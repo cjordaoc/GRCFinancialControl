@@ -7,9 +7,10 @@ using System.Linq;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using AreaFinancialControl.Data;
+using GRCFinancialControl.Data;
 
-namespace AreaFinancialControl.Ingestion
+
+namespace GRCFinancialControl.Services
 {
     public static class StringNormalizer
     {

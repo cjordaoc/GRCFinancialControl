@@ -2,9 +2,11 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using MySql.Data.MySqlClient;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
-using AreaFinancialControl.Data;
 
-namespace AreaFinancialControl.Configuration
+using GRCFinancialControl.Data;
+
+namespace GRCFinancialControl.Configuration
+
 {
     public sealed class AppConfig
     {

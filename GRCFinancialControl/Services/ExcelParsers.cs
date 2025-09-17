@@ -5,9 +5,11 @@ using System.IO;
 using System.Linq;
 using ClosedXML.Excel;
 
-namespace AreaFinancialControl.Ingestion
+
+namespace GRCFinancialControl.Services
 {
-    public sealed class ExcelParseResult<TRow>
+    public class ExcelParseResult<TRow>
+
     {
         private readonly List<TRow> _rows = new();
         private readonly List<string> _errors = new();
@@ -247,8 +249,9 @@ namespace AreaFinancialControl.Ingestion
 
             var result = new ExcelParseResult<PlanRow>("Initial Plan");
 
-            using var workbook = new XLWorkbook(filePath, XLEventTracking.Disabled);
-            var worksheet = workbook.Worksheets.First(ws => !ws.IsHidden);
+            using var workbook = new XLWorkbook(filePath);
+            var worksheet = ExcelWorksheetHelper.FirstVisible(workbook.Worksheets);
+
             var (headers, headerRow) = ExcelHeaderDetector.DetectHeaders(worksheet, HeaderMap, new[] { "LEVEL", "HOURS" });
 
             foreach (var row in worksheet.RowsUsed().Where(r => r.RowNumber() > headerRow))
@@ -321,8 +324,8 @@ namespace AreaFinancialControl.Ingestion
 
             var result = new EtcParseResult();
 
-            using var workbook = new XLWorkbook(filePath, XLEventTracking.Disabled);
-            var worksheet = workbook.Worksheets.First(ws => !ws.IsHidden);
+            using var workbook = new XLWorkbook(filePath);
+            var worksheet = ExcelWorksheetHelper.FirstVisible(workbook.Worksheets);
             var (headers, headerRow) = ExcelHeaderDetector.DetectHeaders(worksheet, HeaderMap, new[] { "EMPLOYEE", "HOURS_INCURRED", "ETC" });
 
             decimal? projectedMargin = null;
@@ -341,7 +344,12 @@ namespace AreaFinancialControl.Ingestion
                     continue;
                 }
 
-                var rawLevel = headers.ContainsKey("LEVEL") ? ExcelParsingUtilities.GetCellString(row.Cell(headers["LEVEL"])) : string.Empty;
+
+                var rawLevel = string.Empty;
+                if (headers.TryGetValue("LEVEL", out var levelColumn))
+                {
+                    rawLevel = ExcelParsingUtilities.GetCellString(row.Cell(levelColumn));
+                }
 
                 if (!ExcelParsingUtilities.TryGetDecimal(row.Cell(headers["HOURS_INCURRED"]), out var hoursIncurred))
                 {
@@ -405,9 +413,9 @@ namespace AreaFinancialControl.Ingestion
             }
 
             var result = new ExcelParseResult<WeeklyDeclarationRow>("Weekly Declaration");
+            using var workbook = new XLWorkbook(filePath);
+            var worksheet = ExcelWorksheetHelper.FirstVisible(workbook.Worksheets);
 
-            using var workbook = new XLWorkbook(filePath, XLEventTracking.Disabled);
-            var worksheet = workbook.Worksheets.First(ws => !ws.IsHidden);
             var (headers, headerRow) = ExcelHeaderDetector.DetectHeaders(worksheet, HeaderMap, new[] { "EMPLOYEE", "WEEK", "HOURS" });
 
             foreach (var row in worksheet.RowsUsed().Where(r => r.RowNumber() > headerRow))
@@ -474,8 +482,9 @@ namespace AreaFinancialControl.Ingestion
 
             var result = new ExcelParseResult<ChargeRow>("Charges");
 
-            using var workbook = new XLWorkbook(filePath, XLEventTracking.Disabled);
-            var worksheet = workbook.Worksheets.First(ws => !ws.IsHidden);
+
+            using var workbook = new XLWorkbook(filePath);
+            var worksheet = ExcelWorksheetHelper.FirstVisible(workbook.Worksheets);
             var (headers, headerRow) = ExcelHeaderDetector.DetectHeaders(worksheet, HeaderMap, new[] { "EMPLOYEE", "DATE", "HOURS" });
 
             foreach (var row in worksheet.RowsUsed().Where(r => r.RowNumber() > headerRow))
@@ -527,6 +536,25 @@ namespace AreaFinancialControl.Ingestion
             }
 
             return result;
+        }
+    }
+
+
+    internal static class ExcelWorksheetHelper
+    {
+        public static IXLWorksheet FirstVisible(IXLWorksheets worksheets)
+        {
+            ArgumentNullException.ThrowIfNull(worksheets);
+
+            foreach (var worksheet in worksheets)
+            {
+                if (worksheet.Visibility == XLWorksheetVisibility.Visible)
+                {
+                    return worksheet;
+                }
+            }
+
+            throw new InvalidDataException("No visible worksheets were found in the workbook.");
         }
     }
 
