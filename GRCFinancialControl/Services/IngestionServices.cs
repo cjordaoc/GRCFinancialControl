@@ -1,139 +1,282 @@
 // ======================================================================
-// Area Financial Control - Synchronous Ingestion Services
-// No async/await. ClosedXML or ExcelDataReader can be used for parsing.
+// Area Financial Control - Synchronous Ingestion & Normalization
 // ======================================================================
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Globalization;
-using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
-using AreaFinancialControl.Data;
+using Microsoft.EntityFrameworkCore.Storage;
+using GRCFinancialControl.Data;
 
-namespace AreaFinancialControl.Ingestion
+namespace GRCFinancialControl.Services
 {
     public static class StringNormalizer
     {
         public static string NormalizeName(string input)
         {
-            if (string.IsNullOrWhiteSpace(input)) return string.Empty;
-            var trimmed = input.Trim();
-            var deAccented = RemoveDiacritics(trimmed);
-            return deAccented.ToUpperInvariant();
-        }
-
-        public static string RemoveDiacritics(string text)
-        {
-            var formD = text.Normalize(System.Text.NormalizationForm.FormD);
-            var filtered = new System.Text.StringBuilder();
-            foreach (var ch in formD)
+            if (string.IsNullOrWhiteSpace(input))
             {
-                var uc = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(ch);
-                if (uc != System.Globalization.UnicodeCategory.NonSpacingMark)
-                    filtered.Append(ch);
+                return string.Empty;
             }
-            return filtered.ToString().Normalize(System.Text.NormalizationForm.FormC);
+
+            var trimmed = input.Trim();
+            var decomposed = trimmed.Normalize(NormalizationForm.FormD);
+            var builder = new StringBuilder(decomposed.Length);
+            foreach (var ch in decomposed)
+            {
+                var category = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(ch);
+                if (category != System.Globalization.UnicodeCategory.NonSpacingMark)
+                {
+                    builder.Append(ch);
+                }
+            }
+
+            var cleaned = builder.ToString().Normalize(NormalizationForm.FormC);
+            return cleaned.ToUpperInvariant();
         }
 
-        public static string? TrimToNull(string? s)
+        public static string? TrimToNull(string? value)
         {
-            if (string.IsNullOrWhiteSpace(s)) return null;
-            var t = s.Trim();
-            return t.Length == 0 ? null : t;
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return null;
+            }
+
+            var trimmed = value.Trim();
+            return trimmed.Length == 0 ? null : trimmed;
+        }
+    }
+
+    public sealed class OperationSummary
+    {
+        public OperationSummary(string operationName)
+        {
+            OperationName = operationName;
+        }
+
+        public string OperationName { get; }
+        public int Inserted { get; private set; }
+        public int Updated { get; private set; }
+        public int Skipped { get; private set; }
+        public int Removed { get; private set; }
+        public int Duplicates { get; private set; }
+        public bool HasErrors { get; private set; }
+        public List<string> Messages { get; } = new();
+
+        public void IncrementInserted() => Inserted++;
+        public void IncrementUpdated() => Updated++;
+
+        public void RegisterSkip(string message)
+        {
+            Skipped++;
+            AddInfo(message);
+        }
+
+        public void RegisterDuplicate(string message)
+        {
+            Duplicates++;
+            AddInfo(message);
+        }
+
+        public void RegisterRemoval(string message)
+        {
+            RegisterRemoval(1, message);
+        }
+
+        public void RegisterRemoval(int count, string? message = null)
+        {
+            if (count <= 0)
+            {
+                return;
+            }
+
+            Removed += count;
+            AddInfo(message);
+        }
+
+        public void AddInfo(string? message)
+        {
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                Messages.Add(message);
+            }
+        }
+
+        public void MarkError(string message)
+        {
+            HasErrors = true;
+            AddInfo(message);
+        }
+
+        public override string ToString()
+        {
+            return $"{OperationName}: {Inserted} inserted, {Updated} updated, {Skipped} skipped, {Duplicates} duplicates, {Removed} removed.";
+        }
+    }
+
+    internal static class TransactionHelper
+    {
+        public static void Finalize(OperationSummary summary, IDbContextTransaction transaction, bool dryRun)
+        {
+            if (dryRun)
+            {
+                transaction.Rollback();
+                summary.AddInfo("Dry run enabled - transaction rolled back.");
+            }
+            else
+            {
+                transaction.Commit();
+            }
         }
     }
 
     public class IdResolver
     {
         private readonly AppDbContext _db;
-        public IdResolver(AppDbContext db) { _db = db; }
+
+        public IdResolver(AppDbContext db)
+        {
+            _db = db;
+        }
 
         public ushort EnsureSourceSystem(string systemCode, string systemName)
         {
-            var sys = _db.DimSourceSystems.SingleOrDefault(s => s.SystemCode == systemCode);
-            if (sys == null)
+            var trimmedCode = StringNormalizer.TrimToNull(systemCode) ?? throw new ArgumentException("System code is required.", nameof(systemCode));
+            var source = _db.DimSourceSystems.SingleOrDefault(s => s.SystemCode == trimmedCode);
+            if (source == null)
             {
-                sys = new DimSourceSystem { SystemCode = systemCode, SystemName = systemName };
-                _db.DimSourceSystems.Add(sys);
+                source = new DimSourceSystem
+                {
+                    SystemCode = trimmedCode,
+                    SystemName = systemName
+                };
+                _db.DimSourceSystems.Add(source);
                 _db.SaveChanges();
             }
-            return sys.SourceSystemId;
+            else if (!string.Equals(source.SystemName, systemName, StringComparison.Ordinal))
+            {
+                source.SystemName = systemName;
+                _db.SaveChanges();
+            }
+
+            return source.SourceSystemId;
         }
 
         public string EnsureEngagement(string engagementId, string? title = null)
         {
-            if (string.IsNullOrWhiteSpace(engagementId)) throw new ArgumentException("Engagement ID is required.");
-            var e = _db.DimEngagements.Find(engagementId);
-            if (e == null)
+            var trimmedId = StringNormalizer.TrimToNull(engagementId) ?? throw new ArgumentException("Engagement ID is required.", nameof(engagementId));
+            var engagement = _db.DimEngagements.Find(trimmedId);
+            if (engagement == null)
             {
-                e = new DimEngagement { EngagementId = engagementId, EngagementTitle = title ?? engagementId };
-                _db.DimEngagements.Add(e);
-                _db.SaveChanges();
+                engagement = new DimEngagement
+                {
+                    EngagementId = trimmedId,
+                    EngagementTitle = title ?? trimmedId,
+                    CreatedUtc = DateTime.UtcNow,
+                    UpdatedUtc = DateTime.UtcNow
+                };
+                _db.DimEngagements.Add(engagement);
             }
-            return e.EngagementId;
+            else
+            {
+                if (!string.IsNullOrWhiteSpace(title) && !string.Equals(engagement.EngagementTitle, title, StringComparison.Ordinal))
+                {
+                    engagement.EngagementTitle = title;
+                }
+
+                engagement.UpdatedUtc = DateTime.UtcNow;
+            }
+
+            _db.SaveChanges();
+            return engagement.EngagementId;
         }
 
         public uint EnsureLevel(ushort sourceSystemId, string rawLevel, string? levelCodeFallback = null)
         {
-            var normalized = StringNormalizer.NormalizeName(rawLevel);
-            var alias = _db.MapLevelAliases.SingleOrDefault(a => a.SourceSystemId == sourceSystemId && a.NormalizedRaw == normalized);
-            if (alias != null) return alias.LevelId;
+            var trimmedLevel = StringNormalizer.TrimToNull(rawLevel) ?? throw new ArgumentException("Level is required.", nameof(rawLevel));
+            var normalized = StringNormalizer.NormalizeName(trimmedLevel);
 
-            // Try level by code fallback (e.g., "ANALYST")
-            uint levelId;
-            var code = levelCodeFallback ?? normalized;
-            var level = _db.DimLevels.SingleOrDefault(l => l.LevelCode == code);
+            var alias = _db.MapLevelAliases.SingleOrDefault(a => a.SourceSystemId == sourceSystemId && a.NormalizedRaw == normalized);
+            if (alias != null)
+            {
+                return alias.LevelId;
+            }
+
+            var levelCode = levelCodeFallback ?? normalized;
+            var level = _db.DimLevels.SingleOrDefault(l => l.LevelCode == levelCode);
             if (level == null)
             {
-                level = new DimLevel { LevelCode = code, LevelName = rawLevel, LevelOrder = 0 };
+                level = new DimLevel
+                {
+                    LevelCode = levelCode,
+                    LevelName = trimmedLevel,
+                    LevelOrder = 0,
+                    CreatedUtc = DateTime.UtcNow,
+                    UpdatedUtc = DateTime.UtcNow
+                };
                 _db.DimLevels.Add(level);
                 _db.SaveChanges();
             }
-            levelId = level.LevelId;
 
-            _db.MapLevelAliases.Add(new MapLevelAlias
+            var newAlias = new MapLevelAlias
             {
                 SourceSystemId = sourceSystemId,
-                RawLevel = rawLevel,
+                RawLevel = trimmedLevel,
                 NormalizedRaw = normalized,
-                LevelId = levelId
-            });
+                LevelId = level.LevelId,
+                CreatedUtc = DateTime.UtcNow
+            };
+            _db.MapLevelAliases.Add(newAlias);
             _db.SaveChanges();
-            return levelId;
+
+            return level.LevelId;
         }
 
         public ulong EnsureEmployee(ushort sourceSystemId, string rawName, string? employeeCode = null)
         {
-            var normalizedRaw = StringNormalizer.NormalizeName(rawName);
-            var alias = _db.MapEmployeeAliases.SingleOrDefault(a => a.SourceSystemId == sourceSystemId && a.NormalizedRaw == normalizedRaw);
-            if (alias != null) return alias.EmployeeId;
+            var trimmedName = StringNormalizer.TrimToNull(rawName) ?? throw new ArgumentException("Employee name is required.", nameof(rawName));
+            var normalized = StringNormalizer.NormalizeName(trimmedName);
 
-            // Find or create employee by normalized name
-            var emp = _db.DimEmployees.SingleOrDefault(e => e.NormalizedName == normalizedRaw);
-            if (emp == null)
+            var alias = _db.MapEmployeeAliases.SingleOrDefault(a => a.SourceSystemId == sourceSystemId && a.NormalizedRaw == normalized);
+            if (alias != null)
             {
-                emp = new DimEmployee
+                return alias.EmployeeId;
+            }
+
+            var employee = _db.DimEmployees.SingleOrDefault(e => e.NormalizedName == normalized);
+            if (employee == null)
+            {
+                employee = new DimEmployee
                 {
                     EmployeeCode = employeeCode,
-                    FullName = rawName.Trim(),
-                    NormalizedName = normalizedRaw
+                    FullName = trimmedName,
+                    NormalizedName = normalized,
+                    CreatedUtc = DateTime.UtcNow,
+                    UpdatedUtc = DateTime.UtcNow
                 };
-                _db.DimEmployees.Add(emp);
+                _db.DimEmployees.Add(employee);
+                _db.SaveChanges();
+            }
+            else if (!string.IsNullOrWhiteSpace(employeeCode) && string.IsNullOrWhiteSpace(employee.EmployeeCode))
+            {
+                employee.EmployeeCode = employeeCode;
+                employee.UpdatedUtc = DateTime.UtcNow;
                 _db.SaveChanges();
             }
 
-            // Create alias
-            _db.MapEmployeeAliases.Add(new MapEmployeeAlias
+            var newAlias = new MapEmployeeAlias
             {
                 SourceSystemId = sourceSystemId,
-                RawName = rawName,
-                NormalizedRaw = normalizedRaw,
-                EmployeeId = emp.EmployeeId
-            });
+                RawName = trimmedName,
+                NormalizedRaw = normalized,
+                EmployeeId = employee.EmployeeId,
+                CreatedUtc = DateTime.UtcNow
+            };
+            _db.MapEmployeeAliases.Add(newAlias);
             _db.SaveChanges();
 
-            return emp.EmployeeId;
+            return employee.EmployeeId;
         }
     }
 
@@ -141,36 +284,57 @@ namespace AreaFinancialControl.Ingestion
     {
         private readonly AppDbContext _db;
         private readonly IdResolver _ids;
-        private readonly ushort _srcId;
+        private readonly ushort _sourceId;
 
         public PlanLoader(AppDbContext db)
         {
             _db = db;
             _ids = new IdResolver(db);
-            _srcId = _ids.EnsureSourceSystem("WEEKLY_PRICING", "Initial Engagement Plan");
+            _sourceId = _ids.EnsureSourceSystem("WEEKLY_PRICING", "Initial Engagement Plan");
         }
 
-        public void Load(string engagementId, IEnumerable<(string RawLevel, decimal PlannedHours, decimal? PlannedRate)> rows)
-        {
-            if (string.IsNullOrWhiteSpace(engagementId)) return;
-            _ids.EnsureEngagement(engagementId);
+        public OperationSummary Summary { get; } = new("Load Plan");
 
-            var loadUtc = DateTime.UtcNow;
-            foreach (var r in rows)
+        public OperationSummary Load(string engagementId, IEnumerable<(string RawLevel, decimal PlannedHours, decimal? PlannedRate)> rows, bool dryRun)
+        {
+            _ids.EnsureEngagement(engagementId);
+            using var transaction = _db.Database.BeginTransaction();
+            try
             {
-                var levelId = _ids.EnsureLevel(_srcId, r.RawLevel);
-                var fact = new FactPlanByLevel
+                var loadUtc = DateTime.UtcNow;
+                foreach (var row in rows)
                 {
-                    LoadUtc = loadUtc,
-                    SourceSystemId = _srcId,
-                    EngagementId = engagementId,
-                    LevelId = levelId,
-                    PlannedHours = r.PlannedHours,
-                    PlannedRate = r.PlannedRate
-                };
-                _db.FactPlanByLevels.Add(fact);
+                    var levelName = StringNormalizer.TrimToNull(row.RawLevel);
+                    if (levelName == null)
+                    {
+                        Summary.RegisterSkip("Skipped row with missing level.");
+                        continue;
+                    }
+
+                    var levelId = _ids.EnsureLevel(_sourceId, levelName);
+                    _db.FactPlanByLevels.Add(new FactPlanByLevel
+                    {
+                        LoadUtc = loadUtc,
+                        SourceSystemId = _sourceId,
+                        EngagementId = engagementId,
+                        LevelId = levelId,
+                        PlannedHours = row.PlannedHours,
+                        PlannedRate = row.PlannedRate,
+                        CreatedUtc = DateTime.UtcNow
+                    });
+                    Summary.IncrementInserted();
+                }
+
+                _db.SaveChanges();
+                TransactionHelper.Finalize(Summary, transaction, dryRun);
+                return Summary;
             }
-            _db.SaveChanges();
+            catch (Exception ex)
+            {
+                Summary.MarkError(ex.Message);
+                transaction.Rollback();
+                throw;
+            }
         }
     }
 
@@ -178,71 +342,96 @@ namespace AreaFinancialControl.Ingestion
     {
         private readonly AppDbContext _db;
         private readonly IdResolver _ids;
-        private readonly ushort _srcId;
+        private readonly ushort _sourceId;
 
         public EtcLoader(AppDbContext db)
         {
             _db = db;
             _ids = new IdResolver(db);
-            _srcId = _ids.EnsureSourceSystem("ETC", "Engagement ETC Snapshot");
+            _sourceId = _ids.EnsureSourceSystem("ETC", "Engagement ETC Snapshot");
         }
 
-        public void Load(string snapshotLabel, string engagementId,
-                         IEnumerable<(string EmployeeName, string RawLevel, decimal HoursIncurred, decimal EtcRemaining)> rows,
-                         decimal? projectedMarginPct)
+        public OperationSummary Summary { get; } = new("Load ETC Snapshot");
+
+        public OperationSummary Load(string snapshotLabel, string engagementId, IEnumerable<(string EmployeeName, string RawLevel, decimal HoursIncurred, decimal EtcRemaining)> rows, decimal? projectedMarginPct, bool dryRun)
         {
-            if (string.IsNullOrWhiteSpace(engagementId)) return;
+            var trimmedLabel = StringNormalizer.TrimToNull(snapshotLabel) ?? throw new ArgumentException("Snapshot label is required.", nameof(snapshotLabel));
             _ids.EnsureEngagement(engagementId);
 
-            var loadUtc = DateTime.UtcNow;
-
-            foreach (var r in rows)
+            using var transaction = _db.Database.BeginTransaction();
+            try
             {
-                var empId = _ids.EnsureEmployee(_srcId, r.EmployeeName);
-                uint? levelId = null;
-                if (!string.IsNullOrWhiteSpace(r.RawLevel))
+                var loadUtc = DateTime.UtcNow;
+                foreach (var row in rows)
                 {
-                    levelId = _ids.EnsureLevel(_srcId, r.RawLevel);
+                    var employeeName = StringNormalizer.TrimToNull(row.EmployeeName);
+                    if (employeeName == null)
+                    {
+                        Summary.RegisterSkip("Skipped row with missing employee name.");
+                        continue;
+                    }
+
+                    var employeeId = _ids.EnsureEmployee(_sourceId, employeeName);
+                    uint? levelId = null;
+                    if (!string.IsNullOrWhiteSpace(row.RawLevel))
+                    {
+                        levelId = _ids.EnsureLevel(_sourceId, row.RawLevel);
+                    }
+
+                    _db.FactEtcSnapshots.Add(new FactEtcSnapshot
+                    {
+                        SnapshotLabel = trimmedLabel,
+                        LoadUtc = loadUtc,
+                        SourceSystemId = _sourceId,
+                        EngagementId = engagementId,
+                        EmployeeId = employeeId,
+                        LevelId = levelId,
+                        HoursIncurred = row.HoursIncurred,
+                        EtcRemaining = row.EtcRemaining,
+                        CreatedUtc = DateTime.UtcNow
+                    });
+                    Summary.IncrementInserted();
                 }
 
-                var fact = new FactEtcSnapshot
+                if (projectedMarginPct.HasValue)
                 {
-                    SnapshotLabel = snapshotLabel,
-                    LoadUtc = loadUtc,
-                    SourceSystemId = _srcId,
-                    EngagementId = engagementId,
-                    EmployeeId = empId,
-                    LevelId = levelId,
-                    HoursIncurred = r.HoursIncurred,
-                    EtcRemaining = r.EtcRemaining
-                };
-                _db.FactEtcSnapshots.Add(fact);
-            }
+                    _db.FactEngagementMargins.Add(new FactEngagementMargin
+                    {
+                        SnapshotLabel = trimmedLabel,
+                        LoadUtc = DateTime.UtcNow,
+                        SourceSystemId = _sourceId,
+                        EngagementId = engagementId,
+                        ProjectedMarginPct = projectedMarginPct.Value,
+                        CreatedUtc = DateTime.UtcNow
+                    });
+                    Summary.IncrementInserted();
+                }
 
-            if (projectedMarginPct.HasValue)
+                _db.SaveChanges();
+                TransactionHelper.Finalize(Summary, transaction, dryRun);
+                return Summary;
+            }
+            catch (Exception ex)
             {
-                _db.FactEngagementMargins.Add(new FactEngagementMargin
-                {
-                    SnapshotLabel = snapshotLabel,
-                    LoadUtc = loadUtc,
-                    SourceSystemId = _srcId,
-                    EngagementId = engagementId,
-                    ProjectedMarginPct = projectedMarginPct.Value
-                });
+                Summary.MarkError(ex.Message);
+                transaction.Rollback();
+                throw;
             }
-
-            _db.SaveChanges();
         }
     }
 
     public static class WeekHelper
     {
-        // Return Monday for a given date
-        public static DateOnly ToWeekStart(DateOnly d)
+        public static DateOnly ToWeekStart(DateOnly date)
         {
-            var dayOfWeek = (int)d.DayOfWeek; // Monday=1 ... Sunday=0 in .NET? Actually: Sunday=0
-            var offset = dayOfWeek == 0 ? 6 : dayOfWeek - 1;
-            return d.AddDays(-offset);
+            var day = (int)date.DayOfWeek;
+            var offset = day == 0 ? 6 : day - 1;
+            return date.AddDays(-offset);
+        }
+
+        public static DateOnly ToWeekEnd(DateOnly date)
+        {
+            return ToWeekStart(date).AddDays(6);
         }
     }
 
@@ -250,7 +439,7 @@ namespace AreaFinancialControl.Ingestion
     {
         private readonly AppDbContext _db;
         private readonly IdResolver _ids;
-        private readonly ushort _srcId;
+        private readonly ushort _sourceId;
         private readonly bool _isErp;
 
         public WeeklyUpsertLoader(AppDbContext db, bool isErp)
@@ -258,65 +447,156 @@ namespace AreaFinancialControl.Ingestion
             _db = db;
             _ids = new IdResolver(db);
             _isErp = isErp;
-            _srcId = _ids.EnsureSourceSystem(isErp ? "ERP" : "RETAIN", isErp ? "ERP Weekly Allocation" : "Retain Weekly Declaration");
+            _sourceId = _ids.EnsureSourceSystem(isErp ? "ERP" : "RETAIN", isErp ? "ERP Weekly Allocation" : "Retain Weekly Declaration");
         }
 
-        public void Upsert(string engagementId, IEnumerable<(DateOnly WeekStart, string EmployeeName, decimal DeclaredHours)> rows)
+        public OperationSummary Summary { get; } = new("Weekly Declaration Upsert");
+
+        public OperationSummary Upsert(string engagementId, IEnumerable<(DateOnly WeekStart, string EmployeeName, decimal DeclaredHours)> rows, bool dryRun)
         {
             _ids.EnsureEngagement(engagementId);
-            var loadUtc = DateTime.UtcNow;
-
-            foreach (var r in rows)
+            using var transaction = _db.Database.BeginTransaction();
+            try
             {
-                var empId = _ids.EnsureEmployee(_srcId, r.EmployeeName);
-                var w = WeekHelper.ToWeekStart(r.WeekStart);
+                var loadUtc = DateTime.UtcNow;
+                var prepared = PrepareRows(rows);
+                if (prepared.Count == 0)
+                {
+                    Summary.AddInfo("No weekly declaration rows to process.");
+                    TransactionHelper.Finalize(Summary, transaction, dryRun);
+                    return Summary;
+                }
+
+                var uniqueKeys = prepared.Select(r => (r.WeekStart, r.EmployeeId)).ToHashSet();
+                var weeks = uniqueKeys.Select(k => k.WeekStart).Distinct().ToList();
+                var employees = uniqueKeys.Select(k => k.EmployeeId).Distinct().ToList();
 
                 if (_isErp)
                 {
                     var existing = _db.FactDeclaredErpWeeks
-                        .SingleOrDefault(x => x.WeekStartDate == w && x.EngagementId == engagementId && x.EmployeeId == empId);
-                    if (existing == null)
+                        .Where(x => x.EngagementId == engagementId && weeks.Contains(x.WeekStartDate) && employees.Contains(x.EmployeeId))
+                        .ToDictionary(x => (x.WeekStartDate, x.EmployeeId));
+
+                    var seen = new HashSet<(DateOnly WeekStart, ulong EmployeeId)>();
+                    foreach (var row in prepared)
                     {
-                        _db.FactDeclaredErpWeeks.Add(new FactDeclaredErpWeek
+                        if (!seen.Add((row.WeekStart, row.EmployeeId)))
                         {
-                            SourceSystemId = _srcId,
-                            WeekStartDate = w,
-                            EngagementId = engagementId,
-                            EmployeeId = empId,
-                            DeclaredHours = r.DeclaredHours,
-                            LoadUtc = loadUtc
-                        });
-                    }
-                    else
-                    {
-                        existing.DeclaredHours = r.DeclaredHours;
-                        existing.LoadUtc = loadUtc;
+                            Summary.RegisterDuplicate($"Duplicate ERP weekly declaration detected for {row.EmployeeName} - {row.WeekStart:yyyy-MM-dd}.");
+                            continue;
+                        }
+
+                        if (existing.TryGetValue((row.WeekStart, row.EmployeeId), out var entity))
+                        {
+                            entity.DeclaredHours = row.DeclaredHours;
+                            entity.LoadUtc = loadUtc;
+                            Summary.IncrementUpdated();
+                        }
+                        else
+                        {
+                            _db.FactDeclaredErpWeeks.Add(new FactDeclaredErpWeek
+                            {
+                                SourceSystemId = _sourceId,
+                                WeekStartDate = row.WeekStart,
+                                EngagementId = engagementId,
+                                EmployeeId = row.EmployeeId,
+                                DeclaredHours = row.DeclaredHours,
+                                LoadUtc = loadUtc,
+                                CreatedUtc = DateTime.UtcNow
+                            });
+                            Summary.IncrementInserted();
+                        }
                     }
                 }
                 else
                 {
                     var existing = _db.FactDeclaredRetainWeeks
-                        .SingleOrDefault(x => x.WeekStartDate == w && x.EngagementId == engagementId && x.EmployeeId == empId);
-                    if (existing == null)
+                        .Where(x => x.EngagementId == engagementId && weeks.Contains(x.WeekStartDate) && employees.Contains(x.EmployeeId))
+                        .ToDictionary(x => (x.WeekStartDate, x.EmployeeId));
+
+                    var seen = new HashSet<(DateOnly WeekStart, ulong EmployeeId)>();
+                    foreach (var row in prepared)
                     {
-                        _db.FactDeclaredRetainWeeks.Add(new FactDeclaredRetainWeek
+                        if (!seen.Add((row.WeekStart, row.EmployeeId)))
                         {
-                            SourceSystemId = _srcId,
-                            WeekStartDate = w,
-                            EngagementId = engagementId,
-                            EmployeeId = empId,
-                            DeclaredHours = r.DeclaredHours,
-                            LoadUtc = loadUtc
-                        });
-                    }
-                    else
-                    {
-                        existing.DeclaredHours = r.DeclaredHours;
-                        existing.LoadUtc = loadUtc;
+                            Summary.RegisterDuplicate($"Duplicate Retain weekly declaration detected for {row.EmployeeName} - {row.WeekStart:yyyy-MM-dd}.");
+                            continue;
+                        }
+
+                        if (existing.TryGetValue((row.WeekStart, row.EmployeeId), out var entity))
+                        {
+                            entity.DeclaredHours = row.DeclaredHours;
+                            entity.LoadUtc = loadUtc;
+                            Summary.IncrementUpdated();
+                        }
+                        else
+                        {
+                            _db.FactDeclaredRetainWeeks.Add(new FactDeclaredRetainWeek
+                            {
+                                SourceSystemId = _sourceId,
+                                WeekStartDate = row.WeekStart,
+                                EngagementId = engagementId,
+                                EmployeeId = row.EmployeeId,
+                                DeclaredHours = row.DeclaredHours,
+                                LoadUtc = loadUtc,
+                                CreatedUtc = DateTime.UtcNow
+                            });
+                            Summary.IncrementInserted();
+                        }
                     }
                 }
+
+                _db.SaveChanges();
+                TransactionHelper.Finalize(Summary, transaction, dryRun);
+                return Summary;
             }
-            _db.SaveChanges();
+            catch (Exception ex)
+            {
+                Summary.MarkError(ex.Message);
+                transaction.Rollback();
+                throw;
+            }
+        }
+
+        private List<PreparedWeeklyRow> PrepareRows(IEnumerable<(DateOnly WeekStart, string EmployeeName, decimal DeclaredHours)> rows)
+        {
+            var prepared = new List<PreparedWeeklyRow>();
+            var cache = new Dictionary<string, ulong>();
+
+            foreach (var row in rows)
+            {
+                var employeeName = StringNormalizer.TrimToNull(row.EmployeeName);
+                if (employeeName == null)
+                {
+                    Summary.RegisterSkip("Skipped weekly row with missing employee name.");
+                    continue;
+                }
+
+                var normalized = StringNormalizer.NormalizeName(employeeName);
+                if (!cache.TryGetValue(normalized, out var employeeId))
+                {
+                    employeeId = _ids.EnsureEmployee(_sourceId, employeeName);
+                    cache[normalized] = employeeId;
+                }
+
+                prepared.Add(new PreparedWeeklyRow
+                {
+                    WeekStart = WeekHelper.ToWeekStart(row.WeekStart),
+                    EmployeeId = employeeId,
+                    EmployeeName = employeeName,
+                    DeclaredHours = row.DeclaredHours
+                });
+            }
+
+            return prepared;
+        }
+
+        private sealed class PreparedWeeklyRow
+        {
+            public DateOnly WeekStart { get; set; }
+            public ulong EmployeeId { get; set; }
+            public string EmployeeName { get; set; } = string.Empty;
+            public decimal DeclaredHours { get; set; }
         }
     }
 
@@ -324,131 +604,337 @@ namespace AreaFinancialControl.Ingestion
     {
         private readonly AppDbContext _db;
         private readonly IdResolver _ids;
-        private readonly ushort _srcId;
+        private readonly ushort _sourceId;
 
         public ChargesLoader(AppDbContext db)
         {
             _db = db;
             _ids = new IdResolver(db);
-            _srcId = _ids.EnsureSourceSystem("CHARGES", "Daily Timesheet Charges");
+            _sourceId = _ids.EnsureSourceSystem("CHARGES", "Daily Timesheet Charges");
         }
 
-        // Idempotent insert by (date, engagement, employee)
-        public void Insert(string engagementId, IEnumerable<(DateOnly ChargeDate, string EmployeeName, decimal Hours, decimal? CostAmount)> rows)
+        public OperationSummary Summary { get; } = new("Timesheet Charge Insert");
+
+        public OperationSummary Insert(string engagementId, IEnumerable<(DateOnly ChargeDate, string EmployeeName, decimal Hours, decimal? CostAmount)> rows, bool dryRun)
         {
             _ids.EnsureEngagement(engagementId);
-            var loadUtc = DateTime.UtcNow;
-
-            foreach (var r in rows)
+            using var transaction = _db.Database.BeginTransaction();
+            try
             {
-                var empId = _ids.EnsureEmployee(_srcId, r.EmployeeName);
-                var exists = _db.FactTimesheetCharges
-                    .SingleOrDefault(x => x.ChargeDate == r.ChargeDate && x.EngagementId == engagementId && x.EmployeeId == empId);
-                if (exists == null)
+                var prepared = PrepareRows(rows);
+                if (prepared.Count == 0)
                 {
+                    Summary.AddInfo("No charge rows to process.");
+                    TransactionHelper.Finalize(Summary, transaction, dryRun);
+                    return Summary;
+                }
+
+                var keys = prepared.Select(r => (r.ChargeDate, r.EmployeeId)).ToList();
+                var uniqueDates = keys.Select(k => k.ChargeDate).Distinct().ToList();
+                var uniqueEmployees = keys.Select(k => k.EmployeeId).Distinct().ToList();
+
+                var existing = _db.FactTimesheetCharges
+                    .Where(c => c.EngagementId == engagementId && uniqueDates.Contains(c.ChargeDate) && uniqueEmployees.Contains(c.EmployeeId))
+                    .ToDictionary(c => (c.ChargeDate, c.EmployeeId));
+
+                var seen = new HashSet<(DateOnly ChargeDate, ulong EmployeeId)>();
+                var loadUtc = DateTime.UtcNow;
+
+                foreach (var row in prepared)
+                {
+                    if (!seen.Add((row.ChargeDate, row.EmployeeId)))
+                    {
+                        Summary.RegisterDuplicate($"Duplicate charge detected in input for {row.EmployeeName} on {row.ChargeDate:yyyy-MM-dd}.");
+                        continue;
+                    }
+
+                    if (existing.ContainsKey((row.ChargeDate, row.EmployeeId)))
+                    {
+                        Summary.RegisterDuplicate($"Charge already exists for {row.EmployeeName} on {row.ChargeDate:yyyy-MM-dd}. Skipped.");
+                        continue;
+                    }
+
                     _db.FactTimesheetCharges.Add(new FactTimesheetCharge
                     {
-                        SourceSystemId = _srcId,
-                        ChargeDate = r.ChargeDate,
+                        SourceSystemId = _sourceId,
+                        ChargeDate = row.ChargeDate,
                         EngagementId = engagementId,
-                        EmployeeId = empId,
-                        HoursCharged = r.Hours,
-                        CostAmount = r.CostAmount,
-                        LoadUtc = loadUtc
+                        EmployeeId = row.EmployeeId,
+                        HoursCharged = row.Hours,
+                        CostAmount = row.CostAmount,
+                        LoadUtc = loadUtc,
+                        CreatedUtc = DateTime.UtcNow
                     });
+
+                    Summary.IncrementInserted();
                 }
-                else
-                {
-                    // If duplicate found, keep the first (idempotent). Optionally, reconcile hours differences here.
-                }
+
+                _db.SaveChanges();
+                TransactionHelper.Finalize(Summary, transaction, dryRun);
+                return Summary;
             }
-            _db.SaveChanges();
+            catch (Exception ex)
+            {
+                Summary.MarkError(ex.Message);
+                transaction.Rollback();
+                throw;
+            }
+        }
+
+        private List<PreparedChargeRow> PrepareRows(IEnumerable<(DateOnly ChargeDate, string EmployeeName, decimal Hours, decimal? CostAmount)> rows)
+        {
+            var prepared = new List<PreparedChargeRow>();
+            var cache = new Dictionary<string, ulong>();
+
+            foreach (var row in rows)
+            {
+                var employeeName = StringNormalizer.TrimToNull(row.EmployeeName);
+                if (employeeName == null)
+                {
+                    Summary.RegisterSkip("Skipped charge row with missing employee name.");
+                    continue;
+                }
+
+                var normalized = StringNormalizer.NormalizeName(employeeName);
+                if (!cache.TryGetValue(normalized, out var employeeId))
+                {
+                    employeeId = _ids.EnsureEmployee(_sourceId, employeeName);
+                    cache[normalized] = employeeId;
+                }
+
+                prepared.Add(new PreparedChargeRow
+                {
+                    ChargeDate = row.ChargeDate,
+                    EmployeeId = employeeId,
+                    EmployeeName = employeeName,
+                    Hours = row.Hours,
+                    CostAmount = row.CostAmount
+                });
+            }
+
+            return prepared;
+        }
+
+        private sealed class PreparedChargeRow
+        {
+            public DateOnly ChargeDate { get; set; }
+            public ulong EmployeeId { get; set; }
+            public string EmployeeName { get; set; } = string.Empty;
+            public decimal Hours { get; set; }
+            public decimal? CostAmount { get; set; }
         }
     }
-
     public class ReconciliationService
     {
         private readonly AppDbContext _db;
-        public ReconciliationService(AppDbContext db) { _db = db; }
 
-        // Compare latest ETC snapshot for a label vs. sum of charges up to lastWeekEnd (inclusive)
-        public void Reconcile(string snapshotLabel, DateOnly lastWeekEnd)
+        public ReconciliationService(AppDbContext db)
         {
-            // Gather latest ETC per emp for label
-            var etcLatest = _db.FactEtcSnapshots
-                .Where(e => e.SnapshotLabel == snapshotLabel)
-                .GroupBy(e => new { e.EngagementId, e.EmployeeId })
-                .Select(g => new
-                {
-                    g.Key.EngagementId,
-                    g.Key.EmployeeId,
-                    HoursIncurred = g.OrderByDescending(x => x.LoadUtc).First().HoursIncurred
-                })
-                .ToList();
+            _db = db;
+        }
 
-            foreach (var e in etcLatest)
+        public OperationSummary Summary { get; } = new("ETC vs Charges Reconciliation");
+
+        public OperationSummary Reconcile(string snapshotLabel, DateOnly lastWeekEnd, bool dryRun)
+        {
+            var trimmedLabel = StringNormalizer.TrimToNull(snapshotLabel) ?? throw new ArgumentException("Snapshot label is required.", nameof(snapshotLabel));
+            var normalizedWeekEnd = WeekHelper.ToWeekEnd(lastWeekEnd);
+
+            using var transaction = _db.Database.BeginTransaction();
+            try
             {
-                var chargesSum = _db.FactTimesheetCharges
-                    .Where(c => c.EngagementId == e.EngagementId
-                             && c.EmployeeId == e.EmployeeId
-                             && c.ChargeDate <= lastWeekEnd)
-                    .Sum(c => (decimal?)c.HoursCharged) ?? 0m;
+                var latestLoads = _db.FactEtcSnapshots
+                    .Where(e => e.SnapshotLabel == trimmedLabel)
+                    .GroupBy(e => new { e.EngagementId, e.EmployeeId })
+                    .Select(g => new { g.Key.EngagementId, g.Key.EmployeeId, LatestLoadUtc = g.Max(x => x.LoadUtc) })
+                    .ToList();
 
-                var diff = e.HoursIncurred - chargesSum;
-                if (diff != 0m)
+                if (latestLoads.Count == 0)
                 {
+                    Summary.AddInfo($"No ETC snapshots found for label '{trimmedLabel}'.");
+                    TransactionHelper.Finalize(Summary, transaction, dryRun);
+                    return Summary;
+                }
+
+                var etcLatest = (from latest in latestLoads
+                                 join snapshot in _db.FactEtcSnapshots on new { latest.EngagementId, latest.EmployeeId, latest.LatestLoadUtc }
+                                     equals new { snapshot.EngagementId, snapshot.EmployeeId, LatestLoadUtc = snapshot.LoadUtc }
+                                 select new
+                                 {
+                                     snapshot.EngagementId,
+                                     snapshot.EmployeeId,
+                                     snapshot.HoursIncurred
+                                 }).ToList();
+
+                if (etcLatest.Count == 0)
+                {
+                    Summary.AddInfo("No ETC detail rows found for the latest loads.");
+                    TransactionHelper.Finalize(Summary, transaction, dryRun);
+                    return Summary;
+                }
+
+                var engagementIds = etcLatest.Select(x => x.EngagementId).Distinct().ToList();
+                var employeeIds = etcLatest.Select(x => x.EmployeeId).Distinct().ToList();
+
+                var chargesLookup = _db.FactTimesheetCharges
+                    .Where(c => c.ChargeDate <= normalizedWeekEnd && engagementIds.Contains(c.EngagementId) && employeeIds.Contains(c.EmployeeId))
+                    .GroupBy(c => new { c.EngagementId, c.EmployeeId })
+                    .Select(g => new { g.Key.EngagementId, g.Key.EmployeeId, Hours = g.Sum(x => x.HoursCharged) })
+                    .ToDictionary(x => (x.EngagementId, x.EmployeeId), x => x.Hours);
+
+                var existingAudits = _db.AuditEtcVsCharges
+                    .Where(a => a.SnapshotLabel == trimmedLabel && a.LastWeekEndDate == normalizedWeekEnd)
+                    .ToList();
+
+                var removedCount = 0;
+                foreach (var audit in existingAudits)
+                {
+                    _db.AuditEtcVsCharges.Remove(audit);
+                    removedCount++;
+                }
+
+                if (removedCount > 0)
+                {
+                    Summary.RegisterRemoval(removedCount, $"Removed {removedCount} prior audit row(s) for snapshot '{trimmedLabel}'.");
+                }
+
+                foreach (var entry in etcLatest)
+                {
+                    chargesLookup.TryGetValue((entry.EngagementId, entry.EmployeeId), out var chargeHours);
+                    var diff = entry.HoursIncurred - chargeHours;
+
+                    if (diff == 0m)
+                    {
+                        continue;
+                    }
+
                     _db.AuditEtcVsCharges.Add(new AuditEtcVsCharges
                     {
-                        SnapshotLabel = snapshotLabel,
-                        EngagementId = e.EngagementId,
-                        EmployeeId = e.EmployeeId,
-                        LastWeekEndDate = lastWeekEnd,
-                        EtcHoursIncurred = e.HoursIncurred,
-                        ChargesSumHours = chargesSum,
-                        DiffHours = diff
+                        SnapshotLabel = trimmedLabel,
+                        EngagementId = entry.EngagementId,
+                        EmployeeId = entry.EmployeeId,
+                        LastWeekEndDate = normalizedWeekEnd,
+                        EtcHoursIncurred = entry.HoursIncurred,
+                        ChargesSumHours = chargeHours,
+                        DiffHours = diff,
+                        CreatedUtc = DateTime.UtcNow
                     });
+
+                    Summary.IncrementInserted();
                 }
+
+                if (Summary.Inserted == 0)
+                {
+                    Summary.AddInfo("No variances detected between ETC and charges up to the selected week end.");
+                }
+
+                _db.SaveChanges();
+                TransactionHelper.Finalize(Summary, transaction, dryRun);
+                return Summary;
             }
-            _db.SaveChanges();
+            catch (Exception ex)
+            {
+                Summary.MarkError(ex.Message);
+                transaction.Rollback();
+                throw;
+            }
         }
     }
 
-    // Example orchestrator you can call from WinForms button handlers
     public class IngestionOrchestrator
     {
         private readonly AppDbContext _db;
-        public IngestionOrchestrator(AppDbContext db) { _db = db; }
+
+        public IngestionOrchestrator(AppDbContext db)
+        {
+            _db = db;
+        }
+
+        public bool DryRun { get; set; }
+        public OperationSummary? LastResult { get; private set; }
 
         public void LoadPlan(string engagementId, IEnumerable<(string RawLevel, decimal PlannedHours, decimal? PlannedRate)> planRows)
         {
-            new PlanLoader(_db).Load(engagementId, planRows);
+            var loader = new PlanLoader(_db);
+            try
+            {
+                LastResult = loader.Load(engagementId, planRows, DryRun);
+            }
+            catch
+            {
+                LastResult = loader.Summary;
+                throw;
+            }
         }
 
-        public void LoadEtc(string snapshotLabel, string engagementId,
-                            IEnumerable<(string EmployeeName, string RawLevel, decimal HoursIncurred, decimal EtcRemaining)> etcRows,
-                            decimal? projectedMarginPct)
+        public void LoadEtc(string snapshotLabel, string engagementId, IEnumerable<(string EmployeeName, string RawLevel, decimal HoursIncurred, decimal EtcRemaining)> etcRows, decimal? projectedMarginPct)
         {
-            new EtcLoader(_db).Load(snapshotLabel, engagementId, etcRows, projectedMarginPct);
+            var loader = new EtcLoader(_db);
+            try
+            {
+                LastResult = loader.Load(snapshotLabel, engagementId, etcRows, projectedMarginPct, DryRun);
+            }
+            catch
+            {
+                LastResult = loader.Summary;
+                throw;
+            }
         }
 
         public void UpsertErp(string engagementId, IEnumerable<(DateOnly WeekStart, string EmployeeName, decimal DeclaredHours)> rows)
         {
-            new WeeklyUpsertLoader(_db, isErp: true).Upsert(engagementId, rows);
+            var loader = new WeeklyUpsertLoader(_db, isErp: true);
+            try
+            {
+                LastResult = loader.Upsert(engagementId, rows, DryRun);
+            }
+            catch
+            {
+                LastResult = loader.Summary;
+                throw;
+            }
         }
 
         public void UpsertRetain(string engagementId, IEnumerable<(DateOnly WeekStart, string EmployeeName, decimal DeclaredHours)> rows)
         {
-            new WeeklyUpsertLoader(_db, isErp: false).Upsert(engagementId, rows);
+            var loader = new WeeklyUpsertLoader(_db, isErp: false);
+            try
+            {
+                LastResult = loader.Upsert(engagementId, rows, DryRun);
+            }
+            catch
+            {
+                LastResult = loader.Summary;
+                throw;
+            }
         }
 
         public void InsertCharges(string engagementId, IEnumerable<(DateOnly ChargeDate, string EmployeeName, decimal Hours, decimal? CostAmount)> rows)
         {
-            new ChargesLoader(_db).Insert(engagementId, rows);
+            var loader = new ChargesLoader(_db);
+            try
+            {
+                LastResult = loader.Insert(engagementId, rows, DryRun);
+            }
+            catch
+            {
+                LastResult = loader.Summary;
+                throw;
+            }
         }
 
         public void ReconcileEtcVsCharges(string snapshotLabel, DateOnly lastWeekEnd)
         {
-            new ReconciliationService(_db).Reconcile(snapshotLabel, lastWeekEnd);
+            var service = new ReconciliationService(_db);
+            try
+            {
+                LastResult = service.Reconcile(snapshotLabel, lastWeekEnd, DryRun);
+            }
+            catch
+            {
+                LastResult = service.Summary;
+                throw;
+            }
         }
     }
 }

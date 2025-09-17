@@ -8,7 +8,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace AreaFinancialControl.Data
+namespace GRCFinancialControl.Data
 {
     [Index(nameof(SystemCode), IsUnique = true)]
     public class DimSourceSystem
