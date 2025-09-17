@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using GRCFinancialControl.Data;
 
+
 namespace GRCFinancialControl.Services
 {
     public static class StringNormalizer

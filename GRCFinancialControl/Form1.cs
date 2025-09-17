@@ -9,6 +9,7 @@ using GRCFinancialControl.Configuration;
 using GRCFinancialControl.Data;
 using GRCFinancialControl.Services;
 
+
 namespace GRCFinancialControl
 {
     public partial class Form1 : Form

@@ -5,9 +5,11 @@ using System.IO;
 using System.Linq;
 using ClosedXML.Excel;
 
+
 namespace GRCFinancialControl.Services
 {
     public class ExcelParseResult<TRow>
+
     {
         private readonly List<TRow> _rows = new();
         private readonly List<string> _errors = new();
@@ -249,6 +251,7 @@ namespace GRCFinancialControl.Services
 
             using var workbook = new XLWorkbook(filePath);
             var worksheet = ExcelWorksheetHelper.FirstVisible(workbook.Worksheets);
+
             var (headers, headerRow) = ExcelHeaderDetector.DetectHeaders(worksheet, HeaderMap, new[] { "LEVEL", "HOURS" });
 
             foreach (var row in worksheet.RowsUsed().Where(r => r.RowNumber() > headerRow))
@@ -341,6 +344,7 @@ namespace GRCFinancialControl.Services
                     continue;
                 }
 
+
                 var rawLevel = string.Empty;
                 if (headers.TryGetValue("LEVEL", out var levelColumn))
                 {
@@ -409,9 +413,9 @@ namespace GRCFinancialControl.Services
             }
 
             var result = new ExcelParseResult<WeeklyDeclarationRow>("Weekly Declaration");
-
             using var workbook = new XLWorkbook(filePath);
             var worksheet = ExcelWorksheetHelper.FirstVisible(workbook.Worksheets);
+
             var (headers, headerRow) = ExcelHeaderDetector.DetectHeaders(worksheet, HeaderMap, new[] { "EMPLOYEE", "WEEK", "HOURS" });
 
             foreach (var row in worksheet.RowsUsed().Where(r => r.RowNumber() > headerRow))
@@ -478,6 +482,7 @@ namespace GRCFinancialControl.Services
 
             var result = new ExcelParseResult<ChargeRow>("Charges");
 
+
             using var workbook = new XLWorkbook(filePath);
             var worksheet = ExcelWorksheetHelper.FirstVisible(workbook.Worksheets);
             var (headers, headerRow) = ExcelHeaderDetector.DetectHeaders(worksheet, HeaderMap, new[] { "EMPLOYEE", "DATE", "HOURS" });
@@ -533,6 +538,7 @@ namespace GRCFinancialControl.Services
             return result;
         }
     }
+
 
     internal static class ExcelWorksheetHelper
     {
