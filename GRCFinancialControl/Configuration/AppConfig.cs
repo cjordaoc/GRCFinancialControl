@@ -41,7 +41,7 @@ namespace GRCFinancialControl.Configuration
                 Database = Database,
                 UserID = Username,
                 Password = Password,
-                SslMode = UseSsl ? MySqlSslMode.Preferred : MySqlSslMode.None,
+                SslMode = UseSsl ? MySqlSslMode.Preferred : MySqlSslMode.Disabled,
                 AllowUserVariables = true,
                 CharacterSet = "utf8mb4",
                 ConnectionTimeout = 30,
@@ -62,13 +62,12 @@ namespace GRCFinancialControl.Configuration
             }
 
             var connectionString = config.BuildConnectionString();
-            var serverVersion = ServerVersion.Create(8, 0, 0, ServerType.MySql);
+            var serverVersion = MySqlServerVersion.LatestSupportedServerVersion;
 
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
             optionsBuilder.UseMySql(connectionString, serverVersion, mysqlOptions =>
             {
                 mysqlOptions.CommandTimeout(180);
-                mysqlOptions.CharSetBehavior(CharSetBehavior.NeverAppend);
             });
             optionsBuilder.EnableDetailedErrors();
             optionsBuilder.EnableSensitiveDataLogging(false);
