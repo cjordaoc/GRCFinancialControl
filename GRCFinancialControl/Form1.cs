@@ -7,7 +7,10 @@ using System.Text;
 using System.Windows.Forms;
 using GRCFinancialControl.Configuration;
 using GRCFinancialControl.Data;
+using GRCFinancialControl.Forms;
+using GRCFinancialControl.Persistence;
 using GRCFinancialControl.Services;
+using MySql.Data.MySqlClient;
 
 
 namespace GRCFinancialControl
@@ -20,47 +23,208 @@ namespace GRCFinancialControl
         private const string ErpFileName = "20140812 - Programaçao ERP_v14.xlsx";
         private const string RetainFileName = "Programação Retain Platforms GRC (1).xlsx";
 
+        private readonly LocalAppRepository _repository;
+        private ConnectionDefinition? _defaultConnection;
+        private bool _defaultConnectionHealthy;
+
         public Form1()
         {
             InitializeComponent();
+            _repository = new LocalAppRepository();
+            SetDataMenusEnabled(false);
             var today = DateOnly.FromDateTime(DateTime.Today);
             var weekEnd = WeekHelper.ToWeekEnd(today);
             dtpWeekEnd.Value = weekEnd.ToDateTime(TimeOnly.MinValue);
+            LoadDefaultConnection(reportStatus: true);
         }
 
-        private void btnLoadPlan_Click(object sender, EventArgs e)
+        private void maintenanceToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using var form = new ConnectionMaintenanceForm(_repository);
+            form.ShowDialog(this);
+            LoadDefaultConnection(reportStatus: true);
+        }
+
+        private void selectDefaultToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var connections = _repository.GetConnections();
+            if (connections.Count == 0)
+            {
+                MessageBox.Show(this, "No saved connections are available. Please add one first.", "Select Default", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var currentId = _defaultConnection?.Id ?? _repository.GetDefaultConnectionId();
+            using var form = new SelectDefaultConnectionForm(connections, currentId);
+            if (form.ShowDialog(this) != DialogResult.OK || form.SelectedConnection == null)
+            {
+                return;
+            }
+
+            if (!TestConnection(form.SelectedConnection, logDetails: true))
+            {
+                MessageBox.Show(this, "Unable to connect to the selected database. The default connection was not updated.", "Connection Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            _repository.SetDefaultConnectionId(form.SelectedConnection.Id);
+            LoadDefaultConnection(reportStatus: true);
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        private void uploadPlanToolStripMenuItem_Click(object sender, EventArgs e)
         {
             LoadPlan();
         }
 
-        private void btnLoadEtc_Click(object sender, EventArgs e)
+        private void uploadEtcToolStripMenuItem_Click(object sender, EventArgs e)
         {
             LoadEtc();
         }
 
-        private void btnLoadErp_Click(object sender, EventArgs e)
+        private void uploadErpToolStripMenuItem_Click(object sender, EventArgs e)
         {
             LoadWeeklyDeclarations(isErp: true);
         }
 
-        private void btnLoadRetain_Click(object sender, EventArgs e)
+        private void uploadRetainToolStripMenuItem_Click(object sender, EventArgs e)
         {
             LoadWeeklyDeclarations(isErp: false);
         }
 
-        private void btnLoadCharges_Click(object sender, EventArgs e)
+        private void uploadChargesToolStripMenuItem_Click(object sender, EventArgs e)
         {
             LoadCharges();
         }
 
-        private void btnReconcile_Click(object sender, EventArgs e)
+        private void reconcileToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Reconcile();
         }
 
-        private void btnExportAudit_Click(object sender, EventArgs e)
+        private void exportAuditToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ExportAudit();
+        }
+
+        private void viewHelpToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var builder = new StringBuilder();
+            builder.AppendLine($"Application Version: {Application.ProductVersion}");
+            if (_defaultConnection != null && _defaultConnectionHealthy)
+            {
+                builder.AppendLine($"Default Connection: {_defaultConnection.Name}");
+                builder.AppendLine($"Server: {_defaultConnection.Server}:{_defaultConnection.Port}");
+                builder.AppendLine($"Database: {_defaultConnection.Database}");
+                builder.AppendLine($"Username: {_defaultConnection.Username}");
+                builder.AppendLine($"SSL Enabled: {_defaultConnection.UseSsl}");
+            }
+            else
+            {
+                builder.AppendLine("Default Connection: Not configured or unavailable.");
+            }
+
+            builder.AppendLine($"Dry Run Mode: {(chkDryRun.Checked ? "Enabled" : "Disabled")}");
+
+            var readmeText = LoadReadmeText();
+            using var form = new HelpForm(builder.ToString(), readmeText);
+            form.ShowDialog(this);
+        }
+
+        private void SetDataMenusEnabled(bool enabled)
+        {
+            uploadsToolStripMenuItem.Enabled = enabled;
+            reportsToolStripMenuItem.Enabled = enabled;
+        }
+
+        private void LoadDefaultConnection(bool reportStatus)
+        {
+            _defaultConnection = null;
+            _defaultConnectionHealthy = false;
+            SetDataMenusEnabled(false);
+
+            var defaultId = _repository.GetDefaultConnectionId();
+            if (!defaultId.HasValue)
+            {
+                if (reportStatus)
+                {
+                    AppendStatus("No default database connection selected.");
+                }
+
+                return;
+            }
+
+            var definition = _repository.GetConnection(defaultId.Value);
+            if (definition == null)
+            {
+                _repository.SetDefaultConnectionId(null);
+                AppendStatus("The saved default connection could not be found. Please select a new default connection.");
+                return;
+            }
+
+            if (!TestConnection(definition, logDetails: reportStatus))
+            {
+                AppendStatus($"Default connection '{definition.Name}' failed connectivity. Uploads remain disabled.");
+                return;
+            }
+
+            _defaultConnection = definition;
+            _defaultConnectionHealthy = true;
+            SetDataMenusEnabled(true);
+            if (reportStatus)
+            {
+                AppendStatus($"Default connection '{definition.Name}' is ready.");
+            }
+        }
+
+        private bool TestConnection(ConnectionDefinition definition, bool logDetails)
+        {
+            try
+            {
+                var config = definition.ToAppConfig();
+                using var connection = new MySqlConnection(config.BuildConnectionString());
+                connection.Open();
+                connection.Close();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                if (logDetails)
+                {
+                    AppendStatus($"Connection test failed for '{definition.Name}': {ex.Message}");
+                }
+
+                return false;
+            }
+        }
+
+        private string LoadReadmeText()
+        {
+            var current = AppDomain.CurrentDomain.BaseDirectory;
+            for (var i = 0; i < 5 && !string.IsNullOrEmpty(current); i++)
+            {
+                var candidate = Path.Combine(current, "README.md");
+                if (File.Exists(candidate))
+                {
+                    try
+                    {
+                        return File.ReadAllText(candidate);
+                    }
+                    catch (Exception ex)
+                    {
+                        return $"Failed to load README.md: {ex.Message}";
+                    }
+                }
+
+                var parent = Directory.GetParent(current);
+                current = parent?.FullName ?? string.Empty;
+            }
+
+            return "README.md not found.";
         }
 
         private void LoadPlan()
@@ -442,34 +606,14 @@ namespace GRCFinancialControl
 
         private bool TryBuildConfig(out AppConfig config)
         {
-            config = new AppConfig();
-            var server = txtServer.Text?.Trim();
-            if (string.IsNullOrWhiteSpace(server))
+            if (_defaultConnection == null || !_defaultConnectionHealthy)
             {
-                ShowError("Server is required.");
+                ShowError("Default database connection is not available. Please select a working default connection.");
+                config = null!;
                 return false;
             }
 
-            var database = txtDatabase.Text?.Trim();
-            if (string.IsNullOrWhiteSpace(database))
-            {
-                ShowError("Database is required.");
-                return false;
-            }
-
-            var username = txtUsername.Text?.Trim();
-            if (string.IsNullOrWhiteSpace(username))
-            {
-                ShowError("Username is required.");
-                return false;
-            }
-
-            config.Server = server;
-            config.Database = database;
-            config.Username = username;
-            config.Password = txtPassword.Text ?? string.Empty;
-            config.Port = (uint)numPort.Value;
-            config.UseSsl = chkUseSsl.Checked;
+            config = _defaultConnection.ToAppConfig();
             return true;
         }
 
