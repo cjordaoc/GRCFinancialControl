@@ -12,19 +12,50 @@ namespace GRCFinancialControl.Persistence
         private readonly string _databasePath;
         private readonly string _connectionString;
 
-        public LocalAppRepository()
+        public LocalAppRepository(string? databasePath = null)
         {
+            _databasePath = ResolveDatabasePath(databasePath);
+            _connectionString = BuildConnectionString(_databasePath);
+            EnsureSchema();
+        }
+
+        public string DatabasePath => _databasePath;
+
+        private static string ResolveDatabasePath(string? databasePath)
+        {
+            if (!string.IsNullOrWhiteSpace(databasePath))
+            {
+                var fullPath = Path.GetFullPath(databasePath);
+                var directory = Path.GetDirectoryName(fullPath);
+                if (!string.IsNullOrWhiteSpace(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                return fullPath;
+            }
+
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             if (string.IsNullOrWhiteSpace(appData))
             {
                 appData = AppDomain.CurrentDomain.BaseDirectory;
             }
 
-            var directory = Path.Combine(appData, "GRCFinancialControl");
-            Directory.CreateDirectory(directory);
-            _databasePath = Path.Combine(directory, "appdata.db");
-            _connectionString = $"Data Source={_databasePath};Mode=ReadWriteCreate";
-            EnsureSchema();
+            var directoryPath = Path.Combine(appData, "GRCFinancialControl");
+            Directory.CreateDirectory(directoryPath);
+            return Path.Combine(directoryPath, "appdata.db");
+        }
+
+        private static string BuildConnectionString(string databasePath)
+        {
+            var builder = new SqliteConnectionStringBuilder
+            {
+                DataSource = databasePath,
+                Mode = SqliteOpenMode.ReadWriteCreate,
+                Cache = SqliteCacheMode.Private
+            };
+
+            return builder.ToString();
         }
 
         private SqliteConnection CreateConnection()
