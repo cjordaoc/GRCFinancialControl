@@ -39,6 +39,7 @@ namespace GRCFinancialControl
             this.uploadsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.uploadPlanToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.uploadEtcToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.uploadMarginDataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.uploadErpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.uploadRetainToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.uploadChargesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -125,6 +126,7 @@ namespace GRCFinancialControl
             this.uploadsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.uploadPlanToolStripMenuItem,
             this.uploadEtcToolStripMenuItem,
+            this.uploadMarginDataToolStripMenuItem,
             this.uploadErpToolStripMenuItem,
             this.uploadRetainToolStripMenuItem,
             this.uploadChargesToolStripMenuItem});
@@ -140,11 +142,18 @@ namespace GRCFinancialControl
             this.uploadPlanToolStripMenuItem.Click += new System.EventHandler(this.uploadPlanToolStripMenuItem_Click);
             // 
             // uploadEtcToolStripMenuItem
-            // 
+            //
             this.uploadEtcToolStripMenuItem.Name = "uploadEtcToolStripMenuItem";
             this.uploadEtcToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
             this.uploadEtcToolStripMenuItem.Text = "Load ETC";
             this.uploadEtcToolStripMenuItem.Click += new System.EventHandler(this.uploadEtcToolStripMenuItem_Click);
+            //
+            // uploadMarginDataToolStripMenuItem
+            //
+            this.uploadMarginDataToolStripMenuItem.Name = "uploadMarginDataToolStripMenuItem";
+            this.uploadMarginDataToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
+            this.uploadMarginDataToolStripMenuItem.Text = "Load Margin Data";
+            this.uploadMarginDataToolStripMenuItem.Click += new System.EventHandler(this.uploadMarginDataToolStripMenuItem_Click);
             // 
             // uploadErpToolStripMenuItem
             // 
@@ -336,6 +345,7 @@ namespace GRCFinancialControl
         private System.Windows.Forms.ToolStripMenuItem uploadsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem uploadPlanToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem uploadEtcToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem uploadMarginDataToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem uploadErpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem uploadRetainToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem uploadChargesToolStripMenuItem;

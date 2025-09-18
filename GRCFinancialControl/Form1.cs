@@ -22,6 +22,7 @@ namespace GRCFinancialControl
         private const string ChargesFileName = "2500829220250916220434.xlsx";
         private const string ErpFileName = "20140812 - Programaçao ERP_v14.xlsx";
         private const string RetainFileName = "Programação Retain Platforms GRC (1).xlsx";
+        private const string MarginDataFileName = "MarginData.xlsx";
 
         private readonly LocalAppRepository _repository;
         private ConnectionDefinition? _defaultConnection;
@@ -106,6 +107,11 @@ namespace GRCFinancialControl
         private void uploadEtcToolStripMenuItem_Click(object sender, EventArgs e)
         {
             LoadEtc();
+        }
+
+        private void uploadMarginDataToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            LoadMarginData();
         }
 
         private void uploadErpToolStripMenuItem_Click(object sender, EventArgs e)
@@ -331,11 +337,6 @@ namespace GRCFinancialControl
             }
 
             ReportParseResult(parseResult);
-            if (parseResult.ProjectedMarginPct.HasValue)
-            {
-                var marginText = parseResult.ProjectedMarginPct.Value.ToString("P2", CultureInfo.InvariantCulture);
-                AppendStatus($"Projected margin detected: {marginText}.");
-            }
 
             if (parseResult.Rows.Count == 0)
             {
@@ -349,7 +350,48 @@ namespace GRCFinancialControl
                 AppendStatus($"Active period: {FormatMeasurementPeriod(period)}.");
                 var snapshotLabel = period.Description.Trim();
                 var tuples = parseResult.Rows.Select(r => (r.EmployeeName, r.RawLevel, r.HoursIncurred, r.EtcRemaining));
-                orchestrator.LoadEtc(period.MeasurementPeriodId, snapshotLabel, engagementId, tuples, parseResult.ProjectedMarginPct);
+                orchestrator.LoadEtc(period.MeasurementPeriodId, snapshotLabel, engagementId, tuples);
+            });
+        }
+
+        private void LoadMarginData()
+        {
+            var filePath = PromptForFile(MarginDataFileName, enforceExactName: false);
+            if (filePath == null)
+            {
+                return;
+            }
+
+            if (!TryBuildConfig(out var config))
+            {
+                return;
+            }
+
+            AppendStatus($"Loading margin data from '{filePath}'.");
+
+            MarginDataParseResult parseResult;
+            try
+            {
+                parseResult = new MarginDataExcelParser().Parse(filePath);
+            }
+            catch (Exception ex)
+            {
+                ShowError($"Failed to parse margin data file: {ex.Message}");
+                return;
+            }
+
+            ReportParseResult(parseResult);
+            if (parseResult.Rows.Count == 0)
+            {
+                AppendStatus("No margin rows parsed; skipping load.");
+                return;
+            }
+
+            ExecuteWithContext(config, (context, orchestrator) =>
+            {
+                var period = RequireActiveMeasurementPeriod(context);
+                AppendStatus($"Active period: {FormatMeasurementPeriod(period)}.");
+                orchestrator.LoadMarginData(period.MeasurementPeriodId, parseResult.Rows);
             });
         }
 
@@ -684,7 +726,7 @@ namespace GRCFinancialControl
             return $"{period.Description} ({period.StartDate:yyyy-MM-dd} - {period.EndDate:yyyy-MM-dd})";
         }
 
-        private string? PromptForFile(string expectedFileName)
+        private string? PromptForFile(string expectedFileName, bool enforceExactName = true)
         {
             using var dialog = new OpenFileDialog
             {
@@ -702,7 +744,7 @@ namespace GRCFinancialControl
             }
 
             var actualName = Path.GetFileName(dialog.FileName);
-            if (!string.Equals(actualName, expectedFileName, StringComparison.OrdinalIgnoreCase))
+            if (enforceExactName && !string.Equals(actualName, expectedFileName, StringComparison.OrdinalIgnoreCase))
             {
                 MessageBox.Show(this, $"Please select the exact file '{expectedFileName}'.", "Incorrect File", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return null;
