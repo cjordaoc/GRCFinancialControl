@@ -61,8 +61,6 @@ namespace GRCFinancialControl.Services
         public EtcParseResult() : base("ETC Upload")
         {
         }
-
-        public decimal? ProjectedMarginPct { get; internal set; }
     }
 
     public sealed class PlanRow
@@ -78,6 +76,23 @@ namespace GRCFinancialControl.Services
         public string RawLevel { get; set; } = string.Empty;
         public decimal HoursIncurred { get; set; }
         public decimal EtcRemaining { get; set; }
+    }
+
+    public sealed class MarginDataRow
+    {
+        public int ExcelRowNumber { get; set; }
+        public string EngagementId { get; set; } = string.Empty;
+        public string? EngagementTitle { get; set; }
+        public decimal? OpeningMargin { get; set; }
+        public decimal? CurrentMargin { get; set; }
+        public decimal? MarginValue { get; set; }
+    }
+
+    public sealed class MarginDataParseResult : ExcelParseResult<MarginDataRow>
+    {
+        public MarginDataParseResult() : base("Margin Data")
+        {
+        }
     }
 
     public sealed class WeeklyDeclarationRow
@@ -306,8 +321,7 @@ namespace GRCFinancialControl.Services
             ["EMPLOYEE"] = new[] { "EMPLOYEE", "EMPLOYEE NAME", "NAME", "RESOURCE", "PROFISSIONAL" },
             ["LEVEL"] = new[] { "LEVEL", "RANK", "GRADE", "FUNCAO", "CARGO" },
             ["HOURS_INCURRED"] = new[] { "HOURS INCURRED", "HOURS IN CURRED", "HOURS ACTUAL", "ACTUAL HOURS", "HORAS INCORRIDAS" },
-            ["ETC"] = new[] { "ETC REMAINING", "ETC", "REMAINING", "HORAS ETC" },
-            ["MARGIN"] = new[] { "PROJECTED MARGIN", "MARGIN %", "MARGEM" }
+            ["ETC"] = new[] { "ETC REMAINING", "ETC", "REMAINING", "HORAS ETC" }
         };
 
         public EtcParseResult Parse(string filePath)
@@ -327,8 +341,6 @@ namespace GRCFinancialControl.Services
             using var workbook = new XLWorkbook(filePath);
             var worksheet = ExcelWorksheetHelper.FirstVisible(workbook.Worksheets);
             var (headers, headerRow) = ExcelHeaderDetector.DetectHeaders(worksheet, HeaderMap, new[] { "EMPLOYEE", "HOURS_INCURRED", "ETC" });
-
-            decimal? projectedMargin = null;
 
             foreach (var row in worksheet.RowsUsed().Where(r => r.RowNumber() > headerRow))
             {
@@ -363,20 +375,6 @@ namespace GRCFinancialControl.Services
                     continue;
                 }
 
-                if (headers.TryGetValue("MARGIN", out var marginColumn) && projectedMargin == null)
-                {
-                    if (ExcelParsingUtilities.TryGetNullableDecimal(row.Cell(marginColumn), out var marginCandidate) && marginCandidate.HasValue)
-                    {
-                        var marginValue = marginCandidate.Value;
-                        if (marginValue > 1m)
-                        {
-                            marginValue /= 100m;
-                        }
-
-                        projectedMargin = marginValue;
-                    }
-                }
-
                 result.AddRow(new EtcRow
                 {
                     EmployeeName = employeeName,
@@ -386,8 +384,180 @@ namespace GRCFinancialControl.Services
                 });
             }
 
-            result.ProjectedMarginPct = projectedMargin;
             return result;
+        }
+    }
+
+    public sealed class MarginDataExcelParser
+    {
+        private static readonly CultureInfo[] SupportedCultures =
+        {
+            CultureInfo.InvariantCulture,
+            new CultureInfo("pt-BR")
+        };
+
+        public MarginDataParseResult Parse(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                throw new ArgumentException("File path is required.", nameof(filePath));
+            }
+
+            if (!File.Exists(filePath))
+            {
+                throw new FileNotFoundException("Excel file not found.", filePath);
+            }
+
+            var result = new MarginDataParseResult();
+
+            using var workbook = new XLWorkbook(filePath);
+            var worksheet = ExcelWorksheetHelper.FirstVisible(workbook.Worksheets);
+
+            foreach (var row in worksheet.RowsUsed())
+            {
+                if (ExcelParsingUtilities.IsRowEmpty(row))
+                {
+                    continue;
+                }
+
+                var rowNumber = row.RowNumber();
+                var descriptor = ExcelParsingUtilities.GetCellString(row.Cell(1));
+                if (string.IsNullOrWhiteSpace(descriptor))
+                {
+                    result.IncrementSkipped($"Row {rowNumber}: Missing engagement descriptor in column A.");
+                    continue;
+                }
+
+                if (!TryExtractEngagement(descriptor, out var engagementId, out var engagementTitle))
+                {
+                    result.IncrementSkipped($"Row {rowNumber}: Unable to extract engagement ID from '{descriptor}'.");
+                    continue;
+                }
+
+                var marginRow = new MarginDataRow
+                {
+                    ExcelRowNumber = rowNumber,
+                    EngagementId = engagementId,
+                    EngagementTitle = engagementTitle
+                };
+
+                if (!TryReadMarginCell(row.Cell(4), out var openingMargin))
+                {
+                    var openingText = ExcelParsingUtilities.GetCellString(row.Cell(4));
+                    if (!string.IsNullOrEmpty(openingText))
+                    {
+                        result.AddWarning($"Row {rowNumber}: Invalid opening margin '{openingText}'.");
+                    }
+                }
+                else
+                {
+                    marginRow.OpeningMargin = openingMargin;
+                }
+
+                if (!TryReadMarginCell(row.Cell(5), out var currentMargin))
+                {
+                    var currentText = ExcelParsingUtilities.GetCellString(row.Cell(5));
+                    if (!string.IsNullOrEmpty(currentText))
+                    {
+                        result.AddWarning($"Row {rowNumber}: Invalid current margin '{currentText}'.");
+                    }
+                }
+                else
+                {
+                    marginRow.CurrentMargin = currentMargin;
+                }
+
+                if (!TryReadMarginCell(row.Cell(15), out var marginValue))
+                {
+                    var marginText = ExcelParsingUtilities.GetCellString(row.Cell(15));
+                    if (!string.IsNullOrEmpty(marginText))
+                    {
+                        result.AddWarning($"Row {rowNumber}: Invalid margin value '{marginText}'.");
+                    }
+                }
+                else
+                {
+                    marginRow.MarginValue = marginValue;
+                }
+
+                result.AddRow(marginRow);
+            }
+
+            return result;
+        }
+
+        private static bool TryExtractEngagement(string descriptor, out string engagementId, out string? engagementTitle)
+        {
+            engagementId = string.Empty;
+            engagementTitle = null;
+
+            var trimmed = descriptor.Trim();
+            var openIndex = trimmed.LastIndexOf('(');
+            var closeIndex = trimmed.LastIndexOf(')');
+
+            if (openIndex < 0 || closeIndex < 0 || closeIndex <= openIndex + 1)
+            {
+                return false;
+            }
+
+            var candidate = trimmed[(openIndex + 1)..closeIndex].Trim();
+            if (string.IsNullOrWhiteSpace(candidate))
+            {
+                return false;
+            }
+
+            engagementId = candidate;
+
+            var titleCandidate = trimmed[..openIndex].Trim();
+            engagementTitle = StringNormalizer.TrimToNull(titleCandidate);
+            return true;
+        }
+
+        private static bool TryReadMarginCell(IXLCell cell, out decimal? normalized)
+        {
+            normalized = null;
+            if (cell == null)
+            {
+                return true;
+            }
+
+            if (ExcelParsingUtilities.TryGetNullableDecimal(cell, out var parsed))
+            {
+                if (parsed.HasValue)
+                {
+                    normalized = NormalizeMargin(parsed.Value);
+                }
+
+                return true;
+            }
+
+            var rawText = ExcelParsingUtilities.GetCellString(cell);
+            if (string.IsNullOrWhiteSpace(rawText))
+            {
+                return true;
+            }
+
+            var sanitized = rawText.Replace("%", string.Empty, StringComparison.Ordinal).Trim();
+            foreach (var culture in SupportedCultures)
+            {
+                if (decimal.TryParse(sanitized, NumberStyles.Any, culture, out var parsedValue))
+                {
+                    normalized = NormalizeMargin(parsedValue);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static decimal NormalizeMargin(decimal value)
+        {
+            if (value > 1m)
+            {
+                value /= 100m;
+            }
+
+            return Math.Round(value, 6, MidpointRounding.AwayFromZero);
         }
     }
 

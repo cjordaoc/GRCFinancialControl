@@ -132,14 +132,9 @@ namespace GRCFinancialControl.Data
 
     public class FactEngagementMargin
     {
-        [Key] public ulong MarginId { get; set; }
-        [Required, MaxLength(100)] public string SnapshotLabel { get; set; } = null!;
-        [Required] public DateTime LoadUtc { get; set; }
-        [Required] public ushort SourceSystemId { get; set; }
         [Required] public ushort MeasurementPeriodId { get; set; }
         [Required, MaxLength(64)] public string EngagementId { get; set; } = null!;
-        [Required, Column(TypeName = "decimal(6,3)")] public decimal ProjectedMarginPct { get; set; }
-        public DateTime CreatedUtc { get; set; }
+        [Required, Column(TypeName = "decimal(6,3)")] public decimal MarginValue { get; set; }
     }
 
     public class FactDeclaredErpWeek
@@ -363,12 +358,8 @@ namespace GRCFinancialControl.Data
 
             modelBuilder.Entity<FactEngagementMargin>(entity =>
             {
-                entity.Property(e => e.LoadUtc).HasColumnType("datetime(6)");
-                entity.Property(e => e.CreatedUtc)
-                    .HasColumnType("datetime(6)")
-                    .HasDefaultValueSql("CURRENT_TIMESTAMP(6)")
-                    .ValueGeneratedOnAdd();
-                entity.Property(e => e.ProjectedMarginPct).HasPrecision(6, 3);
+                entity.HasKey(e => new { e.MeasurementPeriodId, e.EngagementId });
+                entity.Property(e => e.MarginValue).HasPrecision(6, 3);
             });
 
             modelBuilder.Entity<FactDeclaredErpWeek>(entity =>

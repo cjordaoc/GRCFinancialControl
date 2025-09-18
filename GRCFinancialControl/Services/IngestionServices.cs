@@ -340,6 +340,131 @@ namespace GRCFinancialControl.Services
         }
     }
 
+    public class MarginDataLoader
+    {
+        private readonly AppDbContext _db;
+        private readonly IdResolver _ids;
+
+        public MarginDataLoader(AppDbContext db)
+        {
+            _db = db;
+            _ids = new IdResolver(db);
+        }
+
+        public OperationSummary Summary { get; } = new("Load Margin Data");
+
+        public OperationSummary Load(ushort measurementPeriodId, IEnumerable<MarginDataRow> rows, bool dryRun)
+        {
+            ArgumentNullException.ThrowIfNull(rows);
+
+            using var transaction = _db.Database.BeginTransaction();
+            try
+            {
+                if (_db.DimMeasurementPeriods.Find(measurementPeriodId) == null)
+                {
+                    throw new InvalidOperationException($"Measurement period {measurementPeriodId} was not found.");
+                }
+
+                var processed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var now = DateTime.UtcNow;
+
+                foreach (var row in rows)
+                {
+                    var engagementId = StringNormalizer.TrimToNull(row.EngagementId);
+                    if (engagementId == null)
+                    {
+                        Summary.RegisterSkip($"Row {row.ExcelRowNumber}: Missing engagement identifier.");
+                        continue;
+                    }
+
+                    if (!processed.Add(engagementId))
+                    {
+                        Summary.RegisterDuplicate($"Row {row.ExcelRowNumber}: Duplicate engagement '{engagementId}'.");
+                        continue;
+                    }
+
+                    engagementId = _ids.EnsureEngagement(engagementId, row.EngagementTitle);
+                    var engagement = _db.DimEngagements.Single(e => e.EngagementId == engagementId);
+
+                    var engagementUpdated = false;
+
+                    if (row.OpeningMargin.HasValue && HasDifferentMargin(engagement.OpeningMargin, row.OpeningMargin.Value))
+                    {
+                        engagement.OpeningMargin = Convert.ToDouble(Math.Round(row.OpeningMargin.Value, 6, MidpointRounding.AwayFromZero));
+                        engagementUpdated = true;
+                    }
+
+                    if (row.CurrentMargin.HasValue && HasDifferentMargin(engagement.CurrentMargin, row.CurrentMargin.Value))
+                    {
+                        engagement.CurrentMargin = Convert.ToDouble(Math.Round(row.CurrentMargin.Value, 6, MidpointRounding.AwayFromZero));
+                        engagementUpdated = true;
+                    }
+
+                    var factChanged = false;
+                    var factUpdated = false;
+                    if (row.MarginValue.HasValue)
+                    {
+                        var marginValue = Math.Round(row.MarginValue.Value, 6, MidpointRounding.AwayFromZero);
+                        var existing = _db.FactEngagementMargins.SingleOrDefault(m => m.MeasurementPeriodId == measurementPeriodId && m.EngagementId == engagementId);
+                        if (existing == null)
+                        {
+                            _db.FactEngagementMargins.Add(new FactEngagementMargin
+                            {
+                                MeasurementPeriodId = measurementPeriodId,
+                                EngagementId = engagementId,
+                                MarginValue = marginValue
+                            });
+                            Summary.IncrementInserted();
+                            factChanged = true;
+                        }
+                        else if (existing.MarginValue != marginValue)
+                        {
+                            existing.MarginValue = marginValue;
+                            factChanged = true;
+                            factUpdated = true;
+                        }
+                    }
+                    else
+                    {
+                        Summary.AddInfo($"Row {row.ExcelRowNumber}: Margin value missing; fact table was not updated.");
+                    }
+
+                    if (engagementUpdated)
+                    {
+                        Summary.IncrementUpdated();
+                    }
+
+                    if (factUpdated)
+                    {
+                        Summary.IncrementUpdated();
+                    }
+
+                    if (engagementUpdated || factChanged)
+                    {
+                        engagement.LastMarginUpdateDate = now;
+                        engagement.UpdatedUtc = now;
+                    }
+                }
+
+                _db.SaveChanges();
+                TransactionHelper.Finalize(Summary, transaction, dryRun);
+                return Summary;
+            }
+            catch (Exception ex)
+            {
+                Summary.MarkError(ex.Message);
+                transaction.Rollback();
+                throw;
+            }
+        }
+
+        private static bool HasDifferentMargin(double currentValue, decimal targetValue)
+        {
+            var targetDouble = Convert.ToDouble(Math.Round(targetValue, 6, MidpointRounding.AwayFromZero));
+            return Math.Abs(currentValue - targetDouble) > 0.0005d;
+        }
+    }
+
     public class EtcLoader
     {
         private readonly AppDbContext _db;
@@ -355,7 +480,7 @@ namespace GRCFinancialControl.Services
 
         public OperationSummary Summary { get; } = new("Load ETC Snapshot");
 
-        public OperationSummary Load(ushort measurementPeriodId, string snapshotLabel, string engagementId, IEnumerable<(string EmployeeName, string RawLevel, decimal HoursIncurred, decimal EtcRemaining)> rows, decimal? projectedMarginPct, bool dryRun)
+        public OperationSummary Load(ushort measurementPeriodId, string snapshotLabel, string engagementId, IEnumerable<(string EmployeeName, string RawLevel, decimal HoursIncurred, decimal EtcRemaining)> rows, bool dryRun)
         {
             var trimmedLabel = StringNormalizer.TrimToNull(snapshotLabel) ?? throw new ArgumentException("Snapshot label is required.", nameof(snapshotLabel));
             _ids.EnsureEngagement(engagementId);
@@ -391,21 +516,6 @@ namespace GRCFinancialControl.Services
                         LevelId = levelId,
                         HoursIncurred = row.HoursIncurred,
                         EtcRemaining = row.EtcRemaining,
-                        CreatedUtc = DateTime.UtcNow
-                    });
-                    Summary.IncrementInserted();
-                }
-
-                if (projectedMarginPct.HasValue)
-                {
-                    _db.FactEngagementMargins.Add(new FactEngagementMargin
-                    {
-                        SnapshotLabel = trimmedLabel,
-                        LoadUtc = DateTime.UtcNow,
-                        SourceSystemId = _sourceId,
-                        MeasurementPeriodId = measurementPeriodId,
-                        EngagementId = engagementId,
-                        ProjectedMarginPct = projectedMarginPct.Value,
                         CreatedUtc = DateTime.UtcNow
                     });
                     Summary.IncrementInserted();
@@ -875,12 +985,26 @@ namespace GRCFinancialControl.Services
             }
         }
 
-        public void LoadEtc(ushort measurementPeriodId, string snapshotLabel, string engagementId, IEnumerable<(string EmployeeName, string RawLevel, decimal HoursIncurred, decimal EtcRemaining)> etcRows, decimal? projectedMarginPct)
+        public void LoadEtc(ushort measurementPeriodId, string snapshotLabel, string engagementId, IEnumerable<(string EmployeeName, string RawLevel, decimal HoursIncurred, decimal EtcRemaining)> etcRows)
         {
             var loader = new EtcLoader(_db);
             try
             {
-                LastResult = loader.Load(measurementPeriodId, snapshotLabel, engagementId, etcRows, projectedMarginPct, DryRun);
+                LastResult = loader.Load(measurementPeriodId, snapshotLabel, engagementId, etcRows, DryRun);
+            }
+            catch
+            {
+                LastResult = loader.Summary;
+                throw;
+            }
+        }
+
+        public void LoadMarginData(ushort measurementPeriodId, IEnumerable<MarginDataRow> marginRows)
+        {
+            var loader = new MarginDataLoader(_db);
+            try
+            {
+                LastResult = loader.Load(measurementPeriodId, marginRows, DryRun);
             }
             catch
             {
