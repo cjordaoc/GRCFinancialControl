@@ -1,5 +1,3 @@
-using GRCFinancialControl.Configuration;
-
 namespace GRCFinancialControl.Persistence
 {
     public sealed class ConnectionDefinition
@@ -12,19 +10,6 @@ namespace GRCFinancialControl.Persistence
         public string Username { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public bool UseSsl { get; set; } = true;
-
-        public AppConfig ToAppConfig()
-        {
-            return new AppConfig
-            {
-                Server = Server,
-                Port = Port,
-                Database = Database,
-                Username = Username,
-                Password = Password,
-                UseSsl = UseSsl
-            };
-        }
 
         public override string ToString()
         {
