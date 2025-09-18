@@ -23,8 +23,13 @@ namespace GRCFinancialControl.Data
         [Key, MaxLength(64)] public string EngagementId { get; set; } = null!;
         [MaxLength(255)] public string? EngagementTitle { get; set; }
         public bool IsActive { get; set; } = true;
-        public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
-        public DateTime UpdatedUtc { get; set; } = DateTime.UtcNow;
+        [Column(TypeName = "text")] public string? EngagementPartner { get; set; }
+        [Column(TypeName = "text")] public string? EngagementManager { get; set; }
+        public double OpeningMargin { get; set; }
+        public double CurrentMargin { get; set; }
+        public DateTime? LastMarginUpdateDate { get; set; }
+        public DateTime CreatedUtc { get; set; }
+        public DateTime UpdatedUtc { get; set; }
     }
 
     [Index(nameof(LevelCode), IsUnique = true)]
@@ -34,23 +39,21 @@ namespace GRCFinancialControl.Data
         [Required, MaxLength(64)] public string LevelCode { get; set; } = null!;
         [Required, MaxLength(128)] public string LevelName { get; set; } = null!;
         public ushort LevelOrder { get; set; }
-        public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
-        public DateTime UpdatedUtc { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedUtc { get; set; }
+        public DateTime UpdatedUtc { get; set; }
     }
 
     [Index(nameof(NormalizedName), IsUnique = true)]
-    [Index(nameof(EmployeeCode))]
     public class DimEmployee
     {
         [Key] public ulong EmployeeId { get; set; }
         [MaxLength(64)] public string? EmployeeCode { get; set; }
         [Required, MaxLength(255)] public string FullName { get; set; } = null!;
         [Required, MaxLength(255)] public string NormalizedName { get; set; } = null!;
-        public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
-        public DateTime UpdatedUtc { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedUtc { get; set; }
+        public DateTime UpdatedUtc { get; set; }
     }
 
-    [Index(nameof(SourceSystemId), nameof(NormalizedRaw), IsUnique = true)]
     public class MapEmployeeAlias
     {
         [Key] public ulong EmployeeAliasId { get; set; }
@@ -58,13 +61,12 @@ namespace GRCFinancialControl.Data
         [Required, MaxLength(255)] public string RawName { get; set; } = null!;
         [Required, MaxLength(255)] public string NormalizedRaw { get; set; } = null!;
         [Required] public ulong EmployeeId { get; set; }
-        public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedUtc { get; set; }
 
         public DimSourceSystem? SourceSystem { get; set; }
         public DimEmployee? Employee { get; set; }
     }
 
-    [Index(nameof(SourceSystemId), nameof(NormalizedRaw), IsUnique = true)]
     public class MapLevelAlias
     {
         [Key] public ulong LevelAliasId { get; set; }
@@ -72,14 +74,12 @@ namespace GRCFinancialControl.Data
         [Required, MaxLength(128)] public string RawLevel { get; set; } = null!;
         [Required, MaxLength(128)] public string NormalizedRaw { get; set; } = null!;
         [Required] public uint LevelId { get; set; }
-        public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedUtc { get; set; }
 
         public DimSourceSystem? SourceSystem { get; set; }
         public DimLevel? Level { get; set; }
     }
 
-    [Index(nameof(LoadUtc))]
-    [Index(nameof(EngagementId), nameof(LevelId))]
     public class FactPlanByLevel
     {
         [Key] public ulong PlanId { get; set; }
@@ -89,11 +89,9 @@ namespace GRCFinancialControl.Data
         [Required] public uint LevelId { get; set; }
         [Required, Column(TypeName = "decimal(12,2)")] public decimal PlannedHours { get; set; }
         [Column(TypeName = "decimal(14,4)")] public decimal? PlannedRate { get; set; }
-        public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedUtc { get; set; }
     }
 
-    [Index(nameof(SnapshotLabel), nameof(LoadUtc))]
-    [Index(nameof(EngagementId), nameof(EmployeeId))]
     public class FactEtcSnapshot
     {
         [Key] public ulong EtcId { get; set; }
@@ -105,11 +103,9 @@ namespace GRCFinancialControl.Data
         public uint? LevelId { get; set; }
         [Required, Column(TypeName = "decimal(12,2)")] public decimal HoursIncurred { get; set; }
         [Required, Column(TypeName = "decimal(12,2)")] public decimal EtcRemaining { get; set; }
-        public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedUtc { get; set; }
     }
 
-    [Index(nameof(SnapshotLabel), nameof(LoadUtc))]
-    [Index(nameof(EngagementId))]
     public class FactEngagementMargin
     {
         [Key] public ulong MarginId { get; set; }
@@ -118,10 +114,9 @@ namespace GRCFinancialControl.Data
         [Required] public ushort SourceSystemId { get; set; }
         [Required, MaxLength(64)] public string EngagementId { get; set; } = null!;
         [Required, Column(TypeName = "decimal(6,3)")] public decimal ProjectedMarginPct { get; set; }
-        public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedUtc { get; set; }
     }
 
-    [Index(nameof(WeekStartDate), nameof(EngagementId), nameof(EmployeeId), IsUnique = true)]
     public class FactDeclaredErpWeek
     {
         [Key] public ulong ErpId { get; set; }
@@ -131,10 +126,9 @@ namespace GRCFinancialControl.Data
         [Required] public ulong EmployeeId { get; set; }
         [Required, Column(TypeName = "decimal(12,2)")] public decimal DeclaredHours { get; set; }
         [Required] public DateTime LoadUtc { get; set; }
-        public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedUtc { get; set; }
     }
 
-    [Index(nameof(WeekStartDate), nameof(EngagementId), nameof(EmployeeId), IsUnique = true)]
     public class FactDeclaredRetainWeek
     {
         [Key] public ulong RetainId { get; set; }
@@ -144,12 +138,9 @@ namespace GRCFinancialControl.Data
         [Required] public ulong EmployeeId { get; set; }
         [Required, Column(TypeName = "decimal(12,2)")] public decimal DeclaredHours { get; set; }
         [Required] public DateTime LoadUtc { get; set; }
-        public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedUtc { get; set; }
     }
 
-    [Index(nameof(ChargeDate), nameof(EngagementId), nameof(EmployeeId), IsUnique = true)]
-    [Index(nameof(EngagementId), nameof(ChargeDate))]
-    [Index(nameof(EmployeeId), nameof(ChargeDate))]
     public class FactTimesheetCharge
     {
         [Key] public ulong ChargeId { get; set; }
@@ -160,7 +151,7 @@ namespace GRCFinancialControl.Data
         [Required, Column(TypeName = "decimal(12,2)")] public decimal HoursCharged { get; set; }
         [Column(TypeName = "decimal(14,4)")] public decimal? CostAmount { get; set; }
         [Required] public DateTime LoadUtc { get; set; }
-        public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedUtc { get; set; }
     }
 
     public class AuditEtcVsCharges
@@ -173,7 +164,40 @@ namespace GRCFinancialControl.Data
         [Required, Column(TypeName = "decimal(12,2)")] public decimal EtcHoursIncurred { get; set; }
         [Required, Column(TypeName = "decimal(12,2)")] public decimal ChargesSumHours { get; set; }
         [Required, Column(TypeName = "decimal(12,2)")] public decimal DiffHours { get; set; }
-        public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedUtc { get; set; }
+    }
+
+    [Keyless]
+    public class VwChargesSum
+    {
+        [Required, MaxLength(64)] public string EngagementId { get; set; } = null!;
+        [Required] public ulong EmployeeId { get; set; }
+        [Required] public DateOnly ChargeDate { get; set; }
+        [Column(TypeName = "decimal(34,2)")] public decimal? HoursCharged { get; set; }
+    }
+
+    [Keyless]
+    public class VwLatestEtcPerEmployee
+    {
+        [Required] public ulong EtcId { get; set; }
+        [Required, MaxLength(100)] public string SnapshotLabel { get; set; } = null!;
+        [Required] public DateTime LoadUtc { get; set; }
+        [Required] public ushort SourceSystemId { get; set; }
+        [Required, MaxLength(64)] public string EngagementId { get; set; } = null!;
+        [Required] public ulong EmployeeId { get; set; }
+        public uint? LevelId { get; set; }
+        [Required, Column(TypeName = "decimal(12,2)")] public decimal HoursIncurred { get; set; }
+        [Required, Column(TypeName = "decimal(12,2)")] public decimal EtcRemaining { get; set; }
+        public DateTime CreatedUtc { get; set; }
+    }
+
+    [Keyless]
+    public class VwPlanVsActualByLevel
+    {
+        [Required, MaxLength(64)] public string EngagementId { get; set; } = null!;
+        [Required] public uint LevelId { get; set; }
+        [Column(TypeName = "decimal(34,2)")] public decimal? PlannedHours { get; set; }
+        [Column(TypeName = "decimal(56,2)")] public decimal? ActualHours { get; set; }
     }
 
     public class AppDbContext : DbContext
@@ -191,31 +215,165 @@ namespace GRCFinancialControl.Data
         public DbSet<FactDeclaredRetainWeek> FactDeclaredRetainWeeks => Set<FactDeclaredRetainWeek>();
         public DbSet<FactTimesheetCharge> FactTimesheetCharges => Set<FactTimesheetCharge>();
         public DbSet<AuditEtcVsCharges> AuditEtcVsCharges => Set<AuditEtcVsCharges>();
+        public DbSet<VwChargesSum> VwChargesSum => Set<VwChargesSum>();
+        public DbSet<VwLatestEtcPerEmployee> VwLatestEtcPerEmployees => Set<VwLatestEtcPerEmployee>();
+        public DbSet<VwPlanVsActualByLevel> VwPlanVsActualByLevels => Set<VwPlanVsActualByLevel>();
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<DimEngagement>(entity =>
+            {
+                entity.Property(e => e.CreatedUtc)
+                    .HasColumnType("datetime(6)")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP(6)")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.UpdatedUtc)
+                    .HasColumnType("datetime(6)")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP(6)")
+                    .ValueGeneratedOnAddOrUpdate();
+                entity.Property(e => e.LastMarginUpdateDate)
+                    .HasColumnType("datetime(6)");
+            });
 
-            // Map decimal precision (Pomelo honors Column attribute, but we ensure defaults)
-            modelBuilder.Entity<FactPlanByLevel>().Property(p => p.PlannedHours).HasPrecision(12,2);
-            modelBuilder.Entity<FactPlanByLevel>().Property(p => p.PlannedRate).HasPrecision(14,4);
+            modelBuilder.Entity<DimLevel>(entity =>
+            {
+                entity.Property(e => e.CreatedUtc)
+                    .HasColumnType("datetime(6)")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP(6)")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.UpdatedUtc)
+                    .HasColumnType("datetime(6)")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP(6)")
+                    .ValueGeneratedOnAddOrUpdate();
+            });
 
-            modelBuilder.Entity<FactEtcSnapshot>().Property(p => p.HoursIncurred).HasPrecision(12,2);
-            modelBuilder.Entity<FactEtcSnapshot>().Property(p => p.EtcRemaining).HasPrecision(12,2);
+            modelBuilder.Entity<DimEmployee>(entity =>
+            {
+                entity.Property(e => e.CreatedUtc)
+                    .HasColumnType("datetime(6)")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP(6)")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.UpdatedUtc)
+                    .HasColumnType("datetime(6)")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP(6)")
+                    .ValueGeneratedOnAddOrUpdate();
+            });
 
-            modelBuilder.Entity<FactEngagementMargin>().Property(p => p.ProjectedMarginPct).HasPrecision(6,3);
+            modelBuilder.Entity<MapEmployeeAlias>(entity =>
+            {
+                entity.Property(e => e.CreatedUtc)
+                    .HasColumnType("datetime(6)")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP(6)")
+                    .ValueGeneratedOnAdd();
+            });
 
-            modelBuilder.Entity<FactDeclaredErpWeek>().Property(p => p.DeclaredHours).HasPrecision(12,2);
-            modelBuilder.Entity<FactDeclaredRetainWeek>().Property(p => p.DeclaredHours).HasPrecision(12,2);
+            modelBuilder.Entity<MapLevelAlias>(entity =>
+            {
+                entity.Property(e => e.CreatedUtc)
+                    .HasColumnType("datetime(6)")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP(6)")
+                    .ValueGeneratedOnAdd();
+            });
 
-            modelBuilder.Entity<FactTimesheetCharge>().Property(p => p.HoursCharged).HasPrecision(12,2);
-            modelBuilder.Entity<FactTimesheetCharge>().Property(p => p.CostAmount).HasPrecision(14,4);
+            modelBuilder.Entity<FactPlanByLevel>(entity =>
+            {
+                entity.Property(e => e.LoadUtc).HasColumnType("datetime(6)");
+                entity.Property(e => e.CreatedUtc)
+                    .HasColumnType("datetime(6)")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP(6)")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.PlannedHours).HasPrecision(12, 2);
+                entity.Property(e => e.PlannedRate).HasPrecision(14, 4);
+            });
 
-            modelBuilder.Entity<AuditEtcVsCharges>().Property(p => p.EtcHoursIncurred).HasPrecision(12,2);
-            modelBuilder.Entity<AuditEtcVsCharges>().Property(p => p.ChargesSumHours).HasPrecision(12,2);
-            modelBuilder.Entity<AuditEtcVsCharges>().Property(p => p.DiffHours).HasPrecision(12,2);
+            modelBuilder.Entity<FactEtcSnapshot>(entity =>
+            {
+                entity.Property(e => e.LoadUtc).HasColumnType("datetime(6)");
+                entity.Property(e => e.CreatedUtc)
+                    .HasColumnType("datetime(6)")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP(6)")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.HoursIncurred).HasPrecision(12, 2);
+                entity.Property(e => e.EtcRemaining).HasPrecision(12, 2);
+            });
+
+            modelBuilder.Entity<FactEngagementMargin>(entity =>
+            {
+                entity.Property(e => e.LoadUtc).HasColumnType("datetime(6)");
+                entity.Property(e => e.CreatedUtc)
+                    .HasColumnType("datetime(6)")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP(6)")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.ProjectedMarginPct).HasPrecision(6, 3);
+            });
+
+            modelBuilder.Entity<FactDeclaredErpWeek>(entity =>
+            {
+                entity.Property(e => e.LoadUtc).HasColumnType("datetime(6)");
+                entity.Property(e => e.CreatedUtc)
+                    .HasColumnType("datetime(6)")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP(6)")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.DeclaredHours).HasPrecision(12, 2);
+            });
+
+            modelBuilder.Entity<FactDeclaredRetainWeek>(entity =>
+            {
+                entity.Property(e => e.LoadUtc).HasColumnType("datetime(6)");
+                entity.Property(e => e.CreatedUtc)
+                    .HasColumnType("datetime(6)")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP(6)")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.DeclaredHours).HasPrecision(12, 2);
+            });
+
+            modelBuilder.Entity<FactTimesheetCharge>(entity =>
+            {
+                entity.Property(e => e.LoadUtc).HasColumnType("datetime(6)");
+                entity.Property(e => e.CreatedUtc)
+                    .HasColumnType("datetime(6)")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP(6)")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.HoursCharged).HasPrecision(12, 2);
+                entity.Property(e => e.CostAmount).HasPrecision(14, 4);
+            });
+
+            modelBuilder.Entity<AuditEtcVsCharges>(entity =>
+            {
+                entity.Property(e => e.CreatedUtc)
+                    .HasColumnType("datetime(6)")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP(6)")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.EtcHoursIncurred).HasPrecision(12, 2);
+                entity.Property(e => e.ChargesSumHours).HasPrecision(12, 2);
+                entity.Property(e => e.DiffHours).HasPrecision(12, 2);
+            });
+
+            modelBuilder.Entity<VwChargesSum>(entity =>
+            {
+                entity.ToView("vw_charges_sum");
+                entity.Property(e => e.ChargeDate).HasColumnType("date");
+                entity.Property(e => e.HoursCharged).HasPrecision(34, 2);
+            });
+
+            modelBuilder.Entity<VwLatestEtcPerEmployee>(entity =>
+            {
+                entity.ToView("vw_latest_etc_per_employee");
+                entity.Property(e => e.LoadUtc).HasColumnType("datetime(6)");
+                entity.Property(e => e.CreatedUtc).HasColumnType("datetime(6)");
+                entity.Property(e => e.HoursIncurred).HasPrecision(12, 2);
+                entity.Property(e => e.EtcRemaining).HasPrecision(12, 2);
+            });
+
+            modelBuilder.Entity<VwPlanVsActualByLevel>(entity =>
+            {
+                entity.ToView("vw_plan_vs_actual_by_level");
+                entity.Property(e => e.PlannedHours).HasPrecision(34, 2);
+                entity.Property(e => e.ActualHours).HasPrecision(56, 2);
+            });
         }
     }
 }
