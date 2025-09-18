@@ -71,6 +71,28 @@ namespace GRCFinancialControl
             LoadDefaultConnection(reportStatus: true);
         }
 
+        private void measurementPeriodsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!TryBuildConfig(out var config))
+            {
+                return;
+            }
+
+            using var form = new MeasurementPeriodMaintenanceForm(config);
+            form.ShowDialog(this);
+        }
+
+        private void fiscalYearsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!TryBuildConfig(out var config))
+            {
+                return;
+            }
+
+            using var form = new FiscalYearMaintenanceForm(config);
+            form.ShowDialog(this);
+        }
+
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Close();
@@ -139,6 +161,7 @@ namespace GRCFinancialControl
         {
             uploadsToolStripMenuItem.Enabled = enabled;
             reportsToolStripMenuItem.Enabled = enabled;
+            masterDataToolStripMenuItem.Enabled = enabled;
         }
 
         private void LoadDefaultConnection(bool reportStatus)
@@ -266,10 +289,12 @@ namespace GRCFinancialControl
                 return;
             }
 
-            ExecuteWithContext(config, orchestrator =>
+            ExecuteWithContext(config, (context, orchestrator) =>
             {
+                var period = RequireActiveMeasurementPeriod(context);
+                AppendStatus($"Using measurement period {FormatMeasurementPeriod(period)}.");
                 var tuples = parseResult.Rows.Select(r => (r.RawLevel, r.PlannedHours, r.PlannedRate));
-                orchestrator.LoadPlan(engagementId, tuples);
+                orchestrator.LoadPlan(period.MeasurementPeriodId, engagementId, tuples);
             });
         }
 
@@ -288,12 +313,6 @@ namespace GRCFinancialControl
 
             var engagementId = GetEngagementId();
             if (engagementId == null)
-            {
-                return;
-            }
-
-            var snapshotLabel = GetSnapshotLabel();
-            if (snapshotLabel == null)
             {
                 return;
             }
@@ -324,10 +343,13 @@ namespace GRCFinancialControl
                 return;
             }
 
-            ExecuteWithContext(config, orchestrator =>
+            ExecuteWithContext(config, (context, orchestrator) =>
             {
+                var period = RequireActiveMeasurementPeriod(context);
+                AppendStatus($"Active period: {FormatMeasurementPeriod(period)}.");
+                var snapshotLabel = period.Description.Trim();
                 var tuples = parseResult.Rows.Select(r => (r.EmployeeName, r.RawLevel, r.HoursIncurred, r.EtcRemaining));
-                orchestrator.LoadEtc(snapshotLabel, engagementId, tuples, parseResult.ProjectedMarginPct);
+                orchestrator.LoadEtc(period.MeasurementPeriodId, snapshotLabel, engagementId, tuples, parseResult.ProjectedMarginPct);
             });
         }
 
@@ -371,16 +393,18 @@ namespace GRCFinancialControl
                 return;
             }
 
-            ExecuteWithContext(config, orchestrator =>
+            ExecuteWithContext(config, (context, orchestrator) =>
             {
+                var period = RequireActiveMeasurementPeriod(context);
+                AppendStatus($"Active period: {FormatMeasurementPeriod(period)}.");
                 var tuples = parseResult.Rows.Select(r => (r.WeekStart, r.EmployeeName, r.DeclaredHours));
                 if (isErp)
                 {
-                    orchestrator.UpsertErp(engagementId, tuples);
+                    orchestrator.UpsertErp(period.MeasurementPeriodId, engagementId, tuples);
                 }
                 else
                 {
-                    orchestrator.UpsertRetain(engagementId, tuples);
+                    orchestrator.UpsertRetain(period.MeasurementPeriodId, engagementId, tuples);
                 }
             });
         }
@@ -424,10 +448,12 @@ namespace GRCFinancialControl
                 return;
             }
 
-            ExecuteWithContext(config, orchestrator =>
+            ExecuteWithContext(config, (context, orchestrator) =>
             {
+                var period = RequireActiveMeasurementPeriod(context);
+                AppendStatus($"Active period: {FormatMeasurementPeriod(period)}.");
                 var tuples = parseResult.Rows.Select(r => (r.ChargeDate, r.EmployeeName, r.Hours, r.CostAmount));
-                orchestrator.InsertCharges(engagementId, tuples);
+                orchestrator.InsertCharges(period.MeasurementPeriodId, engagementId, tuples);
             });
         }
 
@@ -438,18 +464,15 @@ namespace GRCFinancialControl
                 return;
             }
 
-            var snapshotLabel = GetSnapshotLabel();
-            if (snapshotLabel == null)
-            {
-                return;
-            }
-
             var lastWeekEnd = DateOnly.FromDateTime(dtpWeekEnd.Value.Date);
-            AppendStatus($"Reconciling ETC vs charges for '{snapshotLabel}' through {lastWeekEnd:yyyy-MM-dd}.");
+            AppendStatus($"Reconciling ETC vs charges through {lastWeekEnd:yyyy-MM-dd}.");
 
-            ExecuteWithContext(config, orchestrator =>
+            ExecuteWithContext(config, (context, orchestrator) =>
             {
-                orchestrator.ReconcileEtcVsCharges(snapshotLabel, lastWeekEnd);
+                var period = RequireActiveMeasurementPeriod(context);
+                var snapshotLabel = period.Description.Trim();
+                AppendStatus($"Active period: {FormatMeasurementPeriod(period)}.");
+                orchestrator.ReconcileEtcVsCharges(period.MeasurementPeriodId, snapshotLabel, lastWeekEnd);
             });
         }
 
@@ -461,10 +484,24 @@ namespace GRCFinancialControl
             }
 
             using var context = DbContextFactory.Create(config);
+            DimMeasurementPeriod period;
+            try
+            {
+                period = RequireActiveMeasurementPeriod(context);
+            }
+            catch (Exception ex)
+            {
+                ShowError(ex.Message);
+                return;
+            }
+
+            AppendStatus($"Exporting audit data for {FormatMeasurementPeriod(period)}.");
+
             List<AuditEtcVsCharges> rows;
             try
             {
                 rows = context.AuditEtcVsCharges
+                    .Where(a => a.MeasurementPeriodId == period.MeasurementPeriodId)
                     .OrderBy(a => a.SnapshotLabel)
                     .ThenBy(a => a.EngagementId)
                     .ThenBy(a => a.EmployeeId)
@@ -478,7 +515,7 @@ namespace GRCFinancialControl
 
             if (rows.Count == 0)
             {
-                MessageBox.Show(this, "No audit records available for export.", "Export Audit", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(this, $"No audit records available for export for {period.Description}.", "Export Audit", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
@@ -496,7 +533,7 @@ namespace GRCFinancialControl
             try
             {
                 WriteAuditCsv(dialog.FileName, rows);
-                AppendStatus($"Exported {rows.Count} audit rows to '{dialog.FileName}'.");
+                AppendStatus($"Exported {rows.Count} audit rows for {FormatMeasurementPeriod(period)} to '{dialog.FileName}'.");
             }
             catch (Exception ex)
             {
@@ -507,9 +544,11 @@ namespace GRCFinancialControl
         private void WriteAuditCsv(string filePath, IReadOnlyList<AuditEtcVsCharges> rows)
         {
             var builder = new StringBuilder();
-            builder.AppendLine("snapshot_label,engagement_id,employee_id,last_week_end,etc_hours_incurred,charges_sum_hours,diff_hours");
+            builder.AppendLine("measurement_period_id,snapshot_label,engagement_id,employee_id,last_week_end,etc_hours_incurred,charges_sum_hours,diff_hours");
             foreach (var row in rows)
             {
+                builder.Append(row.MeasurementPeriodId.ToString(CultureInfo.InvariantCulture));
+                builder.Append(',');
                 builder.Append(EscapeCsv(row.SnapshotLabel));
                 builder.Append(',');
                 builder.Append(EscapeCsv(row.EngagementId));
@@ -539,7 +578,7 @@ namespace GRCFinancialControl
             return value;
         }
 
-        private void ExecuteWithContext(AppConfig config, Action<IngestionOrchestrator> action)
+        private void ExecuteWithContext(AppConfig config, Action<AppDbContext, IngestionOrchestrator> action)
         {
             using var context = DbContextFactory.Create(config);
             var orchestrator = new IngestionOrchestrator(context)
@@ -549,7 +588,7 @@ namespace GRCFinancialControl
 
             try
             {
-                action(orchestrator);
+                action(context, orchestrator);
                 AppendSummary(orchestrator.LastResult);
             }
             catch (Exception ex)
@@ -629,16 +668,20 @@ namespace GRCFinancialControl
             return engagementId;
         }
 
-        private string? GetSnapshotLabel()
+        private DimMeasurementPeriod RequireActiveMeasurementPeriod(AppDbContext context)
         {
-            var snapshot = txtSnapshotLabel.Text?.Trim();
-            if (string.IsNullOrWhiteSpace(snapshot))
+            var service = new MeasurementPeriodService(context);
+            if (!service.TryGetSingleActive(out var period, out var error))
             {
-                ShowError("Snapshot label is required.");
-                return null;
+                throw new InvalidOperationException(error ?? "Active measurement period is not configured.");
             }
 
-            return snapshot;
+            return period!;
+        }
+
+        private static string FormatMeasurementPeriod(DimMeasurementPeriod period)
+        {
+            return $"{period.Description} ({period.StartDate:yyyy-MM-dd} - {period.EndDate:yyyy-MM-dd})";
         }
 
         private string? PromptForFile(string expectedFileName)
