@@ -296,7 +296,7 @@ namespace GRCFinancialControl.Services
 
         public OperationSummary Summary { get; } = new("Load Plan");
 
-        public OperationSummary Load(string engagementId, IEnumerable<(string RawLevel, decimal PlannedHours, decimal? PlannedRate)> rows, bool dryRun)
+        public OperationSummary Load(ushort measurementPeriodId, string engagementId, IEnumerable<(string RawLevel, decimal PlannedHours, decimal? PlannedRate)> rows, bool dryRun)
         {
             _ids.EnsureEngagement(engagementId);
             using var transaction = _db.Database.BeginTransaction();
@@ -317,6 +317,7 @@ namespace GRCFinancialControl.Services
                     {
                         LoadUtc = loadUtc,
                         SourceSystemId = _sourceId,
+                        MeasurementPeriodId = measurementPeriodId,
                         EngagementId = engagementId,
                         LevelId = levelId,
                         PlannedHours = row.PlannedHours,
@@ -354,7 +355,7 @@ namespace GRCFinancialControl.Services
 
         public OperationSummary Summary { get; } = new("Load ETC Snapshot");
 
-        public OperationSummary Load(string snapshotLabel, string engagementId, IEnumerable<(string EmployeeName, string RawLevel, decimal HoursIncurred, decimal EtcRemaining)> rows, decimal? projectedMarginPct, bool dryRun)
+        public OperationSummary Load(ushort measurementPeriodId, string snapshotLabel, string engagementId, IEnumerable<(string EmployeeName, string RawLevel, decimal HoursIncurred, decimal EtcRemaining)> rows, decimal? projectedMarginPct, bool dryRun)
         {
             var trimmedLabel = StringNormalizer.TrimToNull(snapshotLabel) ?? throw new ArgumentException("Snapshot label is required.", nameof(snapshotLabel));
             _ids.EnsureEngagement(engagementId);
@@ -384,6 +385,7 @@ namespace GRCFinancialControl.Services
                         SnapshotLabel = trimmedLabel,
                         LoadUtc = loadUtc,
                         SourceSystemId = _sourceId,
+                        MeasurementPeriodId = measurementPeriodId,
                         EngagementId = engagementId,
                         EmployeeId = employeeId,
                         LevelId = levelId,
@@ -401,6 +403,7 @@ namespace GRCFinancialControl.Services
                         SnapshotLabel = trimmedLabel,
                         LoadUtc = DateTime.UtcNow,
                         SourceSystemId = _sourceId,
+                        MeasurementPeriodId = measurementPeriodId,
                         EngagementId = engagementId,
                         ProjectedMarginPct = projectedMarginPct.Value,
                         CreatedUtc = DateTime.UtcNow
@@ -453,7 +456,7 @@ namespace GRCFinancialControl.Services
 
         public OperationSummary Summary { get; } = new("Weekly Declaration Upsert");
 
-        public OperationSummary Upsert(string engagementId, IEnumerable<(DateOnly WeekStart, string EmployeeName, decimal DeclaredHours)> rows, bool dryRun)
+        public OperationSummary Upsert(ushort measurementPeriodId, string engagementId, IEnumerable<(DateOnly WeekStart, string EmployeeName, decimal DeclaredHours)> rows, bool dryRun)
         {
             _ids.EnsureEngagement(engagementId);
             using var transaction = _db.Database.BeginTransaction();
@@ -475,7 +478,7 @@ namespace GRCFinancialControl.Services
                 if (_isErp)
                 {
                     var existing = _db.FactDeclaredErpWeeks
-                        .Where(x => x.EngagementId == engagementId && weeks.Contains(x.WeekStartDate) && employees.Contains(x.EmployeeId))
+                        .Where(x => x.EngagementId == engagementId && x.MeasurementPeriodId == measurementPeriodId && weeks.Contains(x.WeekStartDate) && employees.Contains(x.EmployeeId))
                         .ToDictionary(x => (x.WeekStartDate, x.EmployeeId));
 
                     var seen = new HashSet<(DateOnly WeekStart, ulong EmployeeId)>();
@@ -495,11 +498,12 @@ namespace GRCFinancialControl.Services
                         }
                         else
                         {
-                            _db.FactDeclaredErpWeeks.Add(new FactDeclaredErpWeek
-                            {
-                                SourceSystemId = _sourceId,
-                                WeekStartDate = row.WeekStart,
-                                EngagementId = engagementId,
+                        _db.FactDeclaredErpWeeks.Add(new FactDeclaredErpWeek
+                        {
+                            SourceSystemId = _sourceId,
+                            MeasurementPeriodId = measurementPeriodId,
+                            WeekStartDate = row.WeekStart,
+                            EngagementId = engagementId,
                                 EmployeeId = row.EmployeeId,
                                 DeclaredHours = row.DeclaredHours,
                                 LoadUtc = loadUtc,
@@ -512,7 +516,7 @@ namespace GRCFinancialControl.Services
                 else
                 {
                     var existing = _db.FactDeclaredRetainWeeks
-                        .Where(x => x.EngagementId == engagementId && weeks.Contains(x.WeekStartDate) && employees.Contains(x.EmployeeId))
+                        .Where(x => x.EngagementId == engagementId && x.MeasurementPeriodId == measurementPeriodId && weeks.Contains(x.WeekStartDate) && employees.Contains(x.EmployeeId))
                         .ToDictionary(x => (x.WeekStartDate, x.EmployeeId));
 
                     var seen = new HashSet<(DateOnly WeekStart, ulong EmployeeId)>();
@@ -532,10 +536,11 @@ namespace GRCFinancialControl.Services
                         }
                         else
                         {
-                            _db.FactDeclaredRetainWeeks.Add(new FactDeclaredRetainWeek
-                            {
-                                SourceSystemId = _sourceId,
-                                WeekStartDate = row.WeekStart,
+                        _db.FactDeclaredRetainWeeks.Add(new FactDeclaredRetainWeek
+                        {
+                            SourceSystemId = _sourceId,
+                            MeasurementPeriodId = measurementPeriodId,
+                            WeekStartDate = row.WeekStart,
                                 EngagementId = engagementId,
                                 EmployeeId = row.EmployeeId,
                                 DeclaredHours = row.DeclaredHours,
@@ -616,7 +621,7 @@ namespace GRCFinancialControl.Services
 
         public OperationSummary Summary { get; } = new("Timesheet Charge Insert");
 
-        public OperationSummary Insert(string engagementId, IEnumerable<(DateOnly ChargeDate, string EmployeeName, decimal Hours, decimal? CostAmount)> rows, bool dryRun)
+        public OperationSummary Insert(ushort measurementPeriodId, string engagementId, IEnumerable<(DateOnly ChargeDate, string EmployeeName, decimal Hours, decimal? CostAmount)> rows, bool dryRun)
         {
             _ids.EnsureEngagement(engagementId);
             using var transaction = _db.Database.BeginTransaction();
@@ -635,7 +640,7 @@ namespace GRCFinancialControl.Services
                 var uniqueEmployees = keys.Select(k => k.EmployeeId).Distinct().ToList();
 
                 var existing = _db.FactTimesheetCharges
-                    .Where(c => c.EngagementId == engagementId && uniqueDates.Contains(c.ChargeDate) && uniqueEmployees.Contains(c.EmployeeId))
+                    .Where(c => c.EngagementId == engagementId && c.MeasurementPeriodId == measurementPeriodId && uniqueDates.Contains(c.ChargeDate) && uniqueEmployees.Contains(c.EmployeeId))
                     .ToDictionary(c => (c.ChargeDate, c.EmployeeId));
 
                 var seen = new HashSet<(DateOnly ChargeDate, ulong EmployeeId)>();
@@ -658,6 +663,7 @@ namespace GRCFinancialControl.Services
                     _db.FactTimesheetCharges.Add(new FactTimesheetCharge
                     {
                         SourceSystemId = _sourceId,
+                        MeasurementPeriodId = measurementPeriodId,
                         ChargeDate = row.ChargeDate,
                         EngagementId = engagementId,
                         EmployeeId = row.EmployeeId,
@@ -736,7 +742,7 @@ namespace GRCFinancialControl.Services
 
         public OperationSummary Summary { get; } = new("ETC vs Charges Reconciliation");
 
-        public OperationSummary Reconcile(string snapshotLabel, DateOnly lastWeekEnd, bool dryRun)
+        public OperationSummary Reconcile(ushort measurementPeriodId, string snapshotLabel, DateOnly lastWeekEnd, bool dryRun)
         {
             var trimmedLabel = StringNormalizer.TrimToNull(snapshotLabel) ?? throw new ArgumentException("Snapshot label is required.", nameof(snapshotLabel));
             var normalizedWeekEnd = WeekHelper.ToWeekEnd(lastWeekEnd);
@@ -745,7 +751,7 @@ namespace GRCFinancialControl.Services
             try
             {
                 var latestLoads = _db.FactEtcSnapshots
-                    .Where(e => e.SnapshotLabel == trimmedLabel)
+                    .Where(e => e.SnapshotLabel == trimmedLabel && e.MeasurementPeriodId == measurementPeriodId)
                     .GroupBy(e => new { e.EngagementId, e.EmployeeId })
                     .Select(g => new { g.Key.EngagementId, g.Key.EmployeeId, LatestLoadUtc = g.Max(x => x.LoadUtc) })
                     .ToList();
@@ -778,13 +784,13 @@ namespace GRCFinancialControl.Services
                 var employeeIds = etcLatest.Select(x => x.EmployeeId).Distinct().ToList();
 
                 var chargesLookup = _db.FactTimesheetCharges
-                    .Where(c => c.ChargeDate <= normalizedWeekEnd && engagementIds.Contains(c.EngagementId) && employeeIds.Contains(c.EmployeeId))
+                    .Where(c => c.ChargeDate <= normalizedWeekEnd && c.MeasurementPeriodId == measurementPeriodId && engagementIds.Contains(c.EngagementId) && employeeIds.Contains(c.EmployeeId))
                     .GroupBy(c => new { c.EngagementId, c.EmployeeId })
                     .Select(g => new { g.Key.EngagementId, g.Key.EmployeeId, Hours = g.Sum(x => x.HoursCharged) })
                     .ToDictionary(x => (x.EngagementId, x.EmployeeId), x => x.Hours);
 
                 var existingAudits = _db.AuditEtcVsCharges
-                    .Where(a => a.SnapshotLabel == trimmedLabel && a.LastWeekEndDate == normalizedWeekEnd)
+                    .Where(a => a.SnapshotLabel == trimmedLabel && a.LastWeekEndDate == normalizedWeekEnd && a.MeasurementPeriodId == measurementPeriodId)
                     .ToList();
 
                 var removedCount = 0;
@@ -812,6 +818,7 @@ namespace GRCFinancialControl.Services
                     _db.AuditEtcVsCharges.Add(new AuditEtcVsCharges
                     {
                         SnapshotLabel = trimmedLabel,
+                        MeasurementPeriodId = measurementPeriodId,
                         EngagementId = entry.EngagementId,
                         EmployeeId = entry.EmployeeId,
                         LastWeekEndDate = normalizedWeekEnd,
@@ -854,12 +861,12 @@ namespace GRCFinancialControl.Services
         public bool DryRun { get; set; }
         public OperationSummary? LastResult { get; private set; }
 
-        public void LoadPlan(string engagementId, IEnumerable<(string RawLevel, decimal PlannedHours, decimal? PlannedRate)> planRows)
+        public void LoadPlan(ushort measurementPeriodId, string engagementId, IEnumerable<(string RawLevel, decimal PlannedHours, decimal? PlannedRate)> planRows)
         {
             var loader = new PlanLoader(_db);
             try
             {
-                LastResult = loader.Load(engagementId, planRows, DryRun);
+                LastResult = loader.Load(measurementPeriodId, engagementId, planRows, DryRun);
             }
             catch
             {
@@ -868,12 +875,12 @@ namespace GRCFinancialControl.Services
             }
         }
 
-        public void LoadEtc(string snapshotLabel, string engagementId, IEnumerable<(string EmployeeName, string RawLevel, decimal HoursIncurred, decimal EtcRemaining)> etcRows, decimal? projectedMarginPct)
+        public void LoadEtc(ushort measurementPeriodId, string snapshotLabel, string engagementId, IEnumerable<(string EmployeeName, string RawLevel, decimal HoursIncurred, decimal EtcRemaining)> etcRows, decimal? projectedMarginPct)
         {
             var loader = new EtcLoader(_db);
             try
             {
-                LastResult = loader.Load(snapshotLabel, engagementId, etcRows, projectedMarginPct, DryRun);
+                LastResult = loader.Load(measurementPeriodId, snapshotLabel, engagementId, etcRows, projectedMarginPct, DryRun);
             }
             catch
             {
@@ -882,12 +889,12 @@ namespace GRCFinancialControl.Services
             }
         }
 
-        public void UpsertErp(string engagementId, IEnumerable<(DateOnly WeekStart, string EmployeeName, decimal DeclaredHours)> rows)
+        public void UpsertErp(ushort measurementPeriodId, string engagementId, IEnumerable<(DateOnly WeekStart, string EmployeeName, decimal DeclaredHours)> rows)
         {
             var loader = new WeeklyUpsertLoader(_db, isErp: true);
             try
             {
-                LastResult = loader.Upsert(engagementId, rows, DryRun);
+                LastResult = loader.Upsert(measurementPeriodId, engagementId, rows, DryRun);
             }
             catch
             {
@@ -896,12 +903,12 @@ namespace GRCFinancialControl.Services
             }
         }
 
-        public void UpsertRetain(string engagementId, IEnumerable<(DateOnly WeekStart, string EmployeeName, decimal DeclaredHours)> rows)
+        public void UpsertRetain(ushort measurementPeriodId, string engagementId, IEnumerable<(DateOnly WeekStart, string EmployeeName, decimal DeclaredHours)> rows)
         {
             var loader = new WeeklyUpsertLoader(_db, isErp: false);
             try
             {
-                LastResult = loader.Upsert(engagementId, rows, DryRun);
+                LastResult = loader.Upsert(measurementPeriodId, engagementId, rows, DryRun);
             }
             catch
             {
@@ -910,12 +917,12 @@ namespace GRCFinancialControl.Services
             }
         }
 
-        public void InsertCharges(string engagementId, IEnumerable<(DateOnly ChargeDate, string EmployeeName, decimal Hours, decimal? CostAmount)> rows)
+        public void InsertCharges(ushort measurementPeriodId, string engagementId, IEnumerable<(DateOnly ChargeDate, string EmployeeName, decimal Hours, decimal? CostAmount)> rows)
         {
             var loader = new ChargesLoader(_db);
             try
             {
-                LastResult = loader.Insert(engagementId, rows, DryRun);
+                LastResult = loader.Insert(measurementPeriodId, engagementId, rows, DryRun);
             }
             catch
             {
@@ -924,12 +931,12 @@ namespace GRCFinancialControl.Services
             }
         }
 
-        public void ReconcileEtcVsCharges(string snapshotLabel, DateOnly lastWeekEnd)
+        public void ReconcileEtcVsCharges(ushort measurementPeriodId, string snapshotLabel, DateOnly lastWeekEnd)
         {
             var service = new ReconciliationService(_db);
             try
             {
-                LastResult = service.Reconcile(snapshotLabel, lastWeekEnd, DryRun);
+                LastResult = service.Reconcile(measurementPeriodId, snapshotLabel, lastWeekEnd, DryRun);
             }
             catch
             {

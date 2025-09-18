@@ -42,6 +42,9 @@ namespace GRCFinancialControl
             this.uploadErpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.uploadRetainToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.uploadChargesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.masterDataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.measurementPeriodsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fiscalYearsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reportsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reconcileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportAuditToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -51,8 +54,6 @@ namespace GRCFinancialControl
             this.chkDryRun = new System.Windows.Forms.CheckBox();
             this.dtpWeekEnd = new System.Windows.Forms.DateTimePicker();
             this.lblWeekEnd = new System.Windows.Forms.Label();
-            this.txtSnapshotLabel = new System.Windows.Forms.TextBox();
-            this.lblSnapshotLabel = new System.Windows.Forms.Label();
             this.txtEngagementId = new System.Windows.Forms.TextBox();
             this.lblEngagementId = new System.Windows.Forms.Label();
             this.txtStatus = new System.Windows.Forms.TextBox();
@@ -65,6 +66,7 @@ namespace GRCFinancialControl
             this.menuMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.uploadsToolStripMenuItem,
+            this.masterDataToolStripMenuItem,
             this.reportsToolStripMenuItem,
             this.helpToolStripMenuItem});
             this.menuMain.Location = new System.Drawing.Point(0, 0);
@@ -159,14 +161,37 @@ namespace GRCFinancialControl
             this.uploadRetainToolStripMenuItem.Click += new System.EventHandler(this.uploadRetainToolStripMenuItem_Click);
             // 
             // uploadChargesToolStripMenuItem
-            // 
+            //
             this.uploadChargesToolStripMenuItem.Name = "uploadChargesToolStripMenuItem";
             this.uploadChargesToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
             this.uploadChargesToolStripMenuItem.Text = "Load Charges";
             this.uploadChargesToolStripMenuItem.Click += new System.EventHandler(this.uploadChargesToolStripMenuItem_Click);
-            // 
+            //
+            // masterDataToolStripMenuItem
+            //
+            this.masterDataToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.measurementPeriodsToolStripMenuItem,
+            this.fiscalYearsToolStripMenuItem});
+            this.masterDataToolStripMenuItem.Name = "masterDataToolStripMenuItem";
+            this.masterDataToolStripMenuItem.Size = new System.Drawing.Size(86, 20);
+            this.masterDataToolStripMenuItem.Text = "Master Data";
+            //
+            // measurementPeriodsToolStripMenuItem
+            //
+            this.measurementPeriodsToolStripMenuItem.Name = "measurementPeriodsToolStripMenuItem";
+            this.measurementPeriodsToolStripMenuItem.Size = new System.Drawing.Size(197, 22);
+            this.measurementPeriodsToolStripMenuItem.Text = "Measurement Periods";
+            this.measurementPeriodsToolStripMenuItem.Click += new System.EventHandler(this.measurementPeriodsToolStripMenuItem_Click);
+            //
+            // fiscalYearsToolStripMenuItem
+            //
+            this.fiscalYearsToolStripMenuItem.Name = "fiscalYearsToolStripMenuItem";
+            this.fiscalYearsToolStripMenuItem.Size = new System.Drawing.Size(197, 22);
+            this.fiscalYearsToolStripMenuItem.Text = "Fiscal Years";
+            this.fiscalYearsToolStripMenuItem.Click += new System.EventHandler(this.fiscalYearsToolStripMenuItem_Click);
+            //
             // reportsToolStripMenuItem
-            // 
+            //
             this.reportsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.reconcileToolStripMenuItem,
             this.exportAuditToolStripMenuItem});
@@ -210,8 +235,6 @@ namespace GRCFinancialControl
             this.groupEngagement.Controls.Add(this.chkDryRun);
             this.groupEngagement.Controls.Add(this.dtpWeekEnd);
             this.groupEngagement.Controls.Add(this.lblWeekEnd);
-            this.groupEngagement.Controls.Add(this.txtSnapshotLabel);
-            this.groupEngagement.Controls.Add(this.lblSnapshotLabel);
             this.groupEngagement.Controls.Add(this.txtEngagementId);
             this.groupEngagement.Controls.Add(this.lblEngagementId);
             this.groupEngagement.Location = new System.Drawing.Point(12, 36);
@@ -228,7 +251,7 @@ namespace GRCFinancialControl
             this.chkDryRun.Location = new System.Drawing.Point(662, 110);
             this.chkDryRun.Name = "chkDryRun";
             this.chkDryRun.Size = new System.Drawing.Size(187, 19);
-            this.chkDryRun.TabIndex = 6;
+            this.chkDryRun.TabIndex = 4;
             this.chkDryRun.Text = "Dry Run (validate without save)";
             this.chkDryRun.UseVisualStyleBackColor = true;
             // 
@@ -236,38 +259,22 @@ namespace GRCFinancialControl
             // 
             this.dtpWeekEnd.CustomFormat = "yyyy-MM-dd";
             this.dtpWeekEnd.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.dtpWeekEnd.Location = new System.Drawing.Point(138, 108);
+            this.dtpWeekEnd.Location = new System.Drawing.Point(138, 67);
             this.dtpWeekEnd.Name = "dtpWeekEnd";
             this.dtpWeekEnd.Size = new System.Drawing.Size(200, 23);
-            this.dtpWeekEnd.TabIndex = 5;
-            // 
+            this.dtpWeekEnd.TabIndex = 3;
+            //
             // lblWeekEnd
-            // 
+            //
             this.lblWeekEnd.AutoSize = true;
-            this.lblWeekEnd.Location = new System.Drawing.Point(19, 112);
+            this.lblWeekEnd.Location = new System.Drawing.Point(19, 70);
             this.lblWeekEnd.Name = "lblWeekEnd";
             this.lblWeekEnd.Size = new System.Drawing.Size(101, 15);
-            this.lblWeekEnd.TabIndex = 4;
+            this.lblWeekEnd.TabIndex = 2;
             this.lblWeekEnd.Text = "Week End (Reconcile)";
-            // 
-            // txtSnapshotLabel
-            // 
-            this.txtSnapshotLabel.Location = new System.Drawing.Point(138, 67);
-            this.txtSnapshotLabel.Name = "txtSnapshotLabel";
-            this.txtSnapshotLabel.Size = new System.Drawing.Size(320, 23);
-            this.txtSnapshotLabel.TabIndex = 3;
-            // 
-            // lblSnapshotLabel
-            // 
-            this.lblSnapshotLabel.AutoSize = true;
-            this.lblSnapshotLabel.Location = new System.Drawing.Point(19, 70);
-            this.lblSnapshotLabel.Name = "lblSnapshotLabel";
-            this.lblSnapshotLabel.Size = new System.Drawing.Size(88, 15);
-            this.lblSnapshotLabel.TabIndex = 2;
-            this.lblSnapshotLabel.Text = "Snapshot Label";
-            // 
+            //
             // txtEngagementId
-            // 
+            //
             this.txtEngagementId.Location = new System.Drawing.Point(138, 27);
             this.txtEngagementId.Name = "txtEngagementId";
             this.txtEngagementId.Size = new System.Drawing.Size(320, 23);
@@ -332,6 +339,9 @@ namespace GRCFinancialControl
         private System.Windows.Forms.ToolStripMenuItem uploadErpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem uploadRetainToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem uploadChargesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem masterDataToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem measurementPeriodsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem fiscalYearsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem reportsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem reconcileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportAuditToolStripMenuItem;
@@ -341,8 +351,6 @@ namespace GRCFinancialControl
         private System.Windows.Forms.CheckBox chkDryRun;
         private System.Windows.Forms.DateTimePicker dtpWeekEnd;
         private System.Windows.Forms.Label lblWeekEnd;
-        private System.Windows.Forms.TextBox txtSnapshotLabel;
-        private System.Windows.Forms.Label lblSnapshotLabel;
         private System.Windows.Forms.TextBox txtEngagementId;
         private System.Windows.Forms.Label lblEngagementId;
         private System.Windows.Forms.TextBox txtStatus;
