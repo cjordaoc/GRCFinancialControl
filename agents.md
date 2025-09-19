@@ -1,6 +1,8 @@
 # GRC Financial Control – Engineering Guidelines
 
 ## What changed
+- 2025-09-20 19:55 UTC — Rolled out worksheet selection preferences, resilient header detection, weekly plan aggregation, ETC enrichment, and margin schema coverage across the Excel parsers.
+- 2025-09-20 18:40 UTC — Documented the Excel parser strategy review plus the expectation to deliver combined findings and remediation plans in a single response to cut back on iteration loops.
 - 2025-09-19 14:09 UTC — Restored the upload summary grid and week-ending picker in Form1 so runtime references match the designer and builds succeed again on non-Windows hosts.
 - 2025-09-19 13:57 UTC — Clarified master-data binding practices for refresh reliability, added insert confirmation messaging expectations, and recorded the fix in the Mistake Catalog.
 - 2025-09-19 12:58 UTC — Documented MySQL alignment script updates for measurement periods, fact tables, and engagement schema tweaks.
@@ -20,8 +22,16 @@
 - Avoid speculative parallelism or unnecessary indirection; favor clear, imperative flows.
 - Ensure each upload batch executes deterministically and idempotently (guard against duplicate loads).
 
+## Process Rules
+- Restate and confirm understanding before coding.
+- If ambiguous, send numbered questions.
+- Start only after explicit "GO".
+- When performing design/review tasks, deliver the findings and the end-to-end remediation plan together so stakeholders receive the full context in one response.
+
 ## Mistake Catalog
 Document newly discovered mistakes and their fixes **before each delivery** to avoid regressions.
+- 2025-09-20 19:55 UTC — Parsing — Worksheet fallbacks and strict header normalization caused repeated upload failures on EY resourcing exports — Added sheet name preferences, broadened normalization (including % → PCT), aggregated multi-row headers, and switched plan/ETC/margin parsers to header-driven extraction with localized synonyms.
+- 2025-09-20 18:40 UTC — Parsing — Parsers failed whenever summary worksheets or localized headers appeared first — Record explicit worksheet targeting, expanded normalization, and broader synonym coverage in the remediation plan to prevent repeats.
 - 2025-09-19 14:09 UTC — UI — Form1 designer no longer declared the upload summary DataGridView or week-ending DateTimePicker, producing build errors — Reinstated both controls in the designer and restructured the layout to align with existing runtime code.
 - 2025-09-19 13:57 UTC — UI — Master-data grids stopped showing rows after refresh because BindingLists were updated without rebinding — Route grid data through BindingSource with ResetBindings and add insert confirmations to surface success.
 - 2025-09-19 12:58 UTC — Data Modeling — EF models expected measurement periods and fact foreign keys that production MySQL lacked — Delivered alignment script to create measurement_periods, add measurement_period_id columns, and normalize dim_engagement widths.
@@ -57,6 +67,9 @@ Document newly discovered mistakes and their fixes **before each delivery** to a
 
 ## Parsing & File Handling
 - Implement reusable parsing helpers for shared header validation, invariant number/date parsing (`CultureInfo.InvariantCulture`), and consistent error messages using `ExcelParserBase`, `HeaderSchema`, and `ExcelHeaderDetector`.
+- Prefer `ExcelWorksheetHelper.SelectWorksheet` with ordered sheet name candidates (e.g., `RESOURCING`, `Export`, localized labels) to avoid landing on summary tabs.
+- Rely on expanded header schemas with localized synonyms; `ExcelHeaderDetector` now collapses multi-row headers and treats `%` as `PCT`, so match keys against the normalized tokens.
+- Use `LevelNormalizer.Normalize` when deriving canonical level codes from plan/ETC rows before resolving level IDs.
 - Normalize and sort multi-file selections before processing.
 - Validate schema/required columns prior to DB operations; abort file load if required headers are missing.
 

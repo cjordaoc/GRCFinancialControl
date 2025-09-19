@@ -46,7 +46,7 @@ namespace GRCFinancialControl.Uploads
 
                 foreach (var row in group)
                 {
-                    var levelName = StringNormalizer.TrimToNull(row.RawLevel);
+                    var levelName = StringNormalizer.TrimToNull(row.NormalizedLevel ?? row.RawLevel);
                     if (levelName == null)
                     {
                         summary.RegisterSkip("Skipped row with missing level.");
