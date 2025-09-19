@@ -93,6 +93,17 @@ CREATE TABLE IF NOT EXISTS AppParameters (
 );";
                 command.ExecuteNonQuery();
             }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = @"
+CREATE TABLE IF NOT EXISTS parameters (
+    param_key   TEXT PRIMARY KEY,
+    param_value TEXT NOT NULL,
+    updated_utc TEXT NOT NULL DEFAULT (datetime('now'))
+);";
+                command.ExecuteNonQuery();
+            }
         }
 
         public IReadOnlyList<ConnectionDefinition> GetConnections()

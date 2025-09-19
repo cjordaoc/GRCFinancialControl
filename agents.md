@@ -1,6 +1,8 @@
 # GRC Financial Control – Engineering Guidelines
 
 ## What changed
+- 2025-09-19 12:58 UTC — Documented MySQL alignment script updates for measurement periods, fact tables, and engagement schema tweaks.
+- 2025-09-20 17:10 UTC — Added guidance for the new Engagement and Measurement Period WinForms plus schema alignment reminders for measurement_period_id columns.
 - 2025-09-19 21:45 UTC — Documented UploadRunner-based upload pattern, shared Excel parser helpers, and summary grid expectations.
 - 2025-09-19 15:30 UTC — Refined the handbook to cover only C#/.NET practices and recorded the adjustment in the Mistake Catalog.
 
@@ -18,6 +20,8 @@
 
 ## Mistake Catalog
 Document newly discovered mistakes and their fixes **before each delivery** to avoid regressions.
+- 2025-09-19 12:58 UTC — Data Modeling — EF models expected measurement periods and fact foreign keys that production MySQL lacked — Delivered alignment script to create measurement_periods, add measurement_period_id columns, and normalize dim_engagement widths.
+- 2025-09-20 17:10 UTC — UI — Menu actions referenced unimplemented master-data forms causing TypeLoadException — Implemented EngagementForm and MeasurementPeriodForm with validation and designer wiring checklist.
 - 2025-09-19 21:45 UTC — Architecture — Form1 orchestrated uploads directly, leaving dry-run UI and inconsistent transactions — Adopt UploadRunner/service helpers, remove dry-run toggles, and centralize parsing/log summaries.
 - 2025-09-19 15:30 UTC — Documentation — Limited the engineering handbook to C#/.NET scope to reflect project direction.
 - Format for new entries: `YYYY-MM-DD HH:MM UTC — [Area] — Issue — Fix/Prevention`

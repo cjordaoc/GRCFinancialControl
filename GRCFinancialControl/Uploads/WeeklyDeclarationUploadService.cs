@@ -9,13 +9,13 @@ namespace GRCFinancialControl.Uploads
 {
     public sealed class WeeklyDeclarationUploadService
     {
-        private readonly AppDbContext _db;
+        private readonly MySqlDbContext _db;
         private readonly IdResolver _ids;
         private readonly ushort _sourceId;
         private readonly bool _isErp;
         private readonly string _operationName;
 
-        public WeeklyDeclarationUploadService(AppDbContext db, bool isErp)
+        public WeeklyDeclarationUploadService(MySqlDbContext db, bool isErp)
         {
             _db = db ?? throw new ArgumentNullException(nameof(db));
             _ids = new IdResolver(db);
@@ -24,7 +24,7 @@ namespace GRCFinancialControl.Uploads
             _sourceId = _ids.EnsureSourceSystem(isErp ? "ERP" : "RETAIN", isErp ? "ERP Weekly Allocation" : "Retain Weekly Declaration");
         }
 
-        public OperationSummary Upsert(ushort measurementPeriodId, string engagementId, IReadOnlyList<WeeklyDeclarationRow> rows)
+        public OperationSummary Upsert(ushort measurementPeriodId, IReadOnlyList<WeeklyDeclarationRow> rows)
         {
             ArgumentNullException.ThrowIfNull(rows);
 
@@ -35,113 +35,149 @@ namespace GRCFinancialControl.Uploads
                 return summary;
             }
 
-            _ids.EnsureEngagement(engagementId);
             var loadUtc = DateTime.UtcNow;
-            var prepared = PrepareRows(rows);
-            if (prepared.Count == 0)
+            foreach (var group in rows.GroupBy(r => StringNormalizer.TrimToNull(r.EngagementId), StringComparer.OrdinalIgnoreCase))
             {
-                summary.AddInfo("No valid weekly declaration rows to process.");
-                return summary;
-            }
-
-            var uniqueKeys = prepared.Select(r => (r.WeekStart, r.EmployeeId)).ToHashSet();
-            var weeks = uniqueKeys.Select(k => k.WeekStart).Distinct().ToList();
-            var employees = uniqueKeys.Select(k => k.EmployeeId).Distinct().ToList();
-
-            if (_isErp)
-            {
-                var existing = _db.FactDeclaredErpWeeks
-                    .Where(x => x.EngagementId == engagementId && x.MeasurementPeriodId == measurementPeriodId && weeks.Contains(x.WeekStartDate) && employees.Contains(x.EmployeeId))
-                    .ToDictionary(x => (x.WeekStartDate, x.EmployeeId));
-
-                var seen = new HashSet<(DateOnly WeekStart, ulong EmployeeId)>();
-                foreach (var row in prepared)
+                var engagementKey = group.Key;
+                if (string.IsNullOrWhiteSpace(engagementKey))
                 {
-                    if (!seen.Add((row.WeekStart, row.EmployeeId)))
-                    {
-                        summary.RegisterDuplicate($"Duplicate ERP weekly declaration detected for {row.EmployeeName} - {row.WeekStart:yyyy-MM-dd}.");
-                        continue;
-                    }
-
-                    if (existing.TryGetValue((row.WeekStart, row.EmployeeId), out var entity))
-                    {
-                        if (entity.DeclaredHours != row.DeclaredHours)
-                        {
-                            entity.DeclaredHours = row.DeclaredHours;
-                            entity.LoadUtc = loadUtc;
-                            entity.CreatedUtc = DateTime.UtcNow;
-                            summary.IncrementUpdated();
-                        }
-                        else
-                        {
-                            summary.RegisterSkip($"ERP weekly declaration unchanged for {row.EmployeeName} - {row.WeekStart:yyyy-MM-dd}.");
-                        }
-
-                        continue;
-                    }
-
-                    _db.FactDeclaredErpWeeks.Add(new FactDeclaredErpWeek
-                    {
-                        SourceSystemId = _sourceId,
-                        MeasurementPeriodId = measurementPeriodId,
-                        WeekStartDate = row.WeekStart,
-                        EngagementId = engagementId,
-                        EmployeeId = row.EmployeeId,
-                        DeclaredHours = row.DeclaredHours,
-                        LoadUtc = loadUtc,
-                        CreatedUtc = DateTime.UtcNow
-                    });
-                    summary.IncrementInserted();
+                    summary.RegisterSkip("Skipped weekly declaration rows without engagement id.");
+                    continue;
                 }
-            }
-            else
-            {
-                var existing = _db.FactDeclaredRetainWeeks
-                    .Where(x => x.EngagementId == engagementId && x.MeasurementPeriodId == measurementPeriodId && weeks.Contains(x.WeekStartDate) && employees.Contains(x.EmployeeId))
-                    .ToDictionary(x => (x.WeekStartDate, x.EmployeeId));
 
-                var seen = new HashSet<(DateOnly WeekStart, ulong EmployeeId)>();
-                foreach (var row in prepared)
+                var engagementId = _ids.EnsureEngagement(engagementKey!);
+                var prepared = PrepareRows(group.ToList());
+                if (prepared.Count == 0)
                 {
-                    if (!seen.Add((row.WeekStart, row.EmployeeId)))
-                    {
-                        summary.RegisterDuplicate($"Duplicate Retain declaration detected for {row.EmployeeName} - {row.WeekStart:yyyy-MM-dd}.");
-                        continue;
-                    }
+                    summary.AddInfo($"No valid weekly declaration rows found for engagement {engagementId}.");
+                    continue;
+                }
 
-                    if (existing.TryGetValue((row.WeekStart, row.EmployeeId), out var entity))
-                    {
-                        if (entity.DeclaredHours != row.DeclaredHours)
+                var uniqueKeys = prepared.Select(r => (r.WeekStart, r.EmployeeId)).ToHashSet();
+                var weeks = uniqueKeys.Select(k => k.WeekStart).Distinct().ToList();
+                var employees = uniqueKeys.Select(k => k.EmployeeId).Distinct().ToList();
+
+                if (_isErp)
+                {
+                    ProcessWeeklyRows(summary, prepared, () => _db.FactDeclaredErpWeeks
+                        .Where(x => x.EngagementId == engagementId && x.MeasurementPeriodId == measurementPeriodId && weeks.Contains(x.WeekStartDate) && employees.Contains(x.EmployeeId))
+                        .ToDictionary(x => (x.WeekStartDate, x.EmployeeId)),
+                        (row, entity) =>
                         {
-                            entity.DeclaredHours = row.DeclaredHours;
-                            entity.LoadUtc = loadUtc;
-                            entity.CreatedUtc = DateTime.UtcNow;
-                            summary.IncrementUpdated();
-                        }
-                        else
+                            if (entity != null)
+                            {
+                                if (entity.DeclaredHours != row.DeclaredHours)
+                                {
+                                    entity.DeclaredHours = row.DeclaredHours;
+                                    entity.LoadUtc = loadUtc;
+                                    entity.CreatedUtc = DateTime.UtcNow;
+                                    summary.IncrementUpdated();
+                                }
+                                else
+                                {
+                                    summary.RegisterSkip($"ERP weekly declaration unchanged for {row.EmployeeName} - {row.WeekStart:yyyy-MM-dd}.");
+                                }
+
+                                return;
+                            }
+
+                            _db.FactDeclaredErpWeeks.Add(new FactDeclaredErpWeek
+                            {
+                                SourceSystemId = _sourceId,
+                                MeasurementPeriodId = measurementPeriodId,
+                                WeekStartDate = row.WeekStart,
+                                EngagementId = engagementId,
+                                EmployeeId = row.EmployeeId,
+                                DeclaredHours = row.DeclaredHours,
+                                LoadUtc = loadUtc,
+                                CreatedUtc = DateTime.UtcNow
+                            });
+                            summary.IncrementInserted();
+                        });
+                }
+                else
+                {
+                    ProcessWeeklyRows(summary, prepared, () => _db.FactDeclaredRetainWeeks
+                        .Where(x => x.EngagementId == engagementId && x.MeasurementPeriodId == measurementPeriodId && weeks.Contains(x.WeekStartDate) && employees.Contains(x.EmployeeId))
+                        .ToDictionary(x => (x.WeekStartDate, x.EmployeeId)),
+                        (row, entity) =>
                         {
-                            summary.RegisterSkip($"Retain declaration unchanged for {row.EmployeeName} - {row.WeekStart:yyyy-MM-dd}.");
-                        }
+                            if (entity != null)
+                            {
+                                if (entity.DeclaredHours != row.DeclaredHours)
+                                {
+                                    entity.DeclaredHours = row.DeclaredHours;
+                                    entity.LoadUtc = loadUtc;
+                                    entity.CreatedUtc = DateTime.UtcNow;
+                                    summary.IncrementUpdated();
+                                }
+                                else
+                                {
+                                    summary.RegisterSkip($"Retain declaration unchanged for {row.EmployeeName} - {row.WeekStart:yyyy-MM-dd}.");
+                                }
 
-                        continue;
-                    }
+                                return;
+                            }
 
-                    _db.FactDeclaredRetainWeeks.Add(new FactDeclaredRetainWeek
-                    {
-                        SourceSystemId = _sourceId,
-                        MeasurementPeriodId = measurementPeriodId,
-                        WeekStartDate = row.WeekStart,
-                        EngagementId = engagementId,
-                        EmployeeId = row.EmployeeId,
-                        DeclaredHours = row.DeclaredHours,
-                        LoadUtc = loadUtc,
-                        CreatedUtc = DateTime.UtcNow
-                    });
-                    summary.IncrementInserted();
+                            _db.FactDeclaredRetainWeeks.Add(new FactDeclaredRetainWeek
+                            {
+                                SourceSystemId = _sourceId,
+                                MeasurementPeriodId = measurementPeriodId,
+                                WeekStartDate = row.WeekStart,
+                                EngagementId = engagementId,
+                                EmployeeId = row.EmployeeId,
+                                DeclaredHours = row.DeclaredHours,
+                                LoadUtc = loadUtc,
+                                CreatedUtc = DateTime.UtcNow
+                            });
+                            summary.IncrementInserted();
+                        });
                 }
             }
 
             return summary;
+        }
+
+        private void ProcessWeeklyRows(
+            OperationSummary summary,
+            List<PreparedWeeklyRow> prepared,
+            Func<Dictionary<(DateOnly WeekStart, ulong EmployeeId), FactDeclaredErpWeek>> erpFetcher,
+            Action<PreparedWeeklyRow, FactDeclaredErpWeek?> apply)
+        {
+            var seen = new HashSet<(DateOnly WeekStart, ulong EmployeeId)>();
+            var existing = erpFetcher();
+            foreach (var row in prepared)
+            {
+                if (!seen.Add((row.WeekStart, row.EmployeeId)))
+                {
+                    summary.RegisterDuplicate($"Duplicate declaration detected for {row.EmployeeName} - {row.WeekStart:yyyy-MM-dd}.");
+                    continue;
+                }
+
+                existing.TryGetValue((row.WeekStart, row.EmployeeId), out var entity);
+                apply(row, entity);
+            }
+        }
+
+        private void ProcessWeeklyRows(
+            OperationSummary summary,
+            List<PreparedWeeklyRow> prepared,
+            Func<Dictionary<(DateOnly WeekStart, ulong EmployeeId), FactDeclaredRetainWeek>> retainFetcher,
+            Action<PreparedWeeklyRow, FactDeclaredRetainWeek?> apply)
+        {
+            var seen = new HashSet<(DateOnly WeekStart, ulong EmployeeId)>();
+            var existing = retainFetcher();
+            foreach (var row in prepared)
+            {
+                if (!seen.Add((row.WeekStart, row.EmployeeId)))
+                {
+                    summary.RegisterDuplicate($"Duplicate declaration detected for {row.EmployeeName} - {row.WeekStart:yyyy-MM-dd}.");
+                    continue;
+                }
+
+                existing.TryGetValue((row.WeekStart, row.EmployeeId), out var entity);
+                apply(row, entity);
+            }
         }
 
         private List<PreparedWeeklyRow> PrepareRows(IReadOnlyList<WeeklyDeclarationRow> rows)

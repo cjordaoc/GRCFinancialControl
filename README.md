@@ -1,6 +1,8 @@
 # GRC Financial Control – Functional Specification
 
 ## What changed
+- 2025-09-19 12:58 UTC — Clarified database alignment steps for measurement periods, fact foreign keys, and engagement column widths.
+- 2025-09-20 17:10 UTC — Delivered engagement CRUD UI, measurement period activation via SQLite parameters, and aligned MySQL scripts for measurement_periods + measurement_period_id columns.
 - 2025-09-19 21:45 UTC — Integrated UploadRunner services, shared Excel parsers, and the upload summary grid to enforce deterministic multi-file batches and clearer results.
 - 2025-09-18 19:55 UTC — Created baseline functional specification, documented upload behaviors, data flows, environment setup, and maintenance rules.
 
@@ -65,7 +67,8 @@ Dialog behavior:
 - Execute the same validation/parsing/mapping steps with a single `UploadRunner` work item and per-file summary entry.
 
 ### Master Data Forms
-- **Measurement Periods**: Maintain ID, description, start date, and end date. Validate contiguous/non-overlapping ranges before saving. Provide CRUD operations synced to MySQL while caching lookups locally.
+- **Engagements**: Maintain engagement ID, name, partner, manager, and opening margin. Edits occur in dedicated text boxes; the grid is read-only and selecting a row hydrates the editors. Validation enforces required fields and keeps opening margin within -100.000 to +100.000 before issuing synchronous insert/update/delete operations.
+- **Measurement Periods**: Maintain description, start date, and end date with synchronous CRUD against MySQL. The read-only grid lists all periods, activation writes the selected `period_id` to SQLite (`parameters` table under `SelectedMeasurePeriod`), and deleting an active period prompts the operator to clear the local selection. Start/end validation prevents invalid ranges.
 - **Fiscal Year**: Maintain fiscal year ID, description, start date, and end date. Enforce chronological consistency and guard against overlapping fiscal years.
 
 ### Fact Tables & Measurement Period Linking
@@ -107,6 +110,7 @@ Dialog behavior:
 - Schema evolution:
   - Update EF Core models and generate migration scripts.
   - Place CREATE/ALTER SQL scripts in `DatabaseScripts/` with clear naming (e.g., `mysql/2025-09-18_AddMarginFact.sql`).
+  - Run `DatabaseScripts/20250920_master_data_measurement_periods.sql` to create `measurement_periods`, align `dim_engagement`, and add `measurement_period_id` columns plus the lean `fact_engagement_margin` table.
   - Document schema diffs in both README and commit messages.
   - Composite index script `DatabaseScripts/20250919_add_fact_indexes.sql` adds OLTP indexes for ETC, plan, weekly declarations, and charges tables.
 

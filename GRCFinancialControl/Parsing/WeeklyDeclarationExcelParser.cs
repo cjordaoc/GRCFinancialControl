@@ -11,10 +11,11 @@ namespace GRCFinancialControl.Parsing
     {
         private static readonly HeaderSchema Schema = new(new Dictionary<string, string[]>
         {
+            ["ENGAGEMENT"] = new[] { "ENGAGEMENT", "ENGAGEMENT ID", "ENG_ID", "PROJECT" },
             ["EMPLOYEE"] = new[] { "EMPLOYEE", "EMPLOYEE NAME", "RESOURCE", "NOME" },
             ["WEEK"] = new[] { "WEEK START", "WEEK OF", "WEEK", "DATA INICIO", "INICIO" },
             ["HOURS"] = new[] { "DECLARED HOURS", "HOURS", "ALLOCATED HOURS", "HORAS" }
-        }, "EMPLOYEE", "WEEK", "HOURS");
+        }, "ENGAGEMENT", "EMPLOYEE", "WEEK", "HOURS");
 
         public ExcelParseResult<WeeklyDeclarationRow> Parse(string filePath)
         {
@@ -41,6 +42,13 @@ namespace GRCFinancialControl.Parsing
                     continue;
                 }
 
+                var engagementId = GetCellString(row.Cell(headers["ENGAGEMENT"]));
+                if (string.IsNullOrWhiteSpace(engagementId))
+                {
+                    result.IncrementSkipped($"Row {row.RowNumber()}: Missing engagement id.");
+                    continue;
+                }
+
                 var employeeName = GetCellString(row.Cell(headers["EMPLOYEE"]));
                 if (string.IsNullOrWhiteSpace(employeeName))
                 {
@@ -64,6 +72,7 @@ namespace GRCFinancialControl.Parsing
 
                 result.AddRow(new WeeklyDeclarationRow
                 {
+                    EngagementId = engagementId,
                     EmployeeName = employeeName,
                     WeekStart = normalizedWeek,
                     DeclaredHours = hours

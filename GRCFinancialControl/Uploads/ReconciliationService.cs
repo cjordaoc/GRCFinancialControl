@@ -7,9 +7,9 @@ namespace GRCFinancialControl.Uploads
 {
     public sealed class ReconciliationService
     {
-        private readonly AppDbContext _db;
+        private readonly MySqlDbContext _db;
 
-        public ReconciliationService(AppDbContext db)
+        public ReconciliationService(MySqlDbContext db)
         {
             _db = db ?? throw new ArgumentNullException(nameof(db));
         }

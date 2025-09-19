@@ -11,7 +11,7 @@ namespace GRCFinancialControl.Uploads
             int rowsParsed,
             IReadOnlyList<string> parseWarnings,
             IReadOnlyList<string> parseErrors,
-            Func<AppDbContext, OperationSummary> execute,
+            Func<MySqlDbContext, OperationSummary> execute,
             bool disableChangeDetection = true)
         {
             FilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
@@ -26,7 +26,7 @@ namespace GRCFinancialControl.Uploads
         public int RowsParsed { get; }
         public IReadOnlyList<string> ParseWarnings { get; }
         public IReadOnlyList<string> ParseErrors { get; }
-        public Func<AppDbContext, OperationSummary> Execute { get; }
+        public Func<MySqlDbContext, OperationSummary> Execute { get; }
         public bool DisableChangeDetection { get; }
     }
 }

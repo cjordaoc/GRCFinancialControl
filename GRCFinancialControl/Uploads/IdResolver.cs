@@ -8,7 +8,7 @@ namespace GRCFinancialControl.Uploads
 {
     public sealed class IdResolver
     {
-        private readonly AppDbContext _db;
+        private readonly MySqlDbContext _db;
 
         private readonly Dictionary<string, ushort> _sourceSystemCache = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, string> _engagementCache = new(StringComparer.OrdinalIgnoreCase);
@@ -17,7 +17,7 @@ namespace GRCFinancialControl.Uploads
         private readonly Dictionary<string, ulong> _employeeAliasCache = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, ulong> _employeeCache = new(StringComparer.OrdinalIgnoreCase);
 
-        public IdResolver(AppDbContext db)
+        public IdResolver(MySqlDbContext db)
         {
             _db = db ?? throw new ArgumentNullException(nameof(db));
         }

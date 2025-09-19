@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using GRCFinancialControl.Common;
 using GRCFinancialControl.Data;
 using GRCFinancialControl.Parsing;
@@ -8,18 +9,18 @@ namespace GRCFinancialControl.Uploads
 {
     public sealed class EtcUploadService
     {
-        private readonly AppDbContext _db;
+        private readonly MySqlDbContext _db;
         private readonly IdResolver _ids;
         private readonly ushort _sourceId;
 
-        public EtcUploadService(AppDbContext db)
+        public EtcUploadService(MySqlDbContext db)
         {
             _db = db ?? throw new ArgumentNullException(nameof(db));
             _ids = new IdResolver(db);
             _sourceId = _ids.EnsureSourceSystem("ETC", "Engagement ETC Snapshot");
         }
 
-        public OperationSummary Load(ushort measurementPeriodId, string snapshotLabel, string engagementId, IReadOnlyList<EtcRow> rows)
+        public OperationSummary Load(ushort measurementPeriodId, string snapshotLabel, IReadOnlyList<EtcRow> rows)
         {
             ArgumentNullException.ThrowIfNull(rows);
 
@@ -31,49 +32,58 @@ namespace GRCFinancialControl.Uploads
             }
 
             var trimmedLabel = StringNormalizer.TrimToNull(snapshotLabel) ?? throw new ArgumentException("Snapshot label is required.", nameof(snapshotLabel));
-            _ids.EnsureEngagement(engagementId);
-
             var loadUtc = DateTime.UtcNow;
-            var entities = new List<FactEtcSnapshot>(rows.Count);
-            foreach (var row in rows)
+
+            foreach (var group in rows.GroupBy(r => StringNormalizer.TrimToNull(r.EngagementId), StringComparer.OrdinalIgnoreCase))
             {
-                var employeeName = StringNormalizer.TrimToNull(row.EmployeeName);
-                if (employeeName == null)
+                var engagementKey = group.Key;
+                if (string.IsNullOrWhiteSpace(engagementKey))
                 {
-                    summary.RegisterSkip("Skipped row with missing employee name.");
+                    summary.RegisterSkip("Skipped rows without engagement id.");
                     continue;
                 }
 
-                var employeeId = _ids.EnsureEmployee(_sourceId, employeeName);
-                uint? levelId = null;
-                if (!string.IsNullOrWhiteSpace(row.RawLevel))
-                {
-                    levelId = _ids.EnsureLevel(_sourceId, row.RawLevel);
-                }
+                var engagementId = _ids.EnsureEngagement(engagementKey!);
 
-                entities.Add(new FactEtcSnapshot
+                foreach (var row in group)
                 {
-                    SnapshotLabel = trimmedLabel,
-                    LoadUtc = loadUtc,
-                    SourceSystemId = _sourceId,
-                    MeasurementPeriodId = measurementPeriodId,
-                    EngagementId = engagementId,
-                    EmployeeId = employeeId,
-                    LevelId = levelId,
-                    HoursIncurred = row.HoursIncurred,
-                    EtcRemaining = row.EtcRemaining,
-                    CreatedUtc = DateTime.UtcNow
-                });
-                summary.IncrementInserted();
+                    var employeeName = StringNormalizer.TrimToNull(row.EmployeeName);
+                    if (employeeName == null)
+                    {
+                        summary.RegisterSkip("Skipped row with missing employee name.");
+                        continue;
+                    }
+
+                    var employeeId = _ids.EnsureEmployee(_sourceId, employeeName);
+                    uint? levelId = null;
+                    if (!string.IsNullOrWhiteSpace(row.RawLevel))
+                    {
+                        levelId = _ids.EnsureLevel(_sourceId, row.RawLevel);
+                    }
+
+                    _db.FactEtcSnapshots.Add(new FactEtcSnapshot
+                    {
+                        SnapshotLabel = trimmedLabel,
+                        LoadUtc = loadUtc,
+                        SourceSystemId = _sourceId,
+                        MeasurementPeriodId = measurementPeriodId,
+                        EngagementId = engagementId,
+                        EmployeeId = employeeId,
+                        LevelId = levelId,
+                        HoursIncurred = row.HoursIncurred,
+                        EtcRemaining = row.EtcRemaining,
+                        CreatedUtc = DateTime.UtcNow
+                    });
+
+                    summary.IncrementInserted();
+                }
             }
 
-            if (entities.Count == 0)
+            if (summary.Inserted == 0)
             {
                 summary.AddInfo("No valid ETC rows to insert.");
                 return summary;
             }
-
-            _db.FactEtcSnapshots.AddRange(entities);
             return summary;
         }
     }

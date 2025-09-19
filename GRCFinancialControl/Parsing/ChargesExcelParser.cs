@@ -10,11 +10,12 @@ namespace GRCFinancialControl.Parsing
     {
         private static readonly HeaderSchema Schema = new(new Dictionary<string, string[]>
         {
+            ["ENGAGEMENT"] = new[] { "ENGAGEMENT", "ENGAGEMENT ID", "ENG_ID", "PROJECT" },
             ["EMPLOYEE"] = new[] { "EMPLOYEE", "EMPLOYEE NAME", "RESOURCE", "NOME" },
             ["DATE"] = new[] { "DATE", "CHARGE DATE", "DATA", "DAY" },
             ["HOURS"] = new[] { "HOURS", "HOURS CHARGED", "HORAS", "QTD HORAS" },
             ["COST"] = new[] { "COST", "AMOUNT", "COST AMOUNT", "VALOR" }
-        }, "EMPLOYEE", "DATE", "HOURS");
+        }, "ENGAGEMENT", "EMPLOYEE", "DATE", "HOURS");
 
         public ExcelParseResult<ChargeRow> Parse(string filePath)
         {
@@ -38,6 +39,13 @@ namespace GRCFinancialControl.Parsing
             {
                 if (IsRowEmpty(row))
                 {
+                    continue;
+                }
+
+                var engagementId = GetCellString(row.Cell(headers["ENGAGEMENT"]));
+                if (string.IsNullOrWhiteSpace(engagementId))
+                {
+                    result.IncrementSkipped($"Row {row.RowNumber()}: Missing engagement id.");
                     continue;
                 }
 
@@ -75,6 +83,7 @@ namespace GRCFinancialControl.Parsing
 
                 result.AddRow(new ChargeRow
                 {
+                    EngagementId = engagementId,
                     EmployeeName = employeeName,
                     ChargeDate = chargeDate,
                     Hours = hours,

@@ -9,18 +9,18 @@ namespace GRCFinancialControl.Uploads
 {
     public sealed class ChargesUploadService
     {
-        private readonly AppDbContext _db;
+        private readonly MySqlDbContext _db;
         private readonly IdResolver _ids;
         private readonly ushort _sourceId;
 
-        public ChargesUploadService(AppDbContext db)
+        public ChargesUploadService(MySqlDbContext db)
         {
             _db = db ?? throw new ArgumentNullException(nameof(db));
             _ids = new IdResolver(db);
             _sourceId = _ids.EnsureSourceSystem("CHARGES", "Daily Timesheet Charges");
         }
 
-        public OperationSummary Insert(ushort measurementPeriodId, string engagementId, IReadOnlyList<ChargeRow> rows)
+        public OperationSummary Insert(ushort measurementPeriodId, IReadOnlyList<ChargeRow> rows)
         {
             ArgumentNullException.ThrowIfNull(rows);
 
@@ -31,7 +31,6 @@ namespace GRCFinancialControl.Uploads
                 return summary;
             }
 
-            _ids.EnsureEngagement(engagementId);
             var prepared = PrepareRows(rows, summary);
             if (prepared.Count == 0)
             {
@@ -39,45 +38,50 @@ namespace GRCFinancialControl.Uploads
                 return summary;
             }
 
-            var keys = prepared.Select(r => (r.ChargeDate, r.EmployeeId)).ToList();
-            var uniqueDates = keys.Select(k => k.ChargeDate).Distinct().ToList();
-            var uniqueEmployees = keys.Select(k => k.EmployeeId).Distinct().ToList();
-
-            var existing = _db.FactTimesheetCharges
-                .Where(c => c.EngagementId == engagementId && c.MeasurementPeriodId == measurementPeriodId && uniqueDates.Contains(c.ChargeDate) && uniqueEmployees.Contains(c.EmployeeId))
-                .ToDictionary(c => (c.ChargeDate, c.EmployeeId));
-
-            var seen = new HashSet<(DateOnly ChargeDate, ulong EmployeeId)>();
             var loadUtc = DateTime.UtcNow;
-
-            foreach (var row in prepared)
+            foreach (var group in prepared.GroupBy(r => r.EngagementId, StringComparer.OrdinalIgnoreCase))
             {
-                if (!seen.Add((row.ChargeDate, row.EmployeeId)))
+                var engagementId = _ids.EnsureEngagement(group.Key);
+                var groupRows = group.ToList();
+                var keys = groupRows.Select(r => (r.ChargeDate, r.EmployeeId)).ToList();
+                var uniqueDates = keys.Select(k => k.ChargeDate).Distinct().ToList();
+                var uniqueEmployees = keys.Select(k => k.EmployeeId).Distinct().ToList();
+
+                var existing = _db.FactTimesheetCharges
+                    .Where(c => c.EngagementId == engagementId && c.MeasurementPeriodId == measurementPeriodId && uniqueDates.Contains(c.ChargeDate) && uniqueEmployees.Contains(c.EmployeeId))
+                    .ToDictionary(c => (c.ChargeDate, c.EmployeeId));
+
+                var seen = new HashSet<(DateOnly ChargeDate, ulong EmployeeId)>();
+
+                foreach (var row in groupRows)
                 {
-                    summary.RegisterDuplicate($"Duplicate charge detected in input for {row.EmployeeName} on {row.ChargeDate:yyyy-MM-dd}.");
-                    continue;
+                    if (!seen.Add((row.ChargeDate, row.EmployeeId)))
+                    {
+                        summary.RegisterDuplicate($"Duplicate charge detected in input for {row.EmployeeName} on {row.ChargeDate:yyyy-MM-dd}.");
+                        continue;
+                    }
+
+                    if (existing.ContainsKey((row.ChargeDate, row.EmployeeId)))
+                    {
+                        summary.RegisterDuplicate($"Charge already exists for {row.EmployeeName} on {row.ChargeDate:yyyy-MM-dd}. Skipped.");
+                        continue;
+                    }
+
+                    _db.FactTimesheetCharges.Add(new FactTimesheetCharge
+                    {
+                        SourceSystemId = _sourceId,
+                        MeasurementPeriodId = measurementPeriodId,
+                        ChargeDate = row.ChargeDate,
+                        EngagementId = engagementId,
+                        EmployeeId = row.EmployeeId,
+                        HoursCharged = row.Hours,
+                        CostAmount = row.CostAmount,
+                        LoadUtc = loadUtc,
+                        CreatedUtc = DateTime.UtcNow
+                    });
+
+                    summary.IncrementInserted();
                 }
-
-                if (existing.ContainsKey((row.ChargeDate, row.EmployeeId)))
-                {
-                    summary.RegisterDuplicate($"Charge already exists for {row.EmployeeName} on {row.ChargeDate:yyyy-MM-dd}. Skipped.");
-                    continue;
-                }
-
-                _db.FactTimesheetCharges.Add(new FactTimesheetCharge
-                {
-                    SourceSystemId = _sourceId,
-                    MeasurementPeriodId = measurementPeriodId,
-                    ChargeDate = row.ChargeDate,
-                    EngagementId = engagementId,
-                    EmployeeId = row.EmployeeId,
-                    HoursCharged = row.Hours,
-                    CostAmount = row.CostAmount,
-                    LoadUtc = loadUtc,
-                    CreatedUtc = DateTime.UtcNow
-                });
-
-                summary.IncrementInserted();
             }
 
             return summary;
@@ -90,6 +94,13 @@ namespace GRCFinancialControl.Uploads
 
             foreach (var row in rows)
             {
+                var engagementId = StringNormalizer.TrimToNull(row.EngagementId);
+                if (engagementId == null)
+                {
+                    summary.RegisterSkip("Skipped charge row with missing engagement id.");
+                    continue;
+                }
+
                 var employeeName = StringNormalizer.TrimToNull(row.EmployeeName);
                 if (employeeName == null)
                 {
@@ -106,6 +117,7 @@ namespace GRCFinancialControl.Uploads
 
                 prepared.Add(new PreparedChargeRow
                 {
+                    EngagementId = engagementId,
                     ChargeDate = row.ChargeDate,
                     EmployeeId = employeeId,
                     EmployeeName = employeeName,
@@ -119,6 +131,7 @@ namespace GRCFinancialControl.Uploads
 
         private sealed class PreparedChargeRow
         {
+            public string EngagementId { get; init; } = string.Empty;
             public DateOnly ChargeDate { get; init; }
             public ulong EmployeeId { get; init; }
             public string EmployeeName { get; init; } = string.Empty;

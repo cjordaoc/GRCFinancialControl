@@ -18,14 +18,30 @@ namespace GRCFinancialControl.Data
         [Required, MaxLength(100)] public string SystemName { get; set; } = null!;
     }
 
-    public partial class DimMeasurementPeriod
+    [Index(nameof(Description))]
+    public class MeasurementPeriod
     {
-        [Key] public ushort MeasurementPeriodId { get; set; }
-        [Required, MaxLength(100)] public string Description { get; set; } = null!;
-        [Required] public DateOnly StartDate { get; set; }
-        [Required] public DateOnly EndDate { get; set; }
-        public bool IsActive { get; set; }
+        [Key]
+        [Column("period_id")]
+        public ushort PeriodId { get; set; }
+
+        [Required]
+        [MaxLength(255)]
+        [Column("description")]
+        public string Description { get; set; } = string.Empty;
+
+        [Required]
+        [Column("start_date")]
+        public DateOnly StartDate { get; set; }
+
+        [Required]
+        [Column("end_date")]
+        public DateOnly EndDate { get; set; }
+
+        [Column("created_utc")]
         public DateTime CreatedUtc { get; set; }
+
+        [Column("updated_utc")]
         public DateTime UpdatedUtc { get; set; }
     }
 
@@ -42,15 +58,40 @@ namespace GRCFinancialControl.Data
 
     public class DimEngagement
     {
-        [Key, MaxLength(64)] public string EngagementId { get; set; } = null!;
-        [MaxLength(255)] public string? EngagementTitle { get; set; }
+        [Key]
+        [MaxLength(64)]
+        [Column("engagement_id")]
+        public string EngagementId { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(255)]
+        [Column("engagement_title")]
+        public string EngagementTitle { get; set; } = string.Empty;
+
+        [Column("is_active")]
         public bool IsActive { get; set; } = true;
-        [Column(TypeName = "text")] public string? EngagementPartner { get; set; }
-        [Column(TypeName = "text")] public string? EngagementManager { get; set; }
-        public double OpeningMargin { get; set; }
+
+        [MaxLength(255)]
+        [Column("engagement_partner")]
+        public string? EngagementPartner { get; set; }
+
+        [MaxLength(255)]
+        [Column("engagement_manager")]
+        public string? EngagementManager { get; set; }
+
+        [Column("opening_margin", TypeName = "decimal(6,3)")]
+        public decimal OpeningMargin { get; set; }
+
+        [Column("current_margin")]
         public double CurrentMargin { get; set; }
+
+        [Column("last_margin_update_date")]
         public DateTime? LastMarginUpdateDate { get; set; }
+
+        [Column("created_utc")]
         public DateTime CreatedUtc { get; set; }
+
+        [Column("updated_utc")]
         public DateTime UpdatedUtc { get; set; }
     }
 
@@ -107,7 +148,9 @@ namespace GRCFinancialControl.Data
         [Key] public ulong PlanId { get; set; }
         [Required] public DateTime LoadUtc { get; set; }
         [Required] public ushort SourceSystemId { get; set; }
-        [Required] public ushort MeasurementPeriodId { get; set; }
+        [Required]
+        [Column("measurement_period_id")]
+        public ushort MeasurementPeriodId { get; set; }
         [Required, MaxLength(64)] public string EngagementId { get; set; } = null!;
         [Required] public uint LevelId { get; set; }
         [Required, Column(TypeName = "decimal(12,2)")] public decimal PlannedHours { get; set; }
@@ -121,7 +164,9 @@ namespace GRCFinancialControl.Data
         [Required, MaxLength(100)] public string SnapshotLabel { get; set; } = null!;
         [Required] public DateTime LoadUtc { get; set; }
         [Required] public ushort SourceSystemId { get; set; }
-        [Required] public ushort MeasurementPeriodId { get; set; }
+        [Required]
+        [Column("measurement_period_id")]
+        public ushort MeasurementPeriodId { get; set; }
         [Required, MaxLength(64)] public string EngagementId { get; set; } = null!;
         [Required] public ulong EmployeeId { get; set; }
         public uint? LevelId { get; set; }
@@ -132,7 +177,9 @@ namespace GRCFinancialControl.Data
 
     public class FactEngagementMargin
     {
-        [Required] public ushort MeasurementPeriodId { get; set; }
+        [Required]
+        [Column("measurement_period_id")]
+        public ushort MeasurementPeriodId { get; set; }
         [Required, MaxLength(64)] public string EngagementId { get; set; } = null!;
         [Required, Column(TypeName = "decimal(6,3)")] public decimal MarginValue { get; set; }
     }
@@ -141,7 +188,9 @@ namespace GRCFinancialControl.Data
     {
         [Key] public ulong ErpId { get; set; }
         [Required] public ushort SourceSystemId { get; set; }
-        [Required] public ushort MeasurementPeriodId { get; set; }
+        [Required]
+        [Column("measurement_period_id")]
+        public ushort MeasurementPeriodId { get; set; }
         [Required] public DateOnly WeekStartDate { get; set; }
         [Required, MaxLength(64)] public string EngagementId { get; set; } = null!;
         [Required] public ulong EmployeeId { get; set; }
@@ -154,7 +203,9 @@ namespace GRCFinancialControl.Data
     {
         [Key] public ulong RetainId { get; set; }
         [Required] public ushort SourceSystemId { get; set; }
-        [Required] public ushort MeasurementPeriodId { get; set; }
+        [Required]
+        [Column("measurement_period_id")]
+        public ushort MeasurementPeriodId { get; set; }
         [Required] public DateOnly WeekStartDate { get; set; }
         [Required, MaxLength(64)] public string EngagementId { get; set; } = null!;
         [Required] public ulong EmployeeId { get; set; }
@@ -167,7 +218,9 @@ namespace GRCFinancialControl.Data
     {
         [Key] public ulong ChargeId { get; set; }
         [Required] public ushort SourceSystemId { get; set; }
-        [Required] public ushort MeasurementPeriodId { get; set; }
+        [Required]
+        [Column("measurement_period_id")]
+        public ushort MeasurementPeriodId { get; set; }
         [Required] public DateOnly ChargeDate { get; set; }
         [Required, MaxLength(64)] public string EngagementId { get; set; } = null!;
         [Required] public ulong EmployeeId { get; set; }
@@ -181,7 +234,9 @@ namespace GRCFinancialControl.Data
     {
         [Key] public ulong AuditId { get; set; }
         [Required, MaxLength(100)] public string SnapshotLabel { get; set; } = null!;
-        [Required] public ushort MeasurementPeriodId { get; set; }
+        [Required]
+        [Column("measurement_period_id")]
+        public ushort MeasurementPeriodId { get; set; }
         [Required, MaxLength(64)] public string EngagementId { get; set; } = null!;
         [Required] public ulong EmployeeId { get; set; }
         [Required] public DateOnly LastWeekEndDate { get; set; }
@@ -224,10 +279,10 @@ namespace GRCFinancialControl.Data
         [Column(TypeName = "decimal(56,2)")] public decimal? ActualHours { get; set; }
     }
 
-    public class AppDbContext : DbContext
+    public class MySqlDbContext : DbContext
     {
         public DbSet<DimSourceSystem> DimSourceSystems => Set<DimSourceSystem>();
-        public DbSet<DimMeasurementPeriod> DimMeasurementPeriods => Set<DimMeasurementPeriod>();
+        public DbSet<MeasurementPeriod> MeasurementPeriods => Set<MeasurementPeriod>();
         public DbSet<DimFiscalYear> DimFiscalYears => Set<DimFiscalYear>();
         public DbSet<DimEngagement> DimEngagements => Set<DimEngagement>();
         public DbSet<DimLevel> DimLevels => Set<DimLevel>();
@@ -245,14 +300,15 @@ namespace GRCFinancialControl.Data
         public DbSet<VwLatestEtcPerEmployee> VwLatestEtcPerEmployees => Set<VwLatestEtcPerEmployee>();
         public DbSet<VwPlanVsActualByLevel> VwPlanVsActualByLevels => Set<VwPlanVsActualByLevel>();
 
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+        public MySqlDbContext(DbContextOptions<MySqlDbContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            modelBuilder.Entity<DimMeasurementPeriod>(entity =>
+            modelBuilder.Entity<MeasurementPeriod>(entity =>
             {
-                entity.Property(e => e.Description).HasMaxLength(100);
+                entity.ToTable("measurement_periods");
+                entity.Property(e => e.Description).HasMaxLength(255);
                 entity.Property(e => e.StartDate).HasColumnType("date");
                 entity.Property(e => e.EndDate).HasColumnType("date");
                 entity.Property(e => e.CreatedUtc)
@@ -282,6 +338,7 @@ namespace GRCFinancialControl.Data
 
             modelBuilder.Entity<DimEngagement>(entity =>
             {
+                entity.ToTable("dim_engagement");
                 entity.Property(e => e.CreatedUtc)
                     .HasColumnType("datetime(6)")
                     .HasDefaultValueSql("CURRENT_TIMESTAMP(6)")
@@ -292,6 +349,7 @@ namespace GRCFinancialControl.Data
                     .ValueGeneratedOnAddOrUpdate();
                 entity.Property(e => e.LastMarginUpdateDate)
                     .HasColumnType("datetime(6)");
+                entity.Property(e => e.OpeningMargin).HasPrecision(6, 3);
             });
 
             modelBuilder.Entity<DimLevel>(entity =>

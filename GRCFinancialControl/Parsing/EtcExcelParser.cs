@@ -10,11 +10,12 @@ namespace GRCFinancialControl.Parsing
     {
         private static readonly HeaderSchema Schema = new(new Dictionary<string, string[]>
         {
+            ["ENGAGEMENT"] = new[] { "ENGAGEMENT", "ENGAGEMENT ID", "ENG_ID", "PROJECT" },
             ["EMPLOYEE"] = new[] { "EMPLOYEE", "EMPLOYEE NAME", "NAME", "RESOURCE", "PROFISSIONAL" },
             ["LEVEL"] = new[] { "LEVEL", "RANK", "GRADE", "FUNCAO", "CARGO" },
             ["HOURS_INCURRED"] = new[] { "HOURS INCURRED", "HOURS IN CURRED", "HOURS ACTUAL", "ACTUAL HOURS", "HORAS INCORRIDAS" },
             ["ETC"] = new[] { "ETC REMAINING", "ETC", "REMAINING", "HORAS ETC" }
-        }, "EMPLOYEE", "HOURS_INCURRED", "ETC");
+        }, "ENGAGEMENT", "EMPLOYEE", "HOURS_INCURRED", "ETC");
 
         public EtcParseResult Parse(string filePath)
         {
@@ -38,6 +39,13 @@ namespace GRCFinancialControl.Parsing
             {
                 if (IsRowEmpty(row))
                 {
+                    continue;
+                }
+
+                var engagementId = GetCellString(row.Cell(headers["ENGAGEMENT"]));
+                if (string.IsNullOrWhiteSpace(engagementId))
+                {
+                    result.IncrementSkipped($"Row {row.RowNumber()}: Missing engagement id.");
                     continue;
                 }
 
@@ -66,6 +74,7 @@ namespace GRCFinancialControl.Parsing
 
                 result.AddRow(new EtcRow
                 {
+                    EngagementId = engagementId,
                     EmployeeName = employeeName,
                     RawLevel = rawLevel,
                     HoursIncurred = hoursIncurred,

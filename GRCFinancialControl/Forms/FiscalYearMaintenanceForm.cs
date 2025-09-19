@@ -20,7 +20,7 @@ namespace GRCFinancialControl.Forms
 
         private void LoadFiscalYears()
         {
-            using var context = DbContextFactory.Create(_config);
+            using var context = DbContextFactory.CreateMySqlContext(_config);
             var service = new FiscalYearService(context);
             var years = service.GetAll();
 
@@ -65,7 +65,7 @@ namespace GRCFinancialControl.Forms
 
             try
             {
-                using var context = DbContextFactory.Create(_config);
+                using var context = DbContextFactory.CreateMySqlContext(_config);
                 var service = new FiscalYearService(context);
                 var created = service.Create(editor.FiscalYearDescription, editor.DateFrom, editor.DateTo);
                 LoadFiscalYears();
@@ -93,7 +93,7 @@ namespace GRCFinancialControl.Forms
 
             try
             {
-                using var context = DbContextFactory.Create(_config);
+                using var context = DbContextFactory.CreateMySqlContext(_config);
                 var service = new FiscalYearService(context);
                 var updated = service.Update(selected.FiscalYearId, editor.FiscalYearDescription, editor.DateFrom, editor.DateTo);
                 LoadFiscalYears();
@@ -121,7 +121,7 @@ namespace GRCFinancialControl.Forms
 
             try
             {
-                using var context = DbContextFactory.Create(_config);
+                using var context = DbContextFactory.CreateMySqlContext(_config);
                 var service = new FiscalYearService(context);
                 service.Delete(selected.FiscalYearId);
                 LoadFiscalYears();
@@ -142,7 +142,7 @@ namespace GRCFinancialControl.Forms
 
             try
             {
-                using var context = DbContextFactory.Create(_config);
+                using var context = DbContextFactory.CreateMySqlContext(_config);
                 var service = new FiscalYearService(context);
                 var activated = service.Activate(selected.FiscalYearId);
                 LoadFiscalYears();
