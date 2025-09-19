@@ -70,6 +70,12 @@ namespace GRCFinancialControl.Forms
                 var created = service.Create(editor.FiscalYearDescription, editor.DateFrom, editor.DateTo);
                 LoadFiscalYears();
                 SelectFiscalYear(created.FiscalYearId);
+                MessageBox.Show(
+                    this,
+                    $"Fiscal year '{created.Description}' was created successfully.",
+                    "Fiscal Year Saved",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
