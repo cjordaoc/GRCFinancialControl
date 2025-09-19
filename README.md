@@ -1,16 +1,12 @@
 # GRC Financial Control – Functional Specification
 
 ## What changed
-- 2025-09-20 23:30 UTC — Hardened Excel date parsing to ignore out-of-range OLE Automation values and kept the UploadRunner execution-strategy context alive to prevent disposed `MySqlDbContext` errors during ETC and margin loads.
-- 2025-09-20 21:55 UTC — Enabled EY resourcing, Retain, and ERP workbook ingestion via engagement ID extraction helpers, aligned weekly allocation parsing, and wrapped UploadRunner operations in EF execution strategy retries.
-- 2025-09-20 19:55 UTC — Implemented worksheet targeting preferences, hardened header detection, weekly plan aggregation, enriched ETC capture, and header-driven margin parsing aligned with the harmonized dictionary.
-- 2025-09-20 18:40 UTC — Captured the Excel parser strategy review plus the remediation roadmap for worksheet selection, header normalization, weekly aggregation, ETC capture, and margin coverage.
-- 2025-09-19 14:09 UTC — Reintroduced the upload summary grid and week-ending picker to Form1 so reconciliation uses the selected date and upload batches show per-file results again.
-- 2025-09-19 13:57 UTC — Hardened master-data refresh so engagement/measurement period grids repopulate instantly and documented the new insert confirmation prompts across maintenance forms.
-- 2025-09-19 12:58 UTC — Clarified database alignment steps for measurement periods, fact foreign keys, and engagement column widths.
-- 2025-09-20 17:10 UTC — Delivered engagement CRUD UI, measurement period activation via SQLite parameters, and aligned MySQL scripts for measurement_periods + measurement_period_id columns.
-- 2025-09-19 21:45 UTC — Integrated UploadRunner services, shared Excel parsers, and the upload summary grid to enforce deterministic multi-file batches and clearer results.
-- 2025-09-18 19:55 UTC — Created baseline functional specification, documented upload behaviors, data flows, environment setup, and maintenance rules.
+- 2025-09-21 00:45 UTC — Copied `README.md` into the WinForms build output so the Help dialog can display the packaged specification, and documented the Help workflow.
+- 2025-09-21 00:15 UTC — Moved historical change tracking and error recovery guidance into dedicated `ChangeLog.md` and `Fixes.md` files and linked them from this specification. Review [`ChangeLog.md`](ChangeLog.md) for previous entries.
+
+## Reference documents
+- [`ChangeLog.md`](ChangeLog.md) — consolidated engineering and functional history.
+- [`Fixes.md`](Fixes.md) — mistake catalog and error-handling guidance.
 
 ## Overview and Goals
 GRC Financial Control is a Windows Forms desktop application used by finance and compliance analysts to upload operational workbooks into a centralized MySQL repository while maintaining selected reference data locally in SQLite. The application streamlines ingestion of Margin, ETC, Budget, and other financial datasets, applies deterministic validation/transformation rules, and persists curated facts for enterprise reporting.
@@ -89,7 +85,7 @@ Dialog behavior:
 - **Enhance ETC parsing for personnel and margin metadata.** Capture employee identifiers, normalize levels via the harmonized mapping, and retrieve additional columns such as projected margin percentage, ETC age, and status. Ensure numeric parsing tolerates blank/zero cells and align the output schema with database expectations.
 - **Replace positional margin extraction with header-driven lookups.** Build a `HeaderSchema` for `data.xlsx`/`Export`, covering all margin and overrun columns. Parse decimal percentages robustly (tolerating `%` signs and localized separators) and normalize to decimal fractions. Surface engagement ID/name pairs consistently with the harmonized rules.
 - **Plan dedicated parsers for Retain and 40h debt workbooks.** Model the boolean assignment markers and weekly 40-hour forecasts, reuse the improved header detection, and wire outputs into upload services that honor the SQLite/MySQL split.
-- **Codify tests and documentation.** Add fixture-based unit tests per parser, update the Mistake Catalog with the resolved issues, and document the new behaviors in both this README and `agents.md` so future uploads remain aligned with the harmonized dictionary.
+- **Codify tests and documentation.** Add fixture-based unit tests per parser, update [`Fixes.md`](Fixes.md) with the resolved issues, and document the new behaviors in both this README and `agents.md` so future uploads remain aligned with the harmonized dictionary.
 
 ### Parser Enhancements Implemented (2025-09-20)
 - **Engagement ID helper.** Centralized `(E-\d+)` extraction to reuse across plan, margin, and weekly declaration parsers while preserving surrounding labels for titles.
@@ -126,6 +122,9 @@ All master-data grids refresh automatically after create/update/delete operation
 4. Launch WinForms app via Visual Studio on Windows or `dotnet run -p GRCFinancialControl/GRCFinancialControl.csproj -p:EnableWindowsTargeting=true` when using a compatible environment.
 5. Confirm connectivity to both SQLite and MySQL before attempting uploads.
 
+### Help Menu Reference
+- The **Help → View Help** command opens a tabbed dialog that shows runtime context plus the packaged `README.md`. The project copies the root `README.md` into the build output so operators always see the same specification the engineering team maintains. Update this document whenever functionality changes so the in-app help remains accurate.
+
 ### Upload Procedures
 1. Navigate to **Upload** menu and choose the appropriate submenu.
 2. Review the dialog filter (e.g., `.xlsx`, `.csv`) and select required files.
@@ -136,9 +135,7 @@ All master-data grids refresh automatically after create/update/delete operation
 5. On completion, export or review the summary log for audit.
 
 ### Error Recovery & Logging
-- Each file logs validation and load outcomes to MySQL (central log table) and local text log.
-- Failed files remain isolated; correct source data and rerun only the affected files.
-- Use Mistake Catalog in `agents.md` to record recurring issues and their mitigations.
+See [`Fixes.md`](Fixes.md) for detailed error recovery practices and the accumulated mistake catalog.
 
 ## Database Guide
 - **SQLite**: Stores local application data (connection strings, cached master data snapshots, user preferences). Never push SQLite-only tables to MySQL.
@@ -158,11 +155,11 @@ All master-data grids refresh automatically after create/update/delete operation
 4. **Validator**: Enforce business rules (e.g., totals, mandatory columns, allowable ranges).
 5. **Writer**: Submit an `UploadFileWork` to `UploadRunner` so each file runs in its own transaction with batched `SaveChanges`.
 6. **Status Reporting**: Extend shared summary reporting to capture new metrics if needed.
-7. **Documentation**: Update both `README.md` and `agents.md` (include `What changed` entry and Mistake Catalog references if applicable).
+7. **Documentation**: Update both `README.md` and `agents.md` (include `What changed` entry and reference the relevant updates in [`Fixes.md`](Fixes.md)).
 8. **Testing**: Add smoke tests covering success and failure scenarios; update schema scripts if new tables/columns arise.
 
 ### Updating Documentation with Each Change
 - Review functional impact, update relevant sections, and refresh the `What changed` log with timestamp.
-- Note any new mistakes or lessons learned in the Mistake Catalog (`agents.md`).
+- Note any new mistakes or lessons learned in [`Fixes.md`](Fixes.md).
 - Confirm that operational steps and upload procedures remain accurate after modifications.
 
