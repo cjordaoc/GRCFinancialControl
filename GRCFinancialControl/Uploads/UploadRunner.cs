@@ -43,58 +43,58 @@ namespace GRCFinancialControl.Uploads
                 _logger.LogStart(summary);
 
                 var operationSummary = default(OperationSummary);
-                IExecutionStrategy executionStrategy;
+
                 using (var strategyContext = _contextFactory())
                 {
-                    executionStrategy = strategyContext.Database.CreateExecutionStrategy();
-                }
+                    var executionStrategy = strategyContext.Database.CreateExecutionStrategy();
 
-                try
-                {
-                    executionStrategy.Execute(() =>
+                    try
                     {
-                        using var context = _contextFactory();
-                        var originalDetectChanges = context.ChangeTracker.AutoDetectChangesEnabled;
-                        var changeDetectionDisabled = work.DisableChangeDetection && originalDetectChanges;
-                        if (changeDetectionDisabled)
+                        executionStrategy.Execute(() =>
                         {
-                            context.ChangeTracker.AutoDetectChangesEnabled = false;
-                        }
-
-                        using var transaction = context.Database.BeginTransaction();
-                        try
-                        {
-                            operationSummary = work.Execute(context);
+                            using var context = _contextFactory();
+                            var originalDetectChanges = context.ChangeTracker.AutoDetectChangesEnabled;
+                            var changeDetectionDisabled = work.DisableChangeDetection && originalDetectChanges;
                             if (changeDetectionDisabled)
                             {
-                                context.ChangeTracker.DetectChanges();
+                                context.ChangeTracker.AutoDetectChangesEnabled = false;
                             }
 
-                            context.SaveChanges();
-                            transaction.Commit();
-                        }
-                        catch
-                        {
-                            transaction.Rollback();
-                            throw;
-                        }
-                        finally
-                        {
-                            context.ChangeTracker.AutoDetectChangesEnabled = originalDetectChanges;
-                        }
-                    });
+                            using var transaction = context.Database.BeginTransaction();
+                            try
+                            {
+                                operationSummary = work.Execute(context);
+                                if (changeDetectionDisabled)
+                                {
+                                    context.ChangeTracker.DetectChanges();
+                                }
 
-                    if (operationSummary != null)
-                    {
-                        summary.Apply(operationSummary);
+                                context.SaveChanges();
+                                transaction.Commit();
+                            }
+                            catch
+                            {
+                                transaction.Rollback();
+                                throw;
+                            }
+                            finally
+                            {
+                                context.ChangeTracker.AutoDetectChangesEnabled = originalDetectChanges;
+                            }
+                        });
+
+                        if (operationSummary != null)
+                        {
+                            summary.Apply(operationSummary);
+                        }
+                        summary.MarkSucceeded();
+                        _logger.LogSuccess(summary);
                     }
-                    summary.MarkSucceeded();
-                    _logger.LogSuccess(summary);
-                }
-                catch (Exception ex)
-                {
-                    summary.MarkFailed(ex);
-                    _logger.LogFailure(summary, ex);
+                    catch (Exception ex)
+                    {
+                        summary.MarkFailed(ex);
+                        _logger.LogFailure(summary, ex);
+                    }
                 }
 
                 batch.Add(summary);
