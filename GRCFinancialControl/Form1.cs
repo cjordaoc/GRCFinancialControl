@@ -30,6 +30,7 @@ namespace GRCFinancialControl
 
         private readonly LocalAppRepository _repository;
         private readonly FileDialogService _fileDialogService;
+        private readonly ParametersService _parametersService;
         private readonly BindingList<UploadFileSummary> _uploadSummaries = new();
         private ConnectionDefinition? _defaultConnection;
         private bool _defaultConnectionHealthy;
@@ -39,6 +40,7 @@ namespace GRCFinancialControl
             InitializeComponent();
             _repository = new LocalAppRepository();
             _fileDialogService = new FileDialogService();
+            _parametersService = new ParametersService(() => DbContextFactory.CreateLocalContext(_repository.DatabasePath));
             DataGridViewStyler.ConfigureUploadSummaryGrid(gridUploadSummary);
             gridUploadSummary.DataSource = _uploadSummaries;
             SetDataMenusEnabled(false);
@@ -81,14 +83,25 @@ namespace GRCFinancialControl
             LoadDefaultConnection(reportStatus: true);
         }
 
-        private void measurementPeriodsToolStripMenuItem_Click(object sender, EventArgs e)
+        private void measurementPeriodToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (!TryBuildConfig(out var config))
             {
                 return;
             }
 
-            using var form = new MeasurementPeriodMaintenanceForm(config);
+            using var form = new MeasurementPeriodForm(config, _parametersService);
+            form.ShowDialog(this);
+        }
+
+        private void engagementsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!TryBuildConfig(out var config))
+            {
+                return;
+            }
+
+            using var form = new EngagementForm(config);
             form.ShowDialog(this);
         }
 
@@ -284,21 +297,8 @@ namespace GRCFinancialControl
                 return;
             }
 
-            var engagementId = GetEngagementId();
-            if (engagementId == null)
+            if (!TryGetSelectedMeasurementPeriod(config, out var period))
             {
-                return;
-            }
-
-            DimMeasurementPeriod period;
-            try
-            {
-                using var context = DbContextFactory.Create(config);
-                period = RequireActiveMeasurementPeriod(context);
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex.Message);
                 return;
             }
 
@@ -330,7 +330,7 @@ namespace GRCFinancialControl
                     ctx =>
                     {
                         var service = new PlanUploadService(ctx);
-                        return service.Load(period.MeasurementPeriodId, engagementId, parseResult.Rows);
+                        return service.Load(period.PeriodId, parseResult.Rows);
                     }));
             }
 
@@ -364,21 +364,8 @@ namespace GRCFinancialControl
                 return;
             }
 
-            var engagementId = GetEngagementId();
-            if (engagementId == null)
+            if (!TryGetSelectedMeasurementPeriod(config, out var period))
             {
-                return;
-            }
-
-            DimMeasurementPeriod period;
-            try
-            {
-                using var context = DbContextFactory.Create(config);
-                period = RequireActiveMeasurementPeriod(context);
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex.Message);
                 return;
             }
 
@@ -411,7 +398,7 @@ namespace GRCFinancialControl
                     ctx =>
                     {
                         var service = new EtcUploadService(ctx);
-                        return service.Load(period.MeasurementPeriodId, snapshotLabel, engagementId, parseResult.Rows);
+                        return service.Load(period.PeriodId, snapshotLabel, parseResult.Rows);
                     }));
             }
 
@@ -446,15 +433,8 @@ namespace GRCFinancialControl
                 return;
             }
 
-            DimMeasurementPeriod period;
-            try
+            if (!TryGetSelectedMeasurementPeriod(config, out var period))
             {
-                using var context = DbContextFactory.Create(config);
-                period = RequireActiveMeasurementPeriod(context);
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex.Message);
                 return;
             }
 
@@ -486,7 +466,7 @@ namespace GRCFinancialControl
                     ctx =>
                     {
                         var service = new MarginDataUploadService(ctx);
-                        return service.Load(period.MeasurementPeriodId, parseResult.Rows);
+                        return service.Load(period.PeriodId, parseResult.Rows);
                     }));
             }
 
@@ -521,21 +501,8 @@ namespace GRCFinancialControl
                 return;
             }
 
-            var engagementId = GetEngagementId();
-            if (engagementId == null)
+            if (!TryGetSelectedMeasurementPeriod(config, out var period))
             {
-                return;
-            }
-
-            DimMeasurementPeriod period;
-            try
-            {
-                using var context = DbContextFactory.Create(config);
-                period = RequireActiveMeasurementPeriod(context);
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex.Message);
                 return;
             }
 
@@ -568,7 +535,7 @@ namespace GRCFinancialControl
                     ctx =>
                     {
                         var service = new WeeklyDeclarationUploadService(ctx, isErp);
-                        return service.Upsert(period.MeasurementPeriodId, engagementId, parseResult.Rows);
+                        return service.Upsert(period.PeriodId, parseResult.Rows);
                     })
             };
 
@@ -596,21 +563,8 @@ namespace GRCFinancialControl
                 return;
             }
 
-            var engagementId = GetEngagementId();
-            if (engagementId == null)
+            if (!TryGetSelectedMeasurementPeriod(config, out var period))
             {
-                return;
-            }
-
-            DimMeasurementPeriod period;
-            try
-            {
-                using var context = DbContextFactory.Create(config);
-                period = RequireActiveMeasurementPeriod(context);
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex.Message);
                 return;
             }
 
@@ -643,7 +597,7 @@ namespace GRCFinancialControl
                     ctx =>
                     {
                         var service = new ChargesUploadService(ctx);
-                        return service.Insert(period.MeasurementPeriodId, engagementId, parseResult.Rows);
+                        return service.Insert(period.PeriodId, parseResult.Rows);
                     })
             };
 
@@ -660,15 +614,8 @@ namespace GRCFinancialControl
             var lastWeekEnd = DateOnly.FromDateTime(dtpWeekEnd.Value.Date);
             AppendStatus($"Reconciling ETC vs charges through {lastWeekEnd:yyyy-MM-dd}.");
 
-            DimMeasurementPeriod period;
-            try
+            if (!TryGetSelectedMeasurementPeriod(config, out var period))
             {
-                using var context = DbContextFactory.Create(config);
-                period = RequireActiveMeasurementPeriod(context);
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex.Message);
                 return;
             }
 
@@ -676,9 +623,9 @@ namespace GRCFinancialControl
 
             try
             {
-                using var context = DbContextFactory.Create(config);
+                using var context = DbContextFactory.CreateMySqlContext(config);
                 var service = new ReconciliationService(context);
-                var summary = service.Reconcile(period.MeasurementPeriodId, period.Description.Trim(), lastWeekEnd);
+                var summary = service.Reconcile(period.PeriodId, period.Description.Trim(), lastWeekEnd);
                 AppendStatus(summary.ToString());
                 WriteMessages("INFO", summary.InfoMessages);
                 WriteMessages("WARN", summary.WarningMessages);
@@ -697,15 +644,8 @@ namespace GRCFinancialControl
                 return;
             }
 
-            using var context = DbContextFactory.Create(config);
-            DimMeasurementPeriod period;
-            try
+            if (!TryGetSelectedMeasurementPeriod(config, out var period))
             {
-                period = RequireActiveMeasurementPeriod(context);
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex.Message);
                 return;
             }
 
@@ -714,8 +654,9 @@ namespace GRCFinancialControl
             List<AuditEtcVsCharges> rows;
             try
             {
+                using var context = DbContextFactory.CreateMySqlContext(config);
                 rows = context.AuditEtcVsCharges
-                    .Where(a => a.MeasurementPeriodId == period.MeasurementPeriodId)
+                    .Where(a => a.MeasurementPeriodId == period.PeriodId)
                     .OrderBy(a => a.SnapshotLabel)
                     .ThenBy(a => a.EngagementId)
                     .ThenBy(a => a.EmployeeId)
@@ -794,7 +735,7 @@ namespace GRCFinancialControl
 
         private UploadRunner CreateUploadRunner(AppConfig config)
         {
-            return new UploadRunner(() => DbContextFactory.Create(config), new StatusUploadLogger(AppendStatus));
+            return new UploadRunner(() => DbContextFactory.CreateMySqlContext(config), new StatusUploadLogger(AppendStatus));
         }
 
         private void DisplayBatchSummary(UploadBatchSummary batch)
@@ -872,32 +813,40 @@ namespace GRCFinancialControl
             return true;
         }
 
-        private string? GetEngagementId()
+        private bool TryGetSelectedMeasurementPeriod(AppConfig config, out MeasurementPeriod period)
         {
-            var engagementId = txtEngagementId.Text?.Trim();
-            if (string.IsNullOrWhiteSpace(engagementId))
+            period = null!;
+            var selectedId = _parametersService.GetSelectedMeasurePeriodId();
+            if (string.IsNullOrWhiteSpace(selectedId))
             {
-                ShowError("Engagement ID is required.");
-                return null;
+                MessageBox.Show(this, "No measurement period is selected. Please open Measurement Period… and activate one.", "Measurement Period Required", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return false;
             }
 
-            return engagementId;
-        }
+            if (!ushort.TryParse(selectedId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var periodId))
+            {
+                _parametersService.ClearSelectedMeasurePeriod();
+                MessageBox.Show(this, "The stored measurement period selection is invalid. Please activate a measurement period again.", "Measurement Period Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
 
-        private DimMeasurementPeriod RequireActiveMeasurementPeriod(AppDbContext context)
-        {
+            using var context = DbContextFactory.CreateMySqlContext(config);
             var service = new MeasurementPeriodService(context);
-            if (!service.TryGetSingleActive(out var period, out var error))
+            var fetched = service.LoadPeriod(periodId);
+            if (fetched == null)
             {
-                throw new InvalidOperationException(error ?? "Active measurement period is not configured.");
+                _parametersService.ClearSelectedMeasurePeriod();
+                MessageBox.Show(this, "The previously selected measurement period no longer exists. Please activate a measurement period again.", "Measurement Period Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
             }
 
-            return period!;
+            period = fetched;
+            return true;
         }
 
-        private static string FormatMeasurementPeriod(DimMeasurementPeriod period)
+        private static string FormatMeasurementPeriod(MeasurementPeriod period)
         {
-            return $"{period.Description} ({period.StartDate:yyyy-MM-dd} - {period.EndDate:yyyy-MM-dd})";
+            return period.ToDisplayString();
         }
 
         private void AppendStatus(string message)

@@ -4,6 +4,7 @@ namespace GRCFinancialControl.Parsing
 {
     public sealed class PlanRow
     {
+        public string EngagementId { get; set; } = string.Empty;
         public string RawLevel { get; set; } = string.Empty;
         public decimal PlannedHours { get; set; }
         public decimal? PlannedRate { get; set; }
@@ -11,6 +12,7 @@ namespace GRCFinancialControl.Parsing
 
     public sealed class EtcRow
     {
+        public string EngagementId { get; set; } = string.Empty;
         public string EmployeeName { get; set; } = string.Empty;
         public string RawLevel { get; set; } = string.Empty;
         public decimal HoursIncurred { get; set; }
@@ -29,6 +31,7 @@ namespace GRCFinancialControl.Parsing
 
     public sealed class WeeklyDeclarationRow
     {
+        public string EngagementId { get; set; } = string.Empty;
         public DateOnly WeekStart { get; set; }
         public string EmployeeName { get; set; } = string.Empty;
         public decimal DeclaredHours { get; set; }
@@ -36,6 +39,7 @@ namespace GRCFinancialControl.Parsing
 
     public sealed class ChargeRow
     {
+        public string EngagementId { get; set; } = string.Empty;
         public DateOnly ChargeDate { get; set; }
         public string EmployeeName { get; set; } = string.Empty;
         public decimal Hours { get; set; }

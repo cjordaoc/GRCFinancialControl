@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using GRCFinancialControl.Common;
 using GRCFinancialControl.Data;
 using GRCFinancialControl.Parsing;
@@ -8,18 +9,18 @@ namespace GRCFinancialControl.Uploads
 {
     public sealed class PlanUploadService
     {
-        private readonly AppDbContext _db;
+        private readonly MySqlDbContext _db;
         private readonly IdResolver _ids;
         private readonly ushort _sourceId;
 
-        public PlanUploadService(AppDbContext db)
+        public PlanUploadService(MySqlDbContext db)
         {
             _db = db ?? throw new ArgumentNullException(nameof(db));
             _ids = new IdResolver(db);
             _sourceId = _ids.EnsureSourceSystem("WEEKLY_PRICING", "Initial Engagement Plan");
         }
 
-        public OperationSummary Load(ushort measurementPeriodId, string engagementId, IReadOnlyList<PlanRow> rows)
+        public OperationSummary Load(ushort measurementPeriodId, IReadOnlyList<PlanRow> rows)
         {
             ArgumentNullException.ThrowIfNull(rows);
 
@@ -30,32 +31,42 @@ namespace GRCFinancialControl.Uploads
                 return summary;
             }
 
-            _ids.EnsureEngagement(engagementId);
-
             var loadUtc = DateTime.UtcNow;
             var entities = new List<FactPlanByLevel>(rows.Count);
-            foreach (var row in rows)
+            foreach (var group in rows.GroupBy(r => StringNormalizer.TrimToNull(r.EngagementId), StringComparer.OrdinalIgnoreCase))
             {
-                var levelName = StringNormalizer.TrimToNull(row.RawLevel);
-                if (levelName == null)
+                var engagementKey = group.Key;
+                if (string.IsNullOrWhiteSpace(engagementKey))
                 {
-                    summary.RegisterSkip("Skipped row with missing level.");
+                    summary.RegisterSkip("Skipped plan rows without engagement id.");
                     continue;
                 }
 
-                var levelId = _ids.EnsureLevel(_sourceId, levelName);
-                entities.Add(new FactPlanByLevel
+                var engagementId = _ids.EnsureEngagement(engagementKey!);
+
+                foreach (var row in group)
                 {
-                    LoadUtc = loadUtc,
-                    SourceSystemId = _sourceId,
-                    MeasurementPeriodId = measurementPeriodId,
-                    EngagementId = engagementId,
-                    LevelId = levelId,
-                    PlannedHours = row.PlannedHours,
-                    PlannedRate = row.PlannedRate,
-                    CreatedUtc = DateTime.UtcNow
-                });
-                summary.IncrementInserted();
+                    var levelName = StringNormalizer.TrimToNull(row.RawLevel);
+                    if (levelName == null)
+                    {
+                        summary.RegisterSkip("Skipped row with missing level.");
+                        continue;
+                    }
+
+                    var levelId = _ids.EnsureLevel(_sourceId, levelName);
+                    entities.Add(new FactPlanByLevel
+                    {
+                        LoadUtc = loadUtc,
+                        SourceSystemId = _sourceId,
+                        MeasurementPeriodId = measurementPeriodId,
+                        EngagementId = engagementId,
+                        LevelId = levelId,
+                        PlannedHours = row.PlannedHours,
+                        PlannedRate = row.PlannedRate,
+                        CreatedUtc = DateTime.UtcNow
+                    });
+                    summary.IncrementInserted();
+                }
             }
 
             if (entities.Count == 0)

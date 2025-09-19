@@ -9,10 +9,10 @@ namespace GRCFinancialControl.Uploads
 {
     public sealed class MarginDataUploadService
     {
-        private readonly AppDbContext _db;
+        private readonly MySqlDbContext _db;
         private readonly IdResolver _ids;
 
-        public MarginDataUploadService(AppDbContext db)
+        public MarginDataUploadService(MySqlDbContext db)
         {
             _db = db ?? throw new ArgumentNullException(nameof(db));
             _ids = new IdResolver(db);
@@ -29,7 +29,7 @@ namespace GRCFinancialControl.Uploads
                 return summary;
             }
 
-            if (_db.DimMeasurementPeriods.Find(measurementPeriodId) == null)
+            if (_db.MeasurementPeriods.Find(measurementPeriodId) == null)
             {
                 throw new InvalidOperationException($"Measurement period {measurementPeriodId} was not found.");
             }
@@ -58,11 +58,11 @@ namespace GRCFinancialControl.Uploads
                 var engagementUpdated = false;
                 if (row.OpeningMargin.HasValue && HasDifferentMargin(engagement.OpeningMargin, row.OpeningMargin.Value))
                 {
-                    engagement.OpeningMargin = Convert.ToDouble(Math.Round(row.OpeningMargin.Value, 6, MidpointRounding.AwayFromZero));
+                    engagement.OpeningMargin = Math.Round(row.OpeningMargin.Value, 3, MidpointRounding.AwayFromZero);
                     engagementUpdated = true;
                 }
 
-                if (row.CurrentMargin.HasValue && HasDifferentMargin(engagement.CurrentMargin, row.CurrentMargin.Value))
+                if (row.CurrentMargin.HasValue && HasDifferentMargin(Convert.ToDecimal(engagement.CurrentMargin), row.CurrentMargin.Value))
                 {
                     engagement.CurrentMargin = Convert.ToDouble(Math.Round(row.CurrentMargin.Value, 6, MidpointRounding.AwayFromZero));
                     engagementUpdated = true;
@@ -117,10 +117,10 @@ namespace GRCFinancialControl.Uploads
             return summary;
         }
 
-        private static bool HasDifferentMargin(double currentValue, decimal targetValue)
+        private static bool HasDifferentMargin(decimal currentValue, decimal targetValue)
         {
-            var targetDouble = Convert.ToDouble(Math.Round(targetValue, 6, MidpointRounding.AwayFromZero));
-            return Math.Abs(currentValue - targetDouble) > 0.0005d;
+            var roundedTarget = Math.Round(targetValue, 3, MidpointRounding.AwayFromZero);
+            return Math.Abs(currentValue - roundedTarget) > 0.0005m;
         }
     }
 }

@@ -34,6 +34,7 @@ namespace GRCFinancialControl
             this.databaseConnectionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.maintenanceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.selectDefaultToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.measurementPeriodToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fileSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.uploadsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -44,22 +45,20 @@ namespace GRCFinancialControl
             this.uploadRetainToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.uploadChargesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.masterDataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.measurementPeriodsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.engagementsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fiscalYearsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reportsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reconcileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportAuditToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewHelpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.groupEngagement = new System.Windows.Forms.GroupBox();
+            this.groupReconciliation = new System.Windows.Forms.GroupBox();
             this.dtpWeekEnd = new System.Windows.Forms.DateTimePicker();
             this.lblWeekEnd = new System.Windows.Forms.Label();
-            this.txtEngagementId = new System.Windows.Forms.TextBox();
-            this.lblEngagementId = new System.Windows.Forms.Label();
             this.txtStatus = new System.Windows.Forms.TextBox();
             this.gridUploadSummary = new System.Windows.Forms.DataGridView();
             this.menuMain.SuspendLayout();
-            this.groupEngagement.SuspendLayout();
+            this.groupReconciliation.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridUploadSummary)).BeginInit();
             this.SuspendLayout();
             // 
@@ -81,6 +80,7 @@ namespace GRCFinancialControl
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.databaseConnectionsToolStripMenuItem,
+            this.measurementPeriodToolStripMenuItem,
             this.fileSeparator,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
@@ -180,18 +180,25 @@ namespace GRCFinancialControl
             // masterDataToolStripMenuItem
             //
             this.masterDataToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.measurementPeriodsToolStripMenuItem,
+            this.engagementsToolStripMenuItem,
             this.fiscalYearsToolStripMenuItem});
             this.masterDataToolStripMenuItem.Name = "masterDataToolStripMenuItem";
             this.masterDataToolStripMenuItem.Size = new System.Drawing.Size(86, 20);
             this.masterDataToolStripMenuItem.Text = "Master Data";
             //
-            // measurementPeriodsToolStripMenuItem
+            // measurementPeriodToolStripMenuItem
             //
-            this.measurementPeriodsToolStripMenuItem.Name = "measurementPeriodsToolStripMenuItem";
-            this.measurementPeriodsToolStripMenuItem.Size = new System.Drawing.Size(197, 22);
-            this.measurementPeriodsToolStripMenuItem.Text = "Measurement Periods";
-            this.measurementPeriodsToolStripMenuItem.Click += new System.EventHandler(this.measurementPeriodsToolStripMenuItem_Click);
+            this.measurementPeriodToolStripMenuItem.Name = "measurementPeriodToolStripMenuItem";
+            this.measurementPeriodToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
+            this.measurementPeriodToolStripMenuItem.Text = "Measurement Period...";
+            this.measurementPeriodToolStripMenuItem.Click += new System.EventHandler(this.measurementPeriodToolStripMenuItem_Click);
+            //
+            // engagementsToolStripMenuItem
+            //
+            this.engagementsToolStripMenuItem.Name = "engagementsToolStripMenuItem";
+            this.engagementsToolStripMenuItem.Size = new System.Drawing.Size(197, 22);
+            this.engagementsToolStripMenuItem.Text = "Engagements";
+            this.engagementsToolStripMenuItem.Click += new System.EventHandler(this.engagementsToolStripMenuItem_Click);
             //
             // fiscalYearsToolStripMenuItem
             //
@@ -238,54 +245,37 @@ namespace GRCFinancialControl
             this.viewHelpToolStripMenuItem.Text = "View Help";
             this.viewHelpToolStripMenuItem.Click += new System.EventHandler(this.viewHelpToolStripMenuItem_Click);
             // 
-            // groupEngagement
-            // 
-            this.groupEngagement.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            // groupReconciliation
+            //
+            this.groupReconciliation.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupEngagement.Controls.Add(this.dtpWeekEnd);
-            this.groupEngagement.Controls.Add(this.lblWeekEnd);
-            this.groupEngagement.Controls.Add(this.txtEngagementId);
-            this.groupEngagement.Controls.Add(this.lblEngagementId);
-            this.groupEngagement.Location = new System.Drawing.Point(12, 36);
-            this.groupEngagement.Name = "groupEngagement";
-            this.groupEngagement.Size = new System.Drawing.Size(880, 120);
-            this.groupEngagement.TabIndex = 1;
-            this.groupEngagement.TabStop = false;
-            this.groupEngagement.Text = "Engagement Context";
+            this.groupReconciliation.Controls.Add(this.dtpWeekEnd);
+            this.groupReconciliation.Controls.Add(this.lblWeekEnd);
+            this.groupReconciliation.Location = new System.Drawing.Point(12, 36);
+            this.groupReconciliation.Name = "groupReconciliation";
+            this.groupReconciliation.Size = new System.Drawing.Size(880, 76);
+            this.groupReconciliation.TabIndex = 1;
+            this.groupReconciliation.TabStop = false;
+            this.groupReconciliation.Text = "Reconciliation";
             // 
             // dtpWeekEnd
             // 
             this.dtpWeekEnd.CustomFormat = "yyyy-MM-dd";
             this.dtpWeekEnd.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.dtpWeekEnd.Location = new System.Drawing.Point(138, 67);
+            this.dtpWeekEnd.Location = new System.Drawing.Point(138, 32);
             this.dtpWeekEnd.Name = "dtpWeekEnd";
             this.dtpWeekEnd.Size = new System.Drawing.Size(200, 23);
-            this.dtpWeekEnd.TabIndex = 3;
+            this.dtpWeekEnd.TabIndex = 1;
             //
             // lblWeekEnd
             //
             this.lblWeekEnd.AutoSize = true;
-            this.lblWeekEnd.Location = new System.Drawing.Point(19, 70);
+            this.lblWeekEnd.Location = new System.Drawing.Point(19, 36);
             this.lblWeekEnd.Name = "lblWeekEnd";
             this.lblWeekEnd.Size = new System.Drawing.Size(101, 15);
-            this.lblWeekEnd.TabIndex = 2;
+            this.lblWeekEnd.TabIndex = 0;
             this.lblWeekEnd.Text = "Week End (Reconcile)";
             //
-            // txtEngagementId
-            //
-            this.txtEngagementId.Location = new System.Drawing.Point(138, 27);
-            this.txtEngagementId.Name = "txtEngagementId";
-            this.txtEngagementId.Size = new System.Drawing.Size(320, 23);
-            this.txtEngagementId.TabIndex = 1;
-            // 
-            // lblEngagementId
-            // 
-            this.lblEngagementId.AutoSize = true;
-            this.lblEngagementId.Location = new System.Drawing.Point(19, 30);
-            this.lblEngagementId.Name = "lblEngagementId";
-            this.lblEngagementId.Size = new System.Drawing.Size(88, 15);
-            this.lblEngagementId.TabIndex = 0;
-            this.lblEngagementId.Text = "Engagement ID";
             //
             // gridUploadSummary
             //
@@ -318,7 +308,7 @@ namespace GRCFinancialControl
             this.ClientSize = new System.Drawing.Size(904, 601);
             this.Controls.Add(this.txtStatus);
             this.Controls.Add(this.gridUploadSummary);
-            this.Controls.Add(this.groupEngagement);
+            this.Controls.Add(this.groupReconciliation);
             this.Controls.Add(this.menuMain);
             this.MainMenuStrip = this.menuMain;
             this.MinimumSize = new System.Drawing.Size(920, 640);
@@ -327,8 +317,8 @@ namespace GRCFinancialControl
             this.Text = "GRC Financial Control Loader";
             this.menuMain.ResumeLayout(false);
             this.menuMain.PerformLayout();
-            this.groupEngagement.ResumeLayout(false);
-            this.groupEngagement.PerformLayout();
+            this.groupReconciliation.ResumeLayout(false);
+            this.groupReconciliation.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridUploadSummary)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -352,18 +342,17 @@ namespace GRCFinancialControl
         private System.Windows.Forms.ToolStripMenuItem uploadRetainToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem uploadChargesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem masterDataToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem measurementPeriodsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem measurementPeriodToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem engagementsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fiscalYearsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem reportsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem reconcileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportAuditToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewHelpToolStripMenuItem;
-        private System.Windows.Forms.GroupBox groupEngagement;
+        private System.Windows.Forms.GroupBox groupReconciliation;
         private System.Windows.Forms.DateTimePicker dtpWeekEnd;
         private System.Windows.Forms.Label lblWeekEnd;
-        private System.Windows.Forms.TextBox txtEngagementId;
-        private System.Windows.Forms.Label lblEngagementId;
         private System.Windows.Forms.TextBox txtStatus;
         private System.Windows.Forms.DataGridView gridUploadSummary;
     }

@@ -6,10 +6,10 @@ namespace GRCFinancialControl.Uploads
 {
     public sealed class UploadRunner
     {
-        private readonly Func<AppDbContext> _contextFactory;
+        private readonly Func<MySqlDbContext> _contextFactory;
         private readonly IUploadLogger _logger;
 
-        public UploadRunner(Func<AppDbContext> contextFactory, IUploadLogger? logger = null)
+        public UploadRunner(Func<MySqlDbContext> contextFactory, IUploadLogger? logger = null)
         {
             _contextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
             _logger = logger ?? NullUploadLogger.Instance;

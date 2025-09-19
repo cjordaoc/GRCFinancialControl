@@ -1,5 +1,6 @@
 using System;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.Sqlite;
 using MySql.Data.MySqlClient;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
@@ -54,7 +55,7 @@ namespace GRCFinancialControl.Configuration
 
     public static class DbContextFactory
     {
-        public static AppDbContext Create(AppConfig config)
+        public static MySqlDbContext CreateMySqlContext(AppConfig config)
         {
             if (config == null)
             {
@@ -63,7 +64,7 @@ namespace GRCFinancialControl.Configuration
 
             var connectionString = config.BuildConnectionString();
 
-            var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+            var optionsBuilder = new DbContextOptionsBuilder<MySqlDbContext>();
             optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString), mysqlOptions =>
             {
                 mysqlOptions.CommandTimeout(180);
@@ -74,13 +75,29 @@ namespace GRCFinancialControl.Configuration
             optionsBuilder.EnableDetailedErrors(false);
             optionsBuilder.EnableSensitiveDataLogging(false);
 
-            var compiledModel = AppDbCompiledModels.TryGetModel();
-            if (compiledModel != null)
+            return new MySqlDbContext(optionsBuilder.Options);
+        }
+
+        public static LocalSqliteContext CreateLocalContext(string databasePath)
+        {
+            if (string.IsNullOrWhiteSpace(databasePath))
             {
-                optionsBuilder.UseModel(compiledModel);
+                throw new ArgumentException("Database path is required.", nameof(databasePath));
             }
 
-            return new AppDbContext(optionsBuilder.Options);
+            var builder = new SqliteConnectionStringBuilder
+            {
+                DataSource = databasePath,
+                Mode = SqliteOpenMode.ReadWriteCreate,
+                Cache = SqliteCacheMode.Private
+            };
+
+            var optionsBuilder = new DbContextOptionsBuilder<LocalSqliteContext>();
+            optionsBuilder.UseSqlite(builder.ConnectionString);
+
+            var context = new LocalSqliteContext(optionsBuilder.Options);
+            context.Database.EnsureCreated();
+            return context;
         }
     }
 }
