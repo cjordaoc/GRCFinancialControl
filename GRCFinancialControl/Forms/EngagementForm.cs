@@ -12,6 +12,7 @@ namespace GRCFinancialControl.Forms
     {
         private readonly AppConfig _config;
         private readonly BindingList<EngagementDto> _engagements = new();
+        private readonly BindingSource _engagementBindingSource = new();
         private EngagementDto? _currentEngagement;
         private bool _isNew = true;
         private bool _suppressEvents;
@@ -21,7 +22,8 @@ namespace GRCFinancialControl.Forms
             _config = config ?? throw new ArgumentNullException(nameof(config));
             InitializeComponent();
             gridEngagements.AutoGenerateColumns = false;
-            gridEngagements.DataSource = _engagements;
+            _engagementBindingSource.DataSource = _engagements;
+            gridEngagements.DataSource = _engagementBindingSource;
             EnterNewMode();
         }
 
@@ -41,12 +43,21 @@ namespace GRCFinancialControl.Forms
                 var data = service.LoadAllEngagements();
 
                 _suppressEvents = true;
-                _engagements.Clear();
-                foreach (var engagement in data)
+                _engagementBindingSource.SuspendBinding();
+                try
                 {
-                    _engagements.Add(engagement);
+                    _engagements.Clear();
+                    foreach (var engagement in data)
+                    {
+                        _engagements.Add(engagement);
+                    }
                 }
-                _suppressEvents = false;
+                finally
+                {
+                    _engagementBindingSource.ResumeBinding();
+                    _engagementBindingSource.ResetBindings(false);
+                    _suppressEvents = false;
+                }
 
                 if (_engagements.Count == 0)
                 {
@@ -56,6 +67,7 @@ namespace GRCFinancialControl.Forms
 
                 if (!string.IsNullOrEmpty(targetId) && SelectGridRow(targetId))
                 {
+                    gridEngagements.Refresh();
                     return;
                 }
 
@@ -67,6 +79,7 @@ namespace GRCFinancialControl.Forms
                     gridEngagements.CurrentCell = gridEngagements.Rows[0].Cells[0];
                 }
                 _suppressEvents = false;
+                gridEngagements.Refresh();
                 UpdateButtonStates();
             }
             catch (Exception ex)
@@ -221,6 +234,12 @@ namespace GRCFinancialControl.Forms
                     };
                     service.Insert(entity);
                     RefreshEngagements(entity.EngagementId);
+                    MessageBox.Show(
+                        this,
+                        $"Engagement '{entity.EngagementId}' was created successfully.",
+                        "Engagement Saved",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
                 }
                 else
                 {

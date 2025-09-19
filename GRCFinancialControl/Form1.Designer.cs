@@ -51,12 +51,20 @@ namespace GRCFinancialControl
             exportAuditToolStripMenuItem = new ToolStripMenuItem();
             helpToolStripMenuItem = new ToolStripMenuItem();
             viewHelpToolStripMenuItem = new ToolStripMenuItem();
+            layoutMain = new TableLayoutPanel();
+            flowWeekEnd = new FlowLayoutPanel();
+            lblWeekEnd = new Label();
+            dtpWeekEnd = new DateTimePicker();
+            gridUploadSummary = new DataGridView();
             txtStatus = new TextBox();
             menuMain.SuspendLayout();
+            layoutMain.SuspendLayout();
+            flowWeekEnd.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)gridUploadSummary).BeginInit();
             SuspendLayout();
-            // 
+            //
             // menuMain
-            // 
+            //
             menuMain.ImageScalingSize = new Size(24, 24);
             menuMain.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, uploadsToolStripMenuItem, masterDataToolStripMenuItem, reportsToolStripMenuItem, helpToolStripMenuItem });
             menuMain.Location = new Point(0, 0);
@@ -217,25 +225,88 @@ namespace GRCFinancialControl
             viewHelpToolStripMenuItem.Size = new Size(193, 34);
             viewHelpToolStripMenuItem.Text = "View Help";
             viewHelpToolStripMenuItem.Click += viewHelpToolStripMenuItem_Click;
-            // 
+            //
+            // layoutMain
+            //
+            layoutMain.ColumnCount = 1;
+            layoutMain.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            layoutMain.Controls.Add(flowWeekEnd, 0, 0);
+            layoutMain.Controls.Add(gridUploadSummary, 0, 1);
+            layoutMain.Controls.Add(txtStatus, 0, 2);
+            layoutMain.Dock = DockStyle.Fill;
+            layoutMain.Location = new Point(0, 35);
+            layoutMain.Name = "layoutMain";
+            layoutMain.RowCount = 3;
+            layoutMain.RowStyles.Add(new RowStyle());
+            layoutMain.RowStyles.Add(new RowStyle(SizeType.Percent, 55F));
+            layoutMain.RowStyles.Add(new RowStyle(SizeType.Percent, 45F));
+            layoutMain.Size = new Size(1002, 677);
+            layoutMain.TabIndex = 1;
+            //
+            // flowWeekEnd
+            //
+            flowWeekEnd.AutoSize = true;
+            flowWeekEnd.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            flowWeekEnd.Controls.Add(lblWeekEnd);
+            flowWeekEnd.Controls.Add(dtpWeekEnd);
+            flowWeekEnd.Dock = DockStyle.Fill;
+            flowWeekEnd.Location = new Point(3, 3);
+            flowWeekEnd.Name = "flowWeekEnd";
+            flowWeekEnd.Size = new Size(996, 38);
+            flowWeekEnd.TabIndex = 0;
+            flowWeekEnd.WrapContents = false;
+            //
+            // lblWeekEnd
+            //
+            lblWeekEnd.Anchor = AnchorStyles.Left;
+            lblWeekEnd.AutoSize = true;
+            lblWeekEnd.Location = new Point(3, 7);
+            lblWeekEnd.Name = "lblWeekEnd";
+            lblWeekEnd.Padding = new Padding(0, 6, 6, 0);
+            lblWeekEnd.Size = new Size(126, 31);
+            lblWeekEnd.TabIndex = 0;
+            lblWeekEnd.Text = "Week ending:";
+            lblWeekEnd.TextAlign = ContentAlignment.MiddleLeft;
+            //
+            // dtpWeekEnd
+            //
+            dtpWeekEnd.Format = DateTimePickerFormat.Short;
+            dtpWeekEnd.Location = new Point(135, 3);
+            dtpWeekEnd.Margin = new Padding(3, 3, 15, 3);
+            dtpWeekEnd.Name = "dtpWeekEnd";
+            dtpWeekEnd.Size = new Size(150, 31);
+            dtpWeekEnd.TabIndex = 1;
+            //
+            // gridUploadSummary
+            //
+            gridUploadSummary.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            gridUploadSummary.Dock = DockStyle.Fill;
+            gridUploadSummary.Location = new Point(3, 47);
+            gridUploadSummary.Margin = new Padding(3, 3, 3, 6);
+            gridUploadSummary.Name = "gridUploadSummary";
+            gridUploadSummary.RowHeadersWidth = 62;
+            gridUploadSummary.RowTemplate.Height = 33;
+            gridUploadSummary.Size = new Size(996, 363);
+            gridUploadSummary.TabIndex = 2;
+            //
             // txtStatus
-            // 
+            //
             txtStatus.Dock = DockStyle.Fill;
-            txtStatus.Location = new Point(0, 35);
-            txtStatus.Margin = new Padding(4, 5, 4, 5);
+            txtStatus.Location = new Point(3, 419);
+            txtStatus.Margin = new Padding(3);
             txtStatus.Multiline = true;
             txtStatus.Name = "txtStatus";
             txtStatus.ReadOnly = true;
             txtStatus.ScrollBars = ScrollBars.Vertical;
-            txtStatus.Size = new Size(1002, 677);
+            txtStatus.Size = new Size(996, 255);
             txtStatus.TabIndex = 3;
-            // 
+            //
             // Form1
-            // 
+            //
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1002, 712);
-            Controls.Add(txtStatus);
+            Controls.Add(layoutMain);
             Controls.Add(menuMain);
             MainMenuStrip = menuMain;
             Margin = new Padding(4, 5, 4, 5);
@@ -243,6 +314,11 @@ namespace GRCFinancialControl
             Name = "Form1";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "GRC Financial Control Loader";
+            flowWeekEnd.ResumeLayout(false);
+            flowWeekEnd.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)gridUploadSummary).EndInit();
+            layoutMain.ResumeLayout(false);
+            layoutMain.PerformLayout();
             menuMain.ResumeLayout(false);
             menuMain.PerformLayout();
             ResumeLayout(false);
@@ -275,6 +351,11 @@ namespace GRCFinancialControl
         private System.Windows.Forms.ToolStripMenuItem exportAuditToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewHelpToolStripMenuItem;
+        private System.Windows.Forms.TableLayoutPanel layoutMain;
+        private System.Windows.Forms.FlowLayoutPanel flowWeekEnd;
+        private System.Windows.Forms.Label lblWeekEnd;
+        private System.Windows.Forms.DateTimePicker dtpWeekEnd;
+        private System.Windows.Forms.DataGridView gridUploadSummary;
         private System.Windows.Forms.TextBox txtStatus;
     }
 }

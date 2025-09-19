@@ -1,6 +1,8 @@
 # GRC Financial Control – Functional Specification
 
 ## What changed
+- 2025-09-19 14:09 UTC — Reintroduced the upload summary grid and week-ending picker to Form1 so reconciliation uses the selected date and upload batches show per-file results again.
+- 2025-09-19 13:57 UTC — Hardened master-data refresh so engagement/measurement period grids repopulate instantly and documented the new insert confirmation prompts across maintenance forms.
 - 2025-09-19 12:58 UTC — Clarified database alignment steps for measurement periods, fact foreign keys, and engagement column widths.
 - 2025-09-20 17:10 UTC — Delivered engagement CRUD UI, measurement period activation via SQLite parameters, and aligned MySQL scripts for measurement_periods + measurement_period_id columns.
 - 2025-09-19 21:45 UTC — Integrated UploadRunner services, shared Excel parsers, and the upload summary grid to enforce deterministic multi-file batches and clearer results.
@@ -70,6 +72,8 @@ Dialog behavior:
 - **Engagements**: Maintain engagement ID, name, partner, manager, and opening margin. Edits occur in dedicated text boxes; the grid is read-only and selecting a row hydrates the editors. Validation enforces required fields and keeps opening margin within -100.000 to +100.000 before issuing synchronous insert/update/delete operations.
 - **Measurement Periods**: Maintain description, start date, and end date with synchronous CRUD against MySQL. The read-only grid lists all periods, activation writes the selected `period_id` to SQLite (`parameters` table under `SelectedMeasurePeriod`), and deleting an active period prompts the operator to clear the local selection. Start/end validation prevents invalid ranges.
 - **Fiscal Year**: Maintain fiscal year ID, description, start date, and end date. Enforce chronological consistency and guard against overlapping fiscal years.
+
+All master-data grids refresh automatically after create/update/delete operations via shared `BindingSource` rebinding, and successful inserts surface a confirmation dialog so operators receive immediate feedback.
 
 ### Fact Tables & Measurement Period Linking
 - Fact entities (Margin facts, ETC projections, Budget allocations, etc.) must persist a valid `MeasurementPeriodId` foreign key.

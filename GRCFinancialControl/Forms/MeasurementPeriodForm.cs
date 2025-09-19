@@ -14,6 +14,7 @@ namespace GRCFinancialControl.Forms
         private readonly AppConfig _config;
         private readonly ParametersService _parametersService;
         private readonly BindingList<MeasurementPeriod> _periods = new();
+        private readonly BindingSource _periodBindingSource = new();
         private MeasurementPeriod? _currentPeriod;
         private bool _isNew = true;
         private bool _suppressEvents;
@@ -25,7 +26,8 @@ namespace GRCFinancialControl.Forms
             _parametersService = parametersService ?? throw new ArgumentNullException(nameof(parametersService));
             InitializeComponent();
             gridMeasurementPeriods.AutoGenerateColumns = false;
-            gridMeasurementPeriods.DataSource = _periods;
+            _periodBindingSource.DataSource = _periods;
+            gridMeasurementPeriods.DataSource = _periodBindingSource;
             EnterNewMode();
         }
 
@@ -80,12 +82,21 @@ namespace GRCFinancialControl.Forms
                 var data = service.LoadAllPeriods();
 
                 _suppressEvents = true;
-                _periods.Clear();
-                foreach (var period in data)
+                _periodBindingSource.SuspendBinding();
+                try
                 {
-                    _periods.Add(period);
+                    _periods.Clear();
+                    foreach (var period in data)
+                    {
+                        _periods.Add(period);
+                    }
                 }
-                _suppressEvents = false;
+                finally
+                {
+                    _periodBindingSource.ResumeBinding();
+                    _periodBindingSource.ResetBindings(false);
+                    _suppressEvents = false;
+                }
 
                 UpdateActivePeriodLabel();
 
@@ -97,6 +108,7 @@ namespace GRCFinancialControl.Forms
 
                 if (targetId.HasValue && SelectGridRow(targetId.Value))
                 {
+                    gridMeasurementPeriods.Refresh();
                     return;
                 }
 
@@ -108,6 +120,7 @@ namespace GRCFinancialControl.Forms
                     gridMeasurementPeriods.CurrentCell = gridMeasurementPeriods.Rows[0].Cells[0];
                 }
                 _suppressEvents = false;
+                gridMeasurementPeriods.Refresh();
                 UpdateButtonStates();
             }
             catch (Exception ex)
@@ -199,9 +212,12 @@ namespace GRCFinancialControl.Forms
                 var service = new MeasurementPeriodService(context);
                 ushort selectedId;
 
+                string? createdDescription = null;
+
                 if (_isNew)
                 {
                     selectedId = service.Insert(snapshot.Description, snapshot.StartDate, snapshot.EndDate);
+                    createdDescription = snapshot.Description;
                 }
                 else
                 {
@@ -223,6 +239,16 @@ namespace GRCFinancialControl.Forms
                 }
 
                 RefreshMeasurementPeriods(selectedId);
+
+                if (createdDescription != null)
+                {
+                    MessageBox.Show(
+                        this,
+                        $"Measurement period '{createdDescription}' was created successfully.",
+                        "Measurement Period Saved",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                }
             }
             catch (Exception ex)
             {
