@@ -62,15 +62,23 @@ namespace GRCFinancialControl.Configuration
             }
 
             var connectionString = config.BuildConnectionString();
-            var serverVersion = MySqlServerVersion.LatestSupportedServerVersion;
 
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-            optionsBuilder.UseMySql(connectionString, serverVersion, mysqlOptions =>
+            optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString), mysqlOptions =>
             {
                 mysqlOptions.CommandTimeout(180);
+                mysqlOptions.MaxBatchSize(100);
+                mysqlOptions.EnableRetryOnFailure(3);
             });
-            optionsBuilder.EnableDetailedErrors();
+
+            optionsBuilder.EnableDetailedErrors(false);
             optionsBuilder.EnableSensitiveDataLogging(false);
+
+            var compiledModel = AppDbCompiledModels.TryGetModel();
+            if (compiledModel != null)
+            {
+                optionsBuilder.UseModel(compiledModel);
+            }
 
             return new AppDbContext(optionsBuilder.Options);
         }

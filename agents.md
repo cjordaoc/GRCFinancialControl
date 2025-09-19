@@ -1,6 +1,7 @@
 # GRC Financial Control – Engineering Guidelines
 
 ## What changed
+- 2025-09-19 21:45 UTC — Documented UploadRunner-based upload pattern, shared Excel parser helpers, and summary grid expectations.
 - 2025-09-19 15:30 UTC — Refined the handbook to cover only C#/.NET practices and recorded the adjustment in the Mistake Catalog.
 
 ## Language and Runtime Stack
@@ -17,6 +18,7 @@
 
 ## Mistake Catalog
 Document newly discovered mistakes and their fixes **before each delivery** to avoid regressions.
+- 2025-09-19 21:45 UTC — Architecture — Form1 orchestrated uploads directly, leaving dry-run UI and inconsistent transactions — Adopt UploadRunner/service helpers, remove dry-run toggles, and centralize parsing/log summaries.
 - 2025-09-19 15:30 UTC — Documentation — Limited the engineering handbook to C#/.NET scope to reflect project direction.
 - Format for new entries: `YYYY-MM-DD HH:MM UTC — [Area] — Issue — Fix/Prevention`
 
@@ -41,17 +43,19 @@ Document newly discovered mistakes and their fixes **before each delivery** to a
 ## UI Guidance
 - Centralize `OpenFileDialog` configuration: expose helpers for single vs. multi-select, expected file filters, and deterministic ordering (alphabetical) of selections.
 - Provide shared helpers for `DataGridView` formatting (column widths, numeric/date formats, read-only flags, and culture-invariant display).
+- Display per-file outcomes through the upload summary grid (`DataGridViewStyler.ConfigureUploadSummaryGrid`) backed by `UploadFileSummary` models.
 - Always validate user inputs (measurement period selection, fiscal year ranges, etc.) before triggering long-running work.
 - Offer status/progress feedback (status bar, modal progress window, or log pane) summarizing file-by-file results.
 
 ## Parsing & File Handling
-- Implement reusable parsing helpers for shared header validation, invariant number/date parsing (`CultureInfo.InvariantCulture`), and consistent error messages.
+- Implement reusable parsing helpers for shared header validation, invariant number/date parsing (`CultureInfo.InvariantCulture`), and consistent error messages using `ExcelParserBase`, `HeaderSchema`, and `ExcelHeaderDetector`.
 - Normalize and sort multi-file selections before processing.
 - Validate schema/required columns prior to DB operations; abort file load if required headers are missing.
 
 ## Database Bulk Write Practices
 - Buffer inserts/updates before committing to reduce transaction time while keeping memory use predictable.
 - Use EF Core change tracking judiciously; prefer `AddRange`/`UpdateRange` or batched `ExecuteUpdate/ExecuteDelete` where appropriate.
+- Orchestrate uploads through `UploadRunner` to enforce per-file transactions, disable change tracking during bulk inserts, and commit once per file.
 - Maintain CREATE/ALTER scripts in `DatabaseScripts/`; update them with any model changes and capture diffs for both SQLite and MySQL schemas.
 
 ## Testing & Checklists

@@ -1,6 +1,7 @@
 # GRC Financial Control – Functional Specification
 
 ## What changed
+- 2025-09-19 21:45 UTC — Integrated UploadRunner services, shared Excel parsers, and the upload summary grid to enforce deterministic multi-file batches and clearer results.
 - 2025-09-18 19:55 UTC — Created baseline functional specification, documented upload behaviors, data flows, environment setup, and maintenance rules.
 
 ## Overview and Goals
@@ -39,29 +40,29 @@ Source Files (.xlsx/.csv)
 ### Upload Menu Structure
 | Upload Type | File Selection | Expected Extensions | Notes |
 |-------------|----------------|---------------------|-------|
-| Margin      | Multi-file (`OpenFileDialog.Multiselect = true`) | `.xlsx` | Process files alphabetically; per-file transaction and summary. |
-| ETC         | Multi-file (`Multiselect = true`) | `.xlsx`, `.csv` | Support deterministic iteration with schema validation. |
-| Budget      | Multi-file (`Multiselect = true`) | `.xlsx` | Same per-file isolation; report inserted/updated counts. |
-| All other upload submenus (e.g., Actuals, Forecast, Adjustments) | Single file (`Multiselect = false`) | `.xlsx` unless specified | Still validate headers, run single transaction per file, and summarize outcome. |
+| Margin      | Multi-file (`OpenFileDialog.Multiselect = true`) | `.xlsx` | Process files alphabetically; each file runs through `UploadRunner` for its own transaction and summary. |
+| ETC         | Multi-file (`Multiselect = true`) | `.xlsx`, `.csv` | Deterministic iteration with schema validation and per-file commits. |
+| Budget      | Multi-file (`Multiselect = true`) | `.xlsx` | Same per-file isolation; report inserted/updated counts through the summary grid. |
+| All other upload submenus (e.g., Actuals, Forecast, Adjustments) | Single file (`Multiselect = false`) | `.xlsx` unless specified | Still validate headers, run a single `UploadRunner` work item, and summarize outcome. |
 
 Dialog behavior:
-- All submenus launch an `OpenFileDialog` configured via shared helper.
+- All submenus launch the shared `FileDialogService` helper to enforce filters, deterministic ordering, and optional exact filename checks.
 - Multi-file uploads sort selected paths alphabetically before processing.
 - Single-file uploads immediately hand the chosen file to the validation pipeline.
 
 ### Multi-file Upload Logic (Margin/ETC/Budget)
 1. Collect selected files and order alphabetically.
-2. For each file:
+2. For each file (coordinated by `UploadRunner`):
    - Instantiate a fresh `DbContext` and begin a transaction.
    - Run header/structure validation; abort and log if invalid.
    - Parse rows using culture-invariant numeric/date handling.
    - Map domain values (including `MeasurementPeriodId`).
    - Perform buffered insert/update operations.
    - Commit on success; rollback and log on failure, then continue to next file.
-3. Present a consolidated summary (rows read, inserted, updated, warnings, errors) in the UI/log.
+3. Present a consolidated summary (rows read, inserted, updated, warnings, errors) in the upload summary grid and status log.
 
 ### Single-file Upload Logic (other types)
-- Execute the same validation/parsing/mapping steps with a single transaction and per-file summary.
+- Execute the same validation/parsing/mapping steps with a single `UploadRunner` work item and per-file summary entry.
 
 ### Master Data Forms
 - **Measurement Periods**: Maintain ID, description, start date, and end date. Validate contiguous/non-overlapping ranges before saving. Provide CRUD operations synced to MySQL while caching lookups locally.
@@ -92,7 +93,7 @@ Dialog behavior:
    - Margin/ETC/Budget: select multiple files (Shift/Ctrl) as needed.
    - Other uploads: select the single file requested.
 3. Confirm measurement period/fiscal year context if prompted.
-4. Monitor progress UI for per-file status (rows processed, warnings, errors).
+4. Monitor the upload summary grid and status log for per-file results (rows processed, inserts, updates, warnings, errors).
 5. On completion, export or review the summary log for audit.
 
 ### Error Recovery & Logging
@@ -107,14 +108,15 @@ Dialog behavior:
   - Update EF Core models and generate migration scripts.
   - Place CREATE/ALTER SQL scripts in `DatabaseScripts/` with clear naming (e.g., `mysql/2025-09-18_AddMarginFact.sql`).
   - Document schema diffs in both README and commit messages.
+  - Composite index script `DatabaseScripts/20250919_add_fact_indexes.sql` adds OLTP indexes for ETC, plan, weekly declarations, and charges tables.
 
 ## Maintenance & Extension
 ### Adding a New Upload Type
-1. **UI**: Add menu item and wire to handler using dialog helper (decide single vs multi-file behavior).
-2. **Parser**: Implement schema/header validation and culture-invariant parsing.
+1. **UI**: Add menu item and wire to handler using `FileDialogService` (choose single vs multi-file behavior).
+2. **Parser**: Implement schema/header validation and culture-invariant parsing via `ExcelParserBase` derivatives.
 3. **Mapper**: Convert raw rows to domain entities, resolving `MeasurementPeriodId` and related keys.
 4. **Validator**: Enforce business rules (e.g., totals, mandatory columns, allowable ranges).
-5. **Writer**: Use bulk writer helper with per-file transaction semantics.
+5. **Writer**: Submit an `UploadFileWork` to `UploadRunner` so each file runs in its own transaction with batched `SaveChanges`.
 6. **Status Reporting**: Extend shared summary reporting to capture new metrics if needed.
 7. **Documentation**: Update both `README.md` and `agents.md` (include `What changed` entry and Mistake Catalog references if applicable).
 8. **Testing**: Add smoke tests covering success and failure scenarios; update schema scripts if new tables/columns arise.

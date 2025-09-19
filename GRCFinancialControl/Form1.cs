@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -9,6 +10,9 @@ using GRCFinancialControl.Configuration;
 using GRCFinancialControl.Data;
 using GRCFinancialControl.Forms;
 using GRCFinancialControl.Persistence;
+using GRCFinancialControl.Common;
+using GRCFinancialControl.Parsing;
+using GRCFinancialControl.Uploads;
 using GRCFinancialControl.Services;
 using MySql.Data.MySqlClient;
 
@@ -25,6 +29,8 @@ namespace GRCFinancialControl
         private const string MarginDataFileName = "MarginData.xlsx";
 
         private readonly LocalAppRepository _repository;
+        private readonly FileDialogService _fileDialogService;
+        private readonly BindingList<UploadFileSummary> _uploadSummaries = new();
         private ConnectionDefinition? _defaultConnection;
         private bool _defaultConnectionHealthy;
 
@@ -32,6 +38,9 @@ namespace GRCFinancialControl
         {
             InitializeComponent();
             _repository = new LocalAppRepository();
+            _fileDialogService = new FileDialogService();
+            DataGridViewStyler.ConfigureUploadSummaryGrid(gridUploadSummary);
+            gridUploadSummary.DataSource = _uploadSummaries;
             SetDataMenusEnabled(false);
             var today = DateOnly.FromDateTime(DateTime.Today);
             var weekEnd = WeekHelper.ToWeekEnd(today);
@@ -156,8 +165,6 @@ namespace GRCFinancialControl
                 builder.AppendLine("Default Connection: Not configured or unavailable.");
             }
 
-            builder.AppendLine($"Dry Run Mode: {(chkDryRun.Checked ? "Enabled" : "Disabled")}");
-
             var readmeText = LoadReadmeText();
             using var form = new HelpForm(builder.ToString(), readmeText);
             form.ShowDialog(this);
@@ -258,8 +265,16 @@ namespace GRCFinancialControl
 
         private void LoadPlan()
         {
-            var filePath = PromptForFile(PlanFileName);
-            if (filePath == null)
+            var files = _fileDialogService.GetFiles(new FileDialogRequest
+            {
+                Owner = this,
+                Title = "Select budget files",
+                SuggestedFileName = PlanFileName,
+                Filter = "Excel Files (*.xlsx)|*.xlsx|All Files (*.*)|*.*",
+                AllowMultiple = true
+            });
+
+            if (files.Count == 0)
             {
                 return;
             }
@@ -275,39 +290,71 @@ namespace GRCFinancialControl
                 return;
             }
 
-            AppendStatus($"Loading plan from '{filePath}'.");
-
-            ExcelParseResult<PlanRow> parseResult;
+            DimMeasurementPeriod period;
             try
             {
-                parseResult = new PlanExcelParser().Parse(filePath);
+                using var context = DbContextFactory.Create(config);
+                period = RequireActiveMeasurementPeriod(context);
             }
             catch (Exception ex)
             {
-                ShowError($"Failed to parse plan file: {ex.Message}");
+                ShowError(ex.Message);
                 return;
             }
 
-            ReportParseResult(parseResult);
-            if (parseResult.Rows.Count == 0)
+            AppendStatus($"Active period: {FormatMeasurementPeriod(period)}.");
+
+            var runner = CreateUploadRunner(config);
+            var works = new List<UploadFileWork>();
+
+            foreach (var file in files)
             {
-                AppendStatus("No plan rows parsed; skipping load.");
+                AppendStatus($"Parsing plan file '{file}'.");
+                ExcelParseResult<PlanRow> parseResult;
+                try
+                {
+                    parseResult = new PlanExcelParser().Parse(file);
+                }
+                catch (Exception ex)
+                {
+                    ShowError($"Failed to parse plan file '{Path.GetFileName(file)}': {ex.Message}");
+                    continue;
+                }
+
+                ReportParseResult(parseResult, file);
+                works.Add(new UploadFileWork(
+                    file,
+                    parseResult.Rows.Count,
+                    parseResult.Warnings,
+                    parseResult.Errors,
+                    ctx =>
+                    {
+                        var service = new PlanUploadService(ctx);
+                        return service.Load(period.MeasurementPeriodId, engagementId, parseResult.Rows);
+                    }));
+            }
+
+            if (works.Count == 0)
+            {
+                AppendStatus("No plan files were queued for upload.");
                 return;
             }
 
-            ExecuteWithContext(config, (context, orchestrator) =>
-            {
-                var period = RequireActiveMeasurementPeriod(context);
-                AppendStatus($"Using measurement period {FormatMeasurementPeriod(period)}.");
-                var tuples = parseResult.Rows.Select(r => (r.RawLevel, r.PlannedHours, r.PlannedRate));
-                orchestrator.LoadPlan(period.MeasurementPeriodId, engagementId, tuples);
-            });
+            DisplayBatchSummary(runner.Run(works));
         }
 
         private void LoadEtc()
         {
-            var filePath = PromptForFile(EtcFileName);
-            if (filePath == null)
+            var files = _fileDialogService.GetFiles(new FileDialogRequest
+            {
+                Owner = this,
+                Title = "Select ETC snapshot files",
+                SuggestedFileName = EtcFileName,
+                Filter = "Excel or CSV Files (*.xlsx;*.csv)|*.xlsx;*.csv|All Files (*.*)|*.*",
+                AllowMultiple = true
+            });
+
+            if (files.Count == 0)
             {
                 return;
             }
@@ -323,41 +370,73 @@ namespace GRCFinancialControl
                 return;
             }
 
-            AppendStatus($"Loading ETC snapshot from '{filePath}'.");
-
-            EtcParseResult parseResult;
+            DimMeasurementPeriod period;
             try
             {
-                parseResult = new EtcExcelParser().Parse(filePath);
+                using var context = DbContextFactory.Create(config);
+                period = RequireActiveMeasurementPeriod(context);
             }
             catch (Exception ex)
             {
-                ShowError($"Failed to parse ETC file: {ex.Message}");
+                ShowError(ex.Message);
                 return;
             }
 
-            ReportParseResult(parseResult);
+            AppendStatus($"Active period: {FormatMeasurementPeriod(period)}.");
+            var snapshotLabel = period.Description.Trim();
 
-            if (parseResult.Rows.Count == 0)
+            var runner = CreateUploadRunner(config);
+            var works = new List<UploadFileWork>();
+
+            foreach (var file in files)
             {
-                AppendStatus("No ETC rows parsed; skipping load.");
+                AppendStatus($"Parsing ETC file '{file}'.");
+                EtcParseResult parseResult;
+                try
+                {
+                    parseResult = new EtcExcelParser().Parse(file);
+                }
+                catch (Exception ex)
+                {
+                    ShowError($"Failed to parse ETC file '{Path.GetFileName(file)}': {ex.Message}");
+                    continue;
+                }
+
+                ReportParseResult(parseResult, file);
+                works.Add(new UploadFileWork(
+                    file,
+                    parseResult.Rows.Count,
+                    parseResult.Warnings,
+                    parseResult.Errors,
+                    ctx =>
+                    {
+                        var service = new EtcUploadService(ctx);
+                        return service.Load(period.MeasurementPeriodId, snapshotLabel, engagementId, parseResult.Rows);
+                    }));
+            }
+
+            if (works.Count == 0)
+            {
+                AppendStatus("No ETC files were queued for upload.");
                 return;
             }
 
-            ExecuteWithContext(config, (context, orchestrator) =>
-            {
-                var period = RequireActiveMeasurementPeriod(context);
-                AppendStatus($"Active period: {FormatMeasurementPeriod(period)}.");
-                var snapshotLabel = period.Description.Trim();
-                var tuples = parseResult.Rows.Select(r => (r.EmployeeName, r.RawLevel, r.HoursIncurred, r.EtcRemaining));
-                orchestrator.LoadEtc(period.MeasurementPeriodId, snapshotLabel, engagementId, tuples);
-            });
+            DisplayBatchSummary(runner.Run(works));
         }
 
         private void LoadMarginData()
         {
-            var filePath = PromptForFile(MarginDataFileName, enforceExactName: false);
-            if (filePath == null)
+            var files = _fileDialogService.GetFiles(new FileDialogRequest
+            {
+                Owner = this,
+                Title = "Select margin data files",
+                SuggestedFileName = MarginDataFileName,
+                Filter = "Excel Files (*.xlsx)|*.xlsx|All Files (*.*)|*.*",
+                AllowMultiple = true,
+                EnforceExactName = false
+            });
+
+            if (files.Count == 0)
             {
                 return;
             }
@@ -367,39 +446,72 @@ namespace GRCFinancialControl
                 return;
             }
 
-            AppendStatus($"Loading margin data from '{filePath}'.");
-
-            MarginDataParseResult parseResult;
+            DimMeasurementPeriod period;
             try
             {
-                parseResult = new MarginDataExcelParser().Parse(filePath);
+                using var context = DbContextFactory.Create(config);
+                period = RequireActiveMeasurementPeriod(context);
             }
             catch (Exception ex)
             {
-                ShowError($"Failed to parse margin data file: {ex.Message}");
+                ShowError(ex.Message);
                 return;
             }
 
-            ReportParseResult(parseResult);
-            if (parseResult.Rows.Count == 0)
+            AppendStatus($"Active period: {FormatMeasurementPeriod(period)}.");
+
+            var runner = CreateUploadRunner(config);
+            var works = new List<UploadFileWork>();
+
+            foreach (var file in files)
             {
-                AppendStatus("No margin rows parsed; skipping load.");
+                AppendStatus($"Parsing margin data file '{file}'.");
+                MarginDataParseResult parseResult;
+                try
+                {
+                    parseResult = new MarginDataExcelParser().Parse(file);
+                }
+                catch (Exception ex)
+                {
+                    ShowError($"Failed to parse margin data file '{Path.GetFileName(file)}': {ex.Message}");
+                    continue;
+                }
+
+                ReportParseResult(parseResult, file);
+                works.Add(new UploadFileWork(
+                    file,
+                    parseResult.Rows.Count,
+                    parseResult.Warnings,
+                    parseResult.Errors,
+                    ctx =>
+                    {
+                        var service = new MarginDataUploadService(ctx);
+                        return service.Load(period.MeasurementPeriodId, parseResult.Rows);
+                    }));
+            }
+
+            if (works.Count == 0)
+            {
+                AppendStatus("No margin data files were queued for upload.");
                 return;
             }
 
-            ExecuteWithContext(config, (context, orchestrator) =>
-            {
-                var period = RequireActiveMeasurementPeriod(context);
-                AppendStatus($"Active period: {FormatMeasurementPeriod(period)}.");
-                orchestrator.LoadMarginData(period.MeasurementPeriodId, parseResult.Rows);
-            });
+            DisplayBatchSummary(runner.Run(works));
         }
 
         private void LoadWeeklyDeclarations(bool isErp)
         {
             var expectedFile = isErp ? ErpFileName : RetainFileName;
-            var filePath = PromptForFile(expectedFile);
-            if (filePath == null)
+            var files = _fileDialogService.GetFiles(new FileDialogRequest
+            {
+                Owner = this,
+                Title = $"Select {(isErp ? "ERP" : "Retain")} weekly declaration file",
+                SuggestedFileName = expectedFile,
+                Filter = "Excel Files (*.xlsx)|*.xlsx|All Files (*.*)|*.*",
+                AllowMultiple = false
+            });
+
+            if (files.Count == 0)
             {
                 return;
             }
@@ -415,6 +527,21 @@ namespace GRCFinancialControl
                 return;
             }
 
+            DimMeasurementPeriod period;
+            try
+            {
+                using var context = DbContextFactory.Create(config);
+                period = RequireActiveMeasurementPeriod(context);
+            }
+            catch (Exception ex)
+            {
+                ShowError(ex.Message);
+                return;
+            }
+
+            AppendStatus($"Active period: {FormatMeasurementPeriod(period)}.");
+
+            var filePath = files[0];
             AppendStatus($"Loading {(isErp ? "ERP" : "Retain")} weekly declarations from '{filePath}'.");
 
             ExcelParseResult<WeeklyDeclarationRow> parseResult;
@@ -424,37 +551,42 @@ namespace GRCFinancialControl
             }
             catch (Exception ex)
             {
-                ShowError($"Failed to parse {(isErp ? "ERP" : "Retain")} file: {ex.Message}");
+                ShowError($"Failed to parse {(isErp ? "ERP" : "Retain")} file '{Path.GetFileName(filePath)}': {ex.Message}");
                 return;
             }
 
-            ReportParseResult(parseResult);
-            if (parseResult.Rows.Count == 0)
-            {
-                AppendStatus("No weekly declaration rows parsed; skipping load.");
-                return;
-            }
+            ReportParseResult(parseResult, filePath);
 
-            ExecuteWithContext(config, (context, orchestrator) =>
+            var runner = CreateUploadRunner(config);
+            var works = new List<UploadFileWork>
             {
-                var period = RequireActiveMeasurementPeriod(context);
-                AppendStatus($"Active period: {FormatMeasurementPeriod(period)}.");
-                var tuples = parseResult.Rows.Select(r => (r.WeekStart, r.EmployeeName, r.DeclaredHours));
-                if (isErp)
-                {
-                    orchestrator.UpsertErp(period.MeasurementPeriodId, engagementId, tuples);
-                }
-                else
-                {
-                    orchestrator.UpsertRetain(period.MeasurementPeriodId, engagementId, tuples);
-                }
-            });
+                new UploadFileWork(
+                    filePath,
+                    parseResult.Rows.Count,
+                    parseResult.Warnings,
+                    parseResult.Errors,
+                    ctx =>
+                    {
+                        var service = new WeeklyDeclarationUploadService(ctx, isErp);
+                        return service.Upsert(period.MeasurementPeriodId, engagementId, parseResult.Rows);
+                    })
+            };
+
+            DisplayBatchSummary(runner.Run(works));
         }
 
         private void LoadCharges()
         {
-            var filePath = PromptForFile(ChargesFileName);
-            if (filePath == null)
+            var files = _fileDialogService.GetFiles(new FileDialogRequest
+            {
+                Owner = this,
+                Title = "Select charges file",
+                SuggestedFileName = ChargesFileName,
+                Filter = "Excel Files (*.xlsx)|*.xlsx|All Files (*.*)|*.*",
+                AllowMultiple = false
+            });
+
+            if (files.Count == 0)
             {
                 return;
             }
@@ -470,6 +602,21 @@ namespace GRCFinancialControl
                 return;
             }
 
+            DimMeasurementPeriod period;
+            try
+            {
+                using var context = DbContextFactory.Create(config);
+                period = RequireActiveMeasurementPeriod(context);
+            }
+            catch (Exception ex)
+            {
+                ShowError(ex.Message);
+                return;
+            }
+
+            AppendStatus($"Active period: {FormatMeasurementPeriod(period)}.");
+
+            var filePath = files[0];
             AppendStatus($"Loading charges from '{filePath}'.");
 
             ExcelParseResult<ChargeRow> parseResult;
@@ -479,24 +626,28 @@ namespace GRCFinancialControl
             }
             catch (Exception ex)
             {
-                ShowError($"Failed to parse charges file: {ex.Message}");
+                ShowError($"Failed to parse charges file '{Path.GetFileName(filePath)}': {ex.Message}");
                 return;
             }
 
-            ReportParseResult(parseResult);
-            if (parseResult.Rows.Count == 0)
-            {
-                AppendStatus("No charge rows parsed; skipping load.");
-                return;
-            }
+            ReportParseResult(parseResult, filePath);
 
-            ExecuteWithContext(config, (context, orchestrator) =>
+            var runner = CreateUploadRunner(config);
+            var works = new List<UploadFileWork>
             {
-                var period = RequireActiveMeasurementPeriod(context);
-                AppendStatus($"Active period: {FormatMeasurementPeriod(period)}.");
-                var tuples = parseResult.Rows.Select(r => (r.ChargeDate, r.EmployeeName, r.Hours, r.CostAmount));
-                orchestrator.InsertCharges(period.MeasurementPeriodId, engagementId, tuples);
-            });
+                new UploadFileWork(
+                    filePath,
+                    parseResult.Rows.Count,
+                    parseResult.Warnings,
+                    parseResult.Errors,
+                    ctx =>
+                    {
+                        var service = new ChargesUploadService(ctx);
+                        return service.Insert(period.MeasurementPeriodId, engagementId, parseResult.Rows);
+                    })
+            };
+
+            DisplayBatchSummary(runner.Run(works));
         }
 
         private void Reconcile()
@@ -509,13 +660,34 @@ namespace GRCFinancialControl
             var lastWeekEnd = DateOnly.FromDateTime(dtpWeekEnd.Value.Date);
             AppendStatus($"Reconciling ETC vs charges through {lastWeekEnd:yyyy-MM-dd}.");
 
-            ExecuteWithContext(config, (context, orchestrator) =>
+            DimMeasurementPeriod period;
+            try
             {
-                var period = RequireActiveMeasurementPeriod(context);
-                var snapshotLabel = period.Description.Trim();
-                AppendStatus($"Active period: {FormatMeasurementPeriod(period)}.");
-                orchestrator.ReconcileEtcVsCharges(period.MeasurementPeriodId, snapshotLabel, lastWeekEnd);
-            });
+                using var context = DbContextFactory.Create(config);
+                period = RequireActiveMeasurementPeriod(context);
+            }
+            catch (Exception ex)
+            {
+                ShowError(ex.Message);
+                return;
+            }
+
+            AppendStatus($"Active period: {FormatMeasurementPeriod(period)}.");
+
+            try
+            {
+                using var context = DbContextFactory.Create(config);
+                var service = new ReconciliationService(context);
+                var summary = service.Reconcile(period.MeasurementPeriodId, period.Description.Trim(), lastWeekEnd);
+                AppendStatus(summary.ToString());
+                WriteMessages("INFO", summary.InfoMessages);
+                WriteMessages("WARN", summary.WarningMessages);
+                WriteMessages("ERROR", summary.ErrorMessages);
+            }
+            catch (Exception ex)
+            {
+                ShowError(ex.Message);
+            }
         }
 
         private void ExportAudit()
@@ -620,55 +792,26 @@ namespace GRCFinancialControl
             return value;
         }
 
-        private void ExecuteWithContext(AppConfig config, Action<AppDbContext, IngestionOrchestrator> action)
+        private UploadRunner CreateUploadRunner(AppConfig config)
         {
-            using var context = DbContextFactory.Create(config);
-            var orchestrator = new IngestionOrchestrator(context)
-            {
-                DryRun = chkDryRun.Checked
-            };
+            return new UploadRunner(() => DbContextFactory.Create(config), new StatusUploadLogger(AppendStatus));
+        }
 
-            try
+        private void DisplayBatchSummary(UploadBatchSummary batch)
+        {
+            _uploadSummaries.Clear();
+            foreach (var summary in batch.Files)
             {
-                action(context, orchestrator);
-                AppendSummary(orchestrator.LastResult);
-            }
-            catch (Exception ex)
-            {
-                AppendSummary(orchestrator.LastResult);
-                ShowError(ex.Message);
+                _uploadSummaries.Add(summary);
             }
         }
 
-        private void AppendSummary(OperationSummary? summary)
+        private void ReportParseResult<TRow>(ExcelParseResult<TRow> parseResult, string? filePath = null)
         {
-            if (summary == null)
-            {
-                AppendStatus("No summary returned from operation.");
-                return;
-            }
-
-            AppendStatus(summary.ToString());
-            const int maxMessages = 10;
-            if (summary.Messages.Count > 0)
-            {
-                for (var i = 0; i < summary.Messages.Count && i < maxMessages; i++)
-                {
-                    AppendStatus(summary.Messages[i]);
-                }
-
-                if (summary.Messages.Count > maxMessages)
-                {
-                    AppendStatus($"... {summary.Messages.Count - maxMessages} additional messages omitted ...");
-                }
-            }
-        }
-
-        private void ReportParseResult<TRow>(ExcelParseResult<TRow> parseResult)
-        {
-            AppendStatus(parseResult.BuildSummary());
-            WriteMessages("WARN", parseResult.Warnings);
-            WriteMessages("ERROR", parseResult.Errors);
+            var fileTag = string.IsNullOrWhiteSpace(filePath) ? string.Empty : $"[{Path.GetFileName(filePath)}] ";
+            AppendStatus(fileTag + parseResult.BuildSummary());
+            WriteMessages($"{fileTag}WARN", parseResult.Warnings);
+            WriteMessages($"{fileTag}ERROR", parseResult.Errors);
         }
 
         private void WriteMessages(string prefix, IReadOnlyList<string> messages)
@@ -682,6 +825,37 @@ namespace GRCFinancialControl
             if (messages.Count > max)
             {
                 AppendStatus($"{prefix}: {messages.Count - max} additional messages omitted ...");
+            }
+        }
+
+        private sealed class StatusUploadLogger : IUploadLogger
+        {
+            private readonly Action<string> _writer;
+
+            public StatusUploadLogger(Action<string> writer)
+            {
+                _writer = writer ?? throw new ArgumentNullException(nameof(writer));
+            }
+
+            public void LogStart(UploadFileSummary summary)
+            {
+                _writer($"[{summary.FileName}] processing started.");
+            }
+
+            public void LogSuccess(UploadFileSummary summary)
+            {
+                _writer($"[{summary.FileName}] {summary.Details}");
+            }
+
+            public void LogSkipped(UploadFileSummary summary)
+            {
+                var message = summary.Infos.FirstOrDefault() ?? "No rows to process.";
+                _writer($"[{summary.FileName}] skipped: {message}");
+            }
+
+            public void LogFailure(UploadFileSummary summary, Exception exception)
+            {
+                _writer($"[{summary.FileName}] failed: {exception.Message}");
             }
         }
 
@@ -724,33 +898,6 @@ namespace GRCFinancialControl
         private static string FormatMeasurementPeriod(DimMeasurementPeriod period)
         {
             return $"{period.Description} ({period.StartDate:yyyy-MM-dd} - {period.EndDate:yyyy-MM-dd})";
-        }
-
-        private string? PromptForFile(string expectedFileName, bool enforceExactName = true)
-        {
-            using var dialog = new OpenFileDialog
-            {
-                Filter = "Excel Files (*.xlsx)|*.xlsx",
-                Title = $"Select {expectedFileName}",
-                FileName = expectedFileName,
-                CheckFileExists = true,
-                CheckPathExists = true
-            };
-
-            var result = dialog.ShowDialog(this);
-            if (result != DialogResult.OK)
-            {
-                return null;
-            }
-
-            var actualName = Path.GetFileName(dialog.FileName);
-            if (enforceExactName && !string.Equals(actualName, expectedFileName, StringComparison.OrdinalIgnoreCase))
-            {
-                MessageBox.Show(this, $"Please select the exact file '{expectedFileName}'.", "Incorrect File", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return null;
-            }
-
-            return dialog.FileName;
         }
 
         private void AppendStatus(string message)
