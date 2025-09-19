@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using GRCFinancialControl.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace GRCFinancialControl.Uploads
 {
@@ -40,38 +42,59 @@ namespace GRCFinancialControl.Uploads
 
                 _logger.LogStart(summary);
 
-                using var context = _contextFactory();
-                var originalDetectChanges = context.ChangeTracker.AutoDetectChangesEnabled;
-                var changeDetectionDisabled = work.DisableChangeDetection && originalDetectChanges;
-                if (changeDetectionDisabled)
+                var operationSummary = default(OperationSummary);
+                IExecutionStrategy executionStrategy;
+                using (var strategyContext = _contextFactory())
                 {
-                    context.ChangeTracker.AutoDetectChangesEnabled = false;
+                    executionStrategy = strategyContext.Database.CreateExecutionStrategy();
                 }
 
-                using var transaction = context.Database.BeginTransaction();
                 try
                 {
-                    var operationSummary = work.Execute(context);
-                    if (changeDetectionDisabled)
+                    executionStrategy.Execute(() =>
                     {
-                        context.ChangeTracker.DetectChanges();
-                    }
-                    context.SaveChanges();
-                    transaction.Commit();
+                        using var context = _contextFactory();
+                        var originalDetectChanges = context.ChangeTracker.AutoDetectChangesEnabled;
+                        var changeDetectionDisabled = work.DisableChangeDetection && originalDetectChanges;
+                        if (changeDetectionDisabled)
+                        {
+                            context.ChangeTracker.AutoDetectChangesEnabled = false;
+                        }
 
-                    summary.Apply(operationSummary);
+                        using var transaction = context.Database.BeginTransaction();
+                        try
+                        {
+                            operationSummary = work.Execute(context);
+                            if (changeDetectionDisabled)
+                            {
+                                context.ChangeTracker.DetectChanges();
+                            }
+
+                            context.SaveChanges();
+                            transaction.Commit();
+                        }
+                        catch
+                        {
+                            transaction.Rollback();
+                            throw;
+                        }
+                        finally
+                        {
+                            context.ChangeTracker.AutoDetectChangesEnabled = originalDetectChanges;
+                        }
+                    });
+
+                    if (operationSummary != null)
+                    {
+                        summary.Apply(operationSummary);
+                    }
                     summary.MarkSucceeded();
                     _logger.LogSuccess(summary);
                 }
                 catch (Exception ex)
                 {
-                    transaction.Rollback();
                     summary.MarkFailed(ex);
                     _logger.LogFailure(summary, ex);
-                }
-                finally
-                {
-                    context.ChangeTracker.AutoDetectChangesEnabled = originalDetectChanges;
                 }
 
                 batch.Add(summary);
