@@ -1,0 +1,231 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using GRCFinancialControl.Common;
+using GRCFinancialControl.Data;
+
+namespace GRCFinancialControl.Uploads
+{
+    public sealed class IdResolver
+    {
+        private readonly AppDbContext _db;
+
+        private readonly Dictionary<string, ushort> _sourceSystemCache = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, string> _engagementCache = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, uint> _levelAliasCache = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, uint> _levelCodeCache = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, ulong> _employeeAliasCache = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, ulong> _employeeCache = new(StringComparer.OrdinalIgnoreCase);
+
+        public IdResolver(AppDbContext db)
+        {
+            _db = db ?? throw new ArgumentNullException(nameof(db));
+        }
+
+        public ushort EnsureSourceSystem(string systemCode, string systemName)
+        {
+            var trimmedCode = StringNormalizer.TrimToNull(systemCode) ?? throw new ArgumentException("System code is required.", nameof(systemCode));
+            if (_sourceSystemCache.TryGetValue(trimmedCode, out var cached))
+            {
+                return cached;
+            }
+
+            var source = _db.DimSourceSystems.SingleOrDefault(s => s.SystemCode == trimmedCode);
+            if (source == null)
+            {
+                source = new DimSourceSystem
+                {
+                    SystemCode = trimmedCode,
+                    SystemName = systemName
+                };
+                _db.DimSourceSystems.Add(source);
+                _db.SaveChanges();
+            }
+            else if (!string.Equals(source.SystemName, systemName, StringComparison.Ordinal))
+            {
+                source.SystemName = systemName;
+                _db.SaveChanges();
+            }
+
+            _sourceSystemCache[trimmedCode] = source.SourceSystemId;
+            return source.SourceSystemId;
+        }
+
+        public string EnsureEngagement(string engagementId, string? title = null)
+        {
+            var trimmedId = StringNormalizer.TrimToNull(engagementId) ?? throw new ArgumentException("Engagement ID is required.", nameof(engagementId));
+            if (_engagementCache.TryGetValue(trimmedId, out var cached))
+            {
+                return cached;
+            }
+
+            var engagement = _db.DimEngagements.Find(trimmedId);
+            if (engagement == null)
+            {
+                engagement = new DimEngagement
+                {
+                    EngagementId = trimmedId,
+                    EngagementTitle = title ?? trimmedId,
+                    CreatedUtc = DateTime.UtcNow,
+                    UpdatedUtc = DateTime.UtcNow
+                };
+                _db.DimEngagements.Add(engagement);
+            }
+            else
+            {
+                if (!string.IsNullOrWhiteSpace(title) && !string.Equals(engagement.EngagementTitle, title, StringComparison.Ordinal))
+                {
+                    engagement.EngagementTitle = title;
+                }
+
+                engagement.UpdatedUtc = DateTime.UtcNow;
+            }
+
+            _engagementCache[trimmedId] = engagement.EngagementId;
+            return engagement.EngagementId;
+        }
+
+        public uint EnsureLevel(ushort sourceSystemId, string rawLevel, string? levelCodeFallback = null)
+        {
+            var trimmedLevel = StringNormalizer.TrimToNull(rawLevel) ?? throw new ArgumentException("Level is required.", nameof(rawLevel));
+            var normalized = StringNormalizer.NormalizeName(trimmedLevel);
+            var aliasKey = BuildAliasKey(sourceSystemId, normalized);
+
+            if (_levelAliasCache.TryGetValue(aliasKey, out var aliasLevelId))
+            {
+                return aliasLevelId;
+            }
+
+            if (_levelCodeCache.TryGetValue(normalized, out var cachedLevelId))
+            {
+                EnsureAlias(sourceSystemId, trimmedLevel, normalized, cachedLevelId);
+                return cachedLevelId;
+            }
+
+            var alias = _db.MapLevelAliases.SingleOrDefault(a => a.SourceSystemId == sourceSystemId && a.NormalizedRaw == normalized);
+            if (alias != null)
+            {
+                _levelAliasCache[aliasKey] = alias.LevelId;
+                return alias.LevelId;
+            }
+
+            var levelCode = levelCodeFallback ?? normalized;
+            if (_levelCodeCache.TryGetValue(levelCode, out cachedLevelId))
+            {
+                EnsureAlias(sourceSystemId, trimmedLevel, normalized, cachedLevelId);
+                return cachedLevelId;
+            }
+
+            var level = _db.DimLevels.SingleOrDefault(l => l.LevelCode == levelCode);
+            if (level == null)
+            {
+                level = new DimLevel
+                {
+                    LevelCode = levelCode,
+                    LevelName = trimmedLevel,
+                    LevelOrder = 0,
+                    CreatedUtc = DateTime.UtcNow,
+                    UpdatedUtc = DateTime.UtcNow
+                };
+                _db.DimLevels.Add(level);
+                _db.SaveChanges();
+            }
+
+            _levelCodeCache[levelCode] = level.LevelId;
+            EnsureAlias(sourceSystemId, trimmedLevel, normalized, level.LevelId);
+            return level.LevelId;
+        }
+
+        public ulong EnsureEmployee(ushort sourceSystemId, string rawName, string? employeeCode = null)
+        {
+            var trimmedName = StringNormalizer.TrimToNull(rawName) ?? throw new ArgumentException("Employee name is required.", nameof(rawName));
+            var normalized = StringNormalizer.NormalizeName(trimmedName);
+            var aliasKey = BuildAliasKey(sourceSystemId, normalized);
+
+            if (_employeeAliasCache.TryGetValue(aliasKey, out var cachedEmployeeId))
+            {
+                return cachedEmployeeId;
+            }
+
+            if (_employeeCache.TryGetValue(normalized, out cachedEmployeeId))
+            {
+                EnsureEmployeeAlias(sourceSystemId, trimmedName, normalized, cachedEmployeeId);
+                return cachedEmployeeId;
+            }
+
+            var alias = _db.MapEmployeeAliases.SingleOrDefault(a => a.SourceSystemId == sourceSystemId && a.NormalizedRaw == normalized);
+            if (alias != null)
+            {
+                _employeeAliasCache[aliasKey] = alias.EmployeeId;
+                return alias.EmployeeId;
+            }
+
+            var employee = _db.DimEmployees.SingleOrDefault(e => e.NormalizedName == normalized);
+            if (employee == null)
+            {
+                employee = new DimEmployee
+                {
+                    EmployeeCode = employeeCode,
+                    FullName = trimmedName,
+                    NormalizedName = normalized,
+                    CreatedUtc = DateTime.UtcNow,
+                    UpdatedUtc = DateTime.UtcNow
+                };
+                _db.DimEmployees.Add(employee);
+                _db.SaveChanges();
+            }
+            else if (!string.IsNullOrWhiteSpace(employeeCode) && string.IsNullOrWhiteSpace(employee.EmployeeCode))
+            {
+                employee.EmployeeCode = employeeCode;
+                employee.UpdatedUtc = DateTime.UtcNow;
+            }
+
+            _employeeCache[normalized] = employee.EmployeeId;
+            EnsureEmployeeAlias(sourceSystemId, trimmedName, normalized, employee.EmployeeId);
+            return employee.EmployeeId;
+        }
+
+        private void EnsureAlias(ushort sourceSystemId, string trimmedLevel, string normalized, uint levelId)
+        {
+            var aliasKey = BuildAliasKey(sourceSystemId, normalized);
+            if (_levelAliasCache.ContainsKey(aliasKey))
+            {
+                return;
+            }
+
+            var newAlias = new MapLevelAlias
+            {
+                SourceSystemId = sourceSystemId,
+                RawLevel = trimmedLevel,
+                NormalizedRaw = normalized,
+                LevelId = levelId,
+                CreatedUtc = DateTime.UtcNow
+            };
+            _db.MapLevelAliases.Add(newAlias);
+            _levelAliasCache[aliasKey] = levelId;
+        }
+
+        private void EnsureEmployeeAlias(ushort sourceSystemId, string trimmedName, string normalized, ulong employeeId)
+        {
+            var aliasKey = BuildAliasKey(sourceSystemId, normalized);
+            if (_employeeAliasCache.ContainsKey(aliasKey))
+            {
+                return;
+            }
+
+            var newAlias = new MapEmployeeAlias
+            {
+                SourceSystemId = sourceSystemId,
+                RawName = trimmedName,
+                NormalizedRaw = normalized,
+                EmployeeId = employeeId,
+                CreatedUtc = DateTime.UtcNow
+            };
+            _db.MapEmployeeAliases.Add(newAlias);
+            _employeeAliasCache[aliasKey] = employeeId;
+        }
+
+        private static string BuildAliasKey(ushort sourceSystemId, string normalized)
+            => $"{sourceSystemId}|{normalized}";
+    }
+}

@@ -52,14 +52,15 @@ namespace GRCFinancialControl
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewHelpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupEngagement = new System.Windows.Forms.GroupBox();
-            this.chkDryRun = new System.Windows.Forms.CheckBox();
             this.dtpWeekEnd = new System.Windows.Forms.DateTimePicker();
             this.lblWeekEnd = new System.Windows.Forms.Label();
             this.txtEngagementId = new System.Windows.Forms.TextBox();
             this.lblEngagementId = new System.Windows.Forms.Label();
             this.txtStatus = new System.Windows.Forms.TextBox();
+            this.gridUploadSummary = new System.Windows.Forms.DataGridView();
             this.menuMain.SuspendLayout();
             this.groupEngagement.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.gridUploadSummary)).BeginInit();
             this.SuspendLayout();
             // 
             // menuMain
@@ -241,28 +242,16 @@ namespace GRCFinancialControl
             // 
             this.groupEngagement.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupEngagement.Controls.Add(this.chkDryRun);
             this.groupEngagement.Controls.Add(this.dtpWeekEnd);
             this.groupEngagement.Controls.Add(this.lblWeekEnd);
             this.groupEngagement.Controls.Add(this.txtEngagementId);
             this.groupEngagement.Controls.Add(this.lblEngagementId);
             this.groupEngagement.Location = new System.Drawing.Point(12, 36);
             this.groupEngagement.Name = "groupEngagement";
-            this.groupEngagement.Size = new System.Drawing.Size(880, 150);
+            this.groupEngagement.Size = new System.Drawing.Size(880, 120);
             this.groupEngagement.TabIndex = 1;
             this.groupEngagement.TabStop = false;
             this.groupEngagement.Text = "Engagement Context";
-            // 
-            // chkDryRun
-            // 
-            this.chkDryRun.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.chkDryRun.AutoSize = true;
-            this.chkDryRun.Location = new System.Drawing.Point(662, 110);
-            this.chkDryRun.Name = "chkDryRun";
-            this.chkDryRun.Size = new System.Drawing.Size(187, 19);
-            this.chkDryRun.TabIndex = 4;
-            this.chkDryRun.Text = "Dry Run (validate without save)";
-            this.chkDryRun.UseVisualStyleBackColor = true;
             // 
             // dtpWeekEnd
             // 
@@ -297,19 +286,30 @@ namespace GRCFinancialControl
             this.lblEngagementId.Size = new System.Drawing.Size(88, 15);
             this.lblEngagementId.TabIndex = 0;
             this.lblEngagementId.Text = "Engagement ID";
-            // 
-            // txtStatus
-            // 
-            this.txtStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            //
+            // gridUploadSummary
+            //
+            this.gridUploadSummary.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtStatus.Location = new System.Drawing.Point(12, 192);
+            this.gridUploadSummary.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.gridUploadSummary.Location = new System.Drawing.Point(12, 162);
+            this.gridUploadSummary.Name = "gridUploadSummary";
+            this.gridUploadSummary.ReadOnly = true;
+            this.gridUploadSummary.Size = new System.Drawing.Size(880, 180);
+            this.gridUploadSummary.TabIndex = 2;
+            //
+            // txtStatus
+            //
+            this.txtStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtStatus.Location = new System.Drawing.Point(12, 348);
             this.txtStatus.Multiline = true;
             this.txtStatus.Name = "txtStatus";
             this.txtStatus.ReadOnly = true;
             this.txtStatus.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtStatus.Size = new System.Drawing.Size(880, 397);
-            this.txtStatus.TabIndex = 2;
+            this.txtStatus.Size = new System.Drawing.Size(880, 241);
+            this.txtStatus.TabIndex = 3;
             // 
             // Form1
             // 
@@ -317,6 +317,7 @@ namespace GRCFinancialControl
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(904, 601);
             this.Controls.Add(this.txtStatus);
+            this.Controls.Add(this.gridUploadSummary);
             this.Controls.Add(this.groupEngagement);
             this.Controls.Add(this.menuMain);
             this.MainMenuStrip = this.menuMain;
@@ -328,6 +329,7 @@ namespace GRCFinancialControl
             this.menuMain.PerformLayout();
             this.groupEngagement.ResumeLayout(false);
             this.groupEngagement.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.gridUploadSummary)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -358,11 +360,11 @@ namespace GRCFinancialControl
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewHelpToolStripMenuItem;
         private System.Windows.Forms.GroupBox groupEngagement;
-        private System.Windows.Forms.CheckBox chkDryRun;
         private System.Windows.Forms.DateTimePicker dtpWeekEnd;
         private System.Windows.Forms.Label lblWeekEnd;
         private System.Windows.Forms.TextBox txtEngagementId;
         private System.Windows.Forms.Label lblEngagementId;
         private System.Windows.Forms.TextBox txtStatus;
+        private System.Windows.Forms.DataGridView gridUploadSummary;
     }
 }
