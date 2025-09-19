@@ -28,328 +28,323 @@ namespace GRCFinancialControl.Forms
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
-            this.tableLayoutPanelEditors = new System.Windows.Forms.TableLayoutPanel();
-            this.lblDescription = new System.Windows.Forms.Label();
-            this.txtDescription = new System.Windows.Forms.TextBox();
-            this.lblStartDate = new System.Windows.Forms.Label();
-            this.dtpStartDate = new System.Windows.Forms.DateTimePicker();
-            this.lblEndDate = new System.Windows.Forms.Label();
-            this.dtpEndDate = new System.Windows.Forms.DateTimePicker();
-            this.lblActivePeriod = new System.Windows.Forms.Label();
-            this.gridMeasurementPeriods = new System.Windows.Forms.DataGridView();
-            this.colPeriodId = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colStartDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colEndDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colCreatedUtc = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colUpdatedUtc = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.flowLayoutPanelButtons = new System.Windows.Forms.FlowLayoutPanel();
-            this.btnNew = new System.Windows.Forms.Button();
-            this.btnSave = new System.Windows.Forms.Button();
-            this.btnDelete = new System.Windows.Forms.Button();
-            this.btnActivate = new System.Windows.Forms.Button();
-            this.btnClose = new System.Windows.Forms.Button();
-            this.tableLayoutPanelEditors.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.gridMeasurementPeriods)).BeginInit();
-            this.flowLayoutPanelButtons.SuspendLayout();
-            this.SuspendLayout();
+            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle7 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle8 = new DataGridViewCellStyle();
+            tableLayoutPanelEditors = new TableLayoutPanel();
+            lblDescription = new Label();
+            txtDescription = new TextBox();
+            lblStartDate = new Label();
+            dtpStartDate = new DateTimePicker();
+            lblEndDate = new Label();
+            dtpEndDate = new DateTimePicker();
+            lblActivePeriod = new Label();
+            gridMeasurementPeriods = new DataGridView();
+            colPeriodId = new DataGridViewTextBoxColumn();
+            colDescription = new DataGridViewTextBoxColumn();
+            colStartDate = new DataGridViewTextBoxColumn();
+            colEndDate = new DataGridViewTextBoxColumn();
+            colCreatedUtc = new DataGridViewTextBoxColumn();
+            colUpdatedUtc = new DataGridViewTextBoxColumn();
+            flowLayoutPanelButtons = new FlowLayoutPanel();
+            btnNew = new Button();
+            btnSave = new Button();
+            btnDelete = new Button();
+            btnActivate = new Button();
+            btnClose = new Button();
+            tableLayoutPanelEditors.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)gridMeasurementPeriods).BeginInit();
+            flowLayoutPanelButtons.SuspendLayout();
+            SuspendLayout();
             // 
             // tableLayoutPanelEditors
             // 
-            this.tableLayoutPanelEditors.AutoSize = true;
-            this.tableLayoutPanelEditors.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.tableLayoutPanelEditors.ColumnCount = 2;
-            this.tableLayoutPanelEditors.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanelEditors.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanelEditors.Controls.Add(this.lblDescription, 0, 0);
-            this.tableLayoutPanelEditors.Controls.Add(this.txtDescription, 1, 0);
-            this.tableLayoutPanelEditors.Controls.Add(this.lblStartDate, 0, 1);
-            this.tableLayoutPanelEditors.Controls.Add(this.dtpStartDate, 1, 1);
-            this.tableLayoutPanelEditors.Controls.Add(this.lblEndDate, 0, 2);
-            this.tableLayoutPanelEditors.Controls.Add(this.dtpEndDate, 1, 2);
-            this.tableLayoutPanelEditors.Dock = System.Windows.Forms.DockStyle.Top;
-            this.tableLayoutPanelEditors.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanelEditors.Margin = new System.Windows.Forms.Padding(6);
-            this.tableLayoutPanelEditors.Name = "tableLayoutPanelEditors";
-            this.tableLayoutPanelEditors.Padding = new System.Windows.Forms.Padding(10, 10, 10, 0);
-            this.tableLayoutPanelEditors.RowCount = 3;
-            this.tableLayoutPanelEditors.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanelEditors.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanelEditors.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanelEditors.Size = new System.Drawing.Size(824, 116);
-            this.tableLayoutPanelEditors.TabIndex = 0;
+            tableLayoutPanelEditors.AutoSize = true;
+            tableLayoutPanelEditors.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            tableLayoutPanelEditors.ColumnCount = 2;
+            tableLayoutPanelEditors.ColumnStyles.Add(new ColumnStyle());
+            tableLayoutPanelEditors.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            tableLayoutPanelEditors.Controls.Add(lblDescription, 0, 0);
+            tableLayoutPanelEditors.Controls.Add(txtDescription, 1, 0);
+            tableLayoutPanelEditors.Controls.Add(lblStartDate, 0, 1);
+            tableLayoutPanelEditors.Controls.Add(dtpStartDate, 1, 1);
+            tableLayoutPanelEditors.Controls.Add(lblEndDate, 0, 2);
+            tableLayoutPanelEditors.Controls.Add(dtpEndDate, 1, 2);
+            tableLayoutPanelEditors.Dock = DockStyle.Bottom;
+            tableLayoutPanelEditors.Location = new Point(0, 93);
+            tableLayoutPanelEditors.Margin = new Padding(9, 10, 9, 10);
+            tableLayoutPanelEditors.Name = "tableLayoutPanelEditors";
+            tableLayoutPanelEditors.Padding = new Padding(14, 17, 14, 0);
+            tableLayoutPanelEditors.RowCount = 3;
+            tableLayoutPanelEditors.RowStyles.Add(new RowStyle());
+            tableLayoutPanelEditors.RowStyles.Add(new RowStyle());
+            tableLayoutPanelEditors.RowStyles.Add(new RowStyle());
+            tableLayoutPanelEditors.Size = new Size(1177, 140);
+            tableLayoutPanelEditors.TabIndex = 0;
             // 
             // lblDescription
             // 
-            this.lblDescription.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.lblDescription.AutoSize = true;
-            this.lblDescription.Location = new System.Drawing.Point(13, 15);
-            this.lblDescription.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
-            this.lblDescription.Name = "lblDescription";
-            this.lblDescription.Size = new System.Drawing.Size(69, 15);
-            this.lblDescription.TabIndex = 0;
-            this.lblDescription.Text = "Description";
+            lblDescription.Anchor = AnchorStyles.Left;
+            lblDescription.AutoSize = true;
+            lblDescription.Location = new Point(18, 25);
+            lblDescription.Margin = new Padding(4, 8, 4, 8);
+            lblDescription.Name = "lblDescription";
+            lblDescription.Size = new Size(102, 25);
+            lblDescription.TabIndex = 0;
+            lblDescription.Text = "Description";
             // 
             // txtDescription
             // 
-            this.txtDescription.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtDescription.Location = new System.Drawing.Point(122, 13);
-            this.txtDescription.Margin = new System.Windows.Forms.Padding(3, 3, 10, 3);
-            this.txtDescription.MaxLength = 255;
-            this.txtDescription.Name = "txtDescription";
-            this.txtDescription.Size = new System.Drawing.Size(682, 23);
-            this.txtDescription.TabIndex = 1;
-            this.txtDescription.TextChanged += new System.EventHandler(this.EditorChanged);
+            txtDescription.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtDescription.Location = new Point(128, 22);
+            txtDescription.Margin = new Padding(4, 5, 14, 5);
+            txtDescription.MaxLength = 255;
+            txtDescription.Name = "txtDescription";
+            txtDescription.Size = new Size(1021, 31);
+            txtDescription.TabIndex = 1;
+            txtDescription.TextChanged += EditorChanged;
             // 
             // lblStartDate
             // 
-            this.lblStartDate.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.lblStartDate.AutoSize = true;
-            this.lblStartDate.Location = new System.Drawing.Point(13, 48);
-            this.lblStartDate.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
-            this.lblStartDate.Name = "lblStartDate";
-            this.lblStartDate.Size = new System.Drawing.Size(61, 15);
-            this.lblStartDate.TabIndex = 2;
-            this.lblStartDate.Text = "Start Date";
+            lblStartDate.Anchor = AnchorStyles.Left;
+            lblStartDate.AutoSize = true;
+            lblStartDate.Location = new Point(18, 66);
+            lblStartDate.Margin = new Padding(4, 8, 4, 8);
+            lblStartDate.Name = "lblStartDate";
+            lblStartDate.Size = new Size(90, 25);
+            lblStartDate.TabIndex = 2;
+            lblStartDate.Text = "Start Date";
             // 
             // dtpStartDate
             // 
-            this.dtpStartDate.Format = System.Windows.Forms.DateTimePickerFormat.Short;
-            this.dtpStartDate.Location = new System.Drawing.Point(122, 45);
-            this.dtpStartDate.Margin = new System.Windows.Forms.Padding(3, 3, 10, 3);
-            this.dtpStartDate.Name = "dtpStartDate";
-            this.dtpStartDate.Size = new System.Drawing.Size(140, 23);
-            this.dtpStartDate.TabIndex = 3;
-            this.dtpStartDate.ValueChanged += new System.EventHandler(this.EditorChanged);
+            dtpStartDate.Format = DateTimePickerFormat.Short;
+            dtpStartDate.Location = new Point(128, 63);
+            dtpStartDate.Margin = new Padding(4, 5, 14, 5);
+            dtpStartDate.Name = "dtpStartDate";
+            dtpStartDate.Size = new Size(198, 31);
+            dtpStartDate.TabIndex = 3;
+            dtpStartDate.ValueChanged += EditorChanged;
             // 
             // lblEndDate
             // 
-            this.lblEndDate.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.lblEndDate.AutoSize = true;
-            this.lblEndDate.Location = new System.Drawing.Point(13, 81);
-            this.lblEndDate.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
-            this.lblEndDate.Name = "lblEndDate";
-            this.lblEndDate.Size = new System.Drawing.Size(55, 15);
-            this.lblEndDate.TabIndex = 4;
-            this.lblEndDate.Text = "End Date";
+            lblEndDate.Anchor = AnchorStyles.Left;
+            lblEndDate.AutoSize = true;
+            lblEndDate.Location = new Point(18, 107);
+            lblEndDate.Margin = new Padding(4, 8, 4, 8);
+            lblEndDate.Name = "lblEndDate";
+            lblEndDate.Size = new Size(84, 25);
+            lblEndDate.TabIndex = 4;
+            lblEndDate.Text = "End Date";
             // 
             // dtpEndDate
             // 
-            this.dtpEndDate.Format = System.Windows.Forms.DateTimePickerFormat.Short;
-            this.dtpEndDate.Location = new System.Drawing.Point(122, 78);
-            this.dtpEndDate.Margin = new System.Windows.Forms.Padding(3, 3, 10, 3);
-            this.dtpEndDate.Name = "dtpEndDate";
-            this.dtpEndDate.Size = new System.Drawing.Size(140, 23);
-            this.dtpEndDate.TabIndex = 5;
-            this.dtpEndDate.ValueChanged += new System.EventHandler(this.EditorChanged);
+            dtpEndDate.Format = DateTimePickerFormat.Short;
+            dtpEndDate.Location = new Point(128, 104);
+            dtpEndDate.Margin = new Padding(4, 5, 14, 5);
+            dtpEndDate.Name = "dtpEndDate";
+            dtpEndDate.Size = new Size(198, 31);
+            dtpEndDate.TabIndex = 5;
+            dtpEndDate.ValueChanged += EditorChanged;
             // 
             // lblActivePeriod
             // 
-            this.lblActivePeriod.AutoSize = true;
-            this.lblActivePeriod.Dock = System.Windows.Forms.DockStyle.Top;
-            this.lblActivePeriod.Location = new System.Drawing.Point(0, 116);
-            this.lblActivePeriod.Margin = new System.Windows.Forms.Padding(10);
-            this.lblActivePeriod.Name = "lblActivePeriod";
-            this.lblActivePeriod.Padding = new System.Windows.Forms.Padding(10, 5, 10, 5);
-            this.lblActivePeriod.Size = new System.Drawing.Size(141, 25);
-            this.lblActivePeriod.TabIndex = 1;
-            this.lblActivePeriod.Text = "Current Active Period: -";
+            lblActivePeriod.AutoSize = true;
+            lblActivePeriod.Dock = DockStyle.Top;
+            lblActivePeriod.Location = new Point(0, 0);
+            lblActivePeriod.Margin = new Padding(14, 17, 14, 17);
+            lblActivePeriod.Name = "lblActivePeriod";
+            lblActivePeriod.Padding = new Padding(14, 8, 14, 8);
+            lblActivePeriod.Size = new Size(222, 41);
+            lblActivePeriod.TabIndex = 1;
+            lblActivePeriod.Text = "Current Active Period: -";
             // 
             // gridMeasurementPeriods
             // 
-            this.gridMeasurementPeriods.AllowUserToAddRows = false;
-            this.gridMeasurementPeriods.AllowUserToDeleteRows = false;
-            this.gridMeasurementPeriods.AllowUserToResizeRows = false;
-            this.gridMeasurementPeriods.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.gridMeasurementPeriods.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.gridMeasurementPeriods.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.colPeriodId,
-            this.colDescription,
-            this.colStartDate,
-            this.colEndDate,
-            this.colCreatedUtc,
-            this.colUpdatedUtc});
-            this.gridMeasurementPeriods.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.gridMeasurementPeriods.Location = new System.Drawing.Point(0, 141);
-            this.gridMeasurementPeriods.MultiSelect = false;
-            this.gridMeasurementPeriods.Name = "gridMeasurementPeriods";
-            this.gridMeasurementPeriods.ReadOnly = true;
-            this.gridMeasurementPeriods.RowHeadersVisible = false;
-            this.gridMeasurementPeriods.RowTemplate.Height = 25;
-            this.gridMeasurementPeriods.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.gridMeasurementPeriods.Size = new System.Drawing.Size(824, 309);
-            this.gridMeasurementPeriods.TabIndex = 2;
-            this.gridMeasurementPeriods.SelectionChanged += new System.EventHandler(this.gridMeasurementPeriods_SelectionChanged);
+            gridMeasurementPeriods.AllowUserToAddRows = false;
+            gridMeasurementPeriods.AllowUserToDeleteRows = false;
+            gridMeasurementPeriods.AllowUserToResizeRows = false;
+            gridMeasurementPeriods.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            gridMeasurementPeriods.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            gridMeasurementPeriods.Columns.AddRange(new DataGridViewColumn[] { colPeriodId, colDescription, colStartDate, colEndDate, colCreatedUtc, colUpdatedUtc });
+            gridMeasurementPeriods.Dock = DockStyle.Bottom;
+            gridMeasurementPeriods.Location = new Point(0, 335);
+            gridMeasurementPeriods.Margin = new Padding(4, 5, 4, 5);
+            gridMeasurementPeriods.MultiSelect = false;
+            gridMeasurementPeriods.Name = "gridMeasurementPeriods";
+            gridMeasurementPeriods.ReadOnly = true;
+            gridMeasurementPeriods.RowHeadersVisible = false;
+            gridMeasurementPeriods.RowHeadersWidth = 62;
+            gridMeasurementPeriods.RowTemplate.Height = 25;
+            gridMeasurementPeriods.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            gridMeasurementPeriods.Size = new Size(1177, 515);
+            gridMeasurementPeriods.TabIndex = 2;
+            gridMeasurementPeriods.SelectionChanged += gridMeasurementPeriods_SelectionChanged;
             // 
             // colPeriodId
             // 
-            this.colPeriodId.DataPropertyName = "PeriodId";
-            this.colPeriodId.HeaderText = "ID";
-            this.colPeriodId.MinimumWidth = 60;
-            this.colPeriodId.Name = "colPeriodId";
-            this.colPeriodId.ReadOnly = true;
+            colPeriodId.DataPropertyName = "PeriodId";
+            colPeriodId.HeaderText = "ID";
+            colPeriodId.MinimumWidth = 60;
+            colPeriodId.Name = "colPeriodId";
+            colPeriodId.ReadOnly = true;
             // 
             // colDescription
             // 
-            this.colDescription.DataPropertyName = "Description";
-            this.colDescription.HeaderText = "Description";
-            this.colDescription.MinimumWidth = 150;
-            this.colDescription.Name = "colDescription";
-            this.colDescription.ReadOnly = true;
+            colDescription.DataPropertyName = "Description";
+            colDescription.HeaderText = "Description";
+            colDescription.MinimumWidth = 150;
+            colDescription.Name = "colDescription";
+            colDescription.ReadOnly = true;
             // 
             // colStartDate
             // 
-            this.colStartDate.DataPropertyName = "StartDate";
-            this.colStartDate.HeaderText = "Start Date";
-            this.colStartDate.MinimumWidth = 100;
-            this.colStartDate.Name = "colStartDate";
-            this.colStartDate.ReadOnly = true;
-            dataGridViewCellStyle1.Format = "yyyy-MM-dd";
-            dataGridViewCellStyle1.NullValue = null;
-            this.colStartDate.DefaultCellStyle = dataGridViewCellStyle1;
+            colStartDate.DataPropertyName = "StartDate";
+            dataGridViewCellStyle5.Format = "yyyy-MM-dd";
+            dataGridViewCellStyle5.NullValue = null;
+            colStartDate.DefaultCellStyle = dataGridViewCellStyle5;
+            colStartDate.HeaderText = "Start Date";
+            colStartDate.MinimumWidth = 100;
+            colStartDate.Name = "colStartDate";
+            colStartDate.ReadOnly = true;
             // 
             // colEndDate
             // 
-            this.colEndDate.DataPropertyName = "EndDate";
-            this.colEndDate.HeaderText = "End Date";
-            this.colEndDate.MinimumWidth = 100;
-            this.colEndDate.Name = "colEndDate";
-            this.colEndDate.ReadOnly = true;
-            dataGridViewCellStyle2.Format = "yyyy-MM-dd";
-            dataGridViewCellStyle2.NullValue = null;
-            this.colEndDate.DefaultCellStyle = dataGridViewCellStyle2;
+            colEndDate.DataPropertyName = "EndDate";
+            dataGridViewCellStyle6.Format = "yyyy-MM-dd";
+            dataGridViewCellStyle6.NullValue = null;
+            colEndDate.DefaultCellStyle = dataGridViewCellStyle6;
+            colEndDate.HeaderText = "End Date";
+            colEndDate.MinimumWidth = 100;
+            colEndDate.Name = "colEndDate";
+            colEndDate.ReadOnly = true;
             // 
             // colCreatedUtc
             // 
-            this.colCreatedUtc.DataPropertyName = "CreatedUtc";
-            this.colCreatedUtc.HeaderText = "Created (UTC)";
-            this.colCreatedUtc.MinimumWidth = 120;
-            this.colCreatedUtc.Name = "colCreatedUtc";
-            this.colCreatedUtc.ReadOnly = true;
-            dataGridViewCellStyle3.Format = "g";
-            dataGridViewCellStyle3.NullValue = null;
-            this.colCreatedUtc.DefaultCellStyle = dataGridViewCellStyle3;
+            colCreatedUtc.DataPropertyName = "CreatedUtc";
+            dataGridViewCellStyle7.Format = "g";
+            dataGridViewCellStyle7.NullValue = null;
+            colCreatedUtc.DefaultCellStyle = dataGridViewCellStyle7;
+            colCreatedUtc.HeaderText = "Created (UTC)";
+            colCreatedUtc.MinimumWidth = 120;
+            colCreatedUtc.Name = "colCreatedUtc";
+            colCreatedUtc.ReadOnly = true;
             // 
             // colUpdatedUtc
             // 
-            this.colUpdatedUtc.DataPropertyName = "UpdatedUtc";
-            this.colUpdatedUtc.HeaderText = "Updated (UTC)";
-            this.colUpdatedUtc.MinimumWidth = 120;
-            this.colUpdatedUtc.Name = "colUpdatedUtc";
-            this.colUpdatedUtc.ReadOnly = true;
-            dataGridViewCellStyle4.Format = "g";
-            dataGridViewCellStyle4.NullValue = null;
-            this.colUpdatedUtc.DefaultCellStyle = dataGridViewCellStyle4;
+            colUpdatedUtc.DataPropertyName = "UpdatedUtc";
+            dataGridViewCellStyle8.Format = "g";
+            dataGridViewCellStyle8.NullValue = null;
+            colUpdatedUtc.DefaultCellStyle = dataGridViewCellStyle8;
+            colUpdatedUtc.HeaderText = "Updated (UTC)";
+            colUpdatedUtc.MinimumWidth = 120;
+            colUpdatedUtc.Name = "colUpdatedUtc";
+            colUpdatedUtc.ReadOnly = true;
             // 
             // flowLayoutPanelButtons
             // 
-            this.flowLayoutPanelButtons.AutoSize = true;
-            this.flowLayoutPanelButtons.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.flowLayoutPanelButtons.Controls.Add(this.btnNew);
-            this.flowLayoutPanelButtons.Controls.Add(this.btnSave);
-            this.flowLayoutPanelButtons.Controls.Add(this.btnDelete);
-            this.flowLayoutPanelButtons.Controls.Add(this.btnActivate);
-            this.flowLayoutPanelButtons.Controls.Add(this.btnClose);
-            this.flowLayoutPanelButtons.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.flowLayoutPanelButtons.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
-            this.flowLayoutPanelButtons.Location = new System.Drawing.Point(0, 450);
-            this.flowLayoutPanelButtons.Margin = new System.Windows.Forms.Padding(10);
-            this.flowLayoutPanelButtons.Name = "flowLayoutPanelButtons";
-            this.flowLayoutPanelButtons.Padding = new System.Windows.Forms.Padding(10);
-            this.flowLayoutPanelButtons.Size = new System.Drawing.Size(824, 60);
-            this.flowLayoutPanelButtons.TabIndex = 3;
-            this.flowLayoutPanelButtons.WrapContents = false;
+            flowLayoutPanelButtons.AutoSize = true;
+            flowLayoutPanelButtons.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            flowLayoutPanelButtons.Controls.Add(btnNew);
+            flowLayoutPanelButtons.Controls.Add(btnSave);
+            flowLayoutPanelButtons.Controls.Add(btnDelete);
+            flowLayoutPanelButtons.Controls.Add(btnActivate);
+            flowLayoutPanelButtons.Controls.Add(btnClose);
+            flowLayoutPanelButtons.Dock = DockStyle.Bottom;
+            flowLayoutPanelButtons.Location = new Point(0, 233);
+            flowLayoutPanelButtons.Margin = new Padding(14, 17, 14, 17);
+            flowLayoutPanelButtons.Name = "flowLayoutPanelButtons";
+            flowLayoutPanelButtons.Padding = new Padding(14, 17, 14, 17);
+            flowLayoutPanelButtons.Size = new Size(1177, 102);
+            flowLayoutPanelButtons.TabIndex = 3;
+            flowLayoutPanelButtons.WrapContents = false;
             // 
             // btnNew
             // 
-            this.btnNew.AutoSize = true;
-            this.btnNew.Location = new System.Drawing.Point(13, 13);
-            this.btnNew.Margin = new System.Windows.Forms.Padding(3);
-            this.btnNew.Name = "btnNew";
-            this.btnNew.Size = new System.Drawing.Size(90, 30);
-            this.btnNew.TabIndex = 0;
-            this.btnNew.Text = "New";
-            this.btnNew.UseVisualStyleBackColor = true;
-            this.btnNew.Click += new System.EventHandler(this.btnNew_Click);
+            btnNew.AutoSize = true;
+            btnNew.Location = new Point(18, 22);
+            btnNew.Margin = new Padding(4, 5, 4, 5);
+            btnNew.Name = "btnNew";
+            btnNew.Size = new Size(129, 58);
+            btnNew.TabIndex = 0;
+            btnNew.Text = "New";
+            btnNew.UseVisualStyleBackColor = true;
+            btnNew.Click += btnNew_Click;
             // 
             // btnSave
             // 
-            this.btnSave.AutoSize = true;
-            this.btnSave.Enabled = false;
-            this.btnSave.Location = new System.Drawing.Point(109, 13);
-            this.btnSave.Margin = new System.Windows.Forms.Padding(3);
-            this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(90, 30);
-            this.btnSave.TabIndex = 1;
-            this.btnSave.Text = "Save";
-            this.btnSave.UseVisualStyleBackColor = true;
-            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
+            btnSave.AutoSize = true;
+            btnSave.Enabled = false;
+            btnSave.Location = new Point(155, 22);
+            btnSave.Margin = new Padding(4, 5, 4, 5);
+            btnSave.Name = "btnSave";
+            btnSave.Size = new Size(129, 58);
+            btnSave.TabIndex = 1;
+            btnSave.Text = "Save";
+            btnSave.UseVisualStyleBackColor = true;
+            btnSave.Click += btnSave_Click;
             // 
             // btnDelete
             // 
-            this.btnDelete.AutoSize = true;
-            this.btnDelete.Enabled = false;
-            this.btnDelete.Location = new System.Drawing.Point(205, 13);
-            this.btnDelete.Margin = new System.Windows.Forms.Padding(3);
-            this.btnDelete.Name = "btnDelete";
-            this.btnDelete.Size = new System.Drawing.Size(90, 30);
-            this.btnDelete.TabIndex = 2;
-            this.btnDelete.Text = "Delete";
-            this.btnDelete.UseVisualStyleBackColor = true;
-            this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
+            btnDelete.AutoSize = true;
+            btnDelete.Enabled = false;
+            btnDelete.Location = new Point(292, 22);
+            btnDelete.Margin = new Padding(4, 5, 4, 5);
+            btnDelete.Name = "btnDelete";
+            btnDelete.Size = new Size(129, 58);
+            btnDelete.TabIndex = 2;
+            btnDelete.Text = "Delete";
+            btnDelete.UseVisualStyleBackColor = true;
+            btnDelete.Click += btnDelete_Click;
             // 
             // btnActivate
             // 
-            this.btnActivate.AutoSize = true;
-            this.btnActivate.Enabled = false;
-            this.btnActivate.Location = new System.Drawing.Point(301, 13);
-            this.btnActivate.Margin = new System.Windows.Forms.Padding(3);
-            this.btnActivate.Name = "btnActivate";
-            this.btnActivate.Size = new System.Drawing.Size(90, 30);
-            this.btnActivate.TabIndex = 3;
-            this.btnActivate.Text = "Activate";
-            this.btnActivate.UseVisualStyleBackColor = true;
-            this.btnActivate.Click += new System.EventHandler(this.btnActivate_Click);
+            btnActivate.AutoSize = true;
+            btnActivate.Enabled = false;
+            btnActivate.Location = new Point(429, 22);
+            btnActivate.Margin = new Padding(4, 5, 4, 5);
+            btnActivate.Name = "btnActivate";
+            btnActivate.Size = new Size(129, 58);
+            btnActivate.TabIndex = 3;
+            btnActivate.Text = "Activate";
+            btnActivate.UseVisualStyleBackColor = true;
+            btnActivate.Click += btnActivate_Click;
             // 
             // btnClose
             // 
-            this.btnClose.AutoSize = true;
-            this.btnClose.Location = new System.Drawing.Point(397, 13);
-            this.btnClose.Margin = new System.Windows.Forms.Padding(3);
-            this.btnClose.Name = "btnClose";
-            this.btnClose.Size = new System.Drawing.Size(90, 30);
-            this.btnClose.TabIndex = 4;
-            this.btnClose.Text = "Close";
-            this.btnClose.UseVisualStyleBackColor = true;
-            this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
+            btnClose.AutoSize = true;
+            btnClose.Location = new Point(566, 22);
+            btnClose.Margin = new Padding(4, 5, 4, 5);
+            btnClose.Name = "btnClose";
+            btnClose.Size = new Size(129, 58);
+            btnClose.TabIndex = 4;
+            btnClose.Text = "Close";
+            btnClose.UseVisualStyleBackColor = true;
+            btnClose.Click += btnClose_Click;
             // 
             // MeasurementPeriodForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(824, 510);
-            this.Controls.Add(this.tableLayoutPanelEditors);
-            this.Controls.Add(this.lblActivePeriod);
-            this.Controls.Add(this.flowLayoutPanelButtons);
-            this.Controls.Add(this.gridMeasurementPeriods);
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(720, 480);
-            this.Name = "MeasurementPeriodForm";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Measurement Periods";
-            this.tableLayoutPanelEditors.ResumeLayout(false);
-            this.tableLayoutPanelEditors.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.gridMeasurementPeriods)).EndInit();
-            this.flowLayoutPanelButtons.ResumeLayout(false);
-            this.flowLayoutPanelButtons.PerformLayout();
-            this.ResumeLayout(false);
-            this.PerformLayout();
+            AutoScaleDimensions = new SizeF(10F, 25F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(1177, 850);
+            Controls.Add(tableLayoutPanelEditors);
+            Controls.Add(lblActivePeriod);
+            Controls.Add(flowLayoutPanelButtons);
+            Controls.Add(gridMeasurementPeriods);
+            Margin = new Padding(4, 5, 4, 5);
+            MaximizeBox = false;
+            MinimizeBox = false;
+            MinimumSize = new Size(1019, 763);
+            Name = "MeasurementPeriodForm";
+            StartPosition = FormStartPosition.CenterParent;
+            Text = "Measurement Periods";
+            tableLayoutPanelEditors.ResumeLayout(false);
+            tableLayoutPanelEditors.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)gridMeasurementPeriods).EndInit();
+            flowLayoutPanelButtons.ResumeLayout(false);
+            flowLayoutPanelButtons.PerformLayout();
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion

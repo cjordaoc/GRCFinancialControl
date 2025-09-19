@@ -28,300 +28,225 @@ namespace GRCFinancialControl
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            this.menuMain = new System.Windows.Forms.MenuStrip();
-            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.databaseConnectionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.maintenanceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.selectDefaultToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.measurementPeriodToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.fileSeparator = new System.Windows.Forms.ToolStripSeparator();
-            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.uploadsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.uploadPlanToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.uploadEtcToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.uploadMarginDataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.uploadErpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.uploadRetainToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.uploadChargesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.masterDataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.engagementsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.fiscalYearsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.reportsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.reconcileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.exportAuditToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.viewHelpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.groupReconciliation = new System.Windows.Forms.GroupBox();
-            this.dtpWeekEnd = new System.Windows.Forms.DateTimePicker();
-            this.lblWeekEnd = new System.Windows.Forms.Label();
-            this.txtStatus = new System.Windows.Forms.TextBox();
-            this.gridUploadSummary = new System.Windows.Forms.DataGridView();
-            this.menuMain.SuspendLayout();
-            this.groupReconciliation.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.gridUploadSummary)).BeginInit();
-            this.SuspendLayout();
+            menuMain = new MenuStrip();
+            fileToolStripMenuItem = new ToolStripMenuItem();
+            databaseConnectionsToolStripMenuItem = new ToolStripMenuItem();
+            maintenanceToolStripMenuItem = new ToolStripMenuItem();
+            selectDefaultToolStripMenuItem = new ToolStripMenuItem();
+            measurementPeriodToolStripMenuItem = new ToolStripMenuItem();
+            fileSeparator = new ToolStripSeparator();
+            exitToolStripMenuItem = new ToolStripMenuItem();
+            uploadsToolStripMenuItem = new ToolStripMenuItem();
+            uploadPlanToolStripMenuItem = new ToolStripMenuItem();
+            uploadEtcToolStripMenuItem = new ToolStripMenuItem();
+            uploadMarginDataToolStripMenuItem = new ToolStripMenuItem();
+            uploadErpToolStripMenuItem = new ToolStripMenuItem();
+            uploadRetainToolStripMenuItem = new ToolStripMenuItem();
+            uploadChargesToolStripMenuItem = new ToolStripMenuItem();
+            masterDataToolStripMenuItem = new ToolStripMenuItem();
+            engagementsToolStripMenuItem = new ToolStripMenuItem();
+            fiscalYearsToolStripMenuItem = new ToolStripMenuItem();
+            reportsToolStripMenuItem = new ToolStripMenuItem();
+            reconcileToolStripMenuItem = new ToolStripMenuItem();
+            exportAuditToolStripMenuItem = new ToolStripMenuItem();
+            helpToolStripMenuItem = new ToolStripMenuItem();
+            viewHelpToolStripMenuItem = new ToolStripMenuItem();
+            txtStatus = new TextBox();
+            menuMain.SuspendLayout();
+            SuspendLayout();
             // 
             // menuMain
             // 
-            this.menuMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem,
-            this.uploadsToolStripMenuItem,
-            this.masterDataToolStripMenuItem,
-            this.reportsToolStripMenuItem,
-            this.helpToolStripMenuItem});
-            this.menuMain.Location = new System.Drawing.Point(0, 0);
-            this.menuMain.Name = "menuMain";
-            this.menuMain.Size = new System.Drawing.Size(904, 24);
-            this.menuMain.TabIndex = 0;
-            this.menuMain.Text = "menuStrip1";
+            menuMain.ImageScalingSize = new Size(24, 24);
+            menuMain.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, uploadsToolStripMenuItem, masterDataToolStripMenuItem, reportsToolStripMenuItem, helpToolStripMenuItem });
+            menuMain.Location = new Point(0, 0);
+            menuMain.Name = "menuMain";
+            menuMain.Padding = new Padding(9, 3, 0, 3);
+            menuMain.Size = new Size(1002, 35);
+            menuMain.TabIndex = 0;
+            menuMain.Text = "menuStrip1";
             // 
             // fileToolStripMenuItem
             // 
-            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.databaseConnectionsToolStripMenuItem,
-            this.measurementPeriodToolStripMenuItem,
-            this.fileSeparator,
-            this.exitToolStripMenuItem});
-            this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
-            this.fileToolStripMenuItem.Text = "File";
+            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { databaseConnectionsToolStripMenuItem, measurementPeriodToolStripMenuItem, fileSeparator, exitToolStripMenuItem });
+            fileToolStripMenuItem.Name = "fileToolStripMenuItem";
+            fileToolStripMenuItem.Size = new Size(54, 29);
+            fileToolStripMenuItem.Text = "File";
             // 
             // databaseConnectionsToolStripMenuItem
             // 
-            this.databaseConnectionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.maintenanceToolStripMenuItem,
-            this.selectDefaultToolStripMenuItem});
-            this.databaseConnectionsToolStripMenuItem.Name = "databaseConnectionsToolStripMenuItem";
-            this.databaseConnectionsToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
-            this.databaseConnectionsToolStripMenuItem.Text = "Database Connections";
+            databaseConnectionsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { maintenanceToolStripMenuItem, selectDefaultToolStripMenuItem });
+            databaseConnectionsToolStripMenuItem.Name = "databaseConnectionsToolStripMenuItem";
+            databaseConnectionsToolStripMenuItem.Size = new Size(291, 34);
+            databaseConnectionsToolStripMenuItem.Text = "Database Connections";
             // 
             // maintenanceToolStripMenuItem
             // 
-            this.maintenanceToolStripMenuItem.Name = "maintenanceToolStripMenuItem";
-            this.maintenanceToolStripMenuItem.Size = new System.Drawing.Size(156, 22);
-            this.maintenanceToolStripMenuItem.Text = "Maintenance...";
-            this.maintenanceToolStripMenuItem.Click += new System.EventHandler(this.maintenanceToolStripMenuItem_Click);
+            maintenanceToolStripMenuItem.Name = "maintenanceToolStripMenuItem";
+            maintenanceToolStripMenuItem.Size = new Size(234, 34);
+            maintenanceToolStripMenuItem.Text = "Maintenance...";
+            maintenanceToolStripMenuItem.Click += maintenanceToolStripMenuItem_Click;
             // 
             // selectDefaultToolStripMenuItem
             // 
-            this.selectDefaultToolStripMenuItem.Name = "selectDefaultToolStripMenuItem";
-            this.selectDefaultToolStripMenuItem.Size = new System.Drawing.Size(156, 22);
-            this.selectDefaultToolStripMenuItem.Text = "Select Default...";
-            this.selectDefaultToolStripMenuItem.Click += new System.EventHandler(this.selectDefaultToolStripMenuItem_Click);
+            selectDefaultToolStripMenuItem.Name = "selectDefaultToolStripMenuItem";
+            selectDefaultToolStripMenuItem.Size = new Size(234, 34);
+            selectDefaultToolStripMenuItem.Text = "Select Default...";
+            selectDefaultToolStripMenuItem.Click += selectDefaultToolStripMenuItem_Click;
+            // 
+            // measurementPeriodToolStripMenuItem
+            // 
+            measurementPeriodToolStripMenuItem.Name = "measurementPeriodToolStripMenuItem";
+            measurementPeriodToolStripMenuItem.Size = new Size(291, 34);
+            measurementPeriodToolStripMenuItem.Text = "Measurement Period...";
+            measurementPeriodToolStripMenuItem.Click += measurementPeriodToolStripMenuItem_Click;
             // 
             // fileSeparator
             // 
-            this.fileSeparator.Name = "fileSeparator";
-            this.fileSeparator.Size = new System.Drawing.Size(186, 6);
+            fileSeparator.Name = "fileSeparator";
+            fileSeparator.Size = new Size(288, 6);
             // 
             // exitToolStripMenuItem
             // 
-            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
-            this.exitToolStripMenuItem.Text = "Exit";
-            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            exitToolStripMenuItem.Size = new Size(291, 34);
+            exitToolStripMenuItem.Text = "Exit";
+            exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
             // uploadsToolStripMenuItem
             // 
-            this.uploadsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.uploadPlanToolStripMenuItem,
-            this.uploadEtcToolStripMenuItem,
-            this.uploadMarginDataToolStripMenuItem,
-            this.uploadErpToolStripMenuItem,
-            this.uploadRetainToolStripMenuItem,
-            this.uploadChargesToolStripMenuItem});
-            this.uploadsToolStripMenuItem.Name = "uploadsToolStripMenuItem";
-            this.uploadsToolStripMenuItem.Size = new System.Drawing.Size(62, 20);
-            this.uploadsToolStripMenuItem.Text = "Uploads";
+            uploadsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { uploadPlanToolStripMenuItem, uploadEtcToolStripMenuItem, uploadMarginDataToolStripMenuItem, uploadErpToolStripMenuItem, uploadRetainToolStripMenuItem, uploadChargesToolStripMenuItem });
+            uploadsToolStripMenuItem.Name = "uploadsToolStripMenuItem";
+            uploadsToolStripMenuItem.Size = new Size(94, 29);
+            uploadsToolStripMenuItem.Text = "Uploads";
             // 
             // uploadPlanToolStripMenuItem
             // 
-            this.uploadPlanToolStripMenuItem.Name = "uploadPlanToolStripMenuItem";
-            this.uploadPlanToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
-            this.uploadPlanToolStripMenuItem.Text = "Load Plan";
-            this.uploadPlanToolStripMenuItem.Click += new System.EventHandler(this.uploadPlanToolStripMenuItem_Click);
+            uploadPlanToolStripMenuItem.Name = "uploadPlanToolStripMenuItem";
+            uploadPlanToolStripMenuItem.Size = new Size(267, 34);
+            uploadPlanToolStripMenuItem.Text = "Load Plan";
+            uploadPlanToolStripMenuItem.Click += uploadPlanToolStripMenuItem_Click;
             // 
             // uploadEtcToolStripMenuItem
-            //
-            this.uploadEtcToolStripMenuItem.Name = "uploadEtcToolStripMenuItem";
-            this.uploadEtcToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
-            this.uploadEtcToolStripMenuItem.Text = "Load ETC";
-            this.uploadEtcToolStripMenuItem.Click += new System.EventHandler(this.uploadEtcToolStripMenuItem_Click);
-            //
+            // 
+            uploadEtcToolStripMenuItem.Name = "uploadEtcToolStripMenuItem";
+            uploadEtcToolStripMenuItem.Size = new Size(267, 34);
+            uploadEtcToolStripMenuItem.Text = "Load ETC";
+            uploadEtcToolStripMenuItem.Click += uploadEtcToolStripMenuItem_Click;
+            // 
             // uploadMarginDataToolStripMenuItem
-            //
-            this.uploadMarginDataToolStripMenuItem.Name = "uploadMarginDataToolStripMenuItem";
-            this.uploadMarginDataToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
-            this.uploadMarginDataToolStripMenuItem.Text = "Load Margin Data";
-            this.uploadMarginDataToolStripMenuItem.Click += new System.EventHandler(this.uploadMarginDataToolStripMenuItem_Click);
+            // 
+            uploadMarginDataToolStripMenuItem.Name = "uploadMarginDataToolStripMenuItem";
+            uploadMarginDataToolStripMenuItem.Size = new Size(267, 34);
+            uploadMarginDataToolStripMenuItem.Text = "Load Margin Data";
+            uploadMarginDataToolStripMenuItem.Click += uploadMarginDataToolStripMenuItem_Click;
             // 
             // uploadErpToolStripMenuItem
             // 
-            this.uploadErpToolStripMenuItem.Name = "uploadErpToolStripMenuItem";
-            this.uploadErpToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
-            this.uploadErpToolStripMenuItem.Text = "Load ERP Weekly";
-            this.uploadErpToolStripMenuItem.Click += new System.EventHandler(this.uploadErpToolStripMenuItem_Click);
+            uploadErpToolStripMenuItem.Name = "uploadErpToolStripMenuItem";
+            uploadErpToolStripMenuItem.Size = new Size(267, 34);
+            uploadErpToolStripMenuItem.Text = "Load ERP Weekly";
+            uploadErpToolStripMenuItem.Click += uploadErpToolStripMenuItem_Click;
             // 
             // uploadRetainToolStripMenuItem
             // 
-            this.uploadRetainToolStripMenuItem.Name = "uploadRetainToolStripMenuItem";
-            this.uploadRetainToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
-            this.uploadRetainToolStripMenuItem.Text = "Load Retain Weekly";
-            this.uploadRetainToolStripMenuItem.Click += new System.EventHandler(this.uploadRetainToolStripMenuItem_Click);
+            uploadRetainToolStripMenuItem.Name = "uploadRetainToolStripMenuItem";
+            uploadRetainToolStripMenuItem.Size = new Size(267, 34);
+            uploadRetainToolStripMenuItem.Text = "Load Retain Weekly";
+            uploadRetainToolStripMenuItem.Click += uploadRetainToolStripMenuItem_Click;
             // 
             // uploadChargesToolStripMenuItem
-            //
-            this.uploadChargesToolStripMenuItem.Name = "uploadChargesToolStripMenuItem";
-            this.uploadChargesToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
-            this.uploadChargesToolStripMenuItem.Text = "Load Charges";
-            this.uploadChargesToolStripMenuItem.Click += new System.EventHandler(this.uploadChargesToolStripMenuItem_Click);
-            //
+            // 
+            uploadChargesToolStripMenuItem.Name = "uploadChargesToolStripMenuItem";
+            uploadChargesToolStripMenuItem.Size = new Size(267, 34);
+            uploadChargesToolStripMenuItem.Text = "Load Charges";
+            uploadChargesToolStripMenuItem.Click += uploadChargesToolStripMenuItem_Click;
+            // 
             // masterDataToolStripMenuItem
-            //
-            this.masterDataToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.engagementsToolStripMenuItem,
-            this.fiscalYearsToolStripMenuItem});
-            this.masterDataToolStripMenuItem.Name = "masterDataToolStripMenuItem";
-            this.masterDataToolStripMenuItem.Size = new System.Drawing.Size(86, 20);
-            this.masterDataToolStripMenuItem.Text = "Master Data";
-            //
-            // measurementPeriodToolStripMenuItem
-            //
-            this.measurementPeriodToolStripMenuItem.Name = "measurementPeriodToolStripMenuItem";
-            this.measurementPeriodToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
-            this.measurementPeriodToolStripMenuItem.Text = "Measurement Period...";
-            this.measurementPeriodToolStripMenuItem.Click += new System.EventHandler(this.measurementPeriodToolStripMenuItem_Click);
-            //
+            // 
+            masterDataToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { engagementsToolStripMenuItem, fiscalYearsToolStripMenuItem });
+            masterDataToolStripMenuItem.Name = "masterDataToolStripMenuItem";
+            masterDataToolStripMenuItem.Size = new Size(124, 29);
+            masterDataToolStripMenuItem.Text = "Master Data";
+            // 
             // engagementsToolStripMenuItem
-            //
-            this.engagementsToolStripMenuItem.Name = "engagementsToolStripMenuItem";
-            this.engagementsToolStripMenuItem.Size = new System.Drawing.Size(197, 22);
-            this.engagementsToolStripMenuItem.Text = "Engagements";
-            this.engagementsToolStripMenuItem.Click += new System.EventHandler(this.engagementsToolStripMenuItem_Click);
-            //
+            // 
+            engagementsToolStripMenuItem.Name = "engagementsToolStripMenuItem";
+            engagementsToolStripMenuItem.Size = new Size(222, 34);
+            engagementsToolStripMenuItem.Text = "Engagements";
+            engagementsToolStripMenuItem.Click += engagementsToolStripMenuItem_Click;
+            // 
             // fiscalYearsToolStripMenuItem
-            //
-            this.fiscalYearsToolStripMenuItem.Name = "fiscalYearsToolStripMenuItem";
-            this.fiscalYearsToolStripMenuItem.Size = new System.Drawing.Size(197, 22);
-            this.fiscalYearsToolStripMenuItem.Text = "Fiscal Years";
-            this.fiscalYearsToolStripMenuItem.Click += new System.EventHandler(this.fiscalYearsToolStripMenuItem_Click);
-            //
+            // 
+            fiscalYearsToolStripMenuItem.Name = "fiscalYearsToolStripMenuItem";
+            fiscalYearsToolStripMenuItem.Size = new Size(222, 34);
+            fiscalYearsToolStripMenuItem.Text = "Fiscal Years";
+            fiscalYearsToolStripMenuItem.Click += fiscalYearsToolStripMenuItem_Click;
+            // 
             // reportsToolStripMenuItem
-            //
-            this.reportsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.reconcileToolStripMenuItem,
-            this.exportAuditToolStripMenuItem});
-            this.reportsToolStripMenuItem.Name = "reportsToolStripMenuItem";
-            this.reportsToolStripMenuItem.Size = new System.Drawing.Size(59, 20);
-            this.reportsToolStripMenuItem.Text = "Reports";
+            // 
+            reportsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { reconcileToolStripMenuItem, exportAuditToolStripMenuItem });
+            reportsToolStripMenuItem.Name = "reportsToolStripMenuItem";
+            reportsToolStripMenuItem.Size = new Size(89, 29);
+            reportsToolStripMenuItem.Text = "Reports";
             // 
             // reconcileToolStripMenuItem
             // 
-            this.reconcileToolStripMenuItem.Name = "reconcileToolStripMenuItem";
-            this.reconcileToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
-            this.reconcileToolStripMenuItem.Text = "Reconcile ETC";
-            this.reconcileToolStripMenuItem.Click += new System.EventHandler(this.reconcileToolStripMenuItem_Click);
+            reconcileToolStripMenuItem.Name = "reconcileToolStripMenuItem";
+            reconcileToolStripMenuItem.Size = new Size(220, 34);
+            reconcileToolStripMenuItem.Text = "Reconcile ETC";
+            reconcileToolStripMenuItem.Click += reconcileToolStripMenuItem_Click;
             // 
             // exportAuditToolStripMenuItem
             // 
-            this.exportAuditToolStripMenuItem.Name = "exportAuditToolStripMenuItem";
-            this.exportAuditToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
-            this.exportAuditToolStripMenuItem.Text = "Export Audit";
-            this.exportAuditToolStripMenuItem.Click += new System.EventHandler(this.exportAuditToolStripMenuItem_Click);
+            exportAuditToolStripMenuItem.Name = "exportAuditToolStripMenuItem";
+            exportAuditToolStripMenuItem.Size = new Size(220, 34);
+            exportAuditToolStripMenuItem.Text = "Export Audit";
+            exportAuditToolStripMenuItem.Click += exportAuditToolStripMenuItem_Click;
             // 
             // helpToolStripMenuItem
             // 
-            this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.viewHelpToolStripMenuItem});
-            this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
-            this.helpToolStripMenuItem.Text = "Help";
+            helpToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { viewHelpToolStripMenuItem });
+            helpToolStripMenuItem.Name = "helpToolStripMenuItem";
+            helpToolStripMenuItem.Size = new Size(65, 29);
+            helpToolStripMenuItem.Text = "Help";
             // 
             // viewHelpToolStripMenuItem
             // 
-            this.viewHelpToolStripMenuItem.Name = "viewHelpToolStripMenuItem";
-            this.viewHelpToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.viewHelpToolStripMenuItem.Text = "View Help";
-            this.viewHelpToolStripMenuItem.Click += new System.EventHandler(this.viewHelpToolStripMenuItem_Click);
+            viewHelpToolStripMenuItem.Name = "viewHelpToolStripMenuItem";
+            viewHelpToolStripMenuItem.Size = new Size(193, 34);
+            viewHelpToolStripMenuItem.Text = "View Help";
+            viewHelpToolStripMenuItem.Click += viewHelpToolStripMenuItem_Click;
             // 
-            // groupReconciliation
-            //
-            this.groupReconciliation.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupReconciliation.Controls.Add(this.dtpWeekEnd);
-            this.groupReconciliation.Controls.Add(this.lblWeekEnd);
-            this.groupReconciliation.Location = new System.Drawing.Point(12, 36);
-            this.groupReconciliation.Name = "groupReconciliation";
-            this.groupReconciliation.Size = new System.Drawing.Size(880, 76);
-            this.groupReconciliation.TabIndex = 1;
-            this.groupReconciliation.TabStop = false;
-            this.groupReconciliation.Text = "Reconciliation";
-            // 
-            // dtpWeekEnd
-            // 
-            this.dtpWeekEnd.CustomFormat = "yyyy-MM-dd";
-            this.dtpWeekEnd.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.dtpWeekEnd.Location = new System.Drawing.Point(138, 32);
-            this.dtpWeekEnd.Name = "dtpWeekEnd";
-            this.dtpWeekEnd.Size = new System.Drawing.Size(200, 23);
-            this.dtpWeekEnd.TabIndex = 1;
-            //
-            // lblWeekEnd
-            //
-            this.lblWeekEnd.AutoSize = true;
-            this.lblWeekEnd.Location = new System.Drawing.Point(19, 36);
-            this.lblWeekEnd.Name = "lblWeekEnd";
-            this.lblWeekEnd.Size = new System.Drawing.Size(101, 15);
-            this.lblWeekEnd.TabIndex = 0;
-            this.lblWeekEnd.Text = "Week End (Reconcile)";
-            //
-            //
-            // gridUploadSummary
-            //
-            this.gridUploadSummary.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.gridUploadSummary.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.gridUploadSummary.Location = new System.Drawing.Point(12, 162);
-            this.gridUploadSummary.Name = "gridUploadSummary";
-            this.gridUploadSummary.ReadOnly = true;
-            this.gridUploadSummary.Size = new System.Drawing.Size(880, 180);
-            this.gridUploadSummary.TabIndex = 2;
-            //
             // txtStatus
-            //
-            this.txtStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtStatus.Location = new System.Drawing.Point(12, 348);
-            this.txtStatus.Multiline = true;
-            this.txtStatus.Name = "txtStatus";
-            this.txtStatus.ReadOnly = true;
-            this.txtStatus.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtStatus.Size = new System.Drawing.Size(880, 241);
-            this.txtStatus.TabIndex = 3;
+            // 
+            txtStatus.Dock = DockStyle.Fill;
+            txtStatus.Location = new Point(0, 35);
+            txtStatus.Margin = new Padding(4, 5, 4, 5);
+            txtStatus.Multiline = true;
+            txtStatus.Name = "txtStatus";
+            txtStatus.ReadOnly = true;
+            txtStatus.ScrollBars = ScrollBars.Vertical;
+            txtStatus.Size = new Size(1002, 677);
+            txtStatus.TabIndex = 3;
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(904, 601);
-            this.Controls.Add(this.txtStatus);
-            this.Controls.Add(this.gridUploadSummary);
-            this.Controls.Add(this.groupReconciliation);
-            this.Controls.Add(this.menuMain);
-            this.MainMenuStrip = this.menuMain;
-            this.MinimumSize = new System.Drawing.Size(920, 640);
-            this.Name = "Form1";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "GRC Financial Control Loader";
-            this.menuMain.ResumeLayout(false);
-            this.menuMain.PerformLayout();
-            this.groupReconciliation.ResumeLayout(false);
-            this.groupReconciliation.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.gridUploadSummary)).EndInit();
-            this.ResumeLayout(false);
-            this.PerformLayout();
+            AutoScaleDimensions = new SizeF(10F, 25F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(1002, 712);
+            Controls.Add(txtStatus);
+            Controls.Add(menuMain);
+            MainMenuStrip = menuMain;
+            Margin = new Padding(4, 5, 4, 5);
+            MinimumSize = new Size(1024, 768);
+            Name = "Form1";
+            StartPosition = FormStartPosition.CenterScreen;
+            Text = "GRC Financial Control Loader";
+            menuMain.ResumeLayout(false);
+            menuMain.PerformLayout();
+            ResumeLayout(false);
+            PerformLayout();
 
         }
 
@@ -350,10 +275,6 @@ namespace GRCFinancialControl
         private System.Windows.Forms.ToolStripMenuItem exportAuditToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewHelpToolStripMenuItem;
-        private System.Windows.Forms.GroupBox groupReconciliation;
-        private System.Windows.Forms.DateTimePicker dtpWeekEnd;
-        private System.Windows.Forms.Label lblWeekEnd;
         private System.Windows.Forms.TextBox txtStatus;
-        private System.Windows.Forms.DataGridView gridUploadSummary;
     }
 }
