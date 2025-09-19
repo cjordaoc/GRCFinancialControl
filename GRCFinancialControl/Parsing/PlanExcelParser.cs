@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using ClosedXML.Excel;
+using GRCFinancialControl.Common;
 
 namespace GRCFinancialControl.Parsing
 {
@@ -18,7 +19,7 @@ namespace GRCFinancialControl.Parsing
             ["CUSTOMER"] = new[] { "CUSTOMER", "CLIENT", "CLIENTE", "CLIENTNAME" },
             ["RATE"] = new[] { "PLANNEDRATE", "RATE", "RATEHOUR", "BILLRATE", "COSTRATE" },
             ["TOTAL_HOURS"] = new[] { "PLANNEDHOURS", "TOTALHOURS", "BUDGETHOURS", "HOURS", "TOTAL" }
-        }, "ENGAGEMENT", "EMPLOYEE", "LEVEL");
+        }, "LEVEL");
 
         public ExcelParseResult<PlanRow> Parse(string filePath)
         {
@@ -35,6 +36,8 @@ namespace GRCFinancialControl.Parsing
             var result = new ExcelParseResult<PlanRow>("Initial Plan");
 
             using var workbook = new XLWorkbook(filePath);
+            var engagementIdFromPlanInfo = ExtractEngagementId(workbook);
+
             var worksheet = ExcelWorksheetHelper.SelectWorksheet(
                 workbook.Worksheets,
                 "RESOURCING",
@@ -55,21 +58,12 @@ namespace GRCFinancialControl.Parsing
                 }
 
                 var rowNumber = row.RowNumber();
-                var engagementId = TrimToNull(GetCellString(row.Cell(headers["ENGAGEMENT"])));
+                var engagementId = ResolveEngagementId(row, headers, engagementIdFromPlanInfo);
                 if (engagementId == null)
                 {
                     result.IncrementSkipped($"Row {rowNumber}: Missing engagement identifier.");
                     continue;
                 }
-
-                var employeeNameRaw = TrimToNull(GetCellString(row.Cell(headers["EMPLOYEE"])));
-                if (employeeNameRaw == null)
-                {
-                    result.IncrementSkipped($"Row {rowNumber}: Missing employee name.");
-                    continue;
-                }
-
-                var normalizedEmployeeName = NormalizeName(employeeNameRaw);
 
                 var levelRaw = TrimToNull(GetCellString(row.Cell(headers["LEVEL"])));
                 if (levelRaw == null)
@@ -79,6 +73,8 @@ namespace GRCFinancialControl.Parsing
                 }
 
                 var normalizedLevel = LevelNormalizer.Normalize(levelRaw);
+
+                var normalizedEmployeeName = ResolveEmployeeName(row, headers);
 
                 var resourceId = headers.TryGetValue("RESOURCE_ID", out var resourceColumn)
                     ? TrimToNull(GetCellString(row.Cell(resourceColumn)))
@@ -146,10 +142,53 @@ namespace GRCFinancialControl.Parsing
             return result;
         }
 
+        private static string? ResolveEngagementId(IXLRow row, IReadOnlyDictionary<string, int> headers, string? defaultEngagementId)
+        {
+            if (headers.TryGetValue("ENGAGEMENT", out var engagementColumn))
+            {
+                var candidate = TrimToNull(GetCellString(row.Cell(engagementColumn)));
+                if (candidate != null)
+                {
+                    if (EngagementIdExtractor.TryExtract(candidate, out var extracted))
+                    {
+                        return extracted;
+                    }
+
+                    return candidate;
+                }
+            }
+
+            return defaultEngagementId;
+        }
+
+        private static string ResolveEmployeeName(IXLRow row, IReadOnlyDictionary<string, int> headers)
+        {
+            if (!headers.TryGetValue("EMPLOYEE", out var employeeColumn))
+            {
+                return string.Empty;
+            }
+
+            var employeeNameRaw = TrimToNull(GetCellString(row.Cell(employeeColumn)));
+            return employeeNameRaw == null ? string.Empty : NormalizeName(employeeNameRaw);
+        }
+
+        private static string? ExtractEngagementId(XLWorkbook workbook)
+        {
+            var planInfo = ExcelWorksheetHelper.SelectWorksheet(workbook.Worksheets, "PLAN INFO", "PLANINFO", "PLAN_INFO");
+            var candidate = TrimToNull(ExcelParsingUtilities.GetCellString(planInfo.Cell("B5")));
+            if (candidate != null && EngagementIdExtractor.TryExtract(candidate, out var extracted))
+            {
+                return extracted;
+            }
+
+            return candidate;
+        }
+
         private static Dictionary<int, DateOnly> DetectWeeklyColumns(IXLWorksheet worksheet, int headerRow, HashSet<int> metadataColumns)
         {
             var detected = new Dictionary<int, DateOnly>();
             var lastColumn = worksheet.LastColumnUsed()?.ColumnNumber() ?? 0;
+            var maxScanRow = Math.Max(headerRow + 6, headerRow);
 
             for (var column = 1; column <= lastColumn; column++)
             {
@@ -158,14 +197,14 @@ namespace GRCFinancialControl.Parsing
                     continue;
                 }
 
-                var headerText = ExcelParsingUtilities.GetCombinedHeaderText(worksheet, column, headerRow);
+                var headerText = ExcelParsingUtilities.GetCombinedHeaderText(worksheet, column, Math.Max(headerRow, 1));
                 if (ExcelParsingUtilities.TryParseDateFromText(headerText, out var parsedDate))
                 {
                     detected[column] = parsedDate;
                     continue;
                 }
 
-                for (var row = headerRow; row >= Math.Max(1, headerRow - 2); row--)
+                for (var row = Math.Max(1, headerRow - 2); row <= maxScanRow; row++)
                 {
                     if (ExcelParsingUtilities.TryGetDate(worksheet.Cell(row, column), out parsedDate))
                     {

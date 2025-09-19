@@ -109,45 +109,24 @@ namespace GRCFinancialControl.Parsing
 
         private static bool TryExtractEngagement(string descriptor, out string engagementId, out string? engagementTitle)
         {
+            if (EngagementIdExtractor.TryExtract(descriptor, out engagementId, out engagementTitle))
+            {
+                return true;
+            }
+
             engagementId = string.Empty;
             engagementTitle = null;
-
-            var trimmed = descriptor.Trim();
-            var openIndex = trimmed.LastIndexOf('(');
-            var closeIndex = trimmed.LastIndexOf(')');
-
-            if (openIndex < 0 || closeIndex < 0 || closeIndex <= openIndex + 1)
-            {
-                return false;
-            }
-
-            var candidate = trimmed[(openIndex + 1)..closeIndex].Trim();
-            if (string.IsNullOrWhiteSpace(candidate))
-            {
-                return false;
-            }
-
-            engagementId = candidate;
-            var titleCandidate = trimmed[..openIndex].Trim();
-            engagementTitle = StringNormalizer.TrimToNull(titleCandidate);
-            return true;
+            return false;
         }
 
         private static string? ExtractName(string descriptor)
         {
-            var trimmed = StringNormalizer.TrimToNull(descriptor);
-            if (trimmed == null)
+            if (EngagementIdExtractor.TryExtract(descriptor, out _, out var cleaned))
             {
-                return null;
+                return cleaned;
             }
 
-            var openIndex = trimmed.LastIndexOf('(');
-            if (openIndex > 0)
-            {
-                return StringNormalizer.TrimToNull(trimmed[..openIndex]);
-            }
-
-            return trimmed;
+            return StringNormalizer.TrimToNull(descriptor);
         }
 
         private static decimal? ReadPercentage(IXLRow row, IDictionary<string, int> headers, string key, string label, MarginDataParseResult result)
