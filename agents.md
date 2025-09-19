@@ -1,19 +1,11 @@
 # GRC Financial Control – Engineering Guidelines
 
-## 1. Change Log
-Keep this section always updated. Use the format:  
-`YYYY-MM-DD HH:MM UTC — [Area] — Summary`
+## What changed
+- 2025-09-21 00:45 UTC — Ensured the WinForms Help dialog ships the current `README.md` by copying it to the build output and reinforced the requirement to keep the specification accurate.
+- 2025-09-21 00:15 UTC — Redirected change history and mistake tracking to dedicated `ChangeLog.md` and `Fixes.md`, and clarified that existing fixes must be reviewed before researching externally.
 
-- **2025-09-20 23:30 UTC** — Excel: Added OLE Automation range guards to date parsing. Uploads: Ensured `UploadRunner` maintains EF execution strategy context to prevent disposed `MySqlDbContext` reuse during ETC/Margin uploads.  
-- **2025-09-20 21:55 UTC** — Uploads: Introduced engagement ID extraction helpers, aligned plan/weekly declaration parsers with EY workbook layouts, and wrapped UploadRunner in EF execution strategy retries.  
-- **2025-09-20 19:55 UTC** — Excel Parsing: Rolled out worksheet preferences, resilient header detection, weekly plan aggregation, ETC enrichment, and margin schema coverage.  
-- **2025-09-20 18:40 UTC** — Documentation: Reviewed parser strategy; mandated combined findings + remediation in single responses to cut iteration loops.  
-- **2025-09-20 17:10 UTC** — UI: Added Engagement and Measurement Period WinForms plus schema alignment reminders for `measurement_period_id`.  
-- **2025-09-19 21:45 UTC** — Architecture: Centralized upload logic into UploadRunner and helpers.  
-- **2025-09-19 14:09 UTC** — UI: Restored upload summary grid + week-ending picker in Form1 for cross-platform builds.  
-- **2025-09-19 13:57 UTC** — UI: Improved master-data binding reliability and added insert confirmations.  
-- **2025-09-19 12:58 UTC** — DB: Delivered MySQL alignment scripts for measurement periods, fact tables, and engagement schema tweaks.  
-- **2025-09-19 15:30 UTC** — Docs: Limited handbook scope to C#/.NET practices.  
+## 1. Change Log
+Historical updates now live in [`ChangeLog.md`](ChangeLog.md). Record engineering guideline changes there using the `YYYY-MM-DD HH:MM UTC — [Area] — Summary` format.
 
 ## 2. Technology Stack
 - **UI:** C# 12, .NET 8 Windows Forms (Win-x64; use `-p:EnableWindowsTargeting=true` when compiling on non-Windows).  
@@ -33,15 +25,10 @@ Keep this section always updated. Use the format:
 - Only start after explicit **“GO”**.  
 - For design/review, deliver **findings + remediation plan together**.  
 
-## 5. Mistake Catalog (Fixes.md)
-Document issues + fixes **before delivery** to avoid regressions.  
-Format:  
-`YYYY-MM-DD HH:MM UTC — [Area] — Issue — Fix/Prevention`
-
-Examples:
-- **2025-09-20 23:30 UTC — Parsing** — `DateTime.FromOADate` crashed on invalid Excel doubles → Range validation added, invalid values emit warnings.  
-- **2025-09-20 21:55 UTC — Uploads** — Transaction scopes clashed with Pomelo retry → Wrapped operations in `CreateExecutionStrategy().Execute(...)`.  
-- **2025-09-19 14:09 UTC — UI** — Missing controls broke builds → Restored DataGridView + DateTimePicker in Form1 designer.  
+## 5. Fix Reference (`Fixes.md`)
+- Document every issue and its prevention steps in [`Fixes.md`](Fixes.md) **before delivery** to avoid regressions.
+- Format entries as `YYYY-MM-DD HH:MM UTC — [Area] — Issue — Fix/Prevention`.
+- When an error occurs, consult `Fixes.md` first and reuse applicable remedies before searching the web.
 
 ## 6. Naming & Structure
 - Favor descriptive, human-readable names (e.g., `MarginUploadController`, `MeasurementPeriodForm`).  
@@ -90,12 +77,13 @@ Examples:
 3. Validate master-data forms for CRUD + binding.  
 4. Review schema diffs; update SQL scripts.  
 5. Confirm logs capture failures as expected.
-6. Whenever errors are found, look at the web to gather knowledge on how to fix them  
+6. Whenever errors are found, review [`Fixes.md`](Fixes.md) first; only research externally if no existing remedy applies.
 
 ## 13. Documentation Discipline
-- Every change updates **both** `agent.md` (guidelines) and `README.md` (functional spec) and fixes.md (create it if it does not exists - It should recieve all fixes applied so far).  
-- Each doc update must include a **timestamped “What Changed”** entry.  
-- Reference Mistake Catalog entries where relevant.  
+- Every change updates **both** `agents.md` (guidelines) and `README.md` (functional spec), records any new fixes in [`Fixes.md`](Fixes.md), and appends the detailed summary to [`ChangeLog.md`](ChangeLog.md).
+- Each doc update must include a **timestamped “What Changed”** entry.
+- Reference relevant entries in [`Fixes.md`](Fixes.md) where applicable.
+- Keep `README.md` accurate at all times; the packaged copy is displayed through the in-app Help menu.
 
 ## 14. Tooling & Environment
 -Install the .net and apt-utils at the container as soon as the container starts
