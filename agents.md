@@ -1,6 +1,7 @@
 # GRC Financial Control – Engineering Guidelines
 
 ## What changed
+- 2025-09-20 23:30 UTC — Added OLE Automation range guards to Excel date parsing and ensured UploadRunner keeps the execution-strategy context alive to stop disposed `MySqlDbContext` failures during ETC/Margin uploads.
 - 2025-09-20 21:55 UTC — Added engagement ID extraction helpers, aligned plan and weekly declaration parsers with EY workbook layouts, and wrapped UploadRunner in EF execution strategy retries.
 - 2025-09-20 19:55 UTC — Rolled out worksheet selection preferences, resilient header detection, weekly plan aggregation, ETC enrichment, and margin schema coverage across the Excel parsers.
 - 2025-09-20 18:40 UTC — Documented the Excel parser strategy review plus the expectation to deliver combined findings and remediation plans in a single response to cut back on iteration loops.
@@ -31,6 +32,8 @@
 
 ## Mistake Catalog
 Document newly discovered mistakes and their fixes **before each delivery** to avoid regressions.
+- 2025-09-20 23:30 UTC — Parsing — Numeric Excel cells outside the OLE Automation range crashed `DateTime.FromOADate` — Validate the double range and swallow invalid conversions so parsers emit warnings instead of exceptions.
+- 2025-09-20 23:30 UTC — Uploads — Disposing the context used to create the EF execution strategy caused `MySqlDbContext` to be reused after disposal — Keep that context alive for the duration of `Execute` and scope per-attempt contexts inside the execution strategy delegate.
 - 2025-09-20 21:55 UTC — Uploads — Manual transaction scopes conflicted with Pomelo retry strategy causing “MySqlRetryingExecutionStrategy” failures — Wrap each per-file operation in `CreateExecutionStrategy().Execute(...)` while preserving single-file transactions.
 - 2025-09-20 19:55 UTC — Parsing — Worksheet fallbacks and strict header normalization caused repeated upload failures on EY resourcing exports — Added sheet name preferences, broadened normalization (including % → PCT), aggregated multi-row headers, and switched plan/ETC/margin parsers to header-driven extraction with localized synonyms.
 - 2025-09-20 18:40 UTC — Parsing — Parsers failed whenever summary worksheets or localized headers appeared first — Record explicit worksheet targeting, expanded normalization, and broader synonym coverage in the remediation plan to prevent repeats.
@@ -51,6 +54,7 @@ Document newly discovered mistakes and their fixes **before each delivery** to a
 ## Data Access & Transactions
 - Create a fresh `DbContext` instance per logical operation (per file for multi-file batches).
 - Wrap each file load in its own transaction. Roll back on validation/load errors while allowing subsequent files to continue.
+- Keep the context used to obtain `Database.CreateExecutionStrategy()` alive for the duration of the execution and create new upload contexts inside the strategy delegate so EF Core does not attempt to reuse a disposed instance.
 - Use parameterized queries and prepared commands for any raw SQL.
 - Persist timestamps in UTC; convert to local time only in the UI.
 - Record per-file summaries (rows read/inserted/updated, warnings, errors) for operator review and audit.
@@ -69,6 +73,7 @@ Document newly discovered mistakes and their fixes **before each delivery** to a
 
 ## Parsing & File Handling
 - Implement reusable parsing helpers for shared header validation, invariant number/date parsing (`CultureInfo.InvariantCulture`), and consistent error messages using `ExcelParserBase`, `HeaderSchema`, and `ExcelHeaderDetector`.
+- Validate numeric Excel dates against the legal OLE Automation range before calling `DateTime.FromOADate`; treat out-of-range values as blanks and surface warnings instead of throwing.
 - Prefer `ExcelWorksheetHelper.SelectWorksheet` with ordered sheet name candidates (e.g., `RESOURCING`, `Export`, localized labels) to avoid landing on summary tabs.
 - Rely on expanded header schemas with localized synonyms; `ExcelHeaderDetector` now collapses multi-row headers and treats `%` as `PCT`, so match keys against the normalized tokens.
 - Use `LevelNormalizer.Normalize` when deriving canonical level codes from plan/ETC rows before resolving level IDs.

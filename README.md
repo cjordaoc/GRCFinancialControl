@@ -1,6 +1,7 @@
 # GRC Financial Control – Functional Specification
 
 ## What changed
+- 2025-09-20 23:30 UTC — Hardened Excel date parsing to ignore out-of-range OLE Automation values and kept the UploadRunner execution-strategy context alive to prevent disposed `MySqlDbContext` errors during ETC and margin loads.
 - 2025-09-20 21:55 UTC — Enabled EY resourcing, Retain, and ERP workbook ingestion via engagement ID extraction helpers, aligned weekly allocation parsing, and wrapped UploadRunner operations in EF execution strategy retries.
 - 2025-09-20 19:55 UTC — Implemented worksheet targeting preferences, hardened header detection, weekly plan aggregation, enriched ETC capture, and header-driven margin parsing aligned with the harmonized dictionary.
 - 2025-09-20 18:40 UTC — Captured the Excel parser strategy review plus the remediation roadmap for worksheet selection, header normalization, weekly aggregation, ETC capture, and margin coverage.
@@ -60,7 +61,7 @@ Dialog behavior:
 ### Multi-file Upload Logic (Margin/ETC/Budget)
 1. Collect selected files and order alphabetically.
 2. For each file (coordinated by `UploadRunner`):
-   - Instantiate a fresh `DbContext` and execute the load inside `Database.CreateExecutionStrategy().Execute(...)` so Pomelo’s retry pipeline governs the transaction.
+   - Instantiate a fresh `DbContext` and execute the load inside `Database.CreateExecutionStrategy().Execute(...)` so Pomelo’s retry pipeline governs the transaction while a separate context stays alive long enough to supply provider-specific retry state.
    - Run header/structure validation; abort and log if invalid.
    - Parse rows using culture-invariant numeric/date handling.
    - Map domain values (including `MeasurementPeriodId`).
@@ -94,7 +95,7 @@ Dialog behavior:
 - **Engagement ID helper.** Centralized `(E-\d+)` extraction to reuse across plan, margin, and weekly declaration parsers while preserving surrounding labels for titles.
 - **Worksheet targeting.** `ExcelWorksheetHelper.SelectWorksheet` prioritizes harmonized sheet names (`RESOURCING`, `Export`, `Planilha1`, `Alocações_Staff`, etc.) before falling back to the first visible tab, preventing summary sheets from short-circuiting uploads.
 - **Header detection.** `ExcelHeaderDetector` aggregates multi-row captions, removes punctuation (including `%` → `PCT`), and matches localized synonyms so colon-delimited and Portuguese headers resolve to schema keys.
-- **Plan parsing.** `PlanExcelParser` reads engagement metadata from the `PLAN INFO` sheet when row-level identifiers are absent, tolerates missing employee columns, detects dynamic weekly date columns (including multi-row headers), aggregates hours, records totals, and normalizes level codes via `LevelNormalizer` while logging invalid totals.
+- **Plan parsing.** `PlanExcelParser` reads engagement metadata from the `PLAN INFO` sheet when row-level identifiers are absent, tolerates missing employee columns, detects dynamic weekly date columns (including multi-row headers), aggregates hours, records totals, skips numeric headers that fall outside the legal OLE Automation range, and normalizes level codes via `LevelNormalizer` while logging invalid totals.
 - **ETC parsing.** `EtcExcelParser` title-cases employee names, captures employee identifiers, normalizes levels, and extracts projected margin %, ETC age, remaining weeks, and status with resilient numeric parsing.
 - **Margin parsing.** `MarginDataExcelParser` reads the `Export` worksheet by header name, extracting client data, all harmonized margin percentages/values, overruns, status, and counts; percentages normalize to decimal fractions for fact loading with warnings on malformed cells. Engagement IDs are derived via the shared regex helper so any `(E-#######)` token is resolved even when not enclosed in parentheses.
 - **Retain & ERP weekly parsing.** `WeeklyDeclarationExcelParser` detects Retain layouts (numeric weekly hours per employee) and ERP layouts (40h allocations flagged by engagement ID text), converts Retain’s Friday headers to ISO Mondays, and continues to support legacy tabular uploads for ad-hoc datasets.

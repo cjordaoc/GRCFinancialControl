@@ -10,6 +10,8 @@ namespace GRCFinancialControl.Parsing
     internal static class ExcelParsingUtilities
     {
         private static readonly CultureInfo PtBr = new("pt-BR");
+        private const double OleAutomationMinValue = -657435.0;
+        private const double OleAutomationMaxValue = 2958466.0;
 
         public static string NormalizeHeader(string header)
         {
@@ -126,9 +128,24 @@ namespace GRCFinancialControl.Parsing
 
             if (cell.DataType == XLDataType.Number)
             {
-                var dt = DateTime.FromOADate(cell.GetDouble());
-                date = DateOnly.FromDateTime(dt);
-                return true;
+                var raw = cell.GetDouble();
+                if (double.IsNaN(raw) || double.IsInfinity(raw) || raw < OleAutomationMinValue || raw > OleAutomationMaxValue)
+                {
+                    date = default;
+                    return false;
+                }
+
+                try
+                {
+                    var dt = DateTime.FromOADate(raw);
+                    date = DateOnly.FromDateTime(dt);
+                    return true;
+                }
+                catch (ArgumentException)
+                {
+                    date = default;
+                    return false;
+                }
             }
 
             var raw = cell.GetValue<string>()?.Trim();
