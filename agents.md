@@ -1,109 +1,112 @@
 # GRC Financial Control – Engineering Guidelines
 
-## What changed
-- 2025-09-20 23:30 UTC — Added OLE Automation range guards to Excel date parsing and ensured UploadRunner keeps the execution-strategy context alive to stop disposed `MySqlDbContext` failures during ETC/Margin uploads.
-- 2025-09-20 21:55 UTC — Added engagement ID extraction helpers, aligned plan and weekly declaration parsers with EY workbook layouts, and wrapped UploadRunner in EF execution strategy retries.
-- 2025-09-20 19:55 UTC — Rolled out worksheet selection preferences, resilient header detection, weekly plan aggregation, ETC enrichment, and margin schema coverage across the Excel parsers.
-- 2025-09-20 18:40 UTC — Documented the Excel parser strategy review plus the expectation to deliver combined findings and remediation plans in a single response to cut back on iteration loops.
-- 2025-09-19 14:09 UTC — Restored the upload summary grid and week-ending picker in Form1 so runtime references match the designer and builds succeed again on non-Windows hosts.
-- 2025-09-19 13:57 UTC — Clarified master-data binding practices for refresh reliability, added insert confirmation messaging expectations, and recorded the fix in the Mistake Catalog.
-- 2025-09-19 12:58 UTC — Documented MySQL alignment script updates for measurement periods, fact tables, and engagement schema tweaks.
-- 2025-09-20 17:10 UTC — Added guidance for the new Engagement and Measurement Period WinForms plus schema alignment reminders for measurement_period_id columns.
-- 2025-09-19 21:45 UTC — Documented UploadRunner-based upload pattern, shared Excel parser helpers, and summary grid expectations.
-- 2025-09-19 15:30 UTC — Refined the handbook to cover only C#/.NET practices and recorded the adjustment in the Mistake Catalog.
+## 1. Change Log
+Keep this section always updated. Use the format:  
+`YYYY-MM-DD HH:MM UTC — [Area] — Summary`
 
-## Language and Runtime Stack
-- **Primary UI**: C# 12 on .NET 8 Windows Forms (Win-x64 build target; use `-p:EnableWindowsTargeting=true` when compiling from non-Windows hosts).
-- **ORM**: EF Core 8 with the Pomelo MySQL provider for centralized data access.
-- **Local data**: SQLite (app configuration, cached lookups, operator preferences).
-- **Central data**: MySQL for shared fact tables, audit logs, and master data.
+- **2025-09-20 23:30 UTC** — Excel: Added OLE Automation range guards to date parsing. Uploads: Ensured `UploadRunner` maintains EF execution strategy context to prevent disposed `MySqlDbContext` reuse during ETC/Margin uploads.  
+- **2025-09-20 21:55 UTC** — Uploads: Introduced engagement ID extraction helpers, aligned plan/weekly declaration parsers with EY workbook layouts, and wrapped UploadRunner in EF execution strategy retries.  
+- **2025-09-20 19:55 UTC** — Excel Parsing: Rolled out worksheet preferences, resilient header detection, weekly plan aggregation, ETC enrichment, and margin schema coverage.  
+- **2025-09-20 18:40 UTC** — Documentation: Reviewed parser strategy; mandated combined findings + remediation in single responses to cut iteration loops.  
+- **2025-09-20 17:10 UTC** — UI: Added Engagement and Measurement Period WinForms plus schema alignment reminders for `measurement_period_id`.  
+- **2025-09-19 21:45 UTC** — Architecture: Centralized upload logic into UploadRunner and helpers.  
+- **2025-09-19 14:09 UTC** — UI: Restored upload summary grid + week-ending picker in Form1 for cross-platform builds.  
+- **2025-09-19 13:57 UTC** — UI: Improved master-data binding reliability and added insert confirmations.  
+- **2025-09-19 12:58 UTC** — DB: Delivered MySQL alignment scripts for measurement periods, fact tables, and engagement schema tweaks.  
+- **2025-09-19 15:30 UTC** — Docs: Limited handbook scope to C#/.NET practices.  
 
-## Project Constraints
-- Synchronous execution only—do not introduce `async`/`await` or background threading unless explicitly requested.
-- Respect the data split: SQLite remains local-only; MySQL holds centralized/shared facts. Never migrate SQLite tables into MySQL.
-- Avoid speculative parallelism or unnecessary indirection; favor clear, imperative flows.
-- Ensure each upload batch executes deterministically and idempotently (guard against duplicate loads).
+## 2. Technology Stack
+- **UI:** C# 12, .NET 8 Windows Forms (Win-x64; use `-p:EnableWindowsTargeting=true` when compiling on non-Windows).  
+- **ORM:** EF Core 8 with Pomelo MySQL provider.  
+- **Local Data:** SQLite for app configuration, cached lookups, and operator preferences.  
+- **Central Data:** MySQL for shared fact tables, audit logs, and master data.  
 
-## Process Rules
-- Restate and confirm understanding before coding.
-- If ambiguous, send numbered questions.
-- Start only after explicit "GO".
-- When performing design/review tasks, deliver the findings and the end-to-end remediation plan together so stakeholders receive the full context in one response.
+## 3. Core Principles
+- Execution is **synchronous only** (no `async`/`await` unless explicitly required).  
+- Respect **data boundaries**: SQLite = local; MySQL = centralized.  
+- Ensure **deterministic, idempotent** batch uploads.  
+- Prefer **clarity over abstraction** — keep flows imperative, no speculative parallelism.  
 
-## Mistake Catalog
-Document newly discovered mistakes and their fixes **before each delivery** to avoid regressions.
-- 2025-09-20 23:30 UTC — Parsing — Numeric Excel cells outside the OLE Automation range crashed `DateTime.FromOADate` — Validate the double range and swallow invalid conversions so parsers emit warnings instead of exceptions.
-- 2025-09-20 23:30 UTC — Uploads — Disposing the context used to create the EF execution strategy caused `MySqlDbContext` to be reused after disposal — Keep that context alive for the duration of `Execute` and scope per-attempt contexts inside the execution strategy delegate.
-- 2025-09-20 21:55 UTC — Uploads — Manual transaction scopes conflicted with Pomelo retry strategy causing “MySqlRetryingExecutionStrategy” failures — Wrap each per-file operation in `CreateExecutionStrategy().Execute(...)` while preserving single-file transactions.
-- 2025-09-20 19:55 UTC — Parsing — Worksheet fallbacks and strict header normalization caused repeated upload failures on EY resourcing exports — Added sheet name preferences, broadened normalization (including % → PCT), aggregated multi-row headers, and switched plan/ETC/margin parsers to header-driven extraction with localized synonyms.
-- 2025-09-20 18:40 UTC — Parsing — Parsers failed whenever summary worksheets or localized headers appeared first — Record explicit worksheet targeting, expanded normalization, and broader synonym coverage in the remediation plan to prevent repeats.
-- 2025-09-19 14:09 UTC — UI — Form1 designer no longer declared the upload summary DataGridView or week-ending DateTimePicker, producing build errors — Reinstated both controls in the designer and restructured the layout to align with existing runtime code.
-- 2025-09-19 13:57 UTC — UI — Master-data grids stopped showing rows after refresh because BindingLists were updated without rebinding — Route grid data through BindingSource with ResetBindings and add insert confirmations to surface success.
-- 2025-09-19 12:58 UTC — Data Modeling — EF models expected measurement periods and fact foreign keys that production MySQL lacked — Delivered alignment script to create measurement_periods, add measurement_period_id columns, and normalize dim_engagement widths.
-- 2025-09-20 17:10 UTC — UI — Menu actions referenced unimplemented master-data forms causing TypeLoadException — Implemented EngagementForm and MeasurementPeriodForm with validation and designer wiring checklist.
-- 2025-09-19 21:45 UTC — Architecture — Form1 orchestrated uploads directly, leaving dry-run UI and inconsistent transactions — Adopt UploadRunner/service helpers, remove dry-run toggles, and centralize parsing/log summaries.
-- 2025-09-19 15:30 UTC — Documentation — Limited the engineering handbook to C#/.NET scope to reflect project direction.
-- Format for new entries: `YYYY-MM-DD HH:MM UTC — [Area] — Issue — Fix/Prevention`
+## 4. Process Rules
+- Always **restate and confirm** understanding before coding.  
+- If ambiguous, send **numbered clarification questions**.  
+- Only start after explicit **“GO”**.  
+- For design/review, deliver **findings + remediation plan together**.  
 
-## Naming and Structure Conventions
-- Favor human-readable names (e.g., `MarginUploadController`, `MeasurementPeriodForm`).
-- Organize source by feature (e.g., `Uploads/Margin`, `MasterData/MeasurementPeriods`). Shared utilities reside under `Common/` (UI helpers, IO, logging).
-- One class = one responsibility; extract helpers for dialog configuration, parsing, validation, bulk writes, and progress reporting.
-- Use partial classes sparingly (primarily for WinForms designer separation).
+## 5. Mistake Catalog (Fixes.md)
+Document issues + fixes **before delivery** to avoid regressions.  
+Format:  
+`YYYY-MM-DD HH:MM UTC — [Area] — Issue — Fix/Prevention`
 
-## Data Access & Transactions
-- Create a fresh `DbContext` instance per logical operation (per file for multi-file batches).
-- Wrap each file load in its own transaction. Roll back on validation/load errors while allowing subsequent files to continue.
-- Keep the context used to obtain `Database.CreateExecutionStrategy()` alive for the duration of the execution and create new upload contexts inside the strategy delegate so EF Core does not attempt to reuse a disposed instance.
-- Use parameterized queries and prepared commands for any raw SQL.
-- Persist timestamps in UTC; convert to local time only in the UI.
-- Record per-file summaries (rows read/inserted/updated, warnings, errors) for operator review and audit.
+Examples:
+- **2025-09-20 23:30 UTC — Parsing** — `DateTime.FromOADate` crashed on invalid Excel doubles → Range validation added, invalid values emit warnings.  
+- **2025-09-20 21:55 UTC — Uploads** — Transaction scopes clashed with Pomelo retry → Wrapped operations in `CreateExecutionStrategy().Execute(...)`.  
+- **2025-09-19 14:09 UTC — UI** — Missing controls broke builds → Restored DataGridView + DateTimePicker in Form1 designer.  
 
-## Error Handling & Logging
-- Catch exceptions at UI/service boundaries. Surface concise, user-friendly messages while logging full technical details to file and/or MySQL logging tables.
-- Log validation failures, schema mismatches, and DB exceptions with enough context to replay (file name, measurement period, user, timestamp).
-- Never swallow exceptions silently; always log and notify the operator of the outcome.
+## 6. Naming & Structure
+- Favor descriptive, human-readable names (e.g., `MarginUploadController`, `MeasurementPeriodForm`).  
+- Organize by **feature** (`Uploads/Margin`, `MasterData/Periods`); shared utils under `Common/`.  
+- One class = one responsibility. Extract helpers for parsing, validation, logging.  
+- Use **partial classes** only for WinForms designer separation.  
 
-## UI Guidance
-- Centralize `OpenFileDialog` configuration: expose helpers for single vs. multi-select, expected file filters, and deterministic ordering (alphabetical) of selections.
-- Provide shared helpers for `DataGridView` formatting (column widths, numeric/date formats, read-only flags, and culture-invariant display).
-- Display per-file outcomes through the upload summary grid (`DataGridViewStyler.ConfigureUploadSummaryGrid`) backed by `UploadFileSummary` models.
-- Always validate user inputs (measurement period selection, fiscal year ranges, etc.) before triggering long-running work.
-- Offer status/progress feedback (status bar, modal progress window, or log pane) summarizing file-by-file results.
+## 7. Data Access & Transactions
+- Fresh `DbContext` per logical operation.  
+- One **transaction per file** — rollback on error, continue with next file.  
+- Keep strategy context alive for retries; create per-attempt contexts inside delegate.  
+- Always use **parameterized queries** for raw SQL.  
+- Persist all timestamps in **UTC** (convert in UI only).  
+- Record per-file summaries (rows read, inserted, updated, warnings, errors).  
 
-## Parsing & File Handling
-- Implement reusable parsing helpers for shared header validation, invariant number/date parsing (`CultureInfo.InvariantCulture`), and consistent error messages using `ExcelParserBase`, `HeaderSchema`, and `ExcelHeaderDetector`.
-- Validate numeric Excel dates against the legal OLE Automation range before calling `DateTime.FromOADate`; treat out-of-range values as blanks and surface warnings instead of throwing.
-- Prefer `ExcelWorksheetHelper.SelectWorksheet` with ordered sheet name candidates (e.g., `RESOURCING`, `Export`, localized labels) to avoid landing on summary tabs.
-- Rely on expanded header schemas with localized synonyms; `ExcelHeaderDetector` now collapses multi-row headers and treats `%` as `PCT`, so match keys against the normalized tokens.
-- Use `LevelNormalizer.Normalize` when deriving canonical level codes from plan/ETC rows before resolving level IDs.
-- Normalize and sort multi-file selections before processing.
-- Validate schema/required columns prior to DB operations; abort file load if required headers are missing.
+## 8. Error Handling & Logging
+- Catch exceptions at **UI/service boundaries**.  
+- Show concise, user-friendly messages; log full technical details.  
+- Include file name, measurement period, user, timestamp in logs.  
+- Never swallow exceptions silently.  
 
-## Database Bulk Write Practices
-- Buffer inserts/updates before committing to reduce transaction time while keeping memory use predictable.
-- Use EF Core change tracking judiciously; prefer `AddRange`/`UpdateRange` or batched `ExecuteUpdate/ExecuteDelete` where appropriate.
-- Orchestrate uploads through `UploadRunner` to enforce per-file transactions, disable change tracking during bulk inserts, and commit once per file.
-- Maintain CREATE/ALTER scripts in `DatabaseScripts/`; update them with any model changes and capture diffs for both SQLite and MySQL schemas.
+## 9. UI Guidelines
+- Centralize `OpenFileDialog` setup (single vs. multi-select, filters, sort order).  
+- Use shared helpers for `DataGridView` styling (columns, formats, read-only flags). Make sure they had a zebra-style row display  
+- Show per-file upload results in **summary grid**.  
+- Validate inputs (periods, fiscal years) before long-running ops.  
+- Provide status/progress feedback (bar, modal, or log pane).  
 
-## Testing & Checklists
-Before committing changes:
-1. Run `dotnet build -p:EnableWindowsTargeting=true` at solution root to confirm compile health.
-2. Execute smoke tests for each affected upload type (Margin, ETC, Budget multi-file; others single-file) against representative fixtures.
-3. Validate master-data forms (Measurement Periods, Fiscal Year) for CRUD, validation, and binding.
-4. Review schema changes and update CREATE/ALTER scripts when EF models evolve.
-5. Ensure logs capture expected entries during failure scenarios.
+## 10. Parsing & File Handling
+- Base all parsers on `ExcelParserBase`, `HeaderSchema`, and `ExcelHeaderDetector`.  
+- Guard against invalid OLE Automation dates.  
+- Use ordered sheet candidates (`RESOURCING`, `Export`, localized synonyms).  
+- Collapse multi-row headers, normalize `%` → `PCT`.  
+- Use `LevelNormalizer` for canonical codes.  
+- Validate schema before DB operations; abort file load if required headers missing.  
 
-## Documentation Discipline
-- Every functional change must update **both** `agents.md` (guideline impact) and `README.md` (functional spec, flows).
-- Include a `What changed` subsection with timestamp in both docs for each revision.
-- Reference related Mistake Catalog entries when fixes address known issues.
+## 11. Database Bulk Writes
+- Buffer writes before committing.  
+- Use `AddRange`, `UpdateRange`, or batched updates where possible.  
+- Orchestrate through `UploadRunner` (per-file transaction, disabled tracking, commit once).  
+- Keep CREATE/ALTER scripts in `DatabaseScripts/`; update on EF model changes.  
 
-## Tooling & Environment Notes
-- Confirmed container toolchain on 2025-09-18:
-  - `.NET SDK 8.0.119` installed via Microsoft package feed.
-  - Verification command: `dotnet --info` (see terminal log for full output).
-- When building on Linux, invoke `dotnet build -p:EnableWindowsTargeting=true` to satisfy Windows Forms targeting requirements.
+## 12. Testing & Pre-Commit Checklist
+1. `dotnet build -p:EnableWindowsTargeting=true` passes.  
+2. Smoke test each upload type with fixture data.  
+3. Validate master-data forms for CRUD + binding.  
+4. Review schema diffs; update SQL scripts.  
+5. Confirm logs capture failures as expected.
+6. Whenever errors are found, look at the web to gather knowledge on how to fix them  
 
-## Validation Requirements
-- For every critical C# API or package adoption, cite current Microsoft/.NET documentation or release notes when documenting availability or behavior.
+## 13. Documentation Discipline
+- Every change updates **both** `agent.md` (guidelines) and `README.md` (functional spec) and fixes.md (create it if it does not exists - It should recieve all fixes applied so far).  
+- Each doc update must include a **timestamped “What Changed”** entry.  
+- Reference Mistake Catalog entries where relevant.  
+
+## 14. Tooling & Environment
+-Install the .net and apt-utils at the container as soon as the container starts
+- Verified toolchain (2025-09-18):  
+  - `.NET SDK 8.0.119` installed.  
+  - Confirm via `dotnet --info`.  
+- On Linux: build with `-p:EnableWindowsTargeting=true`.  
+-Look at the web on how properly install the desktop workload and install it
+
+
+## 15. Validation Requirements
+For critical C# APIs/packages:  
+- Evaluate Microsoft/.NET official docs or release notes.  
+- Document availability and expected behavior.  
