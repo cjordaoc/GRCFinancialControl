@@ -1,6 +1,7 @@
 using System;
-using System.Globalization;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using ClosedXML.Excel;
 using GRCFinancialControl.Common;
 
@@ -8,11 +9,28 @@ namespace GRCFinancialControl.Parsing
 {
     public sealed class MarginDataExcelParser : ExcelParserBase<MarginDataRow>
     {
-        private static readonly CultureInfo[] SupportedCultures =
+        private static readonly HeaderSchema Schema = new(new Dictionary<string, string[]>
         {
-            CultureInfo.InvariantCulture,
-            new CultureInfo("pt-BR")
-        };
+            ["ENGAGEMENT"] = new[] { "ENGAGEMENTNAME(IDCURRENCY)", "ENGAGEMENTNAMEID", "ENGAGEMENTNAME", "ENGAGEMENT" },
+            ["CLIENT"] = new[] { "CLIENTNAME(ID)", "CLIENTNAME", "CLIENT" },
+            ["ETCP_INDICATOR"] = new[] { "ETCPINDICATORTOOLTIP", "ETCINDICATORTOOLTIP", "ETCPINDICATOR" },
+            ["MARGIN_PCT_BUD"] = new[] { "MARGINPCTBUD", "MARGINPERCENTBUD", "MARGINPCTBUDGET" },
+            ["MARGIN_PCT_ETCP"] = new[] { "MARGINPCTETCP", "MARGINPCTETC", "MARGINPCTETC-P" },
+            ["MARGIN_PCT_MERCURY"] = new[] { "MARGINPCTMERCURYPROJECTED", "MARGINPCTMERCURY" },
+            ["MARGIN_BUD"] = new[] { "MARGINBUD" },
+            ["MARGIN_ETCP"] = new[] { "MARGINETCP" },
+            ["MARGIN_MERCURY"] = new[] { "MARGINMERCURYPROJECTED", "MARGINMERCURY" },
+            ["MARGIN_PCT_LOSS_GAIN"] = new[] { "MARGINPCTPLOSSGAIN", "MARGINPCTLOSSGAIN" },
+            ["MARGIN_LOSS_GAIN"] = new[] { "MARGINLOSSGAIN" },
+            ["BILLING_OVERRUN"] = new[] { "BILLINGOVERRUN" },
+            ["EXPENSES_OVERRUN"] = new[] { "EXPENSESOVERRUN" },
+            ["MARGIN_COST_OVERRUN"] = new[] { "MARGINCOSTOVERRUN" },
+            ["MARGIN_PCT_ACT"] = new[] { "MARGINPCTACT", "MARGINPCTACTUAL" },
+            ["ETCP_AGE_DAYS"] = new[] { "ETCPAGEDAYS", "ETCAGEDAYS" },
+            ["REMAINING_WEEKS"] = new[] { "REMAININGWEEKS", "WEEKSREMAINING" },
+            ["STATUS"] = new[] { "STATUS" },
+            ["ENGAGEMENT_COUNT"] = new[] { "ENGAGEMENTCOUNT" }
+        }, "ENGAGEMENT");
 
         public MarginDataParseResult Parse(string filePath)
         {
@@ -29,9 +47,10 @@ namespace GRCFinancialControl.Parsing
             var result = new MarginDataParseResult();
 
             using var workbook = new XLWorkbook(filePath);
-            var worksheet = ExcelWorksheetHelper.FirstVisible(workbook.Worksheets);
+            var worksheet = ExcelWorksheetHelper.SelectWorksheet(workbook.Worksheets, "Export", "RESOURCING");
+            var (headers, headerRow) = ValidateHeaders(worksheet, Schema);
 
-            foreach (var row in worksheet.RowsUsed())
+            foreach (var row in worksheet.RowsUsed().Where(r => r.RowNumber() > headerRow))
             {
                 if (IsRowEmpty(row))
                 {
@@ -39,10 +58,10 @@ namespace GRCFinancialControl.Parsing
                 }
 
                 var rowNumber = row.RowNumber();
-                var descriptor = GetCellString(row.Cell(1));
+                var descriptor = GetCellString(row.Cell(headers["ENGAGEMENT"]));
                 if (string.IsNullOrWhiteSpace(descriptor))
                 {
-                    result.IncrementSkipped($"Row {rowNumber}: Missing engagement descriptor in column A.");
+                    result.IncrementSkipped($"Row {rowNumber}: Missing engagement descriptor.");
                     continue;
                 }
 
@@ -56,47 +75,31 @@ namespace GRCFinancialControl.Parsing
                 {
                     ExcelRowNumber = rowNumber,
                     EngagementId = engagementId,
-                    EngagementTitle = engagementTitle
+                    EngagementTitle = engagementTitle,
+                    ClientName = headers.TryGetValue("CLIENT", out var clientColumn) ? ExtractName(GetCellString(row.Cell(clientColumn))) : null,
+                    EtcIndicatorTooltip = headers.TryGetValue("ETCP_INDICATOR", out var indicatorColumn) ? TrimToNull(GetCellString(row.Cell(indicatorColumn))) : null
                 };
 
-                if (!TryReadMarginCell(row.Cell(4), out var openingMargin))
-                {
-                    var openingText = GetCellString(row.Cell(4));
-                    if (!string.IsNullOrEmpty(openingText))
-                    {
-                        result.AddWarning($"Row {rowNumber}: Invalid opening margin '{openingText}'.");
-                    }
-                }
-                else
-                {
-                    marginRow.OpeningMargin = openingMargin;
-                }
+                marginRow.BudgetMarginPercent = ReadPercentage(row, headers, "MARGIN_PCT_BUD", "Margin % Bud", result);
+                marginRow.EtcMarginPercent = ReadPercentage(row, headers, "MARGIN_PCT_ETCP", "Margin % ETC-P", result);
+                marginRow.MercuryProjectedMarginPercent = ReadPercentage(row, headers, "MARGIN_PCT_MERCURY", "Margin % Mercury Projected", result);
+                marginRow.BudgetMarginValue = ReadDecimal(row, headers, "MARGIN_BUD", "Margin Bud", result);
+                marginRow.EtcMarginValue = ReadDecimal(row, headers, "MARGIN_ETCP", "Margin ETC-P", result);
+                marginRow.MercuryProjectedMarginValue = ReadDecimal(row, headers, "MARGIN_MERCURY", "Margin Mercury Projected", result);
+                marginRow.MarginLossGainPercent = ReadPercentage(row, headers, "MARGIN_PCT_LOSS_GAIN", "Margin %p Loss/Gain", result);
+                marginRow.MarginLossGainValue = ReadDecimal(row, headers, "MARGIN_LOSS_GAIN", "Margin Loss/Gain", result);
+                marginRow.BillingOverrun = ReadDecimal(row, headers, "BILLING_OVERRUN", "Billing Overrun", result);
+                marginRow.ExpensesOverrun = ReadDecimal(row, headers, "EXPENSES_OVERRUN", "Expenses Overrun", result);
+                marginRow.MarginCostOverrun = ReadDecimal(row, headers, "MARGIN_COST_OVERRUN", "Margin Cost Overrun", result);
+                marginRow.ActualMarginPercent = ReadPercentage(row, headers, "MARGIN_PCT_ACT", "Margin % Act", result);
+                marginRow.EtcAgeDays = ReadInt(row, headers, "ETCP_AGE_DAYS", "ETC-P Age (Days)", result);
+                marginRow.RemainingWeeks = ReadInt(row, headers, "REMAINING_WEEKS", "Remaining Weeks", result);
+                marginRow.Status = headers.TryGetValue("STATUS", out var statusColumn) ? TrimToNull(GetCellString(row.Cell(statusColumn))) : null;
+                marginRow.EngagementCount = ReadInt(row, headers, "ENGAGEMENT_COUNT", "Engagement Count", result);
 
-                if (!TryReadMarginCell(row.Cell(5), out var currentMargin))
-                {
-                    var currentText = GetCellString(row.Cell(5));
-                    if (!string.IsNullOrEmpty(currentText))
-                    {
-                        result.AddWarning($"Row {rowNumber}: Invalid current margin '{currentText}'.");
-                    }
-                }
-                else
-                {
-                    marginRow.CurrentMargin = currentMargin;
-                }
-
-                if (!TryReadMarginCell(row.Cell(15), out var marginValue))
-                {
-                    var marginText = GetCellString(row.Cell(15));
-                    if (!string.IsNullOrEmpty(marginText))
-                    {
-                        result.AddWarning($"Row {rowNumber}: Invalid margin value '{marginText}'.");
-                    }
-                }
-                else
-                {
-                    marginRow.MarginValue = marginValue;
-                }
+                marginRow.OpeningMargin = marginRow.BudgetMarginPercent;
+                marginRow.CurrentMargin = marginRow.EtcMarginPercent;
+                marginRow.MarginValue = marginRow.ActualMarginPercent;
 
                 result.AddRow(marginRow);
             }
@@ -130,51 +133,87 @@ namespace GRCFinancialControl.Parsing
             return true;
         }
 
-        private static bool TryReadMarginCell(IXLCell cell, out decimal? normalized)
+        private static string? ExtractName(string descriptor)
         {
-            normalized = null;
-            if (cell == null)
+            var trimmed = StringNormalizer.TrimToNull(descriptor);
+            if (trimmed == null)
             {
-                return false;
+                return null;
             }
 
-            if (ExcelParsingUtilities.TryGetNullableDecimal(cell, out var parsed))
+            var openIndex = trimmed.LastIndexOf('(');
+            if (openIndex > 0)
             {
-                if (parsed.HasValue)
-                {
-                    normalized = NormalizeMargin(parsed.Value);
-                }
-
-                return true;
+                return StringNormalizer.TrimToNull(trimmed[..openIndex]);
             }
 
-            var rawText = GetCellString(cell);
-            if (string.IsNullOrWhiteSpace(rawText))
-            {
-                return true;
-            }
-
-            var sanitized = rawText.Replace("%", string.Empty, StringComparison.Ordinal).Trim();
-            foreach (var culture in SupportedCultures)
-            {
-                if (decimal.TryParse(sanitized, NumberStyles.Any, culture, out var parsedValue))
-                {
-                    normalized = NormalizeMargin(parsedValue);
-                    return true;
-                }
-            }
-
-            return false;
+            return trimmed;
         }
 
-        private static decimal NormalizeMargin(decimal value)
+        private static decimal? ReadPercentage(IXLRow row, IDictionary<string, int> headers, string key, string label, MarginDataParseResult result)
         {
-            if (value > 1m)
+            if (!headers.TryGetValue(key, out var column))
             {
-                value /= 100m;
+                return null;
             }
 
-            return Math.Round(value, 6, MidpointRounding.AwayFromZero);
+            var cell = row.Cell(column);
+            if (ExcelParsingUtilities.TryGetPercentage(cell, out var value))
+            {
+                return value;
+            }
+
+            var raw = ExcelParsingUtilities.GetCellString(cell);
+            if (!string.IsNullOrEmpty(raw))
+            {
+                result.AddWarning($"Row {row.RowNumber()}: Invalid {label} '{raw}'.");
+            }
+
+            return null;
+        }
+
+        private static decimal? ReadDecimal(IXLRow row, IDictionary<string, int> headers, string key, string label, MarginDataParseResult result)
+        {
+            if (!headers.TryGetValue(key, out var column))
+            {
+                return null;
+            }
+
+            var cell = row.Cell(column);
+            if (ExcelParsingUtilities.TryGetNullableDecimal(cell, out var value))
+            {
+                return value;
+            }
+
+            var raw = ExcelParsingUtilities.GetCellString(cell);
+            if (!string.IsNullOrEmpty(raw))
+            {
+                result.AddWarning($"Row {row.RowNumber()}: Invalid {label} '{raw}'.");
+            }
+
+            return null;
+        }
+
+        private static int? ReadInt(IXLRow row, IDictionary<string, int> headers, string key, string label, MarginDataParseResult result)
+        {
+            if (!headers.TryGetValue(key, out var column))
+            {
+                return null;
+            }
+
+            var cell = row.Cell(column);
+            if (ExcelParsingUtilities.TryGetNullableInt(cell, out var value))
+            {
+                return value;
+            }
+
+            var raw = ExcelParsingUtilities.GetCellString(cell);
+            if (!string.IsNullOrEmpty(raw))
+            {
+                result.AddWarning($"Row {row.RowNumber()}: Invalid {label} '{raw}'.");
+            }
+
+            return null;
         }
     }
 }

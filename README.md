@@ -1,6 +1,8 @@
 # GRC Financial Control – Functional Specification
 
 ## What changed
+- 2025-09-20 19:55 UTC — Implemented worksheet targeting preferences, hardened header detection, weekly plan aggregation, enriched ETC capture, and header-driven margin parsing aligned with the harmonized dictionary.
+- 2025-09-20 18:40 UTC — Captured the Excel parser strategy review plus the remediation roadmap for worksheet selection, header normalization, weekly aggregation, ETC capture, and margin coverage.
 - 2025-09-19 14:09 UTC — Reintroduced the upload summary grid and week-ending picker to Form1 so reconciliation uses the selected date and upload batches show per-file results again.
 - 2025-09-19 13:57 UTC — Hardened master-data refresh so engagement/measurement period grids repopulate instantly and documented the new insert confirmation prompts across maintenance forms.
 - 2025-09-19 12:58 UTC — Clarified database alignment steps for measurement periods, fact foreign keys, and engagement column widths.
@@ -67,6 +69,32 @@ Dialog behavior:
 
 ### Single-file Upload Logic (other types)
 - Execute the same validation/parsing/mapping steps with a single `UploadRunner` work item and per-file summary entry.
+
+## Excel Parser Strategy Review (2025-09-20)
+
+### Key Findings
+1. **Worksheet targeting is brittle.** All Excel parsers call `ExcelWorksheetHelper.FirstVisible`, so they only inspect the first visible sheet. Files such as `EY_WEEKLY_PRICING_BUDGETING169202518718608_Excel Export.xlsx` and `EY_PERSON_ETC_LAST_TRANSFERRED_v1.xlsx` expose summary tabs (`PLAN INFO`, `ETC INFO`) before the required `RESOURCING` worksheet, while `data.xlsx` stores margin facts under `Export`. Because the parsers never reach those tabs, header detection fails even when the proper columns exist.
+2. **Header detection cannot accommodate localized or punctuated labels.** `ExcelParsingUtilities.NormalizeHeader` strips spaces, underscores, and hyphens only. Headers like `Actuals: Hours Incurred (through last week)` or `Emp Resource  Name` therefore normalize to tokens with punctuation and double spaces that never match the synonym lists. Multi-row headers and repeated "Unnamed" cells in the EY exports further hide required fields because `ExcelHeaderDetector` demands every header in a single row.
+3. **Plan uploads ignore the weekly allocation layout.** `PlanExcelParser` expects a single `HOURS` column plus an optional rate column. The harmonized dictionary shows weekly columns labelled by dates (e.g., `09/08/2025`, `16/08/2025`) with supporting metadata such as resource GPN, level, and engagement identifiers. The current parser discards that structure, making it impossible to aggregate planned hours per employee or engagement.
+4. **ETC parsing misses required personnel details.** `EtcExcelParser` captures engagement, employee name, raw level, incurred hours, and ETC remaining, but it does not normalize levels, retain employee identifiers, or surface projected margin metrics that coexist on the resourcing sheet. The parser also assumes the headers live on a single row and ignores cases where localized names or punctuation appear.
+5. **Margin ingestion relies on positional columns.** `MarginDataExcelParser` pulls engagement descriptors from column A and then reads columns D, E, and O by index. The raw data shows many additional margin metrics (`Margin % Bud`, `Margin % ETC-P`, `Billing Overrun`, etc.) whose order is not fixed. Without header-driven lookups, the parser silently drops most harmonized fields and risks breakage when spreadsheets add or shift columns.
+6. **Additional feeder workbooks remain unsupported.** The raw field tables include `Programação Retain Platforms GRC (1).xlsx` and `20140812 - Programaçao ERP_v14.xlsx`, which supply Retain platform assignments and 40h debt forecasts. No parser currently consumes those patterns (boolean marks, weekly 40-hour flags), leaving the harmonized dictionary entries unfulfilled.
+
+### Remediation Plan
+- **Introduce worksheet selection rules per upload type.** Extend `ExcelWorksheetHelper` (or parser constructors) to accept ordered sheet name preferences (e.g., `RESOURCING`, `Export`, localized variants) and fall back to the first visible sheet only if none match. Include integration tests with EY weekly and ETC extracts to confirm the intended tab loads.
+- **Broaden header normalization and synonym coverage.** Update `NormalizeHeader` to strip punctuation, collapse repeated whitespace, and optionally split on colons/slashes so `Actuals: Hours Incurred` matches existing synonyms. Expand `HeaderSchema` to register localized phrases (Portuguese labels, double-spaced names) and teach `ExcelHeaderDetector` to consolidate multi-row headers by scanning a bounded range and allowing partial matches for dynamic week/date columns.
+- **Refactor plan parsing around dynamic weekly columns.** Detect identifier columns (engagement, customer, employee, level, location) separately from repeating week headers. Convert recognized date headers to `DateOnly`, aggregate hours per employee/week, and compute row totals. Preserve metadata like resource GPN for downstream joins.
+- **Enhance ETC parsing for personnel and margin metadata.** Capture employee identifiers, normalize levels via the harmonized mapping, and retrieve additional columns such as projected margin percentage, ETC age, and status. Ensure numeric parsing tolerates blank/zero cells and align the output schema with database expectations.
+- **Replace positional margin extraction with header-driven lookups.** Build a `HeaderSchema` for `data.xlsx`/`Export`, covering all margin and overrun columns. Parse decimal percentages robustly (tolerating `%` signs and localized separators) and normalize to decimal fractions. Surface engagement ID/name pairs consistently with the harmonized rules.
+- **Plan dedicated parsers for Retain and 40h debt workbooks.** Model the boolean assignment markers and weekly 40-hour forecasts, reuse the improved header detection, and wire outputs into upload services that honor the SQLite/MySQL split.
+- **Codify tests and documentation.** Add fixture-based unit tests per parser, update the Mistake Catalog with the resolved issues, and document the new behaviors in both this README and `agents.md` so future uploads remain aligned with the harmonized dictionary.
+
+### Parser Enhancements Implemented (2025-09-20)
+- **Worksheet targeting.** `ExcelWorksheetHelper.SelectWorksheet` prioritizes harmonized sheet names (`RESOURCING`, `Export`, `Planilha1`, `Alocações_Staff`, etc.) before falling back to the first visible tab, preventing summary sheets from short-circuiting uploads.
+- **Header detection.** `ExcelHeaderDetector` aggregates multi-row captions, removes punctuation (including `%` → `PCT`), and matches localized synonyms so colon-delimited and Portuguese headers resolve to schema keys.
+- **Plan parsing.** `PlanExcelParser` now captures engagement, employee, resource GPN, customer, and level metadata, detects dynamic weekly date columns, aggregates hours, records totals, and normalizes level codes via `LevelNormalizer` while logging invalid totals.
+- **ETC parsing.** `EtcExcelParser` title-cases employee names, captures employee identifiers, normalizes levels, and extracts projected margin %, ETC age, remaining weeks, and status with resilient numeric parsing.
+- **Margin parsing.** `MarginDataExcelParser` reads the `Export` worksheet by header name, extracting client data, all harmonized margin percentages/values, overruns, status, and counts; percentages normalize to decimal fractions for fact loading with warnings on malformed cells.
 
 ### Master Data Forms
 - **Engagements**: Maintain engagement ID, name, partner, manager, and opening margin. Edits occur in dedicated text boxes; the grid is read-only and selecting a row hydrates the editors. Validation enforces required fields and keeps opening margin within -100.000 to +100.000 before issuing synchronous insert/update/delete operations.

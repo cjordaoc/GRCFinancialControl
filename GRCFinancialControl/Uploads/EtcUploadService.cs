@@ -56,9 +56,10 @@ namespace GRCFinancialControl.Uploads
 
                     var employeeId = _ids.EnsureEmployee(_sourceId, employeeName);
                     uint? levelId = null;
-                    if (!string.IsNullOrWhiteSpace(row.RawLevel))
+                    var levelSource = row.NormalizedLevel ?? row.RawLevel;
+                    if (!string.IsNullOrWhiteSpace(levelSource))
                     {
-                        levelId = _ids.EnsureLevel(_sourceId, row.RawLevel);
+                        levelId = _ids.EnsureLevel(_sourceId, levelSource);
                     }
 
                     _db.FactEtcSnapshots.Add(new FactEtcSnapshot
