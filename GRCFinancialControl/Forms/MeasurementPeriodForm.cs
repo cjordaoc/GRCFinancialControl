@@ -18,7 +18,7 @@ namespace GRCFinancialControl.Forms
         private MeasurementPeriod? _currentPeriod;
         private bool _isNew = true;
         private bool _suppressEvents;
-        private ushort? _activePeriodId;
+        private long? _activePeriodId;
 
         public MeasurementPeriodForm(AppConfig config, ParametersService parametersService)
         {
@@ -47,7 +47,7 @@ namespace GRCFinancialControl.Forms
                 {
                     _activePeriodId = null;
                 }
-                else if (ushort.TryParse(stored, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed))
+                else if (long.TryParse(stored, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed))
                 {
                     _activePeriodId = parsed;
                 }
@@ -72,9 +72,9 @@ namespace GRCFinancialControl.Forms
             UpdateActivePeriodLabel();
         }
 
-        private void RefreshMeasurementPeriods(ushort? selectPeriodId = null)
+        private void RefreshMeasurementPeriods(long? selectPeriodId = null)
         {
-            ushort? targetId = selectPeriodId ?? _currentPeriod?.PeriodId ?? _activePeriodId;
+            long? targetId = selectPeriodId ?? _currentPeriod?.PeriodId ?? _activePeriodId;
             try
             {
                 using var context = DbContextFactory.CreateMySqlContext(_config);
@@ -129,7 +129,7 @@ namespace GRCFinancialControl.Forms
             }
         }
 
-        private bool SelectGridRow(ushort periodId)
+        private bool SelectGridRow(long periodId)
         {
             _suppressEvents = true;
             foreach (DataGridViewRow row in gridMeasurementPeriods.Rows)
@@ -210,7 +210,7 @@ namespace GRCFinancialControl.Forms
             {
                 using var context = DbContextFactory.CreateMySqlContext(_config);
                 var service = new MeasurementPeriodService(context);
-                ushort selectedId;
+                long selectedId;
 
                 string? createdDescription = null;
 

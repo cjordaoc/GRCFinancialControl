@@ -18,7 +18,7 @@ namespace GRCFinancialControl.Uploads
             _ids = new IdResolver(db);
         }
 
-        public OperationSummary Load(ushort measurementPeriodId, IReadOnlyList<MarginDataRow> rows)
+        public OperationSummary Load(long measurementPeriodId, IReadOnlyList<MarginDataRow> rows)
         {
             ArgumentNullException.ThrowIfNull(rows);
 

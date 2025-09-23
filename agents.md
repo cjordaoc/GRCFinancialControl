@@ -1,6 +1,7 @@
 # GRC Financial Control – Engineering Guidelines
 
 ## What changed
+- 2025-09-19 19:50 UTC — Captured the BIGINT ID standard plus the `DimSourceSystems` baseline script so upload services share master data lookups.
 - 2025-09-21 00:45 UTC — Ensured the WinForms Help dialog ships the current `README.md` by copying it to the build output and reinforced the requirement to keep the specification accurate.
 - 2025-09-21 00:15 UTC — Redirected change history and mistake tracking to dedicated `ChangeLog.md` and `Fixes.md`, and clarified that existing fixes must be reviewed before researching externally.
 
@@ -95,6 +96,10 @@ Historical updates now live in [`ChangeLog.md`](ChangeLog.md). Record engineerin
 
 
 ## 15. Validation Requirements
-For critical C# APIs/packages:  
-- Evaluate Microsoft/.NET official docs or release notes.  
-- Document availability and expected behavior.  
+For critical C# APIs/packages:
+- Evaluate Microsoft/.NET official docs or release notes.
+- Document availability and expected behavior.
+
+## 16. Schema & ID Standards
+- All MySQL primary and foreign keys use `BIGINT`; mirror them with C# `long` properties.
+- Apply `DatabaseScripts/20250919_dim_source_systems_bigint.sql` to provision `DimSourceSystems` and upgrade existing ID columns before running uploads.
