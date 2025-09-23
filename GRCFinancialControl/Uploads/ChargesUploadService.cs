@@ -11,7 +11,7 @@ namespace GRCFinancialControl.Uploads
     {
         private readonly MySqlDbContext _db;
         private readonly IdResolver _ids;
-        private readonly ushort _sourceId;
+        private readonly long _sourceId;
 
         public ChargesUploadService(MySqlDbContext db)
         {
@@ -20,7 +20,7 @@ namespace GRCFinancialControl.Uploads
             _sourceId = _ids.EnsureSourceSystem("CHARGES", "Daily Timesheet Charges");
         }
 
-        public OperationSummary Insert(ushort measurementPeriodId, IReadOnlyList<ChargeRow> rows)
+        public OperationSummary Insert(long measurementPeriodId, IReadOnlyList<ChargeRow> rows)
         {
             ArgumentNullException.ThrowIfNull(rows);
 
@@ -51,7 +51,7 @@ namespace GRCFinancialControl.Uploads
                     .Where(c => c.EngagementId == engagementId && c.MeasurementPeriodId == measurementPeriodId && uniqueDates.Contains(c.ChargeDate) && uniqueEmployees.Contains(c.EmployeeId))
                     .ToDictionary(c => (c.ChargeDate, c.EmployeeId));
 
-                var seen = new HashSet<(DateOnly ChargeDate, ulong EmployeeId)>();
+                var seen = new HashSet<(DateOnly ChargeDate, long EmployeeId)>();
 
                 foreach (var row in groupRows)
                 {
@@ -90,7 +90,7 @@ namespace GRCFinancialControl.Uploads
         private List<PreparedChargeRow> PrepareRows(IReadOnlyList<ChargeRow> rows, OperationSummary summary)
         {
             var prepared = new List<PreparedChargeRow>(rows.Count);
-            var cache = new Dictionary<string, ulong>(StringComparer.OrdinalIgnoreCase);
+            var cache = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var row in rows)
             {
@@ -133,7 +133,7 @@ namespace GRCFinancialControl.Uploads
         {
             public string EngagementId { get; init; } = string.Empty;
             public DateOnly ChargeDate { get; init; }
-            public ulong EmployeeId { get; init; }
+            public long EmployeeId { get; init; }
             public string EmployeeName { get; init; } = string.Empty;
             public decimal Hours { get; init; }
             public decimal? CostAmount { get; init; }

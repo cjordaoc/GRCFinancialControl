@@ -10,19 +10,19 @@ namespace GRCFinancialControl.Uploads
     {
         private readonly MySqlDbContext _db;
 
-        private readonly Dictionary<string, ushort> _sourceSystemCache = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, long> _sourceSystemCache = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, string> _engagementCache = new(StringComparer.OrdinalIgnoreCase);
-        private readonly Dictionary<string, uint> _levelAliasCache = new(StringComparer.OrdinalIgnoreCase);
-        private readonly Dictionary<string, uint> _levelCodeCache = new(StringComparer.OrdinalIgnoreCase);
-        private readonly Dictionary<string, ulong> _employeeAliasCache = new(StringComparer.OrdinalIgnoreCase);
-        private readonly Dictionary<string, ulong> _employeeCache = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, long> _levelAliasCache = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, long> _levelCodeCache = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, long> _employeeAliasCache = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, long> _employeeCache = new(StringComparer.OrdinalIgnoreCase);
 
         public IdResolver(MySqlDbContext db)
         {
             _db = db ?? throw new ArgumentNullException(nameof(db));
         }
 
-        public ushort EnsureSourceSystem(string systemCode, string systemName)
+        public long EnsureSourceSystem(string systemCode, string systemName)
         {
             var trimmedCode = StringNormalizer.TrimToNull(systemCode) ?? throw new ArgumentException("System code is required.", nameof(systemCode));
             if (_sourceSystemCache.TryGetValue(trimmedCode, out var cached))
@@ -85,7 +85,7 @@ namespace GRCFinancialControl.Uploads
             return engagement.EngagementId;
         }
 
-        public uint EnsureLevel(ushort sourceSystemId, string rawLevel, string? levelCodeFallback = null)
+        public long EnsureLevel(long sourceSystemId, string rawLevel, string? levelCodeFallback = null)
         {
             var trimmedLevel = StringNormalizer.TrimToNull(rawLevel) ?? throw new ArgumentException("Level is required.", nameof(rawLevel));
             var normalized = StringNormalizer.NormalizeName(trimmedLevel);
@@ -136,7 +136,7 @@ namespace GRCFinancialControl.Uploads
             return level.LevelId;
         }
 
-        public ulong EnsureEmployee(ushort sourceSystemId, string rawName, string? employeeCode = null)
+        public long EnsureEmployee(long sourceSystemId, string rawName, string? employeeCode = null)
         {
             var trimmedName = StringNormalizer.TrimToNull(rawName) ?? throw new ArgumentException("Employee name is required.", nameof(rawName));
             var normalized = StringNormalizer.NormalizeName(trimmedName);
@@ -185,7 +185,7 @@ namespace GRCFinancialControl.Uploads
             return employee.EmployeeId;
         }
 
-        private void EnsureAlias(ushort sourceSystemId, string trimmedLevel, string normalized, uint levelId)
+        private void EnsureAlias(long sourceSystemId, string trimmedLevel, string normalized, long levelId)
         {
             var aliasKey = BuildAliasKey(sourceSystemId, normalized);
             if (_levelAliasCache.ContainsKey(aliasKey))
@@ -205,7 +205,7 @@ namespace GRCFinancialControl.Uploads
             _levelAliasCache[aliasKey] = levelId;
         }
 
-        private void EnsureEmployeeAlias(ushort sourceSystemId, string trimmedName, string normalized, ulong employeeId)
+        private void EnsureEmployeeAlias(long sourceSystemId, string trimmedName, string normalized, long employeeId)
         {
             var aliasKey = BuildAliasKey(sourceSystemId, normalized);
             if (_employeeAliasCache.ContainsKey(aliasKey))
@@ -225,7 +225,7 @@ namespace GRCFinancialControl.Uploads
             _employeeAliasCache[aliasKey] = employeeId;
         }
 
-        private static string BuildAliasKey(ushort sourceSystemId, string normalized)
+        private static string BuildAliasKey(long sourceSystemId, string normalized)
             => $"{sourceSystemId}|{normalized}";
     }
 }

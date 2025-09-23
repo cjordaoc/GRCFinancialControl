@@ -40,7 +40,7 @@ namespace GRCFinancialControl.Services
             return entity;
         }
 
-        public DimFiscalYear Update(ushort id, string description, DateOnly from, DateOnly to)
+        public DimFiscalYear Update(long id, string description, DateOnly from, DateOnly to)
         {
             Validate(description, from, to);
             var entity = _db.DimFiscalYears.SingleOrDefault(f => f.FiscalYearId == id)
@@ -54,7 +54,7 @@ namespace GRCFinancialControl.Services
             return entity;
         }
 
-        public void Delete(ushort id)
+        public void Delete(long id)
         {
             var entity = _db.DimFiscalYears.SingleOrDefault(f => f.FiscalYearId == id)
                 ?? throw new InvalidOperationException("Fiscal year not found.");
@@ -68,7 +68,7 @@ namespace GRCFinancialControl.Services
             _db.SaveChanges();
         }
 
-        public DimFiscalYear Activate(ushort id)
+        public DimFiscalYear Activate(long id)
         {
             var fiscalYears = _db.DimFiscalYears.ToList();
             var target = fiscalYears.SingleOrDefault(f => f.FiscalYearId == id)

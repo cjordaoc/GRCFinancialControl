@@ -823,7 +823,7 @@ namespace GRCFinancialControl
                 return false;
             }
 
-            if (!ushort.TryParse(selectedId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var periodId))
+            if (!long.TryParse(selectedId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var periodId))
             {
                 _parametersService.ClearSelectedMeasurePeriod();
                 MessageBox.Show(this, "The stored measurement period selection is invalid. Please activate a measurement period again.", "Measurement Period Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);

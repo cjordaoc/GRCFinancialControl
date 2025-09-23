@@ -22,12 +22,12 @@ namespace GRCFinancialControl.Services
                 .ToList();
         }
 
-        public MeasurementPeriod? LoadPeriod(ushort periodId)
+        public MeasurementPeriod? LoadPeriod(long periodId)
         {
             return _db.MeasurementPeriods.Find(periodId);
         }
 
-        public ushort Insert(string description, DateOnly startDate, DateOnly endDate)
+        public long Insert(string description, DateOnly startDate, DateOnly endDate)
         {
             Validate(description, startDate, endDate);
             var entity = new MeasurementPeriod
@@ -64,7 +64,7 @@ namespace GRCFinancialControl.Services
             _db.SaveChanges();
         }
 
-        public void Delete(ushort periodId)
+        public void Delete(long periodId)
         {
             var entity = _db.MeasurementPeriods.Find(periodId);
             if (entity == null)

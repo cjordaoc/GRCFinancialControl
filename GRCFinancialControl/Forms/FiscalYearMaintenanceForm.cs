@@ -170,7 +170,7 @@ namespace GRCFinancialControl.Forms
             UpdateButtons();
         }
 
-        private void SelectFiscalYear(ushort id)
+        private void SelectFiscalYear(long id)
         {
             foreach (var item in lstFiscalYears.Items.OfType<DimFiscalYear>())
             {

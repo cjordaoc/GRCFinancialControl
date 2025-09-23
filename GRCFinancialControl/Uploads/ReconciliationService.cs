@@ -14,7 +14,7 @@ namespace GRCFinancialControl.Uploads
             _db = db ?? throw new ArgumentNullException(nameof(db));
         }
 
-        public OperationSummary Reconcile(ushort measurementPeriodId, string snapshotLabel, DateOnly lastWeekEnd)
+        public OperationSummary Reconcile(long measurementPeriodId, string snapshotLabel, DateOnly lastWeekEnd)
         {
             var summary = new OperationSummary("ETC vs Charges Reconciliation");
             var trimmedLabel = StringNormalizer.TrimToNull(snapshotLabel) ?? throw new ArgumentException("Snapshot label is required.", nameof(snapshotLabel));

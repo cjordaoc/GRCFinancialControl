@@ -13,7 +13,7 @@ namespace GRCFinancialControl.Data
     [Index(nameof(SystemCode), IsUnique = true)]
     public class DimSourceSystem
     {
-        [Key] public ushort SourceSystemId { get; set; }
+        [Key] public long SourceSystemId { get; set; }
         [Required, MaxLength(50)] public string SystemCode { get; set; } = null!;
         [Required, MaxLength(100)] public string SystemName { get; set; } = null!;
     }
@@ -23,7 +23,7 @@ namespace GRCFinancialControl.Data
     {
         [Key]
         [Column("period_id")]
-        public ushort PeriodId { get; set; }
+        public long PeriodId { get; set; }
 
         [Required]
         [MaxLength(255)]
@@ -47,7 +47,7 @@ namespace GRCFinancialControl.Data
 
     public partial class DimFiscalYear
     {
-        [Key] public ushort FiscalYearId { get; set; }
+        [Key] public long FiscalYearId { get; set; }
         [Required, MaxLength(100)] public string Description { get; set; } = null!;
         [Required] public DateOnly DateFrom { get; set; }
         [Required] public DateOnly DateTo { get; set; }
@@ -98,7 +98,7 @@ namespace GRCFinancialControl.Data
     [Index(nameof(LevelCode), IsUnique = true)]
     public class DimLevel
     {
-        [Key] public uint LevelId { get; set; }
+        [Key] public long LevelId { get; set; }
         [Required, MaxLength(64)] public string LevelCode { get; set; } = null!;
         [Required, MaxLength(128)] public string LevelName { get; set; } = null!;
         public ushort LevelOrder { get; set; }
@@ -109,7 +109,7 @@ namespace GRCFinancialControl.Data
     [Index(nameof(NormalizedName), IsUnique = true)]
     public class DimEmployee
     {
-        [Key] public ulong EmployeeId { get; set; }
+        [Key] public long EmployeeId { get; set; }
         [MaxLength(64)] public string? EmployeeCode { get; set; }
         [Required, MaxLength(255)] public string FullName { get; set; } = null!;
         [Required, MaxLength(255)] public string NormalizedName { get; set; } = null!;
@@ -119,11 +119,11 @@ namespace GRCFinancialControl.Data
 
     public class MapEmployeeAlias
     {
-        [Key] public ulong EmployeeAliasId { get; set; }
-        [Required] public ushort SourceSystemId { get; set; }
+        [Key] public long EmployeeAliasId { get; set; }
+        [Required] public long SourceSystemId { get; set; }
         [Required, MaxLength(255)] public string RawName { get; set; } = null!;
         [Required, MaxLength(255)] public string NormalizedRaw { get; set; } = null!;
-        [Required] public ulong EmployeeId { get; set; }
+        [Required] public long EmployeeId { get; set; }
         public DateTime CreatedUtc { get; set; }
 
         public DimSourceSystem? SourceSystem { get; set; }
@@ -132,11 +132,11 @@ namespace GRCFinancialControl.Data
 
     public class MapLevelAlias
     {
-        [Key] public ulong LevelAliasId { get; set; }
-        [Required] public ushort SourceSystemId { get; set; }
+        [Key] public long LevelAliasId { get; set; }
+        [Required] public long SourceSystemId { get; set; }
         [Required, MaxLength(128)] public string RawLevel { get; set; } = null!;
         [Required, MaxLength(128)] public string NormalizedRaw { get; set; } = null!;
-        [Required] public uint LevelId { get; set; }
+        [Required] public long LevelId { get; set; }
         public DateTime CreatedUtc { get; set; }
 
         public DimSourceSystem? SourceSystem { get; set; }
@@ -145,14 +145,14 @@ namespace GRCFinancialControl.Data
 
     public class FactPlanByLevel
     {
-        [Key] public ulong PlanId { get; set; }
+        [Key] public long PlanId { get; set; }
         [Required] public DateTime LoadUtc { get; set; }
-        [Required] public ushort SourceSystemId { get; set; }
+        [Required] public long SourceSystemId { get; set; }
         [Required]
         [Column("measurement_period_id")]
-        public ushort MeasurementPeriodId { get; set; }
+        public long MeasurementPeriodId { get; set; }
         [Required, MaxLength(64)] public string EngagementId { get; set; } = null!;
-        [Required] public uint LevelId { get; set; }
+        [Required] public long LevelId { get; set; }
         [Required, Column(TypeName = "decimal(12,2)")] public decimal PlannedHours { get; set; }
         [Column(TypeName = "decimal(14,4)")] public decimal? PlannedRate { get; set; }
         public DateTime CreatedUtc { get; set; }
@@ -160,16 +160,16 @@ namespace GRCFinancialControl.Data
 
     public class FactEtcSnapshot
     {
-        [Key] public ulong EtcId { get; set; }
+        [Key] public long EtcId { get; set; }
         [Required, MaxLength(100)] public string SnapshotLabel { get; set; } = null!;
         [Required] public DateTime LoadUtc { get; set; }
-        [Required] public ushort SourceSystemId { get; set; }
+        [Required] public long SourceSystemId { get; set; }
         [Required]
         [Column("measurement_period_id")]
-        public ushort MeasurementPeriodId { get; set; }
+        public long MeasurementPeriodId { get; set; }
         [Required, MaxLength(64)] public string EngagementId { get; set; } = null!;
-        [Required] public ulong EmployeeId { get; set; }
-        public uint? LevelId { get; set; }
+        [Required] public long EmployeeId { get; set; }
+        public long? LevelId { get; set; }
         [Required, Column(TypeName = "decimal(12,2)")] public decimal HoursIncurred { get; set; }
         [Required, Column(TypeName = "decimal(12,2)")] public decimal EtcRemaining { get; set; }
         public DateTime CreatedUtc { get; set; }
@@ -179,21 +179,21 @@ namespace GRCFinancialControl.Data
     {
         [Required]
         [Column("measurement_period_id")]
-        public ushort MeasurementPeriodId { get; set; }
+        public long MeasurementPeriodId { get; set; }
         [Required, MaxLength(64)] public string EngagementId { get; set; } = null!;
         [Required, Column(TypeName = "decimal(6,3)")] public decimal MarginValue { get; set; }
     }
 
     public class FactDeclaredErpWeek
     {
-        [Key] public ulong ErpId { get; set; }
-        [Required] public ushort SourceSystemId { get; set; }
+        [Key] public long ErpId { get; set; }
+        [Required] public long SourceSystemId { get; set; }
         [Required]
         [Column("measurement_period_id")]
-        public ushort MeasurementPeriodId { get; set; }
+        public long MeasurementPeriodId { get; set; }
         [Required] public DateOnly WeekStartDate { get; set; }
         [Required, MaxLength(64)] public string EngagementId { get; set; } = null!;
-        [Required] public ulong EmployeeId { get; set; }
+        [Required] public long EmployeeId { get; set; }
         [Required, Column(TypeName = "decimal(12,2)")] public decimal DeclaredHours { get; set; }
         [Required] public DateTime LoadUtc { get; set; }
         public DateTime CreatedUtc { get; set; }
@@ -201,14 +201,14 @@ namespace GRCFinancialControl.Data
 
     public class FactDeclaredRetainWeek
     {
-        [Key] public ulong RetainId { get; set; }
-        [Required] public ushort SourceSystemId { get; set; }
+        [Key] public long RetainId { get; set; }
+        [Required] public long SourceSystemId { get; set; }
         [Required]
         [Column("measurement_period_id")]
-        public ushort MeasurementPeriodId { get; set; }
+        public long MeasurementPeriodId { get; set; }
         [Required] public DateOnly WeekStartDate { get; set; }
         [Required, MaxLength(64)] public string EngagementId { get; set; } = null!;
-        [Required] public ulong EmployeeId { get; set; }
+        [Required] public long EmployeeId { get; set; }
         [Required, Column(TypeName = "decimal(12,2)")] public decimal DeclaredHours { get; set; }
         [Required] public DateTime LoadUtc { get; set; }
         public DateTime CreatedUtc { get; set; }
@@ -216,14 +216,14 @@ namespace GRCFinancialControl.Data
 
     public class FactTimesheetCharge
     {
-        [Key] public ulong ChargeId { get; set; }
-        [Required] public ushort SourceSystemId { get; set; }
+        [Key] public long ChargeId { get; set; }
+        [Required] public long SourceSystemId { get; set; }
         [Required]
         [Column("measurement_period_id")]
-        public ushort MeasurementPeriodId { get; set; }
+        public long MeasurementPeriodId { get; set; }
         [Required] public DateOnly ChargeDate { get; set; }
         [Required, MaxLength(64)] public string EngagementId { get; set; } = null!;
-        [Required] public ulong EmployeeId { get; set; }
+        [Required] public long EmployeeId { get; set; }
         [Required, Column(TypeName = "decimal(12,2)")] public decimal HoursCharged { get; set; }
         [Column(TypeName = "decimal(14,4)")] public decimal? CostAmount { get; set; }
         [Required] public DateTime LoadUtc { get; set; }
@@ -232,13 +232,13 @@ namespace GRCFinancialControl.Data
 
     public class AuditEtcVsCharges
     {
-        [Key] public ulong AuditId { get; set; }
+        [Key] public long AuditId { get; set; }
         [Required, MaxLength(100)] public string SnapshotLabel { get; set; } = null!;
         [Required]
         [Column("measurement_period_id")]
-        public ushort MeasurementPeriodId { get; set; }
+        public long MeasurementPeriodId { get; set; }
         [Required, MaxLength(64)] public string EngagementId { get; set; } = null!;
-        [Required] public ulong EmployeeId { get; set; }
+        [Required] public long EmployeeId { get; set; }
         [Required] public DateOnly LastWeekEndDate { get; set; }
         [Required, Column(TypeName = "decimal(12,2)")] public decimal EtcHoursIncurred { get; set; }
         [Required, Column(TypeName = "decimal(12,2)")] public decimal ChargesSumHours { get; set; }
@@ -250,7 +250,7 @@ namespace GRCFinancialControl.Data
     public class VwChargesSum
     {
         [Required, MaxLength(64)] public string EngagementId { get; set; } = null!;
-        [Required] public ulong EmployeeId { get; set; }
+        [Required] public long EmployeeId { get; set; }
         [Required] public DateOnly ChargeDate { get; set; }
         [Column(TypeName = "decimal(34,2)")] public decimal? HoursCharged { get; set; }
     }
@@ -258,13 +258,13 @@ namespace GRCFinancialControl.Data
     [Keyless]
     public class VwLatestEtcPerEmployee
     {
-        [Required] public ulong EtcId { get; set; }
+        [Required] public long EtcId { get; set; }
         [Required, MaxLength(100)] public string SnapshotLabel { get; set; } = null!;
         [Required] public DateTime LoadUtc { get; set; }
-        [Required] public ushort SourceSystemId { get; set; }
+        [Required] public long SourceSystemId { get; set; }
         [Required, MaxLength(64)] public string EngagementId { get; set; } = null!;
-        [Required] public ulong EmployeeId { get; set; }
-        public uint? LevelId { get; set; }
+        [Required] public long EmployeeId { get; set; }
+        public long? LevelId { get; set; }
         [Required, Column(TypeName = "decimal(12,2)")] public decimal HoursIncurred { get; set; }
         [Required, Column(TypeName = "decimal(12,2)")] public decimal EtcRemaining { get; set; }
         public DateTime CreatedUtc { get; set; }
@@ -274,7 +274,7 @@ namespace GRCFinancialControl.Data
     public class VwPlanVsActualByLevel
     {
         [Required, MaxLength(64)] public string EngagementId { get; set; } = null!;
-        [Required] public uint LevelId { get; set; }
+        [Required] public long LevelId { get; set; }
         [Column(TypeName = "decimal(34,2)")] public decimal? PlannedHours { get; set; }
         [Column(TypeName = "decimal(56,2)")] public decimal? ActualHours { get; set; }
     }
