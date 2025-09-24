@@ -1,6 +1,8 @@
 # GRC Financial Control – Functional Specification
 
 ## What changed
+- 2025-09-22 18:30 UTC — Replaced the incremental MySQL scripts with a single full-rebuild script so `DatabaseScripts/` exactly matches the deployed schema.
+- 2025-09-19 19:50 UTC — Added the `DimSourceSystems` baseline script and standardized all numeric IDs as BIGINT/`long` so uploads share master data lookups.
 - 2025-09-21 00:45 UTC — Copied `README.md` into the WinForms build output so the Help dialog can display the packaged specification, and documented the Help workflow.
 - 2025-09-21 00:15 UTC — Moved historical change tracking and error recovery guidance into dedicated `ChangeLog.md` and `Fixes.md` files and linked them from this specification. Review [`ChangeLog.md`](ChangeLog.md) for previous entries.
 
@@ -140,12 +142,11 @@ See [`Fixes.md`](Fixes.md) for detailed error recovery practices and the accumul
 ## Database Guide
 - **SQLite**: Stores local application data (connection strings, cached master data snapshots, user preferences). Never push SQLite-only tables to MySQL.
 - **MySQL**: Houses shared fact tables, master data canonical copies, and audit logs.
+- All numeric primary and foreign keys in MySQL are `BIGINT`; keep the EF models on `long` to avoid truncation and to stay aligned with upload scripts.
 - Schema evolution:
   - Update EF Core models and generate migration scripts.
-  - Place CREATE/ALTER SQL scripts in `DatabaseScripts/` with clear naming (e.g., `mysql/2025-09-18_AddMarginFact.sql`).
-  - Run `DatabaseScripts/20250920_master_data_measurement_periods.sql` to create `measurement_periods`, align `dim_engagement`, and add `measurement_period_id` columns plus the lean `fact_engagement_margin` table.
+  - Keep `DatabaseScripts/20250922_full_rebuild.sql` as the authoritative baseline; apply it when refreshing environments or after destructive changes so tables, indexes, and views match production.
   - Document schema diffs in both README and commit messages.
-  - Composite index script `DatabaseScripts/20250919_add_fact_indexes.sql` adds OLTP indexes for ETC, plan, weekly declarations, and charges tables.
 
 ## Maintenance & Extension
 ### Adding a New Upload Type

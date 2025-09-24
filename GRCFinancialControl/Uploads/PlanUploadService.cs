@@ -11,7 +11,7 @@ namespace GRCFinancialControl.Uploads
     {
         private readonly MySqlDbContext _db;
         private readonly IdResolver _ids;
-        private readonly ushort _sourceId;
+        private readonly long _sourceId;
 
         public PlanUploadService(MySqlDbContext db)
         {
@@ -20,7 +20,7 @@ namespace GRCFinancialControl.Uploads
             _sourceId = _ids.EnsureSourceSystem("WEEKLY_PRICING", "Initial Engagement Plan");
         }
 
-        public OperationSummary Load(ushort measurementPeriodId, IReadOnlyList<PlanRow> rows)
+        public OperationSummary Load(long measurementPeriodId, IReadOnlyList<PlanRow> rows)
         {
             ArgumentNullException.ThrowIfNull(rows);
 

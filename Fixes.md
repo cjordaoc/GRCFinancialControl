@@ -1,6 +1,7 @@
 # Fixes Catalog
 
 ## What changed
+- 2025-09-22 18:30 UTC — Updated rebuild guidance so all missing-table issues reference the consolidated `DatabaseScripts/20250922_full_rebuild.sql` baseline.
 - 2025-09-21 00:45 UTC — Logged the Help dialog packaging fix so `README.md` ships with builds and remains viewable in-app.
 - 2025-09-21 00:15 UTC — Created a centralized fixes catalog with historical mistakes and operational error guidance moved from `agents.md` and `README.md`.
 
@@ -10,6 +11,7 @@
 - Reference relevant entries in commit messages or documentation updates when you apply an existing fix.
 
 ## Mistake Catalog
+- 2025-09-19 19:50 UTC — Uploads — Plan/ETC loads crashed with `DimSourceSystems` missing — Apply `DatabaseScripts/20250922_full_rebuild.sql` to recreate the schema (includes `DimSourceSystems`) and keep EF ID properties on `long` so MySQL tables expose BIGINT keys before uploads.
 - 2025-09-21 00:45 UTC — Help — Help dialog showed “README.md not found” in packaged builds → Copy the root `README.md` into the WinForms output via `<None Include="..\README.md" CopyToOutputDirectory="PreserveNewest" />` and confirm the tab renders text locally.
 - 2025-09-20 23:30 UTC — Parsing — `DateTime.FromOADate` crashed on invalid Excel doubles → Range validation added, invalid values emit warnings.
 - 2025-09-20 21:55 UTC — Uploads — Transaction scopes clashed with Pomelo retry → Wrapped operations in `CreateExecutionStrategy().Execute(...)`.

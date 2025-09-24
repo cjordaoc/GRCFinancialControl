@@ -11,7 +11,7 @@ namespace GRCFinancialControl.Uploads
     {
         private readonly MySqlDbContext _db;
         private readonly IdResolver _ids;
-        private readonly ushort _sourceId;
+        private readonly long _sourceId;
         private readonly bool _isErp;
         private readonly string _operationName;
 
@@ -24,7 +24,7 @@ namespace GRCFinancialControl.Uploads
             _sourceId = _ids.EnsureSourceSystem(isErp ? "ERP" : "RETAIN", isErp ? "ERP Weekly Allocation" : "Retain Weekly Declaration");
         }
 
-        public OperationSummary Upsert(ushort measurementPeriodId, IReadOnlyList<WeeklyDeclarationRow> rows)
+        public OperationSummary Upsert(long measurementPeriodId, IReadOnlyList<WeeklyDeclarationRow> rows)
         {
             ArgumentNullException.ThrowIfNull(rows);
 
@@ -141,10 +141,10 @@ namespace GRCFinancialControl.Uploads
         private void ProcessWeeklyRows(
             OperationSummary summary,
             List<PreparedWeeklyRow> prepared,
-            Func<Dictionary<(DateOnly WeekStart, ulong EmployeeId), FactDeclaredErpWeek>> erpFetcher,
+            Func<Dictionary<(DateOnly WeekStart, long EmployeeId), FactDeclaredErpWeek>> erpFetcher,
             Action<PreparedWeeklyRow, FactDeclaredErpWeek?> apply)
         {
-            var seen = new HashSet<(DateOnly WeekStart, ulong EmployeeId)>();
+            var seen = new HashSet<(DateOnly WeekStart, long EmployeeId)>();
             var existing = erpFetcher();
             foreach (var row in prepared)
             {
@@ -162,10 +162,10 @@ namespace GRCFinancialControl.Uploads
         private void ProcessWeeklyRows(
             OperationSummary summary,
             List<PreparedWeeklyRow> prepared,
-            Func<Dictionary<(DateOnly WeekStart, ulong EmployeeId), FactDeclaredRetainWeek>> retainFetcher,
+            Func<Dictionary<(DateOnly WeekStart, long EmployeeId), FactDeclaredRetainWeek>> retainFetcher,
             Action<PreparedWeeklyRow, FactDeclaredRetainWeek?> apply)
         {
-            var seen = new HashSet<(DateOnly WeekStart, ulong EmployeeId)>();
+            var seen = new HashSet<(DateOnly WeekStart, long EmployeeId)>();
             var existing = retainFetcher();
             foreach (var row in prepared)
             {
@@ -183,7 +183,7 @@ namespace GRCFinancialControl.Uploads
         private List<PreparedWeeklyRow> PrepareRows(IReadOnlyList<WeeklyDeclarationRow> rows)
         {
             var prepared = new List<PreparedWeeklyRow>(rows.Count);
-            var cache = new Dictionary<string, ulong>(StringComparer.OrdinalIgnoreCase);
+            var cache = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var row in rows)
             {
@@ -215,7 +215,7 @@ namespace GRCFinancialControl.Uploads
         private sealed class PreparedWeeklyRow
         {
             public DateOnly WeekStart { get; init; }
-            public ulong EmployeeId { get; init; }
+            public long EmployeeId { get; init; }
             public string EmployeeName { get; init; } = string.Empty;
             public decimal DeclaredHours { get; init; }
         }

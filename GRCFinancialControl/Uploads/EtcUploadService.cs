@@ -11,7 +11,7 @@ namespace GRCFinancialControl.Uploads
     {
         private readonly MySqlDbContext _db;
         private readonly IdResolver _ids;
-        private readonly ushort _sourceId;
+        private readonly long _sourceId;
 
         public EtcUploadService(MySqlDbContext db)
         {
@@ -20,7 +20,7 @@ namespace GRCFinancialControl.Uploads
             _sourceId = _ids.EnsureSourceSystem("ETC", "Engagement ETC Snapshot");
         }
 
-        public OperationSummary Load(ushort measurementPeriodId, string snapshotLabel, IReadOnlyList<EtcRow> rows)
+        public OperationSummary Load(long measurementPeriodId, string snapshotLabel, IReadOnlyList<EtcRow> rows)
         {
             ArgumentNullException.ThrowIfNull(rows);
 
@@ -55,7 +55,7 @@ namespace GRCFinancialControl.Uploads
                     }
 
                     var employeeId = _ids.EnsureEmployee(_sourceId, employeeName);
-                    uint? levelId = null;
+                    long? levelId = null;
                     var levelSource = row.NormalizedLevel ?? row.RawLevel;
                     if (!string.IsNullOrWhiteSpace(levelSource))
                     {
