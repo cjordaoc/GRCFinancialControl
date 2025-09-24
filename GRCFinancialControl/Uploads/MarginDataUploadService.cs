@@ -4,6 +4,7 @@ using System.Linq;
 using GRCFinancialControl.Common;
 using GRCFinancialControl.Data;
 using GRCFinancialControl.Parsing;
+using Microsoft.EntityFrameworkCore;
 
 namespace GRCFinancialControl.Uploads
 {
@@ -52,14 +53,40 @@ namespace GRCFinancialControl.Uploads
                     continue;
                 }
 
-                engagementId = _ids.EnsureEngagement(engagementId, row.EngagementTitle);
-                var engagement = _db.DimEngagements.SingleOrDefault(e => e.EngagementId == engagementId);
+                engagementId = _ids.EnsureEngagement(engagementId, row.EngagementTitle, (entity, isNew) =>
+                {
+                    if (!isNew)
+                    {
+                        return false;
+                    }
+
+                    var openingMargin = row.OpeningMargin.HasValue
+                        ? Math.Round(row.OpeningMargin.Value, 3, MidpointRounding.AwayFromZero)
+                        : 0m;
+                    entity.OpeningMargin = openingMargin;
+                    entity.CurrentMargin = row.CurrentMargin.HasValue
+                        ? Math.Round(Convert.ToDouble(row.CurrentMargin.Value), 6, MidpointRounding.AwayFromZero)
+                        : Math.Round(Convert.ToDouble(openingMargin), 6, MidpointRounding.AwayFromZero);
+                    entity.LastMarginUpdateDate = now;
+                    return true;
+                });
+
+                var engagement = _db.DimEngagements.Local.FirstOrDefault(e => e.EngagementId == engagementId) ??
+                                  _db.DimEngagements.SingleOrDefault(e => e.EngagementId == engagementId);
                 if (engagement == null)
                 {
-                    throw new UploadDataException($"Engagement '{engagementId}' referenced on row {row.ExcelRowNumber} could not be found.");
+                    throw new UploadDataException($"Engagement '{engagementId}' referenced on row {row.ExcelRowNumber} could not be resolved after creation attempt.");
                 }
 
+                var engagementEntry = _db.Entry(engagement);
+                var isNewEngagement = engagementEntry.State == EntityState.Added;
+
                 var engagementUpdated = false;
+                if (isNewEngagement)
+                {
+                    engagementUpdated = true;
+                    summary.AddInfo($"Row {row.ExcelRowNumber}: Created engagement '{engagementId}' from margin file.");
+                }
                 if (row.OpeningMargin.HasValue && HasDifferentMargin(engagement.OpeningMargin, row.OpeningMargin.Value))
                 {
                     engagement.OpeningMargin = Math.Round(row.OpeningMargin.Value, 3, MidpointRounding.AwayFromZero);
@@ -68,7 +95,7 @@ namespace GRCFinancialControl.Uploads
 
                 if (row.CurrentMargin.HasValue && HasDifferentMargin(Convert.ToDecimal(engagement.CurrentMargin), row.CurrentMargin.Value))
                 {
-                    engagement.CurrentMargin = Convert.ToDouble(Math.Round(row.CurrentMargin.Value, 6, MidpointRounding.AwayFromZero));
+                    engagement.CurrentMargin = Math.Round(Convert.ToDouble(row.CurrentMargin.Value), 6, MidpointRounding.AwayFromZero);
                     engagementUpdated = true;
                 }
 

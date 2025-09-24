@@ -2,6 +2,7 @@
 
 ## What changed
 
+- 2025-09-24 22:15 UTC — Enabled margin uploads to seed missing `DimEngagements` records with opening margins, taught the charges parser to prioritize Detail sheets over summary tabs, and updated documentation to reflect the .NET SDK 8.0.120 toolchain verification.
 - 2025-09-25 18:45 UTC — Hardened ETC uploads by detaching unintended `DimEngagements` inserts/updates, surfaced suppression warnings in summaries, and refreshed documentation/fixes catalogs to reflect the read-only enforcement.
 - 2025-09-25 16:10 UTC — Prevented ETC uploads from creating new `DimEngagements` rows by introducing a read-only engagement resolver, updated documentation to stress preloading engagement master data, and recorded the safeguard in the fixes catalog.
 
@@ -14,6 +15,7 @@
 
 ## Engineering Guidelines History (agents.md)
 - 2025-09-25 18:45 UTC — Logged the ETC upload guard that detaches unintended engagement inserts/updates and requires warning the operator when master-data mutations are suppressed.
+- 2025-09-24 22:15 UTC — Captured the margin seeding guidance, Detail-sheet targeting for charges uploads, and the .NET 8.0.120 verification requirement in `agents.md`.
 - 2025-09-25 16:10 UTC — Clarified that ETC uploads must resolve existing engagements via `IdResolver.TryResolveEngagement`, skipping rows instead of inserting master data when IDs are missing.
 - 2025-09-24 20:55 UTC — Added guidance to honor the File Field Upload Map during parsing, require source-system employee code uniqueness, and log SDK verification in delivery checklists.
 - 2025-09-24 14:40 UTC — Documented the `Data/` folder EF organization, the schema smoke test requirement, and the tarball-based SDK installation workflow for Windows desktop builds on Linux.
@@ -33,6 +35,7 @@
 
 ## Functional Specification History (README.md)
 - 2025-09-25 18:45 UTC — Documented ETC engagement read-only enforcement and the warning/summary signals produced when unintended master-data writes are suppressed.
+- 2025-09-24 22:15 UTC — Recorded that margin uploads now seed missing engagements with opening margins, noted the charges parser Detail-sheet preference, and updated environment guidance for .NET SDK 8.0.120 verification in the functional spec.
 - 2025-09-25 16:10 UTC — Recorded the ETC upload safeguard that skips unknown engagements, emphasizing the need to seed `DimEngagements` before running ETC snapshots.
 - 2025-09-24 20:55 UTC — Captured the mapping-driven header validation flow, MySQL employee code registry, rebuild script refresh, and toolchain verification checklist.
 - 2025-09-24 14:40 UTC — Logged the EF Core configuration refactor, schema smoke test, and Linux tarball SDK setup so cross-platform engineers can reproduce builds/tests.
