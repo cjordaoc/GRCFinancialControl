@@ -1,6 +1,8 @@
 # Fixes Catalog
 
 ## What changed
+- 2025-09-25 18:45 UTC — Logged the follow-up ETC regression where tracked `DimEngagements` entities still persisted; documented the change-tracker sweep that detaches unintended inserts/updates and the associated operator warnings.
+- 2025-09-25 16:10 UTC — Captured the ETC upload regression that auto-created DimEngagements, recorded the resolution (read-only engagement lookup + skip), and reiterated the requirement to preload engagement master data.
 - 2025-09-24 20:55 UTC — Documented the duplicate employee code race fix (MapEmployeeCodes + retry), refreshed rebuild guidance, and reminded teams to capture SDK/toolchain verification.
 - 2025-09-24 14:40 UTC — Added guidance for installing the tarball-based .NET SDK to obtain Windows Desktop packs on Linux and recorded the EF schema smoke test as a regression guard.
 - 2025-09-22 18:30 UTC — Updated rebuild guidance so all missing-table issues reference the consolidated `DatabaseScripts/20250922_full_rebuild.sql` baseline.
@@ -13,6 +15,8 @@
 - Reference relevant entries in commit messages or documentation updates when you apply an existing fix.
 
 ## Mistake Catalog
+- 2025-09-25 18:45 UTC — Uploads — ETC snapshots still inserted `DimEngagements` rows when other workflows seeded new engagements in the same context — Run a change-tracker sweep that detaches added/modified `DimEngagements` entries prior to saving, surface warnings listing suppressed IDs, and retry after seeding master data separately.
+- 2025-09-25 16:10 UTC — Uploads — ETC snapshot loads inserted unexpected `DimEngagements` rows when encountering unknown IDs — Use `IdResolver.TryResolveEngagement` to require pre-existing engagements, skip affected rows with warnings, and seed `DimEngagements` via the master-data UI/import before running ETC uploads.
 - 2025-09-24 14:40 UTC — Build — `MSB4019` complaining `Microsoft.NET.Sdk.WindowsDesktop.targets` missing on Linux → Install the official SDK tarball (e.g., `dotnet-sdk-8.0.120-linux-x64.tar.gz`) into `/usr/share/dotnet8`, export `DOTNET_ROOT=/usr/share/dotnet8`, update `PATH`, and rerun `dotnet build -p:EnableWindowsTargeting=true` before executing tests.
 - 2025-09-24 20:55 UTC — Uploads — Concurrent employee creation triggered `DbUpdateConcurrencyException` or duplicate codes → Add `MapEmployeeCodes` with unique `(SourceSystemId, EmployeeCode)` index, wrap inserts in duplicate-key retry (MySQL 1062), and always requery existing rows before returning.
 - 2025-09-19 19:50 UTC — Uploads — Plan/ETC loads crashed with `DimSourceSystems` missing — Apply `DatabaseScripts/20250922_full_rebuild.sql` to recreate the schema (includes `DimSourceSystems`) and keep EF ID properties on `long` so MySQL tables expose BIGINT keys before uploads.

@@ -1,6 +1,8 @@
 # GRC Financial Control – Functional Specification
 
 ## What changed
+- 2025-09-25 18:45 UTC — Added ETC upload safeguards that detach unintended DimEngagement inserts/updates, documenting read-only enforcement for engagement master data and the new warning signals in per-file summaries.
+- 2025-09-25 16:10 UTC — Documented that ETC uploads now skip rows referencing unknown engagements instead of auto-creating master data, updated the engagement resolution workflow, and reiterated the requirement to preload DimEngagements before ETC loads.
 - 2025-09-24 20:55 UTC — Linked Excel parsers to the File Field Upload Map, documented the new employee code registry/unique index, refreshed the MySQL rebuild script, and noted the toolchain verification checklist.
 - 2025-09-24 14:40 UTC — Centralized EF Core mappings in `Data/` with per-entity configuration classes, added a schema validation smoke test, and documented the tarball-based .NET SDK setup required to cross-build WinForms from Linux.
 - 2025-09-22 18:30 UTC — Replaced the incremental MySQL scripts with a single full-rebuild script so `DatabaseScripts/` exactly matches the deployed schema.
@@ -49,7 +51,7 @@ Source Files (.xlsx/.csv)
 | Upload Type | File Selection | Expected Extensions | Notes |
 |-------------|----------------|---------------------|-------|
 | Margin      | Multi-file (`OpenFileDialog.Multiselect = true`) | `.xlsx` | Process files alphabetically; each file runs through `UploadRunner` for its own transaction and summary. |
-| ETC         | Multi-file (`Multiselect = true`) | `.xlsx`, `.csv` | Deterministic iteration with schema validation and per-file commits. |
+| ETC         | Multi-file (`Multiselect = true`) | `.xlsx`, `.csv` | Deterministic iteration with schema validation and per-file commits. Engagement IDs must already exist; rows pointing to unknown engagements are skipped with warnings and any unintended engagement inserts/updates are detached and reported. |
 | Budget      | Multi-file (`Multiselect = true`) | `.xlsx` | Same per-file isolation; report inserted/updated counts through the summary grid. |
 | All other upload submenus (e.g., Actuals, Forecast, Adjustments) | Single file (`Multiselect = false`) | `.xlsx` unless specified | Still validate headers, run a single `UploadRunner` work item, and summarize outcome. |
 
@@ -66,6 +68,7 @@ Dialog behavior:
    - Parse rows using culture-invariant numeric/date handling.
    - Map domain values (including `MeasurementPeriodId`).
    - Perform buffered insert/update operations.
+   - ETC loads validate that each engagement exists before writing; unknown engagement IDs trigger skip warnings, and the loader detaches any unintended `DimEngagements` inserts/updates while reporting suppressed IDs.
    - Commit on success; rollback and log on failure, then continue to next file.
 3. Present a consolidated summary (rows read, inserted, updated, warnings, errors) in the upload summary grid and status log.
 

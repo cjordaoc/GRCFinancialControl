@@ -4,6 +4,7 @@ using System.Linq;
 using GRCFinancialControl.Common;
 using GRCFinancialControl.Data;
 using GRCFinancialControl.Parsing;
+using Microsoft.EntityFrameworkCore;
 
 namespace GRCFinancialControl.Uploads
 {
@@ -43,7 +44,12 @@ namespace GRCFinancialControl.Uploads
                     continue;
                 }
 
-                var engagementId = _ids.EnsureEngagement(engagementKey!);
+                var engagementId = _ids.TryResolveEngagement(engagementKey!);
+                if (engagementId == null)
+                {
+                    summary.RegisterSkip($"Skipped ETC rows for unknown engagement '{engagementKey}'.");
+                    continue;
+                }
 
                 foreach (var row in group)
                 {
@@ -80,12 +86,46 @@ namespace GRCFinancialControl.Uploads
                 }
             }
 
+            SuppressAccidentalEngagementWrites(summary);
+
             if (summary.Inserted == 0)
             {
                 summary.AddInfo("No valid ETC rows to insert.");
                 return summary;
             }
             return summary;
+        }
+
+        private void SuppressAccidentalEngagementWrites(OperationSummary summary)
+        {
+            _db.ChangeTracker.DetectChanges();
+            var pendingEngagements = _db.ChangeTracker
+                .Entries<DimEngagement>()
+                .ToList();
+
+            var suppressed = false;
+            foreach (var entry in pendingEngagements)
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    var id = entry.Entity.EngagementId;
+                    entry.State = EntityState.Detached;
+                    summary.AddWarning($"Suppressed unintended creation of engagement '{id}' during ETC upload. Seed master data and rerun if required.");
+                    suppressed = true;
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    var id = entry.Entity.EngagementId;
+                    entry.State = EntityState.Unchanged;
+                    summary.AddWarning($"Reverted unintended update to engagement '{id}' during ETC upload. Master data updates must run outside the ETC pipeline.");
+                    suppressed = true;
+                }
+            }
+
+            if (suppressed)
+            {
+                summary.AddInfo("ETC upload ran in engagement read-only mode; unintended master-data changes were discarded.");
+            }
         }
     }
 }

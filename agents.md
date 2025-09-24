@@ -1,6 +1,8 @@
 # GRC Financial Control – Engineering Guidelines
 
 ## What changed
+- 2025-09-25 18:45 UTC — Documented the ETC upload guard that detaches unintended DimEngagement inserts/updates so the pipeline remains read-only for engagements and highlighted the requirement to log suppressed IDs in upload summaries.
+- 2025-09-25 16:10 UTC — Clarified that ETC uploads must not create DimEngagements records, added the TryResolveEngagement helper requirement, and reminded engineers to preload engagement master data before ETC loads.
 - 2025-09-24 20:55 UTC — Wired Excel header detection to the File Field Upload Map, added a race-safe employee resolver with source-system code indexing, refreshed the MySQL rebuild script, and logged the .NET SDK verification requirement.
 - 2025-09-24 14:40 UTC — Centralized EF entity models under `Data/` with per-entity `IEntityTypeConfiguration` classes, added the schema smoke test to the test suite, and documented the tarball-based .NET SDK installation needed for Windows desktop targeting on Linux.
 - 2025-09-22 18:30 UTC — Replaced legacy incremental scripts with the single full-rebuild MySQL script so `DatabaseScripts/` mirrors the current production schema.
@@ -42,8 +44,9 @@ Historical updates now live in [`ChangeLog.md`](ChangeLog.md). Record engineerin
 
 ## 7. Data Access & Transactions
 - Fresh `DbContext` per logical operation.  
-- One **transaction per file** — rollback on error, continue with next file.  
-- Keep strategy context alive for retries; create per-attempt contexts inside delegate.  
+- One **transaction per file** — rollback on error, continue with next file.
+- Treat ETC loads as read-only for engagement master data: resolve engagements via `IdResolver.TryResolveEngagement` and skip rows when IDs are missing instead of creating new `DimEngagements` entries.
+- Keep strategy context alive for retries; create per-attempt contexts inside delegate.
 - Always use **parameterized queries** for raw SQL.  
 - Persist all timestamps in **UTC** (convert in UI only).  
 - Record per-file summaries (rows read, inserted, updated, warnings, errors).  
