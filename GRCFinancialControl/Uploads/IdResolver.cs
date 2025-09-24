@@ -13,7 +13,7 @@ namespace GRCFinancialControl.Uploads
         private readonly MySqlDbContext _db;
 
         private readonly Dictionary<string, long> _sourceSystemCache = new(StringComparer.OrdinalIgnoreCase);
-        private readonly Dictionary<string, string> _engagementCache = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, string?> _engagementCache = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, long> _levelAliasCache = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, long> _levelCodeCache = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, long> _employeeAliasCache = new(StringComparer.OrdinalIgnoreCase);
@@ -54,11 +54,40 @@ namespace GRCFinancialControl.Uploads
             return source.SourceSystemId;
         }
 
-        public string EnsureEngagement(string engagementId, string? title = null)
+        public string? TryResolveEngagement(string engagementId)
         {
             var trimmedId = StringNormalizer.TrimToNull(engagementId) ?? throw new ArgumentException("Engagement ID is required.", nameof(engagementId));
             if (_engagementCache.TryGetValue(trimmedId, out var cached))
             {
+                return cached;
+            }
+
+            var engagement = _db.DimEngagements.AsNoTracking().SingleOrDefault(e => e.EngagementId == trimmedId);
+            if (engagement == null)
+            {
+                _engagementCache[trimmedId] = null;
+                return null;
+            }
+
+            _engagementCache[trimmedId] = engagement.EngagementId;
+            return engagement.EngagementId;
+        }
+
+        public string EnsureEngagement(string engagementId, string? title = null)
+        {
+            var trimmedId = StringNormalizer.TrimToNull(engagementId) ?? throw new ArgumentException("Engagement ID is required.", nameof(engagementId));
+            if (_engagementCache.TryGetValue(trimmedId, out var cached) && cached != null)
+            {
+                if (!string.IsNullOrWhiteSpace(title))
+                {
+                    var tracked = _db.DimEngagements.Find(trimmedId);
+                    if (tracked != null && !string.Equals(tracked.EngagementTitle, title, StringComparison.Ordinal))
+                    {
+                        tracked.EngagementTitle = title;
+                        tracked.UpdatedUtc = DateTime.UtcNow;
+                    }
+                }
+
                 return cached;
             }
 
