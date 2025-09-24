@@ -1,6 +1,7 @@
 # GRC Financial Control – Functional Specification
 
 ## What changed
+- 2025-09-24 20:55 UTC — Linked Excel parsers to the File Field Upload Map, documented the new employee code registry/unique index, refreshed the MySQL rebuild script, and noted the toolchain verification checklist.
 - 2025-09-24 14:40 UTC — Centralized EF Core mappings in `Data/` with per-entity configuration classes, added a schema validation smoke test, and documented the tarball-based .NET SDK setup required to cross-build WinForms from Linux.
 - 2025-09-22 18:30 UTC — Replaced the incremental MySQL scripts with a single full-rebuild script so `DatabaseScripts/` exactly matches the deployed schema.
 - 2025-09-19 19:50 UTC — Added the `DimSourceSystems` baseline script and standardized all numeric IDs as BIGINT/`long` so uploads share master data lookups.

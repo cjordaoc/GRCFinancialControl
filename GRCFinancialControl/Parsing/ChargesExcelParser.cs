@@ -8,14 +8,19 @@ namespace GRCFinancialControl.Parsing
 {
     public sealed class ChargesExcelParser : ExcelParserBase<ChargeRow>
     {
-        private static readonly HeaderSchema Schema = new(new Dictionary<string, string[]>
-        {
-            ["ENGAGEMENT"] = new[] { "ENGAGEMENT", "ENGAGEMENT ID", "ENG_ID", "PROJECT" },
-            ["EMPLOYEE"] = new[] { "EMPLOYEE", "EMPLOYEE NAME", "RESOURCE", "NOME" },
-            ["DATE"] = new[] { "DATE", "CHARGE DATE", "DATA", "DAY" },
-            ["HOURS"] = new[] { "HOURS", "HOURS CHARGED", "HORAS", "QTD HORAS" },
-            ["COST"] = new[] { "COST", "AMOUNT", "COST AMOUNT", "VALOR" }
-        }, "ENGAGEMENT", "EMPLOYEE", "DATE", "HOURS");
+        private static readonly HeaderSchema Schema = FileFieldUploadMapProvider.Instance.BuildSchema(
+            new Dictionary<string, string[]>
+            {
+                ["ENGAGEMENT"] = new[] { "ENGAGEMENT", "ENGAGEMENT ID", "ENG_ID", "PROJECT" },
+                ["EMPLOYEE"] = new[] { "EMPLOYEE", "EMPLOYEE NAME", "RESOURCE", "NOME" },
+                ["DATE"] = new[] { "DATE", "CHARGE DATE", "DATA", "DAY", "TRANSACTION DATE", "WEEK ENDING DATE" },
+                ["HOURS"] = new[] { "HOURS", "HOURS CHARGED", "HORAS", "QTD HORAS", "CHARGED HOURS / QUANTITY" },
+                ["COST"] = new[] { "COST", "AMOUNT", "COST AMOUNT", "VALOR", "LABOR COST" }
+            },
+            "ENGAGEMENT",
+            "EMPLOYEE",
+            "DATE",
+            "HOURS");
 
         public ExcelParseResult<ChargeRow> Parse(string filePath)
         {

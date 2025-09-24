@@ -18,4 +18,6 @@ public class DimEmployee
     public DateTime UpdatedUtc { get; set; }
 
     public ICollection<MapEmployeeAlias> Aliases { get; set; } = new List<MapEmployeeAlias>();
+
+    public ICollection<MapEmployeeCode> SourceSystemCodes { get; set; } = new List<MapEmployeeCode>();
 }

@@ -10,16 +10,18 @@ namespace GRCFinancialControl.Parsing
 {
     public sealed class PlanExcelParser : ExcelParserBase<PlanRow>
     {
-        private static readonly HeaderSchema Schema = new(new Dictionary<string, string[]>
-        {
-            ["ENGAGEMENT"] = new[] { "ENGAGEMENT", "ENGAGEMENTID", "ENGAGEMENTNUMBER", "PROJECTID", "PROJECT", "ENGAGEMENTNO" },
-            ["EMPLOYEE"] = new[] { "EMPLOYEE", "EMPRESOURCENAME", "RESOURCE", "EMPLOYEENAME", "RECURSO", "PROFISSIONAL" },
-            ["LEVEL"] = new[] { "LEVEL", "RANK", "GRADE", "FUNCAO", "FUNÇÃO", "CARGO", "NIVEL", "NÍVEL" },
-            ["RESOURCE_ID"] = new[] { "EMPRESOURCEGPN", "RESOURCEGPN", "GPN", "EMPLOYEEID", "EMPLOYEEGPN", "RECURSOGPN" },
-            ["CUSTOMER"] = new[] { "CUSTOMER", "CLIENT", "CLIENTE", "CLIENTNAME" },
-            ["RATE"] = new[] { "PLANNEDRATE", "RATE", "RATEHOUR", "BILLRATE", "COSTRATE" },
-            ["TOTAL_HOURS"] = new[] { "PLANNEDHOURS", "TOTALHOURS", "BUDGETHOURS", "HOURS", "TOTAL" }
-        }, "LEVEL");
+        private static readonly HeaderSchema Schema = FileFieldUploadMapProvider.Instance.BuildSchema(
+            new Dictionary<string, string[]>
+            {
+                ["ENGAGEMENT"] = new[] { "ENGAGEMENT", "ENGAGEMENTID", "ENGAGEMENTNUMBER", "PROJECTID", "PROJECT", "ENGAGEMENTNO" },
+                ["EMPLOYEE"] = new[] { "EMPLOYEE", "EMPRESOURCENAME", "RESOURCE", "EMPLOYEENAME", "RECURSO", "PROFISSIONAL" },
+                ["LEVEL"] = new[] { "LEVEL", "RANK", "GRADE", "FUNCAO", "FUNÇÃO", "CARGO", "NIVEL", "NÍVEL" },
+                ["RESOURCE_ID"] = new[] { "EMPRESOURCEGPN", "RESOURCEGPN", "GPN", "EMPLOYEEID", "EMPLOYEEGPN", "RECURSOGPN" },
+                ["CUSTOMER"] = new[] { "CUSTOMER", "CLIENT", "CLIENTE", "CLIENTNAME" },
+                ["RATE"] = new[] { "PLANNEDRATE", "RATE", "RATEHOUR", "BILLRATE", "COSTRATE", "COST/HR" },
+                ["TOTAL_HOURS"] = new[] { "PLANNEDHOURS", "TOTALHOURS", "BUDGETHOURS", "HOURS", "TOTAL" }
+            },
+            "LEVEL");
 
         public ExcelParseResult<PlanRow> Parse(string filePath)
         {

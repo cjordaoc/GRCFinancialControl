@@ -1,6 +1,7 @@
 # GRC Financial Control – Engineering Guidelines
 
 ## What changed
+- 2025-09-24 20:55 UTC — Wired Excel header detection to the File Field Upload Map, added a race-safe employee resolver with source-system code indexing, refreshed the MySQL rebuild script, and logged the .NET SDK verification requirement.
 - 2025-09-24 14:40 UTC — Centralized EF entity models under `Data/` with per-entity `IEntityTypeConfiguration` classes, added the schema smoke test to the test suite, and documented the tarball-based .NET SDK installation needed for Windows desktop targeting on Linux.
 - 2025-09-22 18:30 UTC — Replaced legacy incremental scripts with the single full-rebuild MySQL script so `DatabaseScripts/` mirrors the current production schema.
 - 2025-09-19 19:50 UTC — Captured the BIGINT ID standard plus the `DimSourceSystems` baseline script so upload services share master data lookups.

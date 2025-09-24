@@ -35,6 +35,7 @@ DROP TABLE IF EXISTS fact_etc_snapshot;
 DROP TABLE IF EXISTS fact_plan_by_level;
 DROP TABLE IF EXISTS fact_timesheet_charge;
 DROP TABLE IF EXISTS map_employee_alias;
+DROP TABLE IF EXISTS map_employee_code;
 DROP TABLE IF EXISTS map_level_alias;
 
 -- Drop canonical CamelCase tables if present (idempotent)
@@ -47,6 +48,7 @@ DROP TABLE IF EXISTS FactEtcSnapshots;
 DROP TABLE IF EXISTS FactPlanByLevels;
 DROP TABLE IF EXISTS MapLevelAliases;
 DROP TABLE IF EXISTS MapEmployeeAliases;
+DROP TABLE IF EXISTS MapEmployeeCodes;
 DROP TABLE IF EXISTS DimEmployees;
 DROP TABLE IF EXISTS DimLevels;
 DROP TABLE IF EXISTS DimEngagements;
@@ -148,6 +150,16 @@ CREATE TABLE MapEmployeeAliases (
     EmployeeId      BIGINT NOT NULL,
     CreatedUtc      DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     PRIMARY KEY (EmployeeAliasId)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE MapEmployeeCodes (
+    EmployeeCodeId BIGINT NOT NULL AUTO_INCREMENT,
+    SourceSystemId BIGINT NOT NULL,
+    EmployeeCode   VARCHAR(64) NOT NULL,
+    EmployeeId     BIGINT NOT NULL,
+    CreatedUtc     DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (EmployeeCodeId),
+    UNIQUE KEY UX_MapEmployeeCodes_SourceCode (SourceSystemId, EmployeeCode)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE MapLevelAliases (
@@ -272,6 +284,8 @@ CREATE UNIQUE INDEX UX_DimEmployees_NormalizedName ON DimEmployees (NormalizedNa
 CREATE INDEX IX_MapEmployeeAliases_SourceSystem_NormalizedRaw ON MapEmployeeAliases (SourceSystemId, NormalizedRaw);
 CREATE INDEX IX_MapEmployeeAliases_Employee ON MapEmployeeAliases (EmployeeId);
 
+CREATE INDEX IX_MapEmployeeCodes_Employee ON MapEmployeeCodes (EmployeeId);
+
 CREATE INDEX IX_MapLevelAliases_SourceSystem_NormalizedRaw ON MapLevelAliases (SourceSystemId, NormalizedRaw);
 CREATE INDEX IX_MapLevelAliases_Level ON MapLevelAliases (LevelId);
 
@@ -305,6 +319,15 @@ ALTER TABLE MapEmployeeAliases
     FOREIGN KEY (SourceSystemId) REFERENCES DimSourceSystems (SourceSystemId)
     ON DELETE RESTRICT ON UPDATE CASCADE,
   ADD CONSTRAINT FK_MapEmployeeAliases_Employee
+    FOREIGN KEY (EmployeeId) REFERENCES DimEmployees (EmployeeId)
+    ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- MapEmployeeCodes
+ALTER TABLE MapEmployeeCodes
+  ADD CONSTRAINT FK_MapEmployeeCodes_SourceSystem
+    FOREIGN KEY (SourceSystemId) REFERENCES DimSourceSystems (SourceSystemId)
+    ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT FK_MapEmployeeCodes_Employee
     FOREIGN KEY (EmployeeId) REFERENCES DimEmployees (EmployeeId)
     ON DELETE RESTRICT ON UPDATE CASCADE;
 

@@ -9,19 +9,24 @@ namespace GRCFinancialControl.Parsing
 {
     public sealed class EtcExcelParser : ExcelParserBase<EtcRow>
     {
-        private static readonly HeaderSchema Schema = new(new Dictionary<string, string[]>
-        {
-            ["ENGAGEMENT"] = new[] { "ENGAGEMENT", "ENGAGEMENTID", "ENGAGEMENTNAMEID", "PROJECT", "PROJECTID", "ENGAGEMENTNO" },
-            ["EMPLOYEE"] = new[] { "EMPLOYEE", "EMPRESOURCENAME", "EMPLOYEENAME", "RESOURCE", "PROFISSIONAL" },
-            ["EMPLOYEE_ID"] = new[] { "EMPRESOURCEGPN", "RESOURCEGPN", "GPN", "EMPLOYEEID", "RESOURCEID", "ID" },
-            ["LEVEL"] = new[] { "LEVEL", "RANK", "GRADE", "FUNCAO", "FUNÇÃO", "CARGO", "NIVEL", "NÍVEL" },
-            ["HOURS_INCURRED"] = new[] { "ACTUALSHOURSINCURREDTHROUGHLASTWEEK", "HOURSINCURRED", "ACTUALHOURS", "HORASINCORRIDAS" },
-            ["ETC"] = new[] { "ETCREMAINING", "ETC", "REMAINING", "HORASETC" },
-            ["PROJECTED_MARGIN"] = new[] { "PROJECTEDMARGIN", "PROJECTEDMARGIN%", "PROJECTEDMARGINPERCENT", "MARGINPROJECTED" },
-            ["STATUS"] = new[] { "STATUS", "SITUATION", "SITUAÇÃO" },
-            ["ETC_AGE"] = new[] { "ETCAGE", "ETCAGEDAYS", "ETCAGEDIAS", "ETCAGEDAY", "ETC-AGEDAYS" },
-            ["REMAINING_WEEKS"] = new[] { "REMAININGWEEKS", "WEEKSREMAINING", "SEMANASRESTANTES" }
-        }, "ENGAGEMENT", "EMPLOYEE", "HOURS_INCURRED", "ETC");
+        private static readonly HeaderSchema Schema = FileFieldUploadMapProvider.Instance.BuildSchema(
+            new Dictionary<string, string[]>
+            {
+                ["ENGAGEMENT"] = new[] { "ENGAGEMENT", "ENGAGEMENTID", "ENGAGEMENTNAMEID", "PROJECT", "PROJECTID", "ENGAGEMENTNO" },
+                ["EMPLOYEE"] = new[] { "EMPLOYEE", "EMPRESOURCENAME", "EMPLOYEENAME", "RESOURCE", "PROFISSIONAL" },
+                ["EMPLOYEE_ID"] = new[] { "EMPRESOURCEGPN", "RESOURCEGPN", "GPN", "EMPLOYEEID", "RESOURCEID", "ID" },
+                ["LEVEL"] = new[] { "LEVEL", "RANK", "GRADE", "FUNCAO", "FUNÇÃO", "CARGO", "NIVEL", "NÍVEL" },
+                ["HOURS_INCURRED"] = new[] { "ACTUALSHOURSINCURREDTHROUGHLASTWEEK", "HOURSINCURRED", "ACTUALHOURS", "HORASINCORRIDAS" },
+                ["ETC"] = new[] { "ETCREMAINING", "ETC", "REMAINING", "HORASETC" },
+                ["PROJECTED_MARGIN"] = new[] { "PROJECTEDMARGIN", "PROJECTEDMARGIN%", "PROJECTEDMARGINPERCENT", "MARGINPROJECTED" },
+                ["STATUS"] = new[] { "STATUS", "SITUATION", "SITUAÇÃO" },
+                ["ETC_AGE"] = new[] { "ETCAGE", "ETCAGEDAYS", "ETCAGEDIAS", "ETCAGEDAY", "ETC-AGEDAYS" },
+                ["REMAINING_WEEKS"] = new[] { "REMAININGWEEKS", "WEEKSREMAINING", "SEMANASRESTANTES" }
+            },
+            "ENGAGEMENT",
+            "EMPLOYEE",
+            "HOURS_INCURRED",
+            "ETC");
 
         public EtcParseResult Parse(string filePath)
         {
