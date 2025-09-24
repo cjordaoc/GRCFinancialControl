@@ -1,6 +1,7 @@
 # Fixes Catalog
 
 ## What changed
+- 2025-09-24 20:55 UTC — Documented the duplicate employee code race fix (MapEmployeeCodes + retry), refreshed rebuild guidance, and reminded teams to capture SDK/toolchain verification.
 - 2025-09-24 14:40 UTC — Added guidance for installing the tarball-based .NET SDK to obtain Windows Desktop packs on Linux and recorded the EF schema smoke test as a regression guard.
 - 2025-09-22 18:30 UTC — Updated rebuild guidance so all missing-table issues reference the consolidated `DatabaseScripts/20250922_full_rebuild.sql` baseline.
 - 2025-09-21 00:45 UTC — Logged the Help dialog packaging fix so `README.md` ships with builds and remains viewable in-app.
@@ -13,6 +14,7 @@
 
 ## Mistake Catalog
 - 2025-09-24 14:40 UTC — Build — `MSB4019` complaining `Microsoft.NET.Sdk.WindowsDesktop.targets` missing on Linux → Install the official SDK tarball (e.g., `dotnet-sdk-8.0.120-linux-x64.tar.gz`) into `/usr/share/dotnet8`, export `DOTNET_ROOT=/usr/share/dotnet8`, update `PATH`, and rerun `dotnet build -p:EnableWindowsTargeting=true` before executing tests.
+- 2025-09-24 20:55 UTC — Uploads — Concurrent employee creation triggered `DbUpdateConcurrencyException` or duplicate codes → Add `MapEmployeeCodes` with unique `(SourceSystemId, EmployeeCode)` index, wrap inserts in duplicate-key retry (MySQL 1062), and always requery existing rows before returning.
 - 2025-09-19 19:50 UTC — Uploads — Plan/ETC loads crashed with `DimSourceSystems` missing — Apply `DatabaseScripts/20250922_full_rebuild.sql` to recreate the schema (includes `DimSourceSystems`) and keep EF ID properties on `long` so MySQL tables expose BIGINT keys before uploads.
 - 2025-09-21 00:45 UTC — Help — Help dialog showed “README.md not found” in packaged builds → Copy the root `README.md` into the WinForms output via `<None Include="..\README.md" CopyToOutputDirectory="PreserveNewest" />` and confirm the tab renders text locally.
 - 2025-09-20 23:30 UTC — Parsing — `DateTime.FromOADate` crashed on invalid Excel doubles → Range validation added, invalid values emit warnings.

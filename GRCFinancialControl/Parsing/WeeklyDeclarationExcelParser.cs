@@ -10,28 +10,38 @@ namespace GRCFinancialControl.Parsing
 {
     public sealed class WeeklyDeclarationExcelParser : ExcelParserBase<WeeklyDeclarationRow>
     {
-        private static readonly HeaderSchema TabularSchema = new(new Dictionary<string, string[]>
-        {
-            ["ENGAGEMENT"] = new[] { "ENGAGEMENT", "ENGAGEMENTID", "ENGAGEMENT ID", "ENG_ID", "PROJECT" },
-            ["EMPLOYEE"] = new[] { "EMPLOYEE", "EMPLOYEENAME", "EMPLOYEE NAME", "RESOURCE", "NOME" },
-            ["WEEK"] = new[] { "WEEK START", "WEEK OF", "WEEK", "DATA INICIO", "INICIO" },
-            ["HOURS"] = new[] { "DECLARED HOURS", "HOURS", "ALLOCATED HOURS", "HORAS" }
-        }, "ENGAGEMENT", "EMPLOYEE", "WEEK", "HOURS");
+        private static readonly HeaderSchema TabularSchema = FileFieldUploadMapProvider.Instance.BuildSchema(
+            new Dictionary<string, string[]>
+            {
+                ["ENGAGEMENT"] = new[] { "ENGAGEMENT", "ENGAGEMENTID", "ENGAGEMENT ID", "ENG_ID", "PROJECT" },
+                ["EMPLOYEE"] = new[] { "EMPLOYEE", "EMPLOYEENAME", "EMPLOYEE NAME", "RESOURCE", "NOME" },
+                ["WEEK"] = new[] { "WEEK START", "WEEK OF", "WEEK", "DATA INICIO", "INICIO" },
+                ["HOURS"] = new[] { "DECLARED HOURS", "HOURS", "ALLOCATED HOURS", "HORAS" }
+            },
+            "ENGAGEMENT",
+            "EMPLOYEE",
+            "WEEK",
+            "HOURS");
 
-        private static readonly HeaderSchema RetainSchema = new(new Dictionary<string, string[]>
-        {
-            ["EMPLOYEE"] = new[] { "EMPRESOURCENAME", "EMP RESOURCE  NAME", "EMPLOYEE", "NOME", "RESOURCE" },
-            ["EMPLOYEE_ID"] = new[] { "EMPRESOURCEGPN", "EMP RESOURCE  GPN", "GPN", "RESOURCEID" },
-            ["ENGAGEMENT_ID"] = new[] { "ENGAGEMENTNUMBER", "ENGAGEMENT  NUMBER", "PROJECTID", "ENGAGEMENTID", "ENGAGEMENTNO" },
-            ["ENGAGEMENT"] = new[] { "ENGAGEMENT", "ENGAGEMENT NAME", "PROJETO" },
-            ["LEVEL"] = new[] { "EMP GRADE", "GRADE", "LEVEL", "NIVEL", "NÍVEL" },
-            ["CUSTOMER"] = new[] { "CUSTOMER", "CLIENT", "CLIENTE" }
-        }, "EMPLOYEE", "ENGAGEMENT_ID");
+        private static readonly HeaderSchema RetainSchema = FileFieldUploadMapProvider.Instance.BuildSchema(
+            new Dictionary<string, string[]>
+            {
+                ["EMPLOYEE"] = new[] { "EMPRESOURCENAME", "EMP RESOURCE  NAME", "EMPLOYEE", "NOME", "RESOURCE" },
+                ["EMPLOYEE_ID"] = new[] { "EMPRESOURCEGPN", "EMP RESOURCE  GPN", "GPN", "RESOURCEID" },
+                ["ENGAGEMENT_ID"] = new[] { "ENGAGEMENTNUMBER", "ENGAGEMENT  NUMBER", "PROJECTID", "ENGAGEMENTID", "ENGAGEMENTNO" },
+                ["ENGAGEMENT"] = new[] { "ENGAGEMENT", "ENGAGEMENT NAME", "PROJETO" },
+                ["LEVEL"] = new[] { "EMP GRADE", "GRADE", "LEVEL", "NIVEL", "NÍVEL" },
+                ["CUSTOMER"] = new[] { "CUSTOMER", "CLIENT", "CLIENTE" }
+            },
+            "EMPLOYEE",
+            "ENGAGEMENT_ID");
 
-        private static readonly HeaderSchema ErpSchema = new(new Dictionary<string, string[]>
-        {
-            ["EMPLOYEE"] = new[] { "RECURSOS", "RECURSO", "EMPLOYEE", "STAFF" }
-        }, "EMPLOYEE");
+        private static readonly HeaderSchema ErpSchema = FileFieldUploadMapProvider.Instance.BuildSchema(
+            new Dictionary<string, string[]>
+            {
+                ["EMPLOYEE"] = new[] { "RECURSOS", "RECURSO", "EMPLOYEE", "STAFF" }
+            },
+            "EMPLOYEE");
 
         public ExcelParseResult<WeeklyDeclarationRow> Parse(string filePath)
         {

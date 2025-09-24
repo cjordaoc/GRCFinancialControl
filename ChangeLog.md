@@ -2,6 +2,7 @@
 
 ## What changed
 
+- 2025-09-24 20:55 UTC — Connected Excel parsers to the File Field Upload Map, hardened employee resolution with source-system code uniqueness, refreshed the rebuild script, and captured the SDK verification checklist.
 - 2025-09-24 14:40 UTC — Centralized EF models under `Data/` with fluent configuration classes, introduced the MySQL schema smoke test, and documented the tarball-based .NET SDK requirement for Linux builds targeting WinForms.
 - 2025-09-22 18:30 UTC — Consolidated the MySQL rebuild guidance into a single baseline script and updated documentation to reflect the new authoritative artifact.
 - 2025-09-19 19:50 UTC — Logged the BIGINT ID migration plus the `DimSourceSystems` bootstrap script for upload services.
@@ -9,6 +10,7 @@
 - 2025-09-21 00:15 UTC — Consolidated engineering and functional history from `agents.md` and `README.md` into this dedicated changelog.
 
 ## Engineering Guidelines History (agents.md)
+- 2025-09-24 20:55 UTC — Added guidance to honor the File Field Upload Map during parsing, require source-system employee code uniqueness, and log SDK verification in delivery checklists.
 - 2025-09-24 14:40 UTC — Documented the `Data/` folder EF organization, the schema smoke test requirement, and the tarball-based SDK installation workflow for Windows desktop builds on Linux.
 - 2025-09-22 18:30 UTC — Database: Replaced incremental scripts with the single `DatabaseScripts/20250922_full_rebuild.sql` baseline to keep rebuilds aligned with production.
 - 2025-09-21 00:45 UTC — Reinforced documentation discipline by noting the Help dialog ships the packaged `README.md`, making accuracy mandatory for every delivery.
@@ -25,6 +27,7 @@
 - 2025-09-19 15:30 UTC — Docs: Limited handbook scope to C#/.NET practices.
 
 ## Functional Specification History (README.md)
+- 2025-09-24 20:55 UTC — Captured the mapping-driven header validation flow, MySQL employee code registry, rebuild script refresh, and toolchain verification checklist.
 - 2025-09-24 14:40 UTC — Logged the EF Core configuration refactor, schema smoke test, and Linux tarball SDK setup so cross-platform engineers can reproduce builds/tests.
 - 2025-09-22 18:30 UTC — Documented the consolidated MySQL rebuild script so operators know `DatabaseScripts/20250922_full_rebuild.sql` is the authoritative schema baseline.
 - 2025-09-21 00:45 UTC — Documented that the WinForms Help dialog now surfaces the packaged `README.md`, outlining the workflow and reminding maintainers to keep it current.

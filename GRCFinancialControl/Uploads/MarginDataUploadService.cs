@@ -31,7 +31,7 @@ namespace GRCFinancialControl.Uploads
 
             if (_db.MeasurementPeriods.Find(measurementPeriodId) == null)
             {
-                throw new InvalidOperationException($"Measurement period {measurementPeriodId} was not found.");
+                throw new UploadDataException($"Measurement period '{measurementPeriodId}' was not found in MySQL.");
             }
 
             var processed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -53,7 +53,11 @@ namespace GRCFinancialControl.Uploads
                 }
 
                 engagementId = _ids.EnsureEngagement(engagementId, row.EngagementTitle);
-                var engagement = _db.DimEngagements.Single(e => e.EngagementId == engagementId);
+                var engagement = _db.DimEngagements.SingleOrDefault(e => e.EngagementId == engagementId);
+                if (engagement == null)
+                {
+                    throw new UploadDataException($"Engagement '{engagementId}' referenced on row {row.ExcelRowNumber} could not be found.");
+                }
 
                 var engagementUpdated = false;
                 if (row.OpeningMargin.HasValue && HasDifferentMargin(engagement.OpeningMargin, row.OpeningMargin.Value))

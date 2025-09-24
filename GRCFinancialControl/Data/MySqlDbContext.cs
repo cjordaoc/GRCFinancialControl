@@ -12,6 +12,7 @@ public class MySqlDbContext : DbContext
     public DbSet<DimLevel> DimLevels => Set<DimLevel>();
     public DbSet<DimEmployee> DimEmployees => Set<DimEmployee>();
     public DbSet<MapEmployeeAlias> MapEmployeeAliases => Set<MapEmployeeAlias>();
+    public DbSet<MapEmployeeCode> MapEmployeeCodes => Set<MapEmployeeCode>();
     public DbSet<MapLevelAlias> MapLevelAliases => Set<MapLevelAlias>();
     public DbSet<FactPlanByLevel> FactPlanByLevels => Set<FactPlanByLevel>();
     public DbSet<FactEtcSnapshot> FactEtcSnapshots => Set<FactEtcSnapshot>();

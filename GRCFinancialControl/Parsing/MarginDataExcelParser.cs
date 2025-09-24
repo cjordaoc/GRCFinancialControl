@@ -9,28 +9,30 @@ namespace GRCFinancialControl.Parsing
 {
     public sealed class MarginDataExcelParser : ExcelParserBase<MarginDataRow>
     {
-        private static readonly HeaderSchema Schema = new(new Dictionary<string, string[]>
-        {
-            ["ENGAGEMENT"] = new[] { "ENGAGEMENTNAME(IDCURRENCY)", "ENGAGEMENTNAMEID", "ENGAGEMENTNAME", "ENGAGEMENT" },
-            ["CLIENT"] = new[] { "CLIENTNAME(ID)", "CLIENTNAME", "CLIENT" },
-            ["ETCP_INDICATOR"] = new[] { "ETCPINDICATORTOOLTIP", "ETCINDICATORTOOLTIP", "ETCPINDICATOR" },
-            ["MARGIN_PCT_BUD"] = new[] { "MARGINPCTBUD", "MARGINPERCENTBUD", "MARGINPCTBUDGET" },
-            ["MARGIN_PCT_ETCP"] = new[] { "MARGINPCTETCP", "MARGINPCTETC", "MARGINPCTETC-P" },
-            ["MARGIN_PCT_MERCURY"] = new[] { "MARGINPCTMERCURYPROJECTED", "MARGINPCTMERCURY" },
-            ["MARGIN_BUD"] = new[] { "MARGINBUD" },
-            ["MARGIN_ETCP"] = new[] { "MARGINETCP" },
-            ["MARGIN_MERCURY"] = new[] { "MARGINMERCURYPROJECTED", "MARGINMERCURY" },
-            ["MARGIN_PCT_LOSS_GAIN"] = new[] { "MARGINPCTPLOSSGAIN", "MARGINPCTLOSSGAIN" },
-            ["MARGIN_LOSS_GAIN"] = new[] { "MARGINLOSSGAIN" },
-            ["BILLING_OVERRUN"] = new[] { "BILLINGOVERRUN" },
-            ["EXPENSES_OVERRUN"] = new[] { "EXPENSESOVERRUN" },
-            ["MARGIN_COST_OVERRUN"] = new[] { "MARGINCOSTOVERRUN" },
-            ["MARGIN_PCT_ACT"] = new[] { "MARGINPCTACT", "MARGINPCTACTUAL" },
-            ["ETCP_AGE_DAYS"] = new[] { "ETCPAGEDAYS", "ETCAGEDAYS" },
-            ["REMAINING_WEEKS"] = new[] { "REMAININGWEEKS", "WEEKSREMAINING" },
-            ["STATUS"] = new[] { "STATUS" },
-            ["ENGAGEMENT_COUNT"] = new[] { "ENGAGEMENTCOUNT" }
-        }, "ENGAGEMENT");
+        private static readonly HeaderSchema Schema = FileFieldUploadMapProvider.Instance.BuildSchema(
+            new Dictionary<string, string[]>
+            {
+                ["ENGAGEMENT"] = new[] { "ENGAGEMENTNAME(IDCURRENCY)", "ENGAGEMENTNAMEID", "ENGAGEMENTNAME", "ENGAGEMENT" },
+                ["CLIENT"] = new[] { "CLIENTNAME(ID)", "CLIENTNAME", "CLIENT" },
+                ["ETCP_INDICATOR"] = new[] { "ETCPINDICATORTOOLTIP", "ETCINDICATORTOOLTIP", "ETCPINDICATOR" },
+                ["MARGIN_PCT_BUD"] = new[] { "MARGINPCTBUD", "MARGINPERCENTBUD", "MARGINPCTBUDGET" },
+                ["MARGIN_PCT_ETCP"] = new[] { "MARGINPCTETCP", "MARGINPCTETC", "MARGINPCTETC-P" },
+                ["MARGIN_PCT_MERCURY"] = new[] { "MARGINPCTMERCURYPROJECTED", "MARGINPCTMERCURY" },
+                ["MARGIN_BUD"] = new[] { "MARGINBUD" },
+                ["MARGIN_ETCP"] = new[] { "MARGINETCP" },
+                ["MARGIN_MERCURY"] = new[] { "MARGINMERCURYPROJECTED", "MARGINMERCURY" },
+                ["MARGIN_PCT_LOSS_GAIN"] = new[] { "MARGINPCTPLOSSGAIN", "MARGINPCTLOSSGAIN" },
+                ["MARGIN_LOSS_GAIN"] = new[] { "MARGINLOSSGAIN" },
+                ["BILLING_OVERRUN"] = new[] { "BILLINGOVERRUN" },
+                ["EXPENSES_OVERRUN"] = new[] { "EXPENSESOVERRUN" },
+                ["MARGIN_COST_OVERRUN"] = new[] { "MARGINCOSTOVERRUN" },
+                ["MARGIN_PCT_ACT"] = new[] { "MARGINPCTACT", "MARGINPCTACTUAL" },
+                ["ETCP_AGE_DAYS"] = new[] { "ETCPAGEDAYS", "ETCAGEDAYS" },
+                ["REMAINING_WEEKS"] = new[] { "REMAININGWEEKS", "WEEKSREMAINING" },
+                ["STATUS"] = new[] { "STATUS" },
+                ["ENGAGEMENT_COUNT"] = new[] { "ENGAGEMENTCOUNT" }
+            },
+            "ENGAGEMENT");
 
         public MarginDataParseResult Parse(string filePath)
         {

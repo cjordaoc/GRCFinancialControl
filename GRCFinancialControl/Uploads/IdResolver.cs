@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using GRCFinancialControl.Common;
 using GRCFinancialControl.Data;
+using Microsoft.EntityFrameworkCore;
+using MySqlConnector;
 
 namespace GRCFinancialControl.Uploads
 {
@@ -16,6 +18,7 @@ namespace GRCFinancialControl.Uploads
         private readonly Dictionary<string, long> _levelCodeCache = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, long> _employeeAliasCache = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, long> _employeeCache = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, long> _employeeCodeCache = new(StringComparer.OrdinalIgnoreCase);
 
         public IdResolver(MySqlDbContext db)
         {
@@ -150,13 +153,34 @@ namespace GRCFinancialControl.Uploads
             if (_employeeCache.TryGetValue(normalized, out cachedEmployeeId))
             {
                 EnsureEmployeeAlias(sourceSystemId, trimmedName, normalized, cachedEmployeeId);
-                return cachedEmployeeId;
+                var resolvedFromCode = EnsureEmployeeCodeMapping(sourceSystemId, employeeCode, cachedEmployeeId);
+                return resolvedFromCode;
+            }
+
+            var trimmedCode = StringNormalizer.TrimToNull(employeeCode);
+            if (!string.IsNullOrEmpty(trimmedCode))
+            {
+                var resolvedByCode = TryResolveEmployeeByCode(sourceSystemId, trimmedCode);
+                if (resolvedByCode.HasValue)
+                {
+                    _employeeCache[normalized] = resolvedByCode.Value;
+                    EnsureEmployeeAlias(sourceSystemId, trimmedName, normalized, resolvedByCode.Value);
+                    return resolvedByCode.Value;
+                }
             }
 
             var alias = _db.MapEmployeeAliases.SingleOrDefault(a => a.SourceSystemId == sourceSystemId && a.NormalizedRaw == normalized);
             if (alias != null)
             {
                 _employeeAliasCache[aliasKey] = alias.EmployeeId;
+                var resolvedAliasId = EnsureEmployeeCodeMapping(sourceSystemId, trimmedCode, alias.EmployeeId);
+                if (resolvedAliasId != alias.EmployeeId)
+                {
+                    _employeeCache[normalized] = resolvedAliasId;
+                    EnsureEmployeeAlias(sourceSystemId, trimmedName, normalized, resolvedAliasId);
+                    return resolvedAliasId;
+                }
+
                 return alias.EmployeeId;
             }
 
@@ -165,24 +189,103 @@ namespace GRCFinancialControl.Uploads
             {
                 employee = new DimEmployee
                 {
-                    EmployeeCode = employeeCode,
+                    EmployeeCode = trimmedCode,
                     FullName = trimmedName,
                     NormalizedName = normalized,
                     CreatedUtc = DateTime.UtcNow,
                     UpdatedUtc = DateTime.UtcNow
                 };
                 _db.DimEmployees.Add(employee);
-                _db.SaveChanges();
+
+                try
+                {
+                    _db.SaveChanges();
+                }
+                catch (DbUpdateException ex) when (IsDuplicateKeyException(ex))
+                {
+                    _db.Entry(employee).State = EntityState.Detached;
+                    employee = _db.DimEmployees.Single(e => e.NormalizedName == normalized);
+                }
             }
-            else if (!string.IsNullOrWhiteSpace(employeeCode) && string.IsNullOrWhiteSpace(employee.EmployeeCode))
+            else if (!string.IsNullOrEmpty(trimmedCode) && string.IsNullOrWhiteSpace(employee.EmployeeCode))
             {
-                employee.EmployeeCode = employeeCode;
+                employee.EmployeeCode = trimmedCode;
                 employee.UpdatedUtc = DateTime.UtcNow;
             }
 
             _employeeCache[normalized] = employee.EmployeeId;
             EnsureEmployeeAlias(sourceSystemId, trimmedName, normalized, employee.EmployeeId);
-            return employee.EmployeeId;
+            var resolvedId = EnsureEmployeeCodeMapping(sourceSystemId, trimmedCode, employee.EmployeeId);
+            if (resolvedId != employee.EmployeeId)
+            {
+                _employeeCache[normalized] = resolvedId;
+                EnsureEmployeeAlias(sourceSystemId, trimmedName, normalized, resolvedId);
+            }
+
+            return resolvedId;
+        }
+
+        private long? TryResolveEmployeeByCode(long sourceSystemId, string employeeCode)
+        {
+            var key = BuildAliasKey(sourceSystemId, employeeCode);
+            if (_employeeCodeCache.TryGetValue(key, out var cached))
+            {
+                return cached;
+            }
+
+            var existing = _db.MapEmployeeCodes.SingleOrDefault(m => m.SourceSystemId == sourceSystemId && m.EmployeeCode == employeeCode);
+            if (existing != null)
+            {
+                _employeeCodeCache[key] = existing.EmployeeId;
+                return existing.EmployeeId;
+            }
+
+            return null;
+        }
+
+        private long EnsureEmployeeCodeMapping(long sourceSystemId, string? employeeCode, long employeeId)
+        {
+            var trimmed = StringNormalizer.TrimToNull(employeeCode);
+            if (trimmed == null)
+            {
+                return employeeId;
+            }
+
+            var key = BuildAliasKey(sourceSystemId, trimmed);
+            if (_employeeCodeCache.TryGetValue(key, out var cached))
+            {
+                return cached;
+            }
+
+            var existing = _db.MapEmployeeCodes.SingleOrDefault(m => m.SourceSystemId == sourceSystemId && m.EmployeeCode == trimmed);
+            if (existing != null)
+            {
+                _employeeCodeCache[key] = existing.EmployeeId;
+                return existing.EmployeeId;
+            }
+
+            var mapping = new MapEmployeeCode
+            {
+                SourceSystemId = sourceSystemId,
+                EmployeeCode = trimmed,
+                EmployeeId = employeeId,
+                CreatedUtc = DateTime.UtcNow
+            };
+            _db.MapEmployeeCodes.Add(mapping);
+
+            try
+            {
+                _db.SaveChanges();
+                _employeeCodeCache[key] = employeeId;
+                return employeeId;
+            }
+            catch (DbUpdateException ex) when (IsDuplicateKeyException(ex))
+            {
+                _db.Entry(mapping).State = EntityState.Detached;
+                existing = _db.MapEmployeeCodes.Single(m => m.SourceSystemId == sourceSystemId && m.EmployeeCode == trimmed);
+                _employeeCodeCache[key] = existing.EmployeeId;
+                return existing.EmployeeId;
+            }
         }
 
         private void EnsureAlias(long sourceSystemId, string trimmedLevel, string normalized, long levelId)
@@ -227,5 +330,20 @@ namespace GRCFinancialControl.Uploads
 
         private static string BuildAliasKey(long sourceSystemId, string normalized)
             => $"{sourceSystemId}|{normalized}";
+
+        private static bool IsDuplicateKeyException(DbUpdateException ex)
+        {
+            if (ex?.InnerException is MySqlException mysql && mysql.Number == 1062)
+            {
+                return true;
+            }
+
+            if (ex?.InnerException?.InnerException is MySqlException nested && nested.Number == 1062)
+            {
+                return true;
+            }
+
+            return false;
+        }
     }
 }
