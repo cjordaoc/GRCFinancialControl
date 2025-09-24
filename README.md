@@ -1,6 +1,7 @@
 # GRC Financial Control – Functional Specification
 
 ## What changed
+- 2025-09-24 14:40 UTC — Centralized EF Core mappings in `Data/` with per-entity configuration classes, added a schema validation smoke test, and documented the tarball-based .NET SDK setup required to cross-build WinForms from Linux.
 - 2025-09-22 18:30 UTC — Replaced the incremental MySQL scripts with a single full-rebuild script so `DatabaseScripts/` exactly matches the deployed schema.
 - 2025-09-19 19:50 UTC — Added the `DimSourceSystems` baseline script and standardized all numeric IDs as BIGINT/`long` so uploads share master data lookups.
 - 2025-09-21 00:45 UTC — Copied `README.md` into the WinForms build output so the Help dialog can display the packaged specification, and documented the Help workflow.
@@ -113,6 +114,7 @@ All master-data grids refresh automatically after create/update/delete operation
 ## Operational Guide
 ### Environment & Prerequisites
 - .NET SDK 8.0.119 installed (verified via `dotnet --info`).
+- If building from Linux, extract the official SDK tarball (e.g., `dotnet-sdk-8.0.120-linux-x64.tar.gz`) into `/usr/share/dotnet8`, export `DOTNET_ROOT=/usr/share/dotnet8`, and prepend `PATH=$DOTNET_ROOT:$PATH` so the Windows Desktop reference packs are available.
 - Windows targeting build command: `dotnet build -p:EnableWindowsTargeting=true` at solution root.
 - MySQL server reachable with credentials defined in environment configuration (e.g., `appsettings.Production.json` or secure secrets store).
 - SQLite database file accessible for local configuration data.
@@ -121,7 +123,8 @@ All master-data grids refresh automatically after create/update/delete operation
 1. Ensure required SDK/runtime installed (see above).
 2. Restore dependencies: `dotnet restore` (if needed).
 3. Build solution: `dotnet build -p:EnableWindowsTargeting=true`.
-4. Launch WinForms app via Visual Studio on Windows or `dotnet run -p GRCFinancialControl/GRCFinancialControl.csproj -p:EnableWindowsTargeting=true` when using a compatible environment.
+4. Run automated checks: `dotnet test -p:EnableWindowsTargeting=true -f net8.0` (model smoke test + persistence specs).
+5. Launch WinForms app via Visual Studio on Windows or `dotnet run -p GRCFinancialControl/GRCFinancialControl.csproj -p:EnableWindowsTargeting=true` when using a compatible environment.
 5. Confirm connectivity to both SQLite and MySQL before attempting uploads.
 
 ### Help Menu Reference
@@ -147,6 +150,12 @@ See [`Fixes.md`](Fixes.md) for detailed error recovery practices and the accumul
   - Update EF Core models and generate migration scripts.
   - Keep `DatabaseScripts/20250922_full_rebuild.sql` as the authoritative baseline; apply it when refreshing environments or after destructive changes so tables, indexes, and views match production.
   - Document schema diffs in both README and commit messages.
+
+### EF Core model contract
+- MySQL entities reside in `GRCFinancialControl/Data/Entities` and are mapped by fluent configuration classes in `Data/Configurations`. Every property calls `HasColumnName`/`HasColumnType` to mirror `MySQL Specs/Tables.csv`.
+- `MySqlDbContext` loads only the MySQL configurations via `ApplyConfigurationsFromAssembly(..., type => type.Namespace == Data.Configurations)`, keeping SQLite entities isolated.
+- `LocalSqliteContext` applies configurations from `Data/SqliteConfigurations` so the local `parameters` table remains independent of the MySQL model.
+- The xUnit smoke test `MySqlModelSmokeTests` compares the EF metadata against `Tables.csv` and exercises `IRelationalDatabaseCreator.GenerateCreateScript()`; run it with `dotnet test -p:EnableWindowsTargeting=true -f net8.0` whenever the model changes.
 
 ## Maintenance & Extension
 ### Adding a New Upload Type
