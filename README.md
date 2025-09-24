@@ -1,6 +1,7 @@
 # GRC Financial Control – Functional Specification
 
 ## What changed
+- 2025-09-26 20:30 UTC — Recorded the wait cursor plus completion popup feedback for all uploads and noted that plan loads now pull `FactPlanByLevels.PlannedHours` from the Resourcing worksheet Hours column.
 - 2025-09-24 22:15 UTC — Documented that margin uploads now create missing DimEngagements seeded with opening margins from `Margin % Bud`, captured the charges parser's new Detail sheet targeting, and updated environment notes for the .NET SDK 8.0.120 toolchain verification.
 - 2025-09-25 18:45 UTC — Added ETC upload safeguards that detach unintended DimEngagement inserts/updates, documenting read-only enforcement for engagement master data and the new warning signals in per-file summaries.
 - 2025-09-25 16:10 UTC — Documented that ETC uploads now skip rows referencing unknown engagements instead of auto-creating master data, updated the engagement resolution workflow, and reiterated the requirement to preload DimEngagements before ETC loads.

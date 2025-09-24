@@ -100,24 +100,33 @@ namespace GRCFinancialControl.Parsing
                 }
 
                 var weeklyHours = ExtractWeeklyHours(row, weeklyColumns, result);
-                var plannedHours = weeklyHours.Values.Sum();
+                var plannedHoursResolved = false;
+                decimal plannedHours = 0m;
 
-                if (weeklyHours.Count == 0 && headers.TryGetValue("TOTAL_HOURS", out var totalColumn))
+                if (headers.TryGetValue("TOTAL_HOURS", out var totalColumn))
                 {
-                    if (TryGetDecimal(row.Cell(totalColumn), out var totalValue))
+                    var totalCell = row.Cell(totalColumn);
+                    if (TryGetDecimal(totalCell, out var totalValue))
                     {
                         plannedHours = totalValue;
+                        plannedHoursResolved = true;
                     }
-                    else if (!row.Cell(totalColumn).IsEmpty())
+                    else if (!totalCell.IsEmpty())
                     {
-                        result.AddWarning($"Row {rowNumber}: Invalid total hours '{row.Cell(totalColumn).GetValue<string>()}'.");
+                        result.IncrementSkipped($"Row {rowNumber}: Invalid total hours '{totalCell.GetValue<string>()}' in Hours column.");
                         continue;
                     }
                 }
 
-                if (weeklyColumns.Count > 0 && weeklyHours.Count == 0)
+                if (!plannedHoursResolved && weeklyHours.Count > 0)
                 {
-                    result.IncrementSkipped($"Row {rowNumber}: Weekly columns detected but no numeric hours were provided.");
+                    plannedHours = weeklyHours.Values.Sum();
+                    plannedHoursResolved = true;
+                }
+
+                if (!plannedHoursResolved)
+                {
+                    result.IncrementSkipped($"Row {rowNumber}: Missing planned hours total.");
                     continue;
                 }
 

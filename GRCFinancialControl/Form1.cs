@@ -340,7 +340,7 @@ namespace GRCFinancialControl
                 return;
             }
 
-            DisplayBatchSummary(runner.Run(works));
+            RunUploadWithFeedback("Load Plan", () => runner.Run(works));
         }
 
         private void LoadEtc()
@@ -408,7 +408,7 @@ namespace GRCFinancialControl
                 return;
             }
 
-            DisplayBatchSummary(runner.Run(works));
+            RunUploadWithFeedback("Load ETC", () => runner.Run(works));
         }
 
         private void LoadMarginData()
@@ -476,7 +476,7 @@ namespace GRCFinancialControl
                 return;
             }
 
-            DisplayBatchSummary(runner.Run(works));
+            RunUploadWithFeedback("Load Margin Data", () => runner.Run(works));
         }
 
         private void LoadWeeklyDeclarations(bool isErp)
@@ -539,7 +539,8 @@ namespace GRCFinancialControl
                     })
             };
 
-            DisplayBatchSummary(runner.Run(works));
+            var operationName = isErp ? "Load ERP Weekly Declarations" : "Load Retain Weekly Declarations";
+            RunUploadWithFeedback(operationName, () => runner.Run(works));
         }
 
         private void LoadCharges()
@@ -601,7 +602,7 @@ namespace GRCFinancialControl
                     })
             };
 
-            DisplayBatchSummary(runner.Run(works));
+            RunUploadWithFeedback("Load Charges", () => runner.Run(works));
         }
 
         private void Reconcile()
@@ -738,13 +739,77 @@ namespace GRCFinancialControl
             return new UploadRunner(() => DbContextFactory.CreateMySqlContext(config), new StatusUploadLogger(AppendStatus));
         }
 
-        private void DisplayBatchSummary(UploadBatchSummary batch)
+        private void DisplayBatchSummary(UploadBatchSummary? batch)
         {
             _uploadSummaries.Clear();
+            if (batch == null)
+            {
+                return;
+            }
+
             foreach (var summary in batch.Files)
             {
                 _uploadSummaries.Add(summary);
             }
+        }
+
+        private void RunUploadWithFeedback(string operationName, Func<UploadBatchSummary> operation)
+        {
+            if (operation == null)
+            {
+                return;
+            }
+
+            UploadBatchSummary? batch = null;
+            var previousCursor = Cursor ?? Cursors.Default;
+            try
+            {
+                UseWaitCursor = true;
+                Cursor = Cursors.WaitCursor;
+                Cursor.Current = Cursors.WaitCursor;
+                Application.DoEvents();
+                batch = operation();
+            }
+            catch (Exception ex)
+            {
+                ShowError($"{operationName} failed: {ex.Message}");
+                return;
+            }
+            finally
+            {
+                UseWaitCursor = false;
+                Cursor = previousCursor;
+                Cursor.Current = previousCursor;
+            }
+
+            DisplayBatchSummary(batch);
+            AppendStatus($"{operationName} completed.");
+            MessageBox.Show(this, BuildUploadCompletionMessage(operationName, batch), "Upload Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private static string BuildUploadCompletionMessage(string operationName, UploadBatchSummary? batch)
+        {
+            if (batch == null || batch.Files.Count == 0)
+            {
+                return $"{operationName} completed.\nNo files were processed.";
+            }
+
+            var totalFiles = batch.Files.Count;
+            var successes = batch.Files.Count(summary => summary.Outcome == UploadOutcome.Succeeded);
+            var failures = batch.Files.Count(summary => summary.Outcome == UploadOutcome.Failed);
+            var skipped = batch.Files.Count(summary => summary.Outcome == UploadOutcome.Skipped);
+            var inserted = batch.Files.Sum(summary => summary.Inserted);
+            var updated = batch.Files.Sum(summary => summary.Updated);
+            var warnings = batch.Files.Sum(summary => summary.WarningCount);
+            var errors = batch.Files.Sum(summary => summary.ErrorCount);
+
+            return string.Join("\n", new[]
+            {
+                $"{operationName} completed.",
+                $"Files processed: {totalFiles} (Success: {successes}, Failed: {failures}, Skipped: {skipped})",
+                $"Inserted: {inserted}, Updated: {updated}",
+                $"Warnings: {warnings}, Errors: {errors}"
+            });
         }
 
         private void ReportParseResult<TRow>(ExcelParseResult<TRow> parseResult, string? filePath = null)
