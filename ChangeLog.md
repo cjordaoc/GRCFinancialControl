@@ -2,6 +2,7 @@
 
 ## What changed
 
+- 2025-09-26 20:30 UTC — Added wait cursor and completion popup feedback for upload batches, corrected plan loads to map Hours column values into `FactPlanByLevels.PlannedHours`, and synchronized documentation with the new behaviors.
 - 2025-09-24 22:15 UTC — Enabled margin uploads to seed missing `DimEngagements` records with opening margins, taught the charges parser to prioritize Detail sheets over summary tabs, and updated documentation to reflect the .NET SDK 8.0.120 toolchain verification.
 - 2025-09-25 18:45 UTC — Hardened ETC uploads by detaching unintended `DimEngagements` inserts/updates, surfaced suppression warnings in summaries, and refreshed documentation/fixes catalogs to reflect the read-only enforcement.
 - 2025-09-25 16:10 UTC — Prevented ETC uploads from creating new `DimEngagements` rows by introducing a read-only engagement resolver, updated documentation to stress preloading engagement master data, and recorded the safeguard in the fixes catalog.
