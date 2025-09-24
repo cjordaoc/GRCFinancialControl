@@ -37,7 +37,12 @@ namespace GRCFinancialControl.Parsing
             var result = new ExcelParseResult<ChargeRow>("Charges");
 
             using var workbook = new XLWorkbook(filePath);
-            var worksheet = ExcelWorksheetHelper.FirstVisible(workbook.Worksheets);
+            var worksheet = ExcelWorksheetHelper.SelectWorksheet(
+                workbook.Worksheets,
+                "Export",
+                "Detail",
+                "Charges",
+                "Time and Expense Detail");
             var (headers, headerRow) = ValidateHeaders(worksheet, Schema);
 
             foreach (var row in worksheet.RowsUsed().Where(r => r.RowNumber() > headerRow))

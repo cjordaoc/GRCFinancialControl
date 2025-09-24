@@ -73,18 +73,33 @@ namespace GRCFinancialControl.Uploads
             return engagement.EngagementId;
         }
 
-        public string EnsureEngagement(string engagementId, string? title = null)
+        public string EnsureEngagement(string engagementId, string? title = null, Func<DimEngagement, bool, bool>? configure = null)
         {
             var trimmedId = StringNormalizer.TrimToNull(engagementId) ?? throw new ArgumentException("Engagement ID is required.", nameof(engagementId));
             if (_engagementCache.TryGetValue(trimmedId, out var cached) && cached != null)
             {
-                if (!string.IsNullOrWhiteSpace(title))
+                if (!string.IsNullOrWhiteSpace(title) || configure != null)
                 {
                     var tracked = _db.DimEngagements.Find(trimmedId);
-                    if (tracked != null && !string.Equals(tracked.EngagementTitle, title, StringComparison.Ordinal))
+                    if (tracked != null)
                     {
-                        tracked.EngagementTitle = title;
-                        tracked.UpdatedUtc = DateTime.UtcNow;
+                        var mutated = false;
+
+                        if (!string.IsNullOrWhiteSpace(title) && !string.Equals(tracked.EngagementTitle, title, StringComparison.Ordinal))
+                        {
+                            tracked.EngagementTitle = title;
+                            mutated = true;
+                        }
+
+                        if (configure != null)
+                        {
+                            mutated |= configure(tracked, false);
+                        }
+
+                        if (mutated)
+                        {
+                            tracked.UpdatedUtc = DateTime.UtcNow;
+                        }
                     }
                 }
 
@@ -92,25 +107,42 @@ namespace GRCFinancialControl.Uploads
             }
 
             var engagement = _db.DimEngagements.Find(trimmedId);
+            var now = DateTime.UtcNow;
             if (engagement == null)
             {
                 engagement = new DimEngagement
                 {
                     EngagementId = trimmedId,
                     EngagementTitle = title ?? trimmedId,
-                    CreatedUtc = DateTime.UtcNow,
-                    UpdatedUtc = DateTime.UtcNow
+                    CreatedUtc = now,
+                    UpdatedUtc = now
                 };
+
+                if (configure != null)
+                {
+                    configure(engagement, true);
+                }
                 _db.DimEngagements.Add(engagement);
             }
             else
             {
+                var mutated = false;
+
                 if (!string.IsNullOrWhiteSpace(title) && !string.Equals(engagement.EngagementTitle, title, StringComparison.Ordinal))
                 {
                     engagement.EngagementTitle = title;
+                    mutated = true;
                 }
 
-                engagement.UpdatedUtc = DateTime.UtcNow;
+                if (configure != null)
+                {
+                    mutated |= configure(engagement, false);
+                }
+
+                if (mutated)
+                {
+                    engagement.UpdatedUtc = DateTime.UtcNow;
+                }
             }
 
             _engagementCache[trimmedId] = engagement.EngagementId;

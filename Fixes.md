@@ -1,6 +1,7 @@
 # Fixes Catalog
 
 ## What changed
+- 2025-09-24 22:15 UTC — Added remedies for margin uploads that encountered missing engagements and for charges files whose Detail sheets were skipped, plus noted the .NET 8.0.120 verification requirement.
 - 2025-09-25 18:45 UTC — Logged the follow-up ETC regression where tracked `DimEngagements` entities still persisted; documented the change-tracker sweep that detaches unintended inserts/updates and the associated operator warnings.
 - 2025-09-25 16:10 UTC — Captured the ETC upload regression that auto-created DimEngagements, recorded the resolution (read-only engagement lookup + skip), and reiterated the requirement to preload engagement master data.
 - 2025-09-24 20:55 UTC — Documented the duplicate employee code race fix (MapEmployeeCodes + retry), refreshed rebuild guidance, and reminded teams to capture SDK/toolchain verification.
@@ -15,6 +16,8 @@
 - Reference relevant entries in commit messages or documentation updates when you apply an existing fix.
 
 ## Mistake Catalog
+- 2025-09-24 22:15 UTC — Uploads — Margin loads failed with `DbUpdateConcurrencyException` when encountering engagements missing from MySQL — Allow the margin loader to create missing `DimEngagements` rows and seed `OpeningMargin` from `Margin % Bud` so the subsequent fact update succeeds.
+- 2025-09-24 22:15 UTC — Parsing — Charges files selected the summary tab first and reported missing ENGAGEMENT/EMPLOYEE/DATE/HOURS headers — Update the parser to prefer Detail/Export sheets before falling back to the first visible worksheet.
 - 2025-09-25 18:45 UTC — Uploads — ETC snapshots still inserted `DimEngagements` rows when other workflows seeded new engagements in the same context — Run a change-tracker sweep that detaches added/modified `DimEngagements` entries prior to saving, surface warnings listing suppressed IDs, and retry after seeding master data separately.
 - 2025-09-25 16:10 UTC — Uploads — ETC snapshot loads inserted unexpected `DimEngagements` rows when encountering unknown IDs — Use `IdResolver.TryResolveEngagement` to require pre-existing engagements, skip affected rows with warnings, and seed `DimEngagements` via the master-data UI/import before running ETC uploads.
 - 2025-09-24 14:40 UTC — Build — `MSB4019` complaining `Microsoft.NET.Sdk.WindowsDesktop.targets` missing on Linux → Install the official SDK tarball (e.g., `dotnet-sdk-8.0.120-linux-x64.tar.gz`) into `/usr/share/dotnet8`, export `DOTNET_ROOT=/usr/share/dotnet8`, update `PATH`, and rerun `dotnet build -p:EnableWindowsTargeting=true` before executing tests.

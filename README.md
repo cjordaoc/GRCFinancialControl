@@ -1,6 +1,7 @@
 # GRC Financial Control – Functional Specification
 
 ## What changed
+- 2025-09-24 22:15 UTC — Documented that margin uploads now create missing DimEngagements seeded with opening margins from `Margin % Bud`, captured the charges parser's new Detail sheet targeting, and updated environment notes for the .NET SDK 8.0.120 toolchain verification.
 - 2025-09-25 18:45 UTC — Added ETC upload safeguards that detach unintended DimEngagement inserts/updates, documenting read-only enforcement for engagement master data and the new warning signals in per-file summaries.
 - 2025-09-25 16:10 UTC — Documented that ETC uploads now skip rows referencing unknown engagements instead of auto-creating master data, updated the engagement resolution workflow, and reiterated the requirement to preload DimEngagements before ETC loads.
 - 2025-09-24 20:55 UTC — Linked Excel parsers to the File Field Upload Map, documented the new employee code registry/unique index, refreshed the MySQL rebuild script, and noted the toolchain verification checklist.
@@ -50,7 +51,7 @@ Source Files (.xlsx/.csv)
 ### Upload Menu Structure
 | Upload Type | File Selection | Expected Extensions | Notes |
 |-------------|----------------|---------------------|-------|
-| Margin      | Multi-file (`OpenFileDialog.Multiselect = true`) | `.xlsx` | Process files alphabetically; each file runs through `UploadRunner` for its own transaction and summary. |
+| Margin      | Multi-file (`OpenFileDialog.Multiselect = true`) | `.xlsx` | Process files alphabetically; each file runs through `UploadRunner` for its own transaction and summary. Unknown engagements are now created on the fly with opening margins sourced from `Margin % Bud`. |
 | ETC         | Multi-file (`Multiselect = true`) | `.xlsx`, `.csv` | Deterministic iteration with schema validation and per-file commits. Engagement IDs must already exist; rows pointing to unknown engagements are skipped with warnings and any unintended engagement inserts/updates are detached and reported. |
 | Budget      | Multi-file (`Multiselect = true`) | `.xlsx` | Same per-file isolation; report inserted/updated counts through the summary grid. |
 | All other upload submenus (e.g., Actuals, Forecast, Adjustments) | Single file (`Multiselect = false`) | `.xlsx` unless specified | Still validate headers, run a single `UploadRunner` work item, and summarize outcome. |
@@ -101,6 +102,7 @@ Dialog behavior:
 - **Plan parsing.** `PlanExcelParser` reads engagement metadata from the `PLAN INFO` sheet when row-level identifiers are absent, tolerates missing employee columns, detects dynamic weekly date columns (including multi-row headers), aggregates hours, records totals, skips numeric headers that fall outside the legal OLE Automation range, and normalizes level codes via `LevelNormalizer` while logging invalid totals.
 - **ETC parsing.** `EtcExcelParser` title-cases employee names, captures employee identifiers, normalizes levels, and extracts projected margin %, ETC age, remaining weeks, and status with resilient numeric parsing.
 - **Margin parsing.** `MarginDataExcelParser` reads the `Export` worksheet by header name, extracting client data, all harmonized margin percentages/values, overruns, status, and counts; percentages normalize to decimal fractions for fact loading with warnings on malformed cells. Engagement IDs are derived via the shared regex helper so any `(E-#######)` token is resolved even when not enclosed in parentheses.
+- **Charges parsing.** `ChargesExcelParser` now prioritizes `Export`, `Detail`, and similarly named sheets before falling back to the first visible worksheet so summary tabs no longer block header detection for required engagement/employee/date/hour columns.
 - **Retain & ERP weekly parsing.** `WeeklyDeclarationExcelParser` detects Retain layouts (numeric weekly hours per employee) and ERP layouts (40h allocations flagged by engagement ID text), converts Retain’s Friday headers to ISO Mondays, and continues to support legacy tabular uploads for ad-hoc datasets.
 
 ### Master Data Forms
@@ -117,7 +119,7 @@ All master-data grids refresh automatically after create/update/delete operation
 
 ## Operational Guide
 ### Environment & Prerequisites
-- .NET SDK 8.0.119 installed (verified via `dotnet --info`).
+- .NET SDK 8.0.120 installed (verified via `dotnet --info`).
 - If building from Linux, extract the official SDK tarball (e.g., `dotnet-sdk-8.0.120-linux-x64.tar.gz`) into `/usr/share/dotnet8`, export `DOTNET_ROOT=/usr/share/dotnet8`, and prepend `PATH=$DOTNET_ROOT:$PATH` so the Windows Desktop reference packs are available.
 - Windows targeting build command: `dotnet build -p:EnableWindowsTargeting=true` at solution root.
 - MySQL server reachable with credentials defined in environment configuration (e.g., `appsettings.Production.json` or secure secrets store).

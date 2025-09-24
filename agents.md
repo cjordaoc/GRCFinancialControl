@@ -1,6 +1,7 @@
 # GRC Financial Control – Engineering Guidelines
 
 ## What changed
+- 2025-09-24 22:15 UTC — Enabled margin uploads to seed missing DimEngagements with opening margins, expanded charges worksheet selection to honor Detail tabs, and reminded engineers to document .NET 8.0.120 toolchain verification.
 - 2025-09-25 18:45 UTC — Documented the ETC upload guard that detaches unintended DimEngagement inserts/updates so the pipeline remains read-only for engagements and highlighted the requirement to log suppressed IDs in upload summaries.
 - 2025-09-25 16:10 UTC — Clarified that ETC uploads must not create DimEngagements records, added the TryResolveEngagement helper requirement, and reminded engineers to preload engagement master data before ETC loads.
 - 2025-09-24 20:55 UTC — Wired Excel header detection to the File Field Upload Map, added a race-safe employee resolver with source-system code indexing, refreshed the MySQL rebuild script, and logged the .NET SDK verification requirement.
@@ -102,7 +103,7 @@ Historical updates now live in [`ChangeLog.md`](ChangeLog.md). Record engineerin
 ## 14. Tooling & Environment
 -Install the .net and apt-utils at the container as soon as the container starts
 - Verified toolchain (2025-09-18):
-  - `.NET SDK 8.0.119` installed.
+  - `.NET SDK 8.0.120` installed.
   - Confirm via `dotnet --info`.
 - On Linux: build with `-p:EnableWindowsTargeting=true`.
 - Extract the official SDK tarball (e.g., `dotnet-sdk-8.0.120-linux-x64.tar.gz`) into `/usr/share/dotnet8` to obtain the Windows Desktop reference packs when running on Linux.
