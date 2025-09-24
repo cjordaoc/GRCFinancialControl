@@ -307,7 +307,7 @@ namespace GRCFinancialControl.Data
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<MeasurementPeriod>(entity =>
             {
-                entity.ToTable("measurement_periods");
+                entity.ToTable("MeasurementPeriods");
                 entity.Property(e => e.Description).HasMaxLength(255);
                 entity.Property(e => e.StartDate).HasColumnType("date");
                 entity.Property(e => e.EndDate).HasColumnType("date");
@@ -338,7 +338,7 @@ namespace GRCFinancialControl.Data
 
             modelBuilder.Entity<DimEngagement>(entity =>
             {
-                entity.ToTable("dim_engagement");
+                entity.ToTable("DimEngagements");
                 entity.Property(e => e.CreatedUtc)
                     .HasColumnType("datetime(6)")
                     .HasDefaultValueSql("CURRENT_TIMESTAMP(6)")

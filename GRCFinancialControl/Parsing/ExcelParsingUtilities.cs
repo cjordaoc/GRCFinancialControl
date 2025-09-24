@@ -128,8 +128,8 @@ namespace GRCFinancialControl.Parsing
 
             if (cell.DataType == XLDataType.Number)
             {
-                var raw = cell.GetDouble();
-                if (double.IsNaN(raw) || double.IsInfinity(raw) || raw < OleAutomationMinValue || raw > OleAutomationMaxValue)
+                var oaValue = cell.GetDouble();
+                if (double.IsNaN(oaValue) || double.IsInfinity(oaValue) || oaValue < OleAutomationMinValue || oaValue > OleAutomationMaxValue)
                 {
                     date = default;
                     return false;
@@ -137,7 +137,7 @@ namespace GRCFinancialControl.Parsing
 
                 try
                 {
-                    var dt = DateTime.FromOADate(raw);
+                    var dt = DateTime.FromOADate(oaValue);
                     date = DateOnly.FromDateTime(dt);
                     return true;
                 }
