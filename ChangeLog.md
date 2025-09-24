@@ -1,6 +1,7 @@
 # Change Log
 
 ## What changed
+
 - 2025-09-22 18:30 UTC — Consolidated the MySQL rebuild guidance into a single baseline script and updated documentation to reflect the new authoritative artifact.
 - 2025-09-19 19:50 UTC — Logged the BIGINT ID migration plus the `DimSourceSystems` bootstrap script for upload services.
 - 2025-09-21 00:45 UTC — Captured the packaged Help dialog update so `README.md` travels with builds, with pointers to consult the in-app copy.
