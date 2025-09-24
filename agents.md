@@ -1,6 +1,7 @@
 # GRC Financial Control – Engineering Guidelines
 
 ## What changed
+- 2025-09-24 14:40 UTC — Centralized EF entity models under `Data/` with per-entity `IEntityTypeConfiguration` classes, added the schema smoke test to the test suite, and documented the tarball-based .NET SDK installation needed for Windows desktop targeting on Linux.
 - 2025-09-22 18:30 UTC — Replaced legacy incremental scripts with the single full-rebuild MySQL script so `DatabaseScripts/` mirrors the current production schema.
 - 2025-09-19 19:50 UTC — Captured the BIGINT ID standard plus the `DimSourceSystems` baseline script so upload services share master data lookups.
 - 2025-09-21 00:45 UTC — Ensured the WinForms Help dialog ships the current `README.md` by copying it to the build output and reinforced the requirement to keep the specification accurate.
@@ -68,16 +69,23 @@ Historical updates now live in [`ChangeLog.md`](ChangeLog.md). Record engineerin
 - Validate schema before DB operations; abort file load if required headers missing.  
 
 ## 11. Database Bulk Writes
-- Buffer writes before committing.  
-- Use `AddRange`, `UpdateRange`, or batched updates where possible.  
-- Orchestrate through `UploadRunner` (per-file transaction, disabled tracking, commit once).  
-- Keep CREATE/ALTER scripts in `DatabaseScripts/`; update on EF model changes.  
+- Buffer writes before committing.
+- Use `AddRange`, `UpdateRange`, or batched updates where possible.
+- Orchestrate through `UploadRunner` (per-file transaction, disabled tracking, commit once).
+- Keep CREATE/ALTER scripts in `DatabaseScripts/`; update on EF model changes.
+
+## 11A. EF Core Model Organization
+- Store MySQL POCOs under `GRCFinancialControl/Data/Entities` and map them with per-entity `IEntityTypeConfiguration<T>` classes in `Data/Configurations`.
+- `MySqlDbContext` must call `ApplyConfigurationsFromAssembly` with the configuration namespace filter so only MySQL entities attach to the model.
+- `LocalSqliteContext` uses the analogous `SqliteConfigurations` namespace; keep SQLite-only entities out of the MySQL model to preserve provider boundaries.
+- When adding entities, update both the fluent configuration (table, columns, defaults, indexes) and the MySQL rebuild script so the `Tables.csv` contract stays authoritative.
 
 ## 12. Testing & Pre-Commit Checklist
-1. `dotnet build -p:EnableWindowsTargeting=true` passes.  
-2. Smoke test each upload type with fixture data.  
-3. Validate master-data forms for CRUD + binding.  
-4. Review schema diffs; update SQL scripts.  
+1. `dotnet build -p:EnableWindowsTargeting=true` passes.
+2. `dotnet test -p:EnableWindowsTargeting=true -f net8.0` (runs `LocalAppRepository` specs plus `MySqlModelSmokeTests`).
+3. Smoke test each upload type with fixture data.
+3. Validate master-data forms for CRUD + binding.
+4. Review schema diffs; update SQL scripts.
 5. Confirm logs capture failures as expected.
 6. Whenever errors are found, review [`Fixes.md`](Fixes.md) first; only research externally if no existing remedy applies.
 
@@ -89,11 +97,13 @@ Historical updates now live in [`ChangeLog.md`](ChangeLog.md). Record engineerin
 
 ## 14. Tooling & Environment
 -Install the .net and apt-utils at the container as soon as the container starts
-- Verified toolchain (2025-09-18):  
-  - `.NET SDK 8.0.119` installed.  
-  - Confirm via `dotnet --info`.  
-- On Linux: build with `-p:EnableWindowsTargeting=true`.  
--Look at the web on how properly install the desktop workload and install it
+- Verified toolchain (2025-09-18):
+  - `.NET SDK 8.0.119` installed.
+  - Confirm via `dotnet --info`.
+- On Linux: build with `-p:EnableWindowsTargeting=true`.
+- Extract the official SDK tarball (e.g., `dotnet-sdk-8.0.120-linux-x64.tar.gz`) into `/usr/share/dotnet8` to obtain the Windows Desktop reference packs when running on Linux.
+- Export `DOTNET_ROOT=/usr/share/dotnet8` and prepend `PATH=$DOTNET_ROOT:$PATH` before invoking build/test commands so the tarball-based SDK is used.
+- `dotnet workload install windowsdesktop` is unavailable on Linux; rely on the tarball pack to satisfy WinForms targeting.
 
 
 ## 15. Validation Requirements
