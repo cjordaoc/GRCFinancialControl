@@ -1,6 +1,7 @@
 # Fixes Catalog
 
 ## What changed
+- 2025-09-26 13:41 UTC — Documented the ETC parsing regression fix: treat the Resourcing `Activity` column as the engagement header, skip subtotal rows such as "Result," fall back to `ETC INFO` for canonical IDs, and captured the .NET SDK 8.0.120 `dotnet --info` verification before execution.
 - 2025-09-24 22:15 UTC — Added remedies for margin uploads that encountered missing engagements and for charges files whose Detail sheets were skipped, plus noted the .NET 8.0.120 verification requirement.
 - 2025-09-25 18:45 UTC — Logged the follow-up ETC regression where tracked `DimEngagements` entities still persisted; documented the change-tracker sweep that detaches unintended inserts/updates and the associated operator warnings.
 - 2025-09-25 16:10 UTC — Captured the ETC upload regression that auto-created DimEngagements, recorded the resolution (read-only engagement lookup + skip), and reiterated the requirement to preload engagement master data.
@@ -16,6 +17,7 @@
 - Reference relevant entries in commit messages or documentation updates when you apply an existing fix.
 
 ## Mistake Catalog
+- 2025-09-26 13:41 UTC — Parsing — ETC uploads parsed zero rows when EY templates only listed `Activity` captions and subtotal lines before the data — Extend `EtcExcelParser` to map the `Activity` header, ignore subtotal rows such as "Result," pull canonical IDs from the `ETC INFO` sheet when no `E-#######` token is present, and lock the behavior with a regression test prior to rerunning uploads.
 - 2025-09-24 22:15 UTC — Uploads — Margin loads failed with `DbUpdateConcurrencyException` when encountering engagements missing from MySQL — Allow the margin loader to create missing `DimEngagements` rows and seed `OpeningMargin` from `Margin % Bud` so the subsequent fact update succeeds.
 - 2025-09-24 22:15 UTC — Parsing — Charges files selected the summary tab first and reported missing ENGAGEMENT/EMPLOYEE/DATE/HOURS headers — Update the parser to prefer Detail/Export sheets before falling back to the first visible worksheet.
 - 2025-09-25 18:45 UTC — Uploads — ETC snapshots still inserted `DimEngagements` rows when other workflows seeded new engagements in the same context — Run a change-tracker sweep that detaches added/modified `DimEngagements` entries prior to saving, surface warnings listing suppressed IDs, and retry after seeding master data separately.

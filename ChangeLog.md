@@ -2,6 +2,7 @@
 
 ## What changed
 
+- 2025-09-26 13:41 UTC — Parsing — Updated ETC parsing to treat `Activity` as the engagement column, skip subtotal rows such as "Result," fall back to the `ETC INFO` sheet for canonical engagement IDs, and documented the .NET SDK 8.0.120 `dotnet --info` verification alongside new regression coverage.
 - 2025-09-26 20:30 UTC — Added wait cursor and completion popup feedback for upload batches, corrected plan loads to map Hours column values into `FactPlanByLevels.PlannedHours`, and synchronized documentation with the new behaviors.
 - 2025-09-24 22:15 UTC — Enabled margin uploads to seed missing `DimEngagements` records with opening margins, taught the charges parser to prioritize Detail sheets over summary tabs, and updated documentation to reflect the .NET SDK 8.0.120 toolchain verification.
 - 2025-09-25 18:45 UTC — Hardened ETC uploads by detaching unintended `DimEngagements` inserts/updates, surfaced suppression warnings in summaries, and refreshed documentation/fixes catalogs to reflect the read-only enforcement.
