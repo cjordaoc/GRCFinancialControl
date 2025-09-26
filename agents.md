@@ -1,6 +1,7 @@
 # GRC Financial Control – Engineering Guidelines
 
 ## What changed
+- 2025-09-26 13:41 UTC — Captured the ETC parser guardrails: prefer the `Activity` header when scanning Resourcing tabs with headers on row 3, skip subtotal rows such as "Result," pull canonical engagement IDs from the `ETC INFO` sheet when rows lack an `E-#######` token, and logged the .NET SDK 8.0.120 `dotnet --info` verification for this iteration.
 - 2025-09-26 20:30 UTC — Documented the wait cursor + completion popup requirement for upload operations and clarified that plan loads must source `FactPlanByLevels.PlannedHours` from the Resourcing sheet Hours column.
 - 2025-09-24 22:15 UTC — Enabled margin uploads to seed missing DimEngagements with opening margins, expanded charges worksheet selection to honor Detail tabs, and reminded engineers to document .NET 8.0.120 toolchain verification.
 - 2025-09-25 18:45 UTC — Documented the ETC upload guard that detaches unintended DimEngagement inserts/updates so the pipeline remains read-only for engagements and highlighted the requirement to log suppressed IDs in upload summaries.
@@ -70,9 +71,10 @@ Historical updates now live in [`ChangeLog.md`](ChangeLog.md). Record engineerin
 - Base all parsers on `ExcelParserBase`, `HeaderSchema`, and `ExcelHeaderDetector`.  
 - Guard against invalid OLE Automation dates.  
 - Use ordered sheet candidates (`RESOURCING`, `Export`, localized synonyms).  
-- Collapse multi-row headers, normalize `%` → `PCT`.  
-- Use `LevelNormalizer` for canonical codes.  
-- Validate schema before DB operations; abort file load if required headers missing.  
+- Collapse multi-row headers, normalize `%` → `PCT`.
+- Use `LevelNormalizer` for canonical codes.
+- Validate schema before DB operations; abort file load if required headers missing.
+- `EtcExcelParser` treats the Resourcing tab's `Activity` header as the engagement column, skips subtotal lines such as "Result," and when no `E-#######` token exists in a row it must read the canonical ID from the `ETC INFO` sheet before continuing.
 
 ## 11. Database Bulk Writes
 - Buffer writes before committing.
