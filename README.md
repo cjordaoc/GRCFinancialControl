@@ -1,6 +1,7 @@
 # GRC Financial Control – Functional Specification
 
 ## What changed
+- 2025-09-29 18:31 UTC — Logged the persistence test build fix that pins the Windows target to `net8.0-windows7.0`, documented the Linux restore/build requirement to pass `-p:EnableWindowsTargeting=true`, and reaffirmed the tarball-based .NET SDK 8.0.120 environment setup.
 - 2025-09-26 13:41 UTC — Recorded the ETC parser updates that honor the Resourcing sheet's row-3 headers/row-5 data layout, read engagement IDs from `ETC INFO` when rows only expose the `Activity` caption, skip subtotal lines such as "Result," and logged the .NET SDK 8.0.120 `dotnet --info` verification executed before build/test.
 - 2025-09-26 20:30 UTC — Recorded the wait cursor plus completion popup feedback for all uploads and noted that plan loads now pull `FactPlanByLevels.PlannedHours` from the Resourcing worksheet Hours column.
 - 2025-09-24 22:15 UTC — Documented that margin uploads now create missing DimEngagements seeded with opening margins from `Margin % Bud`, captured the charges parser's new Detail sheet targeting, and updated environment notes for the .NET SDK 8.0.120 toolchain verification.
