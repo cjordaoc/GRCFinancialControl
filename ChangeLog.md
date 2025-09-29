@@ -2,6 +2,7 @@
 
 ## What changed
 
+- 2025-09-29 18:31 UTC — Build — Resolved NETSDK1005 by pinning the persistence test project's Windows target to `net8.0-windows7.0`, refreshed guidance on tarball-installed .NET SDK 8.0.120 usage, and reiterated the `EnableWindowsTargeting` flag requirement for Linux restore/build/test runs.
 - 2025-09-26 13:41 UTC — Parsing — Updated ETC parsing to treat `Activity` as the engagement column, skip subtotal rows such as "Result," fall back to the `ETC INFO` sheet for canonical engagement IDs, and documented the .NET SDK 8.0.120 `dotnet --info` verification alongside new regression coverage.
 - 2025-09-26 20:30 UTC — Added wait cursor and completion popup feedback for upload batches, corrected plan loads to map Hours column values into `FactPlanByLevels.PlannedHours`, and synchronized documentation with the new behaviors.
 - 2025-09-24 22:15 UTC — Enabled margin uploads to seed missing `DimEngagements` records with opening margins, taught the charges parser to prioritize Detail sheets over summary tabs, and updated documentation to reflect the .NET SDK 8.0.120 toolchain verification.

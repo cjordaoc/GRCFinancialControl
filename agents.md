@@ -1,6 +1,7 @@
 # GRC Financial Control – Engineering Guidelines
 
 ## What changed
+- 2025-09-29 18:31 UTC — Documented the `net8.0-windows7.0` targeting requirement for the persistence test project, recorded the containerized .NET SDK 8.0.120 installation via tarball, and noted the `EnableWindowsTargeting` restore/build flag for Linux hosts.
 - 2025-09-26 13:41 UTC — Captured the ETC parser guardrails: prefer the `Activity` header when scanning Resourcing tabs with headers on row 3, skip subtotal rows such as "Result," pull canonical engagement IDs from the `ETC INFO` sheet when rows lack an `E-#######` token, and logged the .NET SDK 8.0.120 `dotnet --info` verification for this iteration.
 - 2025-09-26 20:30 UTC — Documented the wait cursor + completion popup requirement for upload operations and clarified that plan loads must source `FactPlanByLevels.PlannedHours` from the Resourcing sheet Hours column.
 - 2025-09-24 22:15 UTC — Enabled margin uploads to seed missing DimEngagements with opening margins, expanded charges worksheet selection to honor Detail tabs, and reminded engineers to document .NET 8.0.120 toolchain verification.
