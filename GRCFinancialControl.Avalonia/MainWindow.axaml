@@ -1,0 +1,57 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:GRCFinancialControl.Avalonia.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="GRCFinancialControl.Avalonia.MainWindow"
+        Title="GRC Financial Control">
+  <Design.DataContext>
+    <vm:MainWindowViewModel/>
+  </Design.DataContext>
+
+  <DockPanel>
+    <Menu DockPanel.Dock="Top">
+      <MenuItem Header="_File">
+        <MenuItem Header="_Exit"/>
+      </MenuItem>
+      <MenuItem Header="_Database">
+        <MenuItem Header="_Select Default"/>
+        <MenuItem Header="_Maintenance"/>
+      </MenuItem>
+      <MenuItem Header="_Data">
+        <MenuItem Header="_Uploads">
+            <MenuItem Header="_Plan" Command="{Binding UploadPlanCommand}"/>
+            <MenuItem Header="_ETC" Command="{Binding UploadEtcCommand}"/>
+            <MenuItem Header="_Margin Data" Command="{Binding UploadMarginDataCommand}"/>
+            <MenuItem Header="_ERP" Command="{Binding UploadErpCommand}"/>
+            <MenuItem Header="_Retain" Command="{Binding UploadRetainCommand}"/>
+            <MenuItem Header="_Charges" Command="{Binding UploadChargesCommand}"/>
+        </MenuItem>
+        <MenuItem Header="_Master Data">
+            <MenuItem Header="_Measurement Period" Command="{Binding OpenMeasurementPeriodCommand}"/>
+            <MenuItem Header="_Engagements" Command="{Binding OpenEngagementsCommand}"/>
+            <MenuItem Header="_Fiscal Years" Command="{Binding OpenFiscalYearMaintenanceCommand}"/>
+        </MenuItem>
+      </MenuItem>
+      <MenuItem Header="_Reports">
+        <MenuItem Header="_Reconcile" Command="{Binding ReconcileCommand}"/>
+        <MenuItem Header="_Export Audit" Command="{Binding ExportAuditCommand}"/>
+      </MenuItem>
+      <MenuItem Header="_Help">
+        <MenuItem Header="_View Help"/>
+      </MenuItem>
+    </Menu>
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="10" Margin="5">
+            <TextBlock Text="Reconciliation Date:" VerticalAlignment="Center"/>
+            <DatePicker SelectedDate="{Binding ReconciliationDate}"/>
+        </StackPanel>
+        <Grid RowDefinitions="*,Auto,Auto">
+          <DataGrid Grid.Row="0" Name="gridUploadSummary" ItemsSource="{Binding UploadSummaries}" AutoGenerateColumns="True"/>
+          <Splitter Grid.Row="1" Background="Gray" Height="5"/>
+      <TextBox Grid.Row="2" Name="txtStatus" IsReadOnly="True" Height="150" Text="{Binding StatusText}" TextWrapping="Wrap" />
+    </Grid>
+  </DockPanel>
+
+</Window>
