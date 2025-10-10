@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using System.Text;
 
-namespace GRCFinancialControl.Common
+namespace GRCFinancialControl.Core.Common
 {
     public static class StringNormalizer
     {
