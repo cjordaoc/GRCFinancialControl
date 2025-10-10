@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace GRCFinancialControl.Common
+namespace GRCFinancialControl.Core.Common
 {
     public static class EngagementIdExtractor
     {
