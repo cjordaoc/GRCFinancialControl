@@ -1,0 +1,48 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="GRCFinancialControl.Avalonia.Views.AllocationView"
+             x:DataType="vm:AllocationViewModel">
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="10">
+        <TextBlock Text="Fiscal Year Allocation" FontSize="24" FontWeight="Bold" Margin="0,0,0,10"/>
+
+        <ComboBox Grid.Row="1"
+                  ItemsSource="{Binding Engagements}"
+                  SelectedItem="{Binding SelectedEngagement, Mode=TwoWay}"
+                  DisplayMemberBinding="{Binding Description}"
+                  PlaceholderText="Select an Engagement"
+                  Margin="0,0,0,10">
+        </ComboBox>
+
+        <DataGrid Grid.Row="2"
+                  ItemsSource="{Binding AllocationEntries}"
+                  AutoGenerateColumns="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Fiscal Year" Binding="{Binding FiscalYear.Name}" IsReadOnly="True" Width="*"/>
+                <DataGridTextColumn Header="Allocated Hours" Binding="{Binding AllocatedHours}" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel Grid.Row="3" Margin="0,10,0,0" Spacing="5">
+            <TextBlock>
+                <Run Text="Total Planned Hours: "/>
+                <Run Text="{Binding SelectedEngagement.TotalPlannedHours}"/>
+            </TextBlock>
+            <TextBlock>
+                <Run Text="Total Allocated Hours: "/>
+                <Run Text="{Binding TotalAllocatedHours}"/>
+            </TextBlock>
+            <TextBlock>
+                <Run Text="Remaining Hours: "/>
+                <Run Text="{Binding RemainingHours}"/>
+            </TextBlock>
+            <Button Content="Load Allocations for Selected" Command="{Binding OnEngagementSelectedCommand}" Margin="0,10,0,0" />
+            <Button Content="Recalculate Totals" Command="{Binding RecalculateTotalsCommand}" Margin="0,5,0,0" />
+            <Button Content="Refresh Data" Command="{Binding LoadDataCommand}" Margin="0,5,0,0" />
+            <Button Content="Save Allocations" Command="{Binding SaveAllocationsCommand}" Margin="0,10,0,0" FontWeight="Bold"/>
+        </StackPanel>
+    </Grid>
+</UserControl>
