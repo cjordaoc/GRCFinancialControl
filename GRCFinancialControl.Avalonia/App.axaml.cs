@@ -11,7 +11,6 @@ using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
 
 namespace GRCFinancialControl.Avalonia
 {
@@ -37,19 +36,33 @@ namespace GRCFinancialControl.Avalonia
 
             // Build a temporary service provider to get the settings
             var tempServices = services.BuildServiceProvider();
-            var settingsService = tempServices.GetRequiredService<ISettingsService>();
-            var settings = settingsService.GetAllAsync().Result;
+            using (var scope = tempServices.CreateScope())
+            {
+                var scopedProvider = scope.ServiceProvider;
 
-            settings.TryGetValue("Server", out var server);
-            settings.TryGetValue("Database", out var database);
-            settings.TryGetValue("User", out var user);
-            settings.TryGetValue("Password", out var password);
+                // Ensure the local settings database exists before querying it
+                var settingsDbContext = scopedProvider.GetRequiredService<SettingsDbContext>();
+                settingsDbContext.Database.EnsureCreated();
 
-            var connectionString = $"Server={server};Database={database};User ID={user};Password={password};";
+                var settingsService = scopedProvider.GetRequiredService<ISettingsService>();
+                var settings = settingsService.GetAllAsync().GetAwaiter().GetResult();
 
-            // Register ApplicationDbContext with MySQL
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 29))));
+                settings.TryGetValue("Server", out var server);
+                settings.TryGetValue("Database", out var database);
+                settings.TryGetValue("User", out var user);
+                settings.TryGetValue("Password", out var password);
+
+                var connectionString = $"Server={server};Database={database};User ID={user};Password={password};";
+
+                // Register ApplicationDbContext with MySQL
+                services.AddDbContext<ApplicationDbContext>(options =>
+                    options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 29))));
+            }
+
+            if (tempServices is IDisposable disposableServices)
+            {
+                disposableServices.Dispose();
+            }
 
             // Register other services
             services.AddTransient<IEngagementService, EngagementService>();
