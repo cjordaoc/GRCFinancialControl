@@ -1,0 +1,102 @@
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Markup.Xaml;
+using GRCFinancialControl.Avalonia.Services;
+using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRCFinancialControl.Avalonia.ViewModels;
+using GRCFinancialControl.Avalonia.Views;
+using GRCFinancialControl.Persistence;
+using GRCFinancialControl.Persistence.Services;
+using GRCFinancialControl.Persistence.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Collections.Generic;
+
+namespace GRCFinancialControl.Avalonia
+{
+    public partial class App : Application
+    {
+        public IServiceProvider Services { get; private set; } = null!;
+
+        public override void Initialize()
+        {
+            AvaloniaXamlLoader.Load(this);
+        }
+
+        public override void OnFrameworkInitializationCompleted()
+        {
+            var services = new ServiceCollection();
+
+            // Register SettingsDbContext
+            services.AddDbContext<SettingsDbContext>(options =>
+                options.UseSqlite("Data Source=settings.db"));
+
+            // Register SettingsService
+            services.AddTransient<ISettingsService, SettingsService>();
+
+            // Build a temporary service provider to get the settings
+            var tempServices = services.BuildServiceProvider();
+            var settingsService = tempServices.GetRequiredService<ISettingsService>();
+            var settings = settingsService.GetAllAsync().Result;
+
+            settings.TryGetValue("Server", out var server);
+            settings.TryGetValue("Database", out var database);
+            settings.TryGetValue("User", out var user);
+            settings.TryGetValue("Password", out var password);
+
+            var connectionString = $"Server={server};Database={database};User ID={user};Password={password};";
+
+            // Register ApplicationDbContext with MySQL
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 29))));
+
+            // Register other services
+            services.AddTransient<IEngagementService, EngagementService>();
+            services.AddTransient<IFiscalYearService, FiscalYearService>();
+            services.AddTransient<IImportService, ImportService>();
+            services.AddTransient<IPlannedAllocationService, PlannedAllocationService>();
+            services.AddTransient<IReportService, ReportService>();
+            services.AddTransient<IPapdService, PapdService>();
+            services.AddTransient<IExceptionService, ExceptionService>();
+
+            // Register Messenger
+            services.AddSingleton<CommunityToolkit.Mvvm.Messaging.IMessenger>(CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default);
+
+            // Register ViewModels
+            services.AddTransient<MainWindowViewModel>();
+            services.AddTransient<EngagementsViewModel>();
+            services.AddTransient<FiscalYearsViewModel>();
+            services.AddTransient<ImportViewModel>();
+            services.AddTransient<AllocationViewModel>();
+            services.AddTransient<ReportsViewModel>();
+            services.AddTransient<PlannedVsActualViewModel>();
+            services.AddTransient<BacklogViewModel>();
+            services.AddTransient<PapdViewModel>();
+            services.AddTransient<ExceptionsViewModel>();
+            services.AddTransient<SettingsViewModel>();
+
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                var mainWindow = new MainWindow();
+
+                // Register FilePickerService with the created main window
+                services.AddSingleton<IFilePickerService>(new FilePickerService(mainWindow));
+
+                Services = services.BuildServiceProvider();
+
+                desktop.MainWindow = mainWindow;
+                desktop.MainWindow.DataContext = Services.GetRequiredService<MainWindowViewModel>();
+
+                // Apply migrations at startup
+                using (var scope = Services.CreateScope())
+                {
+                    var settingsDbContext = scope.ServiceProvider.GetRequiredService<SettingsDbContext>();
+                    settingsDbContext.Database.Migrate();
+                }
+            }
+
+            base.OnFrameworkInitializationCompleted();
+        }
+    }
+}

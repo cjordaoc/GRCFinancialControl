@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GRCFinancialControl.Core", "GRCFinancialControl.Core\GRCFinancialControl.Core.csproj", "{321849FB-31C7-4130-ABD3-A05A44189544}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GRCFinancialControl.Persistence", "GRCFinancialControl.Persistence\GRCFinancialControl.Persistence.csproj", "{50441053-34A5-40C6-BBA7-E9205B047F23}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GRCFinancialControl.Avalonia", "GRCFinancialControl.Avalonia\GRCFinancialControl.Avalonia.csproj", "{33A024B6-A150-40DB-AB1D-253FE5E25CA8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{321849FB-31C7-4130-ABD3-A05A44189544}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{321849FB-31C7-4130-ABD3-A05A44189544}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{321849FB-31C7-4130-ABD3-A05A44189544}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{321849FB-31C7-4130-ABD3-A05A44189544}.Release|Any CPU.Build.0 = Release|Any CPU
+		{50441053-34A5-40C6-BBA7-E9205B047F23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50441053-34A5-40C6-BBA7-E9205B047F23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50441053-34A5-40C6-BBA7-E9205B047F23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{50441053-34A5-40C6-BBA7-E9205B047F23}.Release|Any CPU.Build.0 = Release|Any CPU
+		{33A024B6-A150-40DB-AB1D-253FE5E25CA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{33A024B6-A150-40DB-AB1D-253FE5E25CA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{33A024B6-A150-40DB-AB1D-253FE5E25CA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{33A024B6-A150-40DB-AB1D-253FE5E25CA8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

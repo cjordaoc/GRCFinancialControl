@@ -1,0 +1,49 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+        x:Class="GRCFinancialControl.Avalonia.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="GRC Financial Control">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <Grid>
+        <TabControl>
+            <TabItem Header="Import">
+                <ContentControl Content="{Binding Import}"/>
+            </TabItem>
+            <TabItem Header="Engagements">
+                <ContentControl Content="{Binding Engagements}"/>
+            </TabItem>
+            <TabItem Header="Fiscal Years">
+                <ContentControl Content="{Binding FiscalYears}"/>
+            </TabItem>
+        <TabItem Header="PAPD">
+            <ContentControl Content="{Binding Papds}"/>
+        </TabItem>
+            <TabItem Header="Allocation">
+                <ContentControl Content="{Binding Allocation}"/>
+            </TabItem>
+        <TabItem Header="Reports">
+            <ContentControl Content="{Binding Reports}"/>
+        </TabItem>
+        <TabItem Header="Exceptions">
+            <ContentControl Content="{Binding Exceptions}"/>
+        </TabItem>
+        <TabItem Header="Settings">
+            <ContentControl Content="{Binding Settings}"/>
+        </TabItem>
+        </TabControl>
+
+        <!-- Dialog Overlay -->
+        <ContentControl Content="{Binding CurrentDialog}"
+                        IsVisible="{Binding CurrentDialog, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+    </Grid>
+
+</Window>
