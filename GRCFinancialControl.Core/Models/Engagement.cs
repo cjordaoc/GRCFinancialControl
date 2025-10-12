@@ -16,7 +16,10 @@ namespace GRCFinancialControl.Core.Models
         public decimal OpeningValue { get; set; }
         public EngagementStatus Status { get; set; }
         public double TotalPlannedHours { get; set; }
+        public decimal InitialHoursBudget { get; set; }
+        public decimal ActualHours { get; set; }
 
         public ICollection<EngagementPapd> EngagementPapds { get; set; } = new List<EngagementPapd>();
+        public ICollection<EngagementRankBudget> RankBudgets { get; set; } = new List<EngagementRankBudget>();
     }
 }
