@@ -1,19 +1,31 @@
--- Rebuild script for the GRC Financial Control MySQL schema.
--- Execute USE <database>; prior to running this script.
+-- Drop ALL base tables in the current database in one statement
 
+-- 1) Allow a big enough GROUP_CONCAT so the list of tables isn't cut off
+SET SESSION group_concat_max_len = 1024 * 1024;  -- 1 MB
+
+-- 2) Build the DROP statement safely (schema-qualified + backticks)
+SELECT COALESCE(
+         CONCAT(
+           'DROP TABLE IF EXISTS ',
+           GROUP_CONCAT(CONCAT('`', TABLE_SCHEMA, '`.`', TABLE_NAME, '`')
+                        ORDER BY TABLE_NAME SEPARATOR ', ')
+         ),
+         'SELECT 1'
+       )
+INTO @drop_sql
+FROM information_schema.tables
+WHERE TABLE_SCHEMA = DATABASE()
+  AND TABLE_TYPE = 'BASE TABLE';
+
+-- 3) (Optional) Disable FK checks to avoid dependency issues
 SET FOREIGN_KEY_CHECKS = 0;
 
-DROP TABLE IF EXISTS `ActualsEntries`;
-DROP TABLE IF EXISTS `PlannedAllocations`;
-DROP TABLE IF EXISTS `EngagementPapds`;
-DROP TABLE IF EXISTS `Exceptions`;
-DROP TABLE IF EXISTS `Engagements`;
-DROP TABLE IF EXISTS `Papds`;
-DROP TABLE IF EXISTS `ClosingPeriods`;
-DROP TABLE IF EXISTS `Customers`;
-DROP TABLE IF EXISTS `Settings`;
+-- 4) Run it
+PREPARE stmt FROM @drop_sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
-SET FOREIGN_KEY_CHECKS = 1;
+
 
 CREATE TABLE `Customers`
 (
@@ -98,7 +110,7 @@ CREATE TABLE `ActualsEntries`
 CREATE TABLE `Exceptions`
 (
     `Id`        INT          NOT NULL AUTO_INCREMENT,
-    `Timestamp` DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    `Timestamp` timestamp(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     `SourceFile` VARCHAR(260) NOT NULL,
     `RowData`    TEXT        NOT NULL,
     `Reason`     VARCHAR(500) NOT NULL,
