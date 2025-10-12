@@ -11,6 +11,8 @@
 
     <Application.Styles>
         <FluentTheme />
+		<!-- 👇 REQUIRED: DataGrid control templates -->
+		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
         <Style Selector="DataGrid">
             <Setter Property="Background" Value="#2E2E2E"/>
             <Setter Property="Foreground" Value="White"/>
