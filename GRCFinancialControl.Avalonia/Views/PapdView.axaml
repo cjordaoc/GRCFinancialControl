@@ -12,6 +12,7 @@
         <DataGrid Grid.Row="1"
                   ItemsSource="{Binding Papds}"
                   SelectedItem="{Binding SelectedPapd}"
+                  SelectionMode="Single"
                   IsReadOnly="True"
                   AutoGenerateColumns="False">
             <DataGrid.Columns>

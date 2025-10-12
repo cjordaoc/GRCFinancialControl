@@ -60,6 +60,11 @@ namespace GRCFinancialControl.Persistence
                 .WithOne(ep => ep.Papd)
                 .HasForeignKey(ep => ep.PapdId);
 
+            modelBuilder.Entity<Papd>()
+                .Property(p => p.Level)
+                .HasConversion<string>()
+                .HasMaxLength(100);
+
             modelBuilder.Entity<PlannedAllocation>()
                 .HasOne(pa => pa.Engagement)
                 .WithMany() // An engagement can have multiple planned allocations

@@ -12,6 +12,7 @@
         <DataGrid Grid.Row="1"
                   ItemsSource="{Binding Engagements}"
                   SelectedItem="{Binding SelectedEngagement}"
+                  SelectionMode="Single"
                   IsReadOnly="True"
                   AutoGenerateColumns="False">
             <DataGrid.Columns>

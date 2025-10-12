@@ -12,6 +12,7 @@
         <DataGrid Grid.Row="1"
                   ItemsSource="{Binding ClosingPeriods}"
                   SelectedItem="{Binding SelectedClosingPeriod}"
+                  SelectionMode="Single"
                   AutoGenerateColumns="False"
                   IsReadOnly="True">
             <DataGrid.Columns>

@@ -61,5 +61,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             await _engagementService.DeleteAsync(SelectedEngagement.Id);
             await LoadDataAsync();
         }
+
+        partial void OnSelectedEngagementChanged(Engagement? value)
+        {
+            if (EditCommand is RelayCommand editCommand)
+            {
+                editCommand.NotifyCanExecuteChanged();
+            }
+
+            if (DeleteCommand is AsyncRelayCommand deleteCommand)
+            {
+                deleteCommand.NotifyCanExecuteChanged();
+            }
+        }
     }
 }

@@ -44,7 +44,7 @@
             </Grid>
 
             <TextBlock Text="PAPD Assignments" FontSize="16" FontWeight="Bold" Margin="0,20,0,5"/>
-            <DataGrid ItemsSource="{Binding PapdAssignments}" AutoGenerateColumns="False" IsReadOnly="True" Height="150">
+            <DataGrid ItemsSource="{Binding PapdAssignments}" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" Height="150">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="PAPD" Binding="{Binding Papd.Name}" Width="*"/>
                     <DataGridTextColumn Header="Effective Date" Binding="{Binding EffectiveDate, StringFormat='yyyy-MM-dd'}" Width="*"/>

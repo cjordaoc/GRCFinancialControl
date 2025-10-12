@@ -92,5 +92,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             _ = LoadDataAsync();
         }
+
+        partial void OnSelectedClosingPeriodChanged(ClosingPeriod? value)
+        {
+            if (EditCommand is RelayCommand editCommand)
+            {
+                editCommand.NotifyCanExecuteChanged();
+            }
+
+            if (DeleteCommand is AsyncRelayCommand deleteCommand)
+            {
+                deleteCommand.NotifyCanExecuteChanged();
+            }
+        }
     }
 }

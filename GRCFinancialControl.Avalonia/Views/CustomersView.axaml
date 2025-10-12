@@ -9,7 +9,7 @@
     <Grid RowDefinitions="Auto,*,Auto" Margin="20">
         <TextBlock Grid.Row="0" Text="Customers" FontSize="24" FontWeight="Bold"/>
 
-        <DataGrid Grid.Row="1" ItemsSource="{Binding Customers}" SelectedItem="{Binding SelectedCustomer}" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,10,0,0">
+        <DataGrid Grid.Row="1" ItemsSource="{Binding Customers}" SelectedItem="{Binding SelectedCustomer}" SelectionMode="Single" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,10,0,0">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto"/>
                 <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>

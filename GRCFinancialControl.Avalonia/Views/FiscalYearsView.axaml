@@ -12,6 +12,7 @@
         <DataGrid Grid.Row="1"
                   ItemsSource="{Binding FiscalYears}"
                   SelectedItem="{Binding SelectedFiscalYear}"
+                  SelectionMode="Single"
                   IsReadOnly="True"
                   AutoGenerateColumns="False">
             <DataGrid.Columns>

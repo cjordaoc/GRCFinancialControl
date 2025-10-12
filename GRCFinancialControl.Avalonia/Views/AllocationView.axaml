@@ -19,7 +19,8 @@
 
         <DataGrid Grid.Row="2"
                   ItemsSource="{Binding AllocationEntries}"
-                  AutoGenerateColumns="False">
+                  AutoGenerateColumns="False"
+                  SelectionMode="Single">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Fiscal Year" Binding="{Binding FiscalYear.Name}" IsReadOnly="True" Width="*"/>
                 <DataGridTextColumn Header="Allocated Hours" Binding="{Binding AllocatedHours}" Width="*"/>
