@@ -41,6 +41,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                                  ClosingPeriodsViewModel closingPeriodsViewModel,
                                  CustomersViewModel customersViewModel,
                                  IMessenger messenger)
+            : base(messenger)
         {
             Engagements = engagementsViewModel;
             FiscalYears = fiscalYearsViewModel;
@@ -66,8 +67,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 new("Exceptions", Exceptions),
                 new("Settings", Settings)
             };
-            messenger.Register<OpenDialogMessage>(this);
-            messenger.Register<CloseDialogMessage>(this);
 
             SelectedNavigationItem = NavigationItems.FirstOrDefault();
         }
