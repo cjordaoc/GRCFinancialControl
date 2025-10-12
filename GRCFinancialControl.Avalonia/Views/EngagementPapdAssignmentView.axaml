@@ -6,22 +6,70 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.EngagementPapdAssignmentView"
              x:DataType="vm:EngagementPapdAssignmentViewModel">
-    <Grid ColumnDefinitions="*,Auto,*" RowDefinitions="Auto,*,Auto" Margin="10">
-        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="Engagement-PAPD Assignment" FontSize="24" FontWeight="Bold" Margin="0,0,0,10"/>
+    <Panel>
+        <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                CornerRadius="8"/>
 
-        <TextBlock Grid.Row="1" Grid.Column="0" Text="Engagements" HorizontalAlignment="Center"/>
-        <ListBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Engagements}" SelectedItem="{Binding SelectedEngagement}" DisplayMemberBinding="{Binding Description}" Margin="0,20,0,0"/>
+        <Grid Margin="24" RowDefinitions="Auto,Auto,*,Auto">
+            <TextBlock Grid.Row="0"
+                       Text="Engagement-PAPD Assignment"
+                       FontSize="24"
+                       FontWeight="Bold"
+                       HorizontalAlignment="Center"/>
 
-        <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Spacing="10">
-            <Button Content="Assign" Command="{Binding AssignCommand}"/>
-            <Button Content="Unassign" Command="{Binding UnassignCommand}"/>
-        </StackPanel>
+            <TextBlock Grid.Row="1"
+                       Margin="0,12,0,24"
+                       Text="Select an engagement and PAPD, then use the Assign or Unassign buttons to manage the relationship."
+                       TextAlignment="Center"
+                       Opacity="0.8"/>
 
-        <TextBlock Grid.Row="1" Grid.Column="2" Text="PAPDs" HorizontalAlignment="Center"/>
-        <ListBox Grid.Row="1" Grid.Column="2" ItemsSource="{Binding Papds}" SelectedItem="{Binding SelectedPapd}" DisplayMemberBinding="{Binding Name}" Margin="0,20,0,0"/>
+            <Grid Grid.Row="2" ColumnDefinitions="2*,Auto,2*">
+                <StackPanel Grid.Column="0" Spacing="8">
+                    <TextBlock Text="Engagements" FontSize="16" FontWeight="SemiBold"/>
+                    <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                            CornerRadius="6"
+                            Padding="8">
+                        <ListBox ItemsSource="{Binding Engagements}"
+                                 SelectedItem="{Binding SelectedEngagement}"
+                                 DisplayMemberBinding="{Binding Description}"
+                                 MinHeight="220"/>
+                    </Border>
+                </StackPanel>
 
-        <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="5" Margin="0,10,0,0">
-            <Button Content="Save" Command="{Binding SaveCommand}"/>
-        </StackPanel>
-    </Grid>
+                <StackPanel Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Spacing="10"
+                            Margin="16,0">
+                    <Button Content="Assign"
+                            Command="{Binding AssignCommand}"
+                            Width="140"
+                            Classes="accent"/>
+                    <Button Content="Unassign"
+                            Command="{Binding UnassignCommand}"
+                            Width="140"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Spacing="8">
+                    <TextBlock Text="PAPDs" FontSize="16" FontWeight="SemiBold"/>
+                    <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                            CornerRadius="6"
+                            Padding="8">
+                        <ListBox ItemsSource="{Binding Papds}"
+                                 SelectedItem="{Binding SelectedPapd}"
+                                 DisplayMemberBinding="{Binding Name}"
+                                 MinHeight="220"/>
+                    </Border>
+                </StackPanel>
+            </Grid>
+
+            <StackPanel Grid.Row="3"
+                        Orientation="Horizontal"
+                        Spacing="8"
+                        HorizontalAlignment="Right"
+                        Margin="0,24,0,0">
+                <Button Content="Save" Command="{Binding SaveCommand}" Classes="accent"/>
+                <Button Content="Close" Command="{Binding CloseCommand}"/>
+            </StackPanel>
+        </Grid>
+    </Panel>
 </UserControl>
