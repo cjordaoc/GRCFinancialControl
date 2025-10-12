@@ -250,7 +250,7 @@ namespace GRCFinancialControl.Persistence.Services
             return 0d;
         }
 
-        private int FindColumn(List<string> headers, string pattern)
+        private int FindColumn(List<string> headers, string[] primaryKeywords, string[]? secondaryKeywords = null)
         {
             var regex = new System.Text.RegularExpressions.Regex(pattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
             for (int i = 0; i < headers.Count; i++)
