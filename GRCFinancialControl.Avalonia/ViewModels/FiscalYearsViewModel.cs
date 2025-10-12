@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
+using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -16,6 +17,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         [ObservableProperty]
         private ObservableCollection<FiscalYear> _fiscalYears = new();
+
+        [ObservableProperty]
+        private FiscalYear? _selectedFiscalYear;
 
         public FiscalYearsViewModel(IFiscalYearService fiscalYearService, IDialogService dialogService, IMessenger messenger)
             : base(messenger)
@@ -52,6 +56,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (fiscalYear == null) return;
             await _fiscalYearService.DeleteAsync(fiscalYear.Id);
             Messenger.Send(new RefreshDataMessage());
+        }
+
+        partial void OnSelectedFiscalYearChanged(FiscalYear? value)
+        {
+            EditCommand.NotifyCanExecuteChanged();
+            DeleteCommand.NotifyCanExecuteChanged();
         }
     }
 }

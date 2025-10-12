@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
+using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -12,10 +13,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     public partial class CustomersViewModel : ViewModelBase
     {
         private readonly ICustomerService _customerService;
-        private readonly IMessenger _messenger;
-
-        [ObservableProperty]
-        private ObservableCollection<Customer> _customers = new();
+        private readonly IDialogService _dialogService;
 
         [ObservableProperty]
         private Customer? _selectedCustomer;
@@ -62,15 +60,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         partial void OnSelectedCustomerChanged(Customer? value)
         {
-            if (EditCommand is RelayCommand editCommand)
-            {
-                editCommand.NotifyCanExecuteChanged();
-            }
-
-            if (DeleteCommand is AsyncRelayCommand deleteCommand)
-            {
-                deleteCommand.NotifyCanExecuteChanged();
-            }
+            EditCommand.NotifyCanExecuteChanged();
+            DeleteCommand.NotifyCanExecuteChanged();
         }
     }
 }

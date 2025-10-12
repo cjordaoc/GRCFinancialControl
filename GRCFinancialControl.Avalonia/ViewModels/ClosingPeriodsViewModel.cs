@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
+using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -13,7 +14,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     public partial class ClosingPeriodsViewModel : ViewModelBase, IRecipient<ClosingPeriodsChangedMessage>
     {
         private readonly IClosingPeriodService _closingPeriodService;
-        private readonly IMessenger _messenger;
+        private readonly IDialogService _dialogService;
 
         [ObservableProperty]
         private ObservableCollection<ClosingPeriod> _closingPeriods = new();
@@ -29,6 +30,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             _closingPeriodService = closingPeriodService;
             _dialogService = dialogService;
+            Messenger.Register<ClosingPeriodsChangedMessage>(this);
         }
 
         public override async Task LoadDataAsync()
@@ -86,15 +88,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         partial void OnSelectedClosingPeriodChanged(ClosingPeriod? value)
         {
-            if (EditCommand is RelayCommand editCommand)
-            {
-                editCommand.NotifyCanExecuteChanged();
-            }
+            EditCommand.NotifyCanExecuteChanged();
+            DeleteCommand.NotifyCanExecuteChanged();
+        }
 
-            if (DeleteCommand is AsyncRelayCommand deleteCommand)
-            {
-                deleteCommand.NotifyCanExecuteChanged();
-            }
+        public void Receive(ClosingPeriodsChangedMessage message)
+        {
+            _ = LoadDataAsync();
         }
     }
 }

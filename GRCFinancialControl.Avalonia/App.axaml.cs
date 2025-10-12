@@ -86,6 +86,9 @@ namespace GRCFinancialControl.Avalonia
             // Register Messenger
             services.AddSingleton<CommunityToolkit.Mvvm.Messaging.IMessenger>(CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default);
 
+            // Register dialog service
+            services.AddSingleton<IDialogService, DialogService>();
+
             // Register ViewModels
             services.AddTransient<MainWindowViewModel>();
             services.AddTransient<EngagementsViewModel>();

@@ -37,6 +37,11 @@
                 <DatePicker SelectedDate="{Binding EffectiveDate}" />
                 <Button Content="Add" Command="{Binding AddAssignmentCommand}" Classes="accent"/>
             </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                <Button Content="Done" Command="{Binding ConfirmCommand}" Classes="accent"/>
+                <Button Content="Cancel" Command="{Binding CloseCommand}"/>
+            </StackPanel>
         </StackPanel>
     </Panel>
 </UserControl>

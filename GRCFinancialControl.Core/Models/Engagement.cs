@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using GRCFinancialControl.Core.Enums;
+using System.Linq;
 
 namespace GRCFinancialControl.Core.Models
 {

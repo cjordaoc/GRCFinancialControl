@@ -9,6 +9,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         protected IMessenger Messenger { get; }
 
+        protected ViewModelBase() : this(WeakReferenceMessenger.Default)
+        {
+        }
+
         protected ViewModelBase(IMessenger messenger)
         {
             Messenger = messenger;

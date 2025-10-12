@@ -26,7 +26,6 @@
             <Button Content="Add New" Command="{Binding AddCommand}"/>
             <Button Content="Edit" Command="{Binding EditCommand}"/>
             <Button Content="Delete" Command="{Binding DeleteCommand}"/>
-            <Button Content="Manage Engagement Assignments" Command="{Binding ManageAssignmentsCommand}"/>
         </StackPanel>
     </Grid>
 </UserControl>

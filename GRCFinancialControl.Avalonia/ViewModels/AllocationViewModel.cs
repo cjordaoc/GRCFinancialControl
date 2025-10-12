@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -23,7 +24,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private ObservableCollection<FiscalYear> _fiscalYears = new();
 
         [ObservableProperty]
-        private Engagement _selectedEngagement;
+        private Engagement? _selectedEngagement;
 
         public AllocationViewModel(IEngagementService engagementService, IFiscalYearService fiscalYearService, IDialogService dialogService, IMessenger messenger)
             : base(messenger)

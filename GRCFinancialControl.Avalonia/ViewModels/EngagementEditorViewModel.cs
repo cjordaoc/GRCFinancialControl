@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
+using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
@@ -126,19 +127,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         }
 
         [RelayCommand]
-        [RelayCommand]
         private async Task OpenPapdAssignmentDialog()
         {
             var papdAssignmentViewModel = new EngagementPapdAssignmentViewModel(
                 new ObservableCollection<EngagementPapd>(PapdAssignments),
-                await _papdService.GetAllAsync()
+                await _papdService.GetAllAsync(),
+                Messenger
             );
 
-            var result = await _dialogService.ShowDialogAsync(papdAssignmentViewModel);
+            var confirmed = await _dialogService.ShowDialogAsync(papdAssignmentViewModel);
 
-            if (result is ObservableCollection<EngagementPapd> updatedAssignments)
+            if (confirmed)
             {
-                PapdAssignments = updatedAssignments;
+                PapdAssignments = new ObservableCollection<EngagementPapd>(papdAssignmentViewModel.Assignments);
             }
         }
     }

@@ -80,7 +80,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     public partial class AllocationEntry : ObservableObject
     {
         [ObservableProperty]
-        private FiscalYear _fiscalYear;
+        private FiscalYear _fiscalYear = null!;
 
         [ObservableProperty]
         private double _hours;
