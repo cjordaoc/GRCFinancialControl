@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             xmlns:converters="using:Avalonia.Data.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.ImportView"
              x:DataType="vm:ImportViewModel">
@@ -23,7 +24,7 @@
                     <TextBlock Text="{Binding FileType, StringFormat='Import {0} Data'}" FontSize="18" FontWeight="SemiBold"/>
 
                     <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
-                                IsVisible="{Binding FileType, Converter={x:Static StringConverters.Equals}, ConverterParameter=Actuals}">
+                                IsVisible="{Binding FileType, Converter={x:Static converters:StringConverters.Equals}, ConverterParameter=Actuals}">
                         <TextBlock Text="Closing Period:" VerticalAlignment="Center"/>
                         <ComboBox Width="260"
                                   ItemsSource="{Binding ClosingPeriods}"
