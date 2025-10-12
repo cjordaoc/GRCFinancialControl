@@ -9,7 +9,9 @@
     <StackPanel Spacing="10" Margin="10">
         <TextBlock Text="PAPD Details" FontSize="18" FontWeight="Bold"/>
         <TextBox Text="{Binding Name}" Watermark="Name"/>
-        <TextBox Text="{Binding Level}" Watermark="Level (e.g., Partner, Director)"/>
+        <ComboBox ItemsSource="{Binding LevelOptions}"
+                  SelectedItem="{Binding Level}"
+                  Watermark="Level (e.g., Partner, Director)"/>
         <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">
             <Button Content="Save" Command="{Binding SaveCommand}"/>
             <Button Content="Cancel" Command="{Binding CancelCommand}"/>

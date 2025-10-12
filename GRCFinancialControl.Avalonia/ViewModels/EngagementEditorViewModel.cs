@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
+using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -32,10 +34,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private decimal _openingValue;
 
         [ObservableProperty]
-        private string _status = string.Empty;
+        private EngagementStatus _status;
 
         [ObservableProperty]
         private double _totalPlannedHours;
+
+        public IEnumerable<EngagementStatus> StatusOptions => Enum.GetValues<EngagementStatus>();
 
         [ObservableProperty]
         private ObservableCollection<EngagementPapd> _papdAssignments = new();

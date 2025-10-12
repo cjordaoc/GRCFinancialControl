@@ -1,3 +1,5 @@
+using GRCFinancialControl.Core.Enums;
+
 namespace GRCFinancialControl.Core.Models
 {
     /// <summary>
@@ -7,6 +9,6 @@ namespace GRCFinancialControl.Core.Models
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        public string Level { get; set; } = string.Empty; // e.g., "Partner", "Director"
+        public PapdLevel Level { get; set; } // e.g., "Partner", "Director"
     }
 }

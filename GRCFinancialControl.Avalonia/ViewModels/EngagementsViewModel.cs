@@ -30,6 +30,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             AddCommand = new RelayCommand(Add);
             EditCommand = new RelayCommand(Edit, () => SelectedEngagement != null);
             DeleteCommand = new AsyncRelayCommand(Delete, () => SelectedEngagement != null);
+            _ = LoadEngagementsAsync();
         }
 
         public IAsyncRelayCommand LoadEngagementsCommand { get; }

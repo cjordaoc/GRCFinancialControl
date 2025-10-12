@@ -15,6 +15,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly IFilePickerService _filePickerService;
         private readonly IImportService _importService;
         private readonly IClosingPeriodService _closingPeriodService;
+        private readonly ILoggingService _loggingService;
 
         [ObservableProperty]
         private string? _statusMessage;
@@ -28,11 +29,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private string? _fileType;
 
-        public ImportViewModel(IFilePickerService filePickerService, IImportService importService, IClosingPeriodService closingPeriodService)
+        public ImportViewModel(IFilePickerService filePickerService, IImportService importService, IClosingPeriodService closingPeriodService, ILoggingService loggingService)
         {
             _filePickerService = filePickerService;
             _importService = importService;
             _closingPeriodService = closingPeriodService;
+            _loggingService = loggingService;
+            _loggingService.OnLogMessage += (message) => StatusMessage = message;
 
             LoadClosingPeriodsCommand = new AsyncRelayCommand(LoadClosingPeriodsAsync);
             SetImportTypeCommand = new RelayCommand<string>(SetImportType);
@@ -63,7 +66,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var filePath = await _filePickerService.OpenFileAsync();
             if (string.IsNullOrEmpty(filePath)) return;
 
-            StatusMessage = $"Importing {FileType.ToLower()} data...";
+            _loggingService.LogInfo($"Importing {FileType.ToLower()} data...");
             try
             {
                 string result;
@@ -79,11 +82,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 {
                     result = "Invalid import type selected.";
                 }
-                StatusMessage = result;
+                _loggingService.LogInfo(result);
             }
             catch (Exception ex)
             {
-                StatusMessage = $"An error occurred during import: {ex.Message}";
+                _loggingService.LogError($"An error occurred during import: {ex.Message}");
             }
         }
 

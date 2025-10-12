@@ -41,7 +41,7 @@ namespace GRCFinancialControl.Persistence.Services
                         }
                     }
 
-                    var engagementIdCol = FindColumn(header, new[] { "engagement" }, new[] { "id", "code", "#" });
+                    var engagementIdCol = FindColumn(header, new[] { "engagement", "engagementid" }, new[] { "id", "code", "#", "number", "num" });
                     var descriptionCol = FindColumn(header, new[] { "description", "engagement name" });
                     var totalHoursCol = FindColumn(header, new[] { "total" }, new[] { "hours" });
                     var weekCols = FindWeeklyColumns(header);
