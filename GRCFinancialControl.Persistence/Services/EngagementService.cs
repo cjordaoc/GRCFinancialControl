@@ -9,26 +9,29 @@ namespace GRCFinancialControl.Persistence.Services
 {
     public class EngagementService : IEngagementService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
 
-        public EngagementService(ApplicationDbContext context)
+        public EngagementService(IDbContextFactory<ApplicationDbContext> contextFactory)
         {
-            _context = context;
+            _contextFactory = contextFactory;
         }
 
         public async Task<List<Engagement>> GetAllAsync()
         {
-            return await _context.Engagements.Include(e => e.EngagementPapds).ThenInclude(ep => ep.Papd).ToListAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Engagements.Include(e => e.EngagementPapds).ThenInclude(ep => ep.Papd).ToListAsync();
         }
 
         public async Task<Engagement?> GetByIdAsync(int id)
         {
-            return await _context.Engagements.Include(e => e.EngagementPapds).ThenInclude(ep => ep.Papd).FirstOrDefaultAsync(e => e.Id == id);
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Engagements.Include(e => e.EngagementPapds).ThenInclude(ep => ep.Papd).FirstOrDefaultAsync(e => e.Id == id);
         }
 
         public async Task<Papd?> GetPapdForDateAsync(int engagementId, System.DateTime date)
         {
-            var assignment = await _context.EngagementPapds
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            var assignment = await context.EngagementPapds
                 .Include(ep => ep.Papd)
                 .Where(ep => ep.EngagementId == engagementId && ep.EffectiveDate <= date)
                 .OrderByDescending(ep => ep.EffectiveDate)
@@ -39,21 +42,24 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task AddAsync(Engagement engagement)
         {
-            await _context.Engagements.AddAsync(engagement);
-            await _context.SaveChangesAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            await context.Engagements.AddAsync(engagement);
+            await context.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(Engagement engagement)
         {
-            var existingEngagement = await GetByIdAsync(engagement.Id);
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            var existingEngagement = await context.Engagements
+                .Include(e => e.EngagementPapds)
+                .FirstOrDefaultAsync(e => e.Id == engagement.Id);
+
             if (existingEngagement != null)
             {
-                _context.Entry(existingEngagement).CurrentValues.SetValues(engagement);
+                context.Entry(existingEngagement).CurrentValues.SetValues(engagement);
 
-                // Remove old assignments
-                _context.EngagementPapds.RemoveRange(existingEngagement.EngagementPapds);
+                context.EngagementPapds.RemoveRange(existingEngagement.EngagementPapds);
 
-                // Add new assignments
                 foreach (var assignment in engagement.EngagementPapds)
                 {
                     existingEngagement.EngagementPapds.Add(new EngagementPapd
@@ -62,18 +68,21 @@ namespace GRCFinancialControl.Persistence.Services
                         EffectiveDate = assignment.EffectiveDate
                     });
                 }
-            }
 
-            await _context.SaveChangesAsync();
+                await context.SaveChangesAsync();
+            }
         }
 
         public async Task DeleteAsync(int id)
         {
-            var engagement = await GetByIdAsync(id);
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            var engagement = await context.Engagements
+                .Include(e => e.EngagementPapds)
+                .FirstOrDefaultAsync(e => e.Id == id);
             if (engagement != null)
             {
-                _context.Engagements.Remove(engagement);
-                await _context.SaveChangesAsync();
+                context.Engagements.Remove(engagement);
+                await context.SaveChangesAsync();
             }
         }
     }

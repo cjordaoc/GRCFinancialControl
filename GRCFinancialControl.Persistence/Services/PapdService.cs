@@ -8,37 +8,41 @@ namespace GRCFinancialControl.Persistence.Services
 {
     public class PapdService : IPapdService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
 
-        public PapdService(ApplicationDbContext context)
+        public PapdService(IDbContextFactory<ApplicationDbContext> contextFactory)
         {
-            _context = context;
+            _contextFactory = contextFactory;
         }
 
         public async Task<List<Papd>> GetAllAsync()
         {
-            return await _context.Papds.ToListAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Papds.ToListAsync();
         }
 
         public async Task AddAsync(Papd papd)
         {
-            await _context.Papds.AddAsync(papd);
-            await _context.SaveChangesAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            await context.Papds.AddAsync(papd);
+            await context.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(Papd papd)
         {
-            _context.Papds.Update(papd);
-            await _context.SaveChangesAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            context.Papds.Update(papd);
+            await context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
-            var papd = await _context.Papds.FindAsync(id);
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            var papd = await context.Papds.FindAsync(id);
             if (papd != null)
             {
-                _context.Papds.Remove(papd);
-                await _context.SaveChangesAsync();
+                context.Papds.Remove(papd);
+                await context.SaveChangesAsync();
             }
         }
     }

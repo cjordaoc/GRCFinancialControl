@@ -55,7 +55,7 @@ namespace GRCFinancialControl.Avalonia
                 var connectionString = $"Server={server};Database={database};User ID={user};Password={password};";
 
                 // Register ApplicationDbContext with MySQL
-                services.AddDbContext<ApplicationDbContext>(options =>
+                services.AddDbContextFactory<ApplicationDbContext>(options =>
                     options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 29))));
             }
 

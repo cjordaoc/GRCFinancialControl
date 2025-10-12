@@ -8,16 +8,18 @@ namespace GRCFinancialControl.Persistence.Services
 {
     public class ExceptionService : IExceptionService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
 
-        public ExceptionService(ApplicationDbContext context)
+        public ExceptionService(IDbContextFactory<ApplicationDbContext> contextFactory)
         {
-            _context = context;
+            _contextFactory = contextFactory;
         }
 
         public async Task<List<ExceptionEntry>> GetAllAsync()
         {
-            return await _context.Exceptions.ToListAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Exceptions.ToListAsync();
         }
     }
 }
+

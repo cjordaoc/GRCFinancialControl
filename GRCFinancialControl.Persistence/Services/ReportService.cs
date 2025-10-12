@@ -11,21 +11,21 @@ namespace GRCFinancialControl.Persistence.Services
 {
     public class ReportService : IReportService
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IEngagementService _engagementService;
+        private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
 
-        public ReportService(ApplicationDbContext context, IEngagementService engagementService)
+        public ReportService(IDbContextFactory<ApplicationDbContext> contextFactory)
         {
-            _context = context;
-            _engagementService = engagementService;
+            _contextFactory = contextFactory;
         }
 
         public async Task<List<PlannedVsActualData>> GetPlannedVsActualDataAsync()
         {
-            var allEngagements = await _context.Engagements.ToListAsync();
-            var allAllocations = await _context.PlannedAllocations.Include(pa => pa.ClosingPeriod).ToListAsync();
-            var allActuals = await _context.ActualsEntries.Include(ae => ae.Papd).ToListAsync();
-            var allFiscalYears = await _context.ClosingPeriods.OfType<FiscalYear>().ToListAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync();
+
+            var allEngagements = await context.Engagements.ToListAsync();
+            var allAllocations = await context.PlannedAllocations.Include(pa => pa.ClosingPeriod).ToListAsync();
+            var allActuals = await context.ActualsEntries.Include(ae => ae.Papd).ToListAsync();
+            var allFiscalYears = await context.Set<FiscalYear>().ToListAsync();
 
             var reportData = new List<PlannedVsActualData>();
 
@@ -77,10 +77,12 @@ namespace GRCFinancialControl.Persistence.Services
         public async Task<List<BacklogData>> GetBacklogDataAsync()
         {
             var today = DateTime.Today;
-            var backlogData = await _context.PlannedAllocations
+            await using var context = await _contextFactory.CreateDbContextAsync();
+
+            var backlogData = await context.PlannedAllocations
                 .Include(pa => pa.Engagement)
                 .Include(pa => pa.ClosingPeriod)
-                .Where(pa => pa.ClosingPeriod.Discriminator == nameof(FiscalYear) && pa.ClosingPeriod.PeriodStart > today)
+                .Where(pa => EF.Property<string>(pa.ClosingPeriod, "Discriminator") == nameof(FiscalYear) && pa.ClosingPeriod.PeriodStart > today)
                 .GroupBy(pa => new { pa.Engagement.EngagementId, pa.Engagement.Description })
                 .Select(g => new BacklogData
                 {

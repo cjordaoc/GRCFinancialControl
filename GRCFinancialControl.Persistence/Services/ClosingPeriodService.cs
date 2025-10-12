@@ -10,17 +10,19 @@ namespace GRCFinancialControl.Persistence.Services
 {
     public class ClosingPeriodService : IClosingPeriodService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
 
-        public ClosingPeriodService(ApplicationDbContext context)
+        public ClosingPeriodService(IDbContextFactory<ApplicationDbContext> contextFactory)
         {
-            _context = context;
+            _contextFactory = contextFactory;
         }
 
         public async Task<List<ClosingPeriod>> GetAllAsync()
         {
-            return await _context.ClosingPeriods
-                .Where(cp => cp.Discriminator == nameof(ClosingPeriod))
+            await using var context = await _contextFactory.CreateDbContextAsync();
+
+            return await context.ClosingPeriods
+                .Where(cp => EF.Property<string>(cp, "Discriminator") == nameof(ClosingPeriod))
                 .OrderByDescending(cp => cp.PeriodEnd)
                 .ThenByDescending(cp => cp.PeriodStart)
                 .ToListAsync();
@@ -28,32 +30,36 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task AddAsync(ClosingPeriod period)
         {
-            await _context.ClosingPeriods.AddAsync(period);
-            await _context.SaveChangesAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            await context.ClosingPeriods.AddAsync(period);
+            await context.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(ClosingPeriod period)
         {
-            _context.ClosingPeriods.Update(period);
-            await _context.SaveChangesAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            context.ClosingPeriods.Update(period);
+            await context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
-            var period = await _context.ClosingPeriods.FindAsync(id);
+            await using var context = await _contextFactory.CreateDbContextAsync();
+
+            var period = await context.ClosingPeriods.FindAsync(id);
             if (period == null)
             {
                 return;
             }
 
-            var hasActuals = await _context.ActualsEntries.AnyAsync(a => a.ClosingPeriodId == id);
+            var hasActuals = await context.ActualsEntries.AnyAsync(a => a.ClosingPeriodId == id);
             if (hasActuals)
             {
                 throw new InvalidOperationException("Cannot delete a closing period that is linked to imported margin data.");
             }
 
-            _context.ClosingPeriods.Remove(period);
-            await _context.SaveChangesAsync();
+            context.ClosingPeriods.Remove(period);
+            await context.SaveChangesAsync();
         }
     }
 }

@@ -14,13 +14,11 @@ namespace GRCFinancialControl.Persistence.Services
 {
     public class ImportService : IImportService
     {
-        private readonly IEngagementService _engagementService;
-        private readonly ApplicationDbContext _context;
+        private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
 
-        public ImportService(IEngagementService engagementService, ApplicationDbContext context)
+        public ImportService(IDbContextFactory<ApplicationDbContext> contextFactory)
         {
-            _engagementService = engagementService;
-            _context = context;
+            _contextFactory = contextFactory;
         }
 
         public async Task<string> ImportBudgetAsync(string filePath)
@@ -83,9 +81,11 @@ namespace GRCFinancialControl.Persistence.Services
                 }
             }
 
+            await using var context = await _contextFactory.CreateDbContextAsync();
+
             foreach (var fileEngagement in engagementsInFile.Values)
             {
-                var existingEngagement = await _context.Engagements.FirstOrDefaultAsync(e => e.EngagementId == fileEngagement.EngagementId);
+                var existingEngagement = await context.Engagements.FirstOrDefaultAsync(e => e.EngagementId == fileEngagement.EngagementId);
                 if (existingEngagement != null)
                 {
                     existingEngagement.Description = fileEngagement.Description;
@@ -94,11 +94,11 @@ namespace GRCFinancialControl.Persistence.Services
                 }
                 else
                 {
-                    await _context.Engagements.AddAsync(fileEngagement);
+                    await context.Engagements.AddAsync(fileEngagement);
                 }
             }
 
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
 
             return $"Budget import complete. {engagementsInFile.Count} engagements processed.";
         }
@@ -111,7 +111,9 @@ namespace GRCFinancialControl.Persistence.Services
             int engagementsCreated = 0;
             int engagementsUpdated = 0;
 
-            var closingPeriod = await _context.ClosingPeriods.FindAsync(closingPeriodId);
+            await using var context = await _contextFactory.CreateDbContextAsync();
+
+            var closingPeriod = await context.ClosingPeriods.FindAsync(closingPeriodId);
             if (closingPeriod == null)
             {
                 return "Selected closing period could not be found. Please refresh and try again.";
@@ -169,7 +171,7 @@ namespace GRCFinancialControl.Persistence.Services
 
                 foreach (var (engagementId, totalHours) in engagementHours)
                 {
-                    var engagement = await _context.Engagements.FirstOrDefaultAsync(e => e.EngagementId == engagementId);
+                    var engagement = await context.Engagements.FirstOrDefaultAsync(e => e.EngagementId == engagementId);
                     if (engagement == null)
                     {
                         engagement = new Engagement
@@ -180,8 +182,8 @@ namespace GRCFinancialControl.Persistence.Services
                             TotalPlannedHours = 0
                         };
 
-                        await _context.Engagements.AddAsync(engagement);
-                        await _context.SaveChangesAsync();
+                        await context.Engagements.AddAsync(engagement);
+                        await context.SaveChangesAsync();
                         engagementsCreated++;
                     }
 
@@ -194,12 +196,12 @@ namespace GRCFinancialControl.Persistence.Services
                         ClosingPeriodId = closingPeriodId
                     };
 
-                    await _context.ActualsEntries.AddAsync(actualsEntry);
+                    await context.ActualsEntries.AddAsync(actualsEntry);
                     rowsProcessed++;
                 }
             }
 
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
             return $"Actuals import complete for closing period '{closingPeriod.Name}'. {rowsProcessed} rows processed, {engagementsCreated} engagements created, {engagementsUpdated} updated.";
         }
 

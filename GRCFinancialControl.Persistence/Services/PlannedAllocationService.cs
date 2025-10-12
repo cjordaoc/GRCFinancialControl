@@ -9,16 +9,17 @@ namespace GRCFinancialControl.Persistence.Services
 {
     public class PlannedAllocationService : IPlannedAllocationService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
 
-        public PlannedAllocationService(ApplicationDbContext context)
+        public PlannedAllocationService(IDbContextFactory<ApplicationDbContext> contextFactory)
         {
-            _context = context;
+            _contextFactory = contextFactory;
         }
 
         public async Task<List<PlannedAllocation>> GetAllocationsForEngagementAsync(int engagementId)
         {
-            return await _context.PlannedAllocations
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.PlannedAllocations
                 .Where(pa => pa.EngagementId == engagementId)
                 .Include(pa => pa.ClosingPeriod)
                 .ToListAsync();
@@ -26,18 +27,21 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task SaveAllocationsForEngagementAsync(int engagementId, List<PlannedAllocation> allocations)
         {
-            // Remove existing allocations for this engagement
-            var existingAllocations = await GetAllocationsForEngagementAsync(engagementId);
-            _context.PlannedAllocations.RemoveRange(existingAllocations);
+            await using var context = await _contextFactory.CreateDbContextAsync();
+
+            var existingAllocations = await context.PlannedAllocations
+                .Where(pa => pa.EngagementId == engagementId)
+                .ToListAsync();
+            context.PlannedAllocations.RemoveRange(existingAllocations);
 
             // Add the new allocations
             foreach (var allocation in allocations)
             {
                 allocation.EngagementId = engagementId;
-                await _context.PlannedAllocations.AddAsync(allocation);
+                await context.PlannedAllocations.AddAsync(allocation);
             }
 
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
         }
     }
 }

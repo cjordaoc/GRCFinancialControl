@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using GRCFinancialControl.Core.Models;
 using Microsoft.EntityFrameworkCore;
@@ -9,37 +8,41 @@ namespace GRCFinancialControl.Persistence.Services
 {
     public class CustomerService : ICustomerService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
 
-        public CustomerService(ApplicationDbContext context)
+        public CustomerService(IDbContextFactory<ApplicationDbContext> contextFactory)
         {
-            _context = context;
+            _contextFactory = contextFactory;
         }
 
         public async Task<List<Customer>> GetAllAsync()
         {
-            return await _context.Customers.ToListAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Customers.ToListAsync();
         }
 
         public async Task AddAsync(Customer customer)
         {
-            await _context.Customers.AddAsync(customer);
-            await _context.SaveChangesAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            await context.Customers.AddAsync(customer);
+            await context.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(Customer customer)
         {
-            _context.Customers.Update(customer);
-            await _context.SaveChangesAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            context.Customers.Update(customer);
+            await context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
-            var customer = await _context.Customers.FindAsync(id);
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            var customer = await context.Customers.FindAsync(id);
             if (customer != null)
             {
-                _context.Customers.Remove(customer);
-                await _context.SaveChangesAsync();
+                context.Customers.Remove(customer);
+                await context.SaveChangesAsync();
             }
         }
     }
