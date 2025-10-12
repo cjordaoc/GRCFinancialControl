@@ -15,6 +15,7 @@
                   AutoGenerateColumns="False"
                   IsReadOnly="True">
             <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto"/>
                 <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2*"/>
                 <DataGridTextColumn Header="Start" Binding="{Binding PeriodStart, StringFormat='yyyy-MM-dd'}" Width="*"/>
                 <DataGridTextColumn Header="End" Binding="{Binding PeriodEnd, StringFormat='yyyy-MM-dd'}" Width="*"/>
