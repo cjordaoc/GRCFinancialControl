@@ -10,6 +10,7 @@ using GRCFinancialControl.Persistence.Services;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 
 namespace GRCFinancialControl.Avalonia
@@ -78,6 +79,9 @@ namespace GRCFinancialControl.Avalonia
 
             // Register LoggingService
             services.AddSingleton<ILoggingService, LoggingService>();
+
+            // Register .NET logging abstractions for service constructors
+            services.AddLogging(builder => builder.AddConsole());
 
             // Register Messenger
             services.AddSingleton<CommunityToolkit.Mvvm.Messaging.IMessenger>(CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default);
