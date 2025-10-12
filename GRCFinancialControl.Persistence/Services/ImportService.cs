@@ -8,21 +8,25 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ExcelDataReader;
+using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace GRCFinancialControl.Persistence.Services
 {
     public class ImportService : IImportService
     {
         private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
+        private readonly ILogger<ImportService> _logger;
         private static readonly Regex MultiWhitespaceRegex = new Regex("\\s+", RegexOptions.Compiled);
         private static readonly CultureInfo PtBrCulture = CultureInfo.GetCultureInfo("pt-BR");
 
-        public ImportService(IDbContextFactory<ApplicationDbContext> contextFactory)
+        public ImportService(IDbContextFactory<ApplicationDbContext> contextFactory, ILogger<ImportService> logger)
         {
             _contextFactory = contextFactory;
+            _logger = logger;
         }
 
         public async Task<string> ImportBudgetAsync(string filePath)
@@ -123,6 +127,7 @@ namespace GRCFinancialControl.Persistence.Services
                 engagement.CustomerKey = normalizedCustomerName;
             }
 
+            engagement.CustomerId = customer.Id;
             engagement.InitialHoursBudget = totalBudgetHours;
 
             if (engagement.RankBudgets == null)
@@ -360,11 +365,17 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task<string> ImportActualsAsync(string filePath, int closingPeriodId)
         {
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                throw new ArgumentException("File path must be provided.", nameof(filePath));
+            }
+
+            if (!File.Exists(filePath))
+            {
+                throw new FileNotFoundException("Margin workbook could not be found.", filePath);
+            }
+
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-            var importBatchId = Guid.NewGuid().ToString();
-            int rowsProcessed = 0;
-            int engagementsCreated = 0;
-            int engagementsUpdated = 0;
 
             await using var context = await _contextFactory.CreateDbContextAsync();
 
@@ -374,159 +385,526 @@ namespace GRCFinancialControl.Persistence.Services
                 return "Selected closing period could not be found. Please refresh and try again.";
             }
 
-            using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read))
-            using (var reader = ExcelReaderFactory.CreateReader(stream))
+            var uploadTimestampUtc = DateTime.UtcNow;
+            var customerCache = new Dictionary<string, Customer>(StringComparer.OrdinalIgnoreCase);
+            var engagementCache = new Dictionary<string, Engagement>(StringComparer.OrdinalIgnoreCase);
+            var processedEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var rowErrors = new List<string>();
+
+            var engagementsCreated = 0;
+            var engagementsUpdated = 0;
+            var customersCreated = 0;
+            var initialMarginEntriesCreated = 0;
+            var etcEntriesCreated = 0;
+
+            using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var reader = ExcelReaderFactory.CreateReader(stream);
+            var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration
             {
-                var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration
+                ConfigureDataTable = _ => new ExcelDataTableConfiguration
                 {
-                    ConfigureDataTable = _ => new ExcelDataTableConfiguration
-                    {
-                        UseHeaderRow = true
-                    }
-                });
-
-                var detailTable = dataSet.Tables.Cast<DataTable>().FirstOrDefault(t => t.TableName.ToLowerInvariant().Contains("detail"));
-
-                if (detailTable == null)
-                {
-                    return "The margin file does not contain a worksheet with 'detail' in its name.";
+                    UseHeaderRow = true
                 }
+            });
 
-                var header = detailTable.Columns.Cast<DataColumn>().Select(c => c.ColumnName.Trim()).ToList();
-                var engagementIdCol = FindColumn(header, @"(?i)\bengagement\b.*(id|code|#)?");
-                var engagementNameCol = FindColumn(header, @"(?i)engagement name");
-                var clientIdCol = FindColumn(header, @"(?i)client id");
-                var dateCol = FindColumn(header, @"(?i)date|posting date|work date|month|period");
-                var hoursCol = FindColumn(header, @"(?i)hours|hrs|qty");
+            var marginTable = ResolveMarginWorksheet(dataSet);
+            if (marginTable == null)
+            {
+                return "The margin file does not contain a worksheet with the expected headers.";
+            }
 
-                if (engagementIdCol == -1) return "Could not find Engagement ID column.";
-                if (dateCol == -1) return "Could not find Date column.";
-                if (hoursCol == -1) return "Could not find Hours column.";
+            EnsureColumnExists(marginTable, 0, "Engagement Name (ID) Currency");
+            EnsureColumnExists(marginTable, 1, "Client Name (ID)");
+            EnsureColumnExists(marginTable, 3, "Margin % Bud");
+            EnsureColumnExists(marginTable, 4, "Margin % ETC-P");
+            EnsureColumnExists(marginTable, 15, "ETC-P Age (Days)");
+            EnsureColumnExists(marginTable, 17, "Status");
 
-                var engagementHours = new Dictionary<string, double>();
+            for (var rowIndex = 0; rowIndex < marginTable.Rows.Count; rowIndex++)
+            {
+                var row = marginTable.Rows[rowIndex];
+                var rowNumber = rowIndex + 2; // account for header row
 
-                foreach (DataRow row in detailTable.Rows)
+                try
                 {
-                    var engagementId = row[engagementIdCol]?.ToString()?.Trim();
-                    if (string.IsNullOrEmpty(engagementId))
+                    if (IsRowEmpty(row))
                     {
                         continue;
                     }
 
-                    var hours = TryGetDouble(row, detailTable.Columns[hoursCol].ColumnName);
-                    if (engagementHours.ContainsKey(engagementId))
+                    var parsedRow = ParseMarginRow(row, rowNumber, uploadTimestampUtc);
+
+                    var (customer, customerCreated) = await GetOrCreateCustomerAsync(context, customerCache, parsedRow);
+                    if (customerCreated)
                     {
-                        engagementHours[engagementId] += hours;
+                        customersCreated++;
                     }
-                    else
+                    else if (string.IsNullOrWhiteSpace(customer.Name) && !string.IsNullOrWhiteSpace(parsedRow.ClientName))
                     {
-                        engagementHours[engagementId] = hours;
+                        customer.Name = parsedRow.ClientName;
+                    }
+
+                    var (engagement, engagementCreated) = await GetOrCreateEngagementAsync(context, engagementCache, parsedRow);
+                    if (engagementCreated)
+                    {
+                        engagementsCreated++;
+                        processedEngagements.Add(engagement.EngagementId);
+                    }
+                    else if (processedEngagements.Add(engagement.EngagementId))
+                    {
+                        engagementsUpdated++;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(parsedRow.EngagementDisplayName) &&
+                        string.IsNullOrWhiteSpace(engagement.Description))
+                    {
+                        engagement.Description = parsedRow.EngagementDisplayName;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(parsedRow.Currency))
+                    {
+                        engagement.Currency = parsedRow.Currency;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(parsedRow.StatusText))
+                    {
+                        engagement.StatusText = parsedRow.StatusText;
+                    }
+
+                    if (parsedRow.MarginPctBudget.HasValue)
+                    {
+                        engagement.MarginPctBudget = parsedRow.MarginPctBudget;
+                    }
+
+                    if (parsedRow.MarginPctEtcp.HasValue)
+                    {
+                        engagement.MarginPctEtcp = parsedRow.MarginPctEtcp;
+                    }
+
+                    if (parsedRow.EtcpAgeDays.HasValue)
+                    {
+                        engagement.EtcpAgeDays = parsedRow.EtcpAgeDays;
+                    }
+
+                    if (parsedRow.LatestEtcDate.HasValue)
+                    {
+                        engagement.LatestEtcDate = parsedRow.LatestEtcDate;
+                    }
+
+                    engagement.NextEtcDate = null;
+                    engagement.CustomerId = customer.Id;
+                    engagement.CustomerKey = customer.Name;
+
+                    if (parsedRow.MarginPctBudget.HasValue &&
+                        !engagement.MarginEvolutions.Any(me => me.EntryType == MarginEvolutionType.InitialBudget))
+                    {
+                        engagement.MarginEvolutions.Add(new MarginEvolution
+                        {
+                            EntryType = MarginEvolutionType.InitialBudget,
+                            MarginPercentage = parsedRow.MarginPctBudget.Value,
+                            CreatedAtUtc = uploadTimestampUtc,
+                            EffectiveDate = closingPeriod.PeriodEnd,
+                            ClosingPeriodId = closingPeriod.Id
+                        });
+                        initialMarginEntriesCreated++;
+                    }
+
+                    if (parsedRow.MarginPctEtcp.HasValue)
+                    {
+                        engagement.MarginEvolutions.Add(new MarginEvolution
+                        {
+                            EntryType = MarginEvolutionType.Etc,
+                            MarginPercentage = parsedRow.MarginPctEtcp.Value,
+                            CreatedAtUtc = uploadTimestampUtc,
+                            EffectiveDate = parsedRow.LatestEtcDate,
+                            ClosingPeriodId = closingPeriod.Id
+                        });
+                        etcEntriesCreated++;
                     }
                 }
-
-                foreach (var (engagementId, totalHours) in engagementHours)
+                catch (Exception ex)
                 {
-                    var engagement = await context.Engagements.FirstOrDefaultAsync(e => e.EngagementId == engagementId);
-                    if (engagement == null)
-                    {
-                        engagement = new Engagement
-                        {
-                            EngagementId = engagementId,
-                            Description = string.Empty,
-                            CustomerKey = string.Empty,
-                            TotalPlannedHours = 0
-                        };
-
-                        await context.Engagements.AddAsync(engagement);
-                        await context.SaveChangesAsync();
-                        engagementsCreated++;
-                    }
-
-                    var actualsEntry = new ActualsEntry
-                    {
-                        EngagementId = engagement.Id,
-                        Date = closingPeriod.PeriodEnd,
-                        Hours = totalHours,
-                        ImportBatchId = importBatchId,
-                        ClosingPeriodId = closingPeriodId
-                    };
-
-                    await context.ActualsEntries.AddAsync(actualsEntry);
-                    rowsProcessed++;
+                    rowErrors.Add($"Row {rowNumber}: {ex.Message}");
+                    _logger.LogError(ex, "Failed to import row {RowNumber} from file {FilePath}", rowNumber, filePath);
                 }
             }
 
             await context.SaveChangesAsync();
-            return $"Actuals import complete for closing period '{closingPeriod.Name}'. {rowsProcessed} rows processed, {engagementsCreated} engagements created, {engagementsUpdated} updated.";
+
+            var summaryBuilder = new StringBuilder();
+            summaryBuilder.Append($"Margin import complete for closing period '{closingPeriod.Name}'.");
+            summaryBuilder.Append($" {engagementsCreated} engagements created.");
+            summaryBuilder.Append($" {engagementsUpdated} engagements updated.");
+            summaryBuilder.Append($" {customersCreated} customers created.");
+            summaryBuilder.Append($" {initialMarginEntriesCreated + etcEntriesCreated} margin history records added ({initialMarginEntriesCreated} initial, {etcEntriesCreated} ETC).");
+
+            if (rowErrors.Count > 0)
+            {
+                summaryBuilder.Append($" {rowErrors.Count} rows reported issues; review logs for details.");
+            }
+
+            return summaryBuilder.ToString();
         }
 
-        private static DateTime? TryGetDate(DataRow row, string columnName)
+        private static DataTable? ResolveMarginWorksheet(DataSet dataSet)
         {
-            if (!row.Table.Columns.Contains(columnName))
+            foreach (DataTable table in dataSet.Tables)
+            {
+                if (table.Columns.Count == 0)
+                {
+                    continue;
+                }
+
+                var firstHeader = NormalizeWhitespace(table.Columns[0].ColumnName);
+                if (firstHeader.Contains("engagement", StringComparison.OrdinalIgnoreCase))
+                {
+                    return table;
+                }
+            }
+
+            return dataSet.Tables.Count > 0 ? dataSet.Tables[0] : null;
+        }
+
+        private static void EnsureColumnExists(DataTable table, int columnIndex, string friendlyName)
+        {
+            if (columnIndex < table.Columns.Count)
+            {
+                return;
+            }
+
+            var columnName = ColumnIndexToName(columnIndex);
+            throw new InvalidDataException($"The margin worksheet is missing expected column '{friendlyName}' at position {columnName}.");
+        }
+
+        private static string ColumnIndexToName(int columnIndex)
+        {
+            var dividend = columnIndex + 1;
+            var columnName = new StringBuilder();
+
+            while (dividend > 0)
+            {
+                var modulo = (dividend - 1) % 26;
+                columnName.Insert(0, Convert.ToChar('A' + modulo));
+                dividend = (dividend - modulo) / 26;
+            }
+
+            return columnName.ToString();
+        }
+
+        private static bool IsRowEmpty(DataRow row)
+        {
+            foreach (var item in row.ItemArray)
+            {
+                if (item == null || item == DBNull.Value)
+                {
+                    continue;
+                }
+
+                var text = NormalizeWhitespace(Convert.ToString(item, CultureInfo.InvariantCulture));
+                if (!string.IsNullOrEmpty(text))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static MarginImportRow ParseMarginRow(DataRow row, int rowNumber, DateTime uploadTimestampUtc)
+        {
+            var engagementCell = NormalizeWhitespace(Convert.ToString(row[0], CultureInfo.InvariantCulture));
+            if (string.IsNullOrWhiteSpace(engagementCell))
+            {
+                throw new InvalidDataException("Engagement information is required.");
+            }
+
+            var clientCell = NormalizeWhitespace(Convert.ToString(row[1], CultureInfo.InvariantCulture));
+            if (string.IsNullOrWhiteSpace(clientCell))
+            {
+                throw new InvalidDataException("Client information is required.");
+            }
+
+            var (engagementDisplayName, engagementCode, currency) = ParseEngagementCell(engagementCell);
+            var (clientName, clientIdText) = ParseCustomerCell(clientCell);
+
+            var marginBudget = ParsePercentage(row[3]);
+            var marginEtcp = ParsePercentage(row[4]);
+            var etcAgeDays = ParseInt(row[15]);
+            var statusText = NormalizeWhitespace(Convert.ToString(row[17], CultureInfo.InvariantCulture));
+
+            DateTime? latestEtcDate = null;
+            if (etcAgeDays.HasValue)
+            {
+                latestEtcDate = uploadTimestampUtc.Date.AddDays(-etcAgeDays.Value);
+            }
+
+            return new MarginImportRow
+            {
+                RowNumber = rowNumber,
+                EngagementCode = engagementCode,
+                EngagementDisplayName = engagementDisplayName,
+                Currency = currency,
+                ClientName = clientName,
+                ClientIdText = clientIdText,
+                MarginPctBudget = marginBudget,
+                MarginPctEtcp = marginEtcp,
+                EtcpAgeDays = etcAgeDays,
+                LatestEtcDate = latestEtcDate,
+                StatusText = statusText
+            };
+        }
+
+        private static decimal? ParsePercentage(object? value)
+        {
+            if (value == null || value == DBNull.Value)
             {
                 return null;
             }
 
-            var value = row[columnName];
-            if (value is DateTime dt)
+            decimal parsed;
+            switch (value)
             {
-                return dt;
+                case decimal dec:
+                    parsed = dec;
+                    break;
+                case double dbl:
+                    parsed = (decimal)dbl;
+                    break;
+                case float flt:
+                    parsed = (decimal)flt;
+                    break;
+                case int i:
+                    parsed = i;
+                    break;
+                case long l:
+                    parsed = l;
+                    break;
+                case string str:
+                    var trimmed = NormalizeWhitespace(str);
+                    if (trimmed.Length == 0)
+                    {
+                        return null;
+                    }
+
+                    if (!decimal.TryParse(trimmed, NumberStyles.Float, CultureInfo.InvariantCulture, out parsed) &&
+                        !decimal.TryParse(trimmed, NumberStyles.Float, PtBrCulture, out parsed))
+                    {
+                        throw new InvalidDataException($"Unable to parse percentage value '{str}'.");
+                    }
+                    break;
+                default:
+                    try
+                    {
+                        parsed = Convert.ToDecimal(value, CultureInfo.InvariantCulture);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new InvalidDataException($"Unable to parse percentage value '{value}'.", ex);
+                    }
+                    break;
             }
 
-            if (DateTime.TryParse(Convert.ToString(value, CultureInfo.InvariantCulture), CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
-            {
-                return parsed;
-            }
-
-            return null;
+            return NormalizePercentage(parsed);
         }
 
-        private static double TryGetDouble(DataRow row, string columnName)
+        private static decimal NormalizePercentage(decimal value)
         {
-            if (!row.Table.Columns.Contains(columnName))
+            if (value <= 1m && value >= -1m)
             {
-                return 0d;
+                value *= 100m;
             }
 
-            var value = row[columnName];
-            if (value is double dbl)
-            {
-                return dbl;
-            }
-
-            if (value is float flt)
-            {
-                return flt;
-            }
-
-            if (double.TryParse(Convert.ToString(value, CultureInfo.InvariantCulture), NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var parsed))
-            {
-                return parsed;
-            }
-
-            return 0d;
+            return Math.Round(value, 2, MidpointRounding.AwayFromZero);
         }
 
-        private int FindColumn(List<string> headers, string pattern)
+        private static int? ParseInt(object? value)
         {
-            if (string.IsNullOrWhiteSpace(pattern))
+            if (value == null || value == DBNull.Value)
             {
-                return -1;
+                return null;
             }
 
-            var regex = new System.Text.RegularExpressions.Regex(
-                pattern,
-                System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Compiled);
-
-            for (int i = 0; i < headers.Count; i++)
+            switch (value)
             {
-                if (regex.IsMatch(headers[i]))
-                {
+                case int i:
                     return i;
+                case long l:
+                    return (int)l;
+                case short s:
+                    return s;
+                case decimal dec:
+                    return (int)Math.Round(dec, MidpointRounding.AwayFromZero);
+                case double dbl:
+                    return (int)Math.Round(dbl, MidpointRounding.AwayFromZero);
+                case float flt:
+                    return (int)Math.Round(flt, MidpointRounding.AwayFromZero);
+                case string str:
+                    var trimmed = NormalizeWhitespace(str);
+                    if (trimmed.Length == 0)
+                    {
+                        return null;
+                    }
+
+                    if (int.TryParse(trimmed, NumberStyles.Integer, CultureInfo.InvariantCulture, out var invariantParsed))
+                    {
+                        return invariantParsed;
+                    }
+
+                    if (int.TryParse(trimmed, NumberStyles.Integer, PtBrCulture, out var ptBrParsed))
+                    {
+                        return ptBrParsed;
+                    }
+
+                    throw new InvalidDataException($"Unable to parse integer value '{str}'.");
+                default:
+                    try
+                    {
+                        return Convert.ToInt32(value, CultureInfo.InvariantCulture);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new InvalidDataException($"Unable to parse integer value '{value}'.", ex);
+                    }
+            }
+        }
+
+        private static (string EngagementDisplayName, string EngagementCode, string Currency) ParseEngagementCell(string value)
+        {
+            var normalized = NormalizeWhitespace(value);
+            var match = Regex.Match(normalized, @"\((E-[^)]+)\)", RegexOptions.IgnoreCase);
+            if (!match.Success)
+            {
+                throw new InvalidDataException($"Engagement code could not be found in '{value}'.");
+            }
+
+            var engagementCode = NormalizeWhitespace(match.Groups[1].Value).ToUpperInvariant();
+            var displayName = NormalizeWhitespace(normalized[..match.Index]);
+
+            var remainder = NormalizeWhitespace(normalized[(match.Index + match.Length)..]);
+            var currency = string.Empty;
+            if (!string.IsNullOrEmpty(remainder))
+            {
+                var tokens = remainder.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (tokens.Length > 0)
+                {
+                    currency = tokens[^1];
                 }
             }
 
-            return -1;
+            if (string.IsNullOrEmpty(currency))
+            {
+                throw new InvalidDataException($"Currency could not be determined from '{value}'.");
+            }
+
+            return (displayName, engagementCode, currency);
+        }
+
+        private static (string ClientName, string ClientIdText) ParseCustomerCell(string value)
+        {
+            var normalized = NormalizeWhitespace(value);
+            var match = Regex.Match(normalized, @"\(([^)]+)\)\s*$");
+            if (!match.Success)
+            {
+                throw new InvalidDataException($"Client identifier could not be found in '{value}'.");
+            }
+
+            var idText = NormalizeWhitespace(match.Groups[1].Value);
+            if (string.IsNullOrEmpty(idText))
+            {
+                throw new InvalidDataException($"Client identifier is empty in '{value}'.");
+            }
+
+            var name = NormalizeWhitespace(normalized[..match.Index]);
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new InvalidDataException($"Client name is empty in '{value}'.");
+            }
+
+            return (name, idText);
+        }
+
+        private static async Task<(Customer customer, bool created)> GetOrCreateCustomerAsync(
+            ApplicationDbContext context,
+            IDictionary<string, Customer> cache,
+            MarginImportRow row)
+        {
+            if (cache.TryGetValue(row.ClientIdText, out var cachedCustomer))
+            {
+                return (cachedCustomer, false);
+            }
+
+            var existingCustomer = await context.Customers
+                .FirstOrDefaultAsync(c => c.ClientIdText == row.ClientIdText);
+
+            if (existingCustomer != null)
+            {
+                cache[row.ClientIdText] = existingCustomer;
+                return (existingCustomer, false);
+            }
+
+            var customer = new Customer
+            {
+                Name = row.ClientName,
+                ClientIdText = row.ClientIdText
+            };
+
+            await context.Customers.AddAsync(customer);
+            cache[row.ClientIdText] = customer;
+            return (customer, true);
+        }
+
+        private static async Task<(Engagement engagement, bool created)> GetOrCreateEngagementAsync(
+            ApplicationDbContext context,
+            IDictionary<string, Engagement> cache,
+            MarginImportRow row)
+        {
+            if (cache.TryGetValue(row.EngagementCode, out var cachedEngagement))
+            {
+                return (cachedEngagement, false);
+            }
+
+            var engagement = await context.Engagements
+                .Include(e => e.MarginEvolutions)
+                .FirstOrDefaultAsync(e => e.EngagementId == row.EngagementCode);
+
+            if (engagement != null)
+            {
+                cache[row.EngagementCode] = engagement;
+                return (engagement, false);
+            }
+
+            engagement = new Engagement
+            {
+                EngagementId = row.EngagementCode,
+                Description = row.EngagementDisplayName,
+                Currency = row.Currency,
+                CustomerKey = row.ClientName,
+                MarginPctBudget = row.MarginPctBudget,
+                MarginPctEtcp = row.MarginPctEtcp,
+                EtcpAgeDays = row.EtcpAgeDays,
+                LatestEtcDate = row.LatestEtcDate,
+                StatusText = string.IsNullOrWhiteSpace(row.StatusText) ? null : row.StatusText,
+                NextEtcDate = null
+            };
+
+            await context.Engagements.AddAsync(engagement);
+            cache[row.EngagementCode] = engagement;
+            return (engagement, true);
+        }
+
+        private sealed class MarginImportRow
+        {
+            public int RowNumber { get; init; }
+            public string EngagementCode { get; init; } = string.Empty;
+            public string EngagementDisplayName { get; init; } = string.Empty;
+            public string Currency { get; init; } = string.Empty;
+            public string ClientName { get; init; } = string.Empty;
+            public string ClientIdText { get; init; } = string.Empty;
+            public decimal? MarginPctBudget { get; init; }
+            public decimal? MarginPctEtcp { get; init; }
+            public int? EtcpAgeDays { get; init; }
+            public DateTime? LatestEtcDate { get; init; }
+            public string StatusText { get; init; } = string.Empty;
         }
 
         private List<int> FindWeeklyColumns(List<string> headers)
