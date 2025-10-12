@@ -39,6 +39,8 @@ To set up the development environment and verify its integrity:
     dotnet test
     ```
 
+> **Mandatory:** Always verify that the container has the required tooling (including the .NET 8 SDK) installed. If any dependency is missing, install it before running builds or tests so the application can execute without errors.
+
 A successful build and test run confirms the environment is ready.
 
 ## 4. Data Validation Steps (Automated & Manual)

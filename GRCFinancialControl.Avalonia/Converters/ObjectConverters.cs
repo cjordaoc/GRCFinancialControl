@@ -11,6 +11,50 @@ namespace GRCFinancialControl.Avalonia.Converters
 
         public static readonly IValueConverter IsNull =
             new FuncValueConverter<object?, bool>(x => x == null);
+
+        public static readonly IValueConverter AreEqual = EqualityValueConverter.Instance;
+    }
+
+    public sealed class EqualityValueConverter : IValueConverter
+    {
+        public static readonly EqualityValueConverter Instance = new();
+
+        private EqualityValueConverter()
+        {
+        }
+
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            if (value is null && parameter is null)
+            {
+                return true;
+            }
+
+            if (value is null || parameter is null)
+            {
+                return false;
+            }
+
+            if (value.GetType().IsEnum && parameter is string enumCandidate)
+            {
+                if (Enum.TryParse(value.GetType(), enumCandidate, true, out var enumValue))
+                {
+                    return value.Equals(enumValue);
+                }
+
+                return false;
+            }
+
+            return string.Equals(
+                System.Convert.ToString(value, CultureInfo.InvariantCulture),
+                System.Convert.ToString(parameter, CultureInfo.InvariantCulture),
+                StringComparison.Ordinal);
+        }
+
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            throw new NotSupportedException();
+        }
     }
 
     public class FuncValueConverter<TIn, TOut> : IValueConverter
