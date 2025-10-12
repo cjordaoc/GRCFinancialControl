@@ -68,6 +68,7 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<IEngagementService, EngagementService>();
             services.AddTransient<IFiscalYearService, FiscalYearService>();
             services.AddTransient<IImportService, ImportService>();
+            services.AddTransient<IClosingPeriodService, ClosingPeriodService>();
             services.AddTransient<IPlannedAllocationService, PlannedAllocationService>();
             services.AddTransient<IReportService, ReportService>();
             services.AddTransient<IPapdService, PapdService>();
@@ -88,6 +89,8 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<PapdViewModel>();
             services.AddTransient<ExceptionsViewModel>();
             services.AddTransient<SettingsViewModel>();
+            services.AddTransient<ClosingPeriodsViewModel>();
+            services.AddTransient<ClosingPeriodEditorViewModel>();
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {

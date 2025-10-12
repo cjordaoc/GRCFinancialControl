@@ -22,15 +22,20 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private string _password = string.Empty;
 
+        [ObservableProperty]
+        private string? _statusMessage;
+
         public SettingsViewModel(ISettingsService settingsService)
         {
             _settingsService = settingsService;
             LoadSettingsCommand = new AsyncRelayCommand(LoadSettingsAsync);
             SaveSettingsCommand = new AsyncRelayCommand(SaveSettingsAsync);
+            TestConnectionCommand = new AsyncRelayCommand(TestConnectionAsync);
         }
 
         public IAsyncRelayCommand LoadSettingsCommand { get; }
         public IAsyncRelayCommand SaveSettingsCommand { get; }
+        public IAsyncRelayCommand TestConnectionCommand { get; }
 
         private async Task LoadSettingsAsync()
         {
@@ -56,6 +61,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 { "Password", Password }
             };
             await _settingsService.SaveAllAsync(settings);
+            StatusMessage = "Settings saved.";
+        }
+
+        private async Task TestConnectionAsync()
+        {
+            StatusMessage = "Testing connection...";
+            var result = await _settingsService.TestConnectionAsync(Server, Database, User, Password);
+            StatusMessage = result.Message;
         }
     }
 }

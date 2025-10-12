@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="250"
+             x:Class="GRCFinancialControl.Avalonia.Views.ClosingPeriodEditorView"
+             x:DataType="vm:ClosingPeriodEditorViewModel">
+    <Border Background="White" Padding="20">
+        <StackPanel Spacing="12">
+            <TextBlock Text="Closing Period" FontSize="20" FontWeight="Bold"/>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Name"/>
+                <TextBox Text="{Binding Name}"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <StackPanel Width="160" Spacing="4">
+                    <TextBlock Text="Start Date"/>
+                    <DatePicker SelectedDate="{Binding PeriodStart}"/>
+                </StackPanel>
+                <StackPanel Width="160" Spacing="4">
+                    <TextBlock Text="End Date"/>
+                    <DatePicker SelectedDate="{Binding PeriodEnd}"/>
+                </StackPanel>
+            </StackPanel>
+
+            <TextBlock Text="{Binding StatusMessage}" Foreground="Red"/>
+
+            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                <Button Content="Cancel" Command="{Binding CancelCommand}"/>
+                <Button Content="Save" Command="{Binding SaveCommand}"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

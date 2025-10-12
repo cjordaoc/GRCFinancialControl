@@ -12,6 +12,7 @@ namespace GRCFinancialControl.Persistence
         public DbSet<PlannedAllocation> PlannedAllocations { get; set; }
         public DbSet<ActualsEntry> ActualsEntries { get; set; }
         public DbSet<ExceptionEntry> Exceptions { get; set; }
+        public DbSet<ClosingPeriod> ClosingPeriods { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -46,6 +47,12 @@ namespace GRCFinancialControl.Persistence
                 .HasOne(ae => ae.Engagement)
                 .WithMany() // An engagement can have multiple actual entries
                 .HasForeignKey(ae => ae.EngagementId);
+
+            modelBuilder.Entity<ActualsEntry>()
+                .HasOne(ae => ae.ClosingPeriod)
+                .WithMany(cp => cp.ActualsEntries)
+                .HasForeignKey(ae => ae.ClosingPeriodId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
