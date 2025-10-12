@@ -28,7 +28,7 @@
             <TextBlock Text="{Binding StatusMessage}" Foreground="Red"/>
 
             <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
-                <Button Content="Cancel" Command="{Binding CancelCommand}"/>
+                <Button Content="Close" Command="{Binding CloseCommand}"/>
                 <Button Content="Save" Command="{Binding SaveCommand}"/>
             </StackPanel>
         </StackPanel>

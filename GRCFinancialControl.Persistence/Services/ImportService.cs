@@ -127,7 +127,11 @@ namespace GRCFinancialControl.Persistence.Services
                 engagement.CustomerKey = normalizedCustomerName;
             }
 
-            engagement.CustomerId = customer.Id;
+            engagement.Customer = customer;
+            if (customer.Id > 0)
+            {
+                engagement.CustomerId = customer.Id;
+            }
             engagement.InitialHoursBudget = totalBudgetHours;
 
             if (engagement.RankBudgets == null)
@@ -492,7 +496,11 @@ namespace GRCFinancialControl.Persistence.Services
                     }
 
                     engagement.NextEtcDate = null;
-                    engagement.CustomerId = customer.Id;
+                    engagement.Customer = customer;
+                    if (customer.Id > 0)
+                    {
+                        engagement.CustomerId = customer.Id;
+                    }
                     engagement.CustomerKey = customer.Name;
 
                     if (parsedRow.MarginPctBudget.HasValue &&

@@ -14,7 +14,7 @@
                   PlaceholderText="Level (e.g., Partner, Director)"/>
         <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">
             <Button Content="Save" Command="{Binding SaveCommand}"/>
-            <Button Content="Cancel" Command="{Binding CancelCommand}"/>
+            <Button Content="Close" Command="{Binding CloseCommand}"/>
         </StackPanel>
     </StackPanel>
 </UserControl>
