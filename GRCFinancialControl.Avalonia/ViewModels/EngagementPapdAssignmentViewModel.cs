@@ -61,7 +61,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             // In a real app, we would also ask for an effective date.
             // For now, we just add the assignment.
-            SelectedEngagement.EngagementPapds.Add(new EngagementPapd { Papd = SelectedPapd, EffectiveDate = System.DateTime.Today });
+            SelectedEngagement.EngagementPapds.Add(new EngagementPapd
+            {
+                PapdId = SelectedPapd.Id,
+                Papd = SelectedPapd,
+                EffectiveDate = System.DateTime.Today
+            });
         }
 
         private void Unassign()
