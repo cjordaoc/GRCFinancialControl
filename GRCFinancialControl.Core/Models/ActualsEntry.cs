@@ -15,5 +15,7 @@ namespace GRCFinancialControl.Core.Models
         public string ImportBatchId { get; set; } = string.Empty; // To trace back to the source file/upload
         public int? PapdId { get; set; }
         public Papd? Papd { get; set; }
+        public int ClosingPeriodId { get; set; }
+        public ClosingPeriod ClosingPeriod { get; set; } = null!;
     }
 }

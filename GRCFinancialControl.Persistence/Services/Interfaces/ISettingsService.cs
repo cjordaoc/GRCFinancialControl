@@ -8,5 +8,6 @@ namespace GRCFinancialControl.Persistence.Services.Interfaces
     {
         Task<Dictionary<string, string>> GetAllAsync();
         Task SaveAllAsync(Dictionary<string, string> settings);
+        Task<ConnectionTestResult> TestConnectionAsync(string server, string database, string user, string password);
     }
 }

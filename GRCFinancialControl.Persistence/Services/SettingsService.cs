@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using MySqlConnector;
 
 namespace GRCFinancialControl.Persistence.Services
 {
@@ -37,6 +39,35 @@ namespace GRCFinancialControl.Persistence.Services
             }
 
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<ConnectionTestResult> TestConnectionAsync(string server, string database, string user, string password)
+        {
+            if (string.IsNullOrWhiteSpace(server) || string.IsNullOrWhiteSpace(database))
+            {
+                return new ConnectionTestResult(false, "Server and database are required to test the connection.");
+            }
+
+            var builder = new MySqlConnectionStringBuilder
+            {
+                Server = server,
+                Database = database,
+                UserID = user,
+                Password = password,
+                SslMode = MySqlSslMode.Preferred,
+                AllowUserVariables = true
+            };
+
+            try
+            {
+                await using var connection = new MySqlConnection(builder.ConnectionString);
+                await connection.OpenAsync();
+                return new ConnectionTestResult(true, "Connection successful.");
+            }
+            catch (Exception ex)
+            {
+                return new ConnectionTestResult(false, $"Connection failed: {ex.Message}");
+            }
         }
     }
 }

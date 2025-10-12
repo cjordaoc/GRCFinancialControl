@@ -13,36 +13,34 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Grid>
-        <TabControl>
-            <TabItem Header="Import">
-                <ContentControl Content="{Binding Import}"/>
-            </TabItem>
-            <TabItem Header="Engagements">
-                <ContentControl Content="{Binding Engagements}"/>
-            </TabItem>
-            <TabItem Header="Fiscal Years">
-                <ContentControl Content="{Binding FiscalYears}"/>
-            </TabItem>
-        <TabItem Header="PAPD">
-            <ContentControl Content="{Binding Papds}"/>
-        </TabItem>
-            <TabItem Header="Allocation">
-                <ContentControl Content="{Binding Allocation}"/>
-            </TabItem>
-        <TabItem Header="Reports">
-            <ContentControl Content="{Binding Reports}"/>
-        </TabItem>
-        <TabItem Header="Exceptions">
-            <ContentControl Content="{Binding Exceptions}"/>
-        </TabItem>
-        <TabItem Header="Settings">
-            <ContentControl Content="{Binding Settings}"/>
-        </TabItem>
-        </TabControl>
+    <Grid ColumnDefinitions="220,*">
+        <Border Background="{DynamicResource SystemAccentColor}" Margin="0" Padding="0,20">
+            <StackPanel>
+                <TextBlock Text="GRC Control" FontSize="20" FontWeight="Bold" Foreground="White" Margin="20,0,20,20"/>
+                <ListBox ItemsSource="{Binding NavigationItems}"
+                         SelectedItem="{Binding SelectedNavigationItem}"
+                         BorderThickness="0"
+                         Background="Transparent"
+                         Foreground="White"
+                         Margin="0">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Title}"
+                                       Margin="20,6"
+                                       FontSize="16"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Column="1" Padding="20">
+            <ContentControl Content="{Binding ActiveView}"/>
+        </Border>
 
         <!-- Dialog Overlay -->
-        <ContentControl Content="{Binding CurrentDialog}"
+        <ContentControl Grid.ColumnSpan="2"
+                        Content="{Binding CurrentDialog}"
                         IsVisible="{Binding CurrentDialog, Converter={x:Static ObjectConverters.IsNotNull}}"/>
     </Grid>
 
