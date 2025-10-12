@@ -8,37 +8,41 @@ namespace GRCFinancialControl.Persistence.Services
 {
     public class FiscalYearService : IFiscalYearService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
 
-        public FiscalYearService(ApplicationDbContext context)
+        public FiscalYearService(IDbContextFactory<ApplicationDbContext> contextFactory)
         {
-            _context = context;
+            _contextFactory = contextFactory;
         }
 
         public async Task<List<FiscalYear>> GetAllAsync()
         {
-            return await _context.ClosingPeriods.OfType<FiscalYear>().ToListAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Set<FiscalYear>().ToListAsync();
         }
 
         public async Task AddAsync(FiscalYear fiscalYear)
         {
-            await _context.ClosingPeriods.AddAsync(fiscalYear);
-            await _context.SaveChangesAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            await context.ClosingPeriods.AddAsync(fiscalYear);
+            await context.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(FiscalYear fiscalYear)
         {
-            _context.ClosingPeriods.Update(fiscalYear);
-            await _context.SaveChangesAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            context.ClosingPeriods.Update(fiscalYear);
+            await context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
-            var fiscalYear = await _context.ClosingPeriods.FindAsync(id);
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            var fiscalYear = await context.ClosingPeriods.FindAsync(id);
             if (fiscalYear != null)
             {
-                _context.ClosingPeriods.Remove(fiscalYear);
-                await _context.SaveChangesAsync();
+                context.ClosingPeriods.Remove(fiscalYear);
+                await context.SaveChangesAsync();
             }
         }
     }
