@@ -30,7 +30,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             _closingPeriodService = closingPeriodService;
             _dialogService = dialogService;
-            Messenger.Register<ClosingPeriodsChangedMessage>(this);
         }
 
         public override async Task LoadDataAsync()
