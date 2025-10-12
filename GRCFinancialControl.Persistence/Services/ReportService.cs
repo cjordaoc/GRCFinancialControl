@@ -23,9 +23,9 @@ namespace GRCFinancialControl.Persistence.Services
         public async Task<List<PlannedVsActualData>> GetPlannedVsActualDataAsync()
         {
             var allEngagements = await _context.Engagements.ToListAsync();
-            var allAllocations = await _context.PlannedAllocations.Include(pa => pa.FiscalYear).ToListAsync();
+            var allAllocations = await _context.PlannedAllocations.Include(pa => pa.ClosingPeriod).ToListAsync();
             var allActuals = await _context.ActualsEntries.Include(ae => ae.Papd).ToListAsync();
-            var allFiscalYears = await _context.FiscalYears.ToListAsync();
+            var allFiscalYears = await _context.ClosingPeriods.OfType<FiscalYear>().ToListAsync();
 
             var reportData = new List<PlannedVsActualData>();
 
@@ -34,11 +34,11 @@ namespace GRCFinancialControl.Persistence.Services
                 foreach (var fy in allFiscalYears)
                 {
                     var plannedHours = allAllocations
-                        .Where(a => a.EngagementId == engagement.Id && a.FiscalYearId == fy.Id)
+                        .Where(a => a.EngagementId == engagement.Id && a.ClosingPeriodId == fy.Id)
                         .Sum(a => a.AllocatedHours);
 
                     var actualsInYear = allActuals
-                        .Where(a => a.EngagementId == engagement.Id && a.Date >= fy.StartDate && a.Date <= fy.EndDate);
+                        .Where(a => a.EngagementId == engagement.Id && a.Date >= fy.PeriodStart && a.Date <= fy.PeriodEnd);
 
                     var actualsByPapd = actualsInYear.GroupBy(a => a.Papd);
 
@@ -79,8 +79,8 @@ namespace GRCFinancialControl.Persistence.Services
             var today = DateTime.Today;
             var backlogData = await _context.PlannedAllocations
                 .Include(pa => pa.Engagement)
-                .Include(pa => pa.FiscalYear)
-                .Where(pa => pa.FiscalYear.StartDate > today)
+                .Include(pa => pa.ClosingPeriod)
+                .Where(pa => pa.ClosingPeriod.Discriminator == nameof(FiscalYear) && pa.ClosingPeriod.PeriodStart > today)
                 .GroupBy(pa => new { pa.Engagement.EngagementId, pa.Engagement.Description })
                 .Select(g => new BacklogData
                 {

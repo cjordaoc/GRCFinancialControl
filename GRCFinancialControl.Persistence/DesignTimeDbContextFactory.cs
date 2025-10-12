@@ -1,18 +1,28 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using System;
 
 namespace GRCFinancialControl.Persistence
 {
-    public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
+    public class DesignTimeApplicationDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
     {
         public ApplicationDbContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            var connectionString = "Server=localhost;Database=grc;User=user;Password=password;";
-            optionsBuilder.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 29)));
+            // This is for design-time tools. At runtime, the connection string will be provided by the settings service.
+            optionsBuilder.UseSqlite("Data Source=design_time.db");
 
             return new ApplicationDbContext(optionsBuilder.Options);
+        }
+    }
+
+    public class DesignTimeSettingsDbContextFactory : IDesignTimeDbContextFactory<SettingsDbContext>
+    {
+        public SettingsDbContext CreateDbContext(string[] args)
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<SettingsDbContext>();
+            optionsBuilder.UseSqlite("Data Source=settings.db");
+
+            return new SettingsDbContext(optionsBuilder.Options);
         }
     }
 }

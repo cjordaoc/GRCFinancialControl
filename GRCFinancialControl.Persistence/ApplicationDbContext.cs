@@ -8,11 +8,11 @@ namespace GRCFinancialControl.Persistence
         public DbSet<Engagement> Engagements { get; set; }
         public DbSet<Papd> Papds { get; set; }
         public DbSet<EngagementPapd> EngagementPapds { get; set; }
-        public DbSet<FiscalYear> FiscalYears { get; set; }
         public DbSet<PlannedAllocation> PlannedAllocations { get; set; }
         public DbSet<ActualsEntry> ActualsEntries { get; set; }
         public DbSet<ExceptionEntry> Exceptions { get; set; }
         public DbSet<ClosingPeriod> ClosingPeriods { get; set; }
+        public DbSet<Customer> Customers { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -22,6 +22,11 @@ namespace GRCFinancialControl.Persistence
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<ClosingPeriod>()
+                .HasDiscriminator<string>("Discriminator")
+                .HasValue<ClosingPeriod>(nameof(ClosingPeriod))
+                .HasValue<FiscalYear>(nameof(FiscalYear));
 
             // Configure composite key for EngagementPapd if not using an auto-incrementing Id
             // modelBuilder.Entity<EngagementPapd>()
@@ -42,6 +47,11 @@ namespace GRCFinancialControl.Persistence
                 .HasOne(pa => pa.Engagement)
                 .WithMany() // An engagement can have multiple planned allocations
                 .HasForeignKey(pa => pa.EngagementId);
+
+            modelBuilder.Entity<PlannedAllocation>()
+                .HasOne(pa => pa.ClosingPeriod)
+                .WithMany() // A closing period can have multiple planned allocations
+                .HasForeignKey(pa => pa.ClosingPeriodId);
 
             modelBuilder.Entity<ActualsEntry>()
                 .HasOne(ae => ae.Engagement)

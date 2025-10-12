@@ -8,11 +8,13 @@ namespace GRCFinancialControl.Core.Models
     /// </summary>
     public class ClosingPeriod
     {
+        public string Discriminator { get; set; } = nameof(ClosingPeriod);
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public DateTime PeriodStart { get; set; }
         public DateTime PeriodEnd { get; set; }
 
         public ICollection<ActualsEntry> ActualsEntries { get; set; } = new List<ActualsEntry>();
+        public ICollection<PlannedAllocation> PlannedAllocations { get; set; } = new List<PlannedAllocation>();
     }
 }

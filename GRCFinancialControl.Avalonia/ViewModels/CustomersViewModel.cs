@@ -9,24 +9,25 @@ using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
-    public partial class PapdViewModel : ViewModelBase
+    public partial class CustomersViewModel : ViewModelBase
     {
-        private readonly IPapdService _papdService;
+        private readonly ICustomerService _customerService;
         private readonly IMessenger _messenger;
 
         [ObservableProperty]
-        private ObservableCollection<Papd> _papds = new();
+        private ObservableCollection<Customer> _customers = new();
 
         [ObservableProperty]
-        private Papd? _selectedPapd;
+        private Customer? _selectedCustomer;
 
-        public PapdViewModel(IPapdService papdService, IMessenger messenger)
+        public CustomersViewModel(ICustomerService customerService, IMessenger messenger)
         {
-            _papdService = papdService;
+            _customerService = customerService;
             _messenger = messenger;
+
             AddCommand = new RelayCommand(Add);
-            EditCommand = new RelayCommand(Edit, () => SelectedPapd != null);
-            DeleteCommand = new AsyncRelayCommand(Delete, () => SelectedPapd != null);
+            EditCommand = new RelayCommand(Edit, () => SelectedCustomer != null);
+            DeleteCommand = new AsyncRelayCommand(Delete, () => SelectedCustomer != null);
         }
 
         public IRelayCommand AddCommand { get; }
@@ -35,26 +36,26 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public override async Task LoadDataAsync()
         {
-            Papds = new ObservableCollection<Papd>(await _papdService.GetAllAsync());
+            Customers = new ObservableCollection<Customer>(await _customerService.GetAllAsync());
         }
 
         private void Add()
         {
-            var editorViewModel = new PapdEditorViewModel(new Papd(), _papdService, _messenger);
+            var editorViewModel = new CustomerEditorViewModel(new Customer(), _customerService, _messenger);
             _messenger.Send(new OpenDialogMessage(editorViewModel));
         }
 
         private void Edit()
         {
-            if (SelectedPapd == null) return;
-            var editorViewModel = new PapdEditorViewModel(SelectedPapd, _papdService, _messenger);
+            if (SelectedCustomer == null) return;
+            var editorViewModel = new CustomerEditorViewModel(SelectedCustomer, _customerService, _messenger);
             _messenger.Send(new OpenDialogMessage(editorViewModel));
         }
 
         private async Task Delete()
         {
-            if (SelectedPapd == null) return;
-            await _papdService.DeleteAsync(SelectedPapd.Id);
+            if (SelectedCustomer == null) return;
+            await _customerService.DeleteAsync(SelectedCustomer.Id);
             await LoadDataAsync();
         }
     }

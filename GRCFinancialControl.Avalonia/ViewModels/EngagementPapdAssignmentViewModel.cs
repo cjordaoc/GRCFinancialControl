@@ -29,19 +29,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             _engagementService = engagementService;
             _papdService = papdService;
-            LoadDataCommand = new AsyncRelayCommand(LoadDataAsync);
             AssignCommand = new RelayCommand(Assign, () => SelectedEngagement != null && SelectedPapd != null);
             UnassignCommand = new RelayCommand(Unassign, () => SelectedEngagement != null && SelectedEngagement.EngagementPapds.Count > 0);
             SaveCommand = new AsyncRelayCommand(SaveAsync);
-            _ = LoadDataCommand.ExecuteAsync(null);
         }
 
-        public IAsyncRelayCommand LoadDataCommand { get; }
         public IRelayCommand AssignCommand { get; }
         public IRelayCommand UnassignCommand { get; }
         public IAsyncRelayCommand SaveCommand { get; }
 
-        private async Task LoadDataAsync()
+        public override async Task LoadDataAsync()
         {
             Engagements = new ObservableCollection<Engagement>(await _engagementService.GetAllAsync());
             Papds = new ObservableCollection<Papd>(await _papdService.GetAllAsync());

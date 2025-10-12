@@ -20,8 +20,12 @@
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Description:" VerticalAlignment="Center" Margin="0,5,0,0"/>
                 <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Description}" Margin="10,5,0,0"/>
 
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Customer Key:" VerticalAlignment="Center" Margin="0,5,0,0"/>
-                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding CustomerKey}" Margin="10,5,0,0"/>
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Customer:" VerticalAlignment="Center" Margin="0,5,0,0"/>
+                <ComboBox Grid.Row="2" Grid.Column="1"
+                            ItemsSource="{Binding Customers}"
+                            SelectedItem="{Binding SelectedCustomer}"
+                            DisplayMemberBinding="{Binding Name}"
+                            Margin="10,5,0,0"/>
 
                 <TextBlock Grid.Row="3" Grid.Column="0" Text="Opening Margin:" VerticalAlignment="Center" Margin="0,5,0,0"/>
                 <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding OpeningMargin}" Margin="10,5,0,0"/>

@@ -6,7 +6,7 @@ namespace GRCFinancialControl.Persistence.Services.Interfaces
 {
     public interface IPlannedAllocationService
     {
-        Task<List<PlannedAllocation>> GetForEngagementAsync(int engagementId);
-        Task SaveForEngagementAsync(int engagementId, List<PlannedAllocation> allocations);
+        Task<List<PlannedAllocation>> GetAllocationsForEngagementAsync(int engagementId);
+        Task SaveAllocationsForEngagementAsync(int engagementId, List<PlannedAllocation> allocations);
     }
 }

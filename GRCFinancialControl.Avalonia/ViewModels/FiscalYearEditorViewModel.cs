@@ -18,49 +18,49 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private string _name = string.Empty;
 
         [ObservableProperty]
-        private DateTime _startDate = DateTime.Today;
+        private DateTime _periodStart = DateTime.Today;
 
         [ObservableProperty]
-        private DateTime _endDate = DateTime.Today;
+        private DateTime _periodEnd = DateTime.Today;
 
-        partial void OnStartDateChanged(DateTime value)
+        partial void OnPeriodStartChanged(DateTime value)
         {
-            OnPropertyChanged(nameof(StartDateOffset));
+            OnPropertyChanged(nameof(PeriodStartOffset));
         }
 
-        partial void OnEndDateChanged(DateTime value)
+        partial void OnPeriodEndChanged(DateTime value)
         {
-            OnPropertyChanged(nameof(EndDateOffset));
+            OnPropertyChanged(nameof(PeriodEndOffset));
         }
 
-        public DateTimeOffset? StartDateOffset
+        public DateTimeOffset? PeriodStartOffset
         {
-            get => ConvertToOffset(StartDate);
+            get => ConvertToOffset(PeriodStart);
             set
             {
                 if (value.HasValue)
                 {
-                    StartDate = value.Value.Date;
+                    PeriodStart = value.Value.Date;
                 }
                 else
                 {
-                    StartDate = default;
+                    PeriodStart = default;
                 }
             }
         }
 
-        public DateTimeOffset? EndDateOffset
+        public DateTimeOffset? PeriodEndOffset
         {
-            get => ConvertToOffset(EndDate);
+            get => ConvertToOffset(PeriodEnd);
             set
             {
                 if (value.HasValue)
                 {
-                    EndDate = value.Value.Date;
+                    PeriodEnd = value.Value.Date;
                 }
                 else
                 {
-                    EndDate = default;
+                    PeriodEnd = default;
                 }
             }
         }
@@ -74,16 +74,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _messenger = messenger;
 
             Name = fiscalYear.Name;
-            StartDate = fiscalYear.StartDate;
-            EndDate = fiscalYear.EndDate;
+            PeriodStart = fiscalYear.PeriodStart;
+            PeriodEnd = fiscalYear.PeriodEnd;
         }
 
         [RelayCommand]
         private async Task Save()
         {
             FiscalYear.Name = Name;
-            FiscalYear.StartDate = StartDate;
-            FiscalYear.EndDate = EndDate;
+            FiscalYear.PeriodStart = PeriodStart;
+            FiscalYear.PeriodEnd = PeriodEnd;
 
             if (FiscalYear.Id == 0)
             {

@@ -17,12 +17,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public ExceptionsViewModel(IExceptionService exceptionService)
         {
             _exceptionService = exceptionService;
-            LoadExceptionsCommand = new AsyncRelayCommand(LoadExceptionsAsync);
         }
 
-        public IAsyncRelayCommand LoadExceptionsCommand { get; }
-
-        private async Task LoadExceptionsAsync()
+        public override async Task LoadDataAsync()
         {
             Exceptions = new ObservableCollection<ExceptionEntry>(await _exceptionService.GetAllAsync());
         }

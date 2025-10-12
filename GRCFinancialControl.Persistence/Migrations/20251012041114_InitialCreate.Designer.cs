@@ -11,40 +11,43 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GRCFinancialControl.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251011231822_InitialCreate_MySql")]
-    partial class InitialCreate_MySql
+    [Migration("20251012041114_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.6")
-                .HasAnnotation("Relational:MaxIdentifierLength", 64);
+            modelBuilder.HasAnnotation("ProductVersion", "8.0.6");
 
             modelBuilder.Entity("GRCFinancialControl.Core.Models.ActualsEntry", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ClosingPeriodId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("Date")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("EngagementId")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<double>("Hours")
-                        .HasColumnType("double");
+                        .HasColumnType("REAL");
 
                     b.Property<string>("ImportBatchId")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<int?>("PapdId")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ClosingPeriodId");
 
                     b.HasIndex("EngagementId");
 
@@ -53,36 +56,71 @@ namespace GRCFinancialControl.Persistence.Migrations
                     b.ToTable("ActualsEntries");
                 });
 
+            modelBuilder.Entity("GRCFinancialControl.Core.Models.ClosingPeriod", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("PeriodEnd")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("PeriodStart")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ClosingPeriods");
+                });
+
+            modelBuilder.Entity("GRCFinancialControl.Core.Models.Customer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Customers");
+                });
+
             modelBuilder.Entity("GRCFinancialControl.Core.Models.Engagement", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("CustomerKey")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("EngagementId")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<decimal>("OpeningMargin")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("TEXT");
 
                     b.Property<decimal>("OpeningValue")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("TEXT");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("longtext");
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
 
                     b.Property<double>("TotalPlannedHours")
-                        .HasColumnType("double");
+                        .HasColumnType("REAL");
 
                     b.HasKey("Id");
 
@@ -93,16 +131,16 @@ namespace GRCFinancialControl.Persistence.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("EffectiveDate")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("EngagementId")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("PapdId")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -117,22 +155,22 @@ namespace GRCFinancialControl.Persistence.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Reason")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("RowData")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("SourceFile")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -143,17 +181,17 @@ namespace GRCFinancialControl.Persistence.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -164,15 +202,14 @@ namespace GRCFinancialControl.Persistence.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
-                    b.Property<string>("Level")
-                        .IsRequired()
-                        .HasColumnType("longtext");
+                    b.Property<int>("Level")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -183,16 +220,16 @@ namespace GRCFinancialControl.Persistence.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<double>("AllocatedHours")
-                        .HasColumnType("double");
+                        .HasColumnType("REAL");
 
                     b.Property<int>("EngagementId")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("FiscalYearId")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -205,6 +242,12 @@ namespace GRCFinancialControl.Persistence.Migrations
 
             modelBuilder.Entity("GRCFinancialControl.Core.Models.ActualsEntry", b =>
                 {
+                    b.HasOne("GRCFinancialControl.Core.Models.ClosingPeriod", "ClosingPeriod")
+                        .WithMany("ActualsEntries")
+                        .HasForeignKey("ClosingPeriodId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("GRCFinancialControl.Core.Models.Engagement", "Engagement")
                         .WithMany()
                         .HasForeignKey("EngagementId")
@@ -214,6 +257,8 @@ namespace GRCFinancialControl.Persistence.Migrations
                     b.HasOne("GRCFinancialControl.Core.Models.Papd", "Papd")
                         .WithMany()
                         .HasForeignKey("PapdId");
+
+                    b.Navigation("ClosingPeriod");
 
                     b.Navigation("Engagement");
 
@@ -256,6 +301,11 @@ namespace GRCFinancialControl.Persistence.Migrations
                     b.Navigation("Engagement");
 
                     b.Navigation("FiscalYear");
+                });
+
+            modelBuilder.Entity("GRCFinancialControl.Core.Models.ClosingPeriod", b =>
+                {
+                    b.Navigation("ActualsEntries");
                 });
 
             modelBuilder.Entity("GRCFinancialControl.Core.Models.Engagement", b =>

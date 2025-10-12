@@ -29,22 +29,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _closingPeriodService = closingPeriodService;
             _messenger = messenger;
 
-            LoadClosingPeriodsCommand = new AsyncRelayCommand(LoadClosingPeriodsAsync);
             AddCommand = new RelayCommand(Add);
             EditCommand = new RelayCommand(Edit, () => SelectedClosingPeriod != null);
             DeleteCommand = new AsyncRelayCommand(DeleteAsync, () => SelectedClosingPeriod != null);
 
             _messenger.Register<ClosingPeriodsChangedMessage>(this);
-
-            _ = LoadClosingPeriodsCommand.ExecuteAsync(null);
         }
 
-        public IAsyncRelayCommand LoadClosingPeriodsCommand { get; }
         public IRelayCommand AddCommand { get; }
         public IRelayCommand EditCommand { get; }
         public IAsyncRelayCommand DeleteCommand { get; }
 
-        private async Task LoadClosingPeriodsAsync()
+        public override async Task LoadDataAsync()
         {
             StatusMessage = null;
             var periods = await _closingPeriodService.GetAllAsync();
@@ -84,7 +80,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             try
             {
                 await _closingPeriodService.DeleteAsync(SelectedClosingPeriod.Id);
-                await LoadClosingPeriodsAsync();
+                await LoadDataAsync();
             }
             catch (InvalidOperationException ex)
             {
@@ -94,7 +90,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public void Receive(ClosingPeriodsChangedMessage message)
         {
-            _ = LoadClosingPeriodsCommand.ExecuteAsync(null);
+            _ = LoadDataAsync();
         }
     }
 }

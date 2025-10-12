@@ -17,27 +17,27 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task<List<FiscalYear>> GetAllAsync()
         {
-            return await _context.FiscalYears.ToListAsync();
+            return await _context.ClosingPeriods.OfType<FiscalYear>().ToListAsync();
         }
 
         public async Task AddAsync(FiscalYear fiscalYear)
         {
-            await _context.FiscalYears.AddAsync(fiscalYear);
+            await _context.ClosingPeriods.AddAsync(fiscalYear);
             await _context.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(FiscalYear fiscalYear)
         {
-            _context.FiscalYears.Update(fiscalYear);
+            _context.ClosingPeriods.Update(fiscalYear);
             await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
-            var fiscalYear = await _context.FiscalYears.FindAsync(id);
+            var fiscalYear = await _context.ClosingPeriods.FindAsync(id);
             if (fiscalYear != null)
             {
-                _context.FiscalYears.Remove(fiscalYear);
+                _context.ClosingPeriods.Remove(fiscalYear);
                 await _context.SaveChangesAsync();
             }
         }

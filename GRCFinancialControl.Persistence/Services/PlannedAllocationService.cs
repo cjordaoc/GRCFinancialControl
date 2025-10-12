@@ -16,17 +16,18 @@ namespace GRCFinancialControl.Persistence.Services
             _context = context;
         }
 
-        public async Task<List<PlannedAllocation>> GetForEngagementAsync(int engagementId)
+        public async Task<List<PlannedAllocation>> GetAllocationsForEngagementAsync(int engagementId)
         {
             return await _context.PlannedAllocations
                 .Where(pa => pa.EngagementId == engagementId)
+                .Include(pa => pa.ClosingPeriod)
                 .ToListAsync();
         }
 
-        public async Task SaveForEngagementAsync(int engagementId, List<PlannedAllocation> allocations)
+        public async Task SaveAllocationsForEngagementAsync(int engagementId, List<PlannedAllocation> allocations)
         {
             // Remove existing allocations for this engagement
-            var existingAllocations = await GetForEngagementAsync(engagementId);
+            var existingAllocations = await GetAllocationsForEngagementAsync(engagementId);
             _context.PlannedAllocations.RemoveRange(existingAllocations);
 
             // Add the new allocations

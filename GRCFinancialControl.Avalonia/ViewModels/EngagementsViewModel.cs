@@ -13,6 +13,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         private readonly IEngagementService _engagementService;
         private readonly IPapdService _papdService;
+        private readonly ICustomerService _customerService;
         private readonly IMessenger _messenger;
 
         [ObservableProperty]
@@ -21,38 +22,36 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private Engagement? _selectedEngagement;
 
-        public EngagementsViewModel(IEngagementService engagementService, IPapdService papdService, IMessenger messenger)
+        public EngagementsViewModel(IEngagementService engagementService, IPapdService papdService, ICustomerService customerService, IMessenger messenger)
         {
             _engagementService = engagementService;
             _papdService = papdService;
+            _customerService = customerService;
             _messenger = messenger;
-            LoadEngagementsCommand = new AsyncRelayCommand(LoadEngagementsAsync);
             AddCommand = new RelayCommand(Add);
             EditCommand = new RelayCommand(Edit, () => SelectedEngagement != null);
             DeleteCommand = new AsyncRelayCommand(Delete, () => SelectedEngagement != null);
-            _ = LoadEngagementsAsync();
         }
 
-        public IAsyncRelayCommand LoadEngagementsCommand { get; }
         public IRelayCommand AddCommand { get; }
         public IRelayCommand EditCommand { get; }
         public IAsyncRelayCommand DeleteCommand { get; }
 
-        private async Task LoadEngagementsAsync()
+        public override async Task LoadDataAsync()
         {
             Engagements = new ObservableCollection<Engagement>(await _engagementService.GetAllAsync());
         }
 
         private void Add()
         {
-            var editorViewModel = new EngagementEditorViewModel(new Engagement(), _engagementService, _papdService, _messenger);
+            var editorViewModel = new EngagementEditorViewModel(new Engagement(), _engagementService, _papdService, _customerService, _messenger);
             _messenger.Send(new OpenDialogMessage(editorViewModel));
         }
 
         private void Edit()
         {
             if (SelectedEngagement == null) return;
-            var editorViewModel = new EngagementEditorViewModel(SelectedEngagement, _engagementService, _papdService, _messenger);
+            var editorViewModel = new EngagementEditorViewModel(SelectedEngagement, _engagementService, _papdService, _customerService, _messenger);
             _messenger.Send(new OpenDialogMessage(editorViewModel));
         }
 
@@ -60,7 +59,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             if (SelectedEngagement == null) return;
             await _engagementService.DeleteAsync(SelectedEngagement.Id);
-            await LoadEngagementsAsync();
+            await LoadDataAsync();
         }
     }
 }
