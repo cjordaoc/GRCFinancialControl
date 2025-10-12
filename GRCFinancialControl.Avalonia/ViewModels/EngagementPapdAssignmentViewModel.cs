@@ -3,6 +3,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -12,6 +14,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         private readonly IEngagementService _engagementService;
         private readonly IPapdService _papdService;
+        private readonly IMessenger _messenger;
 
         [ObservableProperty]
         private ObservableCollection<Engagement> _engagements = new();
@@ -25,18 +28,23 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private Papd? _selectedPapd;
 
-        public EngagementPapdAssignmentViewModel(IEngagementService engagementService, IPapdService papdService)
+        public EngagementPapdAssignmentViewModel(IEngagementService engagementService,
+                                                 IPapdService papdService,
+                                                 IMessenger messenger)
         {
             _engagementService = engagementService;
             _papdService = papdService;
+            _messenger = messenger;
             AssignCommand = new RelayCommand(Assign, () => SelectedEngagement != null && SelectedPapd != null);
             UnassignCommand = new RelayCommand(Unassign, () => SelectedEngagement != null && SelectedEngagement.EngagementPapds.Count > 0);
             SaveCommand = new AsyncRelayCommand(SaveAsync);
+            CloseCommand = new RelayCommand(Close);
         }
 
         public IRelayCommand AssignCommand { get; }
         public IRelayCommand UnassignCommand { get; }
         public IAsyncRelayCommand SaveCommand { get; }
+        public IRelayCommand CloseCommand { get; }
 
         public override async Task LoadDataAsync()
         {
@@ -77,7 +85,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (SelectedEngagement != null)
             {
                 await _engagementService.UpdateAsync(SelectedEngagement);
+                _messenger.Send(new CloseDialogMessage(true));
             }
+        }
+
+        private void Close()
+        {
+            _messenger.Send(new CloseDialogMessage(false));
         }
 
         partial void OnSelectedEngagementChanged(Engagement? value)
