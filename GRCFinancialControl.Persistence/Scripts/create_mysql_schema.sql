@@ -2,7 +2,16 @@
 -- Execute USE <database>; before running this script or replace the placeholder below.
 
 SET FOREIGN_KEY_CHECKS = 0;
-
+-- Dynamically drop any tables in the current schema that start with the TBL_ prefix
+SET @drop_sql = (
+    SELECT IFNULL(
+        CONCAT('DROP TABLE IF EXISTS ', GROUP_CONCAT(CONCAT('`', table_name, '`'))),
+        'SELECT 1'
+    )
+    FROM information_schema.tables
+    WHERE table_schema = DATABASE()
+      AND table_name LIKE 'TBL_%'
+);
 DROP TABLE IF EXISTS `ActualsEntries`;
 DROP TABLE IF EXISTS `ClosingPeriods`;
 DROP TABLE IF EXISTS `PlannedAllocations`;
