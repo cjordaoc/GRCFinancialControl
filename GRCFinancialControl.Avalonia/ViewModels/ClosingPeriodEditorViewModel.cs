@@ -116,7 +116,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         }
 
         [RelayCommand]
-        private void Cancel()
+        private void Close()
         {
             _messenger.Send(new CloseDialogMessage(false));
         }
