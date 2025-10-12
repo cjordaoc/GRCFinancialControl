@@ -23,6 +23,48 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private DateTime _periodEnd = DateTime.Today;
 
+        partial void OnPeriodStartChanged(DateTime value)
+        {
+            OnPropertyChanged(nameof(PeriodStartOffset));
+        }
+
+        partial void OnPeriodEndChanged(DateTime value)
+        {
+            OnPropertyChanged(nameof(PeriodEndOffset));
+        }
+
+        public DateTimeOffset? PeriodStartOffset
+        {
+            get => ConvertToOffset(PeriodStart);
+            set
+            {
+                if (value.HasValue)
+                {
+                    PeriodStart = value.Value.Date;
+                }
+                else
+                {
+                    PeriodStart = default;
+                }
+            }
+        }
+
+        public DateTimeOffset? PeriodEndOffset
+        {
+            get => ConvertToOffset(PeriodEnd);
+            set
+            {
+                if (value.HasValue)
+                {
+                    PeriodEnd = value.Value.Date;
+                }
+                else
+                {
+                    PeriodEnd = default;
+                }
+            }
+        }
+
         [ObservableProperty]
         private string? _statusMessage;
 
@@ -78,5 +120,17 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             _messenger.Send(new CloseDialogMessage(false));
         }
+
+        private static DateTimeOffset? ConvertToOffset(DateTime value)
+        {
+            if (value == default)
+            {
+                return null;
+            }
+
+            var unspecified = DateTime.SpecifyKind(value.Date, DateTimeKind.Unspecified);
+            return new DateTimeOffset(unspecified, TimeSpan.Zero);
+        }
     }
 }
+

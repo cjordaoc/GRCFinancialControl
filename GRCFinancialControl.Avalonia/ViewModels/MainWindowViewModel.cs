@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
@@ -62,9 +61,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 new("Exceptions", Exceptions),
                 new("Settings", Settings)
             };
-
-            SelectedNavigationItem = NavigationItems.FirstOrDefault();
-
             messenger.Register<OpenDialogMessage>(this);
             messenger.Register<CloseDialogMessage>(this);
         }
