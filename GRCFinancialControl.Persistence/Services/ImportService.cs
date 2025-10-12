@@ -268,7 +268,7 @@ namespace GRCFinancialControl.Persistence.Services
             return 0d;
         }
 
-        private int FindColumn(List<string> headers, string[] primaryKeywords, string[] secondaryKeywords = null)
+        private int FindColumn(List<string> headers, string[] primaryKeywords, string[]? secondaryKeywords = null)
         {
             for (int i = 0; i < headers.Count; i++)
             {

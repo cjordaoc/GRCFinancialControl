@@ -13,8 +13,8 @@
         <ListBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Engagements}" SelectedItem="{Binding SelectedEngagement}" DisplayMemberBinding="{Binding Description}" Margin="0,20,0,0"/>
 
         <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Spacing="10">
-            <Button Content="Assign →" Command="{Binding AssignCommand}"/>
-            <Button Content="← Unassign" Command="{Binding UnassignCommand}"/>
+            <Button Content="Assign" Command="{Binding AssignCommand}"/>
+            <Button Content="Unassign" Command="{Binding UnassignCommand}"/>
         </StackPanel>
 
         <TextBlock Grid.Row="1" Grid.Column="2" Text="PAPDs" HorizontalAlignment="Center"/>
