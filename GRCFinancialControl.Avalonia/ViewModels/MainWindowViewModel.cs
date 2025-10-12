@@ -1,7 +1,8 @@
-using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
+using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
@@ -67,6 +68,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             };
             messenger.Register<OpenDialogMessage>(this);
             messenger.Register<CloseDialogMessage>(this);
+
+            SelectedNavigationItem = NavigationItems.FirstOrDefault();
         }
 
         public void Receive(OpenDialogMessage message)
