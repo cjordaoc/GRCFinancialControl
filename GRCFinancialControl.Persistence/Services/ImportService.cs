@@ -250,9 +250,17 @@ namespace GRCFinancialControl.Persistence.Services
             return 0d;
         }
 
-        private int FindColumn(List<string> headers, string[] primaryKeywords, string[]? secondaryKeywords = null)
+        private int FindColumn(List<string> headers, string pattern)
         {
-            var regex = new System.Text.RegularExpressions.Regex(pattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (string.IsNullOrWhiteSpace(pattern))
+            {
+                return -1;
+            }
+
+            var regex = new System.Text.RegularExpressions.Regex(
+                pattern,
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Compiled);
+
             for (int i = 0; i < headers.Count; i++)
             {
                 if (regex.IsMatch(headers[i]))
@@ -260,6 +268,7 @@ namespace GRCFinancialControl.Persistence.Services
                     return i;
                 }
             }
+
             return -1;
         }
 
