@@ -74,7 +74,9 @@ namespace GRCFinancialControl.Persistence.Services
 
             var engagementDescription = ExtractDescription(descriptionRaw);
 
-            var (rankBudgetsFromFile, issues) = ParseResourcing(resourcing);
+            var totalHoursColumnIndex = FindTotalHoursColumn(resourcing);
+
+            var (rankBudgetsFromFile, issues) = ParseResourcing(resourcing, totalHoursColumnIndex);
             var totalBudgetHours = rankBudgetsFromFile.Sum(r => r.hours);
 
             await using var context = await _contextFactory.CreateDbContextAsync();
@@ -132,7 +134,7 @@ namespace GRCFinancialControl.Persistence.Services
             {
                 engagement.CustomerId = customer.Id;
             }
-            engagement.InitialHoursBudget = totalBudgetHours;
+            engagement.TotalPlannedHours = totalBudgetHours;
 
             if (engagement.RankBudgets == null)
             {
@@ -187,10 +189,32 @@ namespace GRCFinancialControl.Persistence.Services
             return summary.ToString();
         }
 
-        private static (List<(string rank, decimal hours)> rows, List<string> issues) ParseResourcing(DataTable resourcing)
+        private static int FindTotalHoursColumn(DataTable resourcing)
+        {
+            var headerRowIndex = 2;
+            if (resourcing.Rows.Count <= headerRowIndex)
+            {
+                throw new InvalidDataException("Resourcing sheet is missing the header row.");
+            }
+
+            var headerRow = resourcing.Rows[headerRowIndex];
+            for (var i = 0; i < headerRow.ItemArray.Length; i++)
+            {
+                var header = NormalizeWhitespace(Convert.ToString(headerRow[i], CultureInfo.InvariantCulture));
+                if (header.Equals("Total", StringComparison.OrdinalIgnoreCase))
+                {
+                    return i;
+                }
+            }
+
+            return -1; // Indicates that weekly columns should be summed
+        }
+
+        private static (List<(string rank, decimal hours)> rows, List<string> issues) ParseResourcing(DataTable resourcing, int totalHoursColumnIndex)
         {
             var rows = new List<(string rank, decimal hours)>();
             var issues = new List<string>();
+            var weeklyColumns = totalHoursColumnIndex == -1 ? FindWeeklyColumns(resourcing) : null;
 
             var rowIndex = 3; // Row 4 in the worksheet
             var consecutiveBlankRows = 0;
@@ -198,7 +222,26 @@ namespace GRCFinancialControl.Persistence.Services
             while (rowIndex < resourcing.Rows.Count || consecutiveBlankRows < 10)
             {
                 var rank = NormalizeWhitespace(GetCellString(resourcing, rowIndex, 0));
-                var (hours, hasHoursValue) = ParseHours(GetCellValue(resourcing, rowIndex, 8));
+
+                decimal hours = 0;
+                bool hasHoursValue = false;
+
+                if (totalHoursColumnIndex != -1)
+                {
+                    (hours, hasHoursValue) = ParseHours(GetCellValue(resourcing, rowIndex, totalHoursColumnIndex));
+                }
+                else if (weeklyColumns != null)
+                {
+                    foreach (var colIndex in weeklyColumns)
+                    {
+                        var (weeklyHours, hasValue) = ParseHours(GetCellValue(resourcing, rowIndex, colIndex));
+                        if (hasValue)
+                        {
+                            hours += weeklyHours;
+                            hasHoursValue = true;
+                        }
+                    }
+                }
 
                 var isRowEmpty = string.IsNullOrEmpty(rank) && !hasHoursValue;
 
@@ -437,6 +480,10 @@ namespace GRCFinancialControl.Persistence.Services
                     }
 
                     var parsedRow = ParseMarginRow(row, rowNumber, uploadTimestampUtc);
+                    if (parsedRow == null)
+                    {
+                        continue;
+                    }
 
                     var (customer, customerCreated) = await GetOrCreateCustomerAsync(context, customerCache, parsedRow);
                     if (customerCreated)
@@ -618,18 +665,19 @@ namespace GRCFinancialControl.Persistence.Services
             return true;
         }
 
-        private static MarginImportRow ParseMarginRow(DataRow row, int rowNumber, DateTime uploadTimestampUtc)
+        private MarginImportRow? ParseMarginRow(DataRow row, int rowNumber, DateTime uploadTimestampUtc)
         {
             var engagementCell = NormalizeWhitespace(Convert.ToString(row[0], CultureInfo.InvariantCulture));
             if (string.IsNullOrWhiteSpace(engagementCell))
             {
-                throw new InvalidDataException("Engagement information is required.");
+                return null;
             }
 
             var clientCell = NormalizeWhitespace(Convert.ToString(row[1], CultureInfo.InvariantCulture));
             if (string.IsNullOrWhiteSpace(clientCell))
             {
-                throw new InvalidDataException("Client information is required.");
+                _logger.LogWarning("Row {RowNumber}: Client information is missing. Skipping row.", rowNumber);
+                return null;
             }
 
             var (engagementDisplayName, engagementCode, currency) = ParseEngagementCell(engagementCell);
@@ -915,18 +963,28 @@ namespace GRCFinancialControl.Persistence.Services
             public string StatusText { get; init; } = string.Empty;
         }
 
-        private List<int> FindWeeklyColumns(List<string> headers)
+        private static List<int> FindWeeklyColumns(DataTable resourcing)
         {
-            var weekCols = new List<int>();
-            var regex = new System.Text.RegularExpressions.Regex(@"(?i)\b(week|wk|w\d{2})|(\d{4}-\d{2}-\d{2})|(\d{1,2}\/\d{1,2}\/\d{4})", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-            for (int i = 0; i < headers.Count; i++)
+            var headerRowIndex = 2;
+            if (resourcing.Rows.Count <= headerRowIndex)
             {
-                if (regex.IsMatch(headers[i]))
+                return new List<int>();
+            }
+
+            var weeklyColumns = new List<int>();
+            var headerRow = resourcing.Rows[headerRowIndex];
+            var weekRegex = new Regex(@"(?i)^(W\d{1,2}|Week\s*\d{1,2})$");
+
+            for (var i = 0; i < headerRow.ItemArray.Length; i++)
+            {
+                var header = NormalizeWhitespace(Convert.ToString(headerRow[i], CultureInfo.InvariantCulture));
+                if (weekRegex.IsMatch(header))
                 {
-                    weekCols.Add(i);
+                    weeklyColumns.Add(i);
                 }
             }
-            return weekCols;
+
+            return weeklyColumns;
         }
     }
 }

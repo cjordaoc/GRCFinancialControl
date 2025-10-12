@@ -15,6 +15,7 @@ namespace GRCFinancialControl.Persistence
         public DbSet<Customer> Customers { get; set; }
         public DbSet<EngagementRankBudget> EngagementRankBudgets { get; set; }
         public DbSet<MarginEvolution> MarginEvolutions { get; set; }
+        public DbSet<EngagementFiscalYearAllocation> EngagementFiscalYearAllocations { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -157,6 +158,19 @@ namespace GRCFinancialControl.Persistence
             modelBuilder.Entity<MarginEvolution>()
                 .HasIndex(me => new { me.EngagementId, me.EntryType, me.CreatedAtUtc })
                 .HasDatabaseName("IX_MarginEvolution_Engagement_Type_Created");
+
+            modelBuilder.Entity<EngagementFiscalYearAllocation>()
+                .HasKey(e => e.Id);
+
+            modelBuilder.Entity<EngagementFiscalYearAllocation>()
+                .HasOne(e => e.Engagement)
+                .WithMany(e => e.Allocations)
+                .HasForeignKey(e => e.EngagementId);
+
+            modelBuilder.Entity<EngagementFiscalYearAllocation>()
+                .HasOne(e => e.FiscalYear)
+                .WithMany()
+                .HasForeignKey(e => e.FiscalYearId);
         }
     }
 }

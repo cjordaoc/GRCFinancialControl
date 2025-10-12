@@ -24,21 +24,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private string? _statusMessage;
 
-        public ClosingPeriodsViewModel(IClosingPeriodService closingPeriodService, IMessenger messenger)
+        public ClosingPeriodsViewModel(IClosingPeriodService closingPeriodService, IDialogService dialogService, IMessenger messenger)
+            : base(messenger)
         {
             _closingPeriodService = closingPeriodService;
-            _messenger = messenger;
-
-            AddCommand = new RelayCommand(Add);
-            EditCommand = new RelayCommand(Edit, () => SelectedClosingPeriod != null);
-            DeleteCommand = new AsyncRelayCommand(DeleteAsync, () => SelectedClosingPeriod != null);
-
-            _messenger.Register<ClosingPeriodsChangedMessage>(this);
+            _dialogService = dialogService;
         }
-
-        public IRelayCommand AddCommand { get; }
-        public IRelayCommand EditCommand { get; }
-        public IAsyncRelayCommand DeleteCommand { get; }
 
         public override async Task LoadDataAsync()
         {
@@ -47,50 +38,50 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             ClosingPeriods = new ObservableCollection<ClosingPeriod>(periods);
         }
 
-        private void Add()
+        [RelayCommand]
+        private async Task Add()
         {
             var editor = new ClosingPeriodEditorViewModel(new ClosingPeriod
             {
                 Name = string.Empty,
                 PeriodStart = DateTime.Today,
                 PeriodEnd = DateTime.Today
-            }, _closingPeriodService, _messenger);
+            }, _closingPeriodService, Messenger);
 
-            _messenger.Send(new OpenDialogMessage(editor));
+            await _dialogService.ShowDialogAsync(editor);
+            Messenger.Send(new RefreshDataMessage());
         }
 
-        private void Edit()
+        [RelayCommand]
+        private async Task Edit(ClosingPeriod closingPeriod)
         {
-            if (SelectedClosingPeriod == null)
+            if (closingPeriod == null)
             {
                 return;
             }
 
-            var editor = new ClosingPeriodEditorViewModel(SelectedClosingPeriod, _closingPeriodService, _messenger);
-            _messenger.Send(new OpenDialogMessage(editor));
+            var editor = new ClosingPeriodEditorViewModel(closingPeriod, _closingPeriodService, Messenger);
+            await _dialogService.ShowDialogAsync(editor);
+            Messenger.Send(new RefreshDataMessage());
         }
 
-        private async Task DeleteAsync()
+        [RelayCommand]
+        private async Task Delete(ClosingPeriod closingPeriod)
         {
-            if (SelectedClosingPeriod == null)
+            if (closingPeriod == null)
             {
                 return;
             }
 
             try
             {
-                await _closingPeriodService.DeleteAsync(SelectedClosingPeriod.Id);
-                await LoadDataAsync();
+                await _closingPeriodService.DeleteAsync(closingPeriod.Id);
+                Messenger.Send(new RefreshDataMessage());
             }
             catch (InvalidOperationException ex)
             {
                 StatusMessage = ex.Message;
             }
-        }
-
-        public void Receive(ClosingPeriodsChangedMessage message)
-        {
-            _ = LoadDataAsync();
         }
 
         partial void OnSelectedClosingPeriodChanged(ClosingPeriod? value)

@@ -1,124 +1,56 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
-using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Core.Models;
-using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
     public partial class EngagementPapdAssignmentViewModel : ViewModelBase
     {
-        private readonly IEngagementService _engagementService;
-        private readonly IPapdService _papdService;
-        private readonly IMessenger _messenger;
+        [ObservableProperty]
+        private ObservableCollection<EngagementPapd> _assignments;
 
         [ObservableProperty]
-        private ObservableCollection<Engagement> _engagements = new();
+        private EngagementPapd _selectedAssignment;
 
         [ObservableProperty]
-        private ObservableCollection<Papd> _papds = new();
+        private ObservableCollection<Papd> _availablePapds;
 
         [ObservableProperty]
-        private Engagement? _selectedEngagement;
+        private Papd _selectedPapd;
 
         [ObservableProperty]
-        private Papd? _selectedPapd;
+        private DateTime _effectiveDate = DateTime.Today;
 
-        public EngagementPapdAssignmentViewModel(IEngagementService engagementService,
-                                                 IPapdService papdService,
-                                                 IMessenger messenger)
+        public EngagementPapdAssignmentViewModel(ObservableCollection<EngagementPapd> assignments, IEnumerable<Papd> availablePapds)
         {
-            _engagementService = engagementService;
-            _papdService = papdService;
-            _messenger = messenger;
-            AssignCommand = new RelayCommand(Assign, () => SelectedEngagement != null && SelectedPapd != null);
-            UnassignCommand = new RelayCommand(Unassign, () => SelectedEngagement != null && SelectedEngagement.EngagementPapds.Count > 0);
-            SaveCommand = new AsyncRelayCommand(SaveAsync);
-            CloseCommand = new RelayCommand(Close);
+            Assignments = assignments;
+            AvailablePapds = new ObservableCollection<Papd>(availablePapds);
+            SelectedPapd = AvailablePapds.FirstOrDefault();
         }
 
-        public IRelayCommand AssignCommand { get; }
-        public IRelayCommand UnassignCommand { get; }
-        public IAsyncRelayCommand SaveCommand { get; }
-        public IRelayCommand CloseCommand { get; }
-
-        public override async Task LoadDataAsync()
+        [RelayCommand]
+        private void AddAssignment()
         {
-            Engagements = new ObservableCollection<Engagement>(await _engagementService.GetAllAsync());
-            Papds = new ObservableCollection<Papd>(await _papdService.GetAllAsync());
-        }
+            if (SelectedPapd == null) return;
 
-        private void Assign()
-        {
-            if (SelectedEngagement is null || SelectedPapd is null)
+            var newAssignment = new EngagementPapd
             {
-                return;
-            }
-
-            // In a real app, we would also ask for an effective date.
-            // For now, we just add the assignment.
-            SelectedEngagement.EngagementPapds.Add(new EngagementPapd
-            {
-                PapdId = SelectedPapd.Id,
                 Papd = SelectedPapd,
-                EffectiveDate = System.DateTime.Today
-            });
+                EffectiveDate = EffectiveDate
+            };
+            Assignments.Add(newAssignment);
         }
 
-        private void Unassign()
+        [RelayCommand]
+        private void RemoveAssignment()
         {
-            if (SelectedEngagement?.EngagementPapds is not { Count: > 0 } assignments)
+            if (SelectedAssignment != null)
             {
-                return;
-            }
-
-            // In a real app, we would select a specific assignment to remove.
-            // For now, we just remove the last one.
-            var lastAssignment = assignments.LastOrDefault();
-            if (lastAssignment is not null)
-            {
-                assignments.Remove(lastAssignment);
-            }
-        }
-
-        private async Task SaveAsync()
-        {
-            if (SelectedEngagement != null)
-            {
-                await _engagementService.UpdateAsync(SelectedEngagement);
-                _messenger.Send(new CloseDialogMessage(true));
-            }
-        }
-
-        private void Close()
-        {
-            _messenger.Send(new CloseDialogMessage(false));
-        }
-
-        partial void OnSelectedEngagementChanged(Engagement? value)
-        {
-            NotifyCommandStates();
-        }
-
-        partial void OnSelectedPapdChanged(Papd? value)
-        {
-            NotifyCommandStates();
-        }
-
-        private void NotifyCommandStates()
-        {
-            if (AssignCommand is RelayCommand assign)
-            {
-                assign.NotifyCanExecuteChanged();
-            }
-
-            if (UnassignCommand is RelayCommand unassign)
-            {
-                unassign.NotifyCanExecuteChanged();
+                Assignments.Remove(SelectedAssignment);
             }
         }
     }

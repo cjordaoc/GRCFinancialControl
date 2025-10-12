@@ -1,13 +1,25 @@
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
+using GRCFinancialControl.Avalonia.Messages;
+using System.Threading.Tasks;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
-    public class ViewModelBase : ObservableObject
+    public abstract partial class ViewModelBase : ObservableObject, IRecipient<RefreshDataMessage>
     {
-        public virtual Task LoadDataAsync()
+        protected IMessenger Messenger { get; }
+
+        protected ViewModelBase(IMessenger messenger)
         {
-            return Task.CompletedTask;
+            Messenger = messenger;
+            Messenger.RegisterAll(this);
+        }
+
+        public virtual Task LoadDataAsync() => Task.CompletedTask;
+
+        public virtual void Receive(RefreshDataMessage message)
+        {
+            _ = LoadDataAsync();
         }
     }
 }

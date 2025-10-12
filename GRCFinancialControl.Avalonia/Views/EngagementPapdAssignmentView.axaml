@@ -3,73 +3,40 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="400"
              x:Class="GRCFinancialControl.Avalonia.Views.EngagementPapdAssignmentView"
              x:DataType="vm:EngagementPapdAssignmentViewModel">
     <Panel>
         <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
                 CornerRadius="8"/>
 
-        <Grid Margin="24" RowDefinitions="Auto,Auto,*,Auto">
-            <TextBlock Grid.Row="0"
-                       Text="Engagement-PAPD Assignment"
-                       FontSize="24"
-                       FontWeight="Bold"
-                       HorizontalAlignment="Center"/>
+        <StackPanel Spacing="10" Margin="20">
+            <TextBlock Text="PAPD Assignments" FontSize="18" FontWeight="Bold"/>
 
-            <TextBlock Grid.Row="1"
-                       Margin="0,12,0,24"
-                       Text="Select an engagement and PAPD, then use the Assign or Unassign buttons to manage the relationship."
-                       TextAlignment="Center"
-                       Opacity="0.8"/>
+            <DataGrid ItemsSource="{Binding Assignments}"
+                      SelectedItem="{Binding SelectedAssignment}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      SelectionMode="Single"
+                      Height="200">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="PAPD" Binding="{Binding Papd.Name}" Width="*"/>
+                    <DataGridTextColumn Header="Effective Date" Binding="{Binding EffectiveDate, StringFormat='yyyy-MM-dd'}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
 
-            <Grid Grid.Row="2" ColumnDefinitions="2*,Auto,2*">
-                <StackPanel Grid.Column="0" Spacing="8">
-                    <TextBlock Text="Engagements" FontSize="16" FontWeight="SemiBold"/>
-                    <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
-                            CornerRadius="6"
-                            Padding="8">
-                        <ListBox ItemsSource="{Binding Engagements}"
-                                 SelectedItem="{Binding SelectedEngagement}"
-                                 DisplayMemberBinding="{Binding Description}"
-                                 MinHeight="220"/>
-                    </Border>
-                </StackPanel>
+            <Button Content="Remove Selected Assignment"
+                    Command="{Binding RemoveAssignmentCommand}"
+                    HorizontalAlignment="Right"/>
 
-                <StackPanel Grid.Column="1"
-                            VerticalAlignment="Center"
-                            Spacing="10"
-                            Margin="16,0">
-                    <Button Content="Assign"
-                            Command="{Binding AssignCommand}"
-                            Width="140"
-                            Classes="accent"/>
-                    <Button Content="Unassign"
-                            Command="{Binding UnassignCommand}"
-                            Width="140"/>
-                </StackPanel>
-
-                <StackPanel Grid.Column="2" Spacing="8">
-                    <TextBlock Text="PAPDs" FontSize="16" FontWeight="SemiBold"/>
-                    <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
-                            CornerRadius="6"
-                            Padding="8">
-                        <ListBox ItemsSource="{Binding Papds}"
-                                 SelectedItem="{Binding SelectedPapd}"
-                                 DisplayMemberBinding="{Binding Name}"
-                                 MinHeight="220"/>
-                    </Border>
-                </StackPanel>
-            </Grid>
-
-            <StackPanel Grid.Row="3"
-                        Orientation="Horizontal"
-                        Spacing="8"
-                        HorizontalAlignment="Right"
-                        Margin="0,24,0,0">
-                <Button Content="Save" Command="{Binding SaveCommand}" Classes="accent"/>
-                <Button Content="Close" Command="{Binding CloseCommand}"/>
+            <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,20,0,0">
+                <ComboBox ItemsSource="{Binding AvailablePapds}"
+                          SelectedItem="{Binding SelectedPapd}"
+                          DisplayMemberBinding="{Binding Name}"
+                          Width="200"/>
+                <DatePicker SelectedDate="{Binding EffectiveDate}" />
+                <Button Content="Add" Command="{Binding AddAssignmentCommand}" Classes="accent"/>
             </StackPanel>
-        </Grid>
+        </StackPanel>
     </Panel>
 </UserControl>

@@ -22,44 +22,46 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private Engagement? _selectedEngagement;
 
-        public EngagementsViewModel(IEngagementService engagementService, IPapdService papdService, ICustomerService customerService, IMessenger messenger)
+        public EngagementsViewModel(IEngagementService engagementService, IPapdService papdService, ICustomerService customerService, IDialogService dialogService, IMessenger messenger)
+            : base(messenger)
         {
             _engagementService = engagementService;
             _papdService = papdService;
             _customerService = customerService;
-            _messenger = messenger;
-            AddCommand = new RelayCommand(Add);
-            EditCommand = new RelayCommand(Edit, () => SelectedEngagement != null);
-            DeleteCommand = new AsyncRelayCommand(Delete, () => SelectedEngagement != null);
+            _dialogService = dialogService;
         }
 
-        public IRelayCommand AddCommand { get; }
-        public IRelayCommand EditCommand { get; }
-        public IAsyncRelayCommand DeleteCommand { get; }
+        [ObservableProperty]
+        private ObservableCollection<Engagement> _engagements = new();
 
         public override async Task LoadDataAsync()
         {
             Engagements = new ObservableCollection<Engagement>(await _engagementService.GetAllAsync());
         }
 
-        private void Add()
+        [RelayCommand]
+        private async Task Add()
         {
-            var editorViewModel = new EngagementEditorViewModel(new Engagement(), _engagementService, _papdService, _customerService, _messenger);
-            _messenger.Send(new OpenDialogMessage(editorViewModel));
+            var editorViewModel = new EngagementEditorViewModel(new Engagement(), _engagementService, _papdService, _customerService, _dialogService, Messenger);
+            await _dialogService.ShowDialogAsync(editorViewModel);
+            Messenger.Send(new RefreshDataMessage());
         }
 
-        private void Edit()
+        [RelayCommand]
+        private async Task Edit(Engagement engagement)
         {
-            if (SelectedEngagement == null) return;
-            var editorViewModel = new EngagementEditorViewModel(SelectedEngagement, _engagementService, _papdService, _customerService, _messenger);
-            _messenger.Send(new OpenDialogMessage(editorViewModel));
+            if (engagement == null) return;
+            var editorViewModel = new EngagementEditorViewModel(engagement, _engagementService, _papdService, _customerService, _dialogService, Messenger);
+            await _dialogService.ShowDialogAsync(editorViewModel);
+            Messenger.Send(new RefreshDataMessage());
         }
 
-        private async Task Delete()
+        [RelayCommand]
+        private async Task Delete(Engagement engagement)
         {
-            if (SelectedEngagement == null) return;
-            await _engagementService.DeleteAsync(SelectedEngagement.Id);
-            await LoadDataAsync();
+            if (engagement == null) return;
+            await _engagementService.DeleteAsync(engagement.Id);
+            Messenger.Send(new RefreshDataMessage());
         }
 
         partial void OnSelectedEngagementChanged(Engagement? value)

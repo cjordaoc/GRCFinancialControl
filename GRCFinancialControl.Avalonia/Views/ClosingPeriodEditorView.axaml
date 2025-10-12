@@ -6,31 +6,16 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="250"
              x:Class="GRCFinancialControl.Avalonia.Views.ClosingPeriodEditorView"
              x:DataType="vm:ClosingPeriodEditorViewModel">
-    <StackPanel Spacing="12" Margin="20">
-            <TextBlock Text="Closing Period" FontSize="20" FontWeight="Bold"/>
-
-            <StackPanel Spacing="4">
-                <TextBlock Text="Name"/>
-                <TextBox Text="{Binding Name}"/>
-            </StackPanel>
-
-            <StackPanel Orientation="Horizontal" Spacing="12">
-                <StackPanel Width="160" Spacing="4">
-                    <TextBlock Text="Start Date"/>
-                    <DatePicker SelectedDate="{Binding PeriodStartOffset}"/>
-                </StackPanel>
-                <StackPanel Width="160" Spacing="4">
-                    <TextBlock Text="End Date"/>
-                    <DatePicker SelectedDate="{Binding PeriodEndOffset}"/>
-                </StackPanel>
-            </StackPanel>
-
-            <TextBlock Text="{Binding StatusMessage}" Foreground="Red"/>
-
-            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
-                <Button Content="Close" Command="{Binding CloseCommand}"/>
-                <Button Content="Save" Command="{Binding SaveCommand}"/>
-            </StackPanel>
+    <StackPanel Spacing="10" Margin="10">
+        <TextBlock Text="Closing Period Details" FontSize="18" FontWeight="Bold"/>
+        <TextBox Text="{Binding Name}" Watermark="Name (e.g., P01-2025)"/>
+        <DatePicker SelectedDate="{Binding PeriodStartOffset}" Watermark="Start Date"/>
+        <DatePicker SelectedDate="{Binding PeriodEndOffset}" Watermark="End Date"/>
+        <TextBlock Text="{Binding StatusMessage}" Foreground="Red"/>
+        <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">
+            <Button Content="Save" Command="{Binding SaveCommand}"/>
+            <Button Content="Close" Command="{Binding CloseCommand}"/>
         </StackPanel>
+    </StackPanel>
 </UserControl>
 

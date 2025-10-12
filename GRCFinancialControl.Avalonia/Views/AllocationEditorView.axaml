@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="GRCFinancialControl.Avalonia.Views.AllocationEditorView"
+             x:DataType="vm:AllocationEditorViewModel">
+    <StackPanel Spacing="10" Margin="10">
+        <TextBlock Text="{Binding Engagement.Description}" FontSize="20" FontWeight="Bold"/>
+        <TextBlock>
+            <Run Text="Total Planned Hours: "/>
+            <Run Text="{Binding TotalPlannedHours}"/>
+        </TextBlock>
+        <TextBlock>
+            <Run Text="Current Hours Allocation: "/>
+            <Run Text="{Binding CurrentHoursAllocation}"/>
+        </TextBlock>
+        <DataGrid ItemsSource="{Binding Allocations}" AutoGenerateColumns="False" CanUserSortColumns="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Fiscal Year" Binding="{Binding FiscalYear.Name}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Hours" Binding="{Binding Hours}"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <Button Content="Save" Command="{Binding SaveCommand}" HorizontalAlignment="Right"/>
+    </StackPanel>
+</UserControl>
