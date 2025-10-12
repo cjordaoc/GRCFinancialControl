@@ -7,7 +7,7 @@ namespace GRCFinancialControl.Avalonia.Services
 {
     public class LoggingService : ILoggingService
     {
-        public event Action<string> OnLogMessage;
+        public event Action<string> OnLogMessage = delegate { };
 
         private int _messageId = 0;
 

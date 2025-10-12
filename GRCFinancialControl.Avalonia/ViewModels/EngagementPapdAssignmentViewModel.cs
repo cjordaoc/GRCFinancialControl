@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -48,6 +49,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private void Assign()
         {
+            if (SelectedEngagement is null || SelectedPapd is null)
+            {
+                return;
+            }
+
             // In a real app, we would also ask for an effective date.
             // For now, we just add the assignment.
             SelectedEngagement.EngagementPapds.Add(new EngagementPapd { Papd = SelectedPapd, EffectiveDate = System.DateTime.Today });
@@ -55,11 +61,17 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private void Unassign()
         {
+            if (SelectedEngagement?.EngagementPapds is not { Count: > 0 } assignments)
+            {
+                return;
+            }
+
             // In a real app, we would select a specific assignment to remove.
             // For now, we just remove the last one.
-            if (SelectedEngagement.EngagementPapds.Count > 0)
+            var lastAssignment = assignments.LastOrDefault();
+            if (lastAssignment is not null)
             {
-                SelectedEngagement.EngagementPapds.RemoveAt(SelectedEngagement.EngagementPapds.Count - 1);
+                assignments.Remove(lastAssignment);
             }
         }
 
@@ -68,6 +80,29 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (SelectedEngagement != null)
             {
                 await _engagementService.UpdateAsync(SelectedEngagement);
+            }
+        }
+
+        partial void OnSelectedEngagementChanged(Engagement? value)
+        {
+            NotifyCommandStates();
+        }
+
+        partial void OnSelectedPapdChanged(Papd? value)
+        {
+            NotifyCommandStates();
+        }
+
+        private void NotifyCommandStates()
+        {
+            if (AssignCommand is RelayCommand assign)
+            {
+                assign.NotifyCanExecuteChanged();
+            }
+
+            if (UnassignCommand is RelayCommand unassign)
+            {
+                unassign.NotifyCanExecuteChanged();
             }
         }
     }

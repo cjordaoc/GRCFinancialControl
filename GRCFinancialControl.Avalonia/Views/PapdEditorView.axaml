@@ -11,7 +11,7 @@
         <TextBox Text="{Binding Name}" Watermark="Name"/>
         <ComboBox ItemsSource="{Binding LevelOptions}"
                   SelectedItem="{Binding Level}"
-                  Watermark="Level (e.g., Partner, Director)"/>
+                  PlaceholderText="Level (e.g., Partner, Director)"/>
         <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">
             <Button Content="Save" Command="{Binding SaveCommand}"/>
             <Button Content="Cancel" Command="{Binding CancelCommand}"/>
