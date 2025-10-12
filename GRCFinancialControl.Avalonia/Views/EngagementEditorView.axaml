@@ -3,34 +3,55 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="300"
+             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="550"
              x:Class="GRCFinancialControl.Avalonia.Views.EngagementEditorView"
              x:DataType="vm:EngagementEditorViewModel">
-    <StackPanel Spacing="10" Margin="10">
-        <TextBlock Text="Engagement Details" FontSize="18" FontWeight="Bold"/>
-        <TextBox Text="{Binding EngagementId}" Watermark="Engagement ID"/>
-        <TextBox Text="{Binding Description}" Watermark="Description"/>
-        <TextBox Text="{Binding CustomerKey}" Watermark="Customer Key"/>
-        <TextBox Text="{Binding OpeningMargin}" Watermark="Opening Margin"/>
-        <TextBox Text="{Binding OpeningValue}" Watermark="Opening Value"/>
-        <TextBox Text="{Binding Status}" Watermark="Status"/>
-        <TextBox Text="{Binding TotalPlannedHours}" Watermark="Total Planned Hours"/>
+    <Panel>
+        <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                CornerRadius="8"/>
 
-        <TextBlock Text="PAPD Assignments" FontSize="16" FontWeight="Bold" Margin="0,10,0,5"/>
-        <DataGrid ItemsSource="{Binding PapdAssignments}" AutoGenerateColumns="False" IsReadOnly="True" Height="150">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="PAPD" Binding="{Binding Papd.Name}" Width="*"/>
-                <DataGridTextColumn Header="Effective Date" Binding="{Binding EffectiveDate, StringFormat='yyyy-MM-dd'}" Width="*"/>
-            </DataGrid.Columns>
-        </DataGrid>
-        <StackPanel Orientation="Horizontal" Spacing="5" Margin="0,5,0,0">
-            <Button Content="Add Assignment" Command="{Binding AddAssignmentCommand}"/>
-            <Button Content="Remove Assignment" Command="{Binding RemoveAssignmentCommand}"/>
-        </StackPanel>
+        <StackPanel Spacing="10" Margin="20">
+            <TextBlock Text="Engagement Details" FontSize="18" FontWeight="Bold"/>
 
-        <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right" Margin="0,10,0,0">
-            <Button Content="Save" Command="{Binding SaveCommand}"/>
-            <Button Content="Cancel" Command="{Binding CancelCommand}"/>
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="0,10,0,0">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Engagement ID:" VerticalAlignment="Center"/>
+                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding EngagementId}" Margin="10,0,0,0"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Description:" VerticalAlignment="Center" Margin="0,5,0,0"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Description}" Margin="10,5,0,0"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Customer Key:" VerticalAlignment="Center" Margin="0,5,0,0"/>
+                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding CustomerKey}" Margin="10,5,0,0"/>
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Opening Margin:" VerticalAlignment="Center" Margin="0,5,0,0"/>
+                <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding OpeningMargin}" Margin="10,5,0,0"/>
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Opening Value:" VerticalAlignment="Center" Margin="0,5,0,0"/>
+                <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding OpeningValue}" Margin="10,5,0,0"/>
+
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="Status:" VerticalAlignment="Center" Margin="0,5,0,0"/>
+                <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding Status}" Margin="10,5,0,0"/>
+
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="Total Planned Hours:" VerticalAlignment="Center" Margin="0,5,0,0"/>
+                <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding TotalPlannedHours}" Margin="10,5,0,0"/>
+            </Grid>
+
+            <TextBlock Text="PAPD Assignments" FontSize="16" FontWeight="Bold" Margin="0,20,0,5"/>
+            <DataGrid ItemsSource="{Binding PapdAssignments}" AutoGenerateColumns="False" IsReadOnly="True" Height="150">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="PAPD" Binding="{Binding Papd.Name}" Width="*"/>
+                    <DataGridTextColumn Header="Effective Date" Binding="{Binding EffectiveDate, StringFormat='yyyy-MM-dd'}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+            <StackPanel Orientation="Horizontal" Spacing="5" Margin="0,5,0,0">
+                <Button Content="Add Assignment" Command="{Binding AddAssignmentCommand}" Classes="accent"/>
+                <Button Content="Remove Assignment" Command="{Binding RemoveAssignmentCommand}"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right" Margin="0,20,0,0">
+                <Button Content="Save" Command="{Binding SaveCommand}" Classes="accent"/>
+                <Button Content="Cancel" Command="{Binding CancelCommand}"/>
+            </StackPanel>
         </StackPanel>
-    </StackPanel>
+    </Panel>
 </UserControl>

@@ -36,24 +36,17 @@
         </Border>
 
         <Border Grid.Column="1" Padding="20">
-            <Grid>
-                <TextBlock Text="Select an area from the sidebar to get started."
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"
-                           FontSize="16"
-                           Opacity="0.6"
-                           TextAlignment="Center"
-                           TextWrapping="Wrap"
-                           IsVisible="{Binding ActiveView, Converter={x:Static converters:ObjectConverters.IsNull}}"/>
-                <ContentControl Content="{Binding ActiveView}"
-                                IsVisible="{Binding ActiveView, Converter={x:Static converters:ObjectConverters.IsNotNull}}"/>
-            </Grid>
+            <ContentControl Content="{Binding ActiveView}"
+                            IsVisible="{Binding ActiveView, Converter={x:Static converters:ObjectConverters.IsNotNull}}"/>
         </Border>
 
-        <!-- Dialog Overlay -->
-        <ContentControl Grid.ColumnSpan="2"
-                        Content="{Binding CurrentDialog}"
-                        IsVisible="{Binding CurrentDialog, Converter={x:Static converters:ObjectConverters.IsNotNull}}"/>
+        <Panel Grid.ColumnSpan="2"
+               Background="#7F000000"
+               IsVisible="{Binding CurrentDialog, Converter={x:Static converters:ObjectConverters.IsNotNull}}">
+            <ContentControl Content="{Binding CurrentDialog}"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"/>
+        </Panel>
     </Grid>
 
 </Window>
