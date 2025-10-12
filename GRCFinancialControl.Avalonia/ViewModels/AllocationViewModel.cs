@@ -38,18 +38,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _engagementService = engagementService;
             _fiscalYearService = fiscalYearService;
             _allocationService = allocationService;
-            LoadDataCommand = new AsyncRelayCommand(LoadDataAsync);
             OnEngagementSelectedCommand = new AsyncRelayCommand(OnEngagementSelectedAsync);
             RecalculateTotalsCommand = new RelayCommand(RecalculateTotals);
             SaveAllocationsCommand = new AsyncRelayCommand(SaveAllocationsAsync);
         }
 
-        public IAsyncRelayCommand LoadDataCommand { get; }
         public IAsyncRelayCommand OnEngagementSelectedCommand { get; }
         public IRelayCommand RecalculateTotalsCommand { get; }
         public IAsyncRelayCommand SaveAllocationsCommand { get; }
 
-        private async Task LoadDataAsync()
+        public override async Task LoadDataAsync()
         {
             Engagements = new ObservableCollection<Engagement>(await _engagementService.GetAllAsync());
             FiscalYears = new ObservableCollection<FiscalYear>(await _fiscalYearService.GetAllAsync());
@@ -60,11 +58,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (SelectedEngagement == null) return;
 
             AllocationEntries.Clear();
-            var existingAllocations = await _allocationService.GetForEngagementAsync(SelectedEngagement.Id);
+            var existingAllocations = await _allocationService.GetAllocationsForEngagementAsync(SelectedEngagement.Id);
 
             foreach (var fy in FiscalYears)
             {
-                var existing = existingAllocations.FirstOrDefault(a => a.FiscalYearId == fy.Id);
+                var existing = existingAllocations.FirstOrDefault(a => a.ClosingPeriodId == fy.Id);
                 AllocationEntries.Add(new AllocationEntryViewModel(fy, existing?.AllocatedHours ?? 0));
             }
             RecalculateTotals();
@@ -84,11 +82,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             var allocations = AllocationEntries.Select(e => new PlannedAllocation
             {
-                FiscalYearId = e.FiscalYear.Id,
+                ClosingPeriodId = e.FiscalYear.Id,
                 AllocatedHours = e.AllocatedHours
             }).ToList();
 
-            await _allocationService.SaveForEngagementAsync(SelectedEngagement.Id, allocations);
+            await _allocationService.SaveAllocationsForEngagementAsync(SelectedEngagement.Id, allocations);
         }
     }
 

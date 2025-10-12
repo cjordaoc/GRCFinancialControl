@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -16,6 +17,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         private readonly IEngagementService _engagementService;
         private readonly IPapdService _papdService;
+        private readonly ICustomerService _customerService;
         private readonly IMessenger _messenger;
 
         [ObservableProperty]
@@ -25,7 +27,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private string _description = string.Empty;
 
         [ObservableProperty]
-        private string _customerKey = string.Empty;
+        private Customer? _selectedCustomer;
+
+        [ObservableProperty]
+        private ObservableCollection<Customer> _customers = new();
 
         [ObservableProperty]
         private decimal _openingMargin;
@@ -46,21 +51,29 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public Engagement Engagement { get; }
 
-        public EngagementEditorViewModel(Engagement engagement, IEngagementService engagementService, IPapdService papdService, IMessenger messenger)
+        public EngagementEditorViewModel(Engagement engagement, IEngagementService engagementService, IPapdService papdService, ICustomerService customerService, IMessenger messenger)
         {
             Engagement = engagement;
             _engagementService = engagementService;
             _papdService = papdService;
+            _customerService = customerService;
             _messenger = messenger;
 
             EngagementId = engagement.EngagementId;
             Description = engagement.Description;
-            CustomerKey = engagement.CustomerKey;
             OpeningMargin = engagement.OpeningMargin;
             OpeningValue = engagement.OpeningValue;
             Status = engagement.Status;
             TotalPlannedHours = engagement.TotalPlannedHours;
             PapdAssignments = new ObservableCollection<EngagementPapd>(engagement.EngagementPapds);
+
+            _ = LoadCustomersAsync();
+        }
+
+        private async Task LoadCustomersAsync()
+        {
+            Customers = new ObservableCollection<Customer>(await _customerService.GetAllAsync());
+            SelectedCustomer = Customers.FirstOrDefault(c => c.Name == Engagement.CustomerKey);
         }
 
         [RelayCommand]
@@ -68,7 +81,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             Engagement.EngagementId = EngagementId;
             Engagement.Description = Description;
-            Engagement.CustomerKey = CustomerKey;
+            Engagement.CustomerKey = SelectedCustomer?.Name ?? string.Empty;
             Engagement.OpeningMargin = OpeningMargin;
             Engagement.OpeningValue = OpeningValue;
             Engagement.Status = Status;

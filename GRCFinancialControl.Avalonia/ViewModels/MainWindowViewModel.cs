@@ -17,6 +17,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public SettingsViewModel Settings { get; }
         public ClosingPeriodsViewModel ClosingPeriods { get; }
         public EngagementPapdAssignmentViewModel EngagementPapdAssignment { get; }
+        public CustomersViewModel Customers { get; }
 
         public ObservableCollection<NavigationItem> NavigationItems { get; }
 
@@ -39,6 +40,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                                  SettingsViewModel settingsViewModel,
                                  ClosingPeriodsViewModel closingPeriodsViewModel,
                                  EngagementPapdAssignmentViewModel engagementPapdAssignmentViewModel,
+                                 CustomersViewModel customersViewModel,
                                  IMessenger messenger)
         {
             Engagements = engagementsViewModel;
@@ -51,12 +53,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Settings = settingsViewModel;
             ClosingPeriods = closingPeriodsViewModel;
             EngagementPapdAssignment = engagementPapdAssignmentViewModel;
+            Customers = customersViewModel;
 
             NavigationItems = new ObservableCollection<NavigationItem>
             {
                 new("Import", Import),
                 new("Closing Periods", ClosingPeriods),
                 new("Engagements", Engagements),
+                new("Customers", Customers),
                 new("Fiscal Years", FiscalYears),
                 new("PAPD", Papds),
                 new("Engagement-PAPD", EngagementPapdAssignment),
@@ -79,9 +83,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             CurrentDialog = null;
         }
 
-        partial void OnSelectedNavigationItemChanged(NavigationItem? value)
+        async partial void OnSelectedNavigationItemChanged(NavigationItem? value)
         {
             ActiveView = value?.ViewModel;
+            if (ActiveView is not null)
+            {
+                await ActiveView.LoadDataAsync();
+            }
         }
     }
 

@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="150"
+             x:Class="GRCFinancialControl.Avalonia.Views.CustomerEditorView"
+             x:DataType="vm:CustomerEditorViewModel">
+    <Panel>
+        <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                CornerRadius="8"/>
+
+        <StackPanel Spacing="10" Margin="20">
+            <TextBlock Text="Customer Details" FontSize="18" FontWeight="Bold"/>
+
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto" Margin="0,10,0,0">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" VerticalAlignment="Center"/>
+                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name}" Margin="10,0,0,0"/>
+            </Grid>
+
+            <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right" Margin="0,20,0,0">
+                <Button Content="Save" Command="{Binding SaveCommand}" Classes="accent"/>
+                <Button Content="Cancel" Command="{Binding CancelCommand}"/>
+            </StackPanel>
+        </StackPanel>
+    </Panel>
+</UserControl>

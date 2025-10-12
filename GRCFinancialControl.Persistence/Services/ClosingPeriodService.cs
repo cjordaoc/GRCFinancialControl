@@ -20,6 +20,7 @@ namespace GRCFinancialControl.Persistence.Services
         public async Task<List<ClosingPeriod>> GetAllAsync()
         {
             return await _context.ClosingPeriods
+                .Where(cp => cp.Discriminator == nameof(ClosingPeriod))
                 .OrderByDescending(cp => cp.PeriodEnd)
                 .ThenByDescending(cp => cp.PeriodStart)
                 .ToListAsync();

@@ -37,13 +37,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _loggingService = loggingService;
             _loggingService.OnLogMessage += (message) => StatusMessage = message;
 
-            LoadClosingPeriodsCommand = new AsyncRelayCommand(LoadClosingPeriodsAsync);
             SetImportTypeCommand = new RelayCommand<string>(SetImportType);
             ImportCommand = new AsyncRelayCommand(ImportAsync);
-            _ = LoadClosingPeriodsCommand.ExecuteAsync(null);
         }
 
-        public IAsyncRelayCommand LoadClosingPeriodsCommand { get; }
         public IRelayCommand SetImportTypeCommand { get; }
         public IAsyncRelayCommand ImportCommand { get; }
 
@@ -90,7 +87,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
-        private async Task LoadClosingPeriodsAsync()
+        public override async Task LoadDataAsync()
         {
             var periods = await _closingPeriodService.GetAllAsync();
             ClosingPeriods = new ObservableCollection<ClosingPeriod>(periods);

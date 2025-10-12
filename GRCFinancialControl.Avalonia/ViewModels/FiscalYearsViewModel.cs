@@ -24,20 +24,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             _fiscalYearService = fiscalYearService;
             _messenger = messenger;
-            LoadFiscalYearsCommand = new AsyncRelayCommand(LoadFiscalYearsAsync);
             AddCommand = new RelayCommand(Add);
             EditCommand = new RelayCommand(Edit, () => SelectedFiscalYear != null);
             DeleteCommand = new AsyncRelayCommand(Delete, () => SelectedFiscalYear != null);
-
-            _ = LoadFiscalYearsCommand.ExecuteAsync(null);
         }
 
-        public IAsyncRelayCommand LoadFiscalYearsCommand { get; }
         public IRelayCommand AddCommand { get; }
         public IRelayCommand EditCommand { get; }
         public IAsyncRelayCommand DeleteCommand { get; }
 
-        private async Task LoadFiscalYearsAsync()
+        public override async Task LoadDataAsync()
         {
             FiscalYears = new ObservableCollection<FiscalYear>(await _fiscalYearService.GetAllAsync());
         }
@@ -59,7 +55,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             if (SelectedFiscalYear == null) return;
             await _fiscalYearService.DeleteAsync(SelectedFiscalYear.Id);
-            await LoadFiscalYearsAsync();
+            await LoadDataAsync();
         }
     }
 }

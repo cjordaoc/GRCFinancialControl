@@ -46,7 +46,6 @@
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
-                        <Button Content="Refresh" Command="{Binding LoadClosingPeriodsCommand}"/>
                     </StackPanel>
 
                     <Button Content="Select File and Import" Command="{Binding ImportCommand}" Classes="accent"/>
