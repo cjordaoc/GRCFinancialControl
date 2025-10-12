@@ -1,31 +1,30 @@
--- MySQL schema reset script generated from the domain POCOs.
--- Execute USE <database>; before running this script or replace the placeholder below.
+-- Drop ALL base tables in the current database in one statement
 
+-- 1) Allow a big enough GROUP_CONCAT so the list of tables isn't cut off
+SET SESSION group_concat_max_len = 1024 * 1024;  -- 1 MB
+
+-- 2) Build the DROP statement safely (schema-qualified + backticks)
+SELECT COALESCE(
+         CONCAT(
+           'DROP TABLE IF EXISTS ',
+           GROUP_CONCAT(CONCAT('`', TABLE_SCHEMA, '`.`', TABLE_NAME, '`')
+                        ORDER BY TABLE_NAME SEPARATOR ', ')
+         ),
+         'SELECT 1'
+       )
+INTO @drop_sql
+FROM information_schema.tables
+WHERE TABLE_SCHEMA = DATABASE()
+  AND TABLE_TYPE = 'BASE TABLE';
+
+-- 3) (Optional) Disable FK checks to avoid dependency issues
 SET FOREIGN_KEY_CHECKS = 0;
--- Dynamically drop any tables in the current schema that start with the TBL_ prefix
-SET @drop_sql = (
-    SELECT IFNULL(
-        CONCAT('DROP TABLE IF EXISTS ', GROUP_CONCAT(CONCAT('`', table_name, '`'))),
-        'SELECT 1'
-    )
-    FROM information_schema.tables
-    WHERE table_schema = DATABASE()
-      AND table_name LIKE 'TBL_%'
-);
-DROP TABLE IF EXISTS `ActualsEntries`;
-DROP TABLE IF EXISTS `ClosingPeriods`;
-DROP TABLE IF EXISTS `PlannedAllocations`;
-DROP TABLE IF EXISTS `EngagementPapds`;
-DROP TABLE IF EXISTS `EngagementRankBudgets`;
-DROP TABLE IF EXISTS `MarginEvolutions`;
-DROP TABLE IF EXISTS `Exceptions`;
-DROP TABLE IF EXISTS `FiscalYears`;
-DROP TABLE IF EXISTS `Papds`;
-DROP TABLE IF EXISTS `Engagements`;
-DROP TABLE IF EXISTS `Customers`;
-DROP TABLE IF EXISTS `Settings`;
 
-SET FOREIGN_KEY_CHECKS = 1;
+-- 4) Run it
+PREPARE stmt FROM @drop_sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
 
 CREATE TABLE `Customers`
 (
