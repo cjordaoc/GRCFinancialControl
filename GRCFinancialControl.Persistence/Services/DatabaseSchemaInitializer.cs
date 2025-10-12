@@ -17,28 +17,28 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task EnsureSchemaAsync()
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
             var connection = context.Database.GetDbConnection();
 
-            await connection.OpenAsync();
+            await connection.OpenAsync().ConfigureAwait(false);
             try
             {
-                var discriminatorExists = await ColumnExistsAsync(connection, "ClosingPeriods", "Discriminator");
+                var discriminatorExists = await ColumnExistsAsync(connection, "ClosingPeriods", "Discriminator").ConfigureAwait(false);
                 if (!discriminatorExists)
                 {
-                    await context.Database.ExecuteSqlRawAsync("ALTER TABLE `ClosingPeriods` ADD COLUMN `Discriminator` VARCHAR(64) NOT NULL DEFAULT 'ClosingPeriod';");
+                    await context.Database.ExecuteSqlRawAsync("ALTER TABLE `ClosingPeriods` ADD COLUMN `Discriminator` VARCHAR(64) NOT NULL DEFAULT 'ClosingPeriod';").ConfigureAwait(false);
                 }
 
-                await context.Database.ExecuteSqlRawAsync("UPDATE `ClosingPeriods` SET `Discriminator` = 'ClosingPeriod' WHERE `Discriminator` IS NULL OR `Discriminator` = ''; ");
+                await context.Database.ExecuteSqlRawAsync("UPDATE `ClosingPeriods` SET `Discriminator` = 'ClosingPeriod' WHERE `Discriminator` IS NULL OR `Discriminator` = ''; ").ConfigureAwait(false);
 
-                if (await TableExistsAsync(connection, "FiscalYears"))
+                if (await TableExistsAsync(connection, "FiscalYears").ConfigureAwait(false))
                 {
-                    await MigrateFiscalYearsAsync(context, connection);
+                    await MigrateFiscalYearsAsync(context, connection).ConfigureAwait(false);
                 }
             }
             finally
             {
-                await connection.CloseAsync();
+                await connection.CloseAsync().ConfigureAwait(false);
             }
         }
 
@@ -57,7 +57,7 @@ namespace GRCFinancialControl.Persistence.Services
             columnParameter.Value = columnName;
             command.Parameters.Add(columnParameter);
 
-            var result = await command.ExecuteScalarAsync();
+            var result = await command.ExecuteScalarAsync().ConfigureAwait(false);
             return Convert.ToInt64(result) > 0;
         }
 
@@ -71,7 +71,7 @@ namespace GRCFinancialControl.Persistence.Services
             tableParameter.Value = tableName;
             command.Parameters.Add(tableParameter);
 
-            var result = await command.ExecuteScalarAsync();
+            var result = await command.ExecuteScalarAsync().ConfigureAwait(false);
             return Convert.ToInt64(result) > 0;
         }
 
@@ -79,18 +79,18 @@ namespace GRCFinancialControl.Persistence.Services
         {
             await using var command = connection.CreateCommand();
             command.CommandText = "SELECT `Name`, `StartDate`, `EndDate` FROM `FiscalYears`;";
-            await using var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
+            await using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
+            while (await reader.ReadAsync().ConfigureAwait(false))
             {
                 var name = reader.GetString(0);
                 var startDate = reader.GetDateTime(1);
                 var endDate = reader.GetDateTime(2);
 
-                var rowsAffected = await context.Database.ExecuteSqlInterpolatedAsync($"UPDATE `ClosingPeriods` SET `Discriminator` = 'FiscalYear', `PeriodStart` = {startDate}, `PeriodEnd` = {endDate} WHERE `Name` = {name};");
+                var rowsAffected = await context.Database.ExecuteSqlInterpolatedAsync($"UPDATE `ClosingPeriods` SET `Discriminator` = 'FiscalYear', `PeriodStart` = {startDate}, `PeriodEnd` = {endDate} WHERE `Name` = {name};").ConfigureAwait(false);
 
                 if (rowsAffected == 0)
                 {
-                    await context.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO `ClosingPeriods` (`Name`, `PeriodStart`, `PeriodEnd`, `Discriminator`) VALUES ({name}, {startDate}, {endDate}, 'FiscalYear');");
+                    await context.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO `ClosingPeriods` (`Name`, `PeriodStart`, `PeriodEnd`, `Discriminator`) VALUES ({name}, {startDate}, {endDate}, 'FiscalYear');").ConfigureAwait(false);
                 }
             }
         }
