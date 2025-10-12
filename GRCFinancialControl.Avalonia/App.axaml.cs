@@ -74,6 +74,7 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<IPapdService, PapdService>();
             services.AddTransient<IExceptionService, ExceptionService>();
             services.AddTransient<ICustomerService, CustomerService>();
+            services.AddSingleton<IDatabaseSchemaInitializer, DatabaseSchemaInitializer>();
 
             // Register LoggingService
             services.AddSingleton<ILoggingService, LoggingService>();
@@ -98,6 +99,7 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<EngagementPapdAssignmentViewModel>();
             services.AddTransient<CustomersViewModel>();
             services.AddTransient<CustomerEditorViewModel>();
+            services.AddTransient<Func<EngagementPapdAssignmentViewModel>>(sp => () => sp.GetRequiredService<EngagementPapdAssignmentViewModel>());
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
@@ -114,6 +116,9 @@ namespace GRCFinancialControl.Avalonia
                 // Apply migrations at startup
                 using (var scope = Services.CreateScope())
                 {
+                    var schemaInitializer = scope.ServiceProvider.GetRequiredService<IDatabaseSchemaInitializer>();
+                    schemaInitializer.EnsureSchemaAsync().GetAwaiter().GetResult();
+
                     var settingsDbContext = scope.ServiceProvider.GetRequiredService<SettingsDbContext>();
                     settingsDbContext.Database.Migrate();
                 }

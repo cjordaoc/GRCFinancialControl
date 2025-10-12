@@ -16,7 +16,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public ExceptionsViewModel Exceptions { get; }
         public SettingsViewModel Settings { get; }
         public ClosingPeriodsViewModel ClosingPeriods { get; }
-        public EngagementPapdAssignmentViewModel EngagementPapdAssignment { get; }
         public CustomersViewModel Customers { get; }
 
         public ObservableCollection<NavigationItem> NavigationItems { get; }
@@ -39,7 +38,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                                  ExceptionsViewModel exceptionsViewModel,
                                  SettingsViewModel settingsViewModel,
                                  ClosingPeriodsViewModel closingPeriodsViewModel,
-                                 EngagementPapdAssignmentViewModel engagementPapdAssignmentViewModel,
                                  CustomersViewModel customersViewModel,
                                  IMessenger messenger)
         {
@@ -52,7 +50,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Exceptions = exceptionsViewModel;
             Settings = settingsViewModel;
             ClosingPeriods = closingPeriodsViewModel;
-            EngagementPapdAssignment = engagementPapdAssignmentViewModel;
             Customers = customersViewModel;
 
             NavigationItems = new ObservableCollection<NavigationItem>
@@ -63,7 +60,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 new("Customers", Customers),
                 new("Fiscal Years", FiscalYears),
                 new("PAPD", Papds),
-                new("Engagement-PAPD", EngagementPapdAssignment),
                 new("Allocation", Allocation),
                 new("Reports", Reports),
                 new("Exceptions", Exceptions),

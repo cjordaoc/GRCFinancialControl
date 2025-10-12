@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -13,6 +14,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         private readonly IPapdService _papdService;
         private readonly IMessenger _messenger;
+        private readonly Func<EngagementPapdAssignmentViewModel> _assignmentViewModelFactory;
 
         [ObservableProperty]
         private ObservableCollection<Papd> _papds = new();
@@ -20,18 +22,21 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private Papd? _selectedPapd;
 
-        public PapdViewModel(IPapdService papdService, IMessenger messenger)
+        public PapdViewModel(IPapdService papdService, IMessenger messenger, Func<EngagementPapdAssignmentViewModel> assignmentViewModelFactory)
         {
             _papdService = papdService;
             _messenger = messenger;
+            _assignmentViewModelFactory = assignmentViewModelFactory;
             AddCommand = new RelayCommand(Add);
             EditCommand = new RelayCommand(Edit, () => SelectedPapd != null);
             DeleteCommand = new AsyncRelayCommand(Delete, () => SelectedPapd != null);
+            ManageAssignmentsCommand = new AsyncRelayCommand(ManageAssignmentsAsync);
         }
 
         public IRelayCommand AddCommand { get; }
         public IRelayCommand EditCommand { get; }
         public IAsyncRelayCommand DeleteCommand { get; }
+        public IAsyncRelayCommand ManageAssignmentsCommand { get; }
 
         public override async Task LoadDataAsync()
         {
@@ -56,6 +61,26 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (SelectedPapd == null) return;
             await _papdService.DeleteAsync(SelectedPapd.Id);
             await LoadDataAsync();
+        }
+
+        private async Task ManageAssignmentsAsync()
+        {
+            var assignmentViewModel = _assignmentViewModelFactory();
+            await assignmentViewModel.LoadDataAsync();
+            _messenger.Send(new OpenDialogMessage(assignmentViewModel));
+        }
+
+        partial void OnSelectedPapdChanged(Papd? value)
+        {
+            if (EditCommand is RelayCommand edit)
+            {
+                edit.NotifyCanExecuteChanged();
+            }
+
+            if (DeleteCommand is AsyncRelayCommand delete)
+            {
+                delete.NotifyCanExecuteChanged();
+            }
         }
     }
 }
