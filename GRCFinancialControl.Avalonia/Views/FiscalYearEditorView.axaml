@@ -9,8 +9,8 @@
     <StackPanel Spacing="10" Margin="10">
         <TextBlock Text="Fiscal Year Details" FontSize="18" FontWeight="Bold"/>
         <TextBox Text="{Binding Name}" Watermark="Name (e.g., FY2025)"/>
-        <DatePicker SelectedDate="{Binding StartDate}" />
-        <DatePicker SelectedDate="{Binding EndDate}" />
+        <DatePicker SelectedDate="{Binding StartDateOffset}" />
+        <DatePicker SelectedDate="{Binding EndDateOffset}" />
         <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">
             <Button Content="Save" Command="{Binding SaveCommand}"/>
             <Button Content="Cancel" Command="{Binding CancelCommand}"/>

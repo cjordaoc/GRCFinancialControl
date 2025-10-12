@@ -8,6 +8,9 @@ namespace GRCFinancialControl.Avalonia.Converters
     {
         public static readonly IValueConverter IsNotNull =
             new FuncValueConverter<object?, bool>(x => x != null);
+
+        public static readonly IValueConverter IsNull =
+            new FuncValueConverter<object?, bool>(x => x == null);
     }
 
     public class FuncValueConverter<TIn, TOut> : IValueConverter

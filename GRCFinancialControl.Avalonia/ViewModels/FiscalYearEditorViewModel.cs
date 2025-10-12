@@ -23,6 +23,48 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private DateTime _endDate = DateTime.Today;
 
+        partial void OnStartDateChanged(DateTime value)
+        {
+            OnPropertyChanged(nameof(StartDateOffset));
+        }
+
+        partial void OnEndDateChanged(DateTime value)
+        {
+            OnPropertyChanged(nameof(EndDateOffset));
+        }
+
+        public DateTimeOffset? StartDateOffset
+        {
+            get => ConvertToOffset(StartDate);
+            set
+            {
+                if (value.HasValue)
+                {
+                    StartDate = value.Value.Date;
+                }
+                else
+                {
+                    StartDate = default;
+                }
+            }
+        }
+
+        public DateTimeOffset? EndDateOffset
+        {
+            get => ConvertToOffset(EndDate);
+            set
+            {
+                if (value.HasValue)
+                {
+                    EndDate = value.Value.Date;
+                }
+                else
+                {
+                    EndDate = default;
+                }
+            }
+        }
+
         public FiscalYear FiscalYear { get; }
 
         public FiscalYearEditorViewModel(FiscalYear fiscalYear, IFiscalYearService fiscalYearService, IMessenger messenger)
@@ -59,6 +101,17 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private void Cancel()
         {
             _messenger.Send(new CloseDialogMessage(false));
+        }
+
+        private static DateTimeOffset? ConvertToOffset(DateTime value)
+        {
+            if (value == default)
+            {
+                return null;
+            }
+
+            var unspecified = DateTime.SpecifyKind(value.Date, DateTimeKind.Unspecified);
+            return new DateTimeOffset(unspecified, TimeSpan.Zero);
         }
     }
 }

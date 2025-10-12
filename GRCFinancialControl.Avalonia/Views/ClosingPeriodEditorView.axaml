@@ -18,11 +18,11 @@
             <StackPanel Orientation="Horizontal" Spacing="12">
                 <StackPanel Width="160" Spacing="4">
                     <TextBlock Text="Start Date"/>
-                    <DatePicker SelectedDate="{Binding PeriodStart}"/>
+                    <DatePicker SelectedDate="{Binding PeriodStartOffset}"/>
                 </StackPanel>
                 <StackPanel Width="160" Spacing="4">
                     <TextBlock Text="End Date"/>
-                    <DatePicker SelectedDate="{Binding PeriodEnd}"/>
+                    <DatePicker SelectedDate="{Binding PeriodEndOffset}"/>
                 </StackPanel>
             </StackPanel>
 
@@ -35,3 +35,4 @@
         </StackPanel>
     </Border>
 </UserControl>
+

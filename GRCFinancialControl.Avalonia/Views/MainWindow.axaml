@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+        xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
@@ -35,13 +36,25 @@
         </Border>
 
         <Border Grid.Column="1" Padding="20">
-            <ContentControl Content="{Binding ActiveView}"/>
+            <Grid>
+                <TextBlock Text="Select an area from the sidebar to get started."
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           FontSize="16"
+                           Opacity="0.6"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           IsVisible="{Binding ActiveView, Converter={x:Static converters:ObjectConverters.IsNull}}"/>
+                <ContentControl Content="{Binding ActiveView}"
+                                IsVisible="{Binding ActiveView, Converter={x:Static converters:ObjectConverters.IsNotNull}}"/>
+            </Grid>
         </Border>
 
         <!-- Dialog Overlay -->
         <ContentControl Grid.ColumnSpan="2"
                         Content="{Binding CurrentDialog}"
-                        IsVisible="{Binding CurrentDialog, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                        IsVisible="{Binding CurrentDialog, Converter={x:Static converters:ObjectConverters.IsNotNull}}"/>
     </Grid>
 
 </Window>
+
