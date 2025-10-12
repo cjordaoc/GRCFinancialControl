@@ -13,6 +13,7 @@ namespace GRCFinancialControl.Persistence
         public DbSet<ExceptionEntry> Exceptions { get; set; }
         public DbSet<ClosingPeriod> ClosingPeriods { get; set; }
         public DbSet<Customer> Customers { get; set; }
+        public DbSet<EngagementRankBudget> EngagementRankBudgets { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -37,6 +38,22 @@ namespace GRCFinancialControl.Persistence
                 .HasMany(e => e.EngagementPapds)
                 .WithOne(ep => ep.Engagement)
                 .HasForeignKey(ep => ep.EngagementId);
+
+            modelBuilder.Entity<Engagement>()
+                .HasMany(e => e.RankBudgets)
+                .WithOne(rb => rb.Engagement)
+                .HasForeignKey(rb => rb.EngagementId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Engagement>()
+                .Property(e => e.InitialHoursBudget)
+                .HasPrecision(18, 2)
+                .HasDefaultValue(0m);
+
+            modelBuilder.Entity<Engagement>()
+                .Property(e => e.ActualHours)
+                .HasPrecision(18, 2)
+                .HasDefaultValue(0m);
 
             modelBuilder.Entity<Papd>()
                 .HasMany<EngagementPapd>() // A PAPD can be linked to many EngagementPapd records
@@ -63,6 +80,23 @@ namespace GRCFinancialControl.Persistence
                 .WithMany(cp => cp.ActualsEntries)
                 .HasForeignKey(ae => ae.ClosingPeriodId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<EngagementRankBudget>()
+                .Property(rb => rb.RankName)
+                .HasMaxLength(100);
+
+            modelBuilder.Entity<EngagementRankBudget>()
+                .Property(rb => rb.Hours)
+                .HasPrecision(18, 2)
+                .HasDefaultValue(0m);
+
+            modelBuilder.Entity<EngagementRankBudget>()
+                .Property(rb => rb.CreatedAtUtc)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            modelBuilder.Entity<EngagementRankBudget>()
+                .HasIndex(rb => new { rb.EngagementId, rb.RankName })
+                .IsUnique();
         }
     }
 }

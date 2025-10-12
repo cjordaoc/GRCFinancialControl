@@ -63,6 +63,8 @@ CREATE TABLE `Engagements`
     `OpeningMargin`    DECIMAL(18, 2) NOT NULL,
     `OpeningValue`     DECIMAL(18, 2) NOT NULL,
     `Status`           INT            NOT NULL,
+    `InitialHoursBudget` DECIMAL(18, 2) NOT NULL DEFAULT 0,
+    `ActualHours`      DECIMAL(18, 2) NOT NULL DEFAULT 0,
     `TotalPlannedHours` DOUBLE        NOT NULL,
     CONSTRAINT `PK_Engagements` PRIMARY KEY (`Id`),
     CONSTRAINT `UX_Engagements_EngagementId` UNIQUE (`EngagementId`)
@@ -78,6 +80,20 @@ CREATE TABLE `EngagementPapds`
     CONSTRAINT `FK_EngagementPapds_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
     CONSTRAINT `FK_EngagementPapds_Papds` FOREIGN KEY (`PapdId`) REFERENCES `Papds` (`Id`) ON DELETE CASCADE,
     CONSTRAINT `UX_EngagementPapds_Assignment` UNIQUE (`EngagementId`, `PapdId`, `EffectiveDate`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE `EngagementRankBudgets`
+(
+    `Id`            BIGINT          NOT NULL AUTO_INCREMENT,
+    `EngagementId`  INT             NOT NULL,
+    `RankName`      VARCHAR(100)    NOT NULL,
+    `Hours`         DECIMAL(18, 2)  NOT NULL DEFAULT 0,
+    `CreatedAtUtc`  DATETIME(6)     NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    `UpdatedAtUtc`  DATETIME(6)     NULL,
+    CONSTRAINT `PK_EngagementRankBudgets` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_EngagementRankBudgets_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `UX_EngagementRankBudgets_EngagementRank` UNIQUE (`EngagementId`, `RankName`),
+    INDEX `IX_EngagementRankBudgets_EngagementId` (`EngagementId`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 CREATE TABLE `PlannedAllocations`
