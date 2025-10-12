@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using GRCFinancialControl.Core.Enums;
 
 namespace GRCFinancialControl.Core.Models
 {
@@ -13,7 +14,7 @@ namespace GRCFinancialControl.Core.Models
         public string CustomerKey { get; set; } = string.Empty;
         public decimal OpeningMargin { get; set; }
         public decimal OpeningValue { get; set; }
-        public string Status { get; set; } = string.Empty;
+        public EngagementStatus Status { get; set; }
         public double TotalPlannedHours { get; set; }
 
         public ICollection<EngagementPapd> EngagementPapds { get; set; } = new List<EngagementPapd>();

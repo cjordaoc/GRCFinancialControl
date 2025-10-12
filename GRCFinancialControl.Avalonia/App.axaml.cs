@@ -74,6 +74,9 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<IPapdService, PapdService>();
             services.AddTransient<IExceptionService, ExceptionService>();
 
+            // Register LoggingService
+            services.AddSingleton<ILoggingService, LoggingService>();
+
             // Register Messenger
             services.AddSingleton<CommunityToolkit.Mvvm.Messaging.IMessenger>(CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default);
 
@@ -91,6 +94,7 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<SettingsViewModel>();
             services.AddTransient<ClosingPeriodsViewModel>();
             services.AddTransient<ClosingPeriodEditorViewModel>();
+            services.AddTransient<EngagementPapdAssignmentViewModel>();
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {

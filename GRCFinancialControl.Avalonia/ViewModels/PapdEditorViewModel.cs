@@ -1,8 +1,10 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
+using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -17,7 +19,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private string _name = string.Empty;
 
         [ObservableProperty]
-        private string _level = string.Empty;
+        private PapdLevel _level;
+
+        public IEnumerable<PapdLevel> LevelOptions => System.Enum.GetValues<PapdLevel>();
 
         public Papd Papd { get; }
 

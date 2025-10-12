@@ -8,7 +8,9 @@
         x:Class="GRCFinancialControl.Avalonia.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="GRC Financial Control">
+        Title="GRC Financial Control"
+        WindowState="Maximized"
+        WindowStartupLocation="CenterScreen">
 
     <Design.DataContext>
         <vm:MainWindowViewModel/>

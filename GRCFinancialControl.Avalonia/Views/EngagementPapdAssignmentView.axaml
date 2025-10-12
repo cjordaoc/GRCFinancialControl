@@ -1,0 +1,28 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="GRCFinancialControl.Avalonia.Views.EngagementPapdAssignmentView"
+             x:DataType="vm:EngagementPapdAssignmentViewModel">
+    <Grid ColumnDefinitions="*,Auto,*" RowDefinitions="Auto,*,Auto" Margin="10">
+        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="Engagement-PAPD Assignment" FontSize="24" FontWeight="Bold" Margin="0,0,0,10"/>
+
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Engagements" HorizontalAlignment="Center"/>
+        <ListBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Engagements}" SelectedItem="{Binding SelectedEngagement}" DisplayMemberBinding="{Binding Description}" Margin="0,20,0,0"/>
+
+        <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Spacing="10">
+            <Button Content="Assign >>" Command="{Binding AssignCommand}"/>
+            <Button Content="<< Unassign" Command="{Binding UnassignCommand}"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="1" Grid.Column="2" Text="PAPDs" HorizontalAlignment="Center"/>
+        <ListBox Grid.Row="1" Grid.Column="2" ItemsSource="{Binding Papds}" SelectedItem="{Binding SelectedPapd}" DisplayMemberBinding="{Binding Name}" Margin="0,20,0,0"/>
+
+        <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="5" Margin="0,10,0,0">
+            <Button Content="Refresh" Command="{Binding LoadDataCommand}"/>
+            <Button Content="Save" Command="{Binding SaveCommand}"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

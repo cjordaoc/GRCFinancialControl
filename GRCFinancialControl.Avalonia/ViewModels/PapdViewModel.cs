@@ -28,6 +28,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             AddCommand = new RelayCommand(Add);
             EditCommand = new RelayCommand(Edit, () => SelectedPapd != null);
             DeleteCommand = new AsyncRelayCommand(Delete, () => SelectedPapd != null);
+
+            _ = LoadPapdsCommand.ExecuteAsync(null);
         }
 
         public IAsyncRelayCommand LoadPapdsCommand { get; }

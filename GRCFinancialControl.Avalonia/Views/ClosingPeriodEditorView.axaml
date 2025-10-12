@@ -6,8 +6,7 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="250"
              x:Class="GRCFinancialControl.Avalonia.Views.ClosingPeriodEditorView"
              x:DataType="vm:ClosingPeriodEditorViewModel">
-    <Border Background="White" Padding="20">
-        <StackPanel Spacing="12">
+    <StackPanel Spacing="12" Margin="20">
             <TextBlock Text="Closing Period" FontSize="20" FontWeight="Bold"/>
 
             <StackPanel Spacing="4">
@@ -33,6 +32,5 @@
                 <Button Content="Save" Command="{Binding SaveCommand}"/>
             </StackPanel>
         </StackPanel>
-    </Border>
 </UserControl>
 

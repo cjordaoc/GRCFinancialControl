@@ -28,6 +28,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             AddCommand = new RelayCommand(Add);
             EditCommand = new RelayCommand(Edit, () => SelectedFiscalYear != null);
             DeleteCommand = new AsyncRelayCommand(Delete, () => SelectedFiscalYear != null);
+
+            _ = LoadFiscalYearsCommand.ExecuteAsync(null);
         }
 
         public IAsyncRelayCommand LoadFiscalYearsCommand { get; }
