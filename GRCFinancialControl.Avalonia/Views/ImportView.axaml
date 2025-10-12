@@ -6,36 +6,52 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.ImportView"
              x:DataType="vm:ImportViewModel">
-    <StackPanel Spacing="10" Margin="10">
+    <StackPanel Spacing="10" Margin="20">
         <TextBlock Text="File Import" FontSize="24" FontWeight="Bold"/>
 
-        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-            <TextBlock Text="Closing Period:" VerticalAlignment="Center"/>
-            <ComboBox Width="260"
-                      ItemsSource="{Binding ClosingPeriods}"
-                      SelectedItem="{Binding SelectedClosingPeriod}">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
-                            <TextBlock>
-                                <TextBlock.Inlines>
-                                    <Run Text="("/>
-                                    <Run Text="{Binding PeriodStart, StringFormat='{}{0:yyyy-MM-dd}'}"/>
-                                    <Run Text=" - "/>
-                                    <Run Text="{Binding PeriodEnd, StringFormat='{}{0:yyyy-MM-dd}'}"/>
-                                    <Run Text=")"/>
-                                </TextBlock.Inlines>
-                            </TextBlock>
-                        </StackPanel>
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
-            <Button Content="Refresh" Command="{Binding LoadClosingPeriodsCommand}"/>
+        <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,10,0,0">
+            <Button Content="Import Budget File" Command="{Binding SetImportTypeCommand}" CommandParameter="Budget" Classes="accent"/>
+            <Button Content="Import Margin Data" Command="{Binding SetImportTypeCommand}" CommandParameter="Actuals" Classes="accent"/>
         </StackPanel>
 
-        <Button Content="Import Budget File" Command="{Binding ImportBudgetCommand}"/>
-        <Button Content="Import Margin Data" Command="{Binding ImportActualsCommand}"/>
-        <TextBlock Text="{Binding StatusMessage}" Margin="0,10,0,0"/>
+        <Panel IsVisible="{Binding FileType, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                    CornerRadius="8"
+                    Padding="15"
+                    Margin="0,10,0,0">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="{Binding FileType, StringFormat='Import {0} Data'}" FontSize="18" FontWeight="SemiBold"/>
+
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
+                                IsVisible="{Binding FileType, Converter={x:Static StringConverters.Equals}, ConverterParameter=Actuals}">
+                        <TextBlock Text="Closing Period:" VerticalAlignment="Center"/>
+                        <ComboBox Width="260"
+                                  ItemsSource="{Binding ClosingPeriods}"
+                                  SelectedItem="{Binding SelectedClosingPeriod}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                                        <TextBlock>
+                                            <TextBlock.Inlines>
+                                                <Run Text="("/>
+                                                <Run Text="{Binding PeriodStart, StringFormat='{}{0:yyyy-MM-dd}'}"/>
+                                                <Run Text=" - "/>
+                                                <Run Text="{Binding PeriodEnd, StringFormat='{}{0:yyyy-MM-dd}'}"/>
+                                                <Run Text=")"/>
+                                            </TextBlock.Inlines>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <Button Content="Refresh" Command="{Binding LoadClosingPeriodsCommand}"/>
+                    </StackPanel>
+
+                    <Button Content="Select File and Import" Command="{Binding ImportCommand}" Classes="accent"/>
+                    <TextBlock Text="{Binding StatusMessage}" Margin="0,10,0,0" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+        </Panel>
     </StackPanel>
 </UserControl>

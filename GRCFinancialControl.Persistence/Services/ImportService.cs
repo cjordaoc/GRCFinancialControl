@@ -32,10 +32,25 @@ namespace GRCFinancialControl.Persistence.Services
             {
                 using (var reader = ExcelReaderFactory.CreateReader(stream))
                 {
-                    reader.Read(); // Skip header row
+                    var header = new List<string>();
+                    if (reader.Read())
+                    {
+                        for (var i = 0; i < reader.FieldCount; i++)
+                        {
+                            header.Add(reader.GetValue(i)?.ToString()?.Trim() ?? string.Empty);
+                        }
+                    }
+
+                    var engagementIdCol = FindColumn(header, new[] { "engagement" }, new[] { "id", "code", "#" });
+                    var descriptionCol = FindColumn(header, new[] { "description", "engagement name" });
+                    var totalHoursCol = FindColumn(header, new[] { "total" }, new[] { "hours" });
+                    var weekCols = FindWeeklyColumns(header);
+
+                    if (engagementIdCol == -1) return "Could not find Engagement ID column.";
+
                     while (reader.Read())
                     {
-                        var engagementId = reader.GetValue(0)?.ToString();
+                        var engagementId = reader.GetValue(engagementIdCol)?.ToString();
                         if (string.IsNullOrEmpty(engagementId)) continue;
 
                         if (!engagementsInFile.ContainsKey(engagementId))
@@ -43,16 +58,27 @@ namespace GRCFinancialControl.Persistence.Services
                             engagementsInFile[engagementId] = new Engagement
                             {
                                 EngagementId = engagementId,
-                                Description = reader.GetValue(1)?.ToString() ?? string.Empty,
-                                CustomerKey = reader.GetValue(2)?.ToString() ?? string.Empty,
+                                Description = descriptionCol != -1 ? reader.GetValue(descriptionCol)?.ToString() ?? string.Empty : string.Empty,
                                 TotalPlannedHours = 0
                             };
                         }
 
-                        if (reader.GetValue(3) != null && double.TryParse(reader.GetValue(3).ToString(), out var hours))
+                        double totalHours = 0;
+                        if (totalHoursCol != -1)
                         {
-                            engagementsInFile[engagementId].TotalPlannedHours += hours;
+                            double.TryParse(reader.GetValue(totalHoursCol)?.ToString(), out totalHours);
                         }
+                        else if (weekCols.Any())
+                        {
+                            foreach (var col in weekCols)
+                            {
+                                if (double.TryParse(reader.GetValue(col)?.ToString(), out var hours))
+                                {
+                                    totalHours += hours;
+                                }
+                            }
+                        }
+                        engagementsInFile[engagementId].TotalPlannedHours += totalHours;
                     }
                 }
             }
@@ -102,17 +128,27 @@ namespace GRCFinancialControl.Persistence.Services
                     }
                 });
 
-                var detailTable = dataSet.Tables.Cast<DataTable>()
-                    .FirstOrDefault(t => t.Columns.Contains("Engagement ID") && t.Columns.Contains("Charged Hours / Quantity"));
+                var detailTable = dataSet.Tables.Cast<DataTable>().FirstOrDefault(t => t.Columns.Contains("Engagement ID") || t.Columns.Contains("Engagement"));
 
                 if (detailTable == null)
                 {
                     return "The margin file does not contain a detail worksheet with the required columns.";
                 }
 
+                var header = detailTable.Columns.Cast<DataColumn>().Select(c => c.ColumnName.Trim()).ToList();
+                var engagementIdCol = FindColumn(header, new[] { "engagement" }, new[] { "id", "code", "#" });
+                var engagementNameCol = FindColumn(header, new[] { "engagement name" });
+                var clientIdCol = FindColumn(header, new[] { "client id" });
+                var dateCol = FindColumn(header, new[] { "date", "posting date", "work date" });
+                var hoursCol = FindColumn(header, new[] { "hours", "hrs", "qty" });
+
+                if (engagementIdCol == -1) return "Could not find Engagement ID column.";
+                if (dateCol == -1) return "Could not find Date column.";
+                if (hoursCol == -1) return "Could not find Hours column.";
+
                 foreach (DataRow row in detailTable.Rows)
                 {
-                    var engagementId = row["Engagement ID"]?.ToString()?.Trim();
+                    var engagementId = row[engagementIdCol]?.ToString()?.Trim();
                     if (string.IsNullOrEmpty(engagementId))
                     {
                         continue;
@@ -124,8 +160,8 @@ namespace GRCFinancialControl.Persistence.Services
                         engagement = new Engagement
                         {
                             EngagementId = engagementId,
-                            Description = row["Engagement Name"]?.ToString() ?? string.Empty,
-                            CustomerKey = row.Table.Columns.Contains("Client ID") ? row["Client ID"]?.ToString() ?? string.Empty : string.Empty,
+                            Description = engagementNameCol != -1 ? row[engagementNameCol]?.ToString() ?? string.Empty : string.Empty,
+                            CustomerKey = clientIdCol != -1 ? row[clientIdCol]?.ToString() ?? string.Empty : string.Empty,
                             TotalPlannedHours = 0
                         };
 
@@ -136,16 +172,19 @@ namespace GRCFinancialControl.Persistence.Services
                     else
                     {
                         var updated = false;
-                        var engagementName = row["Engagement Name"]?.ToString();
-                        if (!string.IsNullOrWhiteSpace(engagementName) && !string.Equals(engagement.Description, engagementName, StringComparison.Ordinal))
+                        if (engagementNameCol != -1)
                         {
-                            engagement.Description = engagementName;
-                            updated = true;
+                            var engagementName = row[engagementNameCol]?.ToString();
+                            if (!string.IsNullOrWhiteSpace(engagementName) && !string.Equals(engagement.Description, engagementName, StringComparison.Ordinal))
+                            {
+                                engagement.Description = engagementName;
+                                updated = true;
+                            }
                         }
 
-                        if (row.Table.Columns.Contains("Client ID"))
+                        if (clientIdCol != -1)
                         {
-                            var clientId = row["Client ID"]?.ToString();
+                            var clientId = row[clientIdCol]?.ToString();
                             if (!string.IsNullOrWhiteSpace(clientId) && !string.Equals(engagement.CustomerKey, clientId, StringComparison.Ordinal))
                             {
                                 engagement.CustomerKey = clientId;
@@ -159,8 +198,8 @@ namespace GRCFinancialControl.Persistence.Services
                         }
                     }
 
-                    var activityDate = TryGetDate(row, "Week Ending Date") ?? TryGetDate(row, "Transaction Date") ?? DateTime.MinValue;
-                    var hours = TryGetDouble(row, "Charged Hours / Quantity");
+                    var activityDate = TryGetDate(row, detailTable.Columns[dateCol].ColumnName) ?? DateTime.MinValue;
+                    var hours = TryGetDouble(row, detailTable.Columns[hoursCol].ColumnName);
                     var papd = engagement.Id == 0 ? null : await _engagementService.GetPapdForDateAsync(engagement.Id, activityDate);
 
                     var actualsEntry = new ActualsEntry
@@ -227,6 +266,36 @@ namespace GRCFinancialControl.Persistence.Services
             }
 
             return 0d;
+        }
+
+        private int FindColumn(List<string> headers, string[] primaryKeywords, string[] secondaryKeywords = null)
+        {
+            for (int i = 0; i < headers.Count; i++)
+            {
+                var header = headers[i].ToLower();
+                if (primaryKeywords.Any(key => header.Contains(key)))
+                {
+                    if (secondaryKeywords == null || secondaryKeywords.Any(key => header.Contains(key)))
+                    {
+                        return i;
+                    }
+                }
+            }
+            return -1;
+        }
+
+        private List<int> FindWeeklyColumns(List<string> headers)
+        {
+            var weekCols = new List<int>();
+            var regex = new System.Text.RegularExpressions.Regex(@"(?i)\b(week|wk|w\d{2})|(\d{4}-\d{2}-\d{2})|(\d{1,2}\/\d{1,2}\/\d{4})");
+            for (int i = 0; i < headers.Count; i++)
+            {
+                if (regex.IsMatch(headers[i]))
+                {
+                    weekCols.Add(i);
+                }
+            }
+            return weekCols;
         }
     }
 }

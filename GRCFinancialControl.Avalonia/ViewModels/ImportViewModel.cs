@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,6 +25,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private ClosingPeriod? _selectedClosingPeriod;
 
+        [ObservableProperty]
+        private string? _fileType;
+
         public ImportViewModel(IFilePickerService filePickerService, IImportService importService, IClosingPeriodService closingPeriodService)
         {
             _filePickerService = filePickerService;
@@ -31,36 +35,55 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _closingPeriodService = closingPeriodService;
 
             LoadClosingPeriodsCommand = new AsyncRelayCommand(LoadClosingPeriodsAsync);
+            SetImportTypeCommand = new RelayCommand<string>(SetImportType);
+            ImportCommand = new AsyncRelayCommand(ImportAsync);
             _ = LoadClosingPeriodsCommand.ExecuteAsync(null);
         }
 
         public IAsyncRelayCommand LoadClosingPeriodsCommand { get; }
+        public IRelayCommand SetImportTypeCommand { get; }
+        public IAsyncRelayCommand ImportCommand { get; }
 
-        [RelayCommand]
-        private async Task ImportBudget()
+        private void SetImportType(string? fileType)
         {
-            var filePath = await _filePickerService.OpenFileAsync();
-            if (filePath != null)
-            {
-                StatusMessage = "Importing budget...";
-                StatusMessage = await _importService.ImportBudgetAsync(filePath);
-            }
+            FileType = fileType;
+            StatusMessage = null;
         }
 
-        [RelayCommand]
-        private async Task ImportActuals()
+        private async Task ImportAsync()
         {
-            if (SelectedClosingPeriod == null)
+            if (string.IsNullOrEmpty(FileType)) return;
+
+            if (FileType == "Actuals" && SelectedClosingPeriod == null)
             {
-                StatusMessage = "Select a closing period before importing margin data.";
+                StatusMessage = "Please select a closing period before importing margin data.";
                 return;
             }
 
             var filePath = await _filePickerService.OpenFileAsync();
-            if (filePath != null)
+            if (string.IsNullOrEmpty(filePath)) return;
+
+            StatusMessage = $"Importing {FileType.ToLower()} data...";
+            try
             {
-                StatusMessage = "Importing actuals...";
-                StatusMessage = await _importService.ImportActualsAsync(filePath, SelectedClosingPeriod.Id);
+                string result;
+                if (FileType == "Budget")
+                {
+                    result = await _importService.ImportBudgetAsync(filePath);
+                }
+                else if (FileType == "Actuals")
+                {
+                    result = await _importService.ImportActualsAsync(filePath, SelectedClosingPeriod!.Id);
+                }
+                else
+                {
+                    result = "Invalid import type selected.";
+                }
+                StatusMessage = result;
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"An error occurred during import: {ex.Message}";
             }
         }
 
