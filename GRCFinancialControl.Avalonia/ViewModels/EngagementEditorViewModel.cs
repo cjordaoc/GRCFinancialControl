@@ -73,7 +73,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private async Task LoadCustomersAsync()
         {
             Customers = new ObservableCollection<Customer>(await _customerService.GetAllAsync());
-            SelectedCustomer = Customers.FirstOrDefault(c => c.Name == Engagement.CustomerKey);
+            SelectedCustomer = Customers.FirstOrDefault(c => Engagement.CustomerId.HasValue && c.Id == Engagement.CustomerId)
+                               ?? Customers.FirstOrDefault(c => c.Name == Engagement.CustomerKey);
         }
 
         [RelayCommand]
@@ -82,6 +83,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Engagement.EngagementId = EngagementId;
             Engagement.Description = Description;
             Engagement.CustomerKey = SelectedCustomer?.Name ?? string.Empty;
+            Engagement.CustomerId = SelectedCustomer?.Id;
             Engagement.OpeningMargin = OpeningMargin;
             Engagement.OpeningValue = OpeningValue;
             Engagement.Status = Status;
