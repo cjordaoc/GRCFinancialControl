@@ -12,7 +12,8 @@
         <DataGrid Grid.Row="1"
                   ItemsSource="{Binding ReportData}"
                   IsReadOnly="True"
-                  AutoGenerateColumns="False">
+                  AutoGenerateColumns="False"
+                  SelectionMode="Single">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Engagement ID" Binding="{Binding EngagementId}" Width="*"/>
                 <DataGridTextColumn Header="Description" Binding="{Binding EngagementDescription}" Width="2*"/>

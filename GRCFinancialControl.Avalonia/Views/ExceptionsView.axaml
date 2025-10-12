@@ -12,7 +12,8 @@
         <DataGrid Grid.Row="1"
                   ItemsSource="{Binding Exceptions}"
                   IsReadOnly="True"
-                  AutoGenerateColumns="False">
+                  AutoGenerateColumns="False"
+                  SelectionMode="Single">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Timestamp" Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}" Width="*"/>
                 <DataGridTextColumn Header="Source File" Binding="{Binding SourceFile}" Width="*"/>

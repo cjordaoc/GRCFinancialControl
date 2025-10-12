@@ -57,5 +57,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             await _fiscalYearService.DeleteAsync(SelectedFiscalYear.Id);
             await LoadDataAsync();
         }
+
+        partial void OnSelectedFiscalYearChanged(FiscalYear? value)
+        {
+            if (EditCommand is RelayCommand editCommand)
+            {
+                editCommand.NotifyCanExecuteChanged();
+            }
+
+            if (DeleteCommand is AsyncRelayCommand deleteCommand)
+            {
+                deleteCommand.NotifyCanExecuteChanged();
+            }
+        }
     }
 }

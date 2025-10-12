@@ -58,5 +58,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             await _customerService.DeleteAsync(SelectedCustomer.Id);
             await LoadDataAsync();
         }
+
+        partial void OnSelectedCustomerChanged(Customer? value)
+        {
+            if (EditCommand is RelayCommand editCommand)
+            {
+                editCommand.NotifyCanExecuteChanged();
+            }
+
+            if (DeleteCommand is AsyncRelayCommand deleteCommand)
+            {
+                deleteCommand.NotifyCanExecuteChanged();
+            }
+        }
     }
 }
