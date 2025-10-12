@@ -43,7 +43,6 @@ CREATE TABLE `ClosingPeriods`
     `Name`          VARCHAR(100)  NOT NULL,
     `PeriodStart`   DATE          NOT NULL,
     `PeriodEnd`     DATE          NOT NULL,
-    `Discriminator` VARCHAR(64)   NOT NULL,
     CONSTRAINT `PK_ClosingPeriods` PRIMARY KEY (`Id`),
     CONSTRAINT `UX_ClosingPeriods_Name` UNIQUE (`Name`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
@@ -166,6 +165,28 @@ CREATE TABLE `Settings`
     `Value` TEXT          NOT NULL,
     CONSTRAINT `PK_Settings` PRIMARY KEY (`Id`),
     CONSTRAINT `UX_Settings_Key` UNIQUE (`Key`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE `FiscalYears`
+(
+    `Id`        INT           NOT NULL AUTO_INCREMENT,
+    `Name`      VARCHAR(100)  NOT NULL,
+    `StartDate` DATE          NOT NULL,
+    `EndDate`   DATE          NOT NULL,
+    CONSTRAINT `PK_FiscalYears` PRIMARY KEY (`Id`),
+    CONSTRAINT `UX_FiscalYears_Name` UNIQUE (`Name`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE `EngagementFiscalYearAllocations`
+(
+    `Id`             INT             NOT NULL AUTO_INCREMENT,
+    `EngagementId`   INT             NOT NULL,
+    `FiscalYearId`   INT             NOT NULL,
+    `PlannedHours`   DECIMAL(18, 2)  NOT NULL,
+    CONSTRAINT `PK_EngagementFiscalYearAllocations` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_EngagementFiscalYearAllocations_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_EngagementFiscalYearAllocations_FiscalYears` FOREIGN KEY (`FiscalYearId`) REFERENCES `FiscalYears` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `UX_EngagementFiscalYearAllocations_Allocation` UNIQUE (`EngagementId`, `FiscalYearId`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
