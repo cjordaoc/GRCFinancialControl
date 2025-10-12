@@ -18,6 +18,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly IEngagementService _engagementService;
         private readonly IPapdService _papdService;
         private readonly ICustomerService _customerService;
+        private readonly IDialogService _dialogService;
         private readonly IMessenger _messenger;
 
         [ObservableProperty]
@@ -44,6 +45,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private double _totalPlannedHours;
 
+        [ObservableProperty]
+        private decimal? _marginPctEtcp;
+
+        [ObservableProperty]
+        private int? _etcpAgeDays;
+
+        [ObservableProperty]
+        private DateTime? _latestEtcDate;
+
         public IEnumerable<EngagementStatus> StatusOptions => Enum.GetValues<EngagementStatus>();
 
         [ObservableProperty]
@@ -51,12 +61,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public Engagement Engagement { get; }
 
-        public EngagementEditorViewModel(Engagement engagement, IEngagementService engagementService, IPapdService papdService, ICustomerService customerService, IMessenger messenger)
+        public EngagementEditorViewModel(Engagement engagement, IEngagementService engagementService, IPapdService papdService, ICustomerService customerService, IDialogService dialogService, IMessenger messenger)
         {
             Engagement = engagement;
             _engagementService = engagementService;
             _papdService = papdService;
             _customerService = customerService;
+            _dialogService = dialogService;
             _messenger = messenger;
 
             EngagementId = engagement.EngagementId;
@@ -65,6 +76,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             OpeningValue = engagement.OpeningValue;
             Status = engagement.Status;
             TotalPlannedHours = engagement.TotalPlannedHours;
+            MarginPctEtcp = engagement.MarginPctEtcp;
+            EtcpAgeDays = engagement.EtcpAgeDays;
+            LatestEtcDate = engagement.LatestEtcDate;
             PapdAssignments = new ObservableCollection<EngagementPapd>(engagement.EngagementPapds);
 
             _ = LoadCustomersAsync();
@@ -88,6 +102,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Engagement.OpeningValue = OpeningValue;
             Engagement.Status = Status;
             Engagement.TotalPlannedHours = TotalPlannedHours;
+            Engagement.MarginPctEtcp = MarginPctEtcp;
+            Engagement.EtcpAgeDays = EtcpAgeDays;
+            Engagement.LatestEtcDate = LatestEtcDate;
             Engagement.EngagementPapds = PapdAssignments;
 
             if (Engagement.Id == 0)
@@ -109,17 +126,20 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         }
 
         [RelayCommand]
-        private void AddAssignment()
-        {
-            // In a real app, this would open a dialog to select a PAPD and a date.
-            // For now, we'll just add a placeholder.
-            PapdAssignments.Add(new EngagementPapd { Papd = new Papd { Name = "New PAPD" }, EffectiveDate = DateTime.Today });
-        }
-
         [RelayCommand]
-        private void RemoveAssignment()
+        private async Task OpenPapdAssignmentDialog()
         {
-            // Logic to remove the selected assignment
+            var papdAssignmentViewModel = new EngagementPapdAssignmentViewModel(
+                new ObservableCollection<EngagementPapd>(PapdAssignments),
+                await _papdService.GetAllAsync()
+            );
+
+            var result = await _dialogService.ShowDialogAsync(papdAssignmentViewModel);
+
+            if (result is ObservableCollection<EngagementPapd> updatedAssignments)
+            {
+                PapdAssignments = updatedAssignments;
+            }
         }
     }
 }

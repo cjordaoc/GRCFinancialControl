@@ -33,5 +33,8 @@ namespace GRCFinancialControl.Core.Models
         public ICollection<EngagementPapd> EngagementPapds { get; set; } = new List<EngagementPapd>();
         public ICollection<EngagementRankBudget> RankBudgets { get; set; } = new List<EngagementRankBudget>();
         public ICollection<MarginEvolution> MarginEvolutions { get; set; } = new List<MarginEvolution>();
+        public ICollection<EngagementFiscalYearAllocation> Allocations { get; set; } = new List<EngagementFiscalYearAllocation>();
+        [NotMapped]
+        public double CurrentHoursAllocation => Allocations.Sum(a => a.Hours);
     }
 }

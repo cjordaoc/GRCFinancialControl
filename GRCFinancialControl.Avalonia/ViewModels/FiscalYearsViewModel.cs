@@ -12,63 +12,46 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     public partial class FiscalYearsViewModel : ViewModelBase
     {
         private readonly IFiscalYearService _fiscalYearService;
-        private readonly IMessenger _messenger;
+        private readonly IDialogService _dialogService;
 
         [ObservableProperty]
         private ObservableCollection<FiscalYear> _fiscalYears = new();
 
-        [ObservableProperty]
-        private FiscalYear? _selectedFiscalYear;
-
-        public FiscalYearsViewModel(IFiscalYearService fiscalYearService, IMessenger messenger)
+        public FiscalYearsViewModel(IFiscalYearService fiscalYearService, IDialogService dialogService, IMessenger messenger)
+            : base(messenger)
         {
             _fiscalYearService = fiscalYearService;
-            _messenger = messenger;
-            AddCommand = new RelayCommand(Add);
-            EditCommand = new RelayCommand(Edit, () => SelectedFiscalYear != null);
-            DeleteCommand = new AsyncRelayCommand(Delete, () => SelectedFiscalYear != null);
+            _dialogService = dialogService;
         }
-
-        public IRelayCommand AddCommand { get; }
-        public IRelayCommand EditCommand { get; }
-        public IAsyncRelayCommand DeleteCommand { get; }
 
         public override async Task LoadDataAsync()
         {
             FiscalYears = new ObservableCollection<FiscalYear>(await _fiscalYearService.GetAllAsync());
         }
 
-        private void Add()
+        [RelayCommand]
+        private async Task Add()
         {
-            var editorViewModel = new FiscalYearEditorViewModel(new FiscalYear(), _fiscalYearService, _messenger);
-            _messenger.Send(new OpenDialogMessage(editorViewModel));
+            var editorViewModel = new FiscalYearEditorViewModel(new FiscalYear(), _fiscalYearService, Messenger);
+            await _dialogService.ShowDialogAsync(editorViewModel);
+            Messenger.Send(new RefreshDataMessage());
         }
 
-        private void Edit()
+        [RelayCommand]
+        private async Task Edit(FiscalYear fiscalYear)
         {
-            if (SelectedFiscalYear == null) return;
-            var editorViewModel = new FiscalYearEditorViewModel(SelectedFiscalYear, _fiscalYearService, _messenger);
-            _messenger.Send(new OpenDialogMessage(editorViewModel));
+            if (fiscalYear == null) return;
+            var editorViewModel = new FiscalYearEditorViewModel(fiscalYear, _fiscalYearService, Messenger);
+            await _dialogService.ShowDialogAsync(editorViewModel);
+            Messenger.Send(new RefreshDataMessage());
         }
 
-        private async Task Delete()
+        [RelayCommand]
+        private async Task Delete(FiscalYear fiscalYear)
         {
-            if (SelectedFiscalYear == null) return;
-            await _fiscalYearService.DeleteAsync(SelectedFiscalYear.Id);
-            await LoadDataAsync();
-        }
-
-        partial void OnSelectedFiscalYearChanged(FiscalYear? value)
-        {
-            if (EditCommand is RelayCommand editCommand)
-            {
-                editCommand.NotifyCanExecuteChanged();
-            }
-
-            if (DeleteCommand is AsyncRelayCommand deleteCommand)
-            {
-                deleteCommand.NotifyCanExecuteChanged();
-            }
+            if (fiscalYear == null) return;
+            await _fiscalYearService.DeleteAsync(fiscalYear.Id);
+            Messenger.Send(new RefreshDataMessage());
         }
     }
 }

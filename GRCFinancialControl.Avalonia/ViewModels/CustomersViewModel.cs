@@ -20,43 +20,44 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private Customer? _selectedCustomer;
 
-        public CustomersViewModel(ICustomerService customerService, IMessenger messenger)
+        public CustomersViewModel(ICustomerService customerService, IDialogService dialogService, IMessenger messenger)
+            : base(messenger)
         {
             _customerService = customerService;
-            _messenger = messenger;
-
-            AddCommand = new RelayCommand(Add);
-            EditCommand = new RelayCommand(Edit, () => SelectedCustomer != null);
-            DeleteCommand = new AsyncRelayCommand(Delete, () => SelectedCustomer != null);
+            _dialogService = dialogService;
         }
 
-        public IRelayCommand AddCommand { get; }
-        public IRelayCommand EditCommand { get; }
-        public IAsyncRelayCommand DeleteCommand { get; }
+        [ObservableProperty]
+        private ObservableCollection<Customer> _customers = new();
 
         public override async Task LoadDataAsync()
         {
             Customers = new ObservableCollection<Customer>(await _customerService.GetAllAsync());
         }
 
-        private void Add()
+        [RelayCommand]
+        private async Task Add()
         {
-            var editorViewModel = new CustomerEditorViewModel(new Customer(), _customerService, _messenger);
-            _messenger.Send(new OpenDialogMessage(editorViewModel));
+            var editorViewModel = new CustomerEditorViewModel(new Customer(), _customerService, Messenger);
+            await _dialogService.ShowDialogAsync(editorViewModel);
+            Messenger.Send(new RefreshDataMessage());
         }
 
-        private void Edit()
+        [RelayCommand]
+        private async Task Edit(Customer customer)
         {
-            if (SelectedCustomer == null) return;
-            var editorViewModel = new CustomerEditorViewModel(SelectedCustomer, _customerService, _messenger);
-            _messenger.Send(new OpenDialogMessage(editorViewModel));
+            if (customer == null) return;
+            var editorViewModel = new CustomerEditorViewModel(customer, _customerService, Messenger);
+            await _dialogService.ShowDialogAsync(editorViewModel);
+            Messenger.Send(new RefreshDataMessage());
         }
 
-        private async Task Delete()
+        [RelayCommand]
+        private async Task Delete(Customer customer)
         {
-            if (SelectedCustomer == null) return;
-            await _customerService.DeleteAsync(SelectedCustomer.Id);
-            await LoadDataAsync();
+            if (customer == null) return;
+            await _customerService.DeleteAsync(customer.Id);
+            Messenger.Send(new RefreshDataMessage());
         }
 
         partial void OnSelectedCustomerChanged(Customer? value)

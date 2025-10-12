@@ -6,43 +6,22 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.AllocationView"
              x:DataType="vm:AllocationViewModel">
-    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="10">
-        <TextBlock Text="Fiscal Year Allocation" FontSize="24" FontWeight="Bold" Margin="0,0,0,10"/>
-
-        <ComboBox Grid.Row="1"
-                  ItemsSource="{Binding Engagements}"
-                  SelectedItem="{Binding SelectedEngagement, Mode=TwoWay}"
-                  DisplayMemberBinding="{Binding Description}"
-                  PlaceholderText="Select an Engagement"
-                  Margin="0,0,0,10">
-        </ComboBox>
-
-        <DataGrid Grid.Row="2"
-                  ItemsSource="{Binding AllocationEntries}"
-                  AutoGenerateColumns="False"
-                  SelectionMode="Single">
+    <Grid RowDefinitions="Auto,*">
+        <TextBlock Text="Engagements Allocation" FontSize="20" FontWeight="Bold" Margin="10"/>
+        <DataGrid Grid.Row="1" ItemsSource="{Binding Engagements}" AutoGenerateColumns="False" IsReadOnly="True" CanUserSortColumns="True">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Fiscal Year" Binding="{Binding FiscalYear.Name}" IsReadOnly="True" Width="*"/>
-                <DataGridTextColumn Header="Allocated Hours" Binding="{Binding AllocatedHours}" Width="*"/>
+                <DataGridTextColumn Header="Engagement ID" Binding="{Binding EngagementId}" Width="*"/>
+                <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="2*"/>
+                <DataGridTextColumn Header="Total Planned Hours" Binding="{Binding TotalPlannedHours}" Width="*"/>
+                <DataGridTextColumn Header="Current Hours Allocation" Binding="{Binding CurrentHoursAllocation}" Width="*"/>
+                <DataGridTemplateColumn Header="Actions">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="Edit" Command="{Binding $parent[UserControl].DataContext.EditAllocationCommand}" CommandParameter="{Binding}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
-
-        <StackPanel Grid.Row="3" Margin="0,10,0,0" Spacing="5">
-            <TextBlock>
-                <Run Text="Total Planned Hours: "/>
-                <Run Text="{Binding SelectedEngagement.TotalPlannedHours}"/>
-            </TextBlock>
-            <TextBlock>
-                <Run Text="Total Allocated Hours: "/>
-                <Run Text="{Binding TotalAllocatedHours}"/>
-            </TextBlock>
-            <TextBlock>
-                <Run Text="Remaining Hours: "/>
-                <Run Text="{Binding RemainingHours}"/>
-            </TextBlock>
-            <Button Content="Load Allocations for Selected" Command="{Binding OnEngagementSelectedCommand}" Margin="0,10,0,0" />
-            <Button Content="Recalculate Totals" Command="{Binding RecalculateTotalsCommand}" Margin="0,5,0,0" />
-            <Button Content="Save Allocations" Command="{Binding SaveAllocationsCommand}" Margin="0,10,0,0" FontWeight="Bold"/>
-        </StackPanel>
     </Grid>
 </UserControl>

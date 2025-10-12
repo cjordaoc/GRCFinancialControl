@@ -168,6 +168,16 @@ CREATE TABLE `Exceptions`
     CONSTRAINT `PK_Exceptions` PRIMARY KEY (`Id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
+CREATE TABLE `EngagementFiscalYearAllocations` (
+    `Id` int NOT NULL AUTO_INCREMENT,
+    `EngagementId` int NOT NULL,
+    `FiscalYearId` int NOT NULL,
+    `Hours` double NOT NULL,
+    PRIMARY KEY (`Id`),
+    FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
+    FOREIGN KEY (`FiscalYearId`) REFERENCES `FiscalYears` (`Id`) ON DELETE CASCADE
+);
+
 CREATE TABLE `Settings`
 (
     `Id`    INT           NOT NULL AUTO_INCREMENT,

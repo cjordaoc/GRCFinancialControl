@@ -22,52 +22,44 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private Papd? _selectedPapd;
 
-        public PapdViewModel(IPapdService papdService, IMessenger messenger, Func<EngagementPapdAssignmentViewModel> assignmentViewModelFactory)
+        public PapdViewModel(IPapdService papdService, IDialogService dialogService, IMessenger messenger)
+            : base(messenger)
         {
             _papdService = papdService;
-            _messenger = messenger;
-            _assignmentViewModelFactory = assignmentViewModelFactory;
-            AddCommand = new RelayCommand(Add);
-            EditCommand = new RelayCommand(Edit, () => SelectedPapd != null);
-            DeleteCommand = new AsyncRelayCommand(Delete, () => SelectedPapd != null);
-            ManageAssignmentsCommand = new AsyncRelayCommand(ManageAssignmentsAsync);
+            _dialogService = dialogService;
         }
 
-        public IRelayCommand AddCommand { get; }
-        public IRelayCommand EditCommand { get; }
-        public IAsyncRelayCommand DeleteCommand { get; }
-        public IAsyncRelayCommand ManageAssignmentsCommand { get; }
+        [ObservableProperty]
+        private ObservableCollection<Papd> _papds = new();
 
         public override async Task LoadDataAsync()
         {
             Papds = new ObservableCollection<Papd>(await _papdService.GetAllAsync());
         }
 
-        private void Add()
+        [RelayCommand]
+        private async Task Add()
         {
-            var editorViewModel = new PapdEditorViewModel(new Papd(), _papdService, _messenger);
-            _messenger.Send(new OpenDialogMessage(editorViewModel));
+            var editorViewModel = new PapdEditorViewModel(new Papd(), _papdService, Messenger);
+            await _dialogService.ShowDialogAsync(editorViewModel);
+            Messenger.Send(new RefreshDataMessage());
         }
 
-        private void Edit()
+        [RelayCommand]
+        private async Task Edit(Papd papd)
         {
-            if (SelectedPapd == null) return;
-            var editorViewModel = new PapdEditorViewModel(SelectedPapd, _papdService, _messenger);
-            _messenger.Send(new OpenDialogMessage(editorViewModel));
+            if (papd == null) return;
+            var editorViewModel = new PapdEditorViewModel(papd, _papdService, Messenger);
+            await _dialogService.ShowDialogAsync(editorViewModel);
+            Messenger.Send(new RefreshDataMessage());
         }
 
-        private async Task Delete()
+        [RelayCommand]
+        private async Task Delete(Papd papd)
         {
-            if (SelectedPapd == null) return;
-            await _papdService.DeleteAsync(SelectedPapd.Id);
-            await LoadDataAsync();
-        }
-
-        private async Task ManageAssignmentsAsync()
-        {
-            var assignmentViewModel = _assignmentViewModelFactory();
-            await assignmentViewModel.LoadDataAsync();
-            _messenger.Send(new OpenDialogMessage(assignmentViewModel));
+            if (papd == null) return;
+            await _papdService.DeleteAsync(papd.Id);
+            Messenger.Send(new RefreshDataMessage());
         }
 
         partial void OnSelectedPapdChanged(Papd? value)
