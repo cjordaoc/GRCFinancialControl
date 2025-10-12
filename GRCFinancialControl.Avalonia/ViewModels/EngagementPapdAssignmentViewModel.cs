@@ -4,6 +4,8 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Core.Models;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
@@ -14,18 +16,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private ObservableCollection<EngagementPapd> _assignments;
 
         [ObservableProperty]
-        private EngagementPapd _selectedAssignment;
+        private EngagementPapd? _selectedAssignment;
 
         [ObservableProperty]
         private ObservableCollection<Papd> _availablePapds;
 
         [ObservableProperty]
-        private Papd _selectedPapd;
+        private Papd? _selectedPapd;
 
         [ObservableProperty]
         private DateTime _effectiveDate = DateTime.Today;
 
-        public EngagementPapdAssignmentViewModel(ObservableCollection<EngagementPapd> assignments, IEnumerable<Papd> availablePapds)
+        public EngagementPapdAssignmentViewModel(ObservableCollection<EngagementPapd> assignments, IEnumerable<Papd> availablePapds, IMessenger messenger)
+            : base(messenger)
         {
             Assignments = assignments;
             AvailablePapds = new ObservableCollection<Papd>(availablePapds);
@@ -52,6 +55,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 Assignments.Remove(SelectedAssignment);
             }
+        }
+
+        [RelayCommand]
+        private void Confirm()
+        {
+            Messenger.Send(new CloseDialogMessage(true));
+        }
+
+        [RelayCommand]
+        private void Close()
+        {
+            Messenger.Send(new CloseDialogMessage(false));
         }
     }
 }

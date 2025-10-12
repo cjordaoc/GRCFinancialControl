@@ -1,10 +1,10 @@
-using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
+using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -13,11 +13,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     public partial class PapdViewModel : ViewModelBase
     {
         private readonly IPapdService _papdService;
-        private readonly IMessenger _messenger;
-        private readonly Func<EngagementPapdAssignmentViewModel> _assignmentViewModelFactory;
-
-        [ObservableProperty]
-        private ObservableCollection<Papd> _papds = new();
+        private readonly IDialogService _dialogService;
 
         [ObservableProperty]
         private Papd? _selectedPapd;
@@ -64,15 +60,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         partial void OnSelectedPapdChanged(Papd? value)
         {
-            if (EditCommand is RelayCommand edit)
-            {
-                edit.NotifyCanExecuteChanged();
-            }
-
-            if (DeleteCommand is AsyncRelayCommand delete)
-            {
-                delete.NotifyCanExecuteChanged();
-            }
+            EditCommand.NotifyCanExecuteChanged();
+            DeleteCommand.NotifyCanExecuteChanged();
         }
     }
 }

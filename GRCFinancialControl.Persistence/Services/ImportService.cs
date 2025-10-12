@@ -134,7 +134,7 @@ namespace GRCFinancialControl.Persistence.Services
             {
                 engagement.CustomerId = customer.Id;
             }
-            engagement.TotalPlannedHours = totalBudgetHours;
+            engagement.TotalPlannedHours = (double)totalBudgetHours;
 
             if (engagement.RankBudgets == null)
             {
