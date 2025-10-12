@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -62,9 +63,20 @@ namespace GRCFinancialControl.Persistence.Services
 
                 foreach (var assignment in engagement.EngagementPapds)
                 {
+                    var papdId = assignment.PapdId;
+                    if (papdId == 0 && assignment.Papd != null)
+                    {
+                        papdId = assignment.Papd.Id;
+                    }
+
+                    if (papdId == 0)
+                    {
+                        throw new InvalidOperationException("Cannot update engagement PAPD assignments without a valid PapdId.");
+                    }
+
                     existingEngagement.EngagementPapds.Add(new EngagementPapd
                     {
-                        PapdId = assignment.PapdId,
+                        PapdId = papdId,
                         EffectiveDate = assignment.EffectiveDate
                     });
                 }
