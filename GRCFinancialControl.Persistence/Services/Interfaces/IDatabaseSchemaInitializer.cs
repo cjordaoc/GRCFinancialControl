@@ -5,5 +5,6 @@ namespace GRCFinancialControl.Persistence.Services.Interfaces
     public interface IDatabaseSchemaInitializer
     {
         Task EnsureSchemaAsync();
+        Task ClearAllDataAsync();
     }
 }

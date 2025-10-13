@@ -62,10 +62,26 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Messenger.Send(new RefreshDataMessage());
         }
 
+        [RelayCommand(CanExecute = nameof(CanDeleteData))]
+        private async Task DeleteData(Engagement engagement)
+        {
+            if (engagement is null) return;
+
+            var result = await _dialogService.ShowConfirmationAsync("Delete Data", $"Are you sure you want to delete all data for {engagement.EngagementId}? This action cannot be undone.");
+            if (result)
+            {
+                await _engagementService.DeleteDataAsync(engagement.Id);
+                Messenger.Send(new RefreshDataMessage());
+            }
+        }
+
+        private bool CanDeleteData(Engagement engagement) => engagement is not null;
+
         partial void OnSelectedEngagementChanged(Engagement? value)
         {
             EditCommand.NotifyCanExecuteChanged();
             DeleteCommand.NotifyCanExecuteChanged();
+            DeleteDataCommand.NotifyCanExecuteChanged();
         }
 
     }

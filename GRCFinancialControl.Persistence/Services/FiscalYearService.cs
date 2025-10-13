@@ -45,5 +45,33 @@ namespace GRCFinancialControl.Persistence.Services
                 await context.SaveChangesAsync();
             }
         }
+
+        public async Task DeleteDataAsync(int fiscalYearId)
+        {
+            await using var context = await _contextFactory.CreateDbContextAsync();
+
+            var fiscalYear = await context.FiscalYears.FindAsync(fiscalYearId);
+            if (fiscalYear == null) return;
+
+            var allocationsToDelete = await context.EngagementFiscalYearAllocations
+                .Where(a => a.FiscalYearId == fiscalYearId)
+                .ToListAsync();
+
+            if (allocationsToDelete.Any())
+            {
+                context.EngagementFiscalYearAllocations.RemoveRange(allocationsToDelete);
+            }
+
+            var actualsToDelete = await context.ActualsEntries
+                .Where(a => a.Date >= fiscalYear.StartDate && a.Date <= fiscalYear.EndDate)
+                .ToListAsync();
+
+            if (actualsToDelete.Any())
+            {
+                context.ActualsEntries.RemoveRange(actualsToDelete);
+            }
+
+            await context.SaveChangesAsync();
+        }
     }
 }

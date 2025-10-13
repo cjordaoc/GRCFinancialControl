@@ -58,10 +58,26 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Messenger.Send(new RefreshDataMessage());
         }
 
+        [RelayCommand(CanExecute = nameof(CanDeleteData))]
+        private async Task DeleteData()
+        {
+            if (SelectedFiscalYear is null) return;
+
+            var result = await _dialogService.ShowConfirmationAsync("Delete Data", $"Are you sure you want to delete all data for {SelectedFiscalYear.Name}? This action cannot be undone.");
+            if (result)
+            {
+                await _fiscalYearService.DeleteDataAsync(SelectedFiscalYear.Id);
+                Messenger.Send(new RefreshDataMessage());
+            }
+        }
+
+        private bool CanDeleteData() => SelectedFiscalYear is not null;
+
         partial void OnSelectedFiscalYearChanged(FiscalYear? value)
         {
             EditCommand.NotifyCanExecuteChanged();
             DeleteCommand.NotifyCanExecuteChanged();
+            DeleteDataCommand.NotifyCanExecuteChanged();
         }
     }
 }

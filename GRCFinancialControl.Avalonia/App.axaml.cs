@@ -12,6 +12,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
 
 namespace GRCFinancialControl.Avalonia
 {
@@ -26,6 +28,12 @@ namespace GRCFinancialControl.Avalonia
 
         public override void OnFrameworkInitializationCompleted()
         {
+            LiveCharts.Configure(config =>
+                config
+                    .AddSkiaSharp()
+                    .AddDefaultMappers()
+                    .AddLightTheme());
+
             var services = new ServiceCollection();
 
             // Register SettingsDbContext
@@ -88,6 +96,7 @@ namespace GRCFinancialControl.Avalonia
 
             // Register dialog service
             services.AddSingleton<IDialogService, DialogService>();
+            services.AddTransient<IExportService, ExportService>();
 
             // Register ViewModels
             services.AddTransient<MainWindowViewModel>();
@@ -95,7 +104,25 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<FiscalYearsViewModel>();
             services.AddTransient<ImportViewModel>();
             services.AddTransient<AllocationViewModel>();
-            services.AddTransient<ReportsViewModel>();
+            services.AddTransient(sp => new ReportsViewModel(
+                sp.GetRequiredService<ReportFilterViewModel>(),
+                sp.GetRequiredService<PlannedVsActualViewModel>(),
+                sp.GetRequiredService<BacklogViewModel>(),
+                sp.GetRequiredService<FiscalPerformanceViewModel>(),
+                sp.GetRequiredService<EngagementPerformanceViewModel>(),
+                sp.GetRequiredService<PapdContributionViewModel>(),
+                sp.GetRequiredService<TimeAllocationViewModel>(),
+                sp.GetRequiredService<StrategicKpiViewModel>(),
+                sp.GetRequiredService<MarginEvolutionViewModel>(),
+                sp.GetRequiredService<IMessenger>()
+            ));
+            services.AddTransient<FiscalPerformanceViewModel>();
+            services.AddTransient<EngagementPerformanceViewModel>();
+            services.AddTransient<PapdContributionViewModel>();
+            services.AddTransient<TimeAllocationViewModel>();
+            services.AddTransient<StrategicKpiViewModel>();
+            services.AddTransient<MarginEvolutionViewModel>();
+            services.AddTransient<ReportFilterViewModel>();
             services.AddTransient<PlannedVsActualViewModel>();
             services.AddTransient<BacklogViewModel>();
             services.AddTransient<PapdViewModel>();

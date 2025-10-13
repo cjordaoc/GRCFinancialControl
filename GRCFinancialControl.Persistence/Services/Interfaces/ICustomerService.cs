@@ -10,5 +10,6 @@ namespace GRCFinancialControl.Persistence.Services.Interfaces
         Task AddAsync(Customer customer);
         Task UpdateAsync(Customer customer);
         Task DeleteAsync(int id);
+        Task DeleteDataAsync(int customerId);
     }
 }

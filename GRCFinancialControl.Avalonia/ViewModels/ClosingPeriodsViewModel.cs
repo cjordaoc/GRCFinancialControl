@@ -85,10 +85,26 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
+        [RelayCommand(CanExecute = nameof(CanDeleteData))]
+        private async Task DeleteData()
+        {
+            if (SelectedClosingPeriod is null) return;
+
+            var result = await _dialogService.ShowConfirmationAsync("Delete Data", $"Are you sure you want to delete all data for {SelectedClosingPeriod.Name}? This action cannot be undone.");
+            if (result)
+            {
+                await _closingPeriodService.DeleteDataAsync(SelectedClosingPeriod.Id);
+                Messenger.Send(new RefreshDataMessage());
+            }
+        }
+
+        private bool CanDeleteData() => SelectedClosingPeriod is not null;
+
         partial void OnSelectedClosingPeriodChanged(ClosingPeriod? value)
         {
             EditCommand.NotifyCanExecuteChanged();
             DeleteCommand.NotifyCanExecuteChanged();
+            DeleteDataCommand.NotifyCanExecuteChanged();
         }
 
         public void Receive(ClosingPeriodsChangedMessage message)
