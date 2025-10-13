@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="GRCFinancialControl.Avalonia.Views.ReportFilterView"
+             x:DataType="vm:ReportFilterViewModel">
+    <StackPanel Orientation="Horizontal" Spacing="10" Margin="10">
+        <ComboBox ItemsSource="{Binding FiscalYears}" SelectedItem="{Binding SelectedFiscalYear}" Watermark="Fiscal Year"/>
+        <ComboBox ItemsSource="{Binding Papds}" SelectedItem="{Binding SelectedPapd}" Watermark="PAPD"/>
+        <ComboBox ItemsSource="{Binding Engagements}" SelectedItem="{Binding SelectedEngagement}" Watermark="Engagement"/>
+        <Button Content="Apply Filters"/>
+        <Button Content="Export to CSV"/>
+    </StackPanel>
+</UserControl>

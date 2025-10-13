@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="GRCFinancialControl.Avalonia.Views.EngagementPerformanceView"
+             x:DataType="vm:EngagementPerformanceViewModel">
+    <Grid RowDefinitions="Auto,*,*" ColumnDefinitions="*,*">
+        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="Engagement Performance Report" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="10"/>
+
+        <Border Grid.Row="1" Grid.Column="0" Classes="card">
+            <StackPanel>
+                <TextBlock Text="Hours Consumed vs Planned" Classes="h2"/>
+                <lvc:CartesianChart Series="{Binding HoursConsumedSeries}"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="1" Grid.Column="1" Classes="card">
+            <StackPanel>
+                <TextBlock Text="Hours Distribution by Rank" Classes="h2"/>
+                <lvc:CartesianChart Series="{Binding HoursDistributionSeries}"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Classes="card">
+            <StackPanel>
+                <TextBlock Text="Engagement Health Table" Classes="h2"/>
+                <DataGrid ItemsSource="{Binding EngagementHealthData}" AutoGenerateColumns="False" IsReadOnly="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Engagement ID" Binding="{Binding EngagementId}"/>
+                        <DataGridTextColumn Header="Description" Binding="{Binding EngagementDescription}"/>
+                        <DataGridTextColumn Header="Initial Hours Budget" Binding="{Binding InitialHoursBudget}"/>
+                        <DataGridTextColumn Header="Actual Hours" Binding="{Binding ActualHours}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

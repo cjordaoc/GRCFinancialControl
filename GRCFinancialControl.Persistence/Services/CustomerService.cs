@@ -45,5 +45,45 @@ namespace GRCFinancialControl.Persistence.Services
                 await context.SaveChangesAsync();
             }
         }
+
+        public async Task DeleteDataAsync(int customerId)
+        {
+            await using var context = await _contextFactory.CreateDbContextAsync();
+
+            var customer = await context.Customers
+                .Include(c => c.Engagements)
+                .ThenInclude(e => e.EngagementPapds)
+                .Include(c => c.Engagements)
+                .ThenInclude(e => e.RankBudgets)
+                .Include(c => c.Engagements)
+                .ThenInclude(e => e.MarginEvolutions)
+                .Include(c => c.Engagements)
+                .ThenInclude(e => e.Allocations)
+                .FirstOrDefaultAsync(c => c.Id == customerId);
+
+            if (customer == null) return;
+
+            foreach (var engagement in customer.Engagements)
+            {
+                var actualsToDelete = await context.ActualsEntries
+                    .Where(a => a.EngagementId == engagement.Id)
+                    .ToListAsync();
+                context.ActualsEntries.RemoveRange(actualsToDelete);
+
+                var plannedAllocationsToDelete = await context.PlannedAllocations
+                    .Where(p => p.EngagementId == engagement.Id)
+                    .ToListAsync();
+                context.PlannedAllocations.RemoveRange(plannedAllocationsToDelete);
+
+                context.EngagementPapds.RemoveRange(engagement.EngagementPapds);
+                context.EngagementRankBudgets.RemoveRange(engagement.RankBudgets);
+                context.MarginEvolutions.RemoveRange(engagement.MarginEvolutions);
+                context.EngagementFiscalYearAllocations.RemoveRange(engagement.Allocations);
+            }
+
+            context.Engagements.RemoveRange(customer.Engagements);
+
+            await context.SaveChangesAsync();
+        }
     }
 }

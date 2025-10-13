@@ -9,6 +9,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     public partial class SettingsViewModel : ViewModelBase
     {
         private readonly ISettingsService _settingsService;
+        private readonly IDatabaseSchemaInitializer _schemaInitializer;
+        private readonly IDialogService _dialogService;
 
         [ObservableProperty]
         private string _server = string.Empty;
@@ -25,17 +27,32 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private string? _statusMessage;
 
-        public SettingsViewModel(ISettingsService settingsService)
+        public SettingsViewModel(ISettingsService settingsService, IDatabaseSchemaInitializer schemaInitializer, IDialogService dialogService)
         {
             _settingsService = settingsService;
+            _schemaInitializer = schemaInitializer;
+            _dialogService = dialogService;
             LoadSettingsCommand = new AsyncRelayCommand(LoadSettingsAsync);
             SaveSettingsCommand = new AsyncRelayCommand(SaveSettingsAsync);
             TestConnectionCommand = new AsyncRelayCommand(TestConnectionAsync);
+            ClearAllDataCommand = new AsyncRelayCommand(ClearAllDataAsync);
         }
 
         public IAsyncRelayCommand LoadSettingsCommand { get; }
         public IAsyncRelayCommand SaveSettingsCommand { get; }
         public IAsyncRelayCommand TestConnectionCommand { get; }
+        public IAsyncRelayCommand ClearAllDataCommand { get; }
+
+        private async Task ClearAllDataAsync()
+        {
+            var result = await _dialogService.ShowConfirmationAsync("Clear All Data", "Are you sure you want to delete all data? This action cannot be undone.");
+            if (result)
+            {
+                StatusMessage = "Clearing all data...";
+                await _schemaInitializer.ClearAllDataAsync();
+                StatusMessage = "All data has been cleared.";
+            }
+        }
 
         private async Task LoadSettingsAsync()
         {

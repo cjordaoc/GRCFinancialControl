@@ -6,12 +6,33 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.ReportsView"
              x:DataType="vm:ReportsViewModel">
-    <TabControl>
-        <TabItem Header="Planned vs. Actual">
-            <ContentControl Content="{Binding PlannedVsActual}"/>
-        </TabItem>
-        <TabItem Header="Backlog">
-            <ContentControl Content="{Binding Backlog}"/>
-        </TabItem>
-    </TabControl>
+    <Grid RowDefinitions="Auto,*">
+        <ContentControl Grid.Row="0" Content="{Binding Filter}"/>
+        <TabControl Grid.Row="1" SelectedItem="{Binding SelectedReport}">
+            <TabItem Header="Fiscal Performance">
+                <ContentControl Content="{Binding FiscalPerformance}"/>
+            </TabItem>
+            <TabItem Header="Engagement Performance">
+                <ContentControl Content="{Binding EngagementPerformance}"/>
+            </TabItem>
+            <TabItem Header="PAPD Contribution">
+                <ContentControl Content="{Binding PapdContribution}"/>
+            </TabItem>
+            <TabItem Header="Time &amp; Allocation">
+                <ContentControl Content="{Binding TimeAllocation}"/>
+            </TabItem>
+            <TabItem Header="Strategic KPIs">
+                <ContentControl Content="{Binding StrategicKpi}"/>
+            </TabItem>
+            <TabItem Header="Margin Evolution">
+                <ContentControl Content="{Binding MarginEvolution}"/>
+            </TabItem>
+            <TabItem Header="Planned vs. Actual">
+                <ContentControl Content="{Binding PlannedVsActual}"/>
+            </TabItem>
+            <TabItem Header="Backlog">
+                <ContentControl Content="{Binding Backlog}"/>
+            </TabItem>
+        </TabControl>
+    </Grid>
 </UserControl>

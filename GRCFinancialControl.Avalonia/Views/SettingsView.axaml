@@ -17,6 +17,9 @@
             <Button Content="Save Settings" Command="{Binding SaveSettingsCommand}"/>
             <Button Content="Test Connection" Command="{Binding TestConnectionCommand}"/>
         </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="5" Margin="0,20,0,0">
+            <Button Content="Clear All Data" Command="{Binding ClearAllDataCommand}" Classes="danger"/>
+        </StackPanel>
         <TextBlock Text="{Binding StatusMessage}" Margin="0,5,0,0"/>
     </StackPanel>
 </UserControl>

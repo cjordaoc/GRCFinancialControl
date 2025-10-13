@@ -10,5 +10,6 @@ namespace GRCFinancialControl.Persistence.Services.Interfaces
         Task AddAsync(Papd papd);
         Task UpdateAsync(Papd papd);
         Task DeleteAsync(int id);
+        Task DeleteDataAsync(int papdId);
     }
 }

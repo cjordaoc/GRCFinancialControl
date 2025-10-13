@@ -57,5 +57,30 @@ namespace GRCFinancialControl.Persistence.Services
             context.ClosingPeriods.Remove(period);
             await context.SaveChangesAsync();
         }
+
+        public async Task DeleteDataAsync(int closingPeriodId)
+        {
+            await using var context = await _contextFactory.CreateDbContextAsync();
+
+            var actualsToDelete = await context.ActualsEntries
+                .Where(a => a.ClosingPeriodId == closingPeriodId)
+                .ToListAsync();
+
+            var plannedAllocationsToDelete = await context.PlannedAllocations
+                .Where(p => p.ClosingPeriodId == closingPeriodId)
+                .ToListAsync();
+
+            if (actualsToDelete.Any())
+            {
+                context.ActualsEntries.RemoveRange(actualsToDelete);
+            }
+
+            if (plannedAllocationsToDelete.Any())
+            {
+                context.PlannedAllocations.RemoveRange(plannedAllocationsToDelete);
+            }
+
+            await context.SaveChangesAsync();
+        }
     }
 }

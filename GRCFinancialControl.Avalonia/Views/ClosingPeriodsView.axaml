@@ -27,6 +27,7 @@
             <Button Content="Add" Command="{Binding AddCommand}"/>
             <Button Content="Edit" Command="{Binding EditCommand}"/>
             <Button Content="Delete" Command="{Binding DeleteCommand}"/>
+            <Button Content="Delete Data" Command="{Binding DeleteDataCommand}" Classes="danger"/>
         </StackPanel>
 
         <TextBlock Grid.Row="3"

@@ -10,5 +10,6 @@ namespace GRCFinancialControl.Persistence.Services.Interfaces
         Task AddAsync(FiscalYear fiscalYear);
         Task UpdateAsync(FiscalYear fiscalYear);
         Task DeleteAsync(int id);
+        Task DeleteDataAsync(int fiscalYearId);
     }
 }

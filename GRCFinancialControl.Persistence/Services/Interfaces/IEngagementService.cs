@@ -12,5 +12,6 @@ namespace GRCFinancialControl.Persistence.Services.Interfaces
         Task AddAsync(Engagement engagement);
         Task UpdateAsync(Engagement engagement);
         Task DeleteAsync(int id);
+        Task DeleteDataAsync(int engagementId);
     }
 }

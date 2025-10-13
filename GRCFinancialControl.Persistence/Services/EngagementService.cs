@@ -97,5 +97,36 @@ namespace GRCFinancialControl.Persistence.Services
                 await context.SaveChangesAsync();
             }
         }
+
+        public async Task DeleteDataAsync(int engagementId)
+        {
+            await using var context = await _contextFactory.CreateDbContextAsync();
+
+            var engagement = await context.Engagements
+                .Include(e => e.EngagementPapds)
+                .Include(e => e.RankBudgets)
+                .Include(e => e.MarginEvolutions)
+                .Include(e => e.Allocations)
+                .FirstOrDefaultAsync(e => e.Id == engagementId);
+
+            if (engagement == null) return;
+
+            var actualsToDelete = await context.ActualsEntries
+                .Where(a => a.EngagementId == engagement.Id)
+                .ToListAsync();
+            context.ActualsEntries.RemoveRange(actualsToDelete);
+
+            var plannedAllocationsToDelete = await context.PlannedAllocations
+                .Where(p => p.EngagementId == engagement.Id)
+                .ToListAsync();
+            context.PlannedAllocations.RemoveRange(plannedAllocationsToDelete);
+
+            context.EngagementPapds.RemoveRange(engagement.EngagementPapds);
+            context.EngagementRankBudgets.RemoveRange(engagement.RankBudgets);
+            context.MarginEvolutions.RemoveRange(engagement.MarginEvolutions);
+            context.EngagementFiscalYearAllocations.RemoveRange(engagement.Allocations);
+
+            await context.SaveChangesAsync();
+        }
     }
 }

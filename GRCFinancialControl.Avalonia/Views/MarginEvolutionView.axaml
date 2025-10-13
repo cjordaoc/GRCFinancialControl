@@ -1,0 +1,17 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="GRCFinancialControl.Avalonia.Views.MarginEvolutionView"
+             x:DataType="vm:MarginEvolutionViewModel">
+    <Grid RowDefinitions="Auto,*">
+        <TextBlock Grid.Row="0" Text="Margin Evolution Report" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="10"/>
+
+        <Border Grid.Row="1" Classes="card">
+            <lvc:CartesianChart Series="{Binding MarginEvolutionSeries}"/>
+        </Border>
+    </Grid>
+</UserControl>

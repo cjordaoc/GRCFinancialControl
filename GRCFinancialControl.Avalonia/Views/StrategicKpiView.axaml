@@ -1,0 +1,51 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="GRCFinancialControl.Avalonia.Views.StrategicKpiView"
+             x:DataType="vm:StrategicKpiViewModel">
+    <UserControl.Resources>
+        <converters:KpiColorConverter x:Key="KpiColorConverter"/>
+    </UserControl.Resources>
+    <Grid RowDefinitions="Auto,*,*" ColumnDefinitions="*,*,*">
+        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="Strategic KPI Summary" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="10"/>
+
+        <Border Grid.Row="1" Grid.Column="0" Classes="card" Background="{Binding KpiData.PercentSalesTargetAchieved, Converter={StaticResource KpiColorConverter}}">
+            <StackPanel>
+                <TextBlock Text="% Sales Target Achieved" Classes="h2"/>
+                <TextBlock Text="{Binding KpiData.PercentSalesTargetAchieved, StringFormat='{}{0:N2}%'}" FontSize="36" FontWeight="Bold" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="1" Grid.Column="1" Classes="card" Background="{Binding KpiData.PercentRevenueTargetAchieved, Converter={StaticResource KpiColorConverter}}">
+            <StackPanel>
+                <TextBlock Text="% Revenue Target Achieved" Classes="h2"/>
+                <TextBlock Text="{Binding KpiData.PercentRevenueTargetAchieved, StringFormat='{}{0:N2}%'}" FontSize="36" FontWeight="Bold" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="1" Grid.Column="2" Classes="card">
+            <StackPanel>
+                <TextBlock Text="Avg Monthly Sales Needed" Classes="h2"/>
+                <TextBlock Text="{Binding KpiData.AvgMonthlySalesNeeded, StringFormat='{}{0:C}'}" FontSize="36" FontWeight="Bold" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="2" Grid.Column="0" Classes="card">
+            <StackPanel>
+                <TextBlock Text="PAPD Contribution %" Classes="h2"/>
+                <TextBlock Text="{Binding KpiData.PapdContributionPercent, StringFormat='{}{0:N2}%'}" FontSize="36" FontWeight="Bold" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="2" Grid.Column="1" Classes="card">
+            <StackPanel>
+                <TextBlock Text="TER Required for Goal" Classes="h2"/>
+                <TextBlock Text="{Binding KpiData.TerRequiredForGoal, StringFormat='{}{0:N2}'}" FontSize="36" FontWeight="Bold" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

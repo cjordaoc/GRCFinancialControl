@@ -33,6 +33,7 @@
             <Button Content="Add New" Command="{Binding AddCommand}"/>
             <Button Content="Edit" Command="{Binding EditCommand}" CommandParameter="{Binding SelectedEngagement}"/>
             <Button Content="Delete" Command="{Binding DeleteCommand}" CommandParameter="{Binding SelectedEngagement}"/>
+            <Button Content="Delete Data" Command="{Binding DeleteDataCommand}" CommandParameter="{Binding SelectedEngagement}" Classes="danger"/>
         </StackPanel>
     </Grid>
 </UserControl>

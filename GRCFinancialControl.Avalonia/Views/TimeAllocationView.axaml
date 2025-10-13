@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="GRCFinancialControl.Avalonia.Views.TimeAllocationView"
+             x:DataType="vm:TimeAllocationViewModel">
+    <Grid RowDefinitions="Auto,*" ColumnDefinitions="*,*">
+        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="Time &amp; Allocation Analytics" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="10"/>
+
+        <Border Grid.Row="1" Grid.Column="0" Classes="card">
+            <StackPanel>
+                <TextBlock Text="Planned vs Actual Hours per Period" Classes="h2"/>
+                <lvc:CartesianChart Series="{Binding PlannedVsActualSeries}"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="1" Grid.Column="1" Classes="card">
+            <StackPanel>
+                <TextBlock Text="Burn Rate (% Actual / Planned)" Classes="h2"/>
+                <lvc:CartesianChart Series="{Binding BurnRateSeries}"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

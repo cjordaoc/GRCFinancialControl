@@ -22,6 +22,7 @@
             <Button Content="Add" Command="{Binding AddCommand}"/>
             <Button Content="Edit" Command="{Binding EditCommand}" CommandParameter="{Binding SelectedCustomer}"/>
             <Button Content="Delete" Command="{Binding DeleteCommand}" CommandParameter="{Binding SelectedCustomer}"/>
+            <Button Content="Delete Data" Command="{Binding DeleteDataCommand}" CommandParameter="{Binding SelectedCustomer}" Classes="danger"/>
         </StackPanel>
     </Grid>
 </UserControl>
