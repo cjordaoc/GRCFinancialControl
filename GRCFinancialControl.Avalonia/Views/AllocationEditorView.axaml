@@ -19,7 +19,7 @@
         <DataGrid ItemsSource="{Binding Allocations}" AutoGenerateColumns="False" CanUserSortColumns="False">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Fiscal Year" Binding="{Binding FiscalYear.Name}" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Hours" Binding="{Binding Hours}"/>
+                <DataGridTextColumn Header="Planned Hours" Binding="{Binding PlannedHours}"/>
             </DataGrid.Columns>
         </DataGrid>
         <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">

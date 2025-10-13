@@ -37,6 +37,6 @@ namespace GRCFinancialControl.Core.Models
         public ICollection<MarginEvolution> MarginEvolutions { get; set; } = new List<MarginEvolution>();
         public ICollection<EngagementFiscalYearAllocation> Allocations { get; set; } = new List<EngagementFiscalYearAllocation>();
         [NotMapped]
-        public double CurrentHoursAllocation => Allocations.Sum(a => a.Hours);
+        public double CurrentHoursAllocation => Allocations.Sum(a => a.PlannedHours);
     }
 }

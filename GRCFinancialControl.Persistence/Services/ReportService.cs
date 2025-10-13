@@ -28,7 +28,7 @@ namespace GRCFinancialControl.Persistence.Services
             var allFiscalYears = await context.FiscalYears.ToListAsync();
 
             var plannedHoursByKey = allAllocations
-                .ToDictionary(a => (a.EngagementId, a.FiscalYearId), a => a.Hours);
+                .ToDictionary(a => (a.EngagementId, a.FiscalYearId), a => a.PlannedHours);
 
             var reportData = new List<PlannedVsActualData>();
 
@@ -126,7 +126,7 @@ namespace GRCFinancialControl.Persistence.Services
 
                 var totalPlannedHours = (decimal)await context.EngagementFiscalYearAllocations
                     .Where(a => a.FiscalYearId == fy.Id)
-                    .SumAsync(a => a.Hours);
+                    .SumAsync(a => a.PlannedHours);
 
                 var totalActualHours = (decimal)await context.ActualsEntries
                     .Where(a => a.Date >= fy.StartDate && a.Date <= fy.EndDate)

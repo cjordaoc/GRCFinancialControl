@@ -39,19 +39,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 fiscalYears.Select(fy => new AllocationEntry
                 {
                     FiscalYear = fy,
-                    Hours = engagement.Allocations.FirstOrDefault(a => a.FiscalYearId == fy.Id)?.Hours ?? 0
+                    PlannedHours = engagement.Allocations.FirstOrDefault(a => a.FiscalYearId == fy.Id)?.PlannedHours ?? 0
                 })
             );
 
-            CurrentHoursAllocation = Allocations.Sum(a => a.Hours);
+            CurrentHoursAllocation = Allocations.Sum(a => a.PlannedHours);
 
             foreach (var allocation in Allocations)
             {
                 allocation.PropertyChanged += (s, e) =>
                 {
-                    if (e.PropertyName == nameof(AllocationEntry.Hours))
+                    if (e.PropertyName == nameof(AllocationEntry.PlannedHours))
                     {
-                        CurrentHoursAllocation = Allocations.Sum(a => a.Hours);
+                        CurrentHoursAllocation = Allocations.Sum(a => a.PlannedHours);
                     }
                 };
             }
@@ -73,7 +73,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 {
                     EngagementId = Engagement.Id,
                     FiscalYearId = allocation.FiscalYear.Id,
-                    Hours = allocation.Hours
+                    PlannedHours = allocation.PlannedHours
                 });
             }
 
@@ -94,6 +94,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private FiscalYear _fiscalYear = null!;
 
         [ObservableProperty]
-        private double _hours;
+        private double _plannedHours;
     }
 }
