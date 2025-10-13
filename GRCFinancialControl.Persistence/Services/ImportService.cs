@@ -462,11 +462,13 @@ namespace GRCFinancialControl.Persistence.Services
                     if (!string.IsNullOrWhiteSpace(parsedRow.StatusText))
                     {
                         engagement.StatusText = parsedRow.StatusText;
+                        engagement.Status = ParseStatus(parsedRow.StatusText);
                     }
 
                     if (parsedRow.MarginPctBudget.HasValue)
                     {
                         engagement.MarginPctBudget = parsedRow.MarginPctBudget;
+                        engagement.OpeningMargin = parsedRow.MarginPctBudget.Value;
                     }
 
                     if (parsedRow.MarginPctEtcp.HasValue)
@@ -649,6 +651,22 @@ namespace GRCFinancialControl.Persistence.Services
                 EtcpAgeDays = etcAgeDays,
                 LatestEtcDate = latestEtcDate,
                 StatusText = statusText
+            };
+        }
+
+        private static EngagementStatus ParseStatus(string? statusText)
+        {
+            if (string.IsNullOrWhiteSpace(statusText))
+            {
+                return EngagementStatus.Active;
+            }
+
+            return statusText.Trim().ToLowerInvariant() switch
+            {
+                "closing" => EngagementStatus.Closed,
+                "closed" => EngagementStatus.Closed,
+                "inactive" => EngagementStatus.Inactive,
+                _ => EngagementStatus.Active
             };
         }
 
@@ -929,7 +947,9 @@ namespace GRCFinancialControl.Persistence.Services
                 EtcpAgeDays = row.EtcpAgeDays,
                 LatestEtcDate = row.LatestEtcDate,
                 StatusText = string.IsNullOrWhiteSpace(row.StatusText) ? null : row.StatusText,
-                NextEtcDate = null
+                NextEtcDate = null,
+                OpeningMargin = row.MarginPctBudget ?? 0,
+                Status = ParseStatus(row.StatusText)
             };
 
             await context.Engagements.AddAsync(engagement);

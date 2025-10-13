@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
@@ -10,7 +11,7 @@ namespace GRCFinancialControl.Avalonia.Services
     public class DialogService : IDialogService, IRecipient<CloseDialogMessage>
     {
         private readonly IMessenger _messenger;
-        private TaskCompletionSource<bool>? _currentRequest;
+        private readonly Stack<TaskCompletionSource<bool>> _dialogStack = new();
 
         public DialogService(IMessenger messenger)
         {
@@ -20,21 +21,18 @@ namespace GRCFinancialControl.Avalonia.Services
 
         public Task<bool> ShowDialogAsync(ViewModelBase viewModel)
         {
-            if (_currentRequest != null)
-            {
-                throw new InvalidOperationException("A dialog is already open.");
-            }
-
             var tcs = new TaskCompletionSource<bool>();
-            _currentRequest = tcs;
+            _dialogStack.Push(tcs);
             _messenger.Send(new OpenDialogMessage(viewModel));
             return tcs.Task;
         }
 
         public void Receive(CloseDialogMessage message)
         {
-            _currentRequest?.TrySetResult(message.Value);
-            _currentRequest = null;
+            if (_dialogStack.TryPop(out var tcs))
+            {
+                tcs.TrySetResult(message.Value);
+            }
         }
     }
 }
