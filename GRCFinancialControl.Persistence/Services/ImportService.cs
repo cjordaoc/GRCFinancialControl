@@ -74,9 +74,7 @@ namespace GRCFinancialControl.Persistence.Services
 
             var engagementDescription = ExtractDescription(descriptionRaw);
 
-            var totalHoursColumnIndex = FindTotalHoursColumn(resourcing);
-
-            var (rankBudgetsFromFile, issues) = ParseResourcing(resourcing, totalHoursColumnIndex);
+            var (rankBudgetsFromFile, issues) = ParseResourcing(resourcing);
             var totalBudgetHours = rankBudgetsFromFile.Sum(r => r.hours);
 
             await using var context = await _contextFactory.CreateDbContextAsync();
@@ -127,6 +125,7 @@ namespace GRCFinancialControl.Persistence.Services
             {
                 engagement.Description = engagementDescription;
                 engagement.CustomerKey = normalizedCustomerName;
+                engagement.InitialHoursBudget = totalBudgetHours;
             }
 
             engagement.Customer = customer;
@@ -140,37 +139,24 @@ namespace GRCFinancialControl.Persistence.Services
             {
                 engagement.RankBudgets = new List<EngagementRankBudget>();
             }
-
-            var now = DateTime.UtcNow;
-            var existingBudgets = new Dictionary<string, EngagementRankBudget>(StringComparer.OrdinalIgnoreCase);
-            foreach (var budget in engagement.RankBudgets)
+            else
             {
-                if (!existingBudgets.ContainsKey(budget.RankName))
-                {
-                    existingBudgets.Add(budget.RankName, budget);
-                }
+                // Full replace behavior
+                engagement.RankBudgets.Clear();
             }
 
+            var now = DateTime.UtcNow;
             foreach (var (rankName, hours) in rankBudgetsFromFile)
             {
-                if (existingBudgets.TryGetValue(rankName, out var existingBudget))
+                var budget = new EngagementRankBudget
                 {
-                    existingBudget.RankName = rankName;
-                    existingBudget.Hours = hours;
-                    existingBudget.UpdatedAtUtc = now;
-                }
-                else
-                {
-                    var budget = new EngagementRankBudget
-                    {
-                        Engagement = engagement,
-                        RankName = rankName,
-                        Hours = hours,
-                        CreatedAtUtc = now
-                    };
+                    Engagement = engagement,
+                    RankName = rankName,
+                    Hours = hours,
+                    CreatedAtUtc = now
+                };
 
-                    engagement.RankBudgets.Add(budget);
-                }
+                engagement.RankBudgets.Add(budget);
             }
 
             await context.SaveChangesAsync();
@@ -189,71 +175,24 @@ namespace GRCFinancialControl.Persistence.Services
             return summary.ToString();
         }
 
-        private static int FindTotalHoursColumn(DataTable resourcing)
-        {
-            var headerRowIndex = 2;
-            if (resourcing.Rows.Count <= headerRowIndex)
-            {
-                throw new InvalidDataException("Resourcing sheet is missing the header row.");
-            }
-
-            var headerRow = resourcing.Rows[headerRowIndex];
-            for (var i = 0; i < headerRow.ItemArray.Length; i++)
-            {
-                var header = NormalizeWhitespace(Convert.ToString(headerRow[i], CultureInfo.InvariantCulture));
-                if (header.Equals("Total", StringComparison.OrdinalIgnoreCase))
-                {
-                    return i;
-                }
-            }
-
-            return -1; // Indicates that weekly columns should be summed
-        }
-
-        private static (List<(string rank, decimal hours)> rows, List<string> issues) ParseResourcing(DataTable resourcing, int totalHoursColumnIndex)
+        private static (List<(string rank, decimal hours)> rows, List<string> issues) ParseResourcing(DataTable resourcing)
         {
             var rows = new List<(string rank, decimal hours)>();
             var issues = new List<string>();
-            var weeklyColumns = totalHoursColumnIndex == -1 ? FindWeeklyColumns(resourcing) : null;
 
             var rowIndex = 3; // Row 4 in the worksheet
             var consecutiveBlankRows = 0;
 
-            while (rowIndex < resourcing.Rows.Count || consecutiveBlankRows < 10)
+            while (rowIndex < resourcing.Rows.Count && consecutiveBlankRows < 10)
             {
-                var rank = NormalizeWhitespace(GetCellString(resourcing, rowIndex, 0));
-
-                decimal hours = 0;
-                bool hasHoursValue = false;
-
-                if (totalHoursColumnIndex != -1)
-                {
-                    (hours, hasHoursValue) = ParseHours(GetCellValue(resourcing, rowIndex, totalHoursColumnIndex));
-                }
-                else if (weeklyColumns != null)
-                {
-                    foreach (var colIndex in weeklyColumns)
-                    {
-                        var (weeklyHours, hasValue) = ParseHours(GetCellValue(resourcing, rowIndex, colIndex));
-                        if (hasValue)
-                        {
-                            hours += weeklyHours;
-                            hasHoursValue = true;
-                        }
-                    }
-                }
+                var rank = NormalizeWhitespace(GetCellString(resourcing, rowIndex, 0)); // Column A
+                var (hours, hasHoursValue) = ParseHours(GetCellValue(resourcing, rowIndex, 8)); // Column I
 
                 var isRowEmpty = string.IsNullOrEmpty(rank) && !hasHoursValue;
 
                 if (isRowEmpty)
                 {
                     consecutiveBlankRows++;
-
-                    if (rowIndex >= resourcing.Rows.Count && consecutiveBlankRows >= 10)
-                    {
-                        break;
-                    }
-
                     rowIndex++;
                     continue;
                 }
@@ -262,7 +201,10 @@ namespace GRCFinancialControl.Persistence.Services
 
                 if (string.IsNullOrEmpty(rank))
                 {
-                    issues.Add($"Row {rowIndex + 1}: Hours present but rank name missing; skipped.");
+                    if (hours > 0)
+                    {
+                        issues.Add($"Row {rowIndex + 1}: Hours present but rank name missing; skipped.");
+                    }
                     rowIndex++;
                     continue;
                 }

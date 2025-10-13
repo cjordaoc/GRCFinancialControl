@@ -169,10 +169,12 @@ CREATE TABLE `Settings`
 
 CREATE TABLE `FiscalYears`
 (
-    `Id`        INT           NOT NULL AUTO_INCREMENT,
-    `Name`      VARCHAR(100)  NOT NULL,
-    `StartDate` DATE          NOT NULL,
-    `EndDate`   DATE          NOT NULL,
+    `Id`                INT             NOT NULL AUTO_INCREMENT,
+    `Name`              VARCHAR(100)    NOT NULL,
+    `StartDate`         DATE            NOT NULL,
+    `EndDate`           DATE            NOT NULL,
+    `AreaSalesTarget`   DECIMAL(18, 2)  NOT NULL DEFAULT 0,
+    `AreaRevenueTarget` DECIMAL(18, 2)  NOT NULL DEFAULT 0,
     CONSTRAINT `PK_FiscalYears` PRIMARY KEY (`Id`),
     CONSTRAINT `UX_FiscalYears_Name` UNIQUE (`Name`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
