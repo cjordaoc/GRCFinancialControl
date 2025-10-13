@@ -21,11 +21,7 @@ namespace GRCFinancialControl.Persistence.Services
         {
             await using var context = await _contextFactory.CreateDbContextAsync();
 
-            return await context.ClosingPeriods
-                .Where(cp => EF.Property<string>(cp, "Discriminator") == nameof(ClosingPeriod))
-                .OrderByDescending(cp => cp.PeriodEnd)
-                .ThenByDescending(cp => cp.PeriodStart)
-                .ToListAsync();
+            return await context.Set<ClosingPeriod>().ToListAsync();
         }
 
         public async Task AddAsync(ClosingPeriod period)
