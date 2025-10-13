@@ -22,6 +22,9 @@
                 <DataGridTextColumn Header="Hours" Binding="{Binding Hours}"/>
             </DataGrid.Columns>
         </DataGrid>
-        <Button Content="Save" Command="{Binding SaveCommand}" HorizontalAlignment="Right"/>
+        <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">
+            <Button Content="Save" Command="{Binding SaveCommand}"/>
+            <Button Content="Close" Command="{Binding CloseCommand}"/>
+        </StackPanel>
     </StackPanel>
 </UserControl>

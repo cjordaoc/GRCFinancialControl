@@ -24,24 +24,24 @@ namespace GRCFinancialControl.Persistence.Services
         public async Task AddAsync(FiscalYear fiscalYear)
         {
             await using var context = await _contextFactory.CreateDbContextAsync();
-            await context.ClosingPeriods.AddAsync(fiscalYear);
+            await context.FiscalYears.AddAsync(fiscalYear);
             await context.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(FiscalYear fiscalYear)
         {
             await using var context = await _contextFactory.CreateDbContextAsync();
-            context.ClosingPeriods.Update(fiscalYear);
+            context.FiscalYears.Update(fiscalYear);
             await context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
             await using var context = await _contextFactory.CreateDbContextAsync();
-            var fiscalYear = await context.ClosingPeriods.FindAsync(id);
+            var fiscalYear = await context.FiscalYears.FindAsync(id);
             if (fiscalYear != null)
             {
-                context.ClosingPeriods.Remove(fiscalYear);
+                context.FiscalYears.Remove(fiscalYear);
                 await context.SaveChangesAsync();
             }
         }

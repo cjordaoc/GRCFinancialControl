@@ -16,6 +16,7 @@ namespace GRCFinancialControl.Persistence
         public DbSet<EngagementRankBudget> EngagementRankBudgets { get; set; }
         public DbSet<MarginEvolution> MarginEvolutions { get; set; }
         public DbSet<EngagementFiscalYearAllocation> EngagementFiscalYearAllocations { get; set; }
+        public DbSet<FiscalYear> FiscalYears { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -25,11 +26,6 @@ namespace GRCFinancialControl.Persistence
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            modelBuilder.Entity<ClosingPeriod>()
-                .HasDiscriminator<string>("Discriminator")
-                .HasValue<ClosingPeriod>(nameof(ClosingPeriod))
-                .HasValue<FiscalYear>(nameof(FiscalYear));
 
             // Configure composite key for EngagementPapd if not using an auto-incrementing Id
             // modelBuilder.Entity<EngagementPapd>()
@@ -171,6 +167,9 @@ namespace GRCFinancialControl.Persistence
                 .HasOne(e => e.FiscalYear)
                 .WithMany()
                 .HasForeignKey(e => e.FiscalYearId);
+
+            modelBuilder.Entity<FiscalYear>()
+                .HasKey(e => e.Id);
         }
     }
 }

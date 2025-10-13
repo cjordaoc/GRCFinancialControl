@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -12,6 +14,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     public partial class AllocationEditorViewModel : ViewModelBase
     {
         private readonly IEngagementService _engagementService;
+        private readonly IMessenger _messenger;
 
         [ObservableProperty]
         private Engagement _engagement;
@@ -25,10 +28,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private double _currentHoursAllocation;
 
-        public AllocationEditorViewModel(Engagement engagement, List<FiscalYear> fiscalYears, IEngagementService engagementService)
+        public AllocationEditorViewModel(Engagement engagement, List<FiscalYear> fiscalYears, IEngagementService engagementService, IMessenger messenger)
         {
             _engagement = engagement;
             _engagementService = engagementService;
+            _messenger = messenger;
             TotalPlannedHours = engagement.TotalPlannedHours;
 
             Allocations = new ObservableCollection<AllocationEntry>(
@@ -74,6 +78,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
 
             await _engagementService.UpdateAsync(Engagement);
+            _messenger.Send(new CloseDialogMessage(true));
+        }
+
+        [RelayCommand]
+        private void Close()
+        {
+            _messenger.Send(new CloseDialogMessage(false));
         }
     }
 

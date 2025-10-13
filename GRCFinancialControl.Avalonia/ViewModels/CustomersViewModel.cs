@@ -10,7 +10,7 @@ using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
-    public partial class CustomersViewModel : ViewModelBase
+    public partial class CustomersViewModel : ViewModelBase, IRecipient<RefreshDataMessage>
     {
         private readonly ICustomerService _customerService;
         private readonly IDialogService _dialogService;
@@ -62,6 +62,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             EditCommand.NotifyCanExecuteChanged();
             DeleteCommand.NotifyCanExecuteChanged();
+        }
+
+        public void Receive(RefreshDataMessage message)
+        {
+            _ = LoadDataAsync();
         }
     }
 }
