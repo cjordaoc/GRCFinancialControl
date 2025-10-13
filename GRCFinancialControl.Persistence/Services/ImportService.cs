@@ -821,33 +821,80 @@ namespace GRCFinancialControl.Persistence.Services
             return (name, idText);
         }
 
+        private static void CacheCustomer(IDictionary<string, Customer> cache, MarginImportRow row, Customer customer)
+        {
+            static void TryCache(IDictionary<string, Customer> cache, string? key, Customer customer)
+            {
+                if (!string.IsNullOrWhiteSpace(key))
+                {
+                    cache[key.Trim()] = customer;
+                }
+            }
+
+            TryCache(cache, row.ClientIdText, customer);
+            TryCache(cache, row.ClientName, customer);
+            TryCache(cache, customer.ClientIdText, customer);
+            TryCache(cache, customer.Name, customer);
+        }
+
         private static async Task<(Customer customer, bool created)> GetOrCreateCustomerAsync(
             ApplicationDbContext context,
             IDictionary<string, Customer> cache,
             MarginImportRow row)
         {
-            if (cache.TryGetValue(row.ClientIdText, out var cachedCustomer))
+            var normalizedName = string.IsNullOrWhiteSpace(row.ClientName)
+                ? null
+                : row.ClientName.Trim();
+
+            if (!string.IsNullOrWhiteSpace(row.ClientIdText) && cache.TryGetValue(row.ClientIdText, out var cachedById))
             {
-                return (cachedCustomer, false);
+                return (cachedById, false);
             }
 
-            var existingCustomer = await context.Customers
-                .FirstOrDefaultAsync(c => c.ClientIdText == row.ClientIdText);
+            if (!string.IsNullOrWhiteSpace(normalizedName) && cache.TryGetValue(normalizedName, out var cachedByName))
+            {
+                return (cachedByName, false);
+            }
+
+            Customer? existingCustomer = null;
+
+            if (!string.IsNullOrWhiteSpace(row.ClientIdText))
+            {
+                existingCustomer = await context.Customers
+                    .FirstOrDefaultAsync(c => c.ClientIdText == row.ClientIdText);
+            }
+
+            if (existingCustomer == null && !string.IsNullOrWhiteSpace(normalizedName))
+            {
+                existingCustomer = await context.Customers
+                    .FirstOrDefaultAsync(c => c.Name == normalizedName);
+            }
 
             if (existingCustomer != null)
             {
-                cache[row.ClientIdText] = existingCustomer;
+                if (string.IsNullOrWhiteSpace(existingCustomer.ClientIdText) &&
+                    !string.IsNullOrWhiteSpace(row.ClientIdText))
+                {
+                    existingCustomer.ClientIdText = row.ClientIdText;
+                }
+
+                if (string.IsNullOrWhiteSpace(existingCustomer.Name) && !string.IsNullOrWhiteSpace(normalizedName))
+                {
+                    existingCustomer.Name = normalizedName;
+                }
+
+                CacheCustomer(cache, row, existingCustomer);
                 return (existingCustomer, false);
             }
 
             var customer = new Customer
             {
-                Name = row.ClientName,
+                Name = normalizedName ?? string.Empty,
                 ClientIdText = row.ClientIdText
             };
 
             await context.Customers.AddAsync(customer);
-            cache[row.ClientIdText] = customer;
+            CacheCustomer(cache, row, customer);
             return (customer, true);
         }
 
