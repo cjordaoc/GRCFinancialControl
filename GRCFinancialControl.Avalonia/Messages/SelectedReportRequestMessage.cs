@@ -5,5 +5,6 @@ namespace GRCFinancialControl.Avalonia.Messages
 {
     public class SelectedReportRequestMessage : RequestMessage<IEnumerable<object>>
     {
+        public string ReportName { get; set; } = "Report";
     }
 }

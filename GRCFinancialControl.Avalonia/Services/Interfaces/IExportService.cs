@@ -5,6 +5,6 @@ namespace GRCFinancialControl.Avalonia.Services.Interfaces
 {
     public interface IExportService
     {
-        Task ExportToCsvAsync<T>(IEnumerable<T> data, string fileName);
+        Task ExportToExcelAsync<T>(IEnumerable<T> data, string entityName);
     }
 }

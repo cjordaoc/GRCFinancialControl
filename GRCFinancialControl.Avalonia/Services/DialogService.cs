@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Avalonia.ViewModels;
+using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 
 namespace GRCFinancialControl.Avalonia.Services
 {
@@ -25,6 +26,12 @@ namespace GRCFinancialControl.Avalonia.Services
             _dialogStack.Push(tcs);
             _messenger.Send(new OpenDialogMessage(viewModel));
             return tcs.Task;
+        }
+
+        public Task<bool> ShowConfirmationAsync(string title, string message)
+        {
+            var confirmationViewModel = new ConfirmationDialogViewModel(title, message, _messenger);
+            return ShowDialogAsync(confirmationViewModel);
         }
 
         public void Receive(CloseDialogMessage message)
