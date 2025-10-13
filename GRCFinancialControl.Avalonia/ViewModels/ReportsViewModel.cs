@@ -1,6 +1,12 @@
+using System.Collections.Generic;
+using System.Linq;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
+using GRCFinancialControl.Avalonia.Messages;
+
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
-    public class ReportsViewModel : ViewModelBase
+    public partial class ReportsViewModel : ViewModelBase
     {
         public PlannedVsActualViewModel PlannedVsActual { get; }
         public BacklogViewModel Backlog { get; }
@@ -35,6 +41,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             Messenger.Register<SelectedReportRequestMessage>(this, (r, m) =>
             {
+                m.ReportName = GetSelectedReportName();
                 m.Reply(GetSelectedReportData());
             });
         }
@@ -47,11 +54,28 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 EngagementPerformanceViewModel vm => vm.EngagementHealthData,
                 PapdContributionViewModel vm => new[] { vm },
                 TimeAllocationViewModel vm => new[] { vm },
-                StrategicKpiViewModel vm => new[] { vm.KpiData },
+                StrategicKpiViewModel vm when vm.KpiData is not null => new[] { vm.KpiData },
+                StrategicKpiViewModel => Enumerable.Empty<object>(),
                 MarginEvolutionViewModel vm => new[] { vm },
                 PlannedVsActualViewModel vm => new[] { vm },
                 BacklogViewModel vm => new[] { vm },
                 _ => Enumerable.Empty<object>()
+            };
+        }
+
+        private string GetSelectedReportName()
+        {
+            return SelectedReport switch
+            {
+                PlannedVsActualViewModel => nameof(PlannedVsActual),
+                BacklogViewModel => nameof(Backlog),
+                FiscalPerformanceViewModel => nameof(FiscalPerformance),
+                EngagementPerformanceViewModel => nameof(EngagementPerformance),
+                PapdContributionViewModel => nameof(PapdContribution),
+                TimeAllocationViewModel => nameof(TimeAllocation),
+                StrategicKpiViewModel => nameof(StrategicKpi),
+                MarginEvolutionViewModel => nameof(MarginEvolution),
+                _ => "Report"
             };
         }
     }

@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Avalonia.ViewModels;
@@ -8,12 +9,12 @@ using GRCFinancialControl.Avalonia.Views;
 using GRCFinancialControl.Persistence;
 using GRCFinancialControl.Persistence.Services;
 using GRCFinancialControl.Persistence.Services.Interfaces;
+using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
-using LiveChartsCore;
-using LiveChartsCore.SkiaSharpView;
 
 namespace GRCFinancialControl.Avalonia
 {
@@ -92,7 +93,7 @@ namespace GRCFinancialControl.Avalonia
             services.AddLogging(builder => builder.AddConsole());
 
             // Register Messenger
-            services.AddSingleton<CommunityToolkit.Mvvm.Messaging.IMessenger>(CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default);
+            services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
 
             // Register dialog service
             services.AddSingleton<IDialogService, DialogService>();

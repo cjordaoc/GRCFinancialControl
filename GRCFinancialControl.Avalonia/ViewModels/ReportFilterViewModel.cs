@@ -3,6 +3,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using GRCFinancialControl.Avalonia.Messages;
+using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
@@ -31,28 +34,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private string? _selectedEngagement;
 
-        public ReportFilterViewModel(IFiscalYearService fiscalYearService, IPapdService papdService, IEngagementService engagementService)
-        {
-            _fiscalYearService = fiscalYearService;
-            _papdService = papdService;
-            _engagementService = engagementService;
-            LoadFiltersCommand = new AsyncRelayCommand(LoadFiltersAsync);
-            LoadFiltersCommand.Execute(null);
-        }
-
         private readonly IExportService _exportService;
-        private readonly IMessenger _messenger;
 
         public IAsyncRelayCommand LoadFiltersCommand { get; }
         public IAsyncRelayCommand ExportCommand { get; }
 
         public ReportFilterViewModel(IFiscalYearService fiscalYearService, IPapdService papdService, IEngagementService engagementService, IExportService exportService, IMessenger messenger)
+            : base(messenger)
         {
             _fiscalYearService = fiscalYearService;
             _papdService = papdService;
             _engagementService = engagementService;
             _exportService = exportService;
-            _messenger = messenger;
             LoadFiltersCommand = new AsyncRelayCommand(LoadFiltersAsync);
             ExportCommand = new AsyncRelayCommand(ExportAsync);
             LoadFiltersCommand.Execute(null);
@@ -72,11 +65,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private async Task ExportAsync()
         {
-            var selectedReport = _messenger.Send<SelectedReportRequestMessage>();
-            if (selectedReport.Response != null)
+            var selectedReport = Messenger.Send<SelectedReportRequestMessage>();
+            if (selectedReport.Response is null)
             {
-                await _exportService.ExportToCsvAsync(selectedReport.Response, "report.csv");
+                return;
             }
+
+            var data = selectedReport.Response.ToList();
+            await _exportService.ExportToExcelAsync(data, selectedReport.ReportName);
         }
     }
 }

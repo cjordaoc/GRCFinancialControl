@@ -239,7 +239,7 @@ namespace GRCFinancialControl.Persistence.Services
             var plannedHours = await context.PlannedAllocations
                 .Include(pa => pa.ClosingPeriod)
                 .GroupBy(pa => pa.ClosingPeriod.Name)
-                .Select(g => new { ClosingPeriodName = g.Key, Hours = g.Sum(pa => pa.AllocatedHours) })
+                .Select(g => new { ClosingPeriodName = g.Key, Hours = (decimal)g.Sum(pa => pa.AllocatedHours) })
                 .ToListAsync();
 
             var actualHours = await context.ActualsEntries
@@ -260,8 +260,8 @@ namespace GRCFinancialControl.Persistence.Services
                 result.Add(new TimeAllocationData
                 {
                     ClosingPeriodName = period,
-                    PlannedHours = plannedHours.FirstOrDefault(p => p.ClosingPeriodName == period)?.Hours ?? 0,
-                    ActualHours = (decimal)(actualHours.FirstOrDefault(a => a.ClosingPeriodName == period)?.Hours ?? 0)
+                    PlannedHours = plannedHours.FirstOrDefault(p => p.ClosingPeriodName == period)?.Hours ?? 0m,
+                    ActualHours = actualHours.FirstOrDefault(a => a.ClosingPeriodName == period)?.Hours ?? 0m
                 });
             }
 
@@ -282,7 +282,9 @@ namespace GRCFinancialControl.Persistence.Services
                                              .Select(fy => ((fy.EndDate.Year - DateTime.Today.Year) * 12) + fy.EndDate.Month - DateTime.Today.Month)
                                              .Sum();
 
-            var avgMonthlySalesNeeded = remainingMonths > 0 ? (totalSalesTarget - totalRevenue) / remainingMonths : 0;
+            decimal avgMonthlySalesNeeded = remainingMonths > 0
+                ? (totalSalesTarget - totalRevenue) / remainingMonths
+                : 0m;
 
             // Placeholder for PAPD Contribution %
             var papdContributionPercent = 0m;
@@ -292,8 +294,8 @@ namespace GRCFinancialControl.Persistence.Services
 
             return new StrategicKpiData
             {
-                PercentSalesTargetAchieved = totalSalesTarget > 0 ? (totalRevenue / totalSalesTarget) * 100 : 0,
-                PercentRevenueTargetAchieved = totalRevenueTarget > 0 ? (totalRevenue / totalRevenueTarget) * 100 : 0,
+                PercentSalesTargetAchieved = totalSalesTarget > 0 ? (totalRevenue / totalSalesTarget) * 100 : 0m,
+                PercentRevenueTargetAchieved = totalRevenueTarget > 0 ? (totalRevenue / totalRevenueTarget) * 100 : 0m,
                 AvgMonthlySalesNeeded = avgMonthlySalesNeeded,
                 PapdContributionPercent = papdContributionPercent,
                 TerRequiredForGoal = terRequiredForGoal
@@ -314,11 +316,12 @@ namespace GRCFinancialControl.Persistence.Services
             foreach (var engagement in engagements)
             {
                 var marginDataPoints = engagement.MarginEvolutions
-                    .OrderBy(me => me.ClosingPeriod.PeriodStart)
+                    .Where(me => me.ClosingPeriod != null)
+                    .OrderBy(me => me.ClosingPeriod!.PeriodStart)
                     .Select(me => new MarginDataPoint
                     {
-                        ClosingPeriodName = me.ClosingPeriod.Name,
-                        Margin = me.Margin
+                        ClosingPeriodName = me.ClosingPeriod!.Name,
+                        Margin = me.MarginPercentage
                     })
                     .ToList();
 

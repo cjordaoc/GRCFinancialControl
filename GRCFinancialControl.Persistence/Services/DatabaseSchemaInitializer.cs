@@ -21,18 +21,32 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task ClearAllDataAsync()
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
-            var tableNames = new[]
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            var truncateStatements = new[]
             {
-                "ActualsEntries", "PlannedAllocations", "EngagementFiscalYearAllocations",
-                "EngagementRankBudgets", "MarginEvolutions", "EngagementPapds",
-                "Engagements", "Customers", "Papds", "ClosingPeriods", "FiscalYears"
+                "TRUNCATE TABLE `ActualsEntries`;",
+                "TRUNCATE TABLE `PlannedAllocations`;",
+                "TRUNCATE TABLE `EngagementFiscalYearAllocations`;",
+                "TRUNCATE TABLE `EngagementRankBudgets`;",
+                "TRUNCATE TABLE `MarginEvolutions`;",
+                "TRUNCATE TABLE `EngagementPapds`;",
+                "TRUNCATE TABLE `Exceptions`;",
+                "TRUNCATE TABLE `Engagements`;",
+                "TRUNCATE TABLE `Customers`;",
+                "TRUNCATE TABLE `Papds`;",
+                "TRUNCATE TABLE `ClosingPeriods`;",
+                "TRUNCATE TABLE `FiscalYears`;"
             };
 
-            foreach (var tableName in tableNames)
+            await context.Database.ExecuteSqlRawAsync("SET FOREIGN_KEY_CHECKS = 0;").ConfigureAwait(false);
+
+            foreach (var statement in truncateStatements)
             {
-                await context.Database.ExecuteSqlRawAsync($"DELETE FROM `{tableName}`");
+                await context.Database.ExecuteSqlRawAsync(statement).ConfigureAwait(false);
             }
+
+            await context.Database.ExecuteSqlRawAsync("SET FOREIGN_KEY_CHECKS = 1;").ConfigureAwait(false);
         }
     }
 }

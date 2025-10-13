@@ -7,10 +7,10 @@
              x:Class="GRCFinancialControl.Avalonia.Views.ReportFilterView"
              x:DataType="vm:ReportFilterViewModel">
     <StackPanel Orientation="Horizontal" Spacing="10" Margin="10">
-        <ComboBox ItemsSource="{Binding FiscalYears}" SelectedItem="{Binding SelectedFiscalYear}" Watermark="Fiscal Year"/>
-        <ComboBox ItemsSource="{Binding Papds}" SelectedItem="{Binding SelectedPapd}" Watermark="PAPD"/>
-        <ComboBox ItemsSource="{Binding Engagements}" SelectedItem="{Binding SelectedEngagement}" Watermark="Engagement"/>
-        <Button Content="Apply Filters"/>
-        <Button Content="Export to CSV"/>
+        <ComboBox ItemsSource="{Binding FiscalYears}" SelectedItem="{Binding SelectedFiscalYear}" PlaceholderText="Fiscal Year"/>
+        <ComboBox ItemsSource="{Binding Papds}" SelectedItem="{Binding SelectedPapd}" PlaceholderText="PAPD"/>
+        <ComboBox ItemsSource="{Binding Engagements}" SelectedItem="{Binding SelectedEngagement}" PlaceholderText="Engagement"/>
+        <Button Content="Apply Filters" Command="{Binding LoadFiltersCommand}"/>
+        <Button Content="Export" Command="{Binding ExportCommand}"/>
     </StackPanel>
 </UserControl>

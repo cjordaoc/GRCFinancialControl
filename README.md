@@ -14,6 +14,14 @@ The primary goal of this application is to provide a single source of truth for 
 - Calculate future-looking backlog based on allocations to future Fiscal Years.
 - Ensure 100% of data is attributed to a PAPD or flagged for review.
 
+## Recent Updates
+
+- The **Delete All** maintenance action now issues MySQL `TRUNCATE` statements so every business table is cleared quickly and without leaving auto-increment gaps.
+- All report exports generate Excel workbooks following the `Export_<Entity>_<yyyyMMdd_HHmm>.xlsx` naming pattern. Saved files include headers, auto-fit columns, and filters.
+- File pickers only accept and produce `.xlsx` files, aligning imports (e.g., `DataTemplate/data.xlsx` for margin actuals) with the supported Excel format. Revenue actuals remain a future enhancement.
+- Custom UI styles have been consolidated in `Styles/Controls.axaml`, making DataGrid look-and-feel changes easier to maintain from a single resource dictionary.
+- The MySQL rebuild script seeds closing periods from July 2024 through June 2031 and pre-populates fiscal years FY25–FY31 following the July-to-June calendar while leaving PAPD ownership to be defined in-app.
+
 ## 2. Personas & User Journeys
 
 **Persona:** Financial Controller (single user)
@@ -112,7 +120,7 @@ Provide a single place to \*\*plan, reconcile, and monitor\*\* revenue against a
 
 \- Enforce \*\*period close/locks\*\* and a simple \*\*approval flow\*\* for plan changes (§7).
 
-\- Provide \*\*dashboards, drilldowns, and exports\*\* (CSV/Excel; PDF optional) (§8).
+\- Provide \*\*dashboards, drilldowns, and exports\*\* (Excel only; PDF optional) (§8).
 
 
 
@@ -228,7 +236,7 @@ Provide a single place to \*\*plan, reconcile, and monitor\*\* revenue against a
 
 \- \*\*Exception Reports\*\*: Revenue without PAPD, Unmapped entities, Period mismatches.
 
-\- \*\*Exports\*\*: CSV/Excel for all grids; optional PDF summary packs.
+\- \*\*Exports\*\*: Excel (.xlsx) for all grids; optional PDF summary packs.
 
 
 
