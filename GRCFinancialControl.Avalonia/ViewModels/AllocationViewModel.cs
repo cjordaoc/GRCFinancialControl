@@ -45,7 +45,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             if (engagement == null) return;
 
-            var editorViewModel = new AllocationEditorViewModel(engagement, FiscalYears.ToList(), _engagementService);
+            var editorViewModel = new AllocationEditorViewModel(engagement, FiscalYears.ToList(), _engagementService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
             Messenger.Send(new Messages.RefreshDataMessage());
         }

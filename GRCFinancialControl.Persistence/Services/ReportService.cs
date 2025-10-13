@@ -23,9 +23,12 @@ namespace GRCFinancialControl.Persistence.Services
             await using var context = await _contextFactory.CreateDbContextAsync();
 
             var allEngagements = await context.Engagements.ToListAsync();
-            var allAllocations = await context.PlannedAllocations.Include(pa => pa.ClosingPeriod).ToListAsync();
+            var allAllocations = await context.EngagementFiscalYearAllocations.ToListAsync();
             var allActuals = await context.ActualsEntries.Include(ae => ae.Papd).ToListAsync();
-            var allFiscalYears = await context.Set<FiscalYear>().ToListAsync();
+            var allFiscalYears = await context.FiscalYears.ToListAsync();
+
+            var plannedHoursByKey = allAllocations
+                .ToDictionary(a => (a.EngagementId, a.FiscalYearId), a => a.Hours);
 
             var reportData = new List<PlannedVsActualData>();
 
@@ -33,12 +36,10 @@ namespace GRCFinancialControl.Persistence.Services
             {
                 foreach (var fy in allFiscalYears)
                 {
-                    var plannedHours = allAllocations
-                        .Where(a => a.EngagementId == engagement.Id && a.ClosingPeriodId == fy.Id)
-                        .Sum(a => a.AllocatedHours);
+                    plannedHoursByKey.TryGetValue((engagement.Id, fy.Id), out var plannedHours);
 
                     var actualsInYear = allActuals
-                        .Where(a => a.EngagementId == engagement.Id && a.Date >= fy.PeriodStart && a.Date <= fy.PeriodEnd);
+                        .Where(a => a.EngagementId == engagement.Id && a.Date >= fy.StartDate && a.Date <= fy.EndDate);
 
                     var actualsByPapd = actualsInYear.GroupBy(a => a.Papd);
 
@@ -68,6 +69,18 @@ namespace GRCFinancialControl.Persistence.Services
                             ActualHours = 0
                         });
                     }
+                    else if (plannedHours > 0)
+                    {
+                        reportData.Add(new PlannedVsActualData
+                        {
+                            EngagementId = engagement.EngagementId,
+                            EngagementDescription = engagement.Description,
+                            PapdName = "Total",
+                            FiscalYear = fy.Name,
+                            PlannedHours = plannedHours,
+                            ActualHours = actualsInYear.Sum(a => a.Hours)
+                        });
+                    }
                 }
             }
 
@@ -82,7 +95,7 @@ namespace GRCFinancialControl.Persistence.Services
             var backlogData = await context.PlannedAllocations
                 .Include(pa => pa.Engagement)
                 .Include(pa => pa.ClosingPeriod)
-                .Where(pa => EF.Property<string>(pa.ClosingPeriod, "Discriminator") == nameof(FiscalYear) && pa.ClosingPeriod.PeriodStart > today)
+                .Where(pa => pa.ClosingPeriod.PeriodStart > today)
                 .GroupBy(pa => new { pa.Engagement.EngagementId, pa.Engagement.Description })
                 .Select(g => new BacklogData
                 {

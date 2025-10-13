@@ -18,8 +18,8 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto"/>
                 <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
-                <DataGridTextColumn Header="Start Date" Binding="{Binding PeriodStart, StringFormat='{}{0:yyyy-MM-dd}'}" Width="*"/>
-                <DataGridTextColumn Header="End Date" Binding="{Binding PeriodEnd, StringFormat='{}{0:yyyy-MM-dd}'}" Width="*"/>
+                <DataGridTextColumn Header="Start Date" Binding="{Binding StartDate, StringFormat='{}{0:yyyy-MM-dd}'}" Width="*"/>
+                <DataGridTextColumn Header="End Date" Binding="{Binding EndDate, StringFormat='{}{0:yyyy-MM-dd}'}" Width="*"/>
             </DataGrid.Columns>
         </DataGrid>
 
