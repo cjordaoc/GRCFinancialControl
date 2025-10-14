@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -28,12 +29,21 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private double _currentHoursAllocation;
 
+        [ObservableProperty]
+        private double _allocationVariance;
+
+        [ObservableProperty]
+        private bool _hasAllocationVariance;
+
+        [ObservableProperty]
+        private string? _validationMessage;
+
         public AllocationEditorViewModel(Engagement engagement, List<FiscalYear> fiscalYears, IEngagementService engagementService, IMessenger messenger)
         {
             _engagement = engagement;
             _engagementService = engagementService;
             _messenger = messenger;
-            TotalPlannedHours = engagement.TotalPlannedHours;
+            TotalPlannedHours = engagement.HoursToAllocate;
 
             Allocations = new ObservableCollection<AllocationEntry>(
                 fiscalYears.Select(fy => new AllocationEntry
@@ -44,6 +54,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             );
 
             CurrentHoursAllocation = Allocations.Sum(a => a.PlannedHours);
+            UpdateVariance();
 
             foreach (var allocation in Allocations)
             {
@@ -60,12 +71,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand]
         private async Task Save()
         {
-            if (CurrentHoursAllocation != TotalPlannedHours)
+            if (HasAllocationVariance)
             {
-                // In a real app, we would show a message to the user
                 return;
             }
-
             Engagement.Allocations.Clear();
             foreach (var allocation in Allocations)
             {
@@ -77,6 +86,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 });
             }
 
+            Engagement.TotalPlannedHours = TotalPlannedHours;
             await _engagementService.UpdateAsync(Engagement);
             _messenger.Send(new CloseDialogMessage(true));
         }
@@ -85,6 +95,25 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private void Close()
         {
             _messenger.Send(new CloseDialogMessage(false));
+        }
+
+        partial void OnCurrentHoursAllocationChanged(double value)
+        {
+            UpdateVariance();
+        }
+
+        partial void OnTotalPlannedHoursChanged(double value)
+        {
+            UpdateVariance();
+        }
+
+        private void UpdateVariance()
+        {
+            AllocationVariance = CurrentHoursAllocation - TotalPlannedHours;
+            HasAllocationVariance = Math.Abs(AllocationVariance) > 0.01d;
+            ValidationMessage = HasAllocationVariance
+                ? "Allocated hours must match the target hours before saving."
+                : null;
         }
     }
 

@@ -3,23 +3,37 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             xmlns:conv="using:GRCFinancialControl.Avalonia.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.AllocationEditorView"
              x:DataType="vm:AllocationEditorViewModel">
+    <UserControl.Resources>
+        <conv:BooleanToBrushConverter x:Key="AllocationFillBrush" TrueBrush="#FFF1C232" FalseBrush="#228B22"/>
+        <conv:BooleanToBrushConverter x:Key="AllocationStrokeBrush" TrueBrush="#FFB8860B" FalseBrush="#145214"/>
+    </UserControl.Resources>
     <StackPanel Spacing="10" Margin="10">
         <TextBlock Text="{Binding Engagement.Description}" FontSize="20" FontWeight="Bold"/>
-        <TextBlock>
-            <Run Text="Total Planned Hours: "/>
-            <Run Text="{Binding TotalPlannedHours}"/>
-        </TextBlock>
+
+        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <TextBlock Text="Hours to Allocate:" FontWeight="SemiBold"/>
+            <TextBlock Text="{Binding TotalPlannedHours, StringFormat='{}{0:N2}'}"/>
+            <Ellipse Width="14" Height="14" StrokeThickness="1" ToolTip.Tip="{Binding AllocationVariance, StringFormat='Variance {0:+0.##;-0.##;0} h'}"
+                     Fill="{Binding HasAllocationVariance, Converter={StaticResource AllocationFillBrush}}"
+                     Stroke="{Binding HasAllocationVariance, Converter={StaticResource AllocationStrokeBrush}}"/>
+            <TextBlock Text="{Binding AllocationVariance, StringFormat='{}{0:+0.##;-0.##;0} h'}" Foreground="#FFB8860B" IsVisible="{Binding HasAllocationVariance}"/>
+        </StackPanel>
+
         <TextBlock>
             <Run Text="Current Hours Allocation: "/>
-            <Run Text="{Binding CurrentHoursAllocation}"/>
+            <Run Text="{Binding CurrentHoursAllocation, StringFormat='{}{0:N2}'}"/>
         </TextBlock>
+
+        <TextBlock Text="{Binding ValidationMessage}" Foreground="#FFB8860B" FontWeight="SemiBold" IsVisible="{Binding HasAllocationVariance}"/>
+
         <DataGrid ItemsSource="{Binding Allocations}" AutoGenerateColumns="False" CanUserSortColumns="False">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Fiscal Year" Binding="{Binding FiscalYear.Name}" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Planned Hours" Binding="{Binding PlannedHours}"/>
+                <DataGridTextColumn Header="Planned Hours" Binding="{Binding PlannedHours, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}"/>
             </DataGrid.Columns>
         </DataGrid>
         <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">

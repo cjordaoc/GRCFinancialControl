@@ -42,5 +42,30 @@ namespace GRCFinancialControl.Core.Models
         public ICollection<EngagementFiscalYearAllocation> Allocations { get; set; } = new List<EngagementFiscalYearAllocation>();
         [NotMapped]
         public double CurrentHoursAllocation => Allocations.Sum(a => a.PlannedHours);
+
+        [NotMapped]
+        public double HoursToAllocate
+        {
+            get
+            {
+                if (EtcpHours > 0)
+                {
+                    return (double)EtcpHours;
+                }
+
+                if (InitialHoursBudget > 0)
+                {
+                    return (double)InitialHoursBudget;
+                }
+
+                return TotalPlannedHours;
+            }
+        }
+
+        [NotMapped]
+        public double AllocationVariance => CurrentHoursAllocation - HoursToAllocate;
+
+        [NotMapped]
+        public bool RequiresAllocationReview => Math.Abs(AllocationVariance) > 0.01d;
     }
 }

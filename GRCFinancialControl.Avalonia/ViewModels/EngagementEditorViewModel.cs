@@ -53,7 +53,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private int? _etcpAgeDays;
 
         [ObservableProperty]
-        private DateTimeOffset? _latestEtcDate;
+        private DateTime? _latestEtcDate;
 
         public IEnumerable<EngagementStatus> StatusOptions => Enum.GetValues<EngagementStatus>();
 
@@ -79,9 +79,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             TotalPlannedHours = engagement.TotalPlannedHours;
             MarginPctEtcp = engagement.MarginPctEtcp;
             EtcpAgeDays = engagement.EtcpAgeDays;
-            LatestEtcDate = engagement.LatestEtcDate.HasValue
-                ? new DateTimeOffset(engagement.LatestEtcDate.Value)
-                : null;
+            LatestEtcDate = engagement.LatestEtcDate;
             PapdAssignments = new ObservableCollection<EngagementPapd>(engagement.EngagementPapds);
 
             _ = LoadCustomersAsync();
@@ -107,7 +105,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Engagement.TotalPlannedHours = TotalPlannedHours;
             Engagement.MarginPctEtcp = MarginPctEtcp;
             Engagement.EtcpAgeDays = EtcpAgeDays;
-            Engagement.LatestEtcDate = LatestEtcDate?.DateTime;
+            Engagement.LatestEtcDate = LatestEtcDate;
             Engagement.EngagementPapds = PapdAssignments;
 
             if (Engagement.Id == 0)

@@ -237,32 +237,77 @@ namespace GRCFinancialControl.Persistence.Services
         {
             await using var context = await _contextFactory.CreateDbContextAsync();
 
-            var plannedHours = await context.PlannedAllocations
-                .Include(pa => pa.ClosingPeriod)
-                .GroupBy(pa => pa.ClosingPeriod.Name)
-                .Select(g => new { ClosingPeriodName = g.Key, Hours = (decimal)g.Sum(pa => pa.AllocatedHours) })
+            var fiscalYears = await context.FiscalYears
+                .AsNoTracking()
                 .ToListAsync();
 
-            var actualHours = await context.ActualsEntries
-                .Include(a => a.ClosingPeriod)
-                .GroupBy(a => a.ClosingPeriod.Name)
-                .Select(g => new { ClosingPeriodName = g.Key, Hours = (decimal)g.Sum(a => a.Hours) })
+            var plannedAllocations = await context.EngagementFiscalYearAllocations
+                .AsNoTracking()
+                .Include(a => a.FiscalYear)
                 .ToListAsync();
 
-            var closingPeriods = plannedHours.Select(p => p.ClosingPeriodName)
-                .Union(actualHours.Select(a => a.ClosingPeriodName))
-                .Distinct()
+            var plannedHoursByFiscalYear = plannedAllocations
+                .Where(a => a.FiscalYear != null)
+                .GroupBy(a => a.FiscalYear!)
+                .Select(g => new
+                {
+                    Key = g.Key.Name,
+                    Date = g.Key.StartDate,
+                    Hours = (decimal)g.Sum(a => a.PlannedHours)
+                })
                 .ToList();
+
+            var financialEvolutionEntries = await context.FinancialEvolutions
+                .AsNoTracking()
+                .Join(
+                    context.ClosingPeriods.AsNoTracking(),
+                    evolution => evolution.ClosingPeriodId,
+                    period => period.Name,
+                    (evolution, period) => new { evolution, period })
+                .Where(x => x.evolution.HoursData.HasValue && x.evolution.HoursData.Value != 0m)
+                .ToListAsync();
+
+            var etcpHoursByPeriod = financialEvolutionEntries
+                .Select(x =>
+                {
+                    var fiscalYear = fiscalYears.FirstOrDefault(fy => x.period.PeriodEnd >= fy.StartDate && x.period.PeriodEnd <= fy.EndDate);
+                    var key = fiscalYear?.Name ?? x.evolution.ClosingPeriodId;
+                    var orderDate = fiscalYear?.StartDate ?? x.period.PeriodStart;
+                    return new { Key = key, Date = orderDate, Hours = x.evolution.HoursData!.Value };
+                })
+                .GroupBy(x => x.Key)
+                .Select(g => new
+                {
+                    Key = g.Key,
+                    Date = g.Min(x => x.Date),
+                    Hours = g.Sum(x => x.Hours)
+                })
+                .ToList();
+
+            var ordering = plannedHoursByFiscalYear
+                .Select(p => new { p.Key, p.Date })
+                .Concat(etcpHoursByPeriod.Select(a => new { a.Key, a.Date }))
+                .GroupBy(x => x.Key)
+                .Select(g => new { Key = g.Key, Date = g.Min(x => x.Date) })
+                .OrderBy(x => x.Date)
+                .ThenBy(x => x.Key, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var plannedLookup = plannedHoursByFiscalYear.ToDictionary(p => p.Key, p => p.Hours);
+            var etcpLookup = etcpHoursByPeriod.ToDictionary(p => p.Key, p => p.Hours);
 
             var result = new List<TimeAllocationData>();
 
-            foreach (var period in closingPeriods)
+            foreach (var item in ordering)
             {
+                plannedLookup.TryGetValue(item.Key, out var plannedHours);
+                etcpLookup.TryGetValue(item.Key, out var etcpHours);
+
                 result.Add(new TimeAllocationData
                 {
-                    ClosingPeriodName = period,
-                    PlannedHours = plannedHours.FirstOrDefault(p => p.ClosingPeriodName == period)?.Hours ?? 0m,
-                    ActualHours = actualHours.FirstOrDefault(a => a.ClosingPeriodName == period)?.Hours ?? 0m
+                    ClosingPeriodName = item.Key,
+                    PlannedHours = plannedHours,
+                    ActualHours = etcpHours
                 });
             }
 

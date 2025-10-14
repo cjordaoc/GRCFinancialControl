@@ -14,7 +14,9 @@ namespace GRCFinancialControl.Avalonia
                 return null;
             }
 
-            var name = data.GetType().FullName!.Replace("ViewModel", "View");
+            var name = data.GetType().FullName!
+                .Replace(".ViewModels.", ".Views.")
+                .Replace("ViewModel", "View");
             var type = Type.GetType(name);
 
             if (type != null)
