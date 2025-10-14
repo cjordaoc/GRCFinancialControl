@@ -25,35 +25,37 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private Papd? _selectedPapd;
 
         [ObservableProperty]
-        private DateTime _effectiveDate = DateTime.Today;
+        private DateTimeOffset? _effectiveDate = DateTimeOffset.Now;
 
         public EngagementPapdAssignmentViewModel(ObservableCollection<EngagementPapd> assignments, IEnumerable<Papd> availablePapds, IMessenger messenger)
             : base(messenger)
         {
-            Assignments = assignments;
-            AvailablePapds = new ObservableCollection<Papd>(availablePapds);
+            Assignments = assignments ?? new ObservableCollection<EngagementPapd>();
+            AvailablePapds = new ObservableCollection<Papd>(availablePapds ?? Enumerable.Empty<Papd>());
             SelectedPapd = AvailablePapds.FirstOrDefault();
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanAddAssignment))]
         private void AddAssignment()
         {
-            if (SelectedPapd == null) return;
+            if (SelectedPapd == null || EffectiveDate is null) return;
 
             var newAssignment = new EngagementPapd
             {
                 Papd = SelectedPapd,
-                EffectiveDate = EffectiveDate
+                EffectiveDate = EffectiveDate.Value.Date
             };
             Assignments.Add(newAssignment);
+            SelectedAssignment = newAssignment;
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanRemoveAssignment))]
         private void RemoveAssignment()
         {
             if (SelectedAssignment != null)
             {
                 Assignments.Remove(SelectedAssignment);
+                SelectedAssignment = Assignments.LastOrDefault();
             }
         }
 
@@ -67,6 +69,25 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private void Close()
         {
             Messenger.Send(new CloseDialogMessage(false));
+        }
+
+        private bool CanAddAssignment() => SelectedPapd is not null && EffectiveDate is not null;
+
+        private bool CanRemoveAssignment() => SelectedAssignment is not null;
+
+        partial void OnSelectedPapdChanged(Papd? value)
+        {
+            AddAssignmentCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnEffectiveDateChanged(DateTimeOffset? value)
+        {
+            AddAssignmentCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnSelectedAssignmentChanged(EngagementPapd? value)
+        {
+            RemoveAssignmentCommand.NotifyCanExecuteChanged();
         }
     }
 }

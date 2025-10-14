@@ -53,7 +53,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Messenger.Send(new RefreshDataMessage());
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanEdit))]
         private async Task Edit(ClosingPeriod closingPeriod)
         {
             if (closingPeriod == null)
@@ -66,7 +66,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Messenger.Send(new RefreshDataMessage());
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanDelete))]
         private async Task Delete(ClosingPeriod closingPeriod)
         {
             if (closingPeriod == null)
@@ -86,19 +86,23 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         }
 
         [RelayCommand(CanExecute = nameof(CanDeleteData))]
-        private async Task DeleteData()
+        private async Task DeleteData(ClosingPeriod closingPeriod)
         {
-            if (SelectedClosingPeriod is null) return;
+            if (closingPeriod is null) return;
 
-            var result = await _dialogService.ShowConfirmationAsync("Delete Data", $"Are you sure you want to delete all data for {SelectedClosingPeriod.Name}? This action cannot be undone.");
+            var result = await _dialogService.ShowConfirmationAsync("Delete Data", $"Are you sure you want to delete all data for {closingPeriod.Name}? This action cannot be undone.");
             if (result)
             {
-                await _closingPeriodService.DeleteDataAsync(SelectedClosingPeriod.Id);
+                await _closingPeriodService.DeleteDataAsync(closingPeriod.Id);
                 Messenger.Send(new RefreshDataMessage());
             }
         }
 
-        private bool CanDeleteData() => SelectedClosingPeriod is not null;
+        private static bool CanEdit(ClosingPeriod closingPeriod) => closingPeriod is not null;
+
+        private static bool CanDelete(ClosingPeriod closingPeriod) => closingPeriod is not null;
+
+        private static bool CanDeleteData(ClosingPeriod closingPeriod) => closingPeriod is not null;
 
         partial void OnSelectedClosingPeriodChanged(ClosingPeriod? value)
         {

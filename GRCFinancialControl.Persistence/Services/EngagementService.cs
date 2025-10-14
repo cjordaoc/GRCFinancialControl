@@ -105,7 +105,7 @@ namespace GRCFinancialControl.Persistence.Services
             var engagement = await context.Engagements
                 .Include(e => e.EngagementPapds)
                 .Include(e => e.RankBudgets)
-                .Include(e => e.MarginEvolutions)
+                .Include(e => e.FinancialEvolutions)
                 .Include(e => e.Allocations)
                 .FirstOrDefaultAsync(e => e.Id == engagementId);
 
@@ -123,7 +123,7 @@ namespace GRCFinancialControl.Persistence.Services
 
             context.EngagementPapds.RemoveRange(engagement.EngagementPapds);
             context.EngagementRankBudgets.RemoveRange(engagement.RankBudgets);
-            context.MarginEvolutions.RemoveRange(engagement.MarginEvolutions);
+            context.FinancialEvolutions.RemoveRange(engagement.FinancialEvolutions);
             context.EngagementFiscalYearAllocations.RemoveRange(engagement.Allocations);
 
             await context.SaveChangesAsync();

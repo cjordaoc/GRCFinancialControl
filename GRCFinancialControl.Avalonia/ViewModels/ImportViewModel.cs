@@ -29,6 +29,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private string? _fileType;
 
+        public string? FileTypeDisplayName => FileType switch
+        {
+            "Actuals" => "ETC-P",
+            _ => FileType
+        };
+
         public ImportViewModel(IFilePickerService filePickerService, IImportService importService, IClosingPeriodService closingPeriodService, ILoggingService loggingService)
         {
             _filePickerService = filePickerService;
@@ -44,6 +50,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public IRelayCommand SetImportTypeCommand { get; }
         public IAsyncRelayCommand ImportCommand { get; }
 
+        partial void OnFileTypeChanged(string? value)
+        {
+            OnPropertyChanged(nameof(FileTypeDisplayName));
+        }
+
         private void SetImportType(string? fileType)
         {
             FileType = fileType;
@@ -56,14 +67,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             if (FileType == "Actuals" && SelectedClosingPeriod == null)
             {
-                StatusMessage = "Please select a closing period before importing margin data.";
+                StatusMessage = "Please select a closing period before importing ETC-P data.";
                 return;
             }
 
             var filePath = await _filePickerService.OpenFileAsync();
             if (string.IsNullOrEmpty(filePath)) return;
 
-            _loggingService.LogInfo($"Importing {FileType.ToLower()} data...");
+            var displayName = FileTypeDisplayName ?? FileType ?? string.Empty;
+            _loggingService.LogInfo($"Importing {displayName} data...");
             try
             {
                 string result;

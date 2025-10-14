@@ -49,7 +49,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 },
                 new ColumnSeries<decimal>
                 {
-                    Name = "Actual Hours",
+                    Name = "ETC-P Hours",
                     Values = data.Select(d => d.ActualHours).ToArray()
                 }
             };

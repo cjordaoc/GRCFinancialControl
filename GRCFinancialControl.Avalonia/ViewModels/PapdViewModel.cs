@@ -41,7 +41,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Messenger.Send(new RefreshDataMessage());
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanEdit))]
         private async Task Edit(Papd papd)
         {
             if (papd == null) return;
@@ -50,7 +50,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Messenger.Send(new RefreshDataMessage());
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanDelete))]
         private async Task Delete(Papd papd)
         {
             if (papd == null) return;
@@ -71,7 +71,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
-        private bool CanDeleteData(Papd papd) => papd is not null;
+        private static bool CanEdit(Papd papd) => papd is not null;
+
+        private static bool CanDelete(Papd papd) => papd is not null;
+
+        private static bool CanDeleteData(Papd papd) => papd is not null;
 
         partial void OnSelectedPapdChanged(Papd? value)
         {

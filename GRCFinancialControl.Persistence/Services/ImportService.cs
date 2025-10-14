@@ -20,7 +20,9 @@ namespace GRCFinancialControl.Persistence.Services
     {
         private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
         private readonly ILogger<ImportService> _logger;
+        private const string FinancialEvolutionInitialPeriodId = "INITIAL";
         private static readonly Regex MultiWhitespaceRegex = new Regex("\\s+", RegexOptions.Compiled);
+        private static readonly Regex DigitsRegex = new Regex("\\d+", RegexOptions.Compiled);
         private static readonly CultureInfo PtBrCulture = CultureInfo.GetCultureInfo("pt-BR");
 
         public ImportService(IDbContextFactory<ApplicationDbContext> contextFactory, ILogger<ImportService> logger)
@@ -115,7 +117,7 @@ namespace GRCFinancialControl.Persistence.Services
                     Description = engagementDescription,
                     CustomerKey = normalizedCustomerName,
                     InitialHoursBudget = totalBudgetHours,
-                    ActualHours = 0m
+                    EtcpHours = 0m
                 };
 
                 await context.Engagements.AddAsync(engagement);
@@ -361,7 +363,7 @@ namespace GRCFinancialControl.Persistence.Services
 
             if (!File.Exists(filePath))
             {
-                throw new FileNotFoundException("Margin workbook could not be found.", filePath);
+                throw new FileNotFoundException("ETC-P workbook could not be found.", filePath);
             }
 
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
@@ -374,17 +376,15 @@ namespace GRCFinancialControl.Persistence.Services
                 return "Selected closing period could not be found. Please refresh and try again.";
             }
 
-            var uploadTimestampUtc = DateTime.UtcNow;
             var customerCache = new Dictionary<string, Customer>(StringComparer.OrdinalIgnoreCase);
             var engagementCache = new Dictionary<string, Engagement>(StringComparer.OrdinalIgnoreCase);
             var processedEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var rowErrors = new List<string>();
 
+            var customersCreated = 0;
             var engagementsCreated = 0;
             var engagementsUpdated = 0;
-            var customersCreated = 0;
-            var initialMarginEntriesCreated = 0;
-            var etcEntriesCreated = 0;
+            var rowsProcessed = 0;
 
             using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             using var reader = ExcelReaderFactory.CreateReader(stream);
@@ -392,27 +392,39 @@ namespace GRCFinancialControl.Persistence.Services
             {
                 ConfigureDataTable = _ => new ExcelDataTableConfiguration
                 {
-                    UseHeaderRow = true
+                    UseHeaderRow = false
                 }
             });
 
-            var marginTable = ResolveMarginWorksheet(dataSet);
-            if (marginTable == null)
+            var etcpTable = ResolveEtcpWorksheet(dataSet);
+            if (etcpTable == null)
             {
-                return "The margin file does not contain a worksheet with the expected headers.";
+                return "The ETC-P workbook does not contain the expected worksheet.";
             }
 
-            EnsureColumnExists(marginTable, 0, "Engagement Name (ID) Currency");
-            EnsureColumnExists(marginTable, 1, "Client Name (ID)");
-            EnsureColumnExists(marginTable, 3, "Margin % Bud");
-            EnsureColumnExists(marginTable, 4, "Margin % ETC-P");
-            EnsureColumnExists(marginTable, 15, "ETC-P Age (Days)");
-            EnsureColumnExists(marginTable, 17, "Status");
-
-            for (var rowIndex = 0; rowIndex < marginTable.Rows.Count; rowIndex++)
+            const int headerRowIndex = 4; // Row 5 in Excel (1-based)
+            if (etcpTable.Rows.Count <= headerRowIndex)
             {
-                var row = marginTable.Rows[rowIndex];
-                var rowNumber = rowIndex + 2; // account for header row
+                return $"The ETC-P worksheet does not contain any data rows for closing period '{closingPeriod.Name}'.";
+            }
+
+            EnsureColumnExists(etcpTable, 2, "Client Name (ID)");
+            EnsureColumnExists(etcpTable, 3, "Engagement Name (ID) Currency");
+            EnsureColumnExists(etcpTable, 4, "Engagement Status");
+            EnsureColumnExists(etcpTable, 8, "Charged Hours Bud");
+            EnsureColumnExists(etcpTable, 9, "Charged Hours ETC-P");
+            EnsureColumnExists(etcpTable, 11, "TER Bud");
+            EnsureColumnExists(etcpTable, 12, "TER ETC-P");
+            EnsureColumnExists(etcpTable, 14, "Margin % Bud");
+            EnsureColumnExists(etcpTable, 15, "Margin % ETC-P");
+            EnsureColumnExists(etcpTable, 17, "Expenses Bud");
+            EnsureColumnExists(etcpTable, 18, "Expenses ETC-P");
+            EnsureColumnExists(etcpTable, 20, "ETC Age Days");
+
+            for (var rowIndex = headerRowIndex + 1; rowIndex < etcpTable.Rows.Count; rowIndex++)
+            {
+                var row = etcpTable.Rows[rowIndex];
+                var rowNumber = rowIndex + 1; // Excel is 1-based
 
                 try
                 {
@@ -421,7 +433,7 @@ namespace GRCFinancialControl.Persistence.Services
                         continue;
                     }
 
-                    var parsedRow = ParseMarginRow(row, rowNumber, uploadTimestampUtc);
+                    var parsedRow = ParseEtcpRow(row, rowNumber);
                     if (parsedRow == null)
                     {
                         continue;
@@ -432,10 +444,8 @@ namespace GRCFinancialControl.Persistence.Services
                     {
                         customersCreated++;
                     }
-                    else if (string.IsNullOrWhiteSpace(customer.Name) && !string.IsNullOrWhiteSpace(parsedRow.ClientName))
-                    {
-                        customer.Name = parsedRow.ClientName;
-                    }
+
+                    UpdateCustomer(customer, parsedRow);
 
                     var (engagement, engagementCreated) = await GetOrCreateEngagementAsync(context, engagementCache, parsedRow);
                     if (engagementCreated)
@@ -448,94 +458,40 @@ namespace GRCFinancialControl.Persistence.Services
                         engagementsUpdated++;
                     }
 
-                    if (!string.IsNullOrWhiteSpace(parsedRow.EngagementDisplayName) &&
-                        string.IsNullOrWhiteSpace(engagement.Description))
-                    {
-                        engagement.Description = parsedRow.EngagementDisplayName;
-                    }
+                    UpdateEngagement(engagement, customer, parsedRow, closingPeriod);
 
-                    if (!string.IsNullOrWhiteSpace(parsedRow.Currency))
-                    {
-                        engagement.Currency = parsedRow.Currency;
-                    }
+                    UpsertFinancialEvolution(context, engagement, FinancialEvolutionInitialPeriodId, parsedRow.BudgetHours, parsedRow.BudgetValue, parsedRow.MarginBudget, parsedRow.BudgetExpenses);
+                    UpsertFinancialEvolution(context, engagement, closingPeriod.Name, parsedRow.EtcpHours, parsedRow.EtcpValue, parsedRow.MarginEtcp, parsedRow.EtcpExpenses);
 
-                    if (!string.IsNullOrWhiteSpace(parsedRow.StatusText))
-                    {
-                        engagement.StatusText = parsedRow.StatusText;
-                        engagement.Status = ParseStatus(parsedRow.StatusText);
-                    }
-
-                    if (parsedRow.MarginPctBudget.HasValue)
-                    {
-                        engagement.MarginPctBudget = parsedRow.MarginPctBudget;
-                        engagement.OpeningMargin = parsedRow.MarginPctBudget.Value;
-                    }
-
-                    if (parsedRow.MarginPctEtcp.HasValue)
-                    {
-                        engagement.MarginPctEtcp = parsedRow.MarginPctEtcp;
-                    }
-
-                    if (parsedRow.EtcpAgeDays.HasValue)
-                    {
-                        engagement.EtcpAgeDays = parsedRow.EtcpAgeDays;
-                    }
-
-                    if (parsedRow.LatestEtcDate.HasValue)
-                    {
-                        engagement.LatestEtcDate = parsedRow.LatestEtcDate;
-                    }
-
-                    engagement.NextEtcDate = null;
-                    engagement.Customer = customer;
-                    if (customer.Id > 0)
-                    {
-                        engagement.CustomerId = customer.Id;
-                    }
-                    engagement.CustomerKey = customer.Name;
-
-                    if (parsedRow.MarginPctBudget.HasValue &&
-                        !engagement.MarginEvolutions.Any(me => me.EntryType == MarginEvolutionType.InitialBudget))
-                    {
-                        engagement.MarginEvolutions.Add(new MarginEvolution
-                        {
-                            EntryType = MarginEvolutionType.InitialBudget,
-                            MarginPercentage = parsedRow.MarginPctBudget.Value,
-                            CreatedAtUtc = uploadTimestampUtc,
-                            EffectiveDate = closingPeriod.PeriodEnd,
-                            ClosingPeriodId = closingPeriod.Id
-                        });
-                        initialMarginEntriesCreated++;
-                    }
-
-                    if (parsedRow.MarginPctEtcp.HasValue)
-                    {
-                        engagement.MarginEvolutions.Add(new MarginEvolution
-                        {
-                            EntryType = MarginEvolutionType.Etc,
-                            MarginPercentage = parsedRow.MarginPctEtcp.Value,
-                            CreatedAtUtc = uploadTimestampUtc,
-                            EffectiveDate = parsedRow.LatestEtcDate,
-                            ClosingPeriodId = closingPeriod.Id
-                        });
-                        etcEntriesCreated++;
-                    }
+                    rowsProcessed++;
                 }
                 catch (Exception ex)
                 {
                     rowErrors.Add($"Row {rowNumber}: {ex.Message}");
-                    _logger.LogError(ex, "Failed to import row {RowNumber} from file {FilePath}", rowNumber, filePath);
+                    _logger.LogError(ex, "Failed to import ETC-P row {RowNumber} from file {FilePath}", rowNumber, filePath);
                 }
             }
 
             await context.SaveChangesAsync();
 
+            if (rowsProcessed == 0)
+            {
+                var emptySummary = new StringBuilder();
+                emptySummary.Append($"No ETC-P rows were imported for closing period '{closingPeriod.Name}'.");
+                if (rowErrors.Count > 0)
+                {
+                    emptySummary.Append($" {rowErrors.Count} rows reported issues; review logs for details.");
+                }
+
+                return emptySummary.ToString();
+            }
+
             var summaryBuilder = new StringBuilder();
-            summaryBuilder.Append($"Margin import complete for closing period '{closingPeriod.Name}'.");
-            summaryBuilder.Append($" {engagementsCreated} engagements created.");
-            summaryBuilder.Append($" {engagementsUpdated} engagements updated.");
-            summaryBuilder.Append($" {customersCreated} customers created.");
-            summaryBuilder.Append($" {initialMarginEntriesCreated + etcEntriesCreated} margin history records added ({initialMarginEntriesCreated} initial, {etcEntriesCreated} ETC).");
+            summaryBuilder.Append($"ETC-P import complete for closing period '{closingPeriod.Name}'.");
+            summaryBuilder.Append($" Rows processed: {rowsProcessed}.");
+            summaryBuilder.Append($" Customers created: {customersCreated}.");
+            summaryBuilder.Append($" Engagements created: {engagementsCreated}.");
+            summaryBuilder.Append($" Engagements updated: {engagementsUpdated}.");
 
             if (rowErrors.Count > 0)
             {
@@ -545,17 +501,21 @@ namespace GRCFinancialControl.Persistence.Services
             return summaryBuilder.ToString();
         }
 
-        private static DataTable? ResolveMarginWorksheet(DataSet dataSet)
+        private static DataTable? ResolveEtcpWorksheet(DataSet dataSet)
         {
             foreach (DataTable table in dataSet.Tables)
             {
-                if (table.Columns.Count == 0)
+                if (table.Rows.Count <= 4 || table.Columns.Count <= 3)
                 {
                     continue;
                 }
 
-                var firstHeader = NormalizeWhitespace(table.Columns[0].ColumnName);
-                if (firstHeader.Contains("engagement", StringComparison.OrdinalIgnoreCase))
+                var headerRow = table.Rows[4];
+                var clientHeader = NormalizeWhitespace(Convert.ToString(headerRow[2], CultureInfo.InvariantCulture));
+                var engagementHeader = NormalizeWhitespace(Convert.ToString(headerRow[3], CultureInfo.InvariantCulture));
+
+                if (clientHeader.Contains("client", StringComparison.OrdinalIgnoreCase) &&
+                    engagementHeader.Contains("engagement", StringComparison.OrdinalIgnoreCase))
                 {
                     return table;
                 }
@@ -572,7 +532,7 @@ namespace GRCFinancialControl.Persistence.Services
             }
 
             var columnName = ColumnIndexToName(columnIndex);
-            throw new InvalidDataException($"The margin worksheet is missing expected column '{friendlyName}' at position {columnName}.");
+            throw new InvalidDataException($"The ETC-P worksheet is missing expected column '{friendlyName}' at position {columnName}.");
         }
 
         private static string ColumnIndexToName(int columnIndex)
@@ -609,48 +569,59 @@ namespace GRCFinancialControl.Persistence.Services
             return true;
         }
 
-        private MarginImportRow? ParseMarginRow(DataRow row, int rowNumber, DateTime uploadTimestampUtc)
+        private EtcpImportRow? ParseEtcpRow(DataRow row, int rowNumber)
         {
-            var engagementCell = NormalizeWhitespace(Convert.ToString(row[0], CultureInfo.InvariantCulture));
+            var customerCell = NormalizeWhitespace(Convert.ToString(row[2], CultureInfo.InvariantCulture));
+            var engagementCell = NormalizeWhitespace(Convert.ToString(row[3], CultureInfo.InvariantCulture));
+
+            if (string.IsNullOrWhiteSpace(customerCell) && string.IsNullOrWhiteSpace(engagementCell))
+            {
+                return null;
+            }
+
+            if (string.IsNullOrWhiteSpace(customerCell))
+            {
+                throw new InvalidDataException("Client Name (ID) is required.");
+            }
+
             if (string.IsNullOrWhiteSpace(engagementCell))
             {
-                return null;
+                throw new InvalidDataException("Engagement Name (ID) Currency is required.");
             }
 
-            var clientCell = NormalizeWhitespace(Convert.ToString(row[1], CultureInfo.InvariantCulture));
-            if (string.IsNullOrWhiteSpace(clientCell))
-            {
-                _logger.LogWarning("Row {RowNumber}: Client information is missing. Skipping row.", rowNumber);
-                return null;
-            }
+            var (customerName, customerId) = ParseEtcpCustomerCell(customerCell);
+            var (engagementDescription, engagementId, currency) = ParseEngagementCell(engagementCell);
 
-            var (engagementDisplayName, engagementCode, currency) = ParseEngagementCell(engagementCell);
-            var (clientName, clientIdText) = ParseCustomerCell(clientCell);
+            var statusText = NormalizeWhitespace(Convert.ToString(row[4], CultureInfo.InvariantCulture));
 
-            var marginBudget = ParsePercentage(row[3]);
-            var marginEtcp = ParsePercentage(row[4]);
-            var etcAgeDays = ParseInt(row[15]);
-            var statusText = NormalizeWhitespace(Convert.ToString(row[17], CultureInfo.InvariantCulture));
+            var budgetHours = ParsePtBrNumber(row[8]);
+            var etcpHours = ParsePtBrNumber(row[9]);
+            var budgetValue = ParsePtBrMoney(row[11]);
+            var etcpValue = ParsePtBrMoney(row[12]);
+            var marginBudget = ParsePtBrPercent(row[14]);
+            var marginEtcp = ParsePtBrPercent(row[15]);
+            var budgetExpenses = ParsePtBrMoney(row[17]);
+            var etcpExpenses = ParsePtBrMoney(row[18]);
+            var ageDays = ParseInt(row[20]);
 
-            DateTime? latestEtcDate = null;
-            if (etcAgeDays.HasValue)
-            {
-                latestEtcDate = uploadTimestampUtc.Date.AddDays(-etcAgeDays.Value);
-            }
-
-            return new MarginImportRow
+            return new EtcpImportRow
             {
                 RowNumber = rowNumber,
-                EngagementCode = engagementCode,
-                EngagementDisplayName = engagementDisplayName,
+                CustomerName = customerName,
+                CustomerId = customerId,
+                EngagementDescription = engagementDescription,
+                EngagementId = engagementId,
                 Currency = currency,
-                ClientName = clientName,
-                ClientIdText = clientIdText,
-                MarginPctBudget = marginBudget,
-                MarginPctEtcp = marginEtcp,
-                EtcpAgeDays = etcAgeDays,
-                LatestEtcDate = latestEtcDate,
-                StatusText = statusText
+                StatusText = statusText,
+                BudgetHours = budgetHours,
+                EtcpHours = etcpHours,
+                BudgetValue = budgetValue,
+                EtcpValue = etcpValue,
+                MarginBudget = marginBudget,
+                MarginEtcp = marginEtcp,
+                BudgetExpenses = budgetExpenses,
+                EtcpExpenses = etcpExpenses,
+                EtcpAgeDays = ageDays
             };
         }
 
@@ -670,7 +641,28 @@ namespace GRCFinancialControl.Persistence.Services
             };
         }
 
-        private static decimal? ParsePercentage(object? value)
+        private static decimal? ParsePtBrNumber(object? value) => ParseDecimal(value, null);
+
+        private static decimal? ParsePtBrMoney(object? value) => ParseDecimal(value, 2);
+
+        private static decimal? ParsePtBrPercent(object? value)
+        {
+            var parsed = ParseDecimal(value, 4);
+            if (!parsed.HasValue)
+            {
+                return null;
+            }
+
+            var normalized = parsed.Value;
+            if (Math.Abs(normalized) <= 1m)
+            {
+                normalized *= 100m;
+            }
+
+            return Math.Round(normalized, 4, MidpointRounding.AwayFromZero);
+        }
+
+        private static decimal? ParseDecimal(object? value, int? decimals)
         {
             if (value == null || value == DBNull.Value)
             {
@@ -684,10 +676,10 @@ namespace GRCFinancialControl.Persistence.Services
                     parsed = dec;
                     break;
                 case double dbl:
-                    parsed = (decimal)dbl;
+                    parsed = Convert.ToDecimal(dbl);
                     break;
                 case float flt:
-                    parsed = (decimal)flt;
+                    parsed = Convert.ToDecimal(flt);
                     break;
                 case int i:
                     parsed = i;
@@ -696,16 +688,16 @@ namespace GRCFinancialControl.Persistence.Services
                     parsed = l;
                     break;
                 case string str:
-                    var trimmed = NormalizeWhitespace(str);
-                    if (trimmed.Length == 0)
+                    var sanitized = SanitizeNumericString(str);
+                    if (sanitized.Length == 0)
                     {
                         return null;
                     }
 
-                    if (!decimal.TryParse(trimmed, NumberStyles.Float, CultureInfo.InvariantCulture, out parsed) &&
-                        !decimal.TryParse(trimmed, NumberStyles.Float, PtBrCulture, out parsed))
+                    if (!decimal.TryParse(sanitized, NumberStyles.Number | NumberStyles.AllowLeadingSign, PtBrCulture, out parsed) &&
+                        !decimal.TryParse(sanitized, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out parsed))
                     {
-                        throw new InvalidDataException($"Unable to parse percentage value '{str}'.");
+                        throw new InvalidDataException($"Unable to parse decimal value '{str}'.");
                     }
                     break;
                 default:
@@ -715,22 +707,48 @@ namespace GRCFinancialControl.Persistence.Services
                     }
                     catch (Exception ex)
                     {
-                        throw new InvalidDataException($"Unable to parse percentage value '{value}'.", ex);
+                        throw new InvalidDataException($"Unable to parse decimal value '{value}'.", ex);
                     }
                     break;
             }
 
-            return NormalizePercentage(parsed);
-        }
-
-        private static decimal NormalizePercentage(decimal value)
-        {
-            if (value <= 1m && value >= -1m)
+            if (decimals.HasValue)
             {
-                value *= 100m;
+                parsed = Math.Round(parsed, decimals.Value, MidpointRounding.AwayFromZero);
             }
 
-            return Math.Round(value, 2, MidpointRounding.AwayFromZero);
+            return parsed;
+        }
+
+        private static string SanitizeNumericString(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            var sanitized = value
+                .Replace("R$", string.Empty, StringComparison.OrdinalIgnoreCase)
+                .Replace("%", string.Empty, StringComparison.OrdinalIgnoreCase)
+                .Replace("\u00A0", string.Empty, StringComparison.Ordinal);
+
+            sanitized = NormalizeWhitespace(sanitized);
+
+            var isNegative = sanitized.StartsWith("(") && sanitized.EndsWith(")");
+            if (isNegative)
+            {
+                sanitized = sanitized[1..^1];
+            }
+
+            sanitized = sanitized.Replace(" ", string.Empty);
+            sanitized = sanitized.Trim();
+
+            if (isNegative && sanitized.Length > 0)
+            {
+                sanitized = "-" + sanitized;
+            }
+
+            return sanitized;
         }
 
         private static int? ParseInt(object? value)
@@ -815,185 +833,202 @@ namespace GRCFinancialControl.Persistence.Services
             return (displayName, engagementCode, currency);
         }
 
-        private static (string ClientName, string ClientIdText) ParseCustomerCell(string value)
+        private static (string CustomerName, string CustomerId) ParseEtcpCustomerCell(string value)
         {
             var normalized = NormalizeWhitespace(value);
             var match = Regex.Match(normalized, @"\(([^)]+)\)\s*$");
             if (!match.Success)
             {
-                throw new InvalidDataException($"Client identifier could not be found in '{value}'.");
+                throw new InvalidDataException($"Client identifier could not be parsed from '{value}'.");
             }
 
-            var idText = NormalizeWhitespace(match.Groups[1].Value);
-            if (string.IsNullOrEmpty(idText))
+            var digits = DigitsRegex.Match(match.Groups[1].Value);
+            if (!digits.Success)
             {
-                throw new InvalidDataException($"Client identifier is empty in '{value}'.");
+                throw new InvalidDataException($"Client identifier must contain digits in '{value}'.");
             }
 
             var name = NormalizeWhitespace(normalized[..match.Index]);
             if (string.IsNullOrEmpty(name))
             {
-                throw new InvalidDataException($"Client name is empty in '{value}'.");
+                throw new InvalidDataException($"Client name is missing in '{value}'.");
             }
 
-            return (name, idText);
-        }
-
-        private static void CacheCustomer(IDictionary<string, Customer> cache, MarginImportRow row, Customer customer)
-        {
-            static void TryCache(IDictionary<string, Customer> cache, string? key, Customer customer)
-            {
-                if (!string.IsNullOrWhiteSpace(key))
-                {
-                    cache[key.Trim()] = customer;
-                }
-            }
-
-            TryCache(cache, row.ClientIdText, customer);
-            TryCache(cache, row.ClientName, customer);
-            TryCache(cache, customer.ClientIdText, customer);
-            TryCache(cache, customer.Name, customer);
+            return (name, digits.Value);
         }
 
         private static async Task<(Customer customer, bool created)> GetOrCreateCustomerAsync(
             ApplicationDbContext context,
             IDictionary<string, Customer> cache,
-            MarginImportRow row)
+            EtcpImportRow row)
         {
-            var normalizedName = string.IsNullOrWhiteSpace(row.ClientName)
-                ? null
-                : row.ClientName.Trim();
-
-            if (!string.IsNullOrWhiteSpace(row.ClientIdText) && cache.TryGetValue(row.ClientIdText, out var cachedById))
+            if (cache.TryGetValue(row.CustomerId, out var cachedCustomer))
             {
-                return (cachedById, false);
+                return (cachedCustomer, false);
             }
 
-            if (!string.IsNullOrWhiteSpace(normalizedName) && cache.TryGetValue(normalizedName, out var cachedByName))
-            {
-                return (cachedByName, false);
-            }
+            var customer = await context.Customers
+                .FirstOrDefaultAsync(c => c.CustomerID == row.CustomerId);
 
-            Customer? existingCustomer = null;
-
-            if (!string.IsNullOrWhiteSpace(row.ClientIdText))
+            var created = false;
+            if (customer == null)
             {
-                existingCustomer = await context.Customers
-                    .FirstOrDefaultAsync(c => c.ClientIdText == row.ClientIdText);
-            }
-
-            if (existingCustomer == null && !string.IsNullOrWhiteSpace(normalizedName))
-            {
-                existingCustomer = await context.Customers
-                    .FirstOrDefaultAsync(c => c.Name == normalizedName);
-            }
-
-            if (existingCustomer != null)
-            {
-                if (string.IsNullOrWhiteSpace(existingCustomer.ClientIdText) &&
-                    !string.IsNullOrWhiteSpace(row.ClientIdText))
+                customer = new Customer
                 {
-                    existingCustomer.ClientIdText = row.ClientIdText;
-                }
+                    CustomerID = row.CustomerId,
+                    Name = row.CustomerName
+                };
 
-                if (string.IsNullOrWhiteSpace(existingCustomer.Name) && !string.IsNullOrWhiteSpace(normalizedName))
-                {
-                    existingCustomer.Name = normalizedName;
-                }
-
-                CacheCustomer(cache, row, existingCustomer);
-                return (existingCustomer, false);
+                await context.Customers.AddAsync(customer);
+                created = true;
             }
 
-            var customer = new Customer
-            {
-                Name = normalizedName ?? string.Empty,
-                ClientIdText = row.ClientIdText
-            };
+            cache[row.CustomerId] = customer;
+            return (customer, created);
+        }
 
-            await context.Customers.AddAsync(customer);
-            CacheCustomer(cache, row, customer);
-            return (customer, true);
+        private static void UpdateCustomer(Customer customer, EtcpImportRow row)
+        {
+            if (!string.IsNullOrWhiteSpace(row.CustomerName) &&
+                !string.Equals(customer.Name, row.CustomerName, StringComparison.Ordinal))
+            {
+                customer.Name = row.CustomerName;
+            }
         }
 
         private static async Task<(Engagement engagement, bool created)> GetOrCreateEngagementAsync(
             ApplicationDbContext context,
             IDictionary<string, Engagement> cache,
-            MarginImportRow row)
+            EtcpImportRow row)
         {
-            if (cache.TryGetValue(row.EngagementCode, out var cachedEngagement))
+            if (cache.TryGetValue(row.EngagementId, out var cachedEngagement))
             {
                 return (cachedEngagement, false);
             }
 
             var engagement = await context.Engagements
-                .Include(e => e.MarginEvolutions)
-                .FirstOrDefaultAsync(e => e.EngagementId == row.EngagementCode);
+                .Include(e => e.FinancialEvolutions)
+                .FirstOrDefaultAsync(e => e.EngagementId == row.EngagementId);
 
-            if (engagement != null)
+            var created = false;
+            if (engagement == null)
             {
-                cache[row.EngagementCode] = engagement;
-                return (engagement, false);
+                engagement = new Engagement
+                {
+                    EngagementId = row.EngagementId
+                };
+
+                await context.Engagements.AddAsync(engagement);
+                created = true;
             }
 
-            engagement = new Engagement
-            {
-                EngagementId = row.EngagementCode,
-                Description = row.EngagementDisplayName,
-                Currency = row.Currency,
-                CustomerKey = row.ClientName,
-                MarginPctBudget = row.MarginPctBudget,
-                MarginPctEtcp = row.MarginPctEtcp,
-                EtcpAgeDays = row.EtcpAgeDays,
-                LatestEtcDate = row.LatestEtcDate,
-                StatusText = string.IsNullOrWhiteSpace(row.StatusText) ? null : row.StatusText,
-                NextEtcDate = null,
-                OpeningMargin = row.MarginPctBudget ?? 0,
-                Status = ParseStatus(row.StatusText)
-            };
-
-            await context.Engagements.AddAsync(engagement);
-            cache[row.EngagementCode] = engagement;
-            return (engagement, true);
+            cache[row.EngagementId] = engagement;
+            return (engagement, created);
         }
 
-        private sealed class MarginImportRow
+        private static void UpdateEngagement(Engagement engagement, Customer customer, EtcpImportRow row, ClosingPeriod closingPeriod)
+        {
+            if (!string.IsNullOrWhiteSpace(row.EngagementDescription))
+            {
+                engagement.Description = row.EngagementDescription;
+            }
+
+            engagement.Currency = row.Currency;
+            engagement.Customer = customer;
+            if (customer.Id > 0)
+            {
+                engagement.CustomerId = customer.Id;
+            }
+
+            engagement.CustomerKey = customer.Name;
+
+            if (!string.IsNullOrWhiteSpace(row.StatusText))
+            {
+                engagement.StatusText = row.StatusText;
+            }
+
+            engagement.Status = ParseStatus(row.StatusText);
+
+            if (row.MarginBudget.HasValue)
+            {
+                engagement.MarginPctBudget = row.MarginBudget;
+                engagement.OpeningMargin = row.MarginBudget.Value;
+            }
+
+            if (row.BudgetValue.HasValue)
+            {
+                engagement.OpeningValue = row.BudgetValue.Value;
+            }
+
+            if (row.BudgetExpenses.HasValue)
+            {
+                engagement.OpeningExpenses = row.BudgetExpenses.Value;
+            }
+
+            if (row.BudgetHours.HasValue)
+            {
+                engagement.InitialHoursBudget = row.BudgetHours.Value;
+                engagement.TotalPlannedHours = (double)row.BudgetHours.Value;
+            }
+
+            engagement.MarginPctEtcp = row.MarginEtcp;
+            engagement.EtcpHours = row.EtcpHours ?? 0m;
+            engagement.ValueEtcp = row.EtcpValue ?? 0m;
+            engagement.ExpensesEtcp = row.EtcpExpenses ?? 0m;
+            engagement.EtcpAgeDays = row.EtcpAgeDays;
+            engagement.LatestEtcDate = closingPeriod.PeriodEnd;
+            engagement.LastClosingPeriodId = closingPeriod.Name;
+            engagement.NextEtcDate = null;
+        }
+
+        private static void UpsertFinancialEvolution(
+            ApplicationDbContext context,
+            Engagement engagement,
+            string closingPeriodId,
+            decimal? hours,
+            decimal? value,
+            decimal? margin,
+            decimal? expenses)
+        {
+            var evolution = engagement.FinancialEvolutions
+                .FirstOrDefault(fe => string.Equals(fe.ClosingPeriodId, closingPeriodId, StringComparison.OrdinalIgnoreCase));
+
+            if (evolution == null)
+            {
+                evolution = new FinancialEvolution
+                {
+                    ClosingPeriodId = closingPeriodId,
+                    EngagementId = engagement.EngagementId
+                };
+
+                engagement.FinancialEvolutions.Add(evolution);
+                context.FinancialEvolutions.Add(evolution);
+            }
+
+            evolution.HoursData = hours;
+            evolution.ValueData = value;
+            evolution.MarginData = margin;
+            evolution.ExpenseData = expenses;
+        }
+
+        private sealed class EtcpImportRow
         {
             public int RowNumber { get; init; }
-            public string EngagementCode { get; init; } = string.Empty;
-            public string EngagementDisplayName { get; init; } = string.Empty;
+            public string CustomerName { get; init; } = string.Empty;
+            public string CustomerId { get; init; } = string.Empty;
+            public string EngagementDescription { get; init; } = string.Empty;
+            public string EngagementId { get; init; } = string.Empty;
             public string Currency { get; init; } = string.Empty;
-            public string ClientName { get; init; } = string.Empty;
-            public string ClientIdText { get; init; } = string.Empty;
-            public decimal? MarginPctBudget { get; init; }
-            public decimal? MarginPctEtcp { get; init; }
-            public int? EtcpAgeDays { get; init; }
-            public DateTime? LatestEtcDate { get; init; }
             public string StatusText { get; init; } = string.Empty;
-        }
-
-        private static List<int> FindWeeklyColumns(DataTable resourcing)
-        {
-            var headerRowIndex = 2;
-            if (resourcing.Rows.Count <= headerRowIndex)
-            {
-                return new List<int>();
-            }
-
-            var weeklyColumns = new List<int>();
-            var headerRow = resourcing.Rows[headerRowIndex];
-            var weekRegex = new Regex(@"(?i)^(W\d{1,2}|Week\s*\d{1,2})$");
-
-            for (var i = 0; i < headerRow.ItemArray.Length; i++)
-            {
-                var header = NormalizeWhitespace(Convert.ToString(headerRow[i], CultureInfo.InvariantCulture));
-                if (weekRegex.IsMatch(header))
-                {
-                    weeklyColumns.Add(i);
-                }
-            }
-
-            return weeklyColumns;
+            public decimal? BudgetHours { get; init; }
+            public decimal? EtcpHours { get; init; }
+            public decimal? BudgetValue { get; init; }
+            public decimal? EtcpValue { get; init; }
+            public decimal? MarginBudget { get; init; }
+            public decimal? MarginEtcp { get; init; }
+            public decimal? BudgetExpenses { get; init; }
+            public decimal? EtcpExpenses { get; init; }
+            public int? EtcpAgeDays { get; init; }
         }
     }
 }

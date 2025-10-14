@@ -1,0 +1,44 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             x:Class="GRCFinancialControl.Avalonia.Views.FinancialEvolutionView"
+             x:DataType="vm:FinancialEvolutionViewModel">
+    <Grid RowDefinitions="Auto,*,*" ColumnDefinitions="*,*" Margin="10" RowSpacing="10" ColumnSpacing="10">
+        <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Vertical">
+            <TextBlock Text="Evolução Financeira" FontSize="24" FontWeight="Bold"/>
+            <TextBlock Text="{Binding EngagementDisplayName, StringFormat='Engajamento: {0}', TargetNullValue='Engajamento: (Selecione)'}"/>
+        </StackPanel>
+
+        <Border Grid.Row="1" Grid.Column="0" Classes="card">
+            <StackPanel>
+                <TextBlock Text="Margem (%) por Período" Classes="h2"/>
+                <lvc:CartesianChart Series="{Binding MarginSeries}" XAxes="{Binding PeriodAxes}" YAxes="{Binding MarginAxes}"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="1" Grid.Column="1" Classes="card">
+            <StackPanel>
+                <TextBlock Text="Receita por Período" Classes="h2"/>
+                <lvc:CartesianChart Series="{Binding RevenueSeries}" XAxes="{Binding PeriodAxes}" YAxes="{Binding RevenueAxes}"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="2" Grid.Column="0" Classes="card">
+            <StackPanel>
+                <TextBlock Text="Horas ETC-P por Período" Classes="h2"/>
+                <lvc:CartesianChart Series="{Binding HoursSeries}" XAxes="{Binding PeriodAxes}" YAxes="{Binding HoursAxes}"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="2" Grid.Column="1" Classes="card">
+            <StackPanel>
+                <TextBlock Text="Despesas ETC-P por Período" Classes="h2"/>
+                <lvc:CartesianChart Series="{Binding ExpensesSeries}" XAxes="{Binding PeriodAxes}" YAxes="{Binding ExpensesAxes}"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

@@ -9,7 +9,13 @@
     <StackPanel Orientation="Horizontal" Spacing="10" Margin="10">
         <ComboBox ItemsSource="{Binding FiscalYears}" SelectedItem="{Binding SelectedFiscalYear}" PlaceholderText="Fiscal Year"/>
         <ComboBox ItemsSource="{Binding Papds}" SelectedItem="{Binding SelectedPapd}" PlaceholderText="PAPD"/>
-        <ComboBox ItemsSource="{Binding Engagements}" SelectedItem="{Binding SelectedEngagement}" PlaceholderText="Engagement"/>
+        <ComboBox ItemsSource="{Binding Engagements}" SelectedItem="{Binding SelectedEngagement}" PlaceholderText="Engagement">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Description}"/>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
         <Button Content="Apply Filters" Command="{Binding LoadFiltersCommand}"/>
         <Button Content="Export" Command="{Binding ExportCommand}"/>
     </StackPanel>

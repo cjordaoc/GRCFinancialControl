@@ -33,7 +33,7 @@
 
         <Border Grid.Row="2" Grid.Column="1" Classes="card">
             <StackPanel>
-                <TextBlock Text="Planned vs Actual Hours (Cumulative)" Classes="h2"/>
+                <TextBlock Text="Planned vs ETC-P Hours (Cumulative)" Classes="h2"/>
                 <lvc:CartesianChart Series="{Binding PlannedVsActualHoursSeries}"/>
             </StackPanel>
         </Border>

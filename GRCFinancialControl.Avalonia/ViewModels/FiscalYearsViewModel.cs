@@ -41,7 +41,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Messenger.Send(new RefreshDataMessage());
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanEdit))]
         private async Task Edit(FiscalYear fiscalYear)
         {
             if (fiscalYear == null) return;
@@ -50,7 +50,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Messenger.Send(new RefreshDataMessage());
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanDelete))]
         private async Task Delete(FiscalYear fiscalYear)
         {
             if (fiscalYear == null) return;
@@ -59,19 +59,23 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         }
 
         [RelayCommand(CanExecute = nameof(CanDeleteData))]
-        private async Task DeleteData()
+        private async Task DeleteData(FiscalYear fiscalYear)
         {
-            if (SelectedFiscalYear is null) return;
+            if (fiscalYear is null) return;
 
-            var result = await _dialogService.ShowConfirmationAsync("Delete Data", $"Are you sure you want to delete all data for {SelectedFiscalYear.Name}? This action cannot be undone.");
+            var result = await _dialogService.ShowConfirmationAsync("Delete Data", $"Are you sure you want to delete all data for {fiscalYear.Name}? This action cannot be undone.");
             if (result)
             {
-                await _fiscalYearService.DeleteDataAsync(SelectedFiscalYear.Id);
+                await _fiscalYearService.DeleteDataAsync(fiscalYear.Id);
                 Messenger.Send(new RefreshDataMessage());
             }
         }
 
-        private bool CanDeleteData() => SelectedFiscalYear is not null;
+        private static bool CanEdit(FiscalYear fiscalYear) => fiscalYear is not null;
+
+        private static bool CanDelete(FiscalYear fiscalYear) => fiscalYear is not null;
+
+        private static bool CanDeleteData(FiscalYear fiscalYear) => fiscalYear is not null;
 
         partial void OnSelectedFiscalYearChanged(FiscalYear? value)
         {

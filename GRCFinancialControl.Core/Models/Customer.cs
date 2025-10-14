@@ -12,9 +12,9 @@ namespace GRCFinancialControl.Core.Models
         public string Name { get; set; } = string.Empty;
 
         /// <summary>
-        /// External identifier from upstream systems (may be null for legacy records).
+        /// Stable identifier sourced from engagement workbooks (digits inside parentheses).
         /// </summary>
-        public string? ClientIdText { get; set; }
+        public string CustomerID { get; set; } = string.Empty;
 
         public ICollection<Engagement> Engagements { get; set; } = new List<Engagement>();
     }
