@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using GRCFinancialControl.Core.Models.Reporting;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Painting;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
@@ -19,6 +21,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         [ObservableProperty]
         private ISeries[] _burnRateSeries = [];
+
+        [ObservableProperty]
+        private Axis[] _allocationAxes = Array.Empty<Axis>();
+
+        [ObservableProperty]
+        private Axis[] _burnRateAxes = Array.Empty<Axis>();
 
         public TimeAllocationViewModel(IReportService reportService)
         {
@@ -49,13 +57,36 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 }
             };
 
+            var labels = data.Select(d => d.ClosingPeriodName).ToArray();
+            AllocationAxes = new[]
+            {
+                new Axis
+                {
+                    Labels = labels,
+                    Name = "Fiscal Year"
+                }
+            };
+
             // Burn Rate (% ETC-P / Planned)
+            var burnRateValues = data.Select(d => d.PlannedHours > 0 ? (d.ActualHours / d.PlannedHours) * 100 : 0).ToArray();
             BurnRateSeries = new ISeries[]
             {
                 new ColumnSeries<decimal>
                 {
                     Name = "Burn Rate",
-                    Values = data.Select(d => d.PlannedHours > 0 ? (d.ActualHours / d.PlannedHours) * 100 : 0).ToArray()
+                    Values = burnRateValues,
+                    DataLabelsPaint = new SolidColorPaint { Color = SkiaSharp.SKColors.LightGray },
+                    DataLabelsSize = 12,
+                    DataLabelsFormatter = point => point.Model is decimal value ? $"{value:0.#}%" : string.Empty
+                }
+            };
+
+            BurnRateAxes = new[]
+            {
+                new Axis
+                {
+                    Labels = labels,
+                    Name = "Fiscal Year"
                 }
             };
         }

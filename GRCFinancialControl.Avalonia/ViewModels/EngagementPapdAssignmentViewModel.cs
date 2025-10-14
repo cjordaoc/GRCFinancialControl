@@ -25,7 +25,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private Papd? _selectedPapd;
 
         [ObservableProperty]
-        private DateTimeOffset? _effectiveDate = DateTimeOffset.Now;
+        private DateTime? _effectiveDate = DateTime.Today;
 
         public EngagementPapdAssignmentViewModel(ObservableCollection<EngagementPapd> assignments, IEnumerable<Papd> availablePapds, IMessenger messenger)
             : base(messenger)
@@ -80,7 +80,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             AddAssignmentCommand.NotifyCanExecuteChanged();
         }
 
-        partial void OnEffectiveDateChanged(DateTimeOffset? value)
+        partial void OnEffectiveDateChanged(DateTime? value)
         {
             AddAssignmentCommand.NotifyCanExecuteChanged();
         }
