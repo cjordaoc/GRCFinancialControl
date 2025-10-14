@@ -12,26 +12,8 @@
             <TabItem Header="Financial Evolution">
                 <ContentControl Content="{Binding FinancialEvolution}"/>
             </TabItem>
-            <TabItem Header="Fiscal Performance">
-                <ContentControl Content="{Binding FiscalPerformance}"/>
-            </TabItem>
-            <TabItem Header="Engagement Performance">
-                <ContentControl Content="{Binding EngagementPerformance}"/>
-            </TabItem>
             <TabItem Header="PAPD Contribution">
                 <ContentControl Content="{Binding PapdContribution}"/>
-            </TabItem>
-            <TabItem Header="Time &amp; Allocation">
-                <ContentControl Content="{Binding TimeAllocation}"/>
-            </TabItem>
-            <TabItem Header="Strategic KPIs">
-                <ContentControl Content="{Binding StrategicKpi}"/>
-            </TabItem>
-            <TabItem Header="Planned vs. ETC-P">
-                <ContentControl Content="{Binding PlannedVsActual}"/>
-            </TabItem>
-            <TabItem Header="Backlog">
-                <ContentControl Content="{Binding Backlog}"/>
             </TabItem>
         </TabControl>
     </Grid>

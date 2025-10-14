@@ -22,31 +22,42 @@ namespace GRCFinancialControl.Persistence.Services
         public async Task ClearAllDataAsync()
         {
             await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+            await using var transaction = await context.Database.BeginTransactionAsync().ConfigureAwait(false);
 
-            var truncateStatements = new[]
+            var deleteStatements = new[]
             {
-                "TRUNCATE TABLE `ActualsEntries`;",
-                "TRUNCATE TABLE `PlannedAllocations`;",
-                "TRUNCATE TABLE `EngagementFiscalYearAllocations`;",
-                "TRUNCATE TABLE `EngagementRankBudgets`;",
-                "TRUNCATE TABLE `FinancialEvolution`;",
-                "TRUNCATE TABLE `EngagementPapds`;",
-                "TRUNCATE TABLE `Exceptions`;",
-                "TRUNCATE TABLE `Engagements`;",
-                "TRUNCATE TABLE `Customers`;",
-                "TRUNCATE TABLE `Papds`;",
-                "TRUNCATE TABLE `ClosingPeriods`;",
-                "TRUNCATE TABLE `FiscalYears`;"
+                "DELETE FROM `ActualsEntries`;",
+                "DELETE FROM `PlannedAllocations`;",
+                "DELETE FROM `EngagementFiscalYearAllocations`;",
+                "DELETE FROM `EngagementRankBudgets`;",
+                "DELETE FROM `FinancialEvolution`;",
+                "DELETE FROM `EngagementPapds`;",
+                "DELETE FROM `Exceptions`;",
+                "DELETE FROM `Engagements`;",
+                "DELETE FROM `Customers`;",
+                "DELETE FROM `Papds`;",
+                "DELETE FROM `ClosingPeriods`;",
+                "DELETE FROM `FiscalYears`;"
             };
 
             await context.Database.ExecuteSqlRawAsync("SET FOREIGN_KEY_CHECKS = 0;").ConfigureAwait(false);
 
-            foreach (var statement in truncateStatements)
+            try
             {
-                await context.Database.ExecuteSqlRawAsync(statement).ConfigureAwait(false);
-            }
+                foreach (var statement in deleteStatements)
+                {
+                    await context.Database.ExecuteSqlRawAsync(statement).ConfigureAwait(false);
+                }
 
-            await context.Database.ExecuteSqlRawAsync("SET FOREIGN_KEY_CHECKS = 1;").ConfigureAwait(false);
+                await context.Database.ExecuteSqlRawAsync("SET FOREIGN_KEY_CHECKS = 1;").ConfigureAwait(false);
+                await transaction.CommitAsync().ConfigureAwait(false);
+            }
+            catch
+            {
+                await transaction.RollbackAsync().ConfigureAwait(false);
+                await context.Database.ExecuteSqlRawAsync("SET FOREIGN_KEY_CHECKS = 1;").ConfigureAwait(false);
+                throw;
+            }
         }
     }
 }

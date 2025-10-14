@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -14,15 +15,17 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         private readonly IPapdService _papdService;
         private readonly IDialogService _dialogService;
+        private readonly IEngagementService _engagementService;
 
         [ObservableProperty]
         private Papd? _selectedPapd;
 
-        public PapdViewModel(IPapdService papdService, IDialogService dialogService, IMessenger messenger)
+        public PapdViewModel(IPapdService papdService, IDialogService dialogService, IEngagementService engagementService, IMessenger messenger)
             : base(messenger)
         {
             _papdService = papdService;
             _dialogService = dialogService;
+            _engagementService = engagementService;
         }
 
         [ObservableProperty]
@@ -71,17 +74,33 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
+        [RelayCommand(CanExecute = nameof(CanManageAssignments))]
+        private async Task ManageAssignmentsAsync()
+        {
+            if (SelectedPapd is null)
+            {
+                return;
+            }
+
+            var assignmentViewModel = new PapdEngagementAssignmentViewModel(SelectedPapd, _engagementService, Messenger);
+            await assignmentViewModel.LoadDataAsync();
+            await _dialogService.ShowDialogAsync(assignmentViewModel);
+        }
+
         private static bool CanEdit(Papd papd) => papd is not null;
 
         private static bool CanDelete(Papd papd) => papd is not null;
 
         private static bool CanDeleteData(Papd papd) => papd is not null;
 
+        private bool CanManageAssignments() => SelectedPapd is not null;
+
         partial void OnSelectedPapdChanged(Papd? value)
         {
             EditCommand.NotifyCanExecuteChanged();
             DeleteCommand.NotifyCanExecuteChanged();
             DeleteDataCommand.NotifyCanExecuteChanged();
+            ManageAssignmentsCommand.NotifyCanExecuteChanged();
         }
 
     }

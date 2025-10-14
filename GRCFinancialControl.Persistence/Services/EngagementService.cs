@@ -66,6 +66,7 @@ namespace GRCFinancialControl.Persistence.Services
             var existingEngagement = await context.Engagements
                 .Include(e => e.EngagementPapds)
                 .Include(e => e.Allocations)
+                .Include(e => e.FinancialEvolutions)
                 .FirstOrDefaultAsync(e => e.Id == engagement.Id);
 
             if (existingEngagement != null)
@@ -73,8 +74,9 @@ namespace GRCFinancialControl.Persistence.Services
                 context.Entry(existingEngagement).CurrentValues.SetValues(engagement);
 
                 context.EngagementPapds.RemoveRange(existingEngagement.EngagementPapds);
+                existingEngagement.EngagementPapds.Clear();
 
-                foreach (var assignment in engagement.EngagementPapds)
+                foreach (var assignment in engagement.EngagementPapds.OrderBy(a => a.EffectiveDate))
                 {
                     var papdId = assignment.PapdId;
                     if (papdId == 0 && assignment.Papd != null)
@@ -89,18 +91,26 @@ namespace GRCFinancialControl.Persistence.Services
 
                     existingEngagement.EngagementPapds.Add(new EngagementPapd
                     {
+                        EngagementId = existingEngagement.Id,
                         PapdId = papdId,
                         EffectiveDate = assignment.EffectiveDate
                     });
                 }
 
                 context.FinancialEvolutions.RemoveRange(existingEngagement.FinancialEvolutions);
+                existingEngagement.FinancialEvolutions.Clear();
 
-                foreach (var evolution in engagement.FinancialEvolutions)
+                var financialEvolutions = engagement.FinancialEvolutions
+                    .Where(e => !string.IsNullOrWhiteSpace(e.ClosingPeriodId))
+                    .GroupBy(e => e.ClosingPeriodId!, StringComparer.OrdinalIgnoreCase)
+                    .Select(g => g.OrderByDescending(e => e.Id).First());
+
+                foreach (var evolution in financialEvolutions)
                 {
+                    var closingPeriodId = (evolution.ClosingPeriodId ?? string.Empty).Trim();
                     existingEngagement.FinancialEvolutions.Add(new FinancialEvolution
                     {
-                        ClosingPeriodId = evolution.ClosingPeriodId,
+                        ClosingPeriodId = closingPeriodId,
                         EngagementId = existingEngagement.EngagementId,
                         HoursData = evolution.HoursData,
                         ValueData = evolution.ValueData,

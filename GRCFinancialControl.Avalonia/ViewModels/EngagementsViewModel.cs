@@ -13,7 +13,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     public partial class EngagementsViewModel : ViewModelBase
     {
         private readonly IEngagementService _engagementService;
-        private readonly IPapdService _papdService;
         private readonly ICustomerService _customerService;
         private readonly IClosingPeriodService _closingPeriodService;
         private readonly IDialogService _dialogService;
@@ -21,11 +20,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private Engagement? _selectedEngagement;
 
-        public EngagementsViewModel(IEngagementService engagementService, IPapdService papdService, ICustomerService customerService, IClosingPeriodService closingPeriodService, IDialogService dialogService, IMessenger messenger)
+        public EngagementsViewModel(IEngagementService engagementService, ICustomerService customerService, IClosingPeriodService closingPeriodService, IDialogService dialogService, IMessenger messenger)
             : base(messenger)
         {
             _engagementService = engagementService;
-            _papdService = papdService;
             _customerService = customerService;
             _closingPeriodService = closingPeriodService;
             _dialogService = dialogService;
@@ -42,7 +40,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand]
         private async Task Add()
         {
-            var editorViewModel = new EngagementEditorViewModel(new Engagement(), _engagementService, _papdService, _customerService, _closingPeriodService, _dialogService, Messenger);
+            var editorViewModel = new EngagementEditorViewModel(new Engagement(), _engagementService, _customerService, _closingPeriodService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
             Messenger.Send(new RefreshDataMessage());
         }
@@ -51,7 +49,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private async Task Edit(Engagement engagement)
         {
             if (engagement == null) return;
-            var editorViewModel = new EngagementEditorViewModel(engagement, _engagementService, _papdService, _customerService, _closingPeriodService, _dialogService, Messenger);
+            var fullEngagement = await _engagementService.GetByIdAsync(engagement.Id);
+            if (fullEngagement is null)
+            {
+                return;
+            }
+
+            var editorViewModel = new EngagementEditorViewModel(fullEngagement, _engagementService, _customerService, _closingPeriodService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
             Messenger.Send(new RefreshDataMessage());
         }

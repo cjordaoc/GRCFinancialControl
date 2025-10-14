@@ -1,12 +1,10 @@
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
-using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -15,17 +13,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     public partial class CustomersViewModel : ViewModelBase
     {
         private readonly ICustomerService _customerService;
-        private readonly IEngagementService _engagementService;
         private readonly IDialogService _dialogService;
 
         [ObservableProperty]
         private Customer? _selectedCustomer;
 
-        public CustomersViewModel(ICustomerService customerService, IEngagementService engagementService, IDialogService dialogService, IMessenger messenger)
+        public CustomersViewModel(ICustomerService customerService, IDialogService dialogService, IMessenger messenger)
             : base(messenger)
         {
             _customerService = customerService;
-            _engagementService = engagementService;
             _dialogService = dialogService;
         }
 
@@ -73,26 +69,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 await _customerService.DeleteDataAsync(customer.Id);
                 Messenger.Send(new RefreshDataMessage());
             }
-        }
-
-        [RelayCommand]
-        private async Task ReassignEngagementAsync()
-        {
-            var reassignmentViewModel = new EngagementReassignmentViewModel(_engagementService, _customerService, Messenger);
-            await reassignmentViewModel.LoadDataAsync();
-
-            if (SelectedCustomer is not null)
-            {
-                reassignmentViewModel.SelectedCustomer = reassignmentViewModel.Customers.FirstOrDefault(c => c.Id == SelectedCustomer.Id)
-                                                        ?? reassignmentViewModel.Customers.FirstOrDefault();
-                if (reassignmentViewModel.SelectedCustomer is not null)
-                {
-                    reassignmentViewModel.SelectedEngagement = reassignmentViewModel.Engagements.FirstOrDefault(e => e.CustomerId == reassignmentViewModel.SelectedCustomer.Id)
-                                                              ?? reassignmentViewModel.Engagements.FirstOrDefault();
-                }
-            }
-
-            await _dialogService.ShowDialogAsync(reassignmentViewModel);
         }
 
         private static bool CanEdit(Customer customer) => customer is not null;
