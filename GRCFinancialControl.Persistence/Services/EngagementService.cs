@@ -20,13 +20,23 @@ namespace GRCFinancialControl.Persistence.Services
         public async Task<List<Engagement>> GetAllAsync()
         {
             await using var context = await _contextFactory.CreateDbContextAsync();
-            return await context.Engagements.Include(e => e.EngagementPapds).ThenInclude(ep => ep.Papd).ToListAsync();
+            return await context.Engagements
+                .Include(e => e.EngagementPapds)
+                    .ThenInclude(ep => ep.Papd)
+                .Include(e => e.Allocations)
+                    .ThenInclude(a => a.FiscalYear)
+                .ToListAsync();
         }
 
         public async Task<Engagement?> GetByIdAsync(int id)
         {
             await using var context = await _contextFactory.CreateDbContextAsync();
-            return await context.Engagements.Include(e => e.EngagementPapds).ThenInclude(ep => ep.Papd).FirstOrDefaultAsync(e => e.Id == id);
+            return await context.Engagements
+                .Include(e => e.EngagementPapds)
+                    .ThenInclude(ep => ep.Papd)
+                .Include(e => e.Allocations)
+                    .ThenInclude(a => a.FiscalYear)
+                .FirstOrDefaultAsync(e => e.Id == id);
         }
 
         public async Task<Papd?> GetPapdForDateAsync(int engagementId, System.DateTime date)
@@ -53,6 +63,7 @@ namespace GRCFinancialControl.Persistence.Services
             await using var context = await _contextFactory.CreateDbContextAsync();
             var existingEngagement = await context.Engagements
                 .Include(e => e.EngagementPapds)
+                .Include(e => e.Allocations)
                 .FirstOrDefaultAsync(e => e.Id == engagement.Id);
 
             if (existingEngagement != null)
@@ -78,6 +89,18 @@ namespace GRCFinancialControl.Persistence.Services
                     {
                         PapdId = papdId,
                         EffectiveDate = assignment.EffectiveDate
+                    });
+                }
+
+                context.EngagementFiscalYearAllocations.RemoveRange(existingEngagement.Allocations);
+
+                foreach (var allocation in engagement.Allocations)
+                {
+                    existingEngagement.Allocations.Add(new EngagementFiscalYearAllocation
+                    {
+                        FiscalYearId = allocation.FiscalYearId,
+                        PlannedHours = allocation.PlannedHours,
+                        EngagementId = existingEngagement.Id
                     });
                 }
 
