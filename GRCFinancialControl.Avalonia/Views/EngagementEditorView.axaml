@@ -25,7 +25,7 @@
                     <ComboBox Grid.Row="0" Grid.Column="3"
                               ItemsSource="{Binding Customers}"
                               SelectedItem="{Binding SelectedCustomer}"
-                              DisplayMemberBinding="{Binding Name}"
+                              DisplayMemberBinding="{Binding DisplayName}"
                               Margin="10,0,0,0"/>
 
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Description:" VerticalAlignment="Center"/>
@@ -96,10 +96,6 @@
                     <DataGridTextColumn Header="Effective Date" Binding="{Binding EffectiveDate, StringFormat='yyyy-MM-dd'}" Width="*"/>
                 </DataGrid.Columns>
             </DataGrid>
-                <StackPanel Orientation="Horizontal" Spacing="5" Margin="0,5,0,0">
-                    <Button Content="Add Assignment" Command="{Binding OpenPapdAssignmentDialogCommand}" Classes="accent"/>
-                </StackPanel>
-
                 <TextBlock Text="Financial Evolution Data" FontSize="16" FontWeight="Bold" Margin="0,20,0,5"/>
                 <DataGrid ItemsSource="{Binding FinancialEvolutionEntries}"
                           SelectedItem="{Binding SelectedFinancialEvolutionEntry}"
@@ -111,7 +107,8 @@
                                 <DataTemplate x:DataType="vm:EngagementFinancialEvolutionEntryViewModel">
                                     <ComboBox ItemsSource="{Binding DataContext.ClosingPeriods, ElementName=EngagementEditorRoot}"
                                               SelectedItem="{Binding SelectedClosingPeriod}"
-                                              DisplayMemberBinding="{Binding Name}"/>
+                                              DisplayMemberBinding="{Binding Name}"
+                                              IsEnabled="{Binding CanEditClosingPeriod}"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>

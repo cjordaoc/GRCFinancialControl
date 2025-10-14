@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -36,6 +37,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private decimal? _expenses;
 
+        public bool IsInitialClosingPeriod => string.Equals(ClosingPeriodId, "Initial", StringComparison.OrdinalIgnoreCase);
+
+        public bool CanEditClosingPeriod => !IsInitialClosingPeriod;
+
         partial void OnSelectedClosingPeriodChanged(ClosingPeriod? value)
         {
             if (_isUpdating)
@@ -47,6 +52,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 _isUpdating = true;
                 ClosingPeriodId = value?.Name ?? ClosingPeriodId;
+                OnPropertyChanged(nameof(IsInitialClosingPeriod));
+                OnPropertyChanged(nameof(CanEditClosingPeriod));
             }
             finally
             {
@@ -72,6 +79,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 {
                     SelectedClosingPeriod = _closingPeriods.FirstOrDefault(p => p.Name == value);
                 }
+                OnPropertyChanged(nameof(IsInitialClosingPeriod));
+                OnPropertyChanged(nameof(CanEditClosingPeriod));
             }
             finally
             {

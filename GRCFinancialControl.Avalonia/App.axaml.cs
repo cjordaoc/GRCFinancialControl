@@ -108,34 +108,19 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<AllocationViewModel>();
             services.AddTransient(sp => new ReportsViewModel(
                 sp.GetRequiredService<ReportFilterViewModel>(),
-                sp.GetRequiredService<PlannedVsActualViewModel>(),
-                sp.GetRequiredService<BacklogViewModel>(),
-                sp.GetRequiredService<FiscalPerformanceViewModel>(),
-                sp.GetRequiredService<EngagementPerformanceViewModel>(),
                 sp.GetRequiredService<PapdContributionViewModel>(),
-                sp.GetRequiredService<TimeAllocationViewModel>(),
-                sp.GetRequiredService<StrategicKpiViewModel>(),
                 sp.GetRequiredService<FinancialEvolutionViewModel>(),
                 sp.GetRequiredService<IMessenger>()
             ));
-            services.AddTransient<FiscalPerformanceViewModel>();
-            services.AddTransient<EngagementPerformanceViewModel>();
             services.AddTransient<PapdContributionViewModel>();
-            services.AddTransient<TimeAllocationViewModel>();
-            services.AddTransient<StrategicKpiViewModel>();
             services.AddTransient<FinancialEvolutionViewModel>();
             services.AddTransient<ReportFilterViewModel>();
-            services.AddTransient<PlannedVsActualViewModel>();
-            services.AddTransient<BacklogViewModel>();
             services.AddTransient<PapdViewModel>();
             services.AddTransient<SettingsViewModel>();
             services.AddTransient<ClosingPeriodsViewModel>();
             services.AddTransient<ClosingPeriodEditorViewModel>();
-            services.AddTransient<EngagementPapdAssignmentViewModel>();
             services.AddTransient<CustomersViewModel>();
             services.AddTransient<CustomerEditorViewModel>();
-            services.AddTransient<EngagementReassignmentViewModel>();
-            services.AddTransient<Func<EngagementPapdAssignmentViewModel>>(sp => () => sp.GetRequiredService<EngagementPapdAssignmentViewModel>());
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {

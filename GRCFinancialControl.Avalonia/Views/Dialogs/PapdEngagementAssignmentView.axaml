@@ -1,0 +1,48 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels.Dialogs"
+             mc:Ignorable="d"
+             d:DesignWidth="600"
+             d:DesignHeight="450"
+             x:Class="GRCFinancialControl.Avalonia.Views.Dialogs.PapdEngagementAssignmentView"
+             x:DataType="vm:PapdEngagementAssignmentViewModel">
+    <Border Padding="20" Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}">
+        <StackPanel Spacing="12">
+            <TextBlock Text="PAPD Assignments" FontSize="20" FontWeight="Bold"/>
+            <TextBlock Text="{Binding Papd.Name}" FontSize="16" FontWeight="SemiBold"/>
+
+            <DataGrid ItemsSource="{Binding Assignments}"
+                      SelectedItem="{Binding SelectedAssignment}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      Height="200">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Engagement" Binding="{Binding EngagementId}" Width="*"/>
+                    <DataGridTextColumn Header="Description" Binding="{Binding EngagementDescription}" Width="2*"/>
+                    <DataGridTextColumn Header="Effective Date" Binding="{Binding EffectiveDate, StringFormat='yyyy-MM-dd'}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <StackPanel Width="220">
+                    <TextBlock Text="Engagement"/>
+                    <ComboBox ItemsSource="{Binding Engagements}" SelectedItem="{Binding SelectedEngagement}"/>
+                </StackPanel>
+                <StackPanel Width="150">
+                    <TextBlock Text="Effective Date"/>
+                    <DatePicker SelectedDate="{Binding EffectiveDate}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom">
+                    <Button Content="Assign" Command="{Binding AssignCommand}" Classes="accent"/>
+                    <Button Content="Remove" Command="{Binding RemoveAssignmentCommand}"/>
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                <Button Content="Close" Command="{Binding CloseCommand}"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

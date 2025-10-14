@@ -2,9 +2,9 @@ using Avalonia.Controls;
 
 namespace GRCFinancialControl.Avalonia.Views.Dialogs
 {
-    public partial class EngagementReassignmentView : UserControl
+    public partial class PapdEngagementAssignmentView : UserControl
     {
-        public EngagementReassignmentView()
+        public PapdEngagementAssignmentView()
         {
             InitializeComponent();
         }

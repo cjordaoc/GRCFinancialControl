@@ -7,7 +7,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
-using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Avalonia.Utilities;
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
@@ -18,10 +17,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     public partial class EngagementEditorViewModel : ViewModelBase
     {
         private readonly IEngagementService _engagementService;
-        private readonly IPapdService _papdService;
         private readonly ICustomerService _customerService;
         private readonly IClosingPeriodService _closingPeriodService;
-        private readonly IDialogService _dialogService;
         private readonly IMessenger _messenger;
 
         [ObservableProperty]
@@ -121,18 +118,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public EngagementEditorViewModel(
             Engagement engagement,
             IEngagementService engagementService,
-            IPapdService papdService,
             ICustomerService customerService,
             IClosingPeriodService closingPeriodService,
-            IDialogService dialogService,
             IMessenger messenger)
         {
             Engagement = engagement;
             _engagementService = engagementService;
-            _papdService = papdService;
             _customerService = customerService;
             _closingPeriodService = closingPeriodService;
-            _dialogService = dialogService;
             _messenger = messenger;
 
             EngagementId = engagement.EngagementId;
@@ -155,7 +148,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             NextEtcDate = engagement.NextEtcDate;
             StatusText = engagement.StatusText;
             LastClosingPeriodId = engagement.LastClosingPeriodId;
-            PapdAssignments = new ObservableCollection<EngagementPapd>(engagement.EngagementPapds);
+            PapdAssignments = new ObservableCollection<EngagementPapd>(
+                engagement.EngagementPapds
+                    .OrderBy(p => p.EffectiveDate)
+                    .ThenBy(p => p.Papd?.Name, StringComparer.OrdinalIgnoreCase));
             InitializeFinancialEvolutionEntries(engagement.FinancialEvolutions);
 
             _ = LoadCustomersAsync();
@@ -172,22 +168,30 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private async Task LoadClosingPeriodsAsync()
         {
             var periods = await _closingPeriodService.GetAllAsync();
+            var orderedPeriods = periods
+                .OrderBy(p => !string.Equals(p.Name, "Initial", StringComparison.OrdinalIgnoreCase))
+                .ThenBy(p => p.PeriodStart)
+                .ToList();
+
             ClosingPeriods.Clear();
-            foreach (var period in periods)
+            foreach (var period in orderedPeriods)
             {
                 ClosingPeriods.Add(period);
             }
 
             RefreshFinancialEvolutionSelections();
+            SortFinancialEvolutionEntries();
         }
 
         private void InitializeFinancialEvolutionEntries(IEnumerable<FinancialEvolution> evolutions)
         {
-            var entries = evolutions?.Select(CreateEntry)
+            var entries = evolutions?
+                    .Select(CreateEntry)
                 ?? Enumerable.Empty<EngagementFinancialEvolutionEntryViewModel>();
 
             FinancialEvolutionEntries = new ObservableCollection<EngagementFinancialEvolutionEntryViewModel>(entries);
             RefreshFinancialEvolutionSelections();
+            SortFinancialEvolutionEntries();
             SelectedFinancialEvolutionEntry = FinancialEvolutionEntries.FirstOrDefault();
         }
 
@@ -229,6 +233,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             FinancialEvolutionEntries.Add(entry);
             SelectedFinancialEvolutionEntry = entry;
+            SortFinancialEvolutionEntries();
         }
 
         [RelayCommand(CanExecute = nameof(CanRemoveFinancialEvolutionEntry))]
@@ -241,6 +246,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             FinancialEvolutionEntries.Remove(SelectedFinancialEvolutionEntry);
             SelectedFinancialEvolutionEntry = FinancialEvolutionEntries.LastOrDefault();
+            SortFinancialEvolutionEntries();
         }
 
         private bool CanRemoveFinancialEvolutionEntry() => SelectedFinancialEvolutionEntry is not null;
@@ -318,23 +324,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _messenger.Send(new CloseDialogMessage(false));
         }
 
-        [RelayCommand]
-        private async Task OpenPapdAssignmentDialog()
-        {
-            var papdAssignmentViewModel = new EngagementPapdAssignmentViewModel(
-                new ObservableCollection<EngagementPapd>(PapdAssignments),
-                await _papdService.GetAllAsync(),
-                Messenger
-            );
-
-            var confirmed = await _dialogService.ShowDialogAsync(papdAssignmentViewModel);
-
-            if (confirmed)
-            {
-                PapdAssignments = new ObservableCollection<EngagementPapd>(papdAssignmentViewModel.Assignments);
-            }
-        }
-
         partial void OnLatestEtcDateChanged(DateTime? value)
         {
             OnPropertyChanged(nameof(LatestEtcDateOffset));
@@ -349,13 +338,65 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             if (value is not null)
             {
-                CustomerKey = value.Name;
+                CustomerKey = string.IsNullOrWhiteSpace(value.CustomerID)
+                    ? value.Name
+                    : value.CustomerID;
             }
         }
 
         partial void OnSelectedFinancialEvolutionEntryChanged(EngagementFinancialEvolutionEntryViewModel? value)
         {
             RemoveFinancialEvolutionEntryCommand.NotifyCanExecuteChanged();
+        }
+
+        private void SortFinancialEvolutionEntries()
+        {
+            if (FinancialEvolutionEntries.Count <= 1)
+            {
+                return;
+            }
+
+            var sorted = FinancialEvolutionEntries
+                .OrderBy(e => e.IsInitialClosingPeriod ? 0 : 1)
+                .ThenBy(e => GetClosingPeriodIndex(e.ClosingPeriodId))
+                .ThenBy(e => e.ClosingPeriodId, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (sorted.SequenceEqual(FinancialEvolutionEntries))
+            {
+                return;
+            }
+
+            var selectedEntry = SelectedFinancialEvolutionEntry;
+            FinancialEvolutionEntries = new ObservableCollection<EngagementFinancialEvolutionEntryViewModel>(sorted);
+            RefreshFinancialEvolutionSelections();
+
+            if (selectedEntry is not null && FinancialEvolutionEntries.Contains(selectedEntry))
+            {
+                SelectedFinancialEvolutionEntry = selectedEntry;
+            }
+            else
+            {
+                SelectedFinancialEvolutionEntry = FinancialEvolutionEntries.FirstOrDefault();
+            }
+        }
+
+        private int GetClosingPeriodIndex(string? closingPeriodId)
+        {
+            if (string.IsNullOrWhiteSpace(closingPeriodId))
+            {
+                return int.MaxValue;
+            }
+
+            for (var i = 0; i < ClosingPeriods.Count; i++)
+            {
+                if (string.Equals(ClosingPeriods[i].Name, closingPeriodId, StringComparison.OrdinalIgnoreCase))
+                {
+                    return i;
+                }
+            }
+
+            return int.MaxValue;
         }
     }
 }
