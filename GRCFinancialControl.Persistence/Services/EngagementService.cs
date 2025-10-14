@@ -25,6 +25,7 @@ namespace GRCFinancialControl.Persistence.Services
                     .ThenInclude(ep => ep.Papd)
                 .Include(e => e.Allocations)
                     .ThenInclude(a => a.FiscalYear)
+                .Include(e => e.FinancialEvolutions)
                 .ToListAsync();
         }
 
@@ -36,6 +37,7 @@ namespace GRCFinancialControl.Persistence.Services
                     .ThenInclude(ep => ep.Papd)
                 .Include(e => e.Allocations)
                     .ThenInclude(a => a.FiscalYear)
+                .Include(e => e.FinancialEvolutions)
                 .FirstOrDefaultAsync(e => e.Id == id);
         }
 
@@ -89,6 +91,21 @@ namespace GRCFinancialControl.Persistence.Services
                     {
                         PapdId = papdId,
                         EffectiveDate = assignment.EffectiveDate
+                    });
+                }
+
+                context.FinancialEvolutions.RemoveRange(existingEngagement.FinancialEvolutions);
+
+                foreach (var evolution in engagement.FinancialEvolutions)
+                {
+                    existingEngagement.FinancialEvolutions.Add(new FinancialEvolution
+                    {
+                        ClosingPeriodId = evolution.ClosingPeriodId,
+                        EngagementId = existingEngagement.EngagementId,
+                        HoursData = evolution.HoursData,
+                        ValueData = evolution.ValueData,
+                        MarginData = evolution.MarginData,
+                        ExpenseData = evolution.ExpenseData
                     });
                 }
 

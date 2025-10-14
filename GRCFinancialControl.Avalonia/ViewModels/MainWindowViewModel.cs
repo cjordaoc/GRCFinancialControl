@@ -14,7 +14,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public ImportViewModel Import { get; }
         public AllocationViewModel Allocation { get; }
         public ReportsViewModel Reports { get; }
-        public ExceptionsViewModel Exceptions { get; }
         public SettingsViewModel Settings { get; }
         public ClosingPeriodsViewModel ClosingPeriods { get; }
         public CustomersViewModel Customers { get; }
@@ -36,7 +35,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                                  ImportViewModel importViewModel,
                                  AllocationViewModel allocationViewModel,
                                  ReportsViewModel reportsViewModel,
-                                 ExceptionsViewModel exceptionsViewModel,
                                  SettingsViewModel settingsViewModel,
                                  ClosingPeriodsViewModel closingPeriodsViewModel,
                                  CustomersViewModel customersViewModel,
@@ -49,7 +47,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Import = importViewModel;
             Allocation = allocationViewModel;
             Reports = reportsViewModel;
-            Exceptions = exceptionsViewModel;
             Settings = settingsViewModel;
             ClosingPeriods = closingPeriodsViewModel;
             Customers = customersViewModel;
@@ -64,7 +61,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 new("PAPD", Papds),
                 new("Allocation", Allocation),
                 new("Reports", Reports),
-                new("Exceptions", Exceptions),
                 new("Settings", Settings)
             };
 

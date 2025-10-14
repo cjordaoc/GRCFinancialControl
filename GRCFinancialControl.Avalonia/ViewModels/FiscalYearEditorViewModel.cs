@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
+using GRCFinancialControl.Avalonia.Utilities;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -41,33 +42,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public DateTimeOffset? StartDateOffset
         {
-            get => ConvertToOffset(StartDate);
+            get => DateTimeOffsetHelper.FromDate(StartDate);
             set
             {
-                if (value.HasValue)
-                {
-                    StartDate = value.Value.Date;
-                }
-                else
-                {
-                    StartDate = default;
-                }
+                StartDate = DateTimeOffsetHelper.ToDate(value) ?? default;
             }
         }
 
         public DateTimeOffset? EndDateOffset
         {
-            get => ConvertToOffset(EndDate);
+            get => DateTimeOffsetHelper.FromDate(EndDate);
             set
             {
-                if (value.HasValue)
-                {
-                    EndDate = value.Value.Date;
-                }
-                else
-                {
-                    EndDate = default;
-                }
+                EndDate = DateTimeOffsetHelper.ToDate(value) ?? default;
             }
         }
 
@@ -111,17 +98,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private void Close()
         {
             _messenger.Send(new CloseDialogMessage(false));
-        }
-
-        private static DateTimeOffset? ConvertToOffset(DateTime value)
-        {
-            if (value == default)
-            {
-                return null;
-            }
-
-            var unspecified = DateTime.SpecifyKind(value.Date, DateTimeKind.Unspecified);
-            return new DateTimeOffset(unspecified, TimeSpan.Zero);
         }
     }
 }

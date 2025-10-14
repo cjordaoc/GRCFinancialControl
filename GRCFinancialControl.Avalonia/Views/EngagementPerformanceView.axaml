@@ -32,7 +32,7 @@
                         <DataGridTextColumn Header="Engagement ID" Binding="{Binding EngagementId}"/>
                         <DataGridTextColumn Header="Description" Binding="{Binding EngagementDescription}"/>
                         <DataGridTextColumn Header="Initial Hours Budget" Binding="{Binding InitialHoursBudget}"/>
-                        <DataGridTextColumn Header="ETC-P Hours" Binding="{Binding ActualHours}"/>
+                        <DataGridTextColumn Header="ETC-P Hours" Binding="{Binding EtcpHours}"/>
                     </DataGrid.Columns>
                 </DataGrid>
             </StackPanel>

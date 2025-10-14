@@ -34,7 +34,7 @@
                           SelectedItem="{Binding SelectedPapd}"
                           DisplayMemberBinding="{Binding Name}"
                           Width="200"/>
-                <DatePicker SelectedDate="{Binding EffectiveDate}" />
+                <DatePicker SelectedDate="{Binding EffectiveDateOffset}" />
                 <Button Content="Add" Command="{Binding AddAssignmentCommand}" Classes="accent"/>
             </StackPanel>
 

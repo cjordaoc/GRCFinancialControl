@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Avalonia.ViewModels;
+using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRCFinancialControl.Avalonia.Views;
 using GRCFinancialControl.Persistence;
 using GRCFinancialControl.Persistence.Services;
@@ -127,13 +128,13 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<PlannedVsActualViewModel>();
             services.AddTransient<BacklogViewModel>();
             services.AddTransient<PapdViewModel>();
-            services.AddTransient<ExceptionsViewModel>();
             services.AddTransient<SettingsViewModel>();
             services.AddTransient<ClosingPeriodsViewModel>();
             services.AddTransient<ClosingPeriodEditorViewModel>();
             services.AddTransient<EngagementPapdAssignmentViewModel>();
             services.AddTransient<CustomersViewModel>();
             services.AddTransient<CustomerEditorViewModel>();
+            services.AddTransient<EngagementReassignmentViewModel>();
             services.AddTransient<Func<EngagementPapdAssignmentViewModel>>(sp => () => sp.GetRequiredService<EngagementPapdAssignmentViewModel>());
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)

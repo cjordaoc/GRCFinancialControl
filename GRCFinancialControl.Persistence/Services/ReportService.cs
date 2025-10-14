@@ -176,12 +176,14 @@ namespace GRCFinancialControl.Persistence.Services
                     .Where(a => a.EngagementId == engagement.Id)
                     .SumAsync(a => a.Hours);
 
+                var etcpHours = engagement.EtcpHours > 0 ? engagement.EtcpHours : (decimal)actualHours;
+
                 result.Add(new EngagementPerformanceData
                 {
                     EngagementId = engagement.EngagementId,
                     EngagementDescription = engagement.Description,
                     InitialHoursBudget = engagement.InitialHoursBudget,
-                    ActualHours = (decimal)actualHours,
+                    EtcpHours = etcpHours,
                     RankBudgets = engagement.RankBudgets.Select(rb => new Core.Models.Reporting.RankBudget
                     {
                         RankName = rb.RankName,

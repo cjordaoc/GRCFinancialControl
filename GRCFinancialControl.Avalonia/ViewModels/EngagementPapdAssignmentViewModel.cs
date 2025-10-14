@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
+using GRCFinancialControl.Avalonia.Utilities;
 using GRCFinancialControl.Core.Models;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
@@ -27,6 +28,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private DateTime? _effectiveDate = DateTime.Today;
 
+        public DateTimeOffset? EffectiveDateOffset
+        {
+            get => DateTimeOffsetHelper.FromDate(EffectiveDate);
+            set
+            {
+                EffectiveDate = DateTimeOffsetHelper.ToDate(value);
+            }
+        }
+
         public EngagementPapdAssignmentViewModel(ObservableCollection<EngagementPapd> assignments, IEnumerable<Papd> availablePapds, IMessenger messenger)
             : base(messenger)
         {
@@ -43,6 +53,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var newAssignment = new EngagementPapd
             {
                 Papd = SelectedPapd,
+                PapdId = SelectedPapd.Id,
                 EffectiveDate = EffectiveDate.Value.Date
             };
             Assignments.Add(newAssignment);
@@ -83,6 +94,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         partial void OnEffectiveDateChanged(DateTime? value)
         {
             AddAssignmentCommand.NotifyCanExecuteChanged();
+            OnPropertyChanged(nameof(EffectiveDateOffset));
         }
 
         partial void OnSelectedAssignmentChanged(EngagementPapd? value)
