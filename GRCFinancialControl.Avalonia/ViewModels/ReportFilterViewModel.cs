@@ -1,9 +1,11 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
 using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Persistence.Services.Interfaces;
@@ -29,17 +31,22 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private string? _selectedPapd;
 
         [ObservableProperty]
-        private ObservableCollection<string> _engagements = new();
+        private ObservableCollection<EngagementFilterOption> _engagements = new();
 
         [ObservableProperty]
-        private string? _selectedEngagement;
+        private EngagementFilterOption? _selectedEngagement;
 
         private readonly IExportService _exportService;
 
         public IAsyncRelayCommand LoadFiltersCommand { get; }
         public IAsyncRelayCommand ExportCommand { get; }
 
-        public ReportFilterViewModel(IFiscalYearService fiscalYearService, IPapdService papdService, IEngagementService engagementService, IExportService exportService, IMessenger messenger)
+        public ReportFilterViewModel(
+            IFiscalYearService fiscalYearService,
+            IPapdService papdService,
+            IEngagementService engagementService,
+            IExportService exportService,
+            IMessenger messenger)
             : base(messenger)
         {
             _fiscalYearService = fiscalYearService;
@@ -59,8 +66,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var papds = await _papdService.GetAllAsync();
             Papds = new ObservableCollection<string>(papds.Select(p => p.Name));
 
+            var previousSelectionId = SelectedEngagement?.EngagementId;
+
             var engagements = await _engagementService.GetAllAsync();
-            Engagements = new ObservableCollection<string>(engagements.Select(e => e.Description));
+            var options = engagements
+                .OrderBy(e => e.Description, StringComparer.OrdinalIgnoreCase)
+                .Select(e => new EngagementFilterOption(e.EngagementId, e.Description))
+                .ToList();
+
+            Engagements = new ObservableCollection<EngagementFilterOption>(options);
+
+            SelectedEngagement = string.IsNullOrWhiteSpace(previousSelectionId)
+                ? Engagements.FirstOrDefault()
+                : Engagements.FirstOrDefault(e => e.EngagementId == previousSelectionId) ?? Engagements.FirstOrDefault();
         }
 
         private async Task ExportAsync()
@@ -74,5 +92,25 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var data = selectedReport.Response.ToList();
             await _exportService.ExportToExcelAsync(data, selectedReport.ReportName);
         }
+
+        partial void OnSelectedEngagementChanged(EngagementFilterOption? value)
+        {
+            Messenger.Send(new ValueChangedMessage<(string? EngagementId, string? EngagementName)>((value?.EngagementId, value?.Description)));
+        }
+    }
+
+    public class EngagementFilterOption
+    {
+        public EngagementFilterOption(string engagementId, string description)
+        {
+            EngagementId = engagementId;
+            Description = description;
+        }
+
+        public string EngagementId { get; }
+
+        public string Description { get; }
+
+        public override string ToString() => Description;
     }
 }

@@ -12,14 +12,14 @@
 
         <Border Grid.Row="1" Grid.Column="0" Classes="card">
             <StackPanel>
-                <TextBlock Text="Planned vs Actual Hours per Period" Classes="h2"/>
+                <TextBlock Text="Planned vs ETC-P Hours per Period" Classes="h2"/>
                 <lvc:CartesianChart Series="{Binding PlannedVsActualSeries}"/>
             </StackPanel>
         </Border>
 
         <Border Grid.Row="1" Grid.Column="1" Classes="card">
             <StackPanel>
-                <TextBlock Text="Burn Rate (% Actual / Planned)" Classes="h2"/>
+                <TextBlock Text="Burn Rate (% ETC-P / Planned)" Classes="h2"/>
                 <lvc:CartesianChart Series="{Binding BurnRateSeries}"/>
             </StackPanel>
         </Border>

@@ -13,6 +13,6 @@ namespace GRCFinancialControl.Persistence.Services.Interfaces
         Task<List<PapdContributionData>> GetPapdContributionDataAsync();
         Task<List<TimeAllocationData>> GetTimeAllocationDataAsync();
         Task<StrategicKpiData> GetStrategicKpiDataAsync();
-        Task<List<MarginEvolutionData>> GetMarginEvolutionDataAsync();
+        Task<List<FinancialEvolutionPoint>> GetFinancialEvolutionPointsAsync(string engagementId);
     }
 }

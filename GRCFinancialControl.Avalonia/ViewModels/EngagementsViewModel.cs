@@ -45,7 +45,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Messenger.Send(new RefreshDataMessage());
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanEdit))]
         private async Task Edit(Engagement engagement)
         {
             if (engagement == null) return;
@@ -54,7 +54,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Messenger.Send(new RefreshDataMessage());
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanDelete))]
         private async Task Delete(Engagement engagement)
         {
             if (engagement == null) return;
@@ -75,7 +75,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
-        private bool CanDeleteData(Engagement engagement) => engagement is not null;
+        private static bool CanEdit(Engagement engagement) => engagement is not null;
+
+        private static bool CanDelete(Engagement engagement) => engagement is not null;
+
+        private static bool CanDeleteData(Engagement engagement) => engagement is not null;
 
         partial void OnSelectedEngagementChanged(Engagement? value)
         {

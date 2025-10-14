@@ -7,7 +7,7 @@
              x:Class="GRCFinancialControl.Avalonia.Views.PlannedVsActualView"
              x:DataType="vm:PlannedVsActualViewModel">
     <Grid RowDefinitions="Auto,*,Auto" Margin="10">
-        <TextBlock Text="Planned vs. Actual Report" FontSize="24" FontWeight="Bold" Margin="0,0,0,10"/>
+        <TextBlock Text="Planned vs. ETC-P Report" FontSize="24" FontWeight="Bold" Margin="0,0,0,10"/>
 
         <DataGrid Grid.Row="1"
                   ItemsSource="{Binding ReportData}"
@@ -20,7 +20,7 @@
                 <DataGridTextColumn Header="PAPD" Binding="{Binding PapdName}" Width="*"/>
                 <DataGridTextColumn Header="Fiscal Year" Binding="{Binding FiscalYear}" Width="*"/>
                 <DataGridTextColumn Header="Planned Hours" Binding="{Binding PlannedHours}" Width="*"/>
-                <DataGridTextColumn Header="Actual Hours" Binding="{Binding ActualHours}" Width="*"/>
+                <DataGridTextColumn Header="ETC-P Hours" Binding="{Binding ActualHours}" Width="*"/>
                 <DataGridTextColumn Header="Variance" Binding="{Binding Variance}" Width="*"/>
             </DataGrid.Columns>
         </DataGrid>

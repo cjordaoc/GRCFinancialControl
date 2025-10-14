@@ -21,7 +21,7 @@
                     Padding="15"
                     Margin="0,10,0,0">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="{Binding FileType, StringFormat='Import {0} Data'}" FontSize="18" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding FileTypeDisplayName, StringFormat='Import {0} Data'}" FontSize="18" FontWeight="SemiBold"/>
 
                     <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
                                 IsVisible="{Binding FileType, Converter={x:Static converters:ObjectConverters.AreEqual}, ConverterParameter=Actuals}">

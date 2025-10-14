@@ -74,7 +74,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     Values = new[] { g.Sum(pc => pc.Revenue) }
                 }).ToArray();
 
-            // Planned vs Actual Hours
+            // Planned vs ETC-P Hours
             PlannedVsActualHoursSeries = new ISeries[]
             {
                 new ColumnSeries<decimal>
@@ -84,7 +84,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 },
                 new ColumnSeries<decimal>
                 {
-                    Name = "Actual Hours",
+                    Name = "ETC-P Hours",
                     Values = data.Select(d => d.TotalActualHours).ToArray()
                 }
             };

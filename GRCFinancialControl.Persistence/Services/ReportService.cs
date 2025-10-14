@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Core.Models.Reporting;
@@ -268,6 +269,79 @@ namespace GRCFinancialControl.Persistence.Services
             return result;
         }
 
+        public async Task<List<FinancialEvolutionPoint>> GetFinancialEvolutionPointsAsync(string engagementId)
+        {
+            if (string.IsNullOrWhiteSpace(engagementId))
+            {
+                return new List<FinancialEvolutionPoint>();
+            }
+
+            await using var context = await _contextFactory.CreateDbContextAsync();
+
+            var entries = await context.FinancialEvolutions
+                .AsNoTracking()
+                .Where(fe => fe.EngagementId == engagementId)
+                .Where(HasRelevantMetricsExpression())
+                .GroupJoin(
+                    context.ClosingPeriods.AsNoTracking(),
+                    fe => fe.ClosingPeriodId,
+                    cp => cp.Name,
+                    (fe, cps) => new { FinancialEvolution = fe, ClosingPeriods = cps })
+                .SelectMany(
+                    x => x.ClosingPeriods.DefaultIfEmpty(),
+                    (x, cp) => new
+                    {
+                        x.FinancialEvolution.ClosingPeriodId,
+                        PeriodEnd = cp != null ? (DateTime?)cp.PeriodEnd : null,
+                        x.FinancialEvolution.HoursData,
+                        x.FinancialEvolution.ValueData,
+                        x.FinancialEvolution.MarginData,
+                        x.FinancialEvolution.ExpenseData
+                    })
+                .ToListAsync();
+
+            var points = entries
+                .Select(fe => new FinancialEvolutionPoint
+                {
+                    ClosingPeriodId = fe.ClosingPeriodId,
+                    ClosingPeriodDate = fe.PeriodEnd,
+                    Hours = fe.HoursData,
+                    Revenue = fe.ValueData,
+                    Margin = fe.MarginData,
+                    Expenses = fe.ExpenseData
+                })
+                .OrderBy(p => GetClosingPeriodSortKey(p.ClosingPeriodId))
+                .ThenBy(p => p.ClosingPeriodId, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            return points;
+        }
+
+        private static System.Linq.Expressions.Expression<Func<FinancialEvolution, bool>> HasRelevantMetricsExpression()
+        {
+            return evolution => (evolution.HoursData ?? 0m) != 0m
+                                 || (evolution.ValueData ?? 0m) != 0m
+                                 || (evolution.MarginData ?? 0m) != 0m
+                                 || (evolution.ExpenseData ?? 0m) != 0m;
+        }
+
+        private static (int Group, int Number) GetClosingPeriodSortKey(string closingPeriodId)
+        {
+            if (string.Equals(closingPeriodId, "INITIAL", StringComparison.OrdinalIgnoreCase))
+            {
+                return (0, 0);
+            }
+
+            if (closingPeriodId.StartsWith("CP", StringComparison.OrdinalIgnoreCase)
+                && closingPeriodId.Length > 2
+                && int.TryParse(closingPeriodId.Substring(2), out var periodNumber))
+            {
+                return (1, periodNumber);
+            }
+
+            return (2, 0);
+        }
+
         public async Task<StrategicKpiData> GetStrategicKpiDataAsync()
         {
             await using var context = await _contextFactory.CreateDbContextAsync();
@@ -300,39 +374,6 @@ namespace GRCFinancialControl.Persistence.Services
                 PapdContributionPercent = papdContributionPercent,
                 TerRequiredForGoal = terRequiredForGoal
             };
-        }
-
-        public async Task<List<MarginEvolutionData>> GetMarginEvolutionDataAsync()
-        {
-            await using var context = await _contextFactory.CreateDbContextAsync();
-
-            var engagements = await context.Engagements
-                .Include(e => e.MarginEvolutions)
-                .ThenInclude(me => me.ClosingPeriod)
-                .ToListAsync();
-
-            var result = new List<MarginEvolutionData>();
-
-            foreach (var engagement in engagements)
-            {
-                var marginDataPoints = engagement.MarginEvolutions
-                    .Where(me => me.ClosingPeriod != null)
-                    .OrderBy(me => me.ClosingPeriod!.PeriodStart)
-                    .Select(me => new MarginDataPoint
-                    {
-                        ClosingPeriodName = me.ClosingPeriod!.Name,
-                        Margin = me.MarginPercentage
-                    })
-                    .ToList();
-
-                result.Add(new MarginEvolutionData
-                {
-                    EngagementName = engagement.Description,
-                    MarginDataPoints = marginDataPoints
-                });
-            }
-
-            return result;
         }
     }
 }

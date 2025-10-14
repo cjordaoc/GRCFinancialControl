@@ -29,7 +29,7 @@ namespace GRCFinancialControl.Persistence.Services
                 "TRUNCATE TABLE `PlannedAllocations`;",
                 "TRUNCATE TABLE `EngagementFiscalYearAllocations`;",
                 "TRUNCATE TABLE `EngagementRankBudgets`;",
-                "TRUNCATE TABLE `MarginEvolutions`;",
+                "TRUNCATE TABLE `FinancialEvolution`;",
                 "TRUNCATE TABLE `EngagementPapds`;",
                 "TRUNCATE TABLE `Exceptions`;",
                 "TRUNCATE TABLE `Engagements`;",

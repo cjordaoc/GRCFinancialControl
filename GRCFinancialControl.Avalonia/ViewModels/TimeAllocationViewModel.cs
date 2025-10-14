@@ -34,7 +34,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var data = await _reportService.GetTimeAllocationDataAsync();
             if (data is null || !data.Any()) return;
 
-            // Planned vs Actual Hours per Period
+            // Planned vs ETC-P Hours per Period
             PlannedVsActualSeries = new ISeries[]
             {
                 new LineSeries<decimal>
@@ -44,12 +44,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 },
                 new LineSeries<decimal>
                 {
-                    Name = "Actual Hours",
+                    Name = "ETC-P Hours",
                     Values = data.Select(d => d.ActualHours).ToArray()
                 }
             };
 
-            // Burn Rate (% Actual / Planned)
+            // Burn Rate (% ETC-P / Planned)
             BurnRateSeries = new ISeries[]
             {
                 new ColumnSeries<decimal>

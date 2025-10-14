@@ -114,7 +114,7 @@ namespace GRCFinancialControl.Avalonia
                 sp.GetRequiredService<PapdContributionViewModel>(),
                 sp.GetRequiredService<TimeAllocationViewModel>(),
                 sp.GetRequiredService<StrategicKpiViewModel>(),
-                sp.GetRequiredService<MarginEvolutionViewModel>(),
+                sp.GetRequiredService<FinancialEvolutionViewModel>(),
                 sp.GetRequiredService<IMessenger>()
             ));
             services.AddTransient<FiscalPerformanceViewModel>();
@@ -122,7 +122,7 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<PapdContributionViewModel>();
             services.AddTransient<TimeAllocationViewModel>();
             services.AddTransient<StrategicKpiViewModel>();
-            services.AddTransient<MarginEvolutionViewModel>();
+            services.AddTransient<FinancialEvolutionViewModel>();
             services.AddTransient<ReportFilterViewModel>();
             services.AddTransient<PlannedVsActualViewModel>();
             services.AddTransient<BacklogViewModel>();

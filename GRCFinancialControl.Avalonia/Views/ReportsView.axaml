@@ -9,6 +9,9 @@
     <Grid RowDefinitions="Auto,*">
         <ContentControl Grid.Row="0" Content="{Binding Filter}"/>
         <TabControl Grid.Row="1" SelectedItem="{Binding SelectedReport}">
+            <TabItem Header="Financial Evolution">
+                <ContentControl Content="{Binding FinancialEvolution}"/>
+            </TabItem>
             <TabItem Header="Fiscal Performance">
                 <ContentControl Content="{Binding FiscalPerformance}"/>
             </TabItem>
@@ -24,10 +27,7 @@
             <TabItem Header="Strategic KPIs">
                 <ContentControl Content="{Binding StrategicKpi}"/>
             </TabItem>
-            <TabItem Header="Margin Evolution">
-                <ContentControl Content="{Binding MarginEvolution}"/>
-            </TabItem>
-            <TabItem Header="Planned vs. Actual">
+            <TabItem Header="Planned vs. ETC-P">
                 <ContentControl Content="{Binding PlannedVsActual}"/>
             </TabItem>
             <TabItem Header="Backlog">

@@ -29,12 +29,11 @@ DEALLOCATE PREPARE stmt;
 
 CREATE TABLE `Customers`
 (
-    `Id`           INT           NOT NULL AUTO_INCREMENT,
-    `Name`         VARCHAR(200)  NOT NULL,
-    `ClientIdText` VARCHAR(64)   NULL,
+    `Id`          INT           NOT NULL AUTO_INCREMENT,
+    `Name`        VARCHAR(200)  NOT NULL,
+    `CustomerID`  VARCHAR(20)   NOT NULL,
     CONSTRAINT `PK_Customers` PRIMARY KEY (`Id`),
-    CONSTRAINT `UX_Customers_Name` UNIQUE (`Name`),
-    CONSTRAINT `UX_Customers_ClientIdText` UNIQUE (`ClientIdText`)
+    CONSTRAINT `UX_Customers_CustomerID` UNIQUE (`CustomerID`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 CREATE TABLE `ClosingPeriods`
@@ -71,9 +70,13 @@ CREATE TABLE `Engagements`
     `CustomerId`         INT            NULL,
     `OpeningMargin`      DECIMAL(18, 2) NOT NULL,
     `OpeningValue`       DECIMAL(18, 2) NOT NULL,
+    `OpeningExpenses`    DECIMAL(18, 2) NOT NULL DEFAULT 0,
     `Status`             INT            NOT NULL,
     `InitialHoursBudget` DECIMAL(18, 2) NOT NULL DEFAULT 0,
-    `ActualHours`        DECIMAL(18, 2) NOT NULL DEFAULT 0,
+    `EtcpHours`          DECIMAL(18, 2) NOT NULL DEFAULT 0,
+    `ValueEtcp`          DECIMAL(18, 2) NOT NULL DEFAULT 0,
+    `ExpensesEtcp`       DECIMAL(18, 2) NOT NULL DEFAULT 0,
+    `LastClosingPeriodId` VARCHAR(16)   NULL,
     `TotalPlannedHours`  DOUBLE         NOT NULL,
     CONSTRAINT `PK_Engagements` PRIMARY KEY (`Id`),
     CONSTRAINT `UX_Engagements_EngagementId` UNIQUE (`EngagementId`),
@@ -106,19 +109,18 @@ CREATE TABLE `EngagementRankBudgets`
     INDEX `IX_EngagementRankBudgets_EngagementId` (`EngagementId`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
-CREATE TABLE `MarginEvolutions`
+CREATE TABLE `FinancialEvolution`
 (
-    `Id`               INT           NOT NULL AUTO_INCREMENT,
-    `EngagementId`     INT           NOT NULL,
-    `EntryType`        INT           NOT NULL,
-    `MarginPercentage` DECIMAL(9, 4) NOT NULL,
-    `CreatedAtUtc`     DATETIME(6)   NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    `EffectiveDate`    DATETIME(6)   NULL,
-    `ClosingPeriodId`  INT           NULL,
-    CONSTRAINT `PK_MarginEvolutions` PRIMARY KEY (`Id`),
-    CONSTRAINT `FK_MarginEvolutions_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
-    CONSTRAINT `FK_MarginEvolutions_ClosingPeriods` FOREIGN KEY (`ClosingPeriodId`) REFERENCES `ClosingPeriods` (`Id`) ON DELETE SET NULL,
-    INDEX `IX_MarginEvolutions_EngagementTypeCreated` (`EngagementId`, `EntryType`, `CreatedAtUtc`)
+    `Id`              INT            NOT NULL AUTO_INCREMENT,
+    `ClosingPeriodId` VARCHAR(16)    NOT NULL,
+    `EngagementId`    VARCHAR(64)    NOT NULL,
+    `HoursData`       DECIMAL(10, 1) NULL,
+    `ValueData`       DECIMAL(18, 2) NULL,
+    `MarginData`      DECIMAL(9, 4)  NULL,
+    `ExpenseData`     DECIMAL(18, 2) NULL,
+    CONSTRAINT `PK_FinancialEvolution` PRIMARY KEY (`Id`),
+    CONSTRAINT `UX_FinancialEvolution_Key` UNIQUE (`EngagementId`, `ClosingPeriodId`),
+    CONSTRAINT `FK_FinancialEvolution_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`EngagementId`) ON DELETE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 CREATE TABLE `PlannedAllocations`

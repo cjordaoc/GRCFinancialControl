@@ -20,13 +20,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public StrategicKpiViewModel StrategicKpi { get; }
 
+        public FinancialEvolutionViewModel FinancialEvolution { get; }
+
         [ObservableProperty]
         private object? _selectedReport;
 
         public ReportFilterViewModel Filter { get; }
-        public MarginEvolutionViewModel MarginEvolution { get; }
 
-        public ReportsViewModel(ReportFilterViewModel filter, PlannedVsActualViewModel plannedVsActual, BacklogViewModel backlog, FiscalPerformanceViewModel fiscalPerformance, EngagementPerformanceViewModel engagementPerformance, PapdContributionViewModel papdContribution, TimeAllocationViewModel timeAllocation, StrategicKpiViewModel strategicKpi, MarginEvolutionViewModel marginEvolution, IMessenger messenger)
+        public ReportsViewModel(ReportFilterViewModel filter, PlannedVsActualViewModel plannedVsActual, BacklogViewModel backlog, FiscalPerformanceViewModel fiscalPerformance, EngagementPerformanceViewModel engagementPerformance, PapdContributionViewModel papdContribution, TimeAllocationViewModel timeAllocation, StrategicKpiViewModel strategicKpi, FinancialEvolutionViewModel financialEvolution, IMessenger messenger)
             : base(messenger)
         {
             Filter = filter;
@@ -37,7 +38,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             PapdContribution = papdContribution;
             TimeAllocation = timeAllocation;
             StrategicKpi = strategicKpi;
-            MarginEvolution = marginEvolution;
+            FinancialEvolution = financialEvolution;
 
             Messenger.Register<SelectedReportRequestMessage>(this, (r, m) =>
             {
@@ -56,8 +57,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 TimeAllocationViewModel vm => new[] { vm },
                 StrategicKpiViewModel vm when vm.KpiData is not null => new[] { vm.KpiData },
                 StrategicKpiViewModel => Enumerable.Empty<object>(),
-                MarginEvolutionViewModel vm => new[] { vm },
                 PlannedVsActualViewModel vm => new[] { vm },
+                FinancialEvolutionViewModel vm when vm.Points.Any() => vm.Points,
+                FinancialEvolutionViewModel => Enumerable.Empty<object>(),
                 BacklogViewModel vm => new[] { vm },
                 _ => Enumerable.Empty<object>()
             };
@@ -74,7 +76,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 PapdContributionViewModel => nameof(PapdContribution),
                 TimeAllocationViewModel => nameof(TimeAllocation),
                 StrategicKpiViewModel => nameof(StrategicKpi),
-                MarginEvolutionViewModel => nameof(MarginEvolution),
+                FinancialEvolutionViewModel => nameof(FinancialEvolution),
                 _ => "Report"
             };
         }

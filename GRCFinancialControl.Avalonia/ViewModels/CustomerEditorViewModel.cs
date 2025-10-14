@@ -16,6 +16,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private string _name = string.Empty;
 
+        [ObservableProperty]
+        private string _customerId = string.Empty;
+
         public Customer Customer { get; }
 
         public CustomerEditorViewModel(Customer customer, ICustomerService customerService, IMessenger messenger)
@@ -25,12 +28,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _messenger = messenger;
 
             Name = customer.Name;
+            CustomerId = customer.CustomerID;
         }
 
         [RelayCommand]
         private async Task Save()
         {
             Customer.Name = Name;
+            Customer.CustomerID = CustomerId;
 
             if (Customer.Id == 0)
             {

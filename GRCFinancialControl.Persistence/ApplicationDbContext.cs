@@ -14,7 +14,7 @@ namespace GRCFinancialControl.Persistence
         public DbSet<ClosingPeriod> ClosingPeriods { get; set; }
         public DbSet<Customer> Customers { get; set; }
         public DbSet<EngagementRankBudget> EngagementRankBudgets { get; set; }
-        public DbSet<MarginEvolution> MarginEvolutions { get; set; }
+        public DbSet<FinancialEvolution> FinancialEvolutions { get; set; }
         public DbSet<EngagementFiscalYearAllocation> EngagementFiscalYearAllocations { get; set; }
         public DbSet<FiscalYear> FiscalYears { get; set; }
 
@@ -33,12 +33,18 @@ namespace GRCFinancialControl.Persistence
 
             // Configure relationships
             modelBuilder.Entity<Customer>()
-                .Property(c => c.ClientIdText)
-                .HasMaxLength(64);
+                .Property(c => c.CustomerID)
+                .HasMaxLength(20);
 
             modelBuilder.Entity<Customer>()
-                .HasIndex(c => c.ClientIdText)
+                .HasIndex(c => c.CustomerID)
                 .IsUnique();
+
+            modelBuilder.Entity<Engagement>()
+                .HasAlternateKey(e => e.EngagementId);
+
+            modelBuilder.Entity<ClosingPeriod>()
+                .HasAlternateKey(cp => cp.Name);
 
             modelBuilder.Entity<Engagement>()
                 .HasMany(e => e.EngagementPapds)
@@ -74,14 +80,33 @@ namespace GRCFinancialControl.Persistence
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Engagement>()
+                .Property(e => e.OpeningExpenses)
+                .HasPrecision(18, 2)
+                .HasDefaultValue(0m);
+
+            modelBuilder.Entity<Engagement>()
                 .Property(e => e.InitialHoursBudget)
                 .HasPrecision(18, 2)
                 .HasDefaultValue(0m);
 
             modelBuilder.Entity<Engagement>()
-                .Property(e => e.ActualHours)
+                .Property(e => e.EtcpHours)
                 .HasPrecision(18, 2)
                 .HasDefaultValue(0m);
+
+            modelBuilder.Entity<Engagement>()
+                .Property(e => e.ValueEtcp)
+                .HasPrecision(18, 2)
+                .HasDefaultValue(0m);
+
+            modelBuilder.Entity<Engagement>()
+                .Property(e => e.ExpensesEtcp)
+                .HasPrecision(18, 2)
+                .HasDefaultValue(0m);
+
+            modelBuilder.Entity<Engagement>()
+                .Property(e => e.LastClosingPeriodId)
+                .HasMaxLength(16);
 
             modelBuilder.Entity<Papd>()
                 .HasMany<EngagementPapd>() // A PAPD can be linked to many EngagementPapd records
@@ -131,29 +156,35 @@ namespace GRCFinancialControl.Persistence
                 .HasIndex(rb => new { rb.EngagementId, rb.RankName })
                 .IsUnique();
 
-            modelBuilder.Entity<MarginEvolution>()
-                .HasOne(me => me.Engagement)
-                .WithMany(e => e.MarginEvolutions)
-                .HasForeignKey(me => me.EngagementId)
+            modelBuilder.Entity<FinancialEvolution>()
+                .ToTable("FinancialEvolution");
+
+            modelBuilder.Entity<FinancialEvolution>()
+                .HasOne(fe => fe.Engagement)
+                .WithMany(e => e.FinancialEvolutions)
+                .HasForeignKey(fe => fe.EngagementId)
+                .HasPrincipalKey(e => e.EngagementId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<MarginEvolution>()
-                .HasOne(me => me.ClosingPeriod)
-                .WithMany()
-                .HasForeignKey(me => me.ClosingPeriodId)
-                .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity<FinancialEvolution>()
+                .Property(fe => fe.HoursData)
+                .HasPrecision(10, 1);
 
-            modelBuilder.Entity<MarginEvolution>()
-                .Property(me => me.MarginPercentage)
+            modelBuilder.Entity<FinancialEvolution>()
+                .Property(fe => fe.ValueData)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<FinancialEvolution>()
+                .Property(fe => fe.MarginData)
                 .HasPrecision(9, 4);
 
-            modelBuilder.Entity<MarginEvolution>()
-                .Property(me => me.CreatedAtUtc)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+            modelBuilder.Entity<FinancialEvolution>()
+                .Property(fe => fe.ExpenseData)
+                .HasPrecision(18, 2);
 
-            modelBuilder.Entity<MarginEvolution>()
-                .HasIndex(me => new { me.EngagementId, me.EntryType, me.CreatedAtUtc })
-                .HasDatabaseName("IX_MarginEvolution_Engagement_Type_Created");
+            modelBuilder.Entity<FinancialEvolution>()
+                .HasIndex(fe => new { fe.EngagementId, fe.ClosingPeriodId })
+                .IsUnique();
 
             modelBuilder.Entity<EngagementFiscalYearAllocation>()
                 .HasKey(e => e.Id);

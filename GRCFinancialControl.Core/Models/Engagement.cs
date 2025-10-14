@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
-using GRCFinancialControl.Core.Enums;
 using System.Linq;
+using GRCFinancialControl.Core.Enums;
 
 namespace GRCFinancialControl.Core.Models
 {
@@ -26,15 +26,19 @@ namespace GRCFinancialControl.Core.Models
         public decimal OpeningValue { get; set; }
         public EngagementStatus Status { get; set; }
         public double TotalPlannedHours { get; set; }
+        public decimal OpeningExpenses { get; set; }
         public decimal InitialHoursBudget { get; set; }
-        public decimal ActualHours { get; set; }
+        public decimal EtcpHours { get; set; }
+        public decimal ValueEtcp { get; set; }
+        public decimal ExpensesEtcp { get; set; }
+        public string? LastClosingPeriodId { get; set; }
 
         public int? CustomerId { get; set; }
         public Customer? Customer { get; set; }
 
         public ICollection<EngagementPapd> EngagementPapds { get; set; } = new List<EngagementPapd>();
         public ICollection<EngagementRankBudget> RankBudgets { get; set; } = new List<EngagementRankBudget>();
-        public ICollection<MarginEvolution> MarginEvolutions { get; set; } = new List<MarginEvolution>();
+        public ICollection<FinancialEvolution> FinancialEvolutions { get; set; } = new List<FinancialEvolution>();
         public ICollection<EngagementFiscalYearAllocation> Allocations { get; set; } = new List<EngagementFiscalYearAllocation>();
         [NotMapped]
         public double CurrentHoursAllocation => Allocations.Sum(a => a.PlannedHours);
