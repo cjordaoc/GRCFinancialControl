@@ -7,6 +7,7 @@
              xmlns:conv="using:GRCFinancialControl.Avalonia.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.AllocationView"
+             x:Name="AllocationViewRoot"
              x:DataType="vm:AllocationViewModel">
     <UserControl.Resources>
         <conv:BooleanToBrushConverter x:Key="AllocationFillBrush" TrueBrush="#FFF1C232" FalseBrush="#228B22"/>
@@ -35,7 +36,9 @@
                 <DataGridTemplateColumn Header="Actions">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate x:DataType="models:Engagement">
-                            <Button Content="Edit" Command="{Binding $parent[UserControl].DataContext.EditAllocationCommand}" CommandParameter="{Binding}"/>
+                            <Button Content="Edit"
+                                    Command="{Binding DataContext.EditAllocationCommand, ElementName=AllocationViewRoot}"
+                                    CommandParameter="{Binding}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
