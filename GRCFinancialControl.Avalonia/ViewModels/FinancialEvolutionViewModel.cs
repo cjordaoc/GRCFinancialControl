@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using CommunityToolkit.Mvvm.Messaging.Messages;
+using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRCFinancialControl.Core.Models.Reporting;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using LiveChartsCore;
@@ -20,15 +20,22 @@ using LiveChartsCore.SkiaSharpView.Drawing.Geometries;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
-    public partial class FinancialEvolutionViewModel : ViewModelBase, IRecipient<ValueChangedMessage<(string? EngagementId, string? EngagementName)>>
+    public partial class FinancialEvolutionViewModel : ViewModelBase
     {
         private readonly IReportService _reportService;
+        private readonly IEngagementService _engagementService;
         private readonly CultureInfo _ptBr = CultureInfo.GetCultureInfo("pt-BR");
         private readonly List<FinancialEvolutionPoint> _currentPoints = new();
-        private string? _selectedEngagementId;
+        private bool _engagementsLoaded;
 
         [ObservableProperty]
         private string? _engagementDisplayName;
+
+        [ObservableProperty]
+        private ObservableCollection<EngagementOption> _engagements = new();
+
+        [ObservableProperty]
+        private EngagementOption? _selectedEngagement;
 
         [ObservableProperty]
         private ISeries[] _marginSeries = Array.Empty<ISeries>();
@@ -57,11 +64,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private ICartesianAxis[] _expensesAxes = Array.Empty<ICartesianAxis>();
 
-        public FinancialEvolutionViewModel(IReportService reportService, IMessenger messenger)
+        public FinancialEvolutionViewModel(IReportService reportService, IEngagementService engagementService, IMessenger messenger)
             : base(messenger)
         {
             _reportService = reportService;
-            LoadDataCommand = new AsyncRelayCommand(LoadDataAsync);
+            _engagementService = engagementService;
+            LoadDataCommand = new AsyncRelayCommand(LoadSelectedEngagementDataAsync);
         }
 
         public IAsyncRelayCommand LoadDataCommand { get; }
@@ -70,13 +78,57 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public override async Task LoadDataAsync()
         {
-            if (string.IsNullOrWhiteSpace(_selectedEngagementId))
+            await EnsureEngagementsLoadedAsync();
+            await LoadSelectedEngagementDataAsync();
+        }
+
+        private async Task EnsureEngagementsLoadedAsync()
+        {
+            if (_engagementsLoaded)
             {
+                return;
+            }
+
+            var engagements = await _engagementService.GetAllAsync();
+            var options = engagements
+                .OrderBy(e => e.Description, StringComparer.OrdinalIgnoreCase)
+                .Select(e => new EngagementOption(e.Id, e.EngagementId, e.Description))
+                .ToList();
+
+            Engagements = new ObservableCollection<EngagementOption>(options);
+            SelectedEngagement ??= Engagements.FirstOrDefault();
+            _engagementsLoaded = true;
+        }
+
+        private void ClearCharts()
+        {
+            _currentPoints.Clear();
+            Points.Clear();
+
+            MarginSeries = Array.Empty<ISeries>();
+            RevenueSeries = Array.Empty<ISeries>();
+            HoursSeries = Array.Empty<ISeries>();
+            ExpensesSeries = Array.Empty<ISeries>();
+
+            PeriodAxes = Array.Empty<ICartesianAxis>();
+            MarginAxes = Array.Empty<ICartesianAxis>();
+            RevenueAxes = Array.Empty<ICartesianAxis>();
+            HoursAxes = Array.Empty<ICartesianAxis>();
+            ExpensesAxes = Array.Empty<ICartesianAxis>();
+        }
+
+        private async Task LoadSelectedEngagementDataAsync()
+        {
+            if (SelectedEngagement is null || string.IsNullOrWhiteSpace(SelectedEngagement.EngagementId))
+            {
+                EngagementDisplayName = null;
                 ClearCharts();
                 return;
             }
 
-            var data = await _reportService.GetFinancialEvolutionPointsAsync(_selectedEngagementId);
+            var data = await _reportService.GetFinancialEvolutionPointsAsync(SelectedEngagement.EngagementId);
+
+            EngagementDisplayName = SelectedEngagement.Description;
 
             _currentPoints.Clear();
             Points.Clear();
@@ -97,29 +149,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             ConfigureSeries();
         }
 
-        public void Receive(ValueChangedMessage<(string? EngagementId, string? EngagementName)> message)
+        partial void OnSelectedEngagementChanged(EngagementOption? value)
         {
-            var (engagementId, engagementName) = message.Value;
-            _selectedEngagementId = engagementId;
-            EngagementDisplayName = engagementName;
             _ = LoadDataCommand.ExecuteAsync(null);
-        }
-
-        private void ClearCharts()
-        {
-            _currentPoints.Clear();
-            Points.Clear();
-
-            MarginSeries = Array.Empty<ISeries>();
-            RevenueSeries = Array.Empty<ISeries>();
-            HoursSeries = Array.Empty<ISeries>();
-            ExpensesSeries = Array.Empty<ISeries>();
-
-            PeriodAxes = Array.Empty<ICartesianAxis>();
-            MarginAxes = Array.Empty<ICartesianAxis>();
-            RevenueAxes = Array.Empty<ICartesianAxis>();
-            HoursAxes = Array.Empty<ICartesianAxis>();
-            ExpensesAxes = Array.Empty<ICartesianAxis>();
         }
 
         private void ConfigureAxes()

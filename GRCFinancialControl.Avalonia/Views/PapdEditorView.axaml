@@ -8,10 +8,11 @@
              x:DataType="vm:PapdEditorViewModel">
     <StackPanel Spacing="10" Margin="10">
         <TextBlock Text="PAPD Details" FontSize="18" FontWeight="Bold"/>
-        <TextBox Text="{Binding Name}" Watermark="Name"/>
+        <TextBox Text="{Binding Name}" Watermark="Name" Width="280"/>
         <ComboBox ItemsSource="{Binding LevelOptions}"
                   SelectedItem="{Binding Level}"
-                  PlaceholderText="Level (e.g., Partner, Director)"/>
+                  PlaceholderText="Level (e.g., Partner, Director)"
+                  Width="280"/>
         <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">
             <Button Content="Save" Command="{Binding SaveCommand}"/>
             <Button Content="Close" Command="{Binding CloseCommand}"/>

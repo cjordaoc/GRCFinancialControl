@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
+using GRCFinancialControl.Avalonia.Utilities;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -38,6 +39,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
         {
             Papd = papd;
             _engagementService = engagementService;
+        }
+
+        public DateTimeOffset? EffectiveDateOffset
+        {
+            get => DateTimeOffsetHelper.FromDate(EffectiveDate);
+            set => EffectiveDate = DateTimeOffsetHelper.ToDate(value);
         }
 
         public override async Task LoadDataAsync()
@@ -153,6 +160,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
 
         partial void OnEffectiveDateChanged(DateTime? value)
         {
+            OnPropertyChanged(nameof(EffectiveDateOffset));
             AssignCommand.NotifyCanExecuteChanged();
         }
     }

@@ -111,17 +111,17 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<RevenueAllocationsViewModel>();
             services.AddTransient<AllocationsViewModel>();
             services.AddTransient(sp => new ReportsViewModel(
-                sp.GetRequiredService<ReportFilterViewModel>(),
                 sp.GetRequiredService<PapdContributionViewModel>(),
                 sp.GetRequiredService<FinancialEvolutionViewModel>(),
+                sp.GetRequiredService<IExportService>(),
                 sp.GetRequiredService<IMessenger>()
             ));
             services.AddTransient<PapdContributionViewModel>();
             services.AddTransient<FinancialEvolutionViewModel>();
-            services.AddTransient<ReportFilterViewModel>();
             services.AddTransient<PapdViewModel>();
             services.AddTransient<ManagersViewModel>();
             services.AddTransient<ManagerAssignmentsViewModel>();
+            services.AddTransient<PapdAssignmentsViewModel>();
             services.AddTransient<GrcTeamViewModel>();
             services.AddTransient<SettingsViewModel>();
             services.AddTransient<ClosingPeriodsViewModel>();

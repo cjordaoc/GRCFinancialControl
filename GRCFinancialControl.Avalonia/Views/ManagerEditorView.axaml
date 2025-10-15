@@ -8,11 +8,12 @@
              x:DataType="vm:ManagerEditorViewModel">
     <StackPanel Spacing="10" Margin="10">
         <TextBlock Text="Manager Details" FontSize="18" FontWeight="Bold"/>
-        <TextBox Text="{Binding Name}" Watermark="Name"/>
-        <TextBox Text="{Binding Email}" Watermark="Email"/>
+        <TextBox Text="{Binding Name}" Watermark="Name" Width="280"/>
+        <TextBox Text="{Binding Email}" Watermark="Email" Width="280"/>
         <ComboBox ItemsSource="{Binding PositionOptions}"
                   SelectedItem="{Binding Position}"
-                  PlaceholderText="Position"/>
+                  PlaceholderText="Position"
+                  Width="280"/>
         <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">
             <Button Content="Save" Command="{Binding SaveCommand}"/>
             <Button Content="Close" Command="{Binding CloseCommand}"/>

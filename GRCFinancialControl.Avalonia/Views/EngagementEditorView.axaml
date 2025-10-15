@@ -19,26 +19,28 @@
                       RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                       Margin="0,10,0,0">
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Engagement ID:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding EngagementId}" Margin="10,0,0,0" IsReadOnly="True"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding EngagementId}" Margin="10,0,0,0" IsReadOnly="{Binding IsEngagementIdReadOnly}"/>
 
                     <TextBlock Grid.Row="0" Grid.Column="3" Text="Customer:" VerticalAlignment="Center"/>
                     <ComboBox Grid.Row="0" Grid.Column="4"
                               ItemsSource="{Binding Customers}"
                               SelectedItem="{Binding SelectedCustomer}"
                               DisplayMemberBinding="{Binding DisplayName}"
-                              Margin="10,0,0,0"/>
+                              Margin="10,0,0,0"
+                              IsEnabled="{Binding AllowEditing}"/>
 
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Description:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="4" Text="{Binding Description}" Margin="10,4,0,0"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="4" Text="{Binding Description}" Margin="10,4,0,0" IsReadOnly="{Binding IsGeneralFieldReadOnly}"/>
 
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="Status:" VerticalAlignment="Center"/>
                     <ComboBox Grid.Row="2" Grid.Column="1"
                               ItemsSource="{Binding StatusTextOptions}"
                               SelectedItem="{Binding SelectedStatusText}"
-                              Margin="10,4,0,0"/>
+                              Margin="10,4,0,0"
+                              IsEnabled="{Binding AllowEditing}"/>
 
                     <TextBlock Grid.Row="2" Grid.Column="3" Text="Currency:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="2" Grid.Column="4" Text="{Binding Currency}" Margin="10,4,0,0"/>
+                    <TextBox Grid.Row="2" Grid.Column="4" Text="{Binding Currency}" Margin="10,4,0,0" IsReadOnly="{Binding IsGeneralFieldReadOnly}"/>
 
                     <TextBlock Grid.Row="3" Grid.Column="0" Text="Source:" VerticalAlignment="Center"/>
                     <ComboBox Grid.Row="3" Grid.Column="1"
@@ -46,31 +48,32 @@
                               ItemsSource="{Binding SourceOptions}"
                               SelectedItem="{Binding SelectedSource}"
                               DisplayMemberBinding="{Binding DisplayName}"
-                              Margin="10,4,0,0"/>
+                              Margin="10,4,0,0"
+                              IsEnabled="{Binding AllowEditing}"/>
 
                     <TextBlock Grid.Row="4" Grid.Column="0" Text="Opening Value:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding OpeningValue}" Margin="10,4,0,0" IsReadOnly="True"/>
+                    <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding OpeningValue}" Margin="10,4,0,0" IsReadOnly="{Binding IsFinancialSnapshotReadOnly}"/>
 
-                    <TextBlock Grid.Row="4" Grid.Column="3" Text="ETC-P Hours:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="4" Grid.Column="4" Text="{Binding EtcpHours}" Margin="10,4,0,0"/>
+                    <TextBlock Grid.Row="4" Grid.Column="3" Text="Value ETC-P:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="4" Grid.Column="4" Text="{Binding ValueEtcp}" Margin="10,4,0,0" IsReadOnly="{Binding IsGeneralFieldReadOnly}"/>
 
                     <TextBlock Grid.Row="5" Grid.Column="0" Text="Opening Expenses:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding OpeningExpenses}" Margin="10,4,0,0" IsReadOnly="True"/>
+                    <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding OpeningExpenses}" Margin="10,4,0,0" IsReadOnly="{Binding IsFinancialSnapshotReadOnly}"/>
 
-                    <TextBlock Grid.Row="5" Grid.Column="3" Text="Value ETC-P:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="5" Grid.Column="4" Text="{Binding ValueEtcp}" Margin="10,4,0,0"/>
+                    <TextBlock Grid.Row="5" Grid.Column="3" Text="Expenses ETC-P:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="5" Grid.Column="4" Text="{Binding ExpensesEtcp}" Margin="10,4,0,0" IsReadOnly="{Binding IsGeneralFieldReadOnly}"/>
 
                     <TextBlock Grid.Row="6" Grid.Column="0" Text="Planned Hours:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding InitialHoursBudget}" Margin="10,4,0,0" IsReadOnly="True"/>
+                    <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding InitialHoursBudget}" Margin="10,4,0,0" IsReadOnly="{Binding IsFinancialSnapshotReadOnly}"/>
 
-                    <TextBlock Grid.Row="6" Grid.Column="3" Text="Expenses ETC-P:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="6" Grid.Column="4" Text="{Binding ExpensesEtcp}" Margin="10,4,0,0"/>
+                    <TextBlock Grid.Row="6" Grid.Column="3" Text="ETC-P Hours:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="6" Grid.Column="4" Text="{Binding EtcpHours}" Margin="10,4,0,0" IsReadOnly="{Binding IsGeneralFieldReadOnly}"/>
 
                     <TextBlock Grid.Row="7" Grid.Column="0" Text="Margin % Budget:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="7" Grid.Column="1" Text="{Binding MarginPctBudget}" Margin="10,4,0,0" IsReadOnly="True"/>
+                    <TextBox Grid.Row="7" Grid.Column="1" Text="{Binding MarginPctBudget}" Margin="10,4,0,0" IsReadOnly="{Binding IsFinancialSnapshotReadOnly}"/>
 
                     <TextBlock Grid.Row="7" Grid.Column="3" Text="Margin % ETC-P:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="7" Grid.Column="4" Text="{Binding MarginPctEtcp}" Margin="10,4,0,0"/>
+                    <TextBox Grid.Row="7" Grid.Column="4" Text="{Binding MarginPctEtcp}" Margin="10,4,0,0" IsReadOnly="{Binding IsGeneralFieldReadOnly}"/>
 
                     <TextBlock Grid.Row="8" Grid.Column="0" Text="ETC-P Age (Days):" VerticalAlignment="Center"/>
                     <TextBox Grid.Row="8" Grid.Column="1"
@@ -108,11 +111,22 @@
                     <DataGridTextColumn Header="Effective Date" Binding="{Binding EffectiveDate, StringFormat='yyyy-MM-dd'}" Width="*"/>
                 </DataGrid.Columns>
             </DataGrid>
+                <TextBlock Text="Manager Assignments" FontSize="16" FontWeight="Bold" Margin="0,20,0,5"/>
+                <DataGrid ItemsSource="{Binding ManagerAssignments}" AutoGenerateColumns="False" IsReadOnly="True" Height="150">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Manager" Binding="{Binding Manager.Name}" Width="*"/>
+                        <DataGridTextColumn Header="Position" Binding="{Binding Manager.Position}" Width="*"/>
+                        <DataGridTextColumn Header="Begin" Binding="{Binding BeginDate, StringFormat='{}{0:yyyy-MM-dd}'}" Width="*"/>
+                        <DataGridTextColumn Header="End" Binding="{Binding EndDate, StringFormat='{}{0:yyyy-MM-dd}'}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
                 <TextBlock Text="Financial Evolution Data" FontSize="16" FontWeight="Bold" Margin="0,20,0,5"/>
                 <DataGrid ItemsSource="{Binding FinancialEvolutionEntries}"
                           SelectedItem="{Binding SelectedFinancialEvolutionEntry}"
                           AutoGenerateColumns="False"
-                          Height="200">
+                          Height="200"
+                          IsReadOnly="{Binding IsReadOnlyMode}">
                     <DataGrid.Columns>
                         <DataGridTemplateColumn Header="Closing Period" Width="2*">
                             <DataGridTemplateColumn.CellTemplate>
@@ -131,13 +145,13 @@
                         <DataGridTextColumn Header="Expenses" Binding="{Binding Expenses, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
                     </DataGrid.Columns>
                 </DataGrid>
-                <StackPanel Orientation="Horizontal" Spacing="5" Margin="0,5,0,0">
+                <StackPanel Orientation="Horizontal" Spacing="5" Margin="0,5,0,0" IsVisible="{Binding AllowEditing}">
                     <Button Content="Add Period Data" Command="{Binding AddFinancialEvolutionEntryCommand}" Classes="accent"/>
                     <Button Content="Remove Selected" Command="{Binding RemoveFinancialEvolutionEntryCommand}"/>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right" Margin="0,20,0,0">
-                    <Button Content="Save" Command="{Binding SaveCommand}" Classes="accent"/>
+                    <Button Content="Save" Command="{Binding SaveCommand}" Classes="accent" IsVisible="{Binding AllowEditing}"/>
                     <Button Content="Close" Command="{Binding CloseCommand}"/>
                 </StackPanel>
             </StackPanel>

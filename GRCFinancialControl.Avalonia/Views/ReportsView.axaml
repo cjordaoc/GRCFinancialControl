@@ -7,7 +7,9 @@
              x:Class="GRCFinancialControl.Avalonia.Views.ReportsView"
              x:DataType="vm:ReportsViewModel">
     <Grid RowDefinitions="Auto,*">
-        <ContentControl Grid.Row="0" Content="{Binding Filter}"/>
+        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,10" Spacing="8">
+            <Button Content="Export Selected" Command="{Binding ExportCommand}"/>
+        </StackPanel>
         <TabControl Grid.Row="1" SelectedItem="{Binding SelectedReport}">
             <TabItem Header="Financial Evolution">
                 <ContentControl Content="{Binding FinancialEvolution}"/>
