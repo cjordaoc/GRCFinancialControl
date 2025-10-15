@@ -4,7 +4,5 @@
   "displayName": "Dashboard",
   "displayOption": "FitToPage",
   "height": 720,
-  "width": 1280,
-  "filters": [],
-  "visualContainers": []
+  "width": 1280
 }
