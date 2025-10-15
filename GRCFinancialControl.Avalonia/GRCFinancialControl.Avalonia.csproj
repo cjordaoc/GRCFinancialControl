@@ -21,6 +21,8 @@
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.7" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.7" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.7" />
+    <PackageReference Include="WebView.Avalonia" Version="11.0.0" />
+    <PackageReference Include="WebView.Avalonia.Desktop" Version="11.0.0" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Include="Avalonia.Diagnostics" Version="11.3.7">
       <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>

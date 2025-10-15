@@ -26,6 +26,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private string _password = string.Empty;
 
         [ObservableProperty]
+        private string _powerBiEmbedUrl = string.Empty;
+
+        [ObservableProperty]
+        private string _powerBiWorkspaceId = string.Empty;
+
+        [ObservableProperty]
+        private string _powerBiReportId = string.Empty;
+
+        [ObservableProperty]
+        private string _powerBiEmbedToken = string.Empty;
+
+        [ObservableProperty]
         private string? _statusMessage;
 
         public SettingsViewModel(ISettingsService settingsService, IDatabaseSchemaInitializer schemaInitializer, IDialogService dialogService)
@@ -55,6 +67,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
+        public override async Task LoadDataAsync()
+        {
+            await LoadSettingsAsync();
+        }
+
         private async Task LoadSettingsAsync()
         {
             var settings = await _settingsService.GetAllAsync();
@@ -62,11 +79,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             settings.TryGetValue("Database", out var database);
             settings.TryGetValue("User", out var user);
             settings.TryGetValue("Password", out var password);
+            settings.TryGetValue("PowerBiEmbedUrl", out var embedUrl);
+            settings.TryGetValue("PowerBiWorkspaceId", out var workspaceId);
+            settings.TryGetValue("PowerBiReportId", out var reportId);
+            settings.TryGetValue("PowerBiEmbedToken", out var embedToken);
 
             Server = server ?? string.Empty;
             Database = database ?? string.Empty;
             User = user ?? string.Empty;
             Password = password ?? string.Empty;
+            PowerBiEmbedUrl = embedUrl ?? string.Empty;
+            PowerBiWorkspaceId = workspaceId ?? string.Empty;
+            PowerBiReportId = reportId ?? string.Empty;
+            PowerBiEmbedToken = embedToken ?? string.Empty;
         }
 
         private async Task SaveSettingsAsync()
@@ -76,7 +101,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 { "Server", Server },
                 { "Database", Database },
                 { "User", User },
-                { "Password", Password }
+                { "Password", Password },
+                { "PowerBiEmbedUrl", PowerBiEmbedUrl },
+                { "PowerBiWorkspaceId", PowerBiWorkspaceId },
+                { "PowerBiReportId", PowerBiReportId },
+                { "PowerBiEmbedToken", PowerBiEmbedToken }
             };
             await _settingsService.SaveAllAsync(settings);
             StatusMessage = "Settings saved.";

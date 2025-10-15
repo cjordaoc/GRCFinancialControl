@@ -20,6 +20,13 @@
         <StackPanel Orientation="Horizontal" Spacing="5" Margin="0,20,0,0">
             <Button Content="Clear All Data" Command="{Binding ClearAllDataCommand}" Classes="danger"/>
         </StackPanel>
+        <Separator Margin="0,20,0,0"/>
+        <TextBlock Text="Power BI Embedding" FontSize="24" FontWeight="Bold"/>
+        <TextBlock Text="Provide either a Publish to Web URL or the workspace/report identifiers for app-owned embedding." TextWrapping="Wrap"/>
+        <TextBox Text="{Binding PowerBiEmbedUrl}" Watermark="Publish to Web URL"/>
+        <TextBox Text="{Binding PowerBiWorkspaceId}" Watermark="Workspace (Group) Id"/>
+        <TextBox Text="{Binding PowerBiReportId}" Watermark="Report Id"/>
+        <TextBox Text="{Binding PowerBiEmbedToken}" Watermark="Embed Token" PasswordChar="*"/>
         <TextBlock Text="{Binding StatusMessage}" Margin="0,5,0,0"/>
     </StackPanel>
 </UserControl>

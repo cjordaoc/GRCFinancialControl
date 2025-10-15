@@ -16,12 +16,19 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using AvaloniaWebView;
 
 namespace GRCFinancialControl.Avalonia
 {
     public partial class App : Application
     {
         public IServiceProvider Services { get; private set; } = null!;
+
+        public override void RegisterServices()
+        {
+            base.RegisterServices();
+            AvaloniaWebViewBuilder.Initialize(default);
+        }
 
         public override void Initialize()
         {
@@ -101,6 +108,7 @@ namespace GRCFinancialControl.Avalonia
             // Register dialog service
             services.AddSingleton<IDialogService, DialogService>();
             services.AddTransient<IExportService, ExportService>();
+            services.AddSingleton<IPowerBiEmbeddingService, PowerBiEmbeddingService>();
 
             // Register ViewModels
             services.AddTransient<MainWindowViewModel>();
@@ -111,9 +119,8 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<RevenueAllocationsViewModel>();
             services.AddTransient<AllocationsViewModel>();
             services.AddTransient(sp => new ReportsViewModel(
-                sp.GetRequiredService<PapdContributionViewModel>(),
-                sp.GetRequiredService<FinancialEvolutionViewModel>(),
-                sp.GetRequiredService<IExportService>(),
+                sp.GetRequiredService<IPowerBiEmbeddingService>(),
+                sp.GetRequiredService<ILoggingService>(),
                 sp.GetRequiredService<IMessenger>()
             ));
             services.AddTransient<PapdContributionViewModel>();

@@ -1,86 +1,102 @@
-using System.Collections.Generic;
-using System.Linq;
+using System;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRCFinancialControl.Avalonia.Services.Models;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
     public partial class ReportsViewModel : ViewModelBase
     {
-        public PapdContributionViewModel PapdContribution { get; }
-
-        public FinancialEvolutionViewModel FinancialEvolution { get; }
+        private readonly IPowerBiEmbeddingService _embeddingService;
+        private readonly ILoggingService _loggingService;
 
         [ObservableProperty]
-        private object? _selectedReport;
+        private Uri? _dashboardUri;
 
-        private readonly IExportService _exportService;
+        [ObservableProperty]
+        private string? _embedToken;
 
-        public ReportsViewModel(PapdContributionViewModel papdContribution, FinancialEvolutionViewModel financialEvolution, IExportService exportService, IMessenger messenger)
+        [ObservableProperty]
+        private bool _requiresAuthentication;
+
+        [ObservableProperty]
+        private string? _statusMessage;
+
+        public ReportsViewModel(IPowerBiEmbeddingService embeddingService, ILoggingService loggingService, IMessenger messenger)
             : base(messenger)
         {
-            PapdContribution = papdContribution;
-            FinancialEvolution = financialEvolution;
-            _exportService = exportService;
+            _embeddingService = embeddingService;
+            _loggingService = loggingService;
 
-            SelectedReport = FinancialEvolution;
-
-            Messenger.Register<SelectedReportRequestMessage>(this, (r, m) =>
-            {
-                m.ReportName = GetSelectedReportName();
-                m.Reply(GetSelectedReportData());
-            });
+            RefreshCommand = new AsyncRelayCommand(LoadDataAsync);
+            OpenInBrowserCommand = new RelayCommand(OpenInBrowser, CanOpenInBrowser);
         }
+
+        public IAsyncRelayCommand RefreshCommand { get; }
+
+        public IRelayCommand OpenInBrowserCommand { get; }
+
+        public bool HasDashboard => DashboardUri is not null;
+
+        public string? DashboardUrl => DashboardUri?.ToString();
 
         public override async Task LoadDataAsync()
         {
-            await Task.WhenAll(
-                PapdContribution.LoadDataAsync(),
-                FinancialEvolution.LoadDataAsync());
+            try
+            {
+                var configuration = await _embeddingService.GetConfigurationAsync();
+
+                DashboardUri = configuration.DashboardUri;
+                EmbedToken = configuration.EmbedToken;
+                RequiresAuthentication = configuration.RequiresAuthentication;
+                StatusMessage = configuration.StatusMessage;
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogError($"Failed to load Power BI configuration: {ex.Message}");
+                StatusMessage = "Unable to load the Power BI dashboard configuration.";
+                DashboardUri = null;
+                EmbedToken = null;
+                RequiresAuthentication = false;
+            }
+            finally
+            {
+                OpenInBrowserCommand.NotifyCanExecuteChanged();
+            }
         }
 
-        [RelayCommand(CanExecute = nameof(CanExport))]
-        private async Task ExportAsync()
+        private void OpenInBrowser()
         {
-            var data = GetSelectedReportData().ToList();
-            if (data.Count == 0)
+            if (DashboardUri is null)
             {
                 return;
             }
 
-            await _exportService.ExportToExcelAsync(data, GetSelectedReportName());
-        }
-
-        private IEnumerable<object> GetSelectedReportData()
-        {
-            return SelectedReport switch
+            try
             {
-                PapdContributionViewModel vm => new[] { vm },
-                FinancialEvolutionViewModel vm when vm.Points.Any() => vm.Points,
-                FinancialEvolutionViewModel => Enumerable.Empty<object>(),
-                _ => Enumerable.Empty<object>()
-            };
-        }
-
-        private string GetSelectedReportName()
-        {
-            return SelectedReport switch
+                var _ = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = DashboardUri.ToString(),
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
             {
-                PapdContributionViewModel => nameof(PapdContribution),
-                FinancialEvolutionViewModel => nameof(FinancialEvolution),
-                _ => "Report"
-            };
+                _loggingService.LogError($"Failed to launch browser: {ex.Message}");
+                StatusMessage = "Unable to launch the external browser for the dashboard.";
+            }
         }
 
-        private bool CanExport() => SelectedReport is not null;
+        private bool CanOpenInBrowser() => DashboardUri is not null;
 
-        partial void OnSelectedReportChanged(object? value)
+        partial void OnDashboardUriChanged(Uri? value)
         {
-            ExportCommand.NotifyCanExecuteChanged();
+            OnPropertyChanged(nameof(HasDashboard));
+            OnPropertyChanged(nameof(DashboardUrl));
+            OpenInBrowserCommand.NotifyCanExecuteChanged();
         }
     }
 }
