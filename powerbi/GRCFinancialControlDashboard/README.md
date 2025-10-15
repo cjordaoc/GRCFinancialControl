@@ -17,6 +17,13 @@ This folder contains a Power BI project (.pbip) skeleton for the single page das
    - Card visuals for `Hours Completion %` and `Revenue Completion %`.
    - Optional matrix with Fiscal Year, `Actual Hours`, `Target Hours`, `Planned Revenue`, and `Revenue Gap to Target`.
 
+## Validate the project structure
+
+Before committing changes run `powerbi/validate_powerbi_project.py` from the repository root. The helper inspects every
+`definition.pbism` file to ensure only schema-supported properties are present—matching the guidance in the official Power BI
+Projects overview on Microsoft Learn. This prevents unsupported properties such as `displayName` from being reintroduced and
+causing Power BI Desktop to reject the project file.
+
 The semantic model already exposes the following measures:
 
 - `Actual Hours`
