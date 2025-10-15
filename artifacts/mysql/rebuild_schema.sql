@@ -120,7 +120,7 @@ CREATE TABLE `EngagementRankBudgets`
     `EngagementId`  INT             NOT NULL,
     `RankName`      VARCHAR(100)    NOT NULL,
     `Hours`         DECIMAL(18, 2)  NOT NULL DEFAULT 0,
-    `CreatedAtUtc`  DATETIME(6)     NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+    `CreatedAtUtc`  DATETIME(6)     NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     `UpdatedAtUtc`  DATETIME(6)     NULL,
     CONSTRAINT `PK_EngagementRankBudgets` PRIMARY KEY (`Id`),
     CONSTRAINT `FK_EngagementRankBudgets_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
@@ -236,6 +236,21 @@ INSERT INTO `FiscalYears` (`Name`, `StartDate`, `EndDate`, `AreaSalesTarget`, `A
     ('FY25', '2024-07-01', '2025-06-30', 0, 0),
     ('FY26', '2025-07-01', '2026-06-30', 0, 0),
     ('FY27', '2026-07-01', '2027-06-30', 0, 0);
+    
+    INSERT INTO `blac3289_GRCFinancialControl`.`Papds` (`Name`,`Level`) VALUES
+('Danilo Passos','AssociatePartner'),
+('Fernando São Pedro','Director'),
+('Alexandre Jucá de Paiva','AssociatePartner');
+
+INSERT INTO `blac3289_GRCFinancialControl`.`Managers` (`Name`,`Email`,`Position`) VALUES
+('Caio Jordão Calisto','caio.calisto@br.ey.com','SeniorManager'),
+('Gabriel Cortezia','gabriel.cortezia@br.ey.com','SeniorManager'),
+('Rafael Gimenis','rafael.gimenis@br.ey.com','SeniorManager'),
+('Salomão Bruno','salomao.bruno@br.ey.com','SeniorManager'),
+('Mariana Galegale','mariana.galegale@br.ey.com','Manager'),
+('Thomas Lima','thomas.lima@br.ey.com','Manager'),
+('Vinicius Almeida','vinicius.almeida@br.ey.com','SeniorManager');
+
 
 SET FOREIGN_KEY_CHECKS = 1;
 
