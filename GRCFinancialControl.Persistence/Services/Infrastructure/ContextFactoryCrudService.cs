@@ -1,0 +1,102 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using GRCFinancialControl.Persistence;
+using Microsoft.EntityFrameworkCore;
+
+namespace GRCFinancialControl.Persistence.Services.Infrastructure
+{
+    public abstract class ContextFactoryCrudService<TEntity>
+        where TEntity : class
+    {
+        private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
+
+        protected ContextFactoryCrudService(IDbContextFactory<ApplicationDbContext> contextFactory)
+        {
+            ArgumentNullException.ThrowIfNull(contextFactory);
+
+            _contextFactory = contextFactory;
+        }
+
+        protected async Task<ApplicationDbContext> CreateContextAsync()
+        {
+            var context = await _contextFactory.CreateDbContextAsync();
+            ArgumentNullException.ThrowIfNull(context);
+
+            return context;
+        }
+
+        protected abstract DbSet<TEntity> Set(ApplicationDbContext context);
+
+        protected virtual IQueryable<TEntity> BuildQuery(ApplicationDbContext context) => Set(context);
+
+        protected async Task<List<TEntity>> GetAllInternalAsync(Func<IQueryable<TEntity>, IQueryable<TEntity>>? configure = null)
+        {
+            await using var context = await CreateContextAsync();
+            IQueryable<TEntity> query = BuildQuery(context);
+            if (configure is not null)
+            {
+                query = configure(query);
+            }
+
+            return await query.ToListAsync();
+        }
+
+        protected async Task AddEntityAsync(TEntity entity)
+        {
+            ArgumentNullException.ThrowIfNull(entity);
+
+            await using var context = await CreateContextAsync();
+            await Set(context).AddAsync(entity);
+            await context.SaveChangesAsync();
+        }
+
+        protected async Task UpdateEntityAsync(TEntity entity)
+        {
+            ArgumentNullException.ThrowIfNull(entity);
+
+            await using var context = await CreateContextAsync();
+            Set(context).Update(entity);
+            await context.SaveChangesAsync();
+        }
+
+        protected async Task<TEntity?> FindEntityAsync(params object[] keyValues)
+        {
+            ValidateKeyValues(keyValues);
+
+            await using var context = await CreateContextAsync();
+            return await Set(context).FindAsync(keyValues);
+        }
+
+        protected async Task DeleteEntityAsync(params object[] keyValues)
+        {
+            ValidateKeyValues(keyValues);
+
+            await using var context = await CreateContextAsync();
+            var entity = await Set(context).FindAsync(keyValues);
+            if (entity is null)
+            {
+                return;
+            }
+
+            Set(context).Remove(entity);
+            await context.SaveChangesAsync();
+        }
+
+        private static void ValidateKeyValues(object[] keyValues)
+        {
+            ArgumentNullException.ThrowIfNull(keyValues);
+
+            if (keyValues.Length == 0)
+            {
+                throw new ArgumentException("At least one key value must be provided.", nameof(keyValues));
+            }
+
+            if (keyValues.Any(value => value is null))
+            {
+                throw new ArgumentException("Key values must not contain null entries.", nameof(keyValues));
+            }
+        }
+    }
+}

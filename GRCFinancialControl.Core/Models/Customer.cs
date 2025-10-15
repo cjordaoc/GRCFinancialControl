@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GRCFinancialControl.Core.Models
@@ -15,22 +14,16 @@ namespace GRCFinancialControl.Core.Models
         /// <summary>
         /// Stable identifier sourced from engagement workbooks (digits inside parentheses).
         /// </summary>
-        public string CustomerID { get; set; } = string.Empty;
+        public string CustomerCode { get; set; } = string.Empty;
 
-        public ICollection<Engagement> Engagements { get; set; } = new List<Engagement>();
+        public ICollection<Engagement> Engagements { get; set; } = [];
 
         [NotMapped]
         public string DisplayName
         {
-            get
-            {
-                if (string.IsNullOrWhiteSpace(CustomerID))
-                {
-                    return Name;
-                }
-
-                return $"{CustomerID} - {Name}";
-            }
+            get => string.IsNullOrWhiteSpace(CustomerCode)
+                ? Name
+                : $"{CustomerCode} - {Name}";
         }
     }
 }

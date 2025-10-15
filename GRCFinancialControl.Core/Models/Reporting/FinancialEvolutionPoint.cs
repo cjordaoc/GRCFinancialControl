@@ -1,5 +1,3 @@
-using System;
-
 namespace GRCFinancialControl.Core.Models.Reporting
 {
     public class FinancialEvolutionPoint

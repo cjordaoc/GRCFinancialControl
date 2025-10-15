@@ -3,44 +3,37 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GRCFinancialControl.Core.Models;
+using GRCFinancialControl.Persistence.Services.Infrastructure;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace GRCFinancialControl.Persistence.Services
 {
-    public class ClosingPeriodService : IClosingPeriodService
+    public class ClosingPeriodService : ContextFactoryCrudService<ClosingPeriod>, IClosingPeriodService
     {
-        private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
+        private const string CannotDeleteClosingPeriodMessage = "Cannot delete a closing period that is linked to imported margin data.";
 
         public ClosingPeriodService(IDbContextFactory<ApplicationDbContext> contextFactory)
+            : base(contextFactory)
         {
-            _contextFactory = contextFactory;
         }
 
-        public async Task<List<ClosingPeriod>> GetAllAsync()
-        {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+        protected override DbSet<ClosingPeriod> Set(ApplicationDbContext context) => context.ClosingPeriods;
 
-            return await context.Set<ClosingPeriod>().ToListAsync();
-        }
+        public Task<List<ClosingPeriod>> GetAllAsync() => GetAllInternalAsync(static query => query.AsNoTracking().OrderBy(cp => cp.PeriodStart));
 
-        public async Task AddAsync(ClosingPeriod period)
-        {
-            await using var context = await _contextFactory.CreateDbContextAsync();
-            await context.ClosingPeriods.AddAsync(period);
-            await context.SaveChangesAsync();
-        }
+        public Task AddAsync(ClosingPeriod period) => AddEntityAsync(period);
 
-        public async Task UpdateAsync(ClosingPeriod period)
-        {
-            await using var context = await _contextFactory.CreateDbContextAsync();
-            context.ClosingPeriods.Update(period);
-            await context.SaveChangesAsync();
-        }
+        public Task UpdateAsync(ClosingPeriod period) => UpdateEntityAsync(period);
 
         public async Task DeleteAsync(int id)
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            if (id <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(id), id, "Closing period identifier must be positive.");
+            }
+
+            await using var context = await CreateContextAsync();
 
             var period = await context.ClosingPeriods.FindAsync(id);
             if (period == null)
@@ -51,7 +44,7 @@ namespace GRCFinancialControl.Persistence.Services
             var hasActuals = await context.ActualsEntries.AnyAsync(a => a.ClosingPeriodId == id);
             if (hasActuals)
             {
-                throw new InvalidOperationException("Cannot delete a closing period that is linked to imported margin data.");
+                throw new InvalidOperationException(CannotDeleteClosingPeriodMessage);
             }
 
             context.ClosingPeriods.Remove(period);
@@ -60,27 +53,20 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task DeleteDataAsync(int closingPeriodId)
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            if (closingPeriodId <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(closingPeriodId), closingPeriodId, "Closing period identifier must be positive.");
+            }
 
-            var actualsToDelete = await context.ActualsEntries
+            await using var context = await CreateContextAsync();
+
+            await context.ActualsEntries
                 .Where(a => a.ClosingPeriodId == closingPeriodId)
-                .ToListAsync();
+                .ExecuteDeleteAsync();
 
-            var plannedAllocationsToDelete = await context.PlannedAllocations
+            await context.PlannedAllocations
                 .Where(p => p.ClosingPeriodId == closingPeriodId)
-                .ToListAsync();
-
-            if (actualsToDelete.Any())
-            {
-                context.ActualsEntries.RemoveRange(actualsToDelete);
-            }
-
-            if (plannedAllocationsToDelete.Any())
-            {
-                context.PlannedAllocations.RemoveRange(plannedAllocationsToDelete);
-            }
-
-            await context.SaveChangesAsync();
+                .ExecuteDeleteAsync();
         }
     }
 }

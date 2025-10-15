@@ -15,8 +15,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 {
     public partial class AllocationEditorViewModel : ViewModelBase
     {
+        private const decimal VarianceTolerance = 0.01m;
+        private const string HoursTargetLabel = "Hours to Allocate:";
+        private const string ValueTargetLabel = "Value to Allocate:";
+        private const string HoursCurrentAllocationLabel = "Current Hours Allocation:";
+        private const string ValueCurrentAllocationLabel = "Current Value Allocation:";
+        private const string HoursAmountHeader = "Planned Hours";
+        private const string ValueAmountHeader = "Planned Value";
+        private const string HoursValidationMessage = "Allocated hours must match the target hours before saving.";
+        private const string ValueValidationMessage = "Allocated value must match the target value before saving.";
+        private const string HoursVarianceSuffix = " h";
+
         private readonly IEngagementService _engagementService;
-        private readonly IMessenger _messenger;
         private readonly AllocationKind _kind;
 
         [ObservableProperty]
@@ -26,13 +36,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private ObservableCollection<AllocationEntry> _allocations;
 
         [ObservableProperty]
-        private double _targetAmount;
+        private decimal _targetAmount;
 
         [ObservableProperty]
-        private double _currentAllocation;
+        private decimal _currentAllocation;
 
         [ObservableProperty]
-        private double _allocationVariance;
+        private decimal _allocationVariance;
 
         [ObservableProperty]
         private bool _hasAllocationVariance;
@@ -57,10 +67,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                                          IEngagementService engagementService,
                                          IMessenger messenger,
                                          AllocationKind kind)
+            : base(messenger ?? throw new ArgumentNullException(nameof(messenger)))
         {
+            ArgumentNullException.ThrowIfNull(engagement);
+            ArgumentNullException.ThrowIfNull(fiscalYears);
+            ArgumentNullException.ThrowIfNull(engagementService);
+
             _engagement = engagement;
             _engagementService = engagementService;
-            _messenger = messenger;
             _kind = kind;
 
             TargetAmount = GetTargetAmount(engagement);
@@ -88,18 +102,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
-        public string TargetLabel => _kind == AllocationKind.Hours ? "Hours to Allocate:" : "Value to Allocate:";
+        public string TargetLabel => _kind == AllocationKind.Hours ? HoursTargetLabel : ValueTargetLabel;
 
-        public string CurrentAllocationLabel => _kind == AllocationKind.Hours ? "Current Hours Allocation:" : "Current Value Allocation:";
+        public string CurrentAllocationLabel => _kind == AllocationKind.Hours ? HoursCurrentAllocationLabel : ValueCurrentAllocationLabel;
 
-        public string AmountColumnHeader => _kind == AllocationKind.Hours ? "Planned Hours" : "Planned Value";
+        public string AmountColumnHeader => _kind == AllocationKind.Hours ? HoursAmountHeader : ValueAmountHeader;
 
         public string ValidationErrorMessage => _kind == AllocationKind.Hours
-            ? "Allocated hours must match the target hours before saving."
-            : "Allocated value must match the target value before saving.";
+            ? HoursValidationMessage
+            : ValueValidationMessage;
 
         [RelayCommand]
-        private async Task Save()
+        private async Task SaveAsync()
         {
             if (HasAllocationVariance)
             {
@@ -128,34 +142,34 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     {
                         EngagementId = Engagement.Id,
                         FiscalYearId = allocation.FiscalYear.Id,
-                        PlannedValue = (decimal)Math.Round(allocation.PlannedAmount, 2)
+                        PlannedValue = decimal.Round(allocation.PlannedAmount, 2)
                     });
                 }
             }
 
             await _engagementService.UpdateAsync(Engagement);
-            _messenger.Send(new CloseDialogMessage(true));
+            Messenger.Send(new CloseDialogMessage(true));
         }
 
         [RelayCommand]
         private void Close()
         {
-            _messenger.Send(new CloseDialogMessage(false));
+            Messenger.Send(new CloseDialogMessage(false));
         }
 
-        partial void OnCurrentAllocationChanged(double value)
+        partial void OnCurrentAllocationChanged(decimal value)
         {
             UpdateVariance();
             CurrentAllocationDisplay = FormatAmount(value);
         }
 
-        partial void OnTargetAmountChanged(double value)
+        partial void OnTargetAmountChanged(decimal value)
         {
             UpdateVariance();
             TargetAmountDisplay = FormatAmount(value);
         }
 
-        partial void OnAllocationVarianceChanged(double value)
+        partial void OnAllocationVarianceChanged(decimal value)
         {
             var suffix = GetVarianceSuffix();
             AllocationVarianceDisplay = value == 0
@@ -167,30 +181,30 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private void UpdateVariance()
         {
             AllocationVariance = CurrentAllocation - TargetAmount;
-            HasAllocationVariance = Math.Abs(AllocationVariance) > 0.01d;
+            HasAllocationVariance = Math.Abs(AllocationVariance) > VarianceTolerance;
             ValidationMessage = HasAllocationVariance ? ValidationErrorMessage : null;
         }
 
-        private double GetTargetAmount(Engagement engagement)
+        private decimal GetTargetAmount(Engagement engagement)
         {
             return _kind == AllocationKind.Hours ? engagement.HoursToAllocate : engagement.ValueToAllocate;
         }
 
-        private double GetExistingAllocationAmount(Engagement engagement, int fiscalYearId)
+        private decimal GetExistingAllocationAmount(Engagement engagement, int fiscalYearId)
         {
             if (_kind == AllocationKind.Hours)
             {
-                return engagement.Allocations.FirstOrDefault(a => a.FiscalYearId == fiscalYearId)?.PlannedHours ?? 0d;
+                return engagement.Allocations.FirstOrDefault(a => a.FiscalYearId == fiscalYearId)?.PlannedHours ?? 0m;
             }
 
-            return (double)(engagement.RevenueAllocations.FirstOrDefault(a => a.FiscalYearId == fiscalYearId)?.PlannedValue ?? 0m);
+            return engagement.RevenueAllocations.FirstOrDefault(a => a.FiscalYearId == fiscalYearId)?.PlannedValue ?? 0m;
         }
 
         private string GetVarianceSuffix()
         {
             if (_kind == AllocationKind.Hours)
             {
-                return " h";
+                return HoursVarianceSuffix;
             }
 
             return string.IsNullOrWhiteSpace(Engagement.Currency)
@@ -198,7 +212,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 : $" {Engagement.Currency}";
         }
 
-        private string FormatAmount(double value)
+        private string FormatAmount(decimal value)
         {
             var formatted = value.ToString("N2", CultureInfo.InvariantCulture);
 
@@ -219,6 +233,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private FiscalYear _fiscalYear = null!;
 
         [ObservableProperty]
-        private double _plannedAmount;
+        private decimal _plannedAmount;
     }
 }

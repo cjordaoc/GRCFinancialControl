@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
 using GRCFinancialControl.Core.Enums;
 
 namespace GRCFinancialControl.Core.Models
@@ -33,19 +29,19 @@ namespace GRCFinancialControl.Core.Models
         public int? CustomerId { get; set; }
         public Customer? Customer { get; set; }
 
-        public ICollection<EngagementPapd> EngagementPapds { get; set; } = new List<EngagementPapd>();
-        public ICollection<EngagementManagerAssignment> ManagerAssignments { get; set; } = new List<EngagementManagerAssignment>();
-        public ICollection<EngagementRankBudget> RankBudgets { get; set; } = new List<EngagementRankBudget>();
-        public ICollection<FinancialEvolution> FinancialEvolutions { get; set; } = new List<FinancialEvolution>();
-        public ICollection<EngagementFiscalYearAllocation> Allocations { get; set; } = new List<EngagementFiscalYearAllocation>();
-        public ICollection<EngagementFiscalYearRevenueAllocation> RevenueAllocations { get; set; } = new List<EngagementFiscalYearRevenueAllocation>();
-        [NotMapped]
-        public double CurrentHoursAllocation => Allocations.Sum(a => a.PlannedHours);
+        public ICollection<EngagementPapd> EngagementPapds { get; set; } = [];
+        public ICollection<EngagementManagerAssignment> ManagerAssignments { get; set; } = [];
+        public ICollection<EngagementRankBudget> RankBudgets { get; set; } = [];
+        public ICollection<FinancialEvolution> FinancialEvolutions { get; set; } = [];
+        public ICollection<EngagementFiscalYearAllocation> Allocations { get; set; } = [];
+        public ICollection<EngagementFiscalYearRevenueAllocation> RevenueAllocations { get; set; } = [];
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public decimal CurrentHoursAllocation => Allocations.Sum(a => a.PlannedHours);
 
-        [NotMapped]
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
         public string CustomerName => Customer?.Name ?? string.Empty;
 
-        [NotMapped]
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
         public int? EtcpAgeDays
         {
             get
@@ -55,64 +51,52 @@ namespace GRCFinancialControl.Core.Models
                     return null;
                 }
 
-                var today = DateTime.UtcNow.Date;
-                var lastEtcDate = LastEtcDate.Value.Date;
-                var age = (today - lastEtcDate).Days;
+                DateTime today = DateTime.UtcNow.Date;
+                DateTime lastEtcDate = LastEtcDate.Value.Date;
+                int age = (today - lastEtcDate).Days;
                 return age < 0 ? 0 : age;
             }
         }
 
-        [NotMapped]
-        public double HoursToAllocate
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public decimal HoursToAllocate
         {
             get
             {
-                if (EtcpHours > 0)
-                {
-                    return (double)EtcpHours;
-                }
-
-                if (InitialHoursBudget > 0)
-                {
-                    return (double)InitialHoursBudget;
-                }
-
-                return 0d;
+                return EtcpHours > 0m
+                    ? EtcpHours
+                    : InitialHoursBudget > 0m
+                        ? InitialHoursBudget
+                        : 0m;
             }
         }
 
-        [NotMapped]
-        public double AllocationVariance => CurrentHoursAllocation - HoursToAllocate;
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public decimal AllocationVariance => CurrentHoursAllocation - HoursToAllocate;
 
-        [NotMapped]
-        public bool RequiresAllocationReview => Math.Abs(AllocationVariance) > 0.01d;
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public bool RequiresAllocationReview => Math.Abs(AllocationVariance) > 0.01m;
 
-        [NotMapped]
-        public double CurrentRevenueAllocation => RevenueAllocations.Sum(a => (double)a.PlannedValue);
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public decimal CurrentRevenueAllocation => RevenueAllocations.Sum(a => a.PlannedValue);
 
-        [NotMapped]
-        public double ValueToAllocate
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public decimal ValueToAllocate
         {
             get
             {
-                if (ValueEtcp > 0)
-                {
-                    return (double)ValueEtcp;
-                }
-
-                if (OpeningValue > 0)
-                {
-                    return (double)OpeningValue;
-                }
-
-                return 0d;
+                return ValueEtcp > 0m
+                    ? ValueEtcp
+                    : OpeningValue > 0m
+                        ? OpeningValue
+                        : 0m;
             }
         }
 
-        [NotMapped]
-        public double RevenueAllocationVariance => CurrentRevenueAllocation - ValueToAllocate;
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public decimal RevenueAllocationVariance => CurrentRevenueAllocation - ValueToAllocate;
 
-        [NotMapped]
-        public bool RequiresRevenueAllocationReview => Math.Abs(RevenueAllocationVariance) > 0.01d;
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public bool RequiresRevenueAllocationReview => Math.Abs(RevenueAllocationVariance) > 0.01m;
     }
 }

@@ -1,7 +1,8 @@
+using System;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
-using System.Threading.Tasks;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
@@ -15,6 +16,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         protected ViewModelBase(IMessenger messenger)
         {
+            ArgumentNullException.ThrowIfNull(messenger);
+
             Messenger = messenger;
             Messenger.RegisterAll(this);
         }

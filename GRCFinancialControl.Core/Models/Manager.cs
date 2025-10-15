@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using GRCFinancialControl.Core.Enums;
 
 namespace GRCFinancialControl.Core.Models
@@ -9,6 +8,6 @@ namespace GRCFinancialControl.Core.Models
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public ManagerPosition Position { get; set; }
-        public ICollection<EngagementManagerAssignment> EngagementAssignments { get; set; } = new List<EngagementManagerAssignment>();
+        public ICollection<EngagementManagerAssignment> EngagementAssignments { get; set; } = [];
     }
 }

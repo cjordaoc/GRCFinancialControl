@@ -3,7 +3,7 @@
              x:Class="GRCFinancialControl.Avalonia.App"
              xmlns:local="using:GRCFinancialControl.Avalonia"
              RequestedThemeVariant="Dark">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+             <!-- The app defaults to the dark variant for consistency with analytics dashboards. -->
 
     <Application.DataTemplates>
         <local:ViewLocator/>
@@ -11,6 +11,6 @@
 
     <Application.Styles>
         <FluentTheme/>
-        <StyleInclude Source="avares://GRCFinancialControl.Avalonia/Styles/Controls.axaml"/>
+        <StyleInclude Source="avares://GRCFinancialControl.Avalonia/Styles/Styles.axaml"/>
     </Application.Styles>
 </Application>

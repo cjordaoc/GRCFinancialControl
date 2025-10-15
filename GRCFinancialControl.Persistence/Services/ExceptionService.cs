@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
@@ -12,13 +14,20 @@ namespace GRCFinancialControl.Persistence.Services
 
         public ExceptionService(IDbContextFactory<ApplicationDbContext> contextFactory)
         {
+            ArgumentNullException.ThrowIfNull(contextFactory);
+
             _contextFactory = contextFactory;
         }
 
         public async Task<List<ExceptionEntry>> GetAllAsync()
         {
             await using var context = await _contextFactory.CreateDbContextAsync();
-            return await context.Exceptions.ToListAsync();
+            ArgumentNullException.ThrowIfNull(context);
+
+            return await context.Exceptions
+                .AsNoTracking()
+                .OrderByDescending(e => e.Timestamp)
+                .ToListAsync();
         }
     }
 }

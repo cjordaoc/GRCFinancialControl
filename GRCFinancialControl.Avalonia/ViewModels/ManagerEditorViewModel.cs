@@ -1,19 +1,17 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
-    public partial class ManagerEditorViewModel : ViewModelBase
+    public partial class ManagerEditorViewModel : DialogEditorViewModel<Manager>
     {
         private readonly IManagerService _managerService;
-        private readonly IMessenger _messenger;
 
         [ObservableProperty]
         private string _name = string.Empty;
@@ -29,18 +27,17 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public Manager Manager { get; }
 
         public ManagerEditorViewModel(Manager manager, IManagerService managerService, IMessenger messenger)
+            : base(messenger ?? throw new ArgumentNullException(nameof(messenger)))
         {
-            Manager = manager;
-            _managerService = managerService;
-            _messenger = messenger;
+            Manager = manager ?? throw new ArgumentNullException(nameof(manager));
+            _managerService = managerService ?? throw new ArgumentNullException(nameof(managerService));
 
             Name = manager.Name;
             Email = manager.Email;
             Position = manager.Position;
         }
 
-        [RelayCommand]
-        private async Task Save()
+        protected override async Task PersistChangesAsync()
         {
             Manager.Name = Name;
             Manager.Email = Email;
@@ -54,14 +51,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 await _managerService.UpdateAsync(Manager);
             }
-
-            _messenger.Send(new CloseDialogMessage(true));
-        }
-
-        [RelayCommand]
-        private void Close()
-        {
-            _messenger.Send(new CloseDialogMessage(false));
         }
     }
 }

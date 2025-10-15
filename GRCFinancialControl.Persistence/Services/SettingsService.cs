@@ -11,10 +11,16 @@ namespace GRCFinancialControl.Persistence.Services
 {
     public class SettingsService : ISettingsService
     {
+        private const string ConnectionSuccessfulMessage = "Connection successful.";
+        private const string ConnectionFailedPrefix = "Connection failed: ";
+        private const string MissingServerOrDatabaseMessage = "Server and database are required to test the connection.";
+
         private readonly SettingsDbContext _context;
 
         public SettingsService(SettingsDbContext context)
         {
+            ArgumentNullException.ThrowIfNull(context);
+
             _context = context;
         }
 
@@ -25,8 +31,15 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task SaveAllAsync(Dictionary<string, string> settings)
         {
+            ArgumentNullException.ThrowIfNull(settings);
+
             foreach (var setting in settings)
             {
+                if (string.IsNullOrWhiteSpace(setting.Key))
+                {
+                    throw new ArgumentException("Setting keys must be provided.", nameof(settings));
+                }
+
                 var existingSetting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == setting.Key);
                 if (existingSetting != null)
                 {
@@ -45,7 +58,7 @@ namespace GRCFinancialControl.Persistence.Services
         {
             if (string.IsNullOrWhiteSpace(server) || string.IsNullOrWhiteSpace(database))
             {
-                return new ConnectionTestResult(false, "Server and database are required to test the connection.");
+                return new ConnectionTestResult(false, MissingServerOrDatabaseMessage);
             }
 
             var builder = new MySqlConnectionStringBuilder
@@ -62,11 +75,11 @@ namespace GRCFinancialControl.Persistence.Services
             {
                 await using var connection = new MySqlConnection(builder.ConnectionString);
                 await connection.OpenAsync();
-                return new ConnectionTestResult(true, "Connection successful.");
+                return new ConnectionTestResult(true, ConnectionSuccessfulMessage);
             }
             catch (Exception ex)
             {
-                return new ConnectionTestResult(false, $"Connection failed: {ex.Message}");
+                return new ConnectionTestResult(false, string.Concat(ConnectionFailedPrefix, ex.Message));
             }
         }
     }
