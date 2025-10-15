@@ -20,7 +20,7 @@
         <Border Grid.Row="1" Grid.Column="1" Classes="card">
             <StackPanel>
                 <TextBlock Text="Hours Worked by PAPD (Over Time)" Classes="h2"/>
-                <lvc:CartesianChart Series="{Binding HoursWorkedSeries}"/>
+                <lvc:CartesianChart Series="{Binding HoursWorkedSeries}" XAxes="{Binding HoursXAxes}" YAxes="{Binding HoursYAxes}"/>
             </StackPanel>
         </Border>
     </Grid>

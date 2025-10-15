@@ -1,0 +1,21 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="250"
+             x:Class="GRCFinancialControl.Avalonia.Views.ManagerEditorView"
+             x:DataType="vm:ManagerEditorViewModel">
+    <StackPanel Spacing="10" Margin="10">
+        <TextBlock Text="Manager Details" FontSize="18" FontWeight="Bold"/>
+        <TextBox Text="{Binding Name}" Watermark="Name"/>
+        <TextBox Text="{Binding Email}" Watermark="Email"/>
+        <ComboBox ItemsSource="{Binding PositionOptions}"
+                  SelectedItem="{Binding Position}"
+                  PlaceholderText="Position"/>
+        <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">
+            <Button Content="Save" Command="{Binding SaveCommand}"/>
+            <Button Content="Close" Command="{Binding CloseCommand}"/>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

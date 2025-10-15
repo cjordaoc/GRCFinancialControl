@@ -15,78 +15,90 @@
             <StackPanel Spacing="10" Margin="20">
                 <TextBlock Text="Engagement Details" FontSize="18" FontWeight="Bold"/>
 
-                <Grid ColumnDefinitions="Auto,*,Auto,*"
-                      RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                <Grid ColumnDefinitions="Auto,*,40,Auto,*"
+                      RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                       Margin="0,10,0,0">
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Engagement ID:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding EngagementId}" Margin="10,0,0,0"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding EngagementId}" Margin="10,0,0,0" IsReadOnly="True"/>
 
-                    <TextBlock Grid.Row="0" Grid.Column="2" Text="Customer:" VerticalAlignment="Center"/>
-                    <ComboBox Grid.Row="0" Grid.Column="3"
+                    <TextBlock Grid.Row="0" Grid.Column="3" Text="Customer:" VerticalAlignment="Center"/>
+                    <ComboBox Grid.Row="0" Grid.Column="4"
                               ItemsSource="{Binding Customers}"
                               SelectedItem="{Binding SelectedCustomer}"
                               DisplayMemberBinding="{Binding DisplayName}"
                               Margin="10,0,0,0"/>
 
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Description:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding Description}" Margin="10,4,0,0"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="4" Text="{Binding Description}" Margin="10,4,0,0"/>
 
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Customer Key:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding CustomerKey}" Margin="10,4,0,0"/>
-
-                    <TextBlock Grid.Row="2" Grid.Column="2" Text="Currency:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="2" Grid.Column="3" Text="{Binding Currency}" Margin="10,4,0,0"/>
-
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Status:" VerticalAlignment="Center"/>
-                    <ComboBox Grid.Row="3" Grid.Column="1"
-                              ItemsSource="{Binding StatusOptions}"
-                              SelectedItem="{Binding Status}"
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Status:" VerticalAlignment="Center"/>
+                    <ComboBox Grid.Row="2" Grid.Column="1"
+                              ItemsSource="{Binding StatusTextOptions}"
+                              SelectedItem="{Binding SelectedStatusText}"
                               Margin="10,4,0,0"/>
 
-                    <TextBlock Grid.Row="3" Grid.Column="2" Text="Status Text:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="3" Grid.Column="3" Text="{Binding StatusText}" Margin="10,4,0,0"/>
+                    <TextBlock Grid.Row="2" Grid.Column="3" Text="Currency:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="2" Grid.Column="4" Text="{Binding Currency}" Margin="10,4,0,0"/>
 
-                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Opening Margin:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding OpeningMargin}" Margin="10,4,0,0"/>
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Source:" VerticalAlignment="Center"/>
+                    <ComboBox Grid.Row="3" Grid.Column="1"
+                              Grid.ColumnSpan="4"
+                              ItemsSource="{Binding SourceOptions}"
+                              SelectedItem="{Binding SelectedSource}"
+                              DisplayMemberBinding="{Binding DisplayName}"
+                              Margin="10,4,0,0"/>
 
-                    <TextBlock Grid.Row="4" Grid.Column="2" Text="Opening Value:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="4" Grid.Column="3" Text="{Binding OpeningValue}" Margin="10,4,0,0"/>
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Opening Value:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding OpeningValue}" Margin="10,4,0,0" IsReadOnly="True"/>
+
+                    <TextBlock Grid.Row="4" Grid.Column="3" Text="ETC-P Hours:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="4" Grid.Column="4" Text="{Binding EtcpHours}" Margin="10,4,0,0"/>
 
                     <TextBlock Grid.Row="5" Grid.Column="0" Text="Opening Expenses:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding OpeningExpenses}" Margin="10,4,0,0"/>
+                    <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding OpeningExpenses}" Margin="10,4,0,0" IsReadOnly="True"/>
 
-                    <TextBlock Grid.Row="5" Grid.Column="2" Text="Total Planned Hours:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="5" Grid.Column="3" Text="{Binding TotalPlannedHours}" Margin="10,4,0,0"/>
+                    <TextBlock Grid.Row="5" Grid.Column="3" Text="Value ETC-P:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="5" Grid.Column="4" Text="{Binding ValueEtcp}" Margin="10,4,0,0"/>
 
-                    <TextBlock Grid.Row="6" Grid.Column="0" Text="Initial Hours Budget:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding InitialHoursBudget}" Margin="10,4,0,0"/>
+                    <TextBlock Grid.Row="6" Grid.Column="0" Text="Planned Hours:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding InitialHoursBudget}" Margin="10,4,0,0" IsReadOnly="True"/>
 
-                    <TextBlock Grid.Row="6" Grid.Column="2" Text="ETC-P Hours:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="6" Grid.Column="3" Text="{Binding EtcpHours}" Margin="10,4,0,0"/>
+                    <TextBlock Grid.Row="6" Grid.Column="3" Text="Expenses ETC-P:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="6" Grid.Column="4" Text="{Binding ExpensesEtcp}" Margin="10,4,0,0"/>
 
-                    <TextBlock Grid.Row="7" Grid.Column="0" Text="Value ETC-P:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="7" Grid.Column="1" Text="{Binding ValueEtcp}" Margin="10,4,0,0"/>
+                    <TextBlock Grid.Row="7" Grid.Column="0" Text="Margin % Budget:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="7" Grid.Column="1" Text="{Binding MarginPctBudget}" Margin="10,4,0,0" IsReadOnly="True"/>
 
-                    <TextBlock Grid.Row="7" Grid.Column="2" Text="Expenses ETC-P:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="7" Grid.Column="3" Text="{Binding ExpensesEtcp}" Margin="10,4,0,0"/>
+                    <TextBlock Grid.Row="7" Grid.Column="3" Text="Margin % ETC-P:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="7" Grid.Column="4" Text="{Binding MarginPctEtcp}" Margin="10,4,0,0"/>
 
-                    <TextBlock Grid.Row="8" Grid.Column="0" Text="Margin % Budget:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="8" Grid.Column="1" Text="{Binding MarginPctBudget}" Margin="10,4,0,0"/>
+                    <TextBlock Grid.Row="8" Grid.Column="0" Text="ETC-P Age (Days):" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="8" Grid.Column="1"
+                             Text="{Binding EtcpAgeDays, Mode=OneWay}"
+                             Margin="10,4,0,0"
+                             IsReadOnly="True"
+                             IsHitTestVisible="False"
+                             IsTabStop="False"/>
 
-                    <TextBlock Grid.Row="8" Grid.Column="2" Text="Margin % ETC-P:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="8" Grid.Column="3" Text="{Binding MarginPctEtcp}" Margin="10,4,0,0"/>
+                    <TextBlock Grid.Row="8" Grid.Column="3" Text="Last Closing Period:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="8" Grid.Column="4"
+                             Text="{Binding LastClosingPeriodId}"
+                             Margin="10,4,0,0"
+                             IsReadOnly="True"
+                             IsHitTestVisible="False"
+                             IsTabStop="False"/>
 
-                    <TextBlock Grid.Row="9" Grid.Column="0" Text="ETC-P Age (Days):" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="9" Grid.Column="1" Text="{Binding EtcpAgeDays}" Margin="10,4,0,0"/>
+                    <TextBlock Grid.Row="9" Grid.Column="0" Text="Last ETC Date:" VerticalAlignment="Center"/>
+                    <DatePicker Grid.Row="9" Grid.Column="1"
+                                SelectedDate="{Binding LastEtcDateOffset}"
+                                Margin="10,4,0,0"
+                                IsEnabled="False"/>
 
-                    <TextBlock Grid.Row="9" Grid.Column="2" Text="Last Closing Period:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="9" Grid.Column="3" Text="{Binding LastClosingPeriodId}" Margin="10,4,0,0"/>
-
-                    <TextBlock Grid.Row="10" Grid.Column="0" Text="Latest ETC Date:" VerticalAlignment="Center"/>
-                    <DatePicker Grid.Row="10" Grid.Column="1" SelectedDate="{Binding LatestEtcDateOffset}" Margin="10,4,0,0"/>
-
-                    <TextBlock Grid.Row="10" Grid.Column="2" Text="Next ETC Date:" VerticalAlignment="Center"/>
-                    <DatePicker Grid.Row="10" Grid.Column="3" SelectedDate="{Binding NextEtcDateOffset}" Margin="10,4,0,0"/>
+                    <TextBlock Grid.Row="9" Grid.Column="3" Text="Proposed Next ETC Date:" VerticalAlignment="Center"/>
+                    <DatePicker Grid.Row="9" Grid.Column="4"
+                                SelectedDate="{Binding ProposedNextEtcDateOffset}"
+                                Margin="10,4,0,0"
+                                IsEnabled="False"/>
                 </Grid>
 
                 <TextBlock Text="PAPD Assignments" FontSize="16" FontWeight="Bold" Margin="0,20,0,5"/>

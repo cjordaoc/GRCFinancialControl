@@ -21,11 +21,11 @@
                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto"/>
                 <DataGridTextColumn Header="Engagement ID" Binding="{Binding EngagementId}" Width="*"/>
                 <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="2*"/>
-                <DataGridTextColumn Header="Customer Key" Binding="{Binding CustomerKey}" Width="*"/>
-                <DataGridTextColumn Header="Opening Margin" Binding="{Binding OpeningMargin, StringFormat='{}{0:N2}'}" Width="*"/>
+                <DataGridTextColumn Header="Customer Name" Binding="{Binding CustomerName}" Width="*"/>
                 <DataGridTextColumn Header="Opening Value" Binding="{Binding OpeningValue, StringFormat='{}{0:N2}'}" Width="*"/>
-                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="Auto"/>
-                <DataGridTextColumn Header="Total Planned Hours" Binding="{Binding TotalPlannedHours, StringFormat='{}{0:N2}'}" Width="*"/>
+                <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="Auto"/>
+                <DataGridTextColumn Header="ETC-P Hours" Binding="{Binding EtcpHours, StringFormat='{}{0:N2}'}" Width="*"/>
+                <DataGridTextColumn Header="Planned Hours" Binding="{Binding InitialHoursBudget, StringFormat='{}{0:N2}'}" Width="*"/>
             </DataGrid.Columns>
         </DataGrid>
 

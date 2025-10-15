@@ -1,0 +1,48 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             xmlns:models="using:GRCFinancialControl.Core.Models"
+             xmlns:conv="using:GRCFinancialControl.Avalonia.Converters"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="GRCFinancialControl.Avalonia.Views.HoursAllocationsView"
+             x:Name="HoursAllocationsViewRoot"
+             x:DataType="vm:HoursAllocationsViewModel">
+    <UserControl.Resources>
+        <conv:BooleanToBrushConverter x:Key="AllocationFillBrush" TrueBrush="#FFF1C232" FalseBrush="#228B22"/>
+        <conv:BooleanToBrushConverter x:Key="AllocationStrokeBrush" TrueBrush="#FFB8860B" FalseBrush="#145214"/>
+    </UserControl.Resources>
+    <Grid RowDefinitions="Auto,*">
+        <TextBlock Text="{Binding Header}" FontSize="20" FontWeight="Bold" Margin="10"/>
+        <DataGrid Grid.Row="1" ItemsSource="{Binding Engagements}" AutoGenerateColumns="False" IsReadOnly="True" CanUserSortColumns="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Engagement ID" Binding="{Binding EngagementId}" Width="*"/>
+                <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="2*"/>
+                <DataGridTextColumn Header="Hours to Allocate" Binding="{Binding HoursToAllocate, StringFormat='{}{0:N2}'}" Width="*"/>
+                <DataGridTextColumn Header="Current Hours Allocation" Binding="{Binding CurrentHoursAllocation, StringFormat='{}{0:N2}'}" Width="*"/>
+                <DataGridTemplateColumn Header="Review" Width="Auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="models:Engagement">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
+                                <Ellipse Width="12" Height="12" StrokeThickness="1" ToolTip.Tip="{Binding AllocationVariance, StringFormat='Variance {0:+0.##;-0.##;0} h'}"
+                                         Fill="{Binding RequiresAllocationReview, Converter={StaticResource AllocationFillBrush}}"
+                                         Stroke="{Binding RequiresAllocationReview, Converter={StaticResource AllocationStrokeBrush}}"/>
+                                <TextBlock Text="{Binding AllocationVariance, StringFormat='{}{0:+0.##;-0.##;0} h'}" Foreground="#FFB8860B" IsVisible="{Binding RequiresAllocationReview}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Actions">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="models:Engagement">
+                            <Button Content="Edit"
+                                    Command="{Binding DataContext.EditAllocationCommand, ElementName=HoursAllocationsViewRoot}"
+                                    CommandParameter="{Binding}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

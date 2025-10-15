@@ -21,14 +21,27 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly IClosingPeriodService _closingPeriodService;
         private readonly IMessenger _messenger;
 
+        private static readonly string[] DefaultStatusTextChoices =
+        {
+            "Active",
+            "Inactive",
+            "Closing",
+            "Closed"
+        };
+
+        public sealed record EngagementSourceOption(EngagementSource Value, string DisplayName);
+
+        private static readonly IReadOnlyList<EngagementSourceOption> DefaultSourceOptions = new[]
+        {
+            new EngagementSourceOption(EngagementSource.GrcProject, "GRC Project"),
+            new EngagementSourceOption(EngagementSource.S4Project, "S/4 Project")
+        };
+
         [ObservableProperty]
         private string _engagementId = string.Empty;
 
         [ObservableProperty]
         private string _description = string.Empty;
-
-        [ObservableProperty]
-        private string _customerKey = string.Empty;
 
         [ObservableProperty]
         private Customer? _selectedCustomer;
@@ -40,19 +53,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private string _currency = string.Empty;
 
         [ObservableProperty]
-        private decimal _openingMargin;
+        private ObservableCollection<EngagementSourceOption> _sourceOptions = new(DefaultSourceOptions);
+
+        [ObservableProperty]
+        private EngagementSourceOption? _selectedSource;
 
         [ObservableProperty]
         private decimal _openingValue;
 
         [ObservableProperty]
         private decimal _openingExpenses;
-
-        [ObservableProperty]
-        private EngagementStatus _status;
-
-        [ObservableProperty]
-        private double _totalPlannedHours;
 
         [ObservableProperty]
         private decimal _initialHoursBudget;
@@ -72,34 +82,34 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private decimal? _marginPctBudget;
 
-        [ObservableProperty]
-        private int? _etcpAgeDays;
+        public int? EtcpAgeDays => CalculateEtcpAgeDays(LastEtcDate);
 
         [ObservableProperty]
-        private DateTime? _latestEtcDate;
+        private DateTime? _lastEtcDate;
 
         [ObservableProperty]
-        private DateTime? _nextEtcDate;
+        private DateTime? _proposedNextEtcDate;
 
-        public DateTimeOffset? LatestEtcDateOffset
+        public DateTimeOffset? LastEtcDateOffset
         {
-            get => DateTimeOffsetHelper.FromDate(LatestEtcDate);
-            set => LatestEtcDate = DateTimeOffsetHelper.ToDate(value);
+            get => DateTimeOffsetHelper.FromDate(LastEtcDate);
+            set => LastEtcDate = DateTimeOffsetHelper.ToDate(value);
         }
 
-        public DateTimeOffset? NextEtcDateOffset
+        public DateTimeOffset? ProposedNextEtcDateOffset
         {
-            get => DateTimeOffsetHelper.FromDate(NextEtcDate);
-            set => NextEtcDate = DateTimeOffsetHelper.ToDate(value);
+            get => DateTimeOffsetHelper.FromDate(ProposedNextEtcDate);
+            set => ProposedNextEtcDate = DateTimeOffsetHelper.ToDate(value);
         }
 
         [ObservableProperty]
-        private string? _statusText;
+        private ObservableCollection<string> _statusTextOptions = new(DefaultStatusTextChoices);
+
+        [ObservableProperty]
+        private string? _selectedStatusText;
 
         [ObservableProperty]
         private string? _lastClosingPeriodId;
-
-        public IEnumerable<EngagementStatus> StatusOptions => Enum.GetValues<EngagementStatus>();
 
         [ObservableProperty]
         private ObservableCollection<EngagementPapd> _papdAssignments = new();
@@ -130,24 +140,23 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             EngagementId = engagement.EngagementId;
             Description = engagement.Description;
-            CustomerKey = engagement.CustomerKey;
             Currency = engagement.Currency;
-            OpeningMargin = engagement.OpeningMargin;
             OpeningValue = engagement.OpeningValue;
             OpeningExpenses = engagement.OpeningExpenses;
-            Status = engagement.Status;
-            TotalPlannedHours = engagement.TotalPlannedHours;
             InitialHoursBudget = engagement.InitialHoursBudget;
             EtcpHours = engagement.EtcpHours;
             ValueEtcp = engagement.ValueEtcp;
             ExpensesEtcp = engagement.ExpensesEtcp;
             MarginPctEtcp = engagement.MarginPctEtcp;
             MarginPctBudget = engagement.MarginPctBudget;
-            EtcpAgeDays = engagement.EtcpAgeDays;
-            LatestEtcDate = engagement.LatestEtcDate;
-            NextEtcDate = engagement.NextEtcDate;
-            StatusText = engagement.StatusText;
+            LastEtcDate = engagement.LastEtcDate;
+            if (engagement.ProposedNextEtcDate.HasValue)
+            {
+                ProposedNextEtcDate = engagement.ProposedNextEtcDate;
+            }
             LastClosingPeriodId = engagement.LastClosingPeriodId;
+            InitializeStatusSelection(engagement.StatusText, engagement.Status);
+            InitializeSourceSelection(engagement.Source);
             PapdAssignments = new ObservableCollection<EngagementPapd>(
                 engagement.EngagementPapds
                     .OrderBy(p => p.EffectiveDate)
@@ -161,8 +170,21 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private async Task LoadCustomersAsync()
         {
             Customers = new ObservableCollection<Customer>(await _customerService.GetAllAsync());
-            SelectedCustomer = Customers.FirstOrDefault(c => Engagement.CustomerId.HasValue && c.Id == Engagement.CustomerId)
-                               ?? Customers.FirstOrDefault(c => c.Name == Engagement.CustomerKey);
+            Customer? selected = null;
+
+            if (Engagement.CustomerId.HasValue)
+            {
+                selected = Customers.FirstOrDefault(c => c.Id == Engagement.CustomerId);
+            }
+
+            if (selected is null && !string.IsNullOrWhiteSpace(Engagement.Customer?.Name))
+            {
+                var engagementCustomerName = Engagement.Customer!.Name;
+                selected = Customers.FirstOrDefault(c =>
+                    string.Equals(c.Name, engagementCustomerName, StringComparison.OrdinalIgnoreCase));
+            }
+
+            SelectedCustomer = selected;
         }
 
         private async Task LoadClosingPeriodsAsync()
@@ -183,6 +205,53 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             SortFinancialEvolutionEntries();
         }
 
+        private void InitializeStatusSelection(string? statusText, EngagementStatus status)
+        {
+            StatusTextOptions = new ObservableCollection<string>(DefaultStatusTextChoices);
+
+            var initialStatusText = DetermineInitialStatusText(statusText, status);
+
+            if (!string.IsNullOrWhiteSpace(initialStatusText) &&
+                StatusTextOptions.All(option =>
+                    !string.Equals(option, initialStatusText, StringComparison.OrdinalIgnoreCase)))
+            {
+                StatusTextOptions.Add(initialStatusText);
+            }
+
+            SelectedStatusText = initialStatusText;
+        }
+
+        private static string DetermineInitialStatusText(string? statusText, EngagementStatus status)
+        {
+            if (!string.IsNullOrWhiteSpace(statusText))
+            {
+                return statusText.Trim();
+            }
+
+            return status switch
+            {
+                EngagementStatus.Inactive => "Inactive",
+                EngagementStatus.Closed => "Closed",
+                _ => "Active"
+            };
+        }
+
+        private static EngagementStatus MapStatusFromText(string? statusText)
+        {
+            if (string.IsNullOrWhiteSpace(statusText))
+            {
+                return EngagementStatus.Active;
+            }
+
+            return statusText.Trim().ToLowerInvariant() switch
+            {
+                "closing" => EngagementStatus.Closed,
+                "closed" => EngagementStatus.Closed,
+                "inactive" => EngagementStatus.Inactive,
+                _ => EngagementStatus.Active
+            };
+        }
+
         private void InitializeFinancialEvolutionEntries(IEnumerable<FinancialEvolution> evolutions)
         {
             var entries = evolutions?
@@ -193,6 +262,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             RefreshFinancialEvolutionSelections();
             SortFinancialEvolutionEntries();
             SelectedFinancialEvolutionEntry = FinancialEvolutionEntries.FirstOrDefault();
+            UpdateLastClosingPeriodFromEntries();
         }
 
         private EngagementFinancialEvolutionEntryViewModel CreateEntry(FinancialEvolution evolution)
@@ -256,25 +326,27 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             Engagement.EngagementId = EngagementId.Trim();
             Engagement.Description = Description;
-            Engagement.CustomerKey = CustomerKey?.Trim() ?? string.Empty;
             Engagement.CustomerId = SelectedCustomer?.Id;
+            Engagement.Customer = SelectedCustomer;
             Engagement.Currency = Currency?.Trim() ?? string.Empty;
-            Engagement.OpeningMargin = OpeningMargin;
             Engagement.OpeningValue = OpeningValue;
             Engagement.OpeningExpenses = OpeningExpenses;
-            Engagement.Status = Status;
-            Engagement.StatusText = string.IsNullOrWhiteSpace(StatusText) ? null : StatusText.Trim();
-            Engagement.TotalPlannedHours = TotalPlannedHours;
+            var normalizedStatusText = string.IsNullOrWhiteSpace(SelectedStatusText)
+                ? null
+                : SelectedStatusText.Trim();
+
+            Engagement.StatusText = normalizedStatusText;
+            Engagement.Status = MapStatusFromText(normalizedStatusText);
             Engagement.InitialHoursBudget = InitialHoursBudget;
             Engagement.EtcpHours = EtcpHours;
             Engagement.ValueEtcp = ValueEtcp;
             Engagement.ExpensesEtcp = ExpensesEtcp;
             Engagement.MarginPctEtcp = MarginPctEtcp;
             Engagement.MarginPctBudget = MarginPctBudget;
-            Engagement.EtcpAgeDays = EtcpAgeDays;
-            Engagement.LatestEtcDate = LatestEtcDate;
-            Engagement.NextEtcDate = NextEtcDate;
+            Engagement.LastEtcDate = LastEtcDate;
+            Engagement.ProposedNextEtcDate = ProposedNextEtcDate;
             Engagement.LastClosingPeriodId = string.IsNullOrWhiteSpace(LastClosingPeriodId) ? null : LastClosingPeriodId.Trim();
+            Engagement.Source = (SelectedSource?.Value) ?? EngagementSource.GrcProject;
 
             var papdAssignments = PapdAssignments
                 .Where(a => a.PapdId != 0 || a.Papd?.Id > 0)
@@ -318,30 +390,28 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _messenger.Send(new CloseDialogMessage(true));
         }
 
+        private void InitializeSourceSelection(EngagementSource source)
+        {
+            SourceOptions = new ObservableCollection<EngagementSourceOption>(DefaultSourceOptions);
+            SelectedSource = SourceOptions.FirstOrDefault(option => option.Value == source)
+                ?? SourceOptions.FirstOrDefault();
+        }
+
         [RelayCommand]
         private void Close()
         {
             _messenger.Send(new CloseDialogMessage(false));
         }
 
-        partial void OnLatestEtcDateChanged(DateTime? value)
+        partial void OnLastEtcDateChanged(DateTime? value)
         {
-            OnPropertyChanged(nameof(LatestEtcDateOffset));
+            OnPropertyChanged(nameof(LastEtcDateOffset));
+            UpdateSchedulingFields();
         }
 
-        partial void OnNextEtcDateChanged(DateTime? value)
+        partial void OnProposedNextEtcDateChanged(DateTime? value)
         {
-            OnPropertyChanged(nameof(NextEtcDateOffset));
-        }
-
-        partial void OnSelectedCustomerChanged(Customer? value)
-        {
-            if (value is not null)
-            {
-                CustomerKey = string.IsNullOrWhiteSpace(value.CustomerID)
-                    ? value.Name
-                    : value.CustomerID;
-            }
+            OnPropertyChanged(nameof(ProposedNextEtcDateOffset));
         }
 
         partial void OnSelectedFinancialEvolutionEntryChanged(EngagementFinancialEvolutionEntryViewModel? value)
@@ -349,8 +419,41 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             RemoveFinancialEvolutionEntryCommand.NotifyCanExecuteChanged();
         }
 
+        private void UpdateSchedulingFields()
+        {
+            var proposed = CalculateProposedNextEtcDate(LastEtcDate);
+            ProposedNextEtcDate = proposed;
+            OnPropertyChanged(nameof(EtcpAgeDays));
+        }
+
+        private static int? CalculateEtcpAgeDays(DateTime? lastEtcDate)
+        {
+            if (!lastEtcDate.HasValue)
+            {
+                return null;
+            }
+
+            var today = DateTime.UtcNow.Date;
+            var lastDate = lastEtcDate.Value.Date;
+            var age = (today - lastDate).Days;
+            return age < 0 ? 0 : age;
+        }
+
+        private static DateTime? CalculateProposedNextEtcDate(DateTime? lastEtcDate)
+        {
+            if (!lastEtcDate.HasValue)
+            {
+                return null;
+            }
+
+            var proposal = lastEtcDate.Value.Date.AddMonths(1);
+            return DateTime.SpecifyKind(proposal, DateTimeKind.Unspecified);
+        }
+
         private void SortFinancialEvolutionEntries()
         {
+            UpdateLastClosingPeriodFromEntries();
+
             if (FinancialEvolutionEntries.Count <= 1)
             {
                 return;
@@ -379,6 +482,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 SelectedFinancialEvolutionEntry = FinancialEvolutionEntries.FirstOrDefault();
             }
+
+            UpdateLastClosingPeriodFromEntries();
         }
 
         private int GetClosingPeriodIndex(string? closingPeriodId)
@@ -397,6 +502,31 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
 
             return int.MaxValue;
+        }
+
+        private void UpdateLastClosingPeriodFromEntries()
+        {
+            if (FinancialEvolutionEntries.Count == 0)
+            {
+                LastClosingPeriodId = null;
+                return;
+            }
+
+            var latest = FinancialEvolutionEntries
+                .Where(entry => !string.IsNullOrWhiteSpace(entry.ClosingPeriodId))
+                .Where(entry => !entry.IsInitialClosingPeriod)
+                .Select(entry =>
+                {
+                    var normalizedId = entry.ClosingPeriodId.Trim();
+                    var index = GetClosingPeriodIndex(normalizedId);
+                    var sortIndex = index == int.MaxValue ? int.MaxValue : index;
+                    return (entry, normalizedId, sortIndex);
+                })
+                .OrderByDescending(tuple => tuple.sortIndex)
+                .ThenByDescending(tuple => tuple.normalizedId, StringComparer.OrdinalIgnoreCase)
+                .FirstOrDefault();
+
+            LastClosingPeriodId = latest.normalizedId;
         }
     }
 }

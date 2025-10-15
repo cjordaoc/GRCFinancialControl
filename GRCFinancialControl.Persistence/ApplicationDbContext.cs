@@ -1,3 +1,4 @@
+using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,7 +8,9 @@ namespace GRCFinancialControl.Persistence
     {
         public DbSet<Engagement> Engagements { get; set; }
         public DbSet<Papd> Papds { get; set; }
+        public DbSet<Manager> Managers { get; set; }
         public DbSet<EngagementPapd> EngagementPapds { get; set; }
+        public DbSet<EngagementManagerAssignment> EngagementManagerAssignments { get; set; }
         public DbSet<PlannedAllocation> PlannedAllocations { get; set; }
         public DbSet<ActualsEntry> ActualsEntries { get; set; }
         public DbSet<ExceptionEntry> Exceptions { get; set; }
@@ -16,6 +19,7 @@ namespace GRCFinancialControl.Persistence
         public DbSet<EngagementRankBudget> EngagementRankBudgets { get; set; }
         public DbSet<FinancialEvolution> FinancialEvolutions { get; set; }
         public DbSet<EngagementFiscalYearAllocation> EngagementFiscalYearAllocations { get; set; }
+        public DbSet<EngagementFiscalYearRevenueAllocation> EngagementFiscalYearRevenueAllocations { get; set; }
         public DbSet<FiscalYear> FiscalYears { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
@@ -52,10 +56,22 @@ namespace GRCFinancialControl.Persistence
                 .HasForeignKey(ep => ep.EngagementId);
 
             modelBuilder.Entity<Engagement>()
+                .HasMany(e => e.ManagerAssignments)
+                .WithOne(ma => ma.Engagement)
+                .HasForeignKey(ma => ma.EngagementId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Engagement>()
                 .HasOne(e => e.Customer)
                 .WithMany(c => c.Engagements)
                 .HasForeignKey(e => e.CustomerId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Engagement>()
+                .Property(e => e.Source)
+                .HasConversion<string>()
+                .HasMaxLength(20)
+                .HasDefaultValue(EngagementSource.GrcProject);
 
             modelBuilder.Entity<Engagement>()
                 .Property(e => e.Currency)
@@ -117,6 +133,39 @@ namespace GRCFinancialControl.Persistence
                 .Property(p => p.Level)
                 .HasConversion<string>()
                 .HasMaxLength(100);
+
+            modelBuilder.Entity<Manager>()
+                .Property(m => m.Name)
+                .HasMaxLength(200);
+
+            modelBuilder.Entity<Manager>()
+                .Property(m => m.Email)
+                .HasMaxLength(254);
+
+            modelBuilder.Entity<Manager>()
+                .Property(m => m.Position)
+                .HasConversion<string>()
+                .HasMaxLength(50);
+
+            modelBuilder.Entity<Manager>()
+                .HasMany(m => m.EngagementAssignments)
+                .WithOne(a => a.Manager)
+                .HasForeignKey(a => a.ManagerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<EngagementManagerAssignment>()
+                .HasKey(a => a.Id);
+
+            modelBuilder.Entity<EngagementManagerAssignment>()
+                .HasIndex(a => new { a.EngagementId, a.ManagerId, a.BeginDate });
+
+            modelBuilder.Entity<EngagementManagerAssignment>()
+                .Property(a => a.BeginDate)
+                .HasColumnType("date");
+
+            modelBuilder.Entity<EngagementManagerAssignment>()
+                .Property(a => a.EndDate)
+                .HasColumnType("date");
 
             modelBuilder.Entity<PlannedAllocation>()
                 .HasOne(pa => pa.Engagement)
@@ -198,6 +247,23 @@ namespace GRCFinancialControl.Persistence
                 .HasOne(e => e.FiscalYear)
                 .WithMany()
                 .HasForeignKey(e => e.FiscalYearId);
+
+            modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
+                .HasKey(e => e.Id);
+
+            modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
+                .HasOne(e => e.Engagement)
+                .WithMany(e => e.RevenueAllocations)
+                .HasForeignKey(e => e.EngagementId);
+
+            modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
+                .HasOne(e => e.FiscalYear)
+                .WithMany()
+                .HasForeignKey(e => e.FiscalYearId);
+
+            modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
+                .Property(e => e.PlannedValue)
+                .HasPrecision(18, 2);
 
             modelBuilder.Entity<FiscalYear>()
                 .HasKey(e => e.Id);

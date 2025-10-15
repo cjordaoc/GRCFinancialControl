@@ -2,9 +2,9 @@ using Avalonia.Controls;
 
 namespace GRCFinancialControl.Avalonia.Views
 {
-    public partial class AllocationView : UserControl
+    public partial class RevenueAllocationsView : UserControl
     {
-        public AllocationView()
+        public RevenueAllocationsView()
         {
             InitializeComponent();
         }

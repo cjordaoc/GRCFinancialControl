@@ -83,6 +83,8 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<IPlannedAllocationService, PlannedAllocationService>();
             services.AddTransient<IReportService, ReportService>();
             services.AddTransient<IPapdService, PapdService>();
+            services.AddTransient<IManagerService, ManagerService>();
+            services.AddTransient<IManagerAssignmentService, ManagerAssignmentService>();
             services.AddTransient<IExceptionService, ExceptionService>();
             services.AddTransient<ICustomerService, CustomerService>();
             services.AddSingleton<IDatabaseSchemaInitializer, DatabaseSchemaInitializer>();
@@ -105,7 +107,8 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<EngagementsViewModel>();
             services.AddTransient<FiscalYearsViewModel>();
             services.AddTransient<ImportViewModel>();
-            services.AddTransient<AllocationViewModel>();
+            services.AddTransient<HoursAllocationsViewModel>();
+            services.AddTransient<RevenueAllocationsViewModel>();
             services.AddTransient(sp => new ReportsViewModel(
                 sp.GetRequiredService<ReportFilterViewModel>(),
                 sp.GetRequiredService<PapdContributionViewModel>(),
@@ -116,6 +119,9 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<FinancialEvolutionViewModel>();
             services.AddTransient<ReportFilterViewModel>();
             services.AddTransient<PapdViewModel>();
+            services.AddTransient<ManagersViewModel>();
+            services.AddTransient<ManagerAssignmentsViewModel>();
+            services.AddTransient<GrcTeamViewModel>();
             services.AddTransient<SettingsViewModel>();
             services.AddTransient<ClosingPeriodsViewModel>();
             services.AddTransient<ClosingPeriodEditorViewModel>();
