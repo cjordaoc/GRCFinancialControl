@@ -120,7 +120,7 @@ CREATE TABLE `EngagementRankBudgets`
     `EngagementId`  INT             NOT NULL,
     `RankName`      VARCHAR(100)    NOT NULL,
     `Hours`         DECIMAL(18, 2)  NOT NULL DEFAULT 0,
-    `CreatedAtUtc`  DATETIME(6)     NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    `CreatedAtUtc`  DATETIME(6)     NOT NULL DEFAULT CURRENT_TIMESTAMP(),
     `UpdatedAtUtc`  DATETIME(6)     NULL,
     CONSTRAINT `PK_EngagementRankBudgets` PRIMARY KEY (`Id`),
     CONSTRAINT `FK_EngagementRankBudgets_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
@@ -172,7 +172,7 @@ CREATE TABLE `ActualsEntries`
 CREATE TABLE `Exceptions`
 (
     `Id`        INT          NOT NULL AUTO_INCREMENT,
-    `Timestamp` timestamp(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    `Timestamp` timestamp(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(),
     `SourceFile` VARCHAR(260) NOT NULL,
     `RowData`    TEXT        NOT NULL,
     `Reason`     VARCHAR(500) NOT NULL,
@@ -228,27 +228,12 @@ INSERT INTO `ClosingPeriods` (`Name`, `PeriodStart`, `PeriodEnd`) VALUES
       ('2025-10', '2025-10-01', '2025-10-31'),
     ('2025-11', '2025-11-01', '2025-11-30'),
     ('2025-12', '2025-12-01', '2025-12-31'),
-    ('2026-01', '2026-01-01', '2026-01-31'),
-    ('2026-02', '2026-02-01', '2026-02-28'),
-    ('2026-03', '2026-03-01', '2026-03-31'),
-    ('2026-04', '2026-04-01', '2026-04-30'),
-    ('2026-05', '2026-05-01', '2026-05-31'),
-    ('2026-06', '2026-06-01', '2026-06-30'),
-    ('2026-07', '2026-07-01', '2026-07-31'),
-    ('2026-08', '2026-08-01', '2026-08-31'),
-    ('2026-09', '2026-09-01', '2026-09-30'),
-    ('2026-10', '2026-10-01', '2026-10-31'),
-    ('2026-11', '2026-11-01', '2026-11-30'),
-    ('2026-12', '2026-12-01', '2026-12-31');
+    ('2026-01', '2026-01-01', '2026-01-31');
 
 INSERT INTO `FiscalYears` (`Name`, `StartDate`, `EndDate`, `AreaSalesTarget`, `AreaRevenueTarget`) VALUES
     ('FY25', '2024-07-01', '2025-06-30', 0, 0),
     ('FY26', '2025-07-01', '2026-06-30', 0, 0),
-    ('FY27', '2026-07-01', '2027-06-30', 0, 0),
-    ('FY28', '2027-07-01', '2028-06-30', 0, 0),
-    ('FY29', '2028-07-01', '2029-06-30', 0, 0),
-    ('FY30', '2029-07-01', '2030-06-30', 0, 0),
-    ('FY31', '2030-07-01', '2031-06-30', 0, 0);
+    ('FY27', '2026-07-01', '2027-06-30', 0, 0);
 
 SET FOREIGN_KEY_CHECKS = 1;
 
