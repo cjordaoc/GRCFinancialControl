@@ -10,7 +10,5 @@
   ],
   "filters": [],
   "resourcePackages": [],
-  "config": {
-    "layoutOptimization": "balanced"
-  }
+  "config": "{\"layoutOptimization\":\"balanced\"}"
 }
