@@ -12,8 +12,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public FiscalYearsViewModel FiscalYears { get; }
         public GrcTeamViewModel GrcTeam { get; }
         public ImportViewModel Import { get; }
-        public HoursAllocationsViewModel HoursAllocations { get; }
-        public RevenueAllocationsViewModel RevenueAllocations { get; }
+        public AllocationsViewModel Allocations { get; }
         public ReportsViewModel Reports { get; }
         public SettingsViewModel Settings { get; }
         public ClosingPeriodsViewModel ClosingPeriods { get; }
@@ -34,8 +33,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                                  FiscalYearsViewModel fiscalYearsViewModel,
                                  GrcTeamViewModel grcTeamViewModel,
                                  ImportViewModel importViewModel,
-                                 HoursAllocationsViewModel hoursAllocationsViewModel,
-                                 RevenueAllocationsViewModel revenueAllocationsViewModel,
+                                 AllocationsViewModel allocationsViewModel,
                                  ReportsViewModel reportsViewModel,
                                  SettingsViewModel settingsViewModel,
                                  ClosingPeriodsViewModel closingPeriodsViewModel,
@@ -47,8 +45,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             FiscalYears = fiscalYearsViewModel;
             GrcTeam = grcTeamViewModel;
             Import = importViewModel;
-            HoursAllocations = hoursAllocationsViewModel;
-            RevenueAllocations = revenueAllocationsViewModel;
+            Allocations = allocationsViewModel;
             Reports = reportsViewModel;
             Settings = settingsViewModel;
             ClosingPeriods = closingPeriodsViewModel;
@@ -62,11 +59,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 new("Customers", Customers),
                 new("Fiscal Years", FiscalYears),
                 new("GRC Team", GrcTeam),
-                new NavigationItem("Allocations", null, new ObservableCollection<NavigationItem>
-                {
-                    new("Hours", HoursAllocations),
-                    new("Revenue", RevenueAllocations)
-                }),
+                new("Allocations", Allocations),
                 new("Reports", Reports),
                 new("Settings", Settings)
             };
