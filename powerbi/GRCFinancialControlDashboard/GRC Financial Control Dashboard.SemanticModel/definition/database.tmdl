@@ -10,38 +10,45 @@ model Model
             mode: directQuery
             source = ```
                 let
-                    Source = MySQL.Database("{{MYSQL_SERVER}}", "{{MYSQL_DATABASE}}", [ReturnSingleDatabase=true, CreateNavigationProperties=false]),
-                    Query = """
-                        SELECT
-                            fy.Id AS FiscalYearId,
-                            fy.Name AS FiscalYear,
-                            fy.AreaRevenueTarget,
-                            fy.AreaSalesTarget,
-                            COALESCE(actuals.ActualHours, 0) AS ActualHours,
-                            COALESCE(hoursTargets.TargetHours, 0) AS TargetHours,
-                            COALESCE(revenueTargets.PlannedRevenue, 0) AS PlannedRevenue,
-                            COALESCE(hoursTargets.TargetHours, 0) - COALESCE(actuals.ActualHours, 0) AS GapToTargetHours,
-                            fy.AreaRevenueTarget - COALESCE(revenueTargets.PlannedRevenue, 0) AS GapToRevenueTarget
-                        FROM FiscalYears fy
-                        LEFT JOIN (
-                            SELECT fyAgg.Id AS FiscalYearId, SUM(a.Hours) AS ActualHours
-                            FROM ActualsEntries a
-                            JOIN ClosingPeriods cp ON cp.Id = a.ClosingPeriodId
-                            JOIN FiscalYears fyAgg ON cp.PeriodStart BETWEEN fyAgg.StartDate AND fyAgg.EndDate
-                            GROUP BY fyAgg.Id
-                        ) actuals ON actuals.FiscalYearId = fy.Id
-                        LEFT JOIN (
-                            SELECT FiscalYearId, SUM(PlannedHours) AS TargetHours
-                            FROM EngagementFiscalYearAllocations
-                            GROUP BY FiscalYearId
-                        ) hoursTargets ON hoursTargets.FiscalYearId = fy.Id
-                        LEFT JOIN (
-                            SELECT FiscalYearId, SUM(PlannedValue) AS PlannedRevenue
-                            FROM EngagementFiscalYearRevenueAllocations
-                            GROUP BY FiscalYearId
-                        ) revenueTargets ON revenueTargets.FiscalYearId = fy.Id
-                    """,
-                    Result = Value.NativeQuery(Source, Query, [EnableFolding=true])
+                    Query =
+                        "SELECT\n" &
+                        "    fy.Id AS FiscalYearId,\n" &
+                        "    fy.Name AS FiscalYear,\n" &
+                        "    fy.AreaRevenueTarget,\n" &
+                        "    fy.AreaSalesTarget,\n" &
+                        "    COALESCE(actuals.ActualHours, 0) AS ActualHours,\n" &
+                        "    COALESCE(hoursTargets.TargetHours, 0) AS TargetHours,\n" &
+                        "    COALESCE(revenueTargets.PlannedRevenue, 0) AS PlannedRevenue,\n" &
+                        "    COALESCE(hoursTargets.TargetHours, 0) - COALESCE(actuals.ActualHours, 0) AS GapToTargetHours,\n" &
+                        "    fy.AreaRevenueTarget - COALESCE(revenueTargets.PlannedRevenue, 0) AS GapToRevenueTarget\n" &
+                        "FROM FiscalYears fy\n" &
+                        "LEFT JOIN (\n" &
+                        "    SELECT fyAgg.Id AS FiscalYearId, SUM(a.Hours) AS ActualHours\n" &
+                        "    FROM ActualsEntries a\n" &
+                        "    JOIN ClosingPeriods cp ON cp.Id = a.ClosingPeriodId\n" &
+                        "    JOIN FiscalYears fyAgg ON cp.PeriodStart BETWEEN fyAgg.StartDate AND fyAgg.EndDate\n" &
+                        "    GROUP BY fyAgg.Id\n" &
+                        ") actuals ON actuals.FiscalYearId = fy.Id\n" &
+                        "LEFT JOIN (\n" &
+                        "    SELECT FiscalYearId, SUM(PlannedHours) AS TargetHours\n" &
+                        "    FROM EngagementFiscalYearAllocations\n" &
+                        "    GROUP BY FiscalYearId\n" &
+                        ") hoursTargets ON hoursTargets.FiscalYearId = fy.Id\n" &
+                        "LEFT JOIN (\n" &
+                        "    SELECT FiscalYearId, SUM(PlannedValue) AS PlannedRevenue\n" &
+                        "    FROM EngagementFiscalYearRevenueAllocations\n" &
+                        "    GROUP BY FiscalYearId\n" &
+                        ") revenueTargets ON revenueTargets.FiscalYearId = fy.Id",
+                    Result =
+                        MySQL.Database(
+                            "{{MYSQL_SERVER}}",
+                            "{{MYSQL_DATABASE}}",
+                            [
+                                ReturnSingleDatabase = true,
+                                CreateNavigationProperties = false,
+                                Query = Query
+                            ]
+                        )
                 in
                     Result
             ```
