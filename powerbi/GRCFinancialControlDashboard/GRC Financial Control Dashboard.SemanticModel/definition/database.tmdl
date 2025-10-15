@@ -8,7 +8,7 @@ model Model
 
         partition 'MySQL DirectQuery' = m
             mode: directQuery
-            source = ```
+            expression = ```
                 let
                     Source = MySQL.Database("{{MYSQL_SERVER}}", "{{MYSQL_DATABASE}}", [ReturnSingleDatabase=true, CreateNavigationProperties=false]),
                     Query = """
