@@ -1,0 +1,142 @@
+model Model
+    culture: en-US
+    defaultPowerBIDataSourceVersion: powerBI_V3
+    sourceQueryCulture: pt-BR
+    dataAccessOptions
+        legacyRedirects
+        returnErrorValuesAsNull
+
+    expression Partition_36686F87_B3FA_4760_A613_9C6D47A37170 = m
+        kind: m
+        expression = """
+            let
+                Source =
+                    MySQL.Database(
+                        "{{MYSQL_SERVER}}",
+                        "{{MYSQL_DATABASE}}",
+                        [
+                            ReturnSingleDatabase = true,
+                            CreateNavigationProperties = false
+                        ]
+                    ),
+                Query = """
+                    SELECT
+                        fy.Id AS FiscalYearId,
+                        fy.Name AS FiscalYear,
+                        fy.AreaRevenueTarget,
+                        fy.AreaSalesTarget,
+                        COALESCE(actuals.ActualHours, 0) AS ActualHours,
+                        COALESCE(hoursTargets.TargetHours, 0) AS TargetHours,
+                        COALESCE(revenueTargets.PlannedRevenue, 0) AS PlannedRevenue,
+                        COALESCE(hoursTargets.TargetHours, 0) - COALESCE(actuals.ActualHours, 0) AS GapToTargetHours,
+                        fy.AreaRevenueTarget - COALESCE(revenueTargets.PlannedRevenue, 0) AS GapToRevenueTarget
+                    FROM FiscalYears fy
+                    LEFT JOIN (
+                        SELECT fyAgg.Id AS FiscalYearId, SUM(a.Hours) AS ActualHours
+                        FROM ActualsEntries a
+                        JOIN ClosingPeriods cp ON cp.Id = a.ClosingPeriodId
+                        JOIN FiscalYears fyAgg ON cp.PeriodStart BETWEEN fyAgg.StartDate AND fyAgg.EndDate
+                        GROUP BY fyAgg.Id
+                    ) actuals ON actuals.FiscalYearId = fy.Id
+                    LEFT JOIN (
+                        SELECT FiscalYearId, SUM(PlannedHours) AS TargetHours
+                        FROM EngagementFiscalYearAllocations
+                        GROUP BY FiscalYearId
+                    ) hoursTargets ON hoursTargets.FiscalYearId = fy.Id
+                    LEFT JOIN (
+                        SELECT FiscalYearId, SUM(PlannedValue) AS PlannedRevenue
+                        FROM EngagementFiscalYearRevenueAllocations
+                        GROUP BY FiscalYearId
+                    ) revenueTargets ON revenueTargets.FiscalYearId = fy.Id
+                """,
+                Result = Value.NativeQuery(Source, Query, [EnableFolding = true])
+            in
+                Result
+        """
+
+    table 'Fiscal Performance'
+
+        partition 'MySQL DirectQuery'
+            mode: directQuery
+            source =
+                m
+                    expression: Partition_36686F87_B3FA_4760_A613_9C6D47A37170
+
+        column FiscalYearId
+            dataType: int64
+            sourceColumn: FiscalYearId
+            summarizeBy: none
+
+        column 'Fiscal Year'
+            dataType: string
+            sourceColumn: FiscalYear
+            summarizeBy: none
+
+        column AreaRevenueTarget
+            dataType: double
+            sourceColumn: AreaRevenueTarget
+            formatString: "#,0.00;-#,0.00;0.00"
+
+        column AreaSalesTarget
+            dataType: double
+            sourceColumn: AreaSalesTarget
+            formatString: "#,0.00;-#,0.00;0.00"
+
+        column ActualHours
+            dataType: double
+            sourceColumn: ActualHours
+            formatString: "#,0.00;-#,0.00;0.00"
+
+        column TargetHours
+            dataType: double
+            sourceColumn: TargetHours
+            formatString: "#,0.00;-#,0.00;0.00"
+
+        column PlannedRevenue
+            dataType: double
+            sourceColumn: PlannedRevenue
+            formatString: "#,0.00;-#,0.00;0.00"
+
+        column GapToTargetHours
+            dataType: double
+            sourceColumn: GapToTargetHours
+            formatString: "#,0.00;-#,0.00;0.00"
+
+        column GapToRevenueTarget
+            dataType: double
+            sourceColumn: GapToRevenueTarget
+            formatString: "#,0.00;-#,0.00;0.00"
+
+        measure 'Actual Hours' = SUM('Fiscal Performance'[ActualHours])
+            formatString: "#,0.00;-#,0.00;0.00"
+
+        measure 'Target Hours' = SUM('Fiscal Performance'[TargetHours])
+            formatString: "#,0.00;-#,0.00;0.00"
+
+        measure 'Hours Gap to Target' = SUM('Fiscal Performance'[GapToTargetHours])
+            formatString: "#,0.00;-#,0.00;0.00"
+
+        measure 'Hours Completion %' =
+                VAR target = [Target Hours]
+                RETURN IF(target = 0, BLANK(), DIVIDE([Actual Hours], target))
+            formatString: "0.00%"
+
+        measure 'Planned Revenue' = SUM('Fiscal Performance'[PlannedRevenue])
+            formatString: "#,0.00;-#,0.00;0.00"
+
+        measure 'Area Revenue Target' = SUM('Fiscal Performance'[AreaRevenueTarget])
+            formatString: "#,0.00;-#,0.00;0.00"
+
+        measure 'Revenue Gap to Target' = SUM('Fiscal Performance'[GapToRevenueTarget])
+            formatString: "#,0.00;-#,0.00;0.00"
+
+        measure 'Revenue Completion %' =
+                VAR target = [Area Revenue Target]
+                RETURN IF(target = 0, BLANK(), DIVIDE([Planned Revenue], target))
+            formatString: "0.00%"
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref cultureInfo en-US
