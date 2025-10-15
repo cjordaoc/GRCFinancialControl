@@ -123,14 +123,31 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private EngagementFinancialEvolutionEntryViewModel? _selectedFinancialEvolutionEntry;
 
+        [ObservableProperty]
+        private ObservableCollection<EngagementManagerAssignment> _managerAssignments = new();
+
+        [ObservableProperty]
+        private bool _isReadOnlyMode;
+
         public Engagement Engagement { get; }
+
+        public bool IsExistingRecord => Engagement.Id != 0;
+
+        public bool AllowEditing => !IsReadOnlyMode;
+
+        public bool IsEngagementIdReadOnly => IsReadOnlyMode || IsExistingRecord;
+
+        public bool IsFinancialSnapshotReadOnly => IsReadOnlyMode || IsExistingRecord;
+
+        public bool IsGeneralFieldReadOnly => IsReadOnlyMode;
 
         public EngagementEditorViewModel(
             Engagement engagement,
             IEngagementService engagementService,
             ICustomerService customerService,
             IClosingPeriodService closingPeriodService,
-            IMessenger messenger)
+            IMessenger messenger,
+            bool isReadOnlyMode = false)
         {
             Engagement = engagement;
             _engagementService = engagementService;
@@ -161,10 +178,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 engagement.EngagementPapds
                     .OrderBy(p => p.EffectiveDate)
                     .ThenBy(p => p.Papd?.Name, StringComparer.OrdinalIgnoreCase));
+            ManagerAssignments = new ObservableCollection<EngagementManagerAssignment>(
+                engagement.ManagerAssignments
+                    .OrderBy(a => a.BeginDate)
+                    .ThenBy(a => a.Manager?.Name, StringComparer.OrdinalIgnoreCase));
             InitializeFinancialEvolutionEntries(engagement.FinancialEvolutions);
 
             _ = LoadCustomersAsync();
             _ = LoadClosingPeriodsAsync();
+
+            IsReadOnlyMode = isReadOnlyMode;
         }
 
         private async Task LoadCustomersAsync()
@@ -324,6 +347,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand]
         private async Task Save()
         {
+            if (IsReadOnlyMode)
+            {
+                return;
+            }
+
             Engagement.EngagementId = EngagementId.Trim();
             Engagement.Description = Description;
             Engagement.CustomerId = SelectedCustomer?.Id;
@@ -417,6 +445,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         partial void OnSelectedFinancialEvolutionEntryChanged(EngagementFinancialEvolutionEntryViewModel? value)
         {
             RemoveFinancialEvolutionEntryCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnIsReadOnlyModeChanged(bool value)
+        {
+            OnPropertyChanged(nameof(AllowEditing));
+            OnPropertyChanged(nameof(IsEngagementIdReadOnly));
+            OnPropertyChanged(nameof(IsFinancialSnapshotReadOnly));
+            OnPropertyChanged(nameof(IsGeneralFieldReadOnly));
         }
 
         private void UpdateSchedulingFields()

@@ -15,7 +15,14 @@
             <views:ManagersView DataContext="{Binding Managers}"/>
         </TabItem>
         <TabItem Header="Assignments">
-            <views:ManagerAssignmentsView DataContext="{Binding ManagerAssignments}"/>
+            <TabControl>
+                <TabItem Header="Managers">
+                    <views:ManagerAssignmentsView DataContext="{Binding ManagerAssignments}"/>
+                </TabItem>
+                <TabItem Header="PAPD">
+                    <views:PapdAssignmentsView DataContext="{Binding PapdAssignments}"/>
+                </TabItem>
+            </TabControl>
         </TabItem>
     </TabControl>
 </UserControl>

@@ -30,6 +30,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private decimal _areaRevenueTarget;
 
+        [ObservableProperty]
+        private string? _statusMessage;
+
         partial void OnStartDateChanged(DateTime value)
         {
             OnPropertyChanged(nameof(StartDateOffset));
@@ -76,9 +79,23 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand]
         private async Task Save()
         {
-            FiscalYear.Name = Name;
-            FiscalYear.StartDate = StartDate;
-            FiscalYear.EndDate = EndDate;
+            StatusMessage = null;
+
+            if (string.IsNullOrWhiteSpace(Name))
+            {
+                StatusMessage = "A fiscal year name is required.";
+                return;
+            }
+
+            if (EndDate < StartDate)
+            {
+                StatusMessage = "The end date must be on or after the start date.";
+                return;
+            }
+
+            FiscalYear.Name = Name.Trim();
+            FiscalYear.StartDate = StartDate.Date;
+            FiscalYear.EndDate = EndDate.Date;
             FiscalYear.AreaSalesTarget = AreaSalesTarget;
             FiscalYear.AreaRevenueTarget = AreaRevenueTarget;
 

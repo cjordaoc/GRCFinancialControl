@@ -8,9 +8,18 @@
              x:Class="GRCFinancialControl.Avalonia.Views.FinancialEvolutionView"
              x:DataType="vm:FinancialEvolutionViewModel">
     <Grid RowDefinitions="Auto,*,*" ColumnDefinitions="*,*" Margin="10" RowSpacing="10" ColumnSpacing="10">
-        <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Vertical">
+        <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Vertical" Spacing="6">
             <TextBlock Text="Evolução Financeira" FontSize="24" FontWeight="Bold"/>
             <TextBlock Text="{Binding EngagementDisplayName, StringFormat='Engajamento: {0}', TargetNullValue='Engajamento: (Selecione)'}"/>
+            <ComboBox ItemsSource="{Binding Engagements}"
+                      SelectedItem="{Binding SelectedEngagement}"
+                      Width="320">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Description}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
         </StackPanel>
 
         <Border Grid.Row="1" Grid.Column="0" Classes="card">

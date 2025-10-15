@@ -15,6 +15,7 @@
         <TextBox Text="{Binding Name}" Watermark="Name (e.g., FY2025)"/>
         <DatePicker SelectedDate="{Binding StartDateOffset}" />
         <DatePicker SelectedDate="{Binding EndDateOffset}" />
+        <TextBlock Text="{Binding StatusMessage}" Foreground="Red"/>
         <TextBox Text="{Binding AreaSalesTarget, Converter={StaticResource NumericConverter}}" Watermark="Area Sales Target"/>
         <TextBox Text="{Binding AreaRevenueTarget, Converter={StaticResource NumericConverter}}" Watermark="Area Revenue Target"/>
         <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">

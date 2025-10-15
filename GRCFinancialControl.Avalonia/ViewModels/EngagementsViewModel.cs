@@ -60,6 +60,21 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Messenger.Send(new RefreshDataMessage());
         }
 
+        [RelayCommand(CanExecute = nameof(CanView))]
+        private async Task View(Engagement engagement)
+        {
+            if (engagement == null) return;
+
+            var fullEngagement = await _engagementService.GetByIdAsync(engagement.Id);
+            if (fullEngagement is null)
+            {
+                return;
+            }
+
+            var editorViewModel = new EngagementEditorViewModel(fullEngagement, _engagementService, _customerService, _closingPeriodService, Messenger, isReadOnlyMode: true);
+            await _dialogService.ShowDialogAsync(editorViewModel);
+        }
+
         [RelayCommand(CanExecute = nameof(CanDelete))]
         private async Task Delete(Engagement engagement)
         {
@@ -83,6 +98,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private static bool CanEdit(Engagement engagement) => engagement is not null;
 
+        private static bool CanView(Engagement engagement) => engagement is not null;
+
         private static bool CanDelete(Engagement engagement) => engagement is not null;
 
         private static bool CanDeleteData(Engagement engagement) => engagement is not null;
@@ -90,6 +107,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         partial void OnSelectedEngagementChanged(Engagement? value)
         {
             EditCommand.NotifyCanExecuteChanged();
+            ViewCommand.NotifyCanExecuteChanged();
             DeleteCommand.NotifyCanExecuteChanged();
             DeleteDataCommand.NotifyCanExecuteChanged();
         }

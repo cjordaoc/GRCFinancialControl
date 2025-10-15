@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
+using GRCFinancialControl.Avalonia.Utilities;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -51,6 +52,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
 
             _beginDate = assignment.BeginDate == default ? DateTime.Today : assignment.BeginDate;
             _endDate = assignment.EndDate;
+        }
+
+        public DateTimeOffset? BeginDateOffset
+        {
+            get => DateTimeOffsetHelper.FromDate(BeginDate);
+            set => BeginDate = DateTimeOffsetHelper.ToDate(value);
+        }
+
+        public DateTimeOffset? EndDateOffset
+        {
+            get => DateTimeOffsetHelper.FromDate(EndDate);
+            set => EndDate = DateTimeOffsetHelper.ToDate(value);
         }
 
         public override Task LoadDataAsync()
@@ -121,7 +134,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
 
         partial void OnBeginDateChanged(DateTime? value)
         {
+            OnPropertyChanged(nameof(BeginDateOffset));
             SaveCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnEndDateChanged(DateTime? value)
+        {
+            OnPropertyChanged(nameof(EndDateOffset));
         }
     }
 }
