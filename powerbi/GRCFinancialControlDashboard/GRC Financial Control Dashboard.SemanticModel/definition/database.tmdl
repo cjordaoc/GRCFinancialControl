@@ -4,47 +4,61 @@ database 'GRC Financial Control Dashboard'
 model Model
     culture: en-US
 
+    expression Partition_36686F87_B3FA_4760_A613_9C6D47A37170 = m
+        kind: query
+        expression = """
+            let
+                Source =
+                    MySQL.Database(
+                        "{{MYSQL_SERVER}}",
+                        "{{MYSQL_DATABASE}}",
+                        [
+                            ReturnSingleDatabase = true,
+                            CreateNavigationProperties = false
+                        ]
+                    ),
+                Query = """
+                    SELECT
+                        fy.Id AS FiscalYearId,
+                        fy.Name AS FiscalYear,
+                        fy.AreaRevenueTarget,
+                        fy.AreaSalesTarget,
+                        COALESCE(actuals.ActualHours, 0) AS ActualHours,
+                        COALESCE(hoursTargets.TargetHours, 0) AS TargetHours,
+                        COALESCE(revenueTargets.PlannedRevenue, 0) AS PlannedRevenue,
+                        COALESCE(hoursTargets.TargetHours, 0) - COALESCE(actuals.ActualHours, 0) AS GapToTargetHours,
+                        fy.AreaRevenueTarget - COALESCE(revenueTargets.PlannedRevenue, 0) AS GapToRevenueTarget
+                    FROM FiscalYears fy
+                    LEFT JOIN (
+                        SELECT fyAgg.Id AS FiscalYearId, SUM(a.Hours) AS ActualHours
+                        FROM ActualsEntries a
+                        JOIN ClosingPeriods cp ON cp.Id = a.ClosingPeriodId
+                        JOIN FiscalYears fyAgg ON cp.PeriodStart BETWEEN fyAgg.StartDate AND fyAgg.EndDate
+                        GROUP BY fyAgg.Id
+                    ) actuals ON actuals.FiscalYearId = fy.Id
+                    LEFT JOIN (
+                        SELECT FiscalYearId, SUM(PlannedHours) AS TargetHours
+                        FROM EngagementFiscalYearAllocations
+                        GROUP BY FiscalYearId
+                    ) hoursTargets ON hoursTargets.FiscalYearId = fy.Id
+                    LEFT JOIN (
+                        SELECT FiscalYearId, SUM(PlannedValue) AS PlannedRevenue
+                        FROM EngagementFiscalYearRevenueAllocations
+                        GROUP BY FiscalYearId
+                    ) revenueTargets ON revenueTargets.FiscalYearId = fy.Id
+                """,
+                Result = Value.NativeQuery(Source, Query, [EnableFolding = true])
+            in
+                Result
+        """
+
     table 'Fiscal Performance'
 
-        partition 'MySQL DirectQuery' = m
+        partition 'MySQL DirectQuery'
             mode: directQuery
-            source = ```
-                let
-                    Source = MySQL.Database("{{MYSQL_SERVER}}", "{{MYSQL_DATABASE}}", [ReturnSingleDatabase=true, CreateNavigationProperties=false]),
-                    Query = """
-                        SELECT
-                            fy.Id AS FiscalYearId,
-                            fy.Name AS FiscalYear,
-                            fy.AreaRevenueTarget,
-                            fy.AreaSalesTarget,
-                            COALESCE(actuals.ActualHours, 0) AS ActualHours,
-                            COALESCE(hoursTargets.TargetHours, 0) AS TargetHours,
-                            COALESCE(revenueTargets.PlannedRevenue, 0) AS PlannedRevenue,
-                            COALESCE(hoursTargets.TargetHours, 0) - COALESCE(actuals.ActualHours, 0) AS GapToTargetHours,
-                            fy.AreaRevenueTarget - COALESCE(revenueTargets.PlannedRevenue, 0) AS GapToRevenueTarget
-                        FROM FiscalYears fy
-                        LEFT JOIN (
-                            SELECT fyAgg.Id AS FiscalYearId, SUM(a.Hours) AS ActualHours
-                            FROM ActualsEntries a
-                            JOIN ClosingPeriods cp ON cp.Id = a.ClosingPeriodId
-                            JOIN FiscalYears fyAgg ON cp.PeriodStart BETWEEN fyAgg.StartDate AND fyAgg.EndDate
-                            GROUP BY fyAgg.Id
-                        ) actuals ON actuals.FiscalYearId = fy.Id
-                        LEFT JOIN (
-                            SELECT FiscalYearId, SUM(PlannedHours) AS TargetHours
-                            FROM EngagementFiscalYearAllocations
-                            GROUP BY FiscalYearId
-                        ) hoursTargets ON hoursTargets.FiscalYearId = fy.Id
-                        LEFT JOIN (
-                            SELECT FiscalYearId, SUM(PlannedValue) AS PlannedRevenue
-                            FROM EngagementFiscalYearRevenueAllocations
-                            GROUP BY FiscalYearId
-                        ) revenueTargets ON revenueTargets.FiscalYearId = fy.Id
-                    """,
-                    Result = Value.NativeQuery(Source, Query, [EnableFolding=true])
-                in
-                    Result
-            ```
+            source =
+                m
+                    expression: Partition_36686F87_B3FA_4760_A613_9C6D47A37170
 
         column FiscalYearId
             dataType: int64
