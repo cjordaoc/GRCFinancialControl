@@ -10,9 +10,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         public EngagementsViewModel Engagements { get; }
         public FiscalYearsViewModel FiscalYears { get; }
-        public PapdViewModel Papds { get; }
+        public GrcTeamViewModel GrcTeam { get; }
         public ImportViewModel Import { get; }
-        public AllocationViewModel Allocation { get; }
+        public HoursAllocationsViewModel HoursAllocations { get; }
+        public RevenueAllocationsViewModel RevenueAllocations { get; }
         public ReportsViewModel Reports { get; }
         public SettingsViewModel Settings { get; }
         public ClosingPeriodsViewModel ClosingPeriods { get; }
@@ -31,9 +32,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public MainWindowViewModel(EngagementsViewModel engagementsViewModel,
                                  FiscalYearsViewModel fiscalYearsViewModel,
-                                 PapdViewModel papdViewModel,
+                                 GrcTeamViewModel grcTeamViewModel,
                                  ImportViewModel importViewModel,
-                                 AllocationViewModel allocationViewModel,
+                                 HoursAllocationsViewModel hoursAllocationsViewModel,
+                                 RevenueAllocationsViewModel revenueAllocationsViewModel,
                                  ReportsViewModel reportsViewModel,
                                  SettingsViewModel settingsViewModel,
                                  ClosingPeriodsViewModel closingPeriodsViewModel,
@@ -43,9 +45,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             Engagements = engagementsViewModel;
             FiscalYears = fiscalYearsViewModel;
-            Papds = papdViewModel;
+            GrcTeam = grcTeamViewModel;
             Import = importViewModel;
-            Allocation = allocationViewModel;
+            HoursAllocations = hoursAllocationsViewModel;
+            RevenueAllocations = revenueAllocationsViewModel;
             Reports = reportsViewModel;
             Settings = settingsViewModel;
             ClosingPeriods = closingPeriodsViewModel;
@@ -58,8 +61,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 new("Engagements", Engagements),
                 new("Customers", Customers),
                 new("Fiscal Years", FiscalYears),
-                new("PAPD", Papds),
-                new("Allocation", Allocation),
+                new("GRC Team", GrcTeam),
+                new NavigationItem("Allocations", null, new ObservableCollection<NavigationItem>
+                {
+                    new("Hours", HoursAllocations),
+                    new("Revenue", RevenueAllocations)
+                }),
                 new("Reports", Reports),
                 new("Settings", Settings)
             };
@@ -79,6 +86,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         async partial void OnSelectedNavigationItemChanged(NavigationItem? value)
         {
+            if (value?.ViewModel == null && value?.Children?.Count > 0)
+            {
+                SelectedNavigationItem = value.Children.First();
+                return;
+            }
+
             ActiveView = value?.ViewModel;
             if (ActiveView is not null)
             {
@@ -87,5 +100,26 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         }
     }
 
-    public record NavigationItem(string Title, ViewModelBase ViewModel);
+    public class NavigationItem : ObservableObject
+    {
+        public NavigationItem(string title, ViewModelBase? viewModel)
+        {
+            Title = title;
+            ViewModel = viewModel;
+            Children = new ObservableCollection<NavigationItem>();
+        }
+
+        public NavigationItem(string title, ViewModelBase? viewModel, ObservableCollection<NavigationItem> children)
+        {
+            Title = title;
+            ViewModel = viewModel;
+            Children = children;
+        }
+
+        public string Title { get; }
+        public ViewModelBase? ViewModel { get; }
+        public ObservableCollection<NavigationItem> Children { get; }
+
+        public bool HasChildren => Children.Count > 0;
+    }
 }

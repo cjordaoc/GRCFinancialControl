@@ -115,7 +115,6 @@ namespace GRCFinancialControl.Persistence.Services
                 {
                     EngagementId = engagementKey,
                     Description = engagementDescription,
-                    CustomerKey = normalizedCustomerName,
                     InitialHoursBudget = totalBudgetHours,
                     EtcpHours = 0m
                 };
@@ -126,7 +125,6 @@ namespace GRCFinancialControl.Persistence.Services
             else
             {
                 engagement.Description = engagementDescription;
-                engagement.CustomerKey = normalizedCustomerName;
                 engagement.InitialHoursBudget = totalBudgetHours;
             }
 
@@ -135,7 +133,6 @@ namespace GRCFinancialControl.Persistence.Services
             {
                 engagement.CustomerId = customer.Id;
             }
-            engagement.TotalPlannedHours = (double)totalBudgetHours;
 
             if (engagement.RankBudgets == null)
             {
@@ -421,6 +418,8 @@ namespace GRCFinancialControl.Persistence.Services
             EnsureColumnExists(etcpTable, 18, "Expenses ETC-P");
             EnsureColumnExists(etcpTable, 20, "ETC Age Days");
 
+            var etcpAsOfDate = ExtractEtcAsOfDate(etcpTable);
+
             for (var rowIndex = headerRowIndex + 1; rowIndex < etcpTable.Rows.Count; rowIndex++)
             {
                 var row = etcpTable.Rows[rowIndex];
@@ -458,7 +457,7 @@ namespace GRCFinancialControl.Persistence.Services
                         engagementsUpdated++;
                     }
 
-                    UpdateEngagement(engagement, customer, parsedRow, closingPeriod);
+                    UpdateEngagement(engagement, customer, parsedRow, closingPeriod, etcpAsOfDate);
 
                     UpsertFinancialEvolution(context, engagement, FinancialEvolutionInitialPeriodId, parsedRow.BudgetHours, parsedRow.BudgetValue, parsedRow.MarginBudget, parsedRow.BudgetExpenses);
                     UpsertFinancialEvolution(context, engagement, closingPeriod.Name, parsedRow.EtcpHours, parsedRow.EtcpValue, parsedRow.MarginEtcp, parsedRow.EtcpExpenses);
@@ -533,6 +532,107 @@ namespace GRCFinancialControl.Persistence.Services
 
             var columnName = ColumnIndexToName(columnIndex);
             throw new InvalidDataException($"The ETC-P worksheet is missing expected column '{friendlyName}' at position {columnName}.");
+        }
+
+        private DateTime? ExtractEtcAsOfDate(DataTable etcpTable)
+        {
+            const int rowIndex = 2;
+            const int columnIndex = 0;
+
+            var rawValue = GetCellString(etcpTable, rowIndex, columnIndex);
+            if (string.IsNullOrWhiteSpace(rawValue))
+            {
+                return null;
+            }
+
+            var normalized = NormalizeWhitespace(rawValue);
+            var lower = normalized.ToLowerInvariant();
+            const string marker = "etd as of:";
+            var markerIndex = lower.IndexOf(marker, StringComparison.Ordinal);
+            if (markerIndex < 0)
+            {
+                _logger.LogWarning("Unable to locate 'ETD as of' marker in ETC-P cell A3 value '{Value}'.", rawValue);
+                return null;
+            }
+
+            var remainder = normalized[(markerIndex + marker.Length)..].Trim();
+            var gmtIndex = remainder.IndexOf("GMT", StringComparison.OrdinalIgnoreCase);
+            if (gmtIndex >= 0)
+            {
+                remainder = remainder[..gmtIndex].Trim();
+            }
+
+            remainder = remainder.Trim(':').Trim();
+
+            if (TryParseAsOfDate(remainder, out var parsed))
+            {
+                return DateTime.SpecifyKind(parsed.Date, DateTimeKind.Unspecified);
+            }
+
+            _logger.LogWarning("Unable to parse ETC-P as-of date from cell A3 value '{Value}'.", rawValue);
+            return null;
+        }
+
+        private static bool TryParseAsOfDate(string text, out DateTime parsed)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                parsed = default;
+                return false;
+            }
+
+            var cultures = new[]
+            {
+                CultureInfo.InvariantCulture,
+                CultureInfo.GetCultureInfo("en-US"),
+                PtBrCulture
+            };
+
+            var stylesWithTimezone = DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal;
+            foreach (var culture in cultures)
+            {
+                if (DateTime.TryParse(text, culture, stylesWithTimezone, out parsed))
+                {
+                    return true;
+                }
+
+                if (DateTime.TryParse(text, culture, DateTimeStyles.AllowWhiteSpaces, out parsed))
+                {
+                    return true;
+                }
+            }
+
+            var formats = new[]
+            {
+                "dd/MM/yyyy",
+                "dd/MM/yyyy HH:mm",
+                "dd/MM/yyyy HH:mm:ss",
+                "dd-MMM-yyyy",
+                "dd-MMM-yyyy HH:mm",
+                "dd-MMM-yyyy HH:mm:ss",
+                "MM/dd/yyyy",
+                "MM/dd/yyyy HH:mm",
+                "MM/dd/yyyy HH:mm:ss",
+                "yyyy-MM-dd",
+                "yyyy-MM-dd HH:mm",
+                "yyyy-MM-dd HH:mm:ss"
+            };
+
+            foreach (var culture in cultures)
+            {
+                if (DateTime.TryParseExact(text, formats, culture, stylesWithTimezone, out parsed))
+                {
+                    return true;
+                }
+
+                if (DateTime.TryParseExact(text, formats, culture, DateTimeStyles.AllowWhiteSpaces, out parsed))
+                {
+                    return true;
+                }
+            }
+
+            parsed = default;
+            return false;
         }
 
         private static string ColumnIndexToName(int columnIndex)
@@ -926,7 +1026,12 @@ namespace GRCFinancialControl.Persistence.Services
             return (engagement, created);
         }
 
-        private static void UpdateEngagement(Engagement engagement, Customer customer, EtcpImportRow row, ClosingPeriod closingPeriod)
+        private static void UpdateEngagement(
+            Engagement engagement,
+            Customer customer,
+            EtcpImportRow row,
+            ClosingPeriod closingPeriod,
+            DateTime? etcpAsOfDate)
         {
             if (!string.IsNullOrWhiteSpace(row.EngagementDescription))
             {
@@ -940,8 +1045,6 @@ namespace GRCFinancialControl.Persistence.Services
                 engagement.CustomerId = customer.Id;
             }
 
-            engagement.CustomerKey = customer.Name;
-
             if (!string.IsNullOrWhiteSpace(row.StatusText))
             {
                 engagement.StatusText = row.StatusText;
@@ -952,7 +1055,6 @@ namespace GRCFinancialControl.Persistence.Services
             if (row.MarginBudget.HasValue)
             {
                 engagement.MarginPctBudget = row.MarginBudget;
-                engagement.OpeningMargin = row.MarginBudget.Value;
             }
 
             if (row.BudgetValue.HasValue)
@@ -968,17 +1070,52 @@ namespace GRCFinancialControl.Persistence.Services
             if (row.BudgetHours.HasValue)
             {
                 engagement.InitialHoursBudget = row.BudgetHours.Value;
-                engagement.TotalPlannedHours = (double)row.BudgetHours.Value;
             }
 
             engagement.MarginPctEtcp = row.MarginEtcp;
             engagement.EtcpHours = row.EtcpHours ?? 0m;
             engagement.ValueEtcp = row.EtcpValue ?? 0m;
             engagement.ExpensesEtcp = row.EtcpExpenses ?? 0m;
-            engagement.EtcpAgeDays = row.EtcpAgeDays;
-            engagement.LatestEtcDate = closingPeriod.PeriodEnd;
+            var lastEtcDate = DetermineLastEtcDate(etcpAsOfDate, row.EtcpAgeDays, closingPeriod);
+            engagement.LastEtcDate = lastEtcDate;
+            engagement.ProposedNextEtcDate = CalculateProposedNextEtcDate(lastEtcDate);
             engagement.LastClosingPeriodId = closingPeriod.Name;
-            engagement.NextEtcDate = null;
+        }
+
+        private static DateTime? DetermineLastEtcDate(DateTime? etcpAsOfDate, int? ageDays, ClosingPeriod closingPeriod)
+        {
+            var normalizedAge = ageDays.HasValue ? Math.Max(ageDays.Value, 0) : (int?)null;
+
+            if (etcpAsOfDate.HasValue)
+            {
+                var baseDate = etcpAsOfDate.Value.Date;
+                if (normalizedAge.HasValue)
+                {
+                    return DateTime.SpecifyKind(baseDate.AddDays(-normalizedAge.Value), DateTimeKind.Unspecified);
+                }
+
+                return DateTime.SpecifyKind(baseDate, DateTimeKind.Unspecified);
+            }
+
+            var periodEndDate = closingPeriod.PeriodEnd.Date;
+
+            if (normalizedAge.HasValue)
+            {
+                return DateTime.SpecifyKind(periodEndDate.AddDays(-normalizedAge.Value), DateTimeKind.Unspecified);
+            }
+
+            return DateTime.SpecifyKind(periodEndDate, DateTimeKind.Unspecified);
+        }
+
+        private static DateTime? CalculateProposedNextEtcDate(DateTime? lastEtcDate)
+        {
+            if (!lastEtcDate.HasValue)
+            {
+                return null;
+            }
+
+            var proposal = lastEtcDate.Value.Date.AddMonths(1);
+            return DateTime.SpecifyKind(proposal, DateTimeKind.Unspecified);
         }
 
         private static void UpsertFinancialEvolution(

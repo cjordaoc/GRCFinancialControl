@@ -31,7 +31,30 @@ namespace GRCFinancialControl.Avalonia.Services
                 }
             });
 
-            return files.Count >= 1 ? files[0].TryGetLocalPath() : null;
+            if (files.Count == 0)
+            {
+                return null;
+            }
+
+            var file = files[0];
+            var localPath = file.TryGetLocalPath();
+            if (!string.IsNullOrWhiteSpace(localPath))
+            {
+                return localPath;
+            }
+
+            await using var stream = await file.OpenReadAsync();
+            var extension = Path.GetExtension(file.Name);
+            if (!string.Equals(extension, ".xlsx", StringComparison.OrdinalIgnoreCase))
+            {
+                extension = ".xlsx";
+            }
+
+            var tempPath = Path.Combine(Path.GetTempPath(), $"grcfc_{Guid.NewGuid():N}{extension}");
+            await using var destination = File.Create(tempPath);
+            await stream.CopyToAsync(destination);
+
+            return tempPath;
         }
 
         public async Task<string?> SaveFileAsync(string defaultFileName)

@@ -59,6 +59,8 @@ namespace GRCFinancialControl.Persistence.Services
                 .ThenInclude(e => e.FinancialEvolutions)
                 .Include(c => c.Engagements)
                 .ThenInclude(e => e.Allocations)
+                .Include(c => c.Engagements)
+                .ThenInclude(e => e.RevenueAllocations)
                 .FirstOrDefaultAsync(c => c.Id == customerId);
 
             if (customer == null) return;
@@ -79,6 +81,7 @@ namespace GRCFinancialControl.Persistence.Services
                 context.EngagementRankBudgets.RemoveRange(engagement.RankBudgets);
                 context.FinancialEvolutions.RemoveRange(engagement.FinancialEvolutions);
                 context.EngagementFiscalYearAllocations.RemoveRange(engagement.Allocations);
+                context.EngagementFiscalYearRevenueAllocations.RemoveRange(engagement.RevenueAllocations);
             }
 
             context.Engagements.RemoveRange(customer.Engagements);
