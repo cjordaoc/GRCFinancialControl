@@ -1,19 +1,17 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
-    public partial class PapdEditorViewModel : ViewModelBase
+    public partial class PapdEditorViewModel : DialogEditorViewModel<Papd>
     {
         private readonly IPapdService _papdService;
-        private readonly IMessenger _messenger;
 
         [ObservableProperty]
         private string _name = string.Empty;
@@ -26,17 +24,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public Papd Papd { get; }
 
         public PapdEditorViewModel(Papd papd, IPapdService papdService, IMessenger messenger)
+            : base(messenger ?? throw new ArgumentNullException(nameof(messenger)))
         {
-            Papd = papd;
-            _papdService = papdService;
-            _messenger = messenger;
+            Papd = papd ?? throw new ArgumentNullException(nameof(papd));
+            _papdService = papdService ?? throw new ArgumentNullException(nameof(papdService));
 
             Name = papd.Name;
             Level = papd.Level;
         }
 
-        [RelayCommand]
-        private async Task Save()
+        protected override async Task PersistChangesAsync()
         {
             Papd.Name = Name;
             Papd.Level = Level;
@@ -49,14 +46,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 await _papdService.UpdateAsync(Papd);
             }
-
-            _messenger.Send(new CloseDialogMessage(true));
-        }
-
-        [RelayCommand]
-        private void Close()
-        {
-            _messenger.Send(new CloseDialogMessage(false));
         }
     }
 }

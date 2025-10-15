@@ -1,41 +1,38 @@
+using System;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
-    public partial class CustomerEditorViewModel : ViewModelBase
+    public partial class CustomerEditorViewModel : DialogEditorViewModel<Customer>
     {
         private readonly ICustomerService _customerService;
-        private readonly IMessenger _messenger;
 
         [ObservableProperty]
         private string _name = string.Empty;
 
         [ObservableProperty]
-        private string _customerId = string.Empty;
+        private string _customerCode = string.Empty;
 
         public Customer Customer { get; }
 
         public CustomerEditorViewModel(Customer customer, ICustomerService customerService, IMessenger messenger)
+            : base(messenger ?? throw new ArgumentNullException(nameof(messenger)))
         {
-            Customer = customer;
-            _customerService = customerService;
-            _messenger = messenger;
+            Customer = customer ?? throw new ArgumentNullException(nameof(customer));
+            _customerService = customerService ?? throw new ArgumentNullException(nameof(customerService));
 
             Name = customer.Name;
-            CustomerId = customer.CustomerID;
+            CustomerCode = customer.CustomerCode;
         }
 
-        [RelayCommand]
-        private async Task Save()
+        protected override async Task PersistChangesAsync()
         {
             Customer.Name = Name;
-            Customer.CustomerID = CustomerId;
+            Customer.CustomerCode = CustomerCode;
 
             if (Customer.Id == 0)
             {
@@ -45,14 +42,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 await _customerService.UpdateAsync(Customer);
             }
-
-            _messenger.Send(new CloseDialogMessage(true));
-        }
-
-        [RelayCommand]
-        private void Close()
-        {
-            _messenger.Send(new CloseDialogMessage(false));
         }
     }
 }

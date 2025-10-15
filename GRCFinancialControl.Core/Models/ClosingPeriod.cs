@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace GRCFinancialControl.Core.Models
 {
     /// <summary>
@@ -13,7 +10,7 @@ namespace GRCFinancialControl.Core.Models
         public DateTime PeriodStart { get; set; }
         public DateTime PeriodEnd { get; set; }
 
-        public ICollection<ActualsEntry> ActualsEntries { get; set; } = new List<ActualsEntry>();
-        public ICollection<PlannedAllocation> PlannedAllocations { get; set; } = new List<PlannedAllocation>();
+        public ICollection<ActualsEntry> ActualsEntries { get; set; } = [];
+        public ICollection<PlannedAllocation> PlannedAllocations { get; set; } = [];
     }
 }

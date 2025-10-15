@@ -1,5 +1,3 @@
-using System;
-
 namespace GRCFinancialControl.Core.Models
 {
     /// <summary>
@@ -11,7 +9,7 @@ namespace GRCFinancialControl.Core.Models
         public int EngagementId { get; set; }
         public Engagement Engagement { get; set; } = null!;
         public DateTime Date { get; set; }
-        public double Hours { get; set; }
+        public decimal Hours { get; set; }
         public string ImportBatchId { get; set; } = string.Empty; // To trace back to the source file/upload
         public int? PapdId { get; set; }
         public Papd? Papd { get; set; }

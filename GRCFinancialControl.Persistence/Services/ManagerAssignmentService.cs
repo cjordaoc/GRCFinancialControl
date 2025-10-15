@@ -20,6 +20,8 @@ namespace GRCFinancialControl.Persistence.Services
         {
             await using var context = await _contextFactory.CreateDbContextAsync();
             return await context.EngagementManagerAssignments
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(a => a.Manager)
                 .Include(a => a.Engagement)
                 .OrderBy(a => a.Engagement.EngagementId)
@@ -31,6 +33,8 @@ namespace GRCFinancialControl.Persistence.Services
         {
             await using var context = await _contextFactory.CreateDbContextAsync();
             return await context.EngagementManagerAssignments
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(a => a.Manager)
                 .Include(a => a.Engagement)
                 .Where(a => a.EngagementId == engagementId)
@@ -43,6 +47,8 @@ namespace GRCFinancialControl.Persistence.Services
         {
             await using var context = await _contextFactory.CreateDbContextAsync();
             return await context.EngagementManagerAssignments
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(a => a.Manager)
                 .Include(a => a.Engagement)
                 .FirstOrDefaultAsync(a => a.Id == id);

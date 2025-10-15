@@ -1,0 +1,23 @@
+root = true
+
+[*.cs]
+dotnet_analyzer_diagnostic.severity = suggestion
+dotnet_diagnostic.CS1591.severity = none
+dotnet_diagnostic.IDE0007.severity = none
+dotnet_diagnostic.IDE0008.severity = none
+dotnet_diagnostic.IDE0025.severity = suggestion
+dotnet_diagnostic.IDE0046.severity = suggestion
+
+dotnet_naming_rule.private_fields_should_be_camel_with_underscore.severity = warning
+dotnet_naming_rule.private_fields_should_be_camel_with_underscore.symbols = private_fields
+dotnet_naming_rule.private_fields_should_be_camel_with_underscore.style = camel_case_with_underscore
+
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+
+dotnet_naming_style.camel_case_with_underscore.capitalization = camel_case
+dotnet_naming_style.camel_case_with_underscore.required_prefix = _
+
+csharp_prefer_braces = true:warning
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_for_locals = true:suggestion

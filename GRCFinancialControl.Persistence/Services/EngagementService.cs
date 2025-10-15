@@ -17,12 +17,16 @@ namespace GRCFinancialControl.Persistence.Services
 
         public EngagementService(IDbContextFactory<ApplicationDbContext> contextFactory)
         {
+            ArgumentNullException.ThrowIfNull(contextFactory);
+
             _contextFactory = contextFactory;
         }
 
         public async Task<List<Engagement>> GetAllAsync()
         {
             await using var context = await _contextFactory.CreateDbContextAsync();
+            ArgumentNullException.ThrowIfNull(context);
+
             var closingPeriodRecords = await context.ClosingPeriods
                 .AsNoTracking()
                 .Where(cp => !string.IsNullOrWhiteSpace(cp.Name))
@@ -39,6 +43,8 @@ namespace GRCFinancialControl.Persistence.Services
                     StringComparer.OrdinalIgnoreCase);
 
             var engagements = await context.Engagements
+                .AsNoTrackingWithIdentityResolution()
+                .AsSplitQuery()
                 .Include(e => e.Customer)
                 .Include(e => e.EngagementPapds)
                     .ThenInclude(ep => ep.Papd)
@@ -59,6 +65,8 @@ namespace GRCFinancialControl.Persistence.Services
         public async Task<Engagement?> GetByIdAsync(int id)
         {
             await using var context = await _contextFactory.CreateDbContextAsync();
+            ArgumentNullException.ThrowIfNull(context);
+
             var closingPeriodRecords = await context.ClosingPeriods
                 .AsNoTracking()
                 .Where(cp => !string.IsNullOrWhiteSpace(cp.Name))
@@ -75,6 +83,8 @@ namespace GRCFinancialControl.Persistence.Services
                     StringComparer.OrdinalIgnoreCase);
 
             var engagement = await context.Engagements
+                .AsNoTrackingWithIdentityResolution()
+                .AsSplitQuery()
                 .Include(e => e.Customer)
                 .Include(e => e.EngagementPapds)
                     .ThenInclude(ep => ep.Papd)
@@ -98,7 +108,10 @@ namespace GRCFinancialControl.Persistence.Services
         public async Task<Papd?> GetPapdForDateAsync(int engagementId, DateTime date)
         {
             await using var context = await _contextFactory.CreateDbContextAsync();
+            ArgumentNullException.ThrowIfNull(context);
+
             var assignment = await context.EngagementPapds
+                .AsNoTracking()
                 .Include(ep => ep.Papd)
                 .Where(ep => ep.EngagementId == engagementId && ep.EffectiveDate <= date)
                 .OrderByDescending(ep => ep.EffectiveDate)

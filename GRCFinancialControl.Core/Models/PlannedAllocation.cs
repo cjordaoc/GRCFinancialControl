@@ -10,6 +10,6 @@ namespace GRCFinancialControl.Core.Models
         public Engagement Engagement { get; set; } = null!;
         public int ClosingPeriodId { get; set; }
         public ClosingPeriod ClosingPeriod { get; set; } = null!;
-        public double AllocatedHours { get; set; }
+        public decimal AllocatedHours { get; set; }
     }
 }

@@ -1,66 +1,41 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using GRCFinancialControl.Core.Models;
+using GRCFinancialControl.Persistence.Services.Infrastructure;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace GRCFinancialControl.Persistence.Services
 {
-    public class PapdService : IPapdService
+    public class PapdService : ContextFactoryCrudService<Papd>, IPapdService
     {
-        private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
-
         public PapdService(IDbContextFactory<ApplicationDbContext> contextFactory)
+            : base(contextFactory)
         {
-            _contextFactory = contextFactory;
         }
 
-        public async Task<List<Papd>> GetAllAsync()
-        {
-            await using var context = await _contextFactory.CreateDbContextAsync();
-            return await context.Papds.ToListAsync();
-        }
+        protected override DbSet<Papd> Set(ApplicationDbContext context) => context.Papds;
 
-        public async Task AddAsync(Papd papd)
-        {
-            await using var context = await _contextFactory.CreateDbContextAsync();
-            await context.Papds.AddAsync(papd);
-            await context.SaveChangesAsync();
-        }
+        public Task<List<Papd>> GetAllAsync() => GetAllInternalAsync(static query => query.AsNoTracking().OrderBy(p => p.Name));
 
-        public async Task UpdateAsync(Papd papd)
-        {
-            await using var context = await _contextFactory.CreateDbContextAsync();
-            context.Papds.Update(papd);
-            await context.SaveChangesAsync();
-        }
+        public Task AddAsync(Papd papd) => AddEntityAsync(papd);
 
-        public async Task DeleteAsync(int id)
-        {
-            await using var context = await _contextFactory.CreateDbContextAsync();
-            var papd = await context.Papds.FindAsync(id);
-            if (papd != null)
-            {
-                context.Papds.Remove(papd);
-                await context.SaveChangesAsync();
-            }
-        }
+        public Task UpdateAsync(Papd papd) => UpdateEntityAsync(papd);
+
+        public Task DeleteAsync(int id) => DeleteEntityAsync(id);
 
         public async Task DeleteDataAsync(int papdId)
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await CreateContextAsync();
 
-            var actualsToDelete = await context.ActualsEntries
+            await context.ActualsEntries
                 .Where(a => a.PapdId == papdId)
-                .ToListAsync();
-            context.ActualsEntries.RemoveRange(actualsToDelete);
+                .ExecuteDeleteAsync();
 
-            var engagementPapdsToDelete = await context.EngagementPapds
+            await context.EngagementPapds
                 .Where(ep => ep.PapdId == papdId)
-                .ToListAsync();
-            context.EngagementPapds.RemoveRange(engagementPapdsToDelete);
-
-            await context.SaveChangesAsync();
+                .ExecuteDeleteAsync();
         }
     }
 }

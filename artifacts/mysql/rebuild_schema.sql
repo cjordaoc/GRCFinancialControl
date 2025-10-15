@@ -31,17 +31,17 @@ CREATE TABLE `Customers`
 (
     `Id`          INT           NOT NULL AUTO_INCREMENT,
     `Name`        VARCHAR(200)  NOT NULL,
-    `CustomerID`  VARCHAR(20)   NOT NULL,
+    `CustomerCode` VARCHAR(20)   NOT NULL,
     CONSTRAINT `PK_Customers` PRIMARY KEY (`Id`),
-    CONSTRAINT `UX_Customers_CustomerID` UNIQUE (`CustomerID`)
+    CONSTRAINT `UX_Customers_CustomerCode` UNIQUE (`CustomerCode`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 CREATE TABLE `ClosingPeriods`
 (
     `Id`            INT           NOT NULL AUTO_INCREMENT,
     `Name`          VARCHAR(100)  NOT NULL,
-    `PeriodStart`   DATE          NOT NULL,
-    `PeriodEnd`     DATE          NOT NULL,
+    `PeriodStart`   DATETIME(6)   NOT NULL,
+    `PeriodEnd`     DATETIME(6)   NOT NULL,
     CONSTRAINT `PK_ClosingPeriods` PRIMARY KEY (`Id`),
     CONSTRAINT `UX_ClosingPeriods_Name` UNIQUE (`Name`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
@@ -50,7 +50,7 @@ CREATE TABLE `Papds`
 (
     `Id`    INT          NOT NULL AUTO_INCREMENT,
     `Name`  VARCHAR(200) NOT NULL,
-    `Level` VARCHAR(50)  NOT NULL,
+    `Level` VARCHAR(100) NOT NULL,
     CONSTRAINT `PK_Papds` PRIMARY KEY (`Id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
@@ -83,7 +83,7 @@ CREATE TABLE `Engagements`
     `EtcpHours`          DECIMAL(18, 2) NOT NULL DEFAULT 0,
     `ValueEtcp`          DECIMAL(18, 2) NOT NULL DEFAULT 0,
     `ExpensesEtcp`       DECIMAL(18, 2) NOT NULL DEFAULT 0,
-    `LastClosingPeriodId` VARCHAR(16)   NULL,
+    `LastClosingPeriodId` VARCHAR(100)  NULL,
     CONSTRAINT `PK_Engagements` PRIMARY KEY (`Id`),
     CONSTRAINT `UX_Engagements_EngagementId` UNIQUE (`EngagementId`),
     CONSTRAINT `FK_Engagements_Customers` FOREIGN KEY (`CustomerId`) REFERENCES `Customers` (`Id`) ON DELETE SET NULL
@@ -94,7 +94,7 @@ CREATE TABLE `EngagementPapds`
     `Id`            INT  NOT NULL AUTO_INCREMENT,
     `EngagementId`  INT  NOT NULL,
     `PapdId`        INT  NOT NULL,
-    `EffectiveDate` DATE NOT NULL,
+    `EffectiveDate` DATETIME(6) NOT NULL,
     CONSTRAINT `PK_EngagementPapds` PRIMARY KEY (`Id`),
     CONSTRAINT `FK_EngagementPapds_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
     CONSTRAINT `FK_EngagementPapds_Papds` FOREIGN KEY (`PapdId`) REFERENCES `Papds` (`Id`) ON DELETE CASCADE,
@@ -103,11 +103,11 @@ CREATE TABLE `EngagementPapds`
 
 CREATE TABLE `EngagementManagerAssignments`
 (
-    `Id`           INT  NOT NULL AUTO_INCREMENT,
-    `EngagementId` INT  NOT NULL,
-    `ManagerId`    INT  NOT NULL,
-    `BeginDate`    DATE NOT NULL,
-    `EndDate`      DATE NULL,
+    `Id`           INT         NOT NULL AUTO_INCREMENT,
+    `EngagementId` INT         NOT NULL,
+    `ManagerId`    INT         NOT NULL,
+    `BeginDate`    DATETIME(6) NOT NULL,
+    `EndDate`      DATETIME(6) NULL,
     CONSTRAINT `PK_EngagementManagerAssignments` PRIMARY KEY (`Id`),
     CONSTRAINT `FK_EngagementManagerAssignments_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
     CONSTRAINT `FK_EngagementManagerAssignments_Managers` FOREIGN KEY (`ManagerId`) REFERENCES `Managers` (`Id`) ON DELETE CASCADE,
@@ -131,9 +131,9 @@ CREATE TABLE `EngagementRankBudgets`
 CREATE TABLE `FinancialEvolution`
 (
     `Id`              INT            NOT NULL AUTO_INCREMENT,
-    `ClosingPeriodId` VARCHAR(16)    NOT NULL,
+    `ClosingPeriodId` VARCHAR(100)   NOT NULL,
     `EngagementId`    VARCHAR(64)    NOT NULL,
-    `HoursData`       DECIMAL(10, 1) NULL,
+    `HoursData`       DECIMAL(18, 2) NULL,
     `ValueData`       DECIMAL(18, 2) NULL,
     `MarginData`      DECIMAL(9, 4)  NULL,
     `ExpenseData`     DECIMAL(18, 2) NULL,
@@ -144,10 +144,10 @@ CREATE TABLE `FinancialEvolution`
 
 CREATE TABLE `PlannedAllocations`
 (
-    `Id`              INT     NOT NULL AUTO_INCREMENT,
-    `EngagementId`    INT     NOT NULL,
-    `ClosingPeriodId` INT     NOT NULL,
-    `AllocatedHours`  DOUBLE  NOT NULL,
+    `Id`              INT            NOT NULL AUTO_INCREMENT,
+    `EngagementId`    INT            NOT NULL,
+    `ClosingPeriodId` INT            NOT NULL,
+    `AllocatedHours`  DECIMAL(18, 2) NOT NULL,
     CONSTRAINT `PK_PlannedAllocations` PRIMARY KEY (`Id`),
     CONSTRAINT `FK_PlannedAllocations_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
     CONSTRAINT `FK_PlannedAllocations_ClosingPeriods` FOREIGN KEY (`ClosingPeriodId`) REFERENCES `ClosingPeriods` (`Id`) ON DELETE CASCADE,
@@ -156,26 +156,28 @@ CREATE TABLE `PlannedAllocations`
 
 CREATE TABLE `ActualsEntries`
 (
-    `Id`              INT           NOT NULL AUTO_INCREMENT,
-    `EngagementId`    INT           NOT NULL,
-    `PapdId`          INT           NULL,
-    `ClosingPeriodId` INT           NOT NULL,
-    `Date`            DATE          NOT NULL,
-    `Hours`           DOUBLE        NOT NULL,
-    `ImportBatchId`   VARCHAR(100)  NOT NULL,
+    `Id`              INT            NOT NULL AUTO_INCREMENT,
+    `EngagementId`    INT            NOT NULL,
+    `PapdId`          INT            NULL,
+    `ClosingPeriodId` INT            NOT NULL,
+    `Date`            DATETIME(6)    NOT NULL,
+    `Hours`           DECIMAL(18, 2) NOT NULL,
+    `ImportBatchId`   VARCHAR(100)   NOT NULL,
     CONSTRAINT `PK_ActualsEntries` PRIMARY KEY (`Id`),
     CONSTRAINT `FK_ActualsEntries_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
     CONSTRAINT `FK_ActualsEntries_Papds` FOREIGN KEY (`PapdId`) REFERENCES `Papds` (`Id`) ON DELETE SET NULL,
-    CONSTRAINT `FK_ActualsEntries_ClosingPeriods` FOREIGN KEY (`ClosingPeriodId`) REFERENCES `ClosingPeriods` (`Id`) ON DELETE RESTRICT
+    CONSTRAINT `FK_ActualsEntries_ClosingPeriods` FOREIGN KEY (`ClosingPeriodId`) REFERENCES `ClosingPeriods` (`Id`) ON DELETE RESTRICT,
+    INDEX `IX_ActualsEntries_Engagement_Date` (`EngagementId`, `Date`),
+    INDEX `IX_ActualsEntries_ClosingPeriodId` (`ClosingPeriodId`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 CREATE TABLE `Exceptions`
 (
-    `Id`        INT          NOT NULL AUTO_INCREMENT,
-    `Timestamp` timestamp(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(),
-    `SourceFile` VARCHAR(260) NOT NULL,
-    `RowData`    TEXT        NOT NULL,
-    `Reason`     VARCHAR(500) NOT NULL,
+    `Id`         INT           NOT NULL AUTO_INCREMENT,
+    `Timestamp`  DATETIME(6)   NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    `SourceFile` VARCHAR(260)  NOT NULL,
+    `RowData`    TEXT          NOT NULL,
+    `Reason`     VARCHAR(500)  NOT NULL,
     CONSTRAINT `PK_Exceptions` PRIMARY KEY (`Id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
@@ -192,8 +194,8 @@ CREATE TABLE `FiscalYears`
 (
     `Id`                INT             NOT NULL AUTO_INCREMENT,
     `Name`              VARCHAR(100)    NOT NULL,
-    `StartDate`         DATE            NOT NULL,
-    `EndDate`           DATE            NOT NULL,
+    `StartDate`         DATETIME(6)     NOT NULL,
+    `EndDate`           DATETIME(6)     NOT NULL,
     `AreaSalesTarget`   DECIMAL(18, 2)  NOT NULL DEFAULT 0,
     `AreaRevenueTarget` DECIMAL(18, 2)  NOT NULL DEFAULT 0,
     CONSTRAINT `PK_FiscalYears` PRIMARY KEY (`Id`),
@@ -225,10 +227,10 @@ CREATE TABLE `EngagementFiscalYearRevenueAllocations`
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 INSERT INTO `ClosingPeriods` (`Name`, `PeriodStart`, `PeriodEnd`) VALUES
-      ('2025-10', '2025-10-01', '2025-10-31'),
-    ('2025-11', '2025-11-01', '2025-11-30'),
-    ('2025-12', '2025-12-01', '2025-12-31'),
-    ('2026-01', '2026-01-01', '2026-01-31');
+      ('2025-10', '2025-10-01 00:00:00', '2025-10-31 00:00:00'),
+    ('2025-11', '2025-11-01 00:00:00', '2025-11-30 00:00:00'),
+    ('2025-12', '2025-12-01 00:00:00', '2025-12-31 00:00:00'),
+    ('2026-01', '2026-01-01 00:00:00', '2026-01-31 00:00:00');
 
 INSERT INTO `FiscalYears` (`Name`, `StartDate`, `EndDate`, `AreaSalesTarget`, `AreaRevenueTarget`) VALUES
     ('FY25', '2024-07-01', '2025-06-30', 0, 0),

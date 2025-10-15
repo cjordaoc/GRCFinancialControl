@@ -4,6 +4,6 @@ namespace GRCFinancialControl.Core.Models.Reporting
     {
         public string EngagementId { get; set; } = string.Empty;
         public string EngagementDescription { get; set; } = string.Empty;
-        public double BacklogHours { get; set; }
+        public decimal BacklogHours { get; set; }
     }
 }

@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace GRCFinancialControl.Core.Models.Reporting
 {
     public class EngagementPerformanceData
@@ -8,7 +6,7 @@ namespace GRCFinancialControl.Core.Models.Reporting
         public string EngagementDescription { get; set; } = string.Empty;
         public decimal InitialHoursBudget { get; set; }
         public decimal EtcpHours { get; set; }
-        public List<RankBudget> RankBudgets { get; set; } = new List<RankBudget>();
+        public List<RankBudget> RankBudgets { get; set; } = [];
     }
 
     public class RankBudget

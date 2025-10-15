@@ -27,6 +27,9 @@ namespace GRCFinancialControl.Persistence.Services
 
         public ImportService(IDbContextFactory<ApplicationDbContext> contextFactory, ILogger<ImportService> logger)
         {
+            ArgumentNullException.ThrowIfNull(contextFactory);
+            ArgumentNullException.ThrowIfNull(logger);
+
             _contextFactory = contextFactory;
             _logger = logger;
         }
@@ -689,7 +692,7 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new InvalidDataException("Engagement Name (ID) Currency is required.");
             }
 
-            var (customerName, customerId) = ParseEtcpCustomerCell(customerCell);
+            var (customerName, customerCode) = ParseEtcpCustomerCell(customerCell);
             var (engagementDescription, engagementId, currency) = ParseEngagementCell(engagementCell);
 
             var statusText = NormalizeWhitespace(Convert.ToString(row[4], CultureInfo.InvariantCulture));
@@ -708,7 +711,7 @@ namespace GRCFinancialControl.Persistence.Services
             {
                 RowNumber = rowNumber,
                 CustomerName = customerName,
-                CustomerId = customerId,
+                CustomerCode = customerCode,
                 EngagementDescription = engagementDescription,
                 EngagementId = engagementId,
                 Currency = currency,
@@ -933,7 +936,7 @@ namespace GRCFinancialControl.Persistence.Services
             return (displayName, engagementCode, currency);
         }
 
-        private static (string CustomerName, string CustomerId) ParseEtcpCustomerCell(string value)
+        private static (string CustomerName, string CustomerCode) ParseEtcpCustomerCell(string value)
         {
             var normalized = NormalizeWhitespace(value);
             var match = Regex.Match(normalized, @"\(([^)]+)\)\s*$");
@@ -962,20 +965,20 @@ namespace GRCFinancialControl.Persistence.Services
             IDictionary<string, Customer> cache,
             EtcpImportRow row)
         {
-            if (cache.TryGetValue(row.CustomerId, out var cachedCustomer))
+            if (cache.TryGetValue(row.CustomerCode, out var cachedCustomer))
             {
                 return (cachedCustomer, false);
             }
 
             var customer = await context.Customers
-                .FirstOrDefaultAsync(c => c.CustomerID == row.CustomerId);
+                .FirstOrDefaultAsync(c => c.CustomerCode == row.CustomerCode);
 
             var created = false;
             if (customer == null)
             {
                 customer = new Customer
                 {
-                    CustomerID = row.CustomerId,
+                    CustomerCode = row.CustomerCode,
                     Name = row.CustomerName
                 };
 
@@ -983,7 +986,7 @@ namespace GRCFinancialControl.Persistence.Services
                 created = true;
             }
 
-            cache[row.CustomerId] = customer;
+            cache[row.CustomerCode] = customer;
             return (customer, created);
         }
 
@@ -1152,7 +1155,7 @@ namespace GRCFinancialControl.Persistence.Services
         {
             public int RowNumber { get; init; }
             public string CustomerName { get; init; } = string.Empty;
-            public string CustomerId { get; init; } = string.Empty;
+            public string CustomerCode { get; init; } = string.Empty;
             public string EngagementDescription { get; init; } = string.Empty;
             public string EngagementId { get; init; } = string.Empty;
             public string Currency { get; init; } = string.Empty;

@@ -20,6 +20,7 @@ namespace GRCFinancialControl.Persistence.Services
         {
             await using var context = await _contextFactory.CreateDbContextAsync();
             return await context.PlannedAllocations
+                .AsNoTracking()
                 .Where(pa => pa.EngagementId == engagementId)
                 .Include(pa => pa.ClosingPeriod)
                 .ToListAsync();
@@ -29,10 +30,9 @@ namespace GRCFinancialControl.Persistence.Services
         {
             await using var context = await _contextFactory.CreateDbContextAsync();
 
-            var existingAllocations = await context.PlannedAllocations
+            await context.PlannedAllocations
                 .Where(pa => pa.EngagementId == engagementId)
-                .ToListAsync();
-            context.PlannedAllocations.RemoveRange(existingAllocations);
+                .ExecuteDeleteAsync();
 
             // Add the new allocations
             foreach (var allocation in allocations)
