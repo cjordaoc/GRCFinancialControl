@@ -55,14 +55,22 @@ namespace GRCFinancialControl.Persistence.Services
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            var closingPeriods = await context.ClosingPeriods
+            var closingPeriodRecords = await context.ClosingPeriods
                 .AsNoTracking()
                 .Where(cp => !string.IsNullOrWhiteSpace(cp.Name))
-                .GroupBy(cp => cp.Name.Trim(), StringComparer.OrdinalIgnoreCase)
-                .ToDictionaryAsync(
+                .ToListAsync();
+
+            var closingPeriods = closingPeriodRecords
+                .Select(cp => new
+                {
+                    NormalizedName = cp.Name!.Trim(),
+                    cp.PeriodEnd
+                })
+                .GroupBy(entry => entry.NormalizedName, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(
                     group => group.Key,
                     group => group
-                        .OrderByDescending(cp => cp.PeriodEnd)
+                        .OrderByDescending(entry => entry.PeriodEnd)
                         .First()
                         .PeriodEnd,
                     StringComparer.OrdinalIgnoreCase);
