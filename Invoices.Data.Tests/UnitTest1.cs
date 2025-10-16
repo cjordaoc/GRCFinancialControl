@@ -1,6 +1,7 @@
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence;
+using GRCFinancialControl.Persistence.Services.People;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
 using Invoices.Data.Repositories;
@@ -28,7 +29,7 @@ public class InvoicePlanRepositoryTests
         }
 
         var factory = new TestDbContextFactory(options);
-        var repository = new InvoicePlanRepository(factory, NullLogger<InvoicePlanRepository>.Instance);
+        var repository = new InvoicePlanRepository(factory, NullLogger<InvoicePlanRepository>.Instance, new NullPersonDirectory());
 
         var plan = new InvoicePlan
         {
@@ -156,7 +157,7 @@ public class InvoicePlanRepositoryTests
         }
 
         var factory = new TestDbContextFactory(options);
-        var repository = new InvoicePlanRepository(factory, NullLogger<InvoicePlanRepository>.Instance);
+        var repository = new InvoicePlanRepository(factory, NullLogger<InvoicePlanRepository>.Instance, new NullPersonDirectory());
 
         var plan = new InvoicePlan
         {
@@ -234,7 +235,7 @@ public class InvoicePlanRepositoryTests
         }
 
         var factory = new TestDbContextFactory(options);
-        var repository = new InvoicePlanRepository(factory, NullLogger<InvoicePlanRepository>.Instance);
+        var repository = new InvoicePlanRepository(factory, NullLogger<InvoicePlanRepository>.Instance, new NullPersonDirectory());
 
         var plan = new InvoicePlan
         {
@@ -312,7 +313,7 @@ public class InvoicePlanRepositoryTests
         }
 
         var factory = new TestDbContextFactory(options);
-        var repository = new InvoicePlanRepository(factory, NullLogger<InvoicePlanRepository>.Instance);
+        var repository = new InvoicePlanRepository(factory, NullLogger<InvoicePlanRepository>.Instance, new NullPersonDirectory());
 
         var plan = new InvoicePlan
         {
@@ -447,7 +448,7 @@ public class InvoicePlanRepositoryTests
         }
 
         var factory = new TestDbContextFactory(options);
-        var repository = new InvoicePlanRepository(factory, NullLogger<InvoicePlanRepository>.Instance);
+        var repository = new InvoicePlanRepository(factory, NullLogger<InvoicePlanRepository>.Instance, new NullPersonDirectory());
 
         var planOne = new InvoicePlan
         {
@@ -693,7 +694,7 @@ public class InvoicePlanRepositoryTests
         }
 
         var factory = new TestDbContextFactory(options);
-        var repository = new InvoicePlanRepository(factory, NullLogger<InvoicePlanRepository>.Instance);
+        var repository = new InvoicePlanRepository(factory, NullLogger<InvoicePlanRepository>.Instance, new NullPersonDirectory());
 
         var plan = new InvoicePlan
         {

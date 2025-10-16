@@ -7,6 +7,23 @@
              x:Class="GRCFinancialControl.Avalonia.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
     <StackPanel Spacing="10" Margin="10">
+        <TextBlock Text="Data Backend" FontSize="24" FontWeight="Bold"/>
+        <StackPanel Spacing="6">
+            <ToggleSwitch Content="Use Dataverse backend" IsChecked="{Binding IsDataverseSelected, Mode=TwoWay}"/>
+            <TextBlock Text="Restart the application after changing the backend." FontStyle="Italic"/>
+        </StackPanel>
+
+        <StackPanel Spacing="6" Margin="0,10,0,0" IsVisible="{Binding IsDataverseSelected}">
+            <TextBlock Text="Dataverse Connection Settings" FontSize="20" FontWeight="SemiBold"/>
+            <TextBox Text="{Binding DataverseOrgUrl}" Watermark="Organization URL"/>
+            <TextBox Text="{Binding DataverseTenantId}" Watermark="Tenant Id"/>
+            <TextBox Text="{Binding DataverseClientId}" Watermark="Client Id"/>
+            <TextBox Text="{Binding DataverseClientSecret}" Watermark="Client Secret" PasswordChar="*"/>
+            <TextBlock Text="Environment variables override these values when present." FontStyle="Italic"/>
+        </StackPanel>
+
+        <Separator Margin="0,10,0,0"/>
+
         <TextBlock Text="MySQL Connection Settings" FontSize="24" FontWeight="Bold"/>
         <TextBox Text="{Binding Server}" Watermark="Server"/>
         <TextBox Text="{Binding Database}" Watermark="Database"/>

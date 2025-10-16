@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using GRCFinancialControl.Core.Configuration;
+using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +17,6 @@ namespace GRCFinancialControl.Persistence.Services
         private const string ConnectionSuccessfulMessage = "Connection successful.";
         private const string ConnectionFailedPrefix = "Connection failed: ";
         private const string MissingServerOrDatabaseMessage = "Server and database are required to test the connection.";
-        private const string DefaultFiscalYearIdKey = "DefaultFiscalYearId";
 
         private readonly SettingsDbContext _context;
 
@@ -87,7 +88,7 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task<int?> GetDefaultFiscalYearIdAsync()
         {
-            var setting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == DefaultFiscalYearIdKey);
+            var setting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == SettingKeys.DefaultFiscalYearId);
             if (setting == null || string.IsNullOrWhiteSpace(setting.Value))
             {
                 return null;
@@ -103,7 +104,7 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task SetDefaultFiscalYearIdAsync(int? fiscalYearId)
         {
-            var existingSetting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == DefaultFiscalYearIdKey);
+            var existingSetting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == SettingKeys.DefaultFiscalYearId);
 
             if (fiscalYearId.HasValue)
             {
@@ -116,7 +117,7 @@ namespace GRCFinancialControl.Persistence.Services
                 {
                     await _context.Settings.AddAsync(new Setting
                     {
-                        Key = DefaultFiscalYearIdKey,
+                        Key = SettingKeys.DefaultFiscalYearId,
                         Value = value
                     });
                 }
@@ -127,6 +128,60 @@ namespace GRCFinancialControl.Persistence.Services
             }
 
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<DataBackend> GetBackendPreferenceAsync()
+        {
+            var value = await FindValueAsync(SettingKeys.DataBackendPreference);
+            return Enum.TryParse(value, ignoreCase: true, out DataBackend backend) ? backend : DataBackend.MySql;
+        }
+
+        public async Task SetBackendPreferenceAsync(DataBackend backend)
+        {
+            await UpsertSettingAsync(SettingKeys.DataBackendPreference, backend.ToString());
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<DataverseSettings> GetDataverseSettingsAsync()
+        {
+            return new DataverseSettings
+            {
+                OrgUrl = await FindValueAsync(SettingKeys.DataverseOrgUrl) ?? string.Empty,
+                TenantId = await FindValueAsync(SettingKeys.DataverseTenantId) ?? string.Empty,
+                ClientId = await FindValueAsync(SettingKeys.DataverseClientId) ?? string.Empty,
+                ClientSecret = await FindValueAsync(SettingKeys.DataverseClientSecret) ?? string.Empty
+            };
+        }
+
+        public async Task SaveDataverseSettingsAsync(DataverseSettings settings)
+        {
+            ArgumentNullException.ThrowIfNull(settings);
+
+            await UpsertSettingAsync(SettingKeys.DataverseOrgUrl, settings.OrgUrl ?? string.Empty);
+            await UpsertSettingAsync(SettingKeys.DataverseTenantId, settings.TenantId ?? string.Empty);
+            await UpsertSettingAsync(SettingKeys.DataverseClientId, settings.ClientId ?? string.Empty);
+            await UpsertSettingAsync(SettingKeys.DataverseClientSecret, settings.ClientSecret ?? string.Empty);
+
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task<string?> FindValueAsync(string key)
+        {
+            var setting = await _context.Settings.AsNoTracking().FirstOrDefaultAsync(s => s.Key == key);
+            return setting?.Value;
+        }
+
+        private async Task UpsertSettingAsync(string key, string value)
+        {
+            var existingSetting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == key);
+            if (existingSetting != null)
+            {
+                existingSetting.Value = value;
+            }
+            else
+            {
+                await _context.Settings.AddAsync(new Setting { Key = key, Value = value });
+            }
         }
     }
 }

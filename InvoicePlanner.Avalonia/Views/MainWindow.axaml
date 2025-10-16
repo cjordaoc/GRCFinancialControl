@@ -11,7 +11,44 @@
         MinWidth="960"
         MinHeight="640"
         Title="{Binding Title}">
-    <Border Classes="Card">
-        <ContentControl Content="{Binding CurrentViewModel}" />
-    </Border>
+    <Grid ColumnDefinitions="240,*" Margin="16">
+        <Grid.Styles>
+            <Style Selector="ToggleButton.NavButton">
+                <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                <Setter Property="Padding" Value="12,8"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderBrush" Value="Transparent"/>
+            </Style>
+            <Style Selector="ToggleButton.NavButton:pointerover">
+                <Setter Property="Background" Value="{DynamicResource ThemeControlHighBrush}"/>
+            </Style>
+            <Style Selector="ToggleButton.NavButton:checked">
+                <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}"/>
+            </Style>
+        </Grid.Styles>
+        <Border Grid.Column="0"
+                Padding="16"
+                CornerRadius="8"
+                Background="{DynamicResource ThemeControlMidBrush}">
+            <StackPanel Spacing="12">
+                <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="SemiBold"/>
+                <ItemsControl ItemsSource="{Binding MenuItems}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:NavigationItemViewModel">
+                            <ToggleButton Content="{Binding Title}"
+                                          Command="{Binding SelectCommand}"
+                                          IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                          HorizontalAlignment="Stretch"
+                                          Classes="NavButton"
+                                          Margin="0,4"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+        <Border Grid.Column="1" Classes="Card" Padding="0" Margin="16,0,0,0">
+            <ContentControl Content="{Binding CurrentViewModel}" />
+        </Border>
+    </Grid>
 </Window>

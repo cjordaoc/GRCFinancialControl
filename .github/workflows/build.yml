@@ -1,0 +1,27 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+      - feature/dataverse-migration
+  pull_request:
+
+jobs:
+  build:
+    name: Build (${{ matrix.data-backend }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        data-backend: [MySql, Dataverse]
+    env:
+      DATA_BACKEND: ${{ matrix.data-backend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore
+        run: dotnet restore GRCFinancialControl.sln
+      - name: Build
+        run: dotnet build GRCFinancialControl.sln --configuration Release --no-restore
