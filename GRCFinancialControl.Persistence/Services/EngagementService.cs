@@ -138,7 +138,7 @@ namespace GRCFinancialControl.Persistence.Services
                 engagement.OpeningValue = 0m;
                 engagement.OpeningExpenses = 0m;
                 engagement.MarginPctBudget = null;
-                engagement.EtcpHours = 0m;
+                engagement.EstimatedToCompleteHours = 0m;
                 engagement.ValueEtcp = 0m;
                 engagement.ExpensesEtcp = 0m;
                 engagement.MarginPctEtcp = null;
@@ -180,7 +180,7 @@ namespace GRCFinancialControl.Persistence.Services
 
             if (latestSnapshot != null)
             {
-                engagement.EtcpHours = latestSnapshot.HoursData ?? 0m;
+                engagement.EstimatedToCompleteHours = latestSnapshot.HoursData ?? 0m;
                 engagement.ValueEtcp = latestSnapshot.ValueData ?? 0m;
                 engagement.ExpensesEtcp = latestSnapshot.ExpenseData ?? 0m;
                 engagement.MarginPctEtcp = latestSnapshot.MarginData;
@@ -200,7 +200,7 @@ namespace GRCFinancialControl.Persistence.Services
             }
             else
             {
-                engagement.EtcpHours = 0m;
+                engagement.EstimatedToCompleteHours = 0m;
                 engagement.ValueEtcp = 0m;
                 engagement.ExpensesEtcp = 0m;
                 engagement.MarginPctEtcp = null;

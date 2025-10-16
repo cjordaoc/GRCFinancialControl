@@ -69,7 +69,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private decimal _initialHoursBudget;
 
         [ObservableProperty]
-        private decimal _etcpHours;
+        private decimal _estimatedToCompleteHours;
 
         [ObservableProperty]
         private decimal _valueEtcp;
@@ -170,7 +170,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             OpeningValue = engagement.OpeningValue;
             OpeningExpenses = engagement.OpeningExpenses;
             InitialHoursBudget = engagement.InitialHoursBudget;
-            EtcpHours = engagement.EtcpHours;
+            EstimatedToCompleteHours = engagement.EstimatedToCompleteHours;
             ValueEtcp = engagement.ValueEtcp;
             ExpensesEtcp = engagement.ExpensesEtcp;
             MarginPctEtcp = engagement.MarginPctEtcp;
@@ -396,7 +396,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Engagement.StatusText = normalizedStatusText;
             Engagement.Status = MapStatusFromText(normalizedStatusText);
             Engagement.InitialHoursBudget = InitialHoursBudget;
-            Engagement.EtcpHours = EtcpHours;
+            Engagement.EstimatedToCompleteHours = EstimatedToCompleteHours;
             Engagement.ValueEtcp = ValueEtcp;
             Engagement.ExpensesEtcp = ExpensesEtcp;
             Engagement.MarginPctEtcp = MarginPctEtcp;

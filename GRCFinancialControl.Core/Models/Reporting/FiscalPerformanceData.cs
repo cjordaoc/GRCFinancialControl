@@ -7,7 +7,7 @@ namespace GRCFinancialControl.Core.Models.Reporting
         public decimal AreaSalesTarget { get; set; }
         public decimal AreaRevenueTarget { get; set; }
         public decimal TotalRevenue { get; set; }
-        public decimal TotalPlannedHours { get; set; }
+        public decimal TotalEstimatedToCompleteHours { get; set; }
         public decimal TotalActualHours { get; set; }
         public List<PapdContribution> PapdContributions { get; set; } = [];
     }

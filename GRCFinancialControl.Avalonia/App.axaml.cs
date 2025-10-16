@@ -10,18 +10,21 @@ using GRCFinancialControl.Avalonia.Views;
 using GRCFinancialControl.Core.Configuration;
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Persistence;
+using GRCFinancialControl.Persistence.Configuration;
 using GRCFinancialControl.Persistence.Services;
 using GRCFinancialControl.Persistence.Services.Importers;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using GRCFinancialControl.Persistence.Services.Dataverse;
+using GRCFinancialControl.Persistence.Services.Dataverse.Provisioning;
 using GRCFinancialControl.Persistence.Services.People;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
-using System.Linq;
+using System.IO;
 using AvaloniaWebView;
 
 namespace GRCFinancialControl.Avalonia
@@ -51,12 +54,12 @@ namespace GRCFinancialControl.Avalonia
 
             var services = new ServiceCollection();
 
-            var dataBackend = ResolveBackendPreference();
+            var dataBackend = BackendPreferenceResolver.Resolve(CreateSettingsDbContext);
             services.AddSingleton(new DataBackendOptions(dataBackend));
 
             // Register SettingsDbContext
             services.AddDbContext<SettingsDbContext>(options =>
-                options.UseSqlite("Data Source=settings.db"));
+                options.UseSqlite(SettingsDatabaseOptions.BuildConnectionString()));
 
             // Register SettingsService
             services.AddTransient<ISettingsService, SettingsService>();
@@ -78,10 +81,10 @@ namespace GRCFinancialControl.Avalonia
                     var settingsService = scopedProvider.GetRequiredService<ISettingsService>();
                     var settings = settingsService.GetAllAsync().GetAwaiter().GetResult();
 
-                    settings.TryGetValue("Server", out var server);
-                    settings.TryGetValue("Database", out var database);
-                    settings.TryGetValue("User", out var user);
-                    settings.TryGetValue("Password", out var password);
+                    settings.TryGetValue(SettingKeys.Server, out var server);
+                    settings.TryGetValue(SettingKeys.Database, out var database);
+                    settings.TryGetValue(SettingKeys.User, out var user);
+                    settings.TryGetValue(SettingKeys.Password, out var password);
 
                     var connectionString = $"Server={server};Database={database};User ID={user};Password={password};";
 
@@ -95,18 +98,24 @@ namespace GRCFinancialControl.Avalonia
                 {
                     disposableServices.Dispose();
                 }
+
+                services.AddSingleton<IDataverseProvisioningService, DisabledDataverseProvisioningService>();
             }
             else
             {
                 services.AddSingleton<IDbContextFactory<ApplicationDbContext>, UnsupportedApplicationDbContextFactory>();
-                var dataverseOptions = ResolveDataverseOptions(services);
+                var dataverseOptions = DataverseConnectionOptionsProvider.Resolve(CreateSettingsDbContext);
                 services.AddSingleton(dataverseOptions);
-                services.AddSingleton(provider =>
-                {
-                    var prefix = Environment.GetEnvironmentVariable("DV_CUSTOMIZATION_PREFIX");
-                    return DataverseEntityMetadataRegistry.CreateDefault(string.IsNullOrWhiteSpace(prefix) ? "grc" : prefix);
-                });
+                services.AddSingleton(_ => DataverseEntityMetadataRegistry.CreateDefault());
                 services.AddSingleton<IDataverseServiceClientFactory, DataverseServiceClientFactory>();
+                services.AddSingleton<IDataverseRepository, DataverseRepository>();
+                services.AddSingleton<SqlForeignKeyParser>();
+                services.Configure<DataverseProvisioningOptions>(options =>
+                {
+                    options.MetadataPath = Path.Combine(AppContext.BaseDirectory, "artifacts", "dataverse", "metadata_changes.json");
+                    options.SqlSchemaPath = Path.Combine(AppContext.BaseDirectory, "artifacts", "mysql", "rebuild_schema.sql");
+                });
+                services.AddSingleton<IDataverseProvisioningService, DataverseProvisioningService>();
                 services.AddSingleton(_ => DataversePeopleOptions.FromEnvironment());
                 services.AddSingleton<NullPersonDirectory>();
                 services.AddSingleton<DataversePersonDirectory>();
@@ -222,70 +231,23 @@ namespace GRCFinancialControl.Avalonia
             base.OnFrameworkInitializationCompleted();
         }
 
-        private static DataBackend ResolveBackendPreference()
+        private static SettingsDbContext CreateSettingsDbContext()
         {
-            var environmentValue = Environment.GetEnvironmentVariable(DataBackendConfiguration.EnvironmentVariableName);
-            if (!string.IsNullOrWhiteSpace(environmentValue) && Enum.TryParse(environmentValue, ignoreCase: true, out DataBackend backendFromEnvironment))
-            {
-                return backendFromEnvironment;
-            }
-
-            try
-            {
-                var optionsBuilder = new DbContextOptionsBuilder<SettingsDbContext>();
-                optionsBuilder.UseSqlite("Data Source=settings.db");
-                using var context = new SettingsDbContext(optionsBuilder.Options);
-                context.Database.EnsureCreated();
-
-                var storedValue = context.Settings.AsNoTracking()
-                    .FirstOrDefault(s => s.Key == SettingKeys.DataBackendPreference)?.Value;
-
-                if (!string.IsNullOrWhiteSpace(storedValue) && Enum.TryParse(storedValue, ignoreCase: true, out DataBackend storedBackend))
-                {
-                    return storedBackend;
-                }
-            }
-            catch
-            {
-                // Ignore errors and fall back to the default backend.
-            }
-
-            return DataBackend.MySql;
+            var optionsBuilder = new DbContextOptionsBuilder<SettingsDbContext>();
+            optionsBuilder.UseSqlite(SettingsDatabaseOptions.BuildConnectionString());
+            return new SettingsDbContext(optionsBuilder.Options);
         }
 
-        private static DataverseConnectionOptions ResolveDataverseOptions(ServiceCollection services)
+        [Obsolete("Use BackendPreferenceResolver.Resolve.")]
+        private static DataBackend ResolveBackendPreference()
         {
-            ServiceProvider? tempProvider = null;
+            return BackendPreferenceResolver.Resolve(CreateSettingsDbContext);
+        }
 
-            try
-            {
-                tempProvider = services.BuildServiceProvider();
-                using var scope = tempProvider.CreateScope();
-                var scopedProvider = scope.ServiceProvider;
-                var settingsDbContext = scopedProvider.GetRequiredService<SettingsDbContext>();
-                settingsDbContext.Database.EnsureCreated();
-
-                var settingsService = scopedProvider.GetRequiredService<ISettingsService>();
-
-                if (DataverseConnectionOptions.TryFromEnvironment(out var environmentOptions) && environmentOptions is not null)
-                {
-                    return environmentOptions;
-                }
-
-                var storedSettings = settingsService.GetDataverseSettingsAsync().GetAwaiter().GetResult();
-                return DataverseConnectionOptions.FromSettings(storedSettings);
-            }
-            catch (InvalidOperationException ex)
-            {
-                throw new InvalidOperationException("Configure Dataverse credentials in Settings before selecting the Dataverse backend.", ex);
-            }
-            finally
-            {
-                if (tempProvider is IDisposable disposable)
-                {
-                    disposable.Dispose();
-                }
-            }
+        [Obsolete("Use DataverseConnectionOptionsProvider.Resolve.")]
+        private static DataverseConnectionOptions ResolveDataverseOptions(ServiceCollection _)
+        {
+            return DataverseConnectionOptionsProvider.Resolve(CreateSettingsDbContext);
         }
     }
 }

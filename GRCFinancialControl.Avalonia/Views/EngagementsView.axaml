@@ -24,7 +24,7 @@
                 <DataGridTextColumn Header="Customer Name" Binding="{Binding CustomerName}" Width="*"/>
                 <DataGridTextColumn Header="Opening Value" Binding="{Binding OpeningValue, StringFormat='{}{0:N2}'}" Width="*"/>
                 <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="Auto"/>
-                <DataGridTextColumn Header="ETC-P Hours" Binding="{Binding EtcpHours, StringFormat='{}{0:N2}'}" Width="*"/>
+                <DataGridTextColumn Header="Estimated Hours" Binding="{Binding EstimatedToCompleteHours, StringFormat='{}{0:N2}'}" Width="*"/>
                 <DataGridTextColumn Header="Planned Hours" Binding="{Binding InitialHoursBudget, StringFormat='{}{0:N2}'}" Width="*"/>
             </DataGrid.Columns>
         </DataGrid>

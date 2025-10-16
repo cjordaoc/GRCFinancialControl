@@ -10,11 +10,18 @@
              x:Name="HoursAllocationsViewRoot"
              x:DataType="vm:HoursAllocationsViewModel">
     <UserControl.Resources>
-        <conv:BooleanToBrushConverter x:Key="AllocationFillBrush" TrueBrush="#FFF1C232" FalseBrush="#228B22"/>
-        <conv:BooleanToBrushConverter x:Key="AllocationStrokeBrush" TrueBrush="#FFB8860B" FalseBrush="#145214"/>
+        <conv:BooleanToBrushConverter x:Key="AllocationFillBrush"
+                                      TrueBrush="{StaticResource BrushWarningHighlight}"
+                                      FalseBrush="{StaticResource BrushSuccess}"/>
+        <conv:BooleanToBrushConverter x:Key="AllocationStrokeBrush"
+                                      TrueBrush="{StaticResource BrushWarning}"
+                                      FalseBrush="{StaticResource BrushSuccessDark}"/>
     </UserControl.Resources>
     <Grid RowDefinitions="Auto,*">
-        <TextBlock Text="{Binding Header}" FontSize="20" FontWeight="Bold" Margin="10"/>
+        <TextBlock Text="{Binding Header}"
+                   FontSize="{StaticResource FontSizeXL}"
+                   FontWeight="Bold"
+                   Margin="{StaticResource SpaceThickness10}"/>
         <DataGrid Grid.Row="1" ItemsSource="{Binding Engagements}" AutoGenerateColumns="False" IsReadOnly="True" CanUserSortColumns="True">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Engagement ID" Binding="{Binding EngagementId}" Width="*"/>
@@ -24,11 +31,13 @@
                 <DataGridTemplateColumn Header="Review" Width="Auto">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate x:DataType="models:Engagement">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="{StaticResource Space4}">
                                 <Ellipse Width="12" Height="12" StrokeThickness="1" ToolTip.Tip="{Binding AllocationVariance, StringFormat='Variance {0:+0.##;-0.##;0} h'}"
                                          Fill="{Binding RequiresAllocationReview, Converter={StaticResource AllocationFillBrush}}"
                                          Stroke="{Binding RequiresAllocationReview, Converter={StaticResource AllocationStrokeBrush}}"/>
-                                <TextBlock Text="{Binding AllocationVariance, StringFormat='{}{0:+0.##;-0.##;0} h'}" Foreground="#FFB8860B" IsVisible="{Binding RequiresAllocationReview}"/>
+                                <TextBlock Text="{Binding AllocationVariance, StringFormat='{}{0:+0.##;-0.##;0} h'}"
+                                           Foreground="{StaticResource BrushWarning}"
+                                           IsVisible="{Binding RequiresAllocationReview}"/>
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -36,7 +45,7 @@
                 <DataGridTemplateColumn Header="Actions">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate x:DataType="models:Engagement">
-                            <StackPanel Orientation="Horizontal" Spacing="6">
+                            <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space6}">
                                 <Button Content="View"
                                         Command="{Binding DataContext.ViewAllocationCommand, ElementName=HoursAllocationsViewRoot}"
                                         CommandParameter="{Binding}"/>

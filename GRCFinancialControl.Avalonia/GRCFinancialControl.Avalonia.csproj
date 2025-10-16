@@ -11,7 +11,6 @@
   <ItemGroup>
     <Folder Include="Models\" />
     <AvaloniaResource Include="Assets\**" />
-    <AvaloniaResource Include="Styles\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -41,5 +40,6 @@
   <ItemGroup>
     <ProjectReference Include="..\GRCFinancialControl.Persistence\GRCFinancialControl.Persistence.csproj" />
     <ProjectReference Include="..\GRCFinancialControl.Core\GRCFinancialControl.Core.csproj" />
+    <ProjectReference Include="..\App.Presentation\App.Presentation.csproj" />
   </ItemGroup>
 </Project>

@@ -27,20 +27,20 @@ public sealed class DataverseCustomerService : DataverseServiceBase, ICustomerSe
     private readonly DataverseEntityMetadata _fiscalYearRevenueAllocationsMetadata;
 
     public DataverseCustomerService(
-        IDataverseServiceClientFactory clientFactory,
+        IDataverseRepository repository,
         DataverseEntityMetadataRegistry metadataRegistry,
         ILogger<DataverseCustomerService> logger)
-        : base(clientFactory, metadataRegistry, logger)
+        : base(repository, metadataRegistry, logger)
     {
-        _metadata = metadataRegistry.Get("Customers");
-        _engagementsMetadata = metadataRegistry.Get("Engagements");
-        _actualsEntriesMetadata = metadataRegistry.Get("ActualsEntries");
-        _plannedAllocationsMetadata = metadataRegistry.Get("PlannedAllocations");
-        _engagementPapdsMetadata = metadataRegistry.Get("EngagementPapds");
-        _engagementRankBudgetsMetadata = metadataRegistry.Get("EngagementRankBudgets");
-        _financialEvolutionsMetadata = metadataRegistry.Get("FinancialEvolutions");
-        _fiscalYearAllocationsMetadata = metadataRegistry.Get("EngagementFiscalYearAllocations");
-        _fiscalYearRevenueAllocationsMetadata = metadataRegistry.Get("EngagementFiscalYearRevenueAllocations");
+        _metadata = GetMetadata("Customers");
+        _engagementsMetadata = GetMetadata("Engagements");
+        _actualsEntriesMetadata = GetMetadata("ActualsEntries");
+        _plannedAllocationsMetadata = GetMetadata("PlannedAllocations");
+        _engagementPapdsMetadata = GetMetadata("EngagementPapds");
+        _engagementRankBudgetsMetadata = GetMetadata("EngagementRankBudgets");
+        _financialEvolutionsMetadata = GetMetadata("FinancialEvolutions");
+        _fiscalYearAllocationsMetadata = GetMetadata("EngagementFiscalYearAllocations");
+        _fiscalYearRevenueAllocationsMetadata = GetMetadata("EngagementFiscalYearRevenueAllocations");
     }
 
     public Task<List<Customer>> GetAllAsync()

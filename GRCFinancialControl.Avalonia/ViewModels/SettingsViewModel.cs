@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -6,6 +7,7 @@ using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Core.Configuration;
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
+using GRCFinancialControl.Persistence.Services.Dataverse.Provisioning;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
@@ -15,6 +17,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly ISettingsService _settingsService;
         private readonly IDatabaseSchemaInitializer _schemaInitializer;
         private readonly IDialogService _dialogService;
+        private readonly IDataverseProvisioningService _dataverseProvisioningService;
 
         [ObservableProperty]
         private string _server = string.Empty;
@@ -58,21 +61,31 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private string? _statusMessage;
 
-        public SettingsViewModel(ISettingsService settingsService, IDatabaseSchemaInitializer schemaInitializer, IDialogService dialogService)
+        [ObservableProperty]
+        private bool _isProvisioningDataverse;
+
+        public SettingsViewModel(
+            ISettingsService settingsService,
+            IDatabaseSchemaInitializer schemaInitializer,
+            IDialogService dialogService,
+            IDataverseProvisioningService dataverseProvisioningService)
         {
             _settingsService = settingsService;
             _schemaInitializer = schemaInitializer;
             _dialogService = dialogService;
+            _dataverseProvisioningService = dataverseProvisioningService;
             LoadSettingsCommand = new AsyncRelayCommand(LoadSettingsAsync);
             SaveSettingsCommand = new AsyncRelayCommand(SaveSettingsAsync);
             TestConnectionCommand = new AsyncRelayCommand(TestConnectionAsync);
             ClearAllDataCommand = new AsyncRelayCommand(ClearAllDataAsync);
+            ProvisionDataverseCommand = new AsyncRelayCommand(ProvisionDataverseAsync, () => IsDataverseSelected && !IsProvisioningDataverse);
         }
 
         public IAsyncRelayCommand LoadSettingsCommand { get; }
         public IAsyncRelayCommand SaveSettingsCommand { get; }
         public IAsyncRelayCommand TestConnectionCommand { get; }
         public IAsyncRelayCommand ClearAllDataCommand { get; }
+        public IAsyncRelayCommand ProvisionDataverseCommand { get; }
 
         public bool IsDataverseSelected
         {
@@ -83,6 +96,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         partial void OnSelectedBackendChanged(DataBackend value)
         {
             OnPropertyChanged(nameof(IsDataverseSelected));
+            ProvisionDataverseCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnIsProvisioningDataverseChanged(bool value)
+        {
+            ProvisionDataverseCommand.NotifyCanExecuteChanged();
         }
 
         private async Task ClearAllDataAsync()
@@ -176,6 +195,44 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             StatusMessage = "Testing connection...";
             var result = await _settingsService.TestConnectionAsync(Server, Database, User, Password);
             StatusMessage = result.Message;
+        }
+
+        private async Task ProvisionDataverseAsync()
+        {
+            if (SelectedBackend != DataBackend.Dataverse)
+            {
+                StatusMessage = "Switch to the Dataverse backend before running provisioning.";
+                return;
+            }
+
+            if (IsProvisioningDataverse)
+            {
+                return;
+            }
+
+            IsProvisioningDataverse = true;
+            StatusMessage = "Provisioning Dataverse schema...";
+
+            try
+            {
+                var result = await _dataverseProvisioningService.ProvisionAsync(default);
+                var summary = string.Join(Environment.NewLine, result.Actions);
+                if (string.IsNullOrWhiteSpace(summary))
+                {
+                    summary = result.Succeeded ? "No changes were required." : "No provisioning actions were reported.";
+                }
+                StatusMessage = result.Succeeded
+                    ? $"Dataverse schema successfully provisioned.{Environment.NewLine}{summary}"
+                    : $"Dataverse provisioning reported issues.{Environment.NewLine}{summary}";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Dataverse provisioning failed: {ex.Message}";
+            }
+            finally
+            {
+                IsProvisioningDataverse = false;
+            }
         }
     }
 }

@@ -140,7 +140,8 @@ namespace GRCFinancialControl.Persistence
                 .HasDefaultValue(0m);
 
             modelBuilder.Entity<Engagement>()
-                .Property(e => e.EtcpHours)
+                .Property(e => e.EstimatedToCompleteHours)
+                .HasColumnName("EtcpHours")
                 .HasPrecision(18, 2)
                 .HasDefaultValue(0m);
 

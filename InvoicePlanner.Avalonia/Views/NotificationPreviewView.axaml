@@ -36,7 +36,7 @@
                         <DataTemplate x:DataType="vm:NotificationPreviewItemViewModel">
                             <Border Classes="Card" Padding="16" Margin="0,0,0,12">
                                 <StackPanel Spacing="12">
-                                    <StackPanel Spacing="4">
+                                    <StackPanel Spacing="{StaticResource Space4}">
                                         <TextBlock Classes="TitleMedium" Text="{Binding EngagementDisplay}" />
                                         <TextBlock Text="{Binding CustomerDisplay}" IsVisible="{Binding HasCustomerName}" />
                                     </StackPanel>
@@ -55,7 +55,9 @@
                                         <TextBlock Text="{Binding ManagersDisplay}" IsVisible="{Binding HasManagerNames}" />
                                     </StackPanel>
                                     <TextBlock FontWeight="Bold" Text="{Binding Subject}" TextWrapping="Wrap" />
-                                    <Border Background="#FFF5F5F5" Padding="12" CornerRadius="6">
+                                    <Border Background="{StaticResource BrushSurfaceLight}"
+                                            Padding="{StaticResource SpaceThickness12}"
+                                            CornerRadius="{StaticResource CornerRadiusMD}">
                                         <TextBlock Text="{Binding Body}" TextWrapping="Wrap" />
                                     </Border>
                                 </StackPanel>

@@ -1,3 +1,4 @@
+using GRCFinancialControl.Persistence.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -20,7 +21,7 @@ namespace GRCFinancialControl.Persistence
         public SettingsDbContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<SettingsDbContext>();
-            optionsBuilder.UseSqlite("Data Source=settings.db");
+            optionsBuilder.UseSqlite(SettingsDatabaseOptions.BuildConnectionString());
 
             return new SettingsDbContext(optionsBuilder.Options);
         }

@@ -7,18 +7,23 @@
              mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="768"
              x:Class="GRCFinancialControl.Avalonia.Views.ReportsView"
              x:DataType="vm:ReportsViewModel">
-    <Grid RowDefinitions="Auto,Auto,*" Margin="12" RowSpacing="8">
-        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+    <Grid RowDefinitions="Auto,Auto,*"
+          Margin="{StaticResource SpaceThickness12}"
+          RowSpacing="{StaticResource Space8}">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="{StaticResource Space8}">
             <Button Content="Open in Browser"
                     Command="{Binding OpenInBrowserCommand}"
                     IsEnabled="{Binding HasDashboard}"/>
             <Button Content="Refresh" Command="{Binding RefreshCommand}"/>
         </StackPanel>
 
-        <Border Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}" Padding="12" CornerRadius="4"
+        <Border Grid.Row="1"
+                Background="{DynamicResource ThemeBackgroundBrush}"
+                Padding="{StaticResource SpaceThickness12}"
+                CornerRadius="{StaticResource CornerRadiusSM}"
                 IsVisible="{Binding DashboardUri, Converter={x:Static converters:ObjectConverters.IsNull}}">
-            <StackPanel Spacing="6">
-                <TextBlock Text="Connect Power BI" FontSize="20" FontWeight="SemiBold"/>
+            <StackPanel Spacing="{StaticResource Space6}">
+                <TextBlock Text="Connect Power BI" FontSize="{StaticResource FontSizeXL}" FontWeight="SemiBold"/>
                 <TextBlock Text="Add a Publish to Web URL or workspace/report identifiers in Settings to load the dashboard." TextWrapping="Wrap"/>
                 <TextBlock Text="Status:" FontWeight="SemiBold"/>
                 <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
@@ -28,11 +33,14 @@
         <Grid Grid.Row="2">
             <WebView Url="{Binding DashboardUrl}"
                      IsVisible="{Binding DashboardUri, Converter={x:Static converters:ObjectConverters.IsNotNull}}"/>
-            <Border Background="#80000000" IsVisible="{Binding RequiresAuthentication}" Padding="16" CornerRadius="4"
-                    HorizontalAlignment="Center" VerticalAlignment="Top" Margin="16">
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Sign-in Required" FontSize="18" FontWeight="SemiBold" Foreground="White"/>
-                    <TextBlock Text="This dashboard requires Azure AD authentication. Ensure the embed token is supplied and the user is authorized." Foreground="White" TextWrapping="Wrap" Width="360"/>
+            <Border Background="{StaticResource BrushOverlay}"
+                    IsVisible="{Binding RequiresAuthentication}"
+                    Padding="{StaticResource SpaceThickness16}"
+                    CornerRadius="{StaticResource CornerRadiusSM}"
+                    HorizontalAlignment="Center" VerticalAlignment="Top" Margin="{StaticResource SpaceThickness16}">
+                <StackPanel Spacing="{StaticResource Space6}">
+                    <TextBlock Text="Sign-in Required" FontSize="{StaticResource FontSizeLG}" FontWeight="SemiBold" Foreground="{StaticResource BrushOnSurface}"/>
+                    <TextBlock Text="This dashboard requires Azure AD authentication. Ensure the embed token is supplied and the user is authorized." Foreground="{StaticResource BrushOnSurface}" TextWrapping="Wrap" Width="360"/>
                 </StackPanel>
             </Border>
         </Grid>

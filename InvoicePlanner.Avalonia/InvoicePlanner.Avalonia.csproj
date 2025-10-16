@@ -8,12 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AvaloniaResource Include="Assets\**" />
-    <AvaloniaResource Include="Styles\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <AvaloniaResource Include="..\GRCFinancialControl.Avalonia\Styles\**" Link="Styles\%(RecursiveDir)%(Filename)%(Extension)" />
+    <AvaloniaResource Include="Assets\\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,9 +32,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Invoices.Core\Invoices.Core.csproj" />
-    <ProjectReference Include="..\Invoices.Data\Invoices.Data.csproj" />
-    <ProjectReference Include="..\GRCFinancialControl.Persistence\GRCFinancialControl.Persistence.csproj" />
-    <ProjectReference Include="..\GRCFinancialControl.Core\GRCFinancialControl.Core.csproj" />
+    <ProjectReference Include="..\\Invoices.Core\\Invoices.Core.csproj" />
+    <ProjectReference Include="..\\Invoices.Data\\Invoices.Data.csproj" />
+    <ProjectReference Include="..\\GRCFinancialControl.Persistence\\GRCFinancialControl.Persistence.csproj" />
+    <ProjectReference Include="..\\GRCFinancialControl.Core\\GRCFinancialControl.Core.csproj" />
+    <ProjectReference Include="..\\App.Presentation\\App.Presentation.csproj" />
   </ItemGroup>
 </Project>
