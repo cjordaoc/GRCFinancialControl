@@ -1,12 +1,17 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
+using App.Presentation.Views;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using CommunityToolkit.Mvvm.Messaging;
+using GRCFinancialControl.Core.Authentication;
 using GRCFinancialControl.Core.Configuration;
 using GRCFinancialControl.Core.Enums;
+using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence;
+using GRCFinancialControl.Persistence.Authentication;
 using GRCFinancialControl.Persistence.Configuration;
 using GRCFinancialControl.Persistence.Services;
 using GRCFinancialControl.Persistence.Services.Dataverse;
@@ -56,10 +61,22 @@ public partial class App : Application
                 services.AddSingleton(new DataBackendOptions(DataBackend.Dataverse));
                 services.AddSingleton<IDbContextFactory<ApplicationDbContext>, UnsupportedApplicationDbContextFactory>();
 
+                ApplyDataverseDefaults(context.Configuration);
                 var dataverseOptions = DataverseConnectionOptionsProvider.Resolve(CreateSettingsDbContext);
                 services.AddSingleton(dataverseOptions);
+                services.AddSingleton<IAuthConfig>(provider =>
+                {
+                    var options = provider.GetRequiredService<DataverseConnectionOptions>();
+                    var authority = string.IsNullOrWhiteSpace(options.TenantId)
+                        ? "https://login.microsoftonline.com/common"
+                        : $"https://login.microsoftonline.com/{options.TenantId}";
+                    var orgUri = new Uri(options.OrgUrl);
+                    var scope = $"{orgUri.AbsoluteUri.TrimEnd('/')}/user_impersonation";
+                    return new AuthConfig(options.ClientId, authority, orgUri, new[] { scope });
+                });
+                services.AddSingleton<IInteractiveAuthService, InteractiveAuthService>();
+                services.AddSingleton<IDataverseClientFactory, DataverseClientFactory>();
                 services.AddSingleton(_ => DataverseEntityMetadataRegistry.CreateDefault());
-                services.AddSingleton<IDataverseServiceClientFactory, DataverseServiceClientFactory>();
                 services.AddSingleton<IDataverseRepository, DataverseRepository>();
                 services.AddSingleton<SqlForeignKeyParser>();
                 services.Configure<DataverseProvisioningOptions>(options =>
@@ -100,15 +117,49 @@ public partial class App : Application
 
         _host.Start();
 
+        EnsureDataverseDefaultsPersisted(Services.GetRequiredService<IConfiguration>());
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var mainWindow = Services.GetRequiredService<MainWindow>();
             mainWindow.DataContext = Services.GetRequiredService<MainWindowViewModel>();
-            desktop.MainWindow = mainWindow;
             desktop.Exit += (_, _) => DisposeHostAsync().GetAwaiter().GetResult();
 
             var errorHandler = Services.GetRequiredService<IGlobalErrorHandler>();
             errorHandler.Register(desktop);
+
+            var backendOptions = Services.GetRequiredService<DataBackendOptions>();
+            if (backendOptions.Backend == DataBackend.Dataverse)
+            {
+                var splash = new AuthenticationSplashWindow();
+                desktop.MainWindow = splash;
+
+                splash.Opened += async (_, _) =>
+                {
+                    var failureMessage = await TryAuthenticateOnStartupAsync(splash).ConfigureAwait(true);
+
+                    if (!string.IsNullOrEmpty(failureMessage))
+                    {
+                        async void Handler(object? sender, EventArgs args)
+                        {
+                            mainWindow.Opened -= Handler;
+                            var dialogService = Services.GetRequiredService<IErrorDialogService>();
+                            await dialogService.ShowErrorAsync(mainWindow, failureMessage, "Dataverse sign-in");
+                        }
+
+                        mainWindow.Opened += Handler;
+                    }
+
+                    desktop.MainWindow = mainWindow;
+                    mainWindow.Show();
+                    splash.Close();
+                };
+            }
+            else
+            {
+                desktop.MainWindow = mainWindow;
+                mainWindow.Show();
+            }
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -152,5 +203,133 @@ public partial class App : Application
         }
 
         _host = null;
+    }
+
+    private static void ApplyDataverseDefaults(IConfiguration configuration)
+    {
+        var section = configuration.GetSection("Dataverse");
+        if (!section.Exists())
+        {
+            return;
+        }
+
+        SetEnvironmentIfMissing("DV_ORG_URL", section["OrgUrl"]);
+        if (IsMeaningfulClientId(section["ClientId"]))
+        {
+            SetEnvironmentIfMissing("DV_CLIENT_ID", section["ClientId"]);
+        }
+        SetEnvironmentIfMissing("DV_TENANT_ID", section["TenantId"]);
+        SetEnvironmentIfMissing("DV_AUTH_MODE", section["AuthMode"] ?? "Interactive");
+    }
+
+    private static void SetEnvironmentIfMissing(string variable, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(variable)))
+        {
+            Environment.SetEnvironmentVariable(variable, value);
+        }
+    }
+
+    private static void EnsureDataverseDefaultsPersisted(IConfiguration configuration)
+    {
+        var section = configuration.GetSection("Dataverse");
+        var orgUrl = section["OrgUrl"];
+        var clientId = section["ClientId"];
+
+        if (string.IsNullOrWhiteSpace(orgUrl) || !IsMeaningfulClientId(clientId))
+        {
+            return;
+        }
+
+        using var context = CreateSettingsDbContext();
+        context.Database.EnsureCreated();
+
+        var settingsService = new SettingsService(context);
+        var existingSettings = settingsService.GetDataverseSettingsAsync().GetAwaiter().GetResult();
+
+        if (!existingSettings.IsComplete())
+        {
+            var authModeValue = section["AuthMode"];
+            var authMode = Enum.TryParse(authModeValue, ignoreCase: true, out DataverseAuthMode parsedMode)
+                ? parsedMode
+                : DataverseAuthMode.Interactive;
+
+            var tenantId = string.IsNullOrWhiteSpace(section["TenantId"])
+                ? "common"
+                : section["TenantId"]!;
+
+            var dataverseSettings = new DataverseSettings
+            {
+                OrgUrl = orgUrl!,
+                ClientId = clientId!,
+                TenantId = tenantId,
+                ClientSecret = string.Empty,
+                AuthMode = authMode
+            };
+
+            settingsService.SaveDataverseSettingsAsync(dataverseSettings).GetAwaiter().GetResult();
+        }
+
+        settingsService.SetBackendPreferenceAsync(DataBackend.Dataverse).GetAwaiter().GetResult();
+    }
+
+    private static bool IsMeaningfulClientId(string? value)
+    {
+        return Guid.TryParse(value, out var clientId) && clientId != Guid.Empty;
+    }
+
+    private async Task<string?> TryAuthenticateOnStartupAsync(AuthenticationSplashWindow splashWindow)
+    {
+        var options = Services.GetService<DataverseConnectionOptions>();
+        if (options is null)
+        {
+            return null;
+        }
+
+        if (options.AuthMode != DataverseAuthMode.Interactive)
+        {
+            splashWindow.SetStatus("Using application authentication.");
+            await Task.Delay(400).ConfigureAwait(true);
+            return null;
+        }
+
+        var authService = Services.GetRequiredService<IInteractiveAuthService>();
+        var authConfig = Services.GetRequiredService<IAuthConfig>();
+        var scopes = authConfig.Scopes?.ToArray() ?? Array.Empty<string>();
+
+        splashWindow.SetStatus("Signing in to Dataverse...");
+
+        try
+        {
+            var result = await authService.AcquireTokenAsync(scopes).ConfigureAwait(true);
+            var user = result.User;
+
+            if (user is not null)
+            {
+                var name = !string.IsNullOrWhiteSpace(user.DisplayName)
+                    ? user.DisplayName
+                    : user.UserPrincipalName ?? "Dataverse user";
+                splashWindow.SetStatus($"Signed in as {name}.");
+            }
+            else
+            {
+                splashWindow.SetStatus("Signed in to Dataverse.");
+            }
+
+            await Task.Delay(650).ConfigureAwait(true);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            var message = AuthenticationMessageFormatter.GetFriendlyMessage(ex);
+            splashWindow.ShowError(message);
+            await Task.Delay(2000).ConfigureAwait(true);
+            return message;
+        }
     }
 }

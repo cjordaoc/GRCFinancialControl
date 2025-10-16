@@ -1,0 +1,25 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="App.Presentation.Views.AuthenticationSplashWindow"
+        Width="360"
+        Height="220"
+        CanResize="False"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False"
+        SystemDecorations="BorderOnly"
+        Title="Signing in">
+    <Border Padding="20" CornerRadius="12" Background="#2F2F33">
+        <StackPanel Spacing="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock Text="Loading Dataverse" FontSize="20" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center"/>
+            <TextBlock x:Name="StatusText"
+                       Text="Preparing sign-in..."
+                       TextWrapping="Wrap"
+                       Foreground="#E0E0E0"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center"/>
+            <ProgressBar x:Name="Progress"
+                         Width="220"
+                         IsIndeterminate="True"/>
+        </StackPanel>
+    </Border>
+</Window>

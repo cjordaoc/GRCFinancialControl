@@ -15,13 +15,38 @@
 
         <StackPanel Spacing="6" Margin="0,10,0,0" IsVisible="{Binding IsDataverseSelected}">
             <TextBlock Text="Dataverse Connection Settings" FontSize="20" FontWeight="SemiBold"/>
-            <TextBox Text="{Binding DataverseOrgUrl}" Watermark="Organization URL"/>
-            <TextBox Text="{Binding DataverseTenantId}" Watermark="Tenant Id"/>
-            <TextBox Text="{Binding DataverseClientId}" Watermark="Client Id"/>
-            <TextBox Text="{Binding DataverseClientSecret}" Watermark="Client Secret" PasswordChar="*"/>
-            <TextBlock Text="Environment variables override these values when present." FontStyle="Italic"/>
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <RadioButton Content="Interactive (User)"
+                             GroupName="DataverseAuth"
+                             IsChecked="{Binding IsInteractiveAuthSelected, Mode=TwoWay}"
+                             IsEnabled="{Binding CanEditDataverseSettings}"/>
+                <RadioButton Content="App (Client Secret)"
+                             GroupName="DataverseAuth"
+                             IsChecked="{Binding IsClientSecretAuthSelected, Mode=TwoWay}"
+                             IsEnabled="{Binding CanEditDataverseSettings}"/>
+            </StackPanel>
+            <TextBlock Text="Environment variables override these values when present."
+                       FontStyle="Italic"/>
+            <TextBlock Text="Environment-managed credentials are read-only."
+                       FontStyle="Italic"
+                       IsVisible="{Binding IsEnvironmentOverride}"/>
+            <TextBox Text="{Binding DataverseOrgUrl}" Watermark="Organization URL" IsEnabled="{Binding CanEditDataverseSettings}"/>
+            <TextBox Text="{Binding DataverseTenantId}" Watermark="Tenant (optional)" IsEnabled="{Binding CanEditDataverseSettings}"/>
+            <TextBox Text="{Binding DataverseClientId}" Watermark="Client Id" IsEnabled="{Binding CanEditDataverseSettings}"/>
+            <TextBox Text="{Binding DataverseClientSecret}" Watermark="Client Secret" PasswordChar="*" IsVisible="{Binding IsClientSecretAuthSelected}" IsEnabled="{Binding CanEditDataverseSettings}"/>
+            <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
+                <Button Content="Load Settings" Command="{Binding LoadSettingsCommand}"/>
+                <Button Content="Save Settings" Command="{Binding SaveSettingsCommand}" IsEnabled="{Binding CanEditDataverseSettings}"/>
+                <Button Content="Test Connection" Command="{Binding TestDataverseConnectionCommand}" IsEnabled="{Binding CanEditDataverseSettings}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
+                <Button Content="Sign In" Command="{Binding SignInCommand}" IsEnabled="{Binding CanEditDataverseSettings}"/>
+                <Button Content="Sign Out" Command="{Binding SignOutCommand}" IsEnabled="{Binding CanEditDataverseSettings}"/>
+                <ProgressBar Width="140" Margin="10,0,0,0" IsIndeterminate="True" IsVisible="{Binding IsAuthOperationInProgress}"/>
+            </StackPanel>
+            <TextBlock Text="{Binding DataverseCurrentUser}" FontStyle="Italic"/>
             <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,10,0,0">
-                <Button Content="Drop and Recreate Dataverse Tables" Command="{Binding ProvisionDataverseCommand}"/>
+                <Button Content="Drop and Recreate Dataverse Tables" Command="{Binding ProvisionDataverseCommand}" IsEnabled="{Binding CanEditDataverseSettings}"/>
                 <ProgressBar Width="160" IsIndeterminate="True" IsVisible="{Binding IsProvisioningDataverse}"/>
             </StackPanel>
         </StackPanel>
