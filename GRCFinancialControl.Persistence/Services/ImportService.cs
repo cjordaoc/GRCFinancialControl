@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using ExcelDataReader;
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
+using GRCFinancialControl.Persistence.Services.Importers;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -20,18 +21,28 @@ namespace GRCFinancialControl.Persistence.Services
     {
         private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
         private readonly ILogger<ImportService> _logger;
+        private readonly IFullManagementDataImporter _fullManagementDataImporter;
         private const string FinancialEvolutionInitialPeriodId = "INITIAL";
+        private const int FcsDataStartRowIndex = 11; // Row 12 in Excel (1-based)
+        private const int FcsEngagementIdColumnIndex = 0;
+        private const int FcsCurrentFiscalYearBacklogColumnIndex = 248; // Column IN
+        private const int FcsFutureFiscalYearBacklogColumnIndex = 249;  // Column IO
         private static readonly Regex MultiWhitespaceRegex = new Regex("\\s+", RegexOptions.Compiled);
         private static readonly Regex DigitsRegex = new Regex("\\d+", RegexOptions.Compiled);
+        private static readonly Regex FiscalYearCodeRegex = new Regex(@"FY\\d{2,4}", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly CultureInfo PtBrCulture = CultureInfo.GetCultureInfo("pt-BR");
 
-        public ImportService(IDbContextFactory<ApplicationDbContext> contextFactory, ILogger<ImportService> logger)
+        public ImportService(IDbContextFactory<ApplicationDbContext> contextFactory,
+            ILogger<ImportService> logger,
+            IFullManagementDataImporter fullManagementDataImporter)
         {
             ArgumentNullException.ThrowIfNull(contextFactory);
             ArgumentNullException.ThrowIfNull(logger);
+            ArgumentNullException.ThrowIfNull(fullManagementDataImporter);
 
             _contextFactory = contextFactory;
             _logger = logger;
+            _fullManagementDataImporter = fullManagementDataImporter;
         }
 
         public async Task<string> ImportBudgetAsync(string filePath)
@@ -127,6 +138,37 @@ namespace GRCFinancialControl.Persistence.Services
             }
             else
             {
+                if (engagement.Source == EngagementSource.S4Project)
+                {
+                    var manualOnlyMessage =
+                        $"Engagement '{engagement.EngagementId}' is sourced from S/4Project and must be managed manually. " +
+                        "Budget workbook import skipped.";
+
+                    _logger.LogInformation(
+                        "Skipping budget import for engagement {EngagementId} from file {FilePath} because it is manual-only (source: {Source}).",
+                        engagement.EngagementId,
+                        filePath,
+                        engagement.Source);
+
+                    await transaction.RollbackAsync();
+                    var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>
+                    {
+                        ["ManualOnly"] = new[] { engagement.EngagementId }
+                    };
+
+                    var skipNotes = new List<string>
+                    {
+                        manualOnlyMessage
+                    };
+
+                    return ImportSummaryFormatter.Build(
+                        "Budget import",
+                        inserted: 0,
+                        updated: 0,
+                        skipReasons,
+                        skipNotes);
+                }
+
                 engagement.Description = engagementDescription;
                 engagement.InitialHoursBudget = totalBudgetHours;
             }
@@ -164,17 +206,30 @@ namespace GRCFinancialControl.Persistence.Services
             await context.SaveChangesAsync();
             await transaction.CommitAsync();
 
-            var summary = new StringBuilder();
-            summary.Append($"Customer '{customer.Name}' {(customerCreated ? "created" : "upserted")} (Id={customer.Id})");
-            summary.Append($", Engagement '{engagement.EngagementId}' {(engagementCreated ? "created" : "upserted")} (Id={engagement.Id})");
-            summary.Append($", {rankBudgetsFromFile.Count} rank rows processed, InitialHoursBudget={totalBudgetHours:F2}");
+            var customersInserted = customerCreated ? 1 : 0;
+            var customersUpdated = customerCreated ? 0 : 1;
+            var engagementsInserted = engagementCreated ? 1 : 0;
+            var engagementsUpdated = engagementCreated ? 0 : 1;
+
+            var notes = new List<string>
+            {
+                $"Customers inserted: {customersInserted}, updated: {customersUpdated}",
+                $"Engagements inserted: {engagementsInserted}, updated: {engagementsUpdated}",
+                $"Rank budgets processed: {rankBudgetsFromFile.Count}",
+                $"Initial hours budget total: {totalBudgetHours:F2}"
+            };
 
             if (issues.Count > 0)
             {
-                summary.Append($". Notes: {string.Join("; ", issues)}");
+                notes.Add($"Notes: {string.Join("; ", issues)}");
             }
 
-            return summary.ToString();
+            return ImportSummaryFormatter.Build(
+                "Budget import",
+                customersInserted + engagementsInserted,
+                customersUpdated + engagementsUpdated,
+                null,
+                notes);
         }
 
         private static (List<(string rank, decimal hours)> rows, List<string> issues) ParseResourcing(DataTable resourcing)
@@ -354,6 +409,358 @@ namespace GRCFinancialControl.Persistence.Services
             return Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
         }
 
+        public async Task<string> ImportFcsRevenueBacklogAsync(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                throw new ArgumentException("File path must be provided.", nameof(filePath));
+            }
+
+            if (!File.Exists(filePath))
+            {
+                throw new FileNotFoundException("FCS backlog workbook could not be found.", filePath);
+            }
+
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+
+            using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var reader = ExcelReaderFactory.CreateReader(stream);
+            var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration
+            {
+                ConfigureDataTable = _ => new ExcelDataTableConfiguration
+                {
+                    UseHeaderRow = false
+                }
+            });
+
+            if (dataSet.Tables.Count == 0)
+            {
+                throw new InvalidDataException("The FCS backlog workbook does not contain any worksheets.");
+            }
+
+            var worksheet = dataSet.Tables[0];
+
+            var (currentFiscalYearName, lastUpdateDate) = ParseFcsMetadata(worksheet);
+            var nextFiscalYearName = IncrementFiscalYearName(currentFiscalYearName);
+
+            EnsureColumnExists(worksheet, FcsEngagementIdColumnIndex, "Engagement ID");
+            EnsureColumnExists(worksheet, FcsCurrentFiscalYearBacklogColumnIndex, "FYTG Backlog");
+            EnsureColumnExists(worksheet, FcsFutureFiscalYearBacklogColumnIndex, "Future FY Backlog");
+
+            var parsedRows = new List<FcsBacklogRow>();
+            for (var rowIndex = FcsDataStartRowIndex; rowIndex < worksheet.Rows.Count; rowIndex++)
+            {
+                var row = worksheet.Rows[rowIndex];
+                if (IsRowEmpty(row))
+                {
+                    continue;
+                }
+
+                var engagementIdRaw = Convert.ToString(row[FcsEngagementIdColumnIndex], CultureInfo.InvariantCulture);
+                var engagementId = NormalizeWhitespace(engagementIdRaw);
+                if (string.IsNullOrEmpty(engagementId))
+                {
+                    continue;
+                }
+
+                var currentBacklog = ParseDecimal(row[FcsCurrentFiscalYearBacklogColumnIndex], 2) ?? 0m;
+                var futureBacklog = ParseDecimal(row[FcsFutureFiscalYearBacklogColumnIndex], 2) ?? 0m;
+
+                var excelRowNumber = rowIndex + 1; // Excel is 1-based
+                parsedRows.Add(new FcsBacklogRow(engagementId, currentBacklog, futureBacklog, excelRowNumber));
+            }
+
+            if (parsedRows.Count == 0)
+            {
+                var emptyNotes = new List<string>
+                {
+                    $"Workbook did not contain any backlog data for fiscal year {currentFiscalYearName}."
+                };
+
+                if (lastUpdateDate.HasValue)
+                {
+                    emptyNotes.Add($"Workbook last update: {lastUpdateDate.Value:yyyy-MM-dd}");
+                }
+
+                return ImportSummaryFormatter.Build(
+                    $"FCS backlog import ({currentFiscalYearName})",
+                    inserted: 0,
+                    updated: 0,
+                    skipReasons: null,
+                    notes: emptyNotes,
+                    processed: 0);
+            }
+
+            var distinctEngagementIds = parsedRows
+                .Select(r => r.EngagementId)
+                .Where(id => !string.IsNullOrEmpty(id))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            await using var context = await _contextFactory.CreateDbContextAsync();
+
+            var fiscalYears = await context.FiscalYears
+                .Where(fy => fy.Name == currentFiscalYearName || fy.Name == nextFiscalYearName)
+                .ToListAsync();
+
+            var fiscalYearLookup = fiscalYears.ToDictionary(fy => fy.Name, StringComparer.OrdinalIgnoreCase);
+
+            if (!fiscalYearLookup.TryGetValue(currentFiscalYearName, out var currentFiscalYear))
+            {
+                throw new InvalidDataException(
+                    $"Fiscal year '{currentFiscalYearName}' referenced by the FCS backlog workbook could not be found in the database.");
+            }
+
+            fiscalYearLookup.TryGetValue(nextFiscalYearName, out var nextFiscalYear);
+            if (nextFiscalYear == null)
+            {
+                _logger.LogWarning(
+                    "Next fiscal year {NextFiscalYear} referenced by the FCS backlog workbook was not found. Future backlog values will be skipped.",
+                    nextFiscalYearName);
+            }
+
+            var engagements = await context.Engagements
+                .Include(e => e.RevenueAllocations)
+                .Where(e => distinctEngagementIds.Contains(e.EngagementId))
+                .ToListAsync();
+
+            var engagementLookup = engagements.ToDictionary(e => e.EngagementId, StringComparer.OrdinalIgnoreCase);
+
+            var manualOnlyDetails = new List<string>();
+            var missingEngagementDetails = new List<string>();
+            var lockedFiscalYearDetails = new List<string>();
+            var touchedEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            var createdAllocations = 0;
+            var updatedAllocations = 0;
+
+            foreach (var row in parsedRows)
+            {
+                if (!engagementLookup.TryGetValue(row.EngagementId, out var engagement))
+                {
+                    _logger.LogWarning(
+                        "FCS backlog row {RowNumber} references engagement '{EngagementId}', which was not found in the database.",
+                        row.RowNumber,
+                        row.EngagementId);
+                    missingEngagementDetails.Add($"{row.EngagementId} (row {row.RowNumber})");
+                    continue;
+                }
+
+                if (engagement.Source == EngagementSource.S4Project)
+                {
+                    _logger.LogInformation(
+                        "Skipping FCS backlog row {RowNumber} for engagement {EngagementId} from file {FilePath} because it is manual-only (source: {Source}).",
+                        row.RowNumber,
+                        engagement.EngagementId,
+                        filePath,
+                        engagement.Source);
+                    manualOnlyDetails.Add($"{engagement.EngagementId} (row {row.RowNumber})");
+                    continue;
+                }
+
+                var toGoCurrent = RoundMoney(row.CurrentBacklog);
+                var toDateCurrent = RoundMoney(engagement.OpeningValue - row.CurrentBacklog - row.FutureBacklog);
+                var toGoNext = RoundMoney(row.FutureBacklog);
+
+                if (currentFiscalYear.IsLocked)
+                {
+                    _logger.LogInformation(
+                        "Skipping FCS backlog update for engagement {EngagementId} in fiscal year {FiscalYear} because the fiscal year is locked.",
+                        engagement.EngagementId,
+                        currentFiscalYear.Name);
+                    lockedFiscalYearDetails.Add($"{engagement.EngagementId} ({currentFiscalYear.Name})");
+                }
+                else
+                {
+                    var allocation = engagement.RevenueAllocations
+                        .FirstOrDefault(a => a.FiscalYearId == currentFiscalYear.Id);
+
+                    if (allocation == null)
+                    {
+                        allocation = new EngagementFiscalYearRevenueAllocation
+                        {
+                            EngagementId = engagement.Id,
+                            FiscalYearId = currentFiscalYear.Id,
+                            ToGoValue = toGoCurrent,
+                            ToDateValue = toDateCurrent
+                        };
+                        engagement.RevenueAllocations.Add(allocation);
+                        context.EngagementFiscalYearRevenueAllocations.Add(allocation);
+                        createdAllocations++;
+                    }
+                    else
+                    {
+                        allocation.ToGoValue = toGoCurrent;
+                        allocation.ToDateValue = toDateCurrent;
+                        updatedAllocations++;
+                    }
+
+                    touchedEngagements.Add(engagement.EngagementId);
+                }
+
+                if (nextFiscalYear == null)
+                {
+                    continue;
+                }
+
+                if (nextFiscalYear.IsLocked)
+                {
+                    _logger.LogInformation(
+                        "Skipping FCS backlog update for engagement {EngagementId} in fiscal year {FiscalYear} because the fiscal year is locked.",
+                        engagement.EngagementId,
+                        nextFiscalYear.Name);
+                    lockedFiscalYearDetails.Add($"{engagement.EngagementId} ({nextFiscalYear.Name})");
+                    continue;
+                }
+
+                var nextAllocation = engagement.RevenueAllocations
+                    .FirstOrDefault(a => a.FiscalYearId == nextFiscalYear.Id);
+
+                if (nextAllocation == null)
+                {
+                    nextAllocation = new EngagementFiscalYearRevenueAllocation
+                    {
+                        EngagementId = engagement.Id,
+                        FiscalYearId = nextFiscalYear.Id,
+                        ToGoValue = toGoNext,
+                        ToDateValue = 0m
+                    };
+                    engagement.RevenueAllocations.Add(nextAllocation);
+                    context.EngagementFiscalYearRevenueAllocations.Add(nextAllocation);
+                    createdAllocations++;
+                }
+                else
+                {
+                    nextAllocation.ToGoValue = toGoNext;
+                    nextAllocation.ToDateValue = 0m;
+                    updatedAllocations++;
+                }
+
+                touchedEngagements.Add(engagement.EngagementId);
+            }
+
+            if (createdAllocations + updatedAllocations > 0)
+            {
+                await context.SaveChangesAsync();
+            }
+
+            var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>();
+
+            if (manualOnlyDetails.Count > 0)
+            {
+                skipReasons["ManualOnly"] = manualOnlyDetails;
+            }
+
+            if (lockedFiscalYearDetails.Count > 0)
+            {
+                skipReasons["LockedFiscalYear"] = lockedFiscalYearDetails;
+            }
+
+            if (missingEngagementDetails.Count > 0)
+            {
+                skipReasons["MissingEngagement"] = missingEngagementDetails;
+            }
+
+            var notes = new List<string>
+            {
+                $"Engagements affected: {touchedEngagements.Count}"
+            };
+
+            if (lastUpdateDate.HasValue)
+            {
+                notes.Insert(0, $"Workbook last update: {lastUpdateDate.Value:yyyy-MM-dd}");
+            }
+
+            if (nextFiscalYear == null)
+            {
+                notes.Add($"Future backlog values skipped because fiscal year {nextFiscalYearName} was not found.");
+            }
+
+            return ImportSummaryFormatter.Build(
+                $"FCS backlog import ({currentFiscalYear.Name})",
+                createdAllocations,
+                updatedAllocations,
+                skipReasons,
+                notes,
+                parsedRows.Count);
+        }
+
+        public async Task<string> ImportFullManagementDataAsync(string filePath)
+        {
+            var result = await _fullManagementDataImporter.ImportAsync(filePath);
+
+            foreach (var error in result.Errors)
+            {
+                _logger.LogWarning("Full Management Data import issue: {Message}", error);
+            }
+
+            return result.Summary;
+        }
+
+        private static (string FiscalYearName, DateTime? LastUpdateDate) ParseFcsMetadata(DataTable worksheet)
+        {
+            var rawValue = GetCellString(worksheet, 3, 0);
+            if (string.IsNullOrWhiteSpace(rawValue))
+            {
+                throw new InvalidDataException("Cell A4 must contain the fiscal year metadata for the FCS backlog workbook.");
+            }
+
+            var normalized = NormalizeWhitespace(rawValue);
+            var match = FiscalYearCodeRegex.Match(normalized);
+            if (!match.Success)
+            {
+                throw new InvalidDataException("Cell A4 must specify the current fiscal year (e.g., FY26).");
+            }
+
+            var fiscalYearName = match.Value.ToUpperInvariant();
+
+            DateTime? lastUpdateDate = null;
+            foreach (var token in normalized.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (TryParseAsOfDate(token, out var parsedDate))
+                {
+                    lastUpdateDate = parsedDate.Date;
+                    break;
+                }
+            }
+
+            return (fiscalYearName, lastUpdateDate);
+        }
+
+        private static string IncrementFiscalYearName(string fiscalYearName)
+        {
+            if (string.IsNullOrWhiteSpace(fiscalYearName))
+            {
+                throw new ArgumentException("Fiscal year name must be provided.", nameof(fiscalYearName));
+            }
+
+            var match = DigitsRegex.Match(fiscalYearName);
+            if (!match.Success)
+            {
+                throw new InvalidDataException($"Unable to determine next fiscal year based on '{fiscalYearName}'.");
+            }
+
+            if (!int.TryParse(match.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var currentYear))
+            {
+                throw new InvalidDataException($"Unable to parse fiscal year component from '{fiscalYearName}'.");
+            }
+
+            var prefix = fiscalYearName[..match.Index];
+            var suffix = fiscalYearName[(match.Index + match.Length)..];
+
+            var format = new string('0', match.Length);
+            var nextYearText = currentYear + 1;
+            var formattedNumber = format.Length > 0
+                ? nextYearText.ToString(format, CultureInfo.InvariantCulture)
+                : nextYearText.ToString(CultureInfo.InvariantCulture);
+
+            return (prefix + formattedNumber + suffix).ToUpperInvariant();
+        }
+
+        private static decimal RoundMoney(decimal value) => Math.Round(value, 2, MidpointRounding.AwayFromZero);
+
+        private sealed record FcsBacklogRow(string EngagementId, decimal CurrentBacklog, decimal FutureBacklog, int RowNumber);
+
         public async Task<string> ImportActualsAsync(string filePath, int closingPeriodId)
         {
             if (string.IsNullOrWhiteSpace(filePath))
@@ -370,10 +777,21 @@ namespace GRCFinancialControl.Persistence.Services
 
             await using var context = await _contextFactory.CreateDbContextAsync();
 
-            var closingPeriod = await context.ClosingPeriods.FindAsync(closingPeriodId);
+            var closingPeriod = await context.ClosingPeriods
+                .Include(cp => cp.FiscalYear)
+                .FirstOrDefaultAsync(cp => cp.Id == closingPeriodId);
             if (closingPeriod == null)
             {
                 return "Selected closing period could not be found. Please refresh and try again.";
+            }
+
+            if (closingPeriod.FiscalYear?.IsLocked ?? false)
+            {
+                var fiscalYearName = string.IsNullOrWhiteSpace(closingPeriod.FiscalYear.Name)
+                    ? $"Id={closingPeriod.FiscalYear.Id}"
+                    : closingPeriod.FiscalYear.Name;
+
+                return $"Closing period '{closingPeriod.Name}' belongs to locked fiscal year '{fiscalYearName}'. Unlock it before running the ETC-P import.";
             }
 
             var customerCache = new Dictionary<string, Customer>(StringComparer.OrdinalIgnoreCase);
@@ -385,6 +803,7 @@ namespace GRCFinancialControl.Persistence.Services
             var engagementsCreated = 0;
             var engagementsUpdated = 0;
             var rowsProcessed = 0;
+            var manualOnlyDetails = new List<string>();
 
             using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             using var reader = ExcelReaderFactory.CreateReader(stream);
@@ -423,6 +842,7 @@ namespace GRCFinancialControl.Persistence.Services
 
             var etcpAsOfDate = ExtractEtcAsOfDate(etcpTable);
 
+            var parsedRows = new List<EtcpImportRow>();
             for (var rowIndex = headerRowIndex + 1; rowIndex < etcpTable.Rows.Count; rowIndex++)
             {
                 var row = etcpTable.Rows[rowIndex];
@@ -441,29 +861,85 @@ namespace GRCFinancialControl.Persistence.Services
                         continue;
                     }
 
-                    var (customer, customerCreated) = await GetOrCreateCustomerAsync(context, customerCache, parsedRow);
+                    parsedRows.Add(parsedRow);
+                }
+                catch (Exception ex)
+                {
+                    rowErrors.Add($"Row {rowNumber}: {ex.Message}");
+                    _logger.LogError(ex, "Failed to import ETC-P row {RowNumber} from file {FilePath}", rowNumber, filePath);
+                }
+            }
+
+            var pendingCustomerCodes = parsedRows.Count > 0
+                ? await PrefetchCustomersAsync(context, customerCache, parsedRows.Select(r => r.CustomerCode))
+                : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            var pendingEngagementIds = parsedRows.Count > 0
+                ? await PrefetchEngagementsAsync(context, engagementCache, parsedRows.Select(r => r.EngagementId))
+                : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var parsedRow in parsedRows)
+            {
+                var rowNumber = parsedRow.RowNumber;
+
+                try
+                {
+                    var (customer, customerCreated) = await GetOrCreateCustomerAsync(
+                        context,
+                        customerCache,
+                        parsedRow,
+                        pendingCustomerCodes);
                     if (customerCreated)
                     {
                         customersCreated++;
                     }
 
-                    UpdateCustomer(customer, parsedRow);
-
-                    var (engagement, engagementCreated) = await GetOrCreateEngagementAsync(context, engagementCache, parsedRow);
+                    var (engagement, engagementCreated) = await GetOrCreateEngagementAsync(
+                        context,
+                        engagementCache,
+                        parsedRow,
+                        pendingEngagementIds);
                     if (engagementCreated)
                     {
                         engagementsCreated++;
                         processedEngagements.Add(engagement.EngagementId);
+                    }
+                    else if (engagement.Source == EngagementSource.S4Project)
+                    {
+                        manualOnlyDetails.Add($"{engagement.EngagementId} (row {rowNumber})");
+                        _logger.LogInformation(
+                            "Skipping ETC-P row {RowNumber} for engagement {EngagementId} from file {FilePath} because it is manual-only (source: {Source}).",
+                            rowNumber,
+                            engagement.EngagementId,
+                            filePath,
+                            engagement.Source);
+                        continue;
                     }
                     else if (processedEngagements.Add(engagement.EngagementId))
                     {
                         engagementsUpdated++;
                     }
 
+                    UpdateCustomer(customer, parsedRow);
+
                     UpdateEngagement(engagement, customer, parsedRow, closingPeriod, etcpAsOfDate);
 
-                    UpsertFinancialEvolution(context, engagement, FinancialEvolutionInitialPeriodId, parsedRow.BudgetHours, parsedRow.BudgetValue, parsedRow.MarginBudget, parsedRow.BudgetExpenses);
-                    UpsertFinancialEvolution(context, engagement, closingPeriod.Name, parsedRow.EtcpHours, parsedRow.EtcpValue, parsedRow.MarginEtcp, parsedRow.EtcpExpenses);
+                    UpsertFinancialEvolution(
+                        context,
+                        engagement,
+                        FinancialEvolutionInitialPeriodId,
+                        parsedRow.BudgetHours,
+                        parsedRow.BudgetValue,
+                        parsedRow.MarginBudget,
+                        parsedRow.BudgetExpenses);
+                    UpsertFinancialEvolution(
+                        context,
+                        engagement,
+                        closingPeriod.Name,
+                        parsedRow.EtcpHours,
+                        parsedRow.EtcpValue,
+                        parsedRow.MarginEtcp,
+                        parsedRow.EtcpExpenses);
 
                     rowsProcessed++;
                 }
@@ -476,31 +952,47 @@ namespace GRCFinancialControl.Persistence.Services
 
             await context.SaveChangesAsync();
 
-            if (rowsProcessed == 0)
+            var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>();
+
+            if (manualOnlyDetails.Count > 0)
             {
-                var emptySummary = new StringBuilder();
-                emptySummary.Append($"No ETC-P rows were imported for closing period '{closingPeriod.Name}'.");
-                if (rowErrors.Count > 0)
-                {
-                    emptySummary.Append($" {rowErrors.Count} rows reported issues; review logs for details.");
-                }
-
-                return emptySummary.ToString();
+                skipReasons["ManualOnly"] = manualOnlyDetails;
             }
-
-            var summaryBuilder = new StringBuilder();
-            summaryBuilder.Append($"ETC-P import complete for closing period '{closingPeriod.Name}'.");
-            summaryBuilder.Append($" Rows processed: {rowsProcessed}.");
-            summaryBuilder.Append($" Customers created: {customersCreated}.");
-            summaryBuilder.Append($" Engagements created: {engagementsCreated}.");
-            summaryBuilder.Append($" Engagements updated: {engagementsUpdated}.");
 
             if (rowErrors.Count > 0)
             {
-                summaryBuilder.Append($" {rowErrors.Count} rows reported issues; review logs for details.");
+                skipReasons["RowError"] = rowErrors;
             }
 
-            return summaryBuilder.ToString();
+            var notes = new List<string>
+            {
+                $"Customers created: {customersCreated}",
+                $"Engagements created: {engagementsCreated}",
+                $"Engagements updated: {engagementsUpdated}"
+            };
+
+            if (rowsProcessed == 0)
+            {
+                notes.Insert(0, $"No ETC-P rows were imported for closing period '{closingPeriod.Name}'.");
+            }
+
+            if (manualOnlyDetails.Count > 0)
+            {
+                notes.Add($"Manual-only rows skipped: {manualOnlyDetails.Count}");
+            }
+
+            if (rowErrors.Count > 0)
+            {
+                notes.Add($"Rows with issues: {rowErrors.Count} (see logs for details)");
+            }
+
+            return ImportSummaryFormatter.Build(
+                $"ETC-P import ({closingPeriod.Name})",
+                customersCreated + engagementsCreated,
+                engagementsUpdated,
+                skipReasons,
+                notes,
+                rowsProcessed);
         }
 
         private static DataTable? ResolveEtcpWorksheet(DataSet dataSet)
@@ -960,14 +1452,113 @@ namespace GRCFinancialControl.Persistence.Services
             return (name, digits.Value);
         }
 
+        private static async Task<HashSet<string>> PrefetchCustomersAsync(
+            ApplicationDbContext context,
+            IDictionary<string, Customer> cache,
+            IEnumerable<string> customerCodes)
+        {
+            var pending = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var code in customerCodes)
+            {
+                if (string.IsNullOrWhiteSpace(code))
+                {
+                    continue;
+                }
+
+                if (cache.ContainsKey(code))
+                {
+                    continue;
+                }
+
+                pending.Add(code);
+            }
+
+            if (pending.Count == 0)
+            {
+                return pending;
+            }
+
+            var lookup = pending.ToList();
+            var existingCustomers = await context.Customers
+                .Where(c => lookup.Contains(c.CustomerCode))
+                .ToListAsync();
+
+            foreach (var customer in existingCustomers)
+            {
+                cache[customer.CustomerCode] = customer;
+                pending.Remove(customer.CustomerCode);
+            }
+
+            return pending;
+        }
+
+        private static async Task<HashSet<string>> PrefetchEngagementsAsync(
+            ApplicationDbContext context,
+            IDictionary<string, Engagement> cache,
+            IEnumerable<string> engagementIds)
+        {
+            var pending = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var engagementId in engagementIds)
+            {
+                if (string.IsNullOrWhiteSpace(engagementId))
+                {
+                    continue;
+                }
+
+                if (cache.ContainsKey(engagementId))
+                {
+                    continue;
+                }
+
+                pending.Add(engagementId);
+            }
+
+            if (pending.Count == 0)
+            {
+                return pending;
+            }
+
+            var lookup = pending.ToList();
+            var existingEngagements = await context.Engagements
+                .Include(e => e.FinancialEvolutions)
+                .Include(e => e.LastClosingPeriod)
+                .Where(e => lookup.Contains(e.EngagementId))
+                .ToListAsync();
+
+            foreach (var engagement in existingEngagements)
+            {
+                cache[engagement.EngagementId] = engagement;
+                pending.Remove(engagement.EngagementId);
+            }
+
+            return pending;
+        }
+
         private static async Task<(Customer customer, bool created)> GetOrCreateCustomerAsync(
             ApplicationDbContext context,
             IDictionary<string, Customer> cache,
-            EtcpImportRow row)
+            EtcpImportRow row,
+            ISet<string> pendingCustomerCodes)
         {
             if (cache.TryGetValue(row.CustomerCode, out var cachedCustomer))
             {
                 return (cachedCustomer, false);
+            }
+
+            if (pendingCustomerCodes.Contains(row.CustomerCode))
+            {
+                var newCustomer = new Customer
+                {
+                    CustomerCode = row.CustomerCode,
+                    Name = row.CustomerName
+                };
+
+                await context.Customers.AddAsync(newCustomer);
+                cache[row.CustomerCode] = newCustomer;
+                pendingCustomerCodes.Remove(row.CustomerCode);
+                return (newCustomer, true);
             }
 
             var customer = await context.Customers
@@ -1002,15 +1593,30 @@ namespace GRCFinancialControl.Persistence.Services
         private static async Task<(Engagement engagement, bool created)> GetOrCreateEngagementAsync(
             ApplicationDbContext context,
             IDictionary<string, Engagement> cache,
-            EtcpImportRow row)
+            EtcpImportRow row,
+            ISet<string> pendingEngagementIds)
         {
             if (cache.TryGetValue(row.EngagementId, out var cachedEngagement))
             {
                 return (cachedEngagement, false);
             }
 
+            if (pendingEngagementIds.Contains(row.EngagementId))
+            {
+                var newEngagement = new Engagement
+                {
+                    EngagementId = row.EngagementId
+                };
+
+                await context.Engagements.AddAsync(newEngagement);
+                cache[row.EngagementId] = newEngagement;
+                pendingEngagementIds.Remove(row.EngagementId);
+                return (newEngagement, true);
+            }
+
             var engagement = await context.Engagements
                 .Include(e => e.FinancialEvolutions)
+                .Include(e => e.LastClosingPeriod)
                 .FirstOrDefaultAsync(e => e.EngagementId == row.EngagementId);
 
             var created = false;
@@ -1082,7 +1688,8 @@ namespace GRCFinancialControl.Persistence.Services
             var lastEtcDate = DetermineLastEtcDate(etcpAsOfDate, row.EtcpAgeDays, closingPeriod);
             engagement.LastEtcDate = lastEtcDate;
             engagement.ProposedNextEtcDate = CalculateProposedNextEtcDate(lastEtcDate);
-            engagement.LastClosingPeriodId = closingPeriod.Name;
+            engagement.LastClosingPeriodId = closingPeriod.Id;
+            engagement.LastClosingPeriod = closingPeriod;
         }
 
         private static DateTime? DetermineLastEtcDate(DateTime? etcpAsOfDate, int? ageDays, ClosingPeriod closingPeriod)
@@ -1138,13 +1745,15 @@ namespace GRCFinancialControl.Persistence.Services
                 evolution = new FinancialEvolution
                 {
                     ClosingPeriodId = closingPeriodId,
-                    EngagementId = engagement.EngagementId
+                    Engagement = engagement
                 };
 
                 engagement.FinancialEvolutions.Add(evolution);
                 context.FinancialEvolutions.Add(evolution);
             }
 
+            evolution.EngagementId = engagement.Id;
+            evolution.Engagement = engagement;
             evolution.HoursData = hours;
             evolution.ValueData = value;
             evolution.MarginData = margin;

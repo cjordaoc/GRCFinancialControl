@@ -26,8 +26,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public Manager Manager { get; }
 
-        public ManagerEditorViewModel(Manager manager, IManagerService managerService, IMessenger messenger)
-            : base(messenger ?? throw new ArgumentNullException(nameof(messenger)))
+        public ManagerEditorViewModel(
+            Manager manager,
+            IManagerService managerService,
+            IMessenger messenger,
+            bool isReadOnlyMode = false)
+            : base(messenger ?? throw new ArgumentNullException(nameof(messenger)), isReadOnlyMode)
         {
             Manager = manager ?? throw new ArgumentNullException(nameof(manager));
             _managerService = managerService ?? throw new ArgumentNullException(nameof(managerService));

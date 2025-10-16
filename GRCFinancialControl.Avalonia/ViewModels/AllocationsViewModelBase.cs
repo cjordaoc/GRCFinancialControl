@@ -69,5 +69,22 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             await _dialogService.ShowDialogAsync(editorViewModel);
             Messenger.Send(new Messages.RefreshDataMessage());
         }
+
+        [RelayCommand]
+        private async Task ViewAllocation(Engagement engagement)
+        {
+            if (engagement == null)
+            {
+                return;
+            }
+
+            var editorViewModel = new AllocationEditorViewModel(engagement,
+                                                                FiscalYears.ToList(),
+                                                                _engagementService,
+                                                                Messenger,
+                                                                Kind,
+                                                                isReadOnlyMode: true);
+            await _dialogService.ShowDialogAsync(editorViewModel);
+        }
     }
 }

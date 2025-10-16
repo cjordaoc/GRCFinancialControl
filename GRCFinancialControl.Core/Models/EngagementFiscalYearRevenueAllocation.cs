@@ -7,6 +7,7 @@ namespace GRCFinancialControl.Core.Models
         public Engagement Engagement { get; set; } = null!;
         public int FiscalYearId { get; set; }
         public FiscalYear FiscalYear { get; set; } = null!;
-        public decimal PlannedValue { get; set; }
+        public decimal ToGoValue { get; set; }
+        public decimal ToDateValue { get; set; }
     }
 }

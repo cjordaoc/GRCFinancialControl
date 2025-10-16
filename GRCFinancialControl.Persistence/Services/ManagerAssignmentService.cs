@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GRCFinancialControl.Core.Models;
+using GRCFinancialControl.Persistence.Services.Infrastructure;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -57,6 +58,12 @@ namespace GRCFinancialControl.Persistence.Services
         public async Task AddAsync(EngagementManagerAssignment assignment)
         {
             await using var context = await _contextFactory.CreateDbContextAsync();
+
+            await EngagementMutationGuard.EnsureCanMutateAsync(
+                context,
+                assignment.EngagementId,
+                "Adding manager assignments");
+
             await context.EngagementManagerAssignments.AddAsync(assignment);
             await context.SaveChangesAsync();
         }
@@ -68,6 +75,19 @@ namespace GRCFinancialControl.Persistence.Services
             if (existingAssignment is null)
             {
                 return;
+            }
+
+            await EngagementMutationGuard.EnsureCanMutateAsync(
+                context,
+                existingAssignment.EngagementId,
+                "Updating manager assignments");
+
+            if (existingAssignment.EngagementId != assignment.EngagementId)
+            {
+                await EngagementMutationGuard.EnsureCanMutateAsync(
+                    context,
+                    assignment.EngagementId,
+                    "Reassigning manager assignments");
             }
 
             existingAssignment.EngagementId = assignment.EngagementId;
@@ -86,6 +106,11 @@ namespace GRCFinancialControl.Persistence.Services
             {
                 return;
             }
+
+            await EngagementMutationGuard.EnsureCanMutateAsync(
+                context,
+                existingAssignment.EngagementId,
+                "Deleting manager assignments");
 
             context.EngagementManagerAssignments.Remove(existingAssignment);
             await context.SaveChangesAsync();

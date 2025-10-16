@@ -146,6 +146,36 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         }
 
         [RelayCommand(CanExecute = nameof(CanModifySelection))]
+        private async Task ViewAsync()
+        {
+            if (SelectedAssignment is null)
+            {
+                return;
+            }
+
+            var existingAssignment = await _assignmentService.GetByIdAsync(SelectedAssignment.AssignmentId);
+            if (existingAssignment is null)
+            {
+                return;
+            }
+
+            var editorViewModel = new ManagerAssignmentEditorViewModel(
+                existingAssignment,
+                Engagements,
+                _managers,
+                _assignmentService,
+                Messenger,
+                isReadOnlyMode: true)
+            {
+                SelectedEngagement = Engagements.FirstOrDefault(e => e.InternalId == existingAssignment.EngagementId),
+                SelectedManager = _managers.FirstOrDefault(m => m.Id == existingAssignment.ManagerId)
+            };
+
+            await editorViewModel.LoadDataAsync();
+            await _dialogService.ShowDialogAsync(editorViewModel);
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModifySelection))]
         private async Task DeleteAsync()
         {
             if (SelectedAssignment is null)
@@ -181,6 +211,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             EditCommand.NotifyCanExecuteChanged();
             DeleteCommand.NotifyCanExecuteChanged();
+            ViewCommand.NotifyCanExecuteChanged();
         }
 
         private async Task LoadAssignmentsForSelectedEngagementAsync()

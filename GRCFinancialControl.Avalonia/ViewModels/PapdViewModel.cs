@@ -53,6 +53,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Messenger.Send(new RefreshDataMessage());
         }
 
+        [RelayCommand(CanExecute = nameof(CanEdit))]
+        private async Task View(Papd papd)
+        {
+            if (papd == null) return;
+            var editorViewModel = new PapdEditorViewModel(papd, _papdService, Messenger, isReadOnlyMode: true);
+            await _dialogService.ShowDialogAsync(editorViewModel);
+        }
+
         [RelayCommand(CanExecute = nameof(CanDelete))]
         private async Task Delete(Papd papd)
         {
@@ -101,6 +109,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             DeleteCommand.NotifyCanExecuteChanged();
             DeleteDataCommand.NotifyCanExecuteChanged();
             ManageAssignmentsCommand.NotifyCanExecuteChanged();
+            ViewCommand.NotifyCanExecuteChanged();
         }
 
     }

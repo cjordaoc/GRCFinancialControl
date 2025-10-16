@@ -37,22 +37,22 @@ namespace GRCFinancialControl.Persistence.Services
                     context.Engagements.AsNoTracking(),
                     ep => ep.EngagementId,
                     e => e.Id,
-                    (ep, engagement) => new { ep.PapdId, engagement.EngagementId })
-                .Where(x => !string.IsNullOrWhiteSpace(x.EngagementId))
+                    (ep, engagement) => new { ep.PapdId, EngagementId = engagement.Id })
                 .ToListAsync();
 
-            var papdToEngagementKeys = assignments
+            var papdToEngagementIds = assignments
                 .GroupBy(a => a.PapdId)
                 .ToDictionary(
                     group => group.Key,
                     group => group
-                        .Select(a => a.EngagementId!)
-                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .Select(a => a.EngagementId)
+                        .Where(id => id > 0)
+                        .Distinct()
                         .ToList());
 
-            var relevantEngagementKeys = papdToEngagementKeys
+            var relevantEngagementIds = papdToEngagementIds
                 .SelectMany(kvp => kvp.Value)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Distinct()
                 .ToList();
 
             var closingPeriodRecords = await context.ClosingPeriods
@@ -75,35 +75,34 @@ namespace GRCFinancialControl.Persistence.Services
                         .PeriodEnd,
                     StringComparer.OrdinalIgnoreCase);
 
-            var evolutions = relevantEngagementKeys.Count == 0
+            var evolutions = relevantEngagementIds.Count == 0
                 ? new List<FinancialEvolution>()
                 : await context.FinancialEvolutions
                     .AsNoTracking()
-                    .Where(fe => relevantEngagementKeys.Contains(fe.EngagementId))
+                    .Where(fe => relevantEngagementIds.Contains(fe.EngagementId))
                     .ToListAsync();
 
             var evolutionsByEngagement = evolutions
-                .GroupBy(fe => fe.EngagementId, StringComparer.OrdinalIgnoreCase)
+                .GroupBy(fe => fe.EngagementId)
                 .ToDictionary(
                     group => group.Key,
-                    group => group.ToList(),
-                    StringComparer.OrdinalIgnoreCase);
+                    group => group.ToList());
 
             var result = new List<PapdContributionData>(papds.Count);
 
             foreach (var papd in papds)
             {
-                papdToEngagementKeys.TryGetValue(papd.Id, out var engagementKeys);
+                papdToEngagementIds.TryGetValue(papd.Id, out var engagementIds);
 
                 var revenueContribution = 0m;
                 var hoursByPeriod = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
 
-                if (engagementKeys != null)
+                if (engagementIds != null)
                 {
-                    foreach (var engagementKey in engagementKeys)
+                    foreach (var engagementId in engagementIds)
                     {
-                        if (string.IsNullOrWhiteSpace(engagementKey) ||
-                            !evolutionsByEngagement.TryGetValue(engagementKey, out var snapshots))
+                        if (engagementId <= 0 ||
+                            !evolutionsByEngagement.TryGetValue(engagementId, out var snapshots))
                         {
                             continue;
                         }
@@ -185,11 +184,24 @@ namespace GRCFinancialControl.Persistence.Services
                 return new List<FinancialEvolutionPoint>();
             }
 
+            var normalizedKey = engagementId.Trim();
+
             await using var context = await _contextFactory.CreateDbContextAsync();
+
+            var engagementDbId = await context.Engagements
+                .AsNoTracking()
+                .Where(e => e.EngagementId == normalizedKey)
+                .Select(e => (int?)e.Id)
+                .FirstOrDefaultAsync();
+
+            if (!engagementDbId.HasValue)
+            {
+                return new List<FinancialEvolutionPoint>();
+            }
 
             var entries = await context.FinancialEvolutions
                 .AsNoTracking()
-                .Where(fe => fe.EngagementId == engagementId)
+                .Where(fe => fe.EngagementId == engagementDbId.Value)
                 .Where(HasRelevantMetricsExpression())
                 .GroupJoin(
                     context.ClosingPeriods.AsNoTracking(),

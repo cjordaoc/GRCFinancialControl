@@ -33,6 +33,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private string? _statusMessage;
 
+        [ObservableProperty]
+        private bool _isReadOnlyMode;
+
         partial void OnStartDateChanged(DateTime value)
         {
             OnPropertyChanged(nameof(StartDateOffset));
@@ -63,7 +66,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public FiscalYear FiscalYear { get; }
 
-        public FiscalYearEditorViewModel(FiscalYear fiscalYear, IFiscalYearService fiscalYearService, IMessenger messenger)
+        public bool AllowEditing => !IsReadOnlyMode;
+
+        public FiscalYearEditorViewModel(
+            FiscalYear fiscalYear,
+            IFiscalYearService fiscalYearService,
+            IMessenger messenger,
+            bool isReadOnlyMode = false)
         {
             FiscalYear = fiscalYear;
             _fiscalYearService = fiscalYearService;
@@ -74,11 +83,17 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             EndDate = fiscalYear.EndDate;
             AreaSalesTarget = fiscalYear.AreaSalesTarget;
             AreaRevenueTarget = fiscalYear.AreaRevenueTarget;
+            IsReadOnlyMode = isReadOnlyMode;
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanSave))]
         private async Task Save()
         {
+            if (IsReadOnlyMode)
+            {
+                return;
+            }
+
             StatusMessage = null;
 
             if (string.IsNullOrWhiteSpace(Name))
@@ -115,6 +130,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private void Close()
         {
             _messenger.Send(new CloseDialogMessage(false));
+        }
+
+        private bool CanSave() => !IsReadOnlyMode;
+
+        partial void OnIsReadOnlyModeChanged(bool value)
+        {
+            SaveCommand.NotifyCanExecuteChanged();
+            OnPropertyChanged(nameof(AllowEditing));
         }
     }
 }

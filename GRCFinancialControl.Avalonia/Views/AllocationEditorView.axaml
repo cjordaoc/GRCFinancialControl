@@ -31,13 +31,22 @@
 
         <TextBlock Text="{Binding ValidationMessage}" Foreground="#FFB8860B" FontWeight="SemiBold" IsVisible="{Binding HasAllocationVariance}"/>
 
-        <DataGrid ItemsSource="{Binding Allocations}" AutoGenerateColumns="False" CanUserSortColumns="False">
+        <DataGrid ItemsSource="{Binding Allocations}" AutoGenerateColumns="False" CanUserSortColumns="False" IsEnabled="{Binding AllowEditing}">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Fiscal Year" Binding="{Binding FiscalYear.Name}" IsReadOnly="True"/>
-                <DataGridTextColumn Header="{Binding #AllocationEditorRoot.DataContext.AmountColumnHeader}"
-                                   Binding="{Binding PlannedAmount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}"/>
+                <DataGridTemplateColumn Header="{Binding #AllocationEditorRoot.DataContext.AmountColumnHeader}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding PlannedAmount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}"
+                                     HorizontalContentAlignment="Right"
+                                     IsEnabled="{Binding IsEditable}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridCheckBoxColumn Header="Locked" Binding="{Binding IsLocked}" IsReadOnly="True" Width="Auto"/>
             </DataGrid.Columns>
         </DataGrid>
+        <TextBlock Text="{Binding StatusMessage}" Foreground="#FFB8860B" Margin="0,5,0,0"/>
         <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">
             <Button Content="Save" Command="{Binding SaveCommand}"/>
             <Button Content="Close" Command="{Binding CloseCommand}"/>

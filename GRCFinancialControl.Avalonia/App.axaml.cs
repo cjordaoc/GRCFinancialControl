@@ -9,6 +9,7 @@ using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRCFinancialControl.Avalonia.Views;
 using GRCFinancialControl.Persistence;
 using GRCFinancialControl.Persistence.Services;
+using GRCFinancialControl.Persistence.Services.Importers;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
@@ -85,6 +86,7 @@ namespace GRCFinancialControl.Avalonia
             // Register other services
             services.AddTransient<IEngagementService, EngagementService>();
             services.AddTransient<IFiscalYearService, FiscalYearService>();
+            services.AddTransient<IFullManagementDataImporter, FullManagementDataImporter>();
             services.AddTransient<IImportService, ImportService>();
             services.AddTransient<IClosingPeriodService, ClosingPeriodService>();
             services.AddTransient<IPlannedAllocationService, PlannedAllocationService>();
