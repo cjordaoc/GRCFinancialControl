@@ -1,0 +1,25 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:InvoicePlanner.Avalonia.ViewModels"
+             xmlns:res="clr-namespace:InvoicePlanner.Avalonia.Resources"
+             xmlns:views="clr-namespace:InvoicePlanner.Avalonia.Views"
+             x:Class="InvoicePlanner.Avalonia.Views.HomeView"
+             x:DataType="vm:HomeViewModel"
+             mc:Ignorable="d">
+    <Grid RowDefinitions="Auto,*,Auto,Auto,Auto,Auto" RowSpacing="16">
+        <Border Grid.Row="0" Classes="Card" Padding="24" Margin="16,16,16,0">
+            <StackPanel Spacing="8">
+                <TextBlock Classes="TitleLarge" Text="{res:Loc Key=HomeTitle}" />
+                <TextBlock Text="{res:Loc Key=HomeSubtitle}" />
+                <TextBlock Text="{Binding WelcomeMessage}" />
+            </StackPanel>
+        </Border>
+        <views:PlanEditorView Grid.Row="1" DataContext="{Binding PlanEditor}" Margin="16,0,16,0" />
+        <views:RequestConfirmationView Grid.Row="2" DataContext="{Binding RequestConfirmation}" Margin="16,0,16,0" />
+        <views:EmissionConfirmationView Grid.Row="3" DataContext="{Binding EmissionConfirmation}" Margin="16,0,16,0" />
+        <views:InvoiceSummaryView Grid.Row="4" DataContext="{Binding Summary}" Margin="16,0,16,0" />
+        <views:NotificationPreviewView Grid.Row="5" DataContext="{Binding NotificationPreview}" Margin="16,0,16,16" />
+    </Grid>
+</UserControl>

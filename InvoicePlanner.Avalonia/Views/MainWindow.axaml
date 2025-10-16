@@ -1,0 +1,17 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:InvoicePlanner.Avalonia.ViewModels"
+        x:Class="InvoicePlanner.Avalonia.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        mc:Ignorable="d"
+        Width="1000"
+        Height="720"
+        MinWidth="960"
+        MinHeight="640"
+        Title="{Binding Title}">
+    <Border Classes="Card">
+        <ContentControl Content="{Binding CurrentViewModel}" />
+    </Border>
+</Window>

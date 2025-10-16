@@ -1,0 +1,181 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:InvoicePlanner.Avalonia.ViewModels"
+             xmlns:res="clr-namespace:InvoicePlanner.Avalonia.Resources"
+             x:Class="InvoicePlanner.Avalonia.Views.PlanEditorView"
+             x:DataType="vm:PlanEditorViewModel"
+             mc:Ignorable="d">
+    <ScrollViewer>
+        <StackPanel Spacing="16" Margin="16">
+            <Border Classes="Card" Padding="24">
+                <StackPanel Spacing="16">
+                    <TextBlock Classes="TitleLarge" Text="{res:Loc Key=PlanEditorTitle}" />
+                    <TextBlock Text="{res:Loc Key=PlanEditorDescription}" />
+                    <Grid ColumnDefinitions="Auto,*,Auto,*,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="0,12,0,0" ColumnSpacing="16" RowSpacing="8">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="{res:Loc Key=PlanEditorEngagementLabel}" Classes="Caption" />
+                        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                            <TextBox Width="140" Text="{Binding EngagementId, Mode=TwoWay}" Watermark="{res:Loc Key=CommonWatermarkCode}" />
+                            <TextBox Width="220" Text="{Binding EngagementName, Mode=TwoWay}" Watermark="{res:Loc Key=CommonWatermarkName}" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="0" Grid.Column="2" Text="{res:Loc Key=PlanEditorPlanTypeLabel}" Classes="Caption" />
+                        <ComboBox Grid.Row="0" Grid.Column="3"
+                                  ItemsSource="{Binding PlanTypes}"
+                                  SelectedItem="{Binding PlanType, Mode=TwoWay}"
+                                  Width="160" />
+
+                        <TextBlock Grid.Row="0" Grid.Column="4" Text="{res:Loc Key=PlanEditorInvoicesLabel}" Classes="Caption" />
+                        <NumericUpDown Grid.Row="0" Grid.Column="5"
+                                       Minimum="1"
+                                       Maximum="48"
+                                       Value="{Binding NumInvoices, Mode=TwoWay}"
+                                       Increment="1" Width="100" />
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="{res:Loc Key=PlanEditorPaymentTermsLabel}" Classes="Caption" />
+                        <NumericUpDown Grid.Row="1" Grid.Column="1"
+                                       Minimum="0"
+                                       Maximum="120"
+                                       Value="{Binding PaymentTermDays, Mode=TwoWay}"
+                                       Increment="1" Width="120" />
+
+                        <TextBlock Grid.Row="1" Grid.Column="2" Text="{res:Loc Key=PlanEditorBaseValueLabel}" Classes="Caption" />
+                        <NumericUpDown Grid.Row="1" Grid.Column="3"
+                                       Minimum="0"
+                                       Maximum="100000000"
+                                       FormatString="F2"
+                                       Value="{Binding PlanningBaseValue, Mode=TwoWay}"
+                                       Increment="100" Width="160" />
+
+                        <TextBlock Grid.Row="1" Grid.Column="4" Text="{res:Loc Key=PlanEditorFirstEmissionLabel}" Classes="Caption" />
+                        <DatePicker Grid.Row="1" Grid.Column="5"
+                                    SelectedDate="{Binding FirstEmissionDate, Mode=TwoWay}"
+                                    IsVisible="{Binding RequiresFirstEmissionDate}"
+                                    IsEnabled="{Binding RequiresFirstEmissionDate}" />
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="{res:Loc Key=PlanEditorFocalPointLabel}" Classes="Caption" />
+                        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                            <TextBox Width="180" Text="{Binding CustomerFocalPointName, Mode=TwoWay}" Watermark="{res:Loc Key=CommonWatermarkName}" />
+                            <TextBox Width="220" Text="{Binding CustomerFocalPointEmail, Mode=TwoWay}" Watermark="{res:Loc Key=CommonWatermarkEmail}" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="2" Grid.Column="2" Text="{res:Loc Key=PlanEditorInstructionsLabel}" Classes="Caption" />
+                        <TextBox Grid.Row="2" Grid.Column="3" Grid.ColumnSpan="3" TextWrapping="Wrap"
+                                 AcceptsReturn="True" Height="68"
+                                 Text="{Binding CustomInstructions, Mode=TwoWay}" />
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="{res:Loc Key=PlanEditorExtraEmailsLabel}" Classes="Caption" />
+                        <StackPanel Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="5" Spacing="8">
+                            <ItemsControl ItemsSource="{Binding AdditionalEmails}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:PlanEmailViewModel">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBox Width="260" Text="{Binding Email, Mode=TwoWay}" Watermark="user@example.com" />
+                                            <Button Content="{res:Loc Key=ButtonRemove}"
+                                                    Command="{Binding RemoveCommand}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Button Content="{res:Loc Key=ButtonAddEmail}" Command="{Binding AddEmailCommand}" HorizontalAlignment="Left" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="Card" Padding="16">
+                <StackPanel Spacing="12">
+                    <TextBlock Classes="TitleMedium" Text="{res:Loc Key=PlanEditorInvoiceLinesTitle}" />
+                    <DataGrid ItemsSource="{Binding Items}"
+                              AutoGenerateColumns="False"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="All"
+                              HorizontalScrollBarVisibility="Auto"
+                              Margin="0,8,0,0">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="{res:Loc Key=PlanEditorHeaderSequence}" Width="60">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                        <TextBlock Text="{Binding Sequence}" HorizontalAlignment="Center" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="{res:Loc Key=PlanEditorHeaderEmissionDate}" Width="180">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                        <DatePicker SelectedDate="{Binding EmissionDate, Mode=TwoWay}"
+                                                    IsEnabled="{Binding CanEditEmissionDate}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="{res:Loc Key=PlanEditorHeaderDeliveryDescription}" Width="220">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                        <TextBox Text="{Binding DeliveryDescription, Mode=TwoWay}"
+                                                 Watermark="{res:Loc Key=PlanEditorWatermarkDelivery}"
+                                                 IsVisible="{Binding ShowDeliveryDescription}"
+                                                 IsEnabled="{Binding ShowDeliveryDescription}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="{res:Loc Key=PlanEditorHeaderPercent}" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                        <NumericUpDown Value="{Binding Percentage, Mode=TwoWay}"
+                                                       Minimum="0"
+                                                       Maximum="100"
+                                                       Increment="0.0100"
+                                                       FormatString="F4" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="{res:Loc Key=PlanEditorHeaderAmount}" Width="140">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                        <NumericUpDown Value="{Binding Amount, Mode=TwoWay}"
+                                                       Minimum="0"
+                                                       Maximum="100000000"
+                                                       Increment="10"
+                                                       FormatString="F2" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,8,0,0">
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="16">
+                            <TextBlock Text="{res:Loc Key=PlanEditorTotalsLabel}" Classes="Caption" />
+                            <TextBlock Text="{res:Loc Key=PlanEditorTotalsPercentLabel}" />
+                            <TextBlock Text="{Binding TotalPercentage, StringFormat={}{0:F4}%}" />
+                            <TextBlock Text="{res:Loc Key=PlanEditorTotalsAmountLabel}" />
+                            <TextBlock Text="{Binding TotalAmount, StringFormat={}{0:F2}}" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="{res:Loc Key=ButtonRebalance}"
+                                Command="{Binding RebalanceCommand}"
+                                HorizontalAlignment="Right"
+                                Margin="8,0" />
+                        <Button Grid.Column="2" Content="{res:Loc Key=ButtonSaveDraft}"
+                                Command="{Binding SavePlanCommand}"
+                                HorizontalAlignment="Right" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="Card" Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="{res:Loc Key=PlanEditorSummaryTitle}" Classes="TitleSmall" />
+                    <TextBlock Text="{res:Loc Key=PlanEditorSummaryDescription}" />
+                    <TextBlock Text="{Binding ValidationMessage}"
+                               Foreground="Red"
+                               FontWeight="SemiBold"
+                               IsVisible="{Binding HasValidationMessage}" />
+                    <TextBlock Text="{Binding StatusMessage}"
+                               Foreground="Green"
+                               FontWeight="SemiBold"
+                               IsVisible="{Binding HasStatusMessage}" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

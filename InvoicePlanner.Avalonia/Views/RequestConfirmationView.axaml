@@ -1,0 +1,115 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:InvoicePlanner.Avalonia.ViewModels"
+             xmlns:res="clr-namespace:InvoicePlanner.Avalonia.Resources"
+             x:Class="InvoicePlanner.Avalonia.Views.RequestConfirmationView"
+             x:DataType="vm:RequestConfirmationViewModel"
+             mc:Ignorable="d">
+    <ScrollViewer>
+        <StackPanel Spacing="16" Margin="16">
+            <Border Classes="Card" Padding="24">
+                <StackPanel Spacing="16">
+                    <TextBlock Classes="TitleMedium" Text="{res:Loc Key=RequestConfirmationTitle}" />
+                    <TextBlock Text="{res:Loc Key=RequestConfirmationDescription}" />
+                    <StackPanel Spacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <TextBlock Text="{res:Loc Key=RequestConfirmationPlanIdLabel}" Classes="Caption" VerticalAlignment="Center" />
+                            <TextBox Width="120"
+                                     Text="{Binding PlanIdText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     Watermark="{res:Loc Key=CommonWatermarkPlan}" />
+                            <Button Content="{res:Loc Key=ButtonLoadPlan}"
+                                    Command="{Binding LoadPlanCommand}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="16" IsVisible="{Binding HasLines}">
+                            <TextBlock Text="{Binding EngagementId, StringFormat={res:Loc Key=RequestConfirmationStatusEngagementFormat}}" />
+                            <TextBlock Text="{Binding PlannedCount, StringFormat={res:Loc Key=RequestConfirmationStatusPlannedFormat}}" />
+                            <TextBlock Text="{Binding RequestedCount, StringFormat={res:Loc Key=RequestConfirmationStatusRequestedFormat}}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <DataGrid ItemsSource="{Binding Lines}"
+                              AutoGenerateColumns="False"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="All"
+                              HorizontalScrollBarVisibility="Auto"
+                              IsVisible="{Binding HasLines}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="{res:Loc Key=PlanEditorHeaderSequence}" Width="60">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:RequestConfirmationLineViewModel">
+                                        <TextBlock Text="{Binding Sequence}" HorizontalAlignment="Center" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="{res:Loc Key=RequestGridEmissionHeader}" Width="160">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:RequestConfirmationLineViewModel">
+                                        <TextBlock Text="{Binding EmissionDate, StringFormat={}{0:yyyy-MM-dd}}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="{res:Loc Key=RequestGridAmountHeader}" Width="140">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:RequestConfirmationLineViewModel">
+                                        <TextBlock Text="{Binding Amount, StringFormat={}{0:F2}}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="{res:Loc Key=RequestGridRitmHeader}" Width="160">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:RequestConfirmationLineViewModel">
+                                        <TextBox Text="{Binding RitmNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="{res:Loc Key=RequestGridCoeHeader}" Width="180">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:RequestConfirmationLineViewModel">
+                                        <TextBox Text="{Binding CoeResponsible, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="{res:Loc Key=RequestGridRequestDateHeader}" Width="160">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:RequestConfirmationLineViewModel">
+                                        <DatePicker SelectedDate="{Binding RequestDate, Mode=TwoWay}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="{res:Loc Key=RequestGridStatusHeader}" Width="140">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:RequestConfirmationLineViewModel">
+                                        <TextBlock Text="{Binding Status}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="{res:Loc Key=RequestGridActionsHeader}" Width="220">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:RequestConfirmationLineViewModel">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <Button Content="{res:Loc Key=ButtonMarkRequested}"
+                                                    Command="{Binding RequestCommand}" />
+                                            <Button Content="{res:Loc Key=ButtonUndo}"
+                                                    Command="{Binding UndoCommand}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="{Binding ValidationMessage}"
+                                   Foreground="Red"
+                                   FontWeight="SemiBold"
+                                   IsVisible="{Binding HasValidationMessage}" />
+                        <TextBlock Text="{Binding StatusMessage}"
+                                   Foreground="Green"
+                                   FontWeight="SemiBold"
+                                   IsVisible="{Binding HasStatusMessage}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

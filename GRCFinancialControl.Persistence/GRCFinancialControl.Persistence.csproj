@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GRCFinancialControl.Core\GRCFinancialControl.Core.csproj" />
+    <ProjectReference Include="..\Invoices.Core\Invoices.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

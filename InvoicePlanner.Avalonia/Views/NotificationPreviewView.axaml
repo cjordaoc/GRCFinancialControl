@@ -1,0 +1,69 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:InvoicePlanner.Avalonia.ViewModels"
+             xmlns:res="clr-namespace:InvoicePlanner.Avalonia.Resources"
+             x:Class="InvoicePlanner.Avalonia.Views.NotificationPreviewView"
+             x:DataType="vm:NotificationPreviewViewModel"
+             mc:Ignorable="d">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
+        <Border Grid.Row="0" Classes="Card" Padding="16" Margin="16,0,16,0">
+            <StackPanel Spacing="12">
+                <TextBlock Classes="TitleMedium" Text="{res:Loc Key=NotificationPreviewTitle}" />
+                <TextBlock Text="{res:Loc Key=NotificationPreviewDescription}" />
+                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="{res:Loc Key=NotificationPreviewDateLabel}" />
+                        <DatePicker SelectedDate="{Binding SelectedDate, Mode=TwoWay}" />
+                    </StackPanel>
+                    <Button Content="{res:Loc Key=ButtonRefresh}" Command="{Binding RefreshCommand}" Margin="8,24,0,0" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <StackPanel Grid.Row="1" Margin="16,0" Spacing="4">
+            <TextBlock Foreground="DarkGreen" Text="{Binding StatusMessage}" IsVisible="{Binding HasStatusMessage}" />
+            <TextBlock Foreground="DarkRed" Text="{Binding ValidationMessage}" IsVisible="{Binding HasValidationMessage}" />
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="2" Margin="16,0,16,16" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="{res:Loc Key=NotificationPreviewEmptyMessage}" HorizontalAlignment="Center" Margin="0,8"
+                           IsVisible="{Binding IsEmpty}" />
+                <ItemsControl ItemsSource="{Binding Items}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:NotificationPreviewItemViewModel">
+                            <Border Classes="Card" Padding="16" Margin="0,0,0,12">
+                                <StackPanel Spacing="12">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Classes="TitleMedium" Text="{Binding EngagementDisplay}" />
+                                        <TextBlock Text="{Binding CustomerDisplay}" IsVisible="{Binding HasCustomerName}" />
+                                    </StackPanel>
+                                    <WrapPanel>
+                                        <TextBlock Text="{Binding SequenceDisplay}" Margin="0,0,12,0" />
+                                        <TextBlock Text="{Binding PlanDisplay}" Margin="0,0,12,0" />
+                                        <TextBlock Text="{Binding NotifyDisplay}" Margin="0,0,12,0" />
+                                        <TextBlock Text="{Binding EmissionDisplay}" Margin="0,0,12,0" />
+                                        <TextBlock Text="{Binding DueDisplay}" Margin="0,0,12,0" />
+                                        <TextBlock Text="{Binding AmountDisplay}" />
+                                    </WrapPanel>
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="{Binding ToDisplay}" />
+                                        <TextBlock Text="{Binding CcDisplay}" IsVisible="{Binding HasCc}" />
+                                        <TextBlock Text="{Binding RecipientsDisplay}" />
+                                        <TextBlock Text="{Binding ManagersDisplay}" IsVisible="{Binding HasManagerNames}" />
+                                    </StackPanel>
+                                    <TextBlock FontWeight="Bold" Text="{Binding Subject}" TextWrapping="Wrap" />
+                                    <Border Background="#FFF5F5F5" Padding="12" CornerRadius="6">
+                                        <TextBlock Text="{Binding Body}" TextWrapping="Wrap" />
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
