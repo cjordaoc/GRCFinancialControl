@@ -105,6 +105,8 @@ namespace GRCFinancialControl.Avalonia
                 }
 
                 services.AddSingleton<IDataverseProvisioningService, DisabledDataverseProvisioningService>();
+                services.AddSingleton<IInteractiveAuthService, DisabledInteractiveAuthService>();
+                services.AddSingleton<IDataverseClientFactory, DisabledDataverseClientFactory>();
             }
             else
             {
