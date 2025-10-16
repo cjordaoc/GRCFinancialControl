@@ -24,6 +24,15 @@
   <data name="HomeWelcome" xml:space="preserve">
     <value>Configure your invoice plan, confirm requests, and close emissions when ready.</value>
   </data>
+  <data name="NavInvoicePlan" xml:space="preserve">
+    <value>Invoice plan</value>
+  </data>
+  <data name="NavConfirmRequest" xml:space="preserve">
+    <value>Confirm request</value>
+  </data>
+  <data name="NavConfirmEmissions" xml:space="preserve">
+    <value>Confirm emissions</value>
+  </data>
   <data name="CommonWatermarkCode" xml:space="preserve">
     <value>Code</value>
   </data>

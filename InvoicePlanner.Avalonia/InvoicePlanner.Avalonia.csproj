@@ -40,5 +40,6 @@
     <ProjectReference Include="..\Invoices.Core\Invoices.Core.csproj" />
     <ProjectReference Include="..\Invoices.Data\Invoices.Data.csproj" />
     <ProjectReference Include="..\GRCFinancialControl.Persistence\GRCFinancialControl.Persistence.csproj" />
+    <ProjectReference Include="..\GRCFinancialControl.Core\GRCFinancialControl.Core.csproj" />
   </ItemGroup>
 </Project>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Avalonia.Services.Models;
+using GRCFinancialControl.Core.Configuration;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.Services
@@ -26,10 +27,10 @@ namespace GRCFinancialControl.Avalonia.Services
 
         private static PowerBiEmbedConfiguration BuildConfiguration(Dictionary<string, string> settings)
         {
-            settings.TryGetValue("PowerBiEmbedUrl", out var embedUrl);
-            settings.TryGetValue("PowerBiWorkspaceId", out var workspaceId);
-            settings.TryGetValue("PowerBiReportId", out var reportId);
-            settings.TryGetValue("PowerBiEmbedToken", out var embedToken);
+            settings.TryGetValue(SettingKeys.PowerBiEmbedUrl, out var embedUrl);
+            settings.TryGetValue(SettingKeys.PowerBiWorkspaceId, out var workspaceId);
+            settings.TryGetValue(SettingKeys.PowerBiReportId, out var reportId);
+            settings.TryGetValue(SettingKeys.PowerBiEmbedToken, out var embedToken);
 
             var statusMessage = string.Empty;
             Uri? dashboardUri = null;

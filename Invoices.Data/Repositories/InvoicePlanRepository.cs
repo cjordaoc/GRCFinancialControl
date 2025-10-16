@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence;
+using GRCFinancialControl.Persistence.Services.Interfaces;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
 using Microsoft.EntityFrameworkCore;
@@ -14,11 +15,16 @@ public class InvoicePlanRepository : IInvoicePlanRepository
 {
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
     private readonly ILogger<InvoicePlanRepository> _logger;
+    private readonly IPersonDirectory _personDirectory;
 
-    public InvoicePlanRepository(IDbContextFactory<ApplicationDbContext> dbContextFactory, ILogger<InvoicePlanRepository> logger)
+    public InvoicePlanRepository(
+        IDbContextFactory<ApplicationDbContext> dbContextFactory,
+        ILogger<InvoicePlanRepository> logger,
+        IPersonDirectory personDirectory)
     {
         _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _personDirectory = personDirectory ?? throw new ArgumentNullException(nameof(personDirectory));
     }
 
     public InvoicePlan? GetPlan(int planId)
@@ -616,7 +622,92 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             .ThenBy(entry => entry.SeqNo)
             .ToList();
 
+        EnrichPeople(previews);
+
         return previews;
+    }
+
+    private void EnrichPeople(IReadOnlyList<InvoiceNotificationPreview> previews)
+    {
+        if (previews.Count == 0)
+        {
+            return;
+        }
+
+        var identifiers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var preview in previews)
+        {
+            if (string.IsNullOrWhiteSpace(preview.CustomerFocalPointName) &&
+                !string.IsNullOrWhiteSpace(preview.CustomerFocalPointEmail))
+            {
+                identifiers.Add(preview.CustomerFocalPointEmail.Trim());
+            }
+
+            if (string.IsNullOrWhiteSpace(preview.ManagerNames) && !string.IsNullOrWhiteSpace(preview.ManagerEmails))
+            {
+                foreach (var email in preview.ManagerEmails
+                             .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    if (!string.IsNullOrWhiteSpace(email))
+                    {
+                        identifiers.Add(email);
+                    }
+                }
+            }
+        }
+
+        if (identifiers.Count == 0)
+        {
+            return;
+        }
+
+        IReadOnlyDictionary<string, string> resolved;
+        try
+        {
+            resolved = _personDirectory.TryResolveDisplayNames(identifiers);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to resolve Dataverse people metadata for notification preview.");
+            return;
+        }
+
+        if (resolved.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var preview in previews)
+        {
+            if (string.IsNullOrWhiteSpace(preview.CustomerFocalPointName) &&
+                !string.IsNullOrWhiteSpace(preview.CustomerFocalPointEmail))
+            {
+                var email = preview.CustomerFocalPointEmail.Trim();
+                if (resolved.TryGetValue(email, out var displayName) && !string.IsNullOrWhiteSpace(displayName))
+                {
+                    preview.CustomerFocalPointName = displayName;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(preview.ManagerNames) && !string.IsNullOrWhiteSpace(preview.ManagerEmails))
+            {
+                var names = new List<string>();
+                foreach (var email in preview.ManagerEmails
+                             .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    if (resolved.TryGetValue(email, out var displayName) && !string.IsNullOrWhiteSpace(displayName))
+                    {
+                        names.Add(displayName);
+                    }
+                }
+
+                if (names.Count > 0)
+                {
+                    preview.ManagerNames = string.Join(';', names.Distinct(StringComparer.OrdinalIgnoreCase));
+                }
+            }
+        }
     }
 
     private static void PrepareNewPlan(InvoicePlan plan, DateTime utcNow)

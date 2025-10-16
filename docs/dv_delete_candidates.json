@@ -1,0 +1,72 @@
+{
+  "generatedAtUtc": "2025-10-16T04:23:25.7396484Z",
+  "attributes": [],
+  "relationships": [],
+  "alternateKeys": [],
+  "missingEntities": [
+    {
+      "TableName": "ActualsEntries",
+      "ExpectedEntityLogicalName": "ActualsEntries"
+    },
+    {
+      "TableName": "ClosingPeriods",
+      "ExpectedEntityLogicalName": "ClosingPeriods"
+    },
+    {
+      "TableName": "Customers",
+      "ExpectedEntityLogicalName": "Customers"
+    },
+    {
+      "TableName": "EngagementFiscalYearAllocations",
+      "ExpectedEntityLogicalName": "EngagementFiscalYearAllocations"
+    },
+    {
+      "TableName": "EngagementFiscalYearRevenueAllocations",
+      "ExpectedEntityLogicalName": "EngagementFiscalYearRevenueAllocations"
+    },
+    {
+      "TableName": "EngagementManagerAssignments",
+      "ExpectedEntityLogicalName": "EngagementManagerAssignments"
+    },
+    {
+      "TableName": "EngagementPapds",
+      "ExpectedEntityLogicalName": "EngagementPapds"
+    },
+    {
+      "TableName": "EngagementRankBudgets",
+      "ExpectedEntityLogicalName": "EngagementRankBudgets"
+    },
+    {
+      "TableName": "Engagements",
+      "ExpectedEntityLogicalName": "Engagements"
+    },
+    {
+      "TableName": "Exceptions",
+      "ExpectedEntityLogicalName": "Exceptions"
+    },
+    {
+      "TableName": "FinancialEvolution",
+      "ExpectedEntityLogicalName": "FinancialEvolution"
+    },
+    {
+      "TableName": "FiscalYears",
+      "ExpectedEntityLogicalName": "FiscalYears"
+    },
+    {
+      "TableName": "Managers",
+      "ExpectedEntityLogicalName": "Managers"
+    },
+    {
+      "TableName": "Papds",
+      "ExpectedEntityLogicalName": "Papds"
+    },
+    {
+      "TableName": "PlannedAllocations",
+      "ExpectedEntityLogicalName": "PlannedAllocations"
+    },
+    {
+      "TableName": "Settings",
+      "ExpectedEntityLogicalName": "Settings"
+    }
+  ]
+}

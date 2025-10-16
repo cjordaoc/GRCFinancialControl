@@ -4,7 +4,13 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using CommunityToolkit.Mvvm.Messaging;
+using GRCFinancialControl.Core.Configuration;
+using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Persistence;
+using GRCFinancialControl.Persistence.Services;
+using GRCFinancialControl.Persistence.Services.Dataverse;
+using GRCFinancialControl.Persistence.Services.Interfaces;
+using GRCFinancialControl.Persistence.Services.People;
 using Invoices.Core.Validation;
 using Invoices.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +22,7 @@ using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using InvoicePlanner.Avalonia.Services;
 using InvoicePlanner.Avalonia.ViewModels;
 using InvoicePlanner.Avalonia.Views;
+using System.Linq;
 
 namespace InvoicePlanner.Avalonia;
 
@@ -44,13 +51,42 @@ public partial class App : Application
             {
                 services.AddLogging(logging => logging.AddConsole());
 
-                services.AddDbContextFactory<ApplicationDbContext>(options =>
+                var dataBackend = ResolveBackendPreference();
+                services.AddSingleton(new DataBackendOptions(dataBackend));
+
+                if (dataBackend == DataBackend.MySql)
                 {
-                    const string fallback = "Server=localhost;Database=InvoicePlanner;User ID=planner;Password=planner;";
-                    var connectionString = context.Configuration.GetConnectionString("MySql");
-                    var serverVersion = new MySqlServerVersion(new Version(8, 0, 36));
-                    options.UseMySql(string.IsNullOrWhiteSpace(connectionString) ? fallback : connectionString, serverVersion);
-                });
+                    services.AddDbContextFactory<ApplicationDbContext>(options =>
+                    {
+                        const string fallback = "Server=localhost;Database=InvoicePlanner;User ID=planner;Password=planner;";
+                        var connectionString = context.Configuration.GetConnectionString("MySql");
+                        var serverVersion = new MySqlServerVersion(new Version(8, 0, 36));
+                        options.UseMySql(string.IsNullOrWhiteSpace(connectionString) ? fallback : connectionString, serverVersion);
+                    });
+                    services.AddSingleton<IPersonDirectory, NullPersonDirectory>();
+                }
+                else
+                {
+                    services.AddSingleton<IDbContextFactory<ApplicationDbContext>, UnsupportedApplicationDbContextFactory>();
+                    var dataverseOptions = ResolveDataverseOptions();
+                    services.AddSingleton(dataverseOptions);
+                    services.AddSingleton(provider =>
+                    {
+                        var prefix = Environment.GetEnvironmentVariable("DV_CUSTOMIZATION_PREFIX");
+                        return DataverseEntityMetadataRegistry.CreateDefault(string.IsNullOrWhiteSpace(prefix) ? "grc" : prefix);
+                    });
+                    services.AddSingleton<IDataverseServiceClientFactory, DataverseServiceClientFactory>();
+                    services.AddSingleton(_ => DataversePeopleOptions.FromEnvironment());
+                    services.AddSingleton<NullPersonDirectory>();
+                    services.AddSingleton<DataversePersonDirectory>();
+                    services.AddSingleton<IPersonDirectory>(provider =>
+                    {
+                        var options = provider.GetRequiredService<DataversePeopleOptions>();
+                        return options.EnablePeopleEnrichment
+                            ? provider.GetRequiredService<DataversePersonDirectory>()
+                            : provider.GetRequiredService<NullPersonDirectory>();
+                    });
+                }
 
                 services.AddSingleton<IInvoicePlanValidator, InvoicePlanValidator>();
                 services.AddTransient<IInvoicePlanRepository, InvoicePlanRepository>();
@@ -85,6 +121,61 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private static DataBackend ResolveBackendPreference()
+    {
+        var environmentValue = Environment.GetEnvironmentVariable(DataBackendConfiguration.EnvironmentVariableName);
+        if (!string.IsNullOrWhiteSpace(environmentValue) && Enum.TryParse(environmentValue, ignoreCase: true, out DataBackend backendFromEnvironment))
+        {
+            return backendFromEnvironment;
+        }
+
+        try
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<SettingsDbContext>();
+            optionsBuilder.UseSqlite("Data Source=settings.db");
+            using var context = new SettingsDbContext(optionsBuilder.Options);
+            context.Database.EnsureCreated();
+
+            var storedValue = context.Settings.AsNoTracking()
+                .FirstOrDefault(s => s.Key == SettingKeys.DataBackendPreference)?.Value;
+
+            if (!string.IsNullOrWhiteSpace(storedValue) && Enum.TryParse(storedValue, ignoreCase: true, out DataBackend storedBackend))
+            {
+                return storedBackend;
+            }
+        }
+        catch
+        {
+            // Ignore errors and fall back to MySQL.
+        }
+
+        return DataBackend.MySql;
+    }
+
+    private static DataverseConnectionOptions ResolveDataverseOptions()
+    {
+        if (DataverseConnectionOptions.TryFromEnvironment(out var environmentOptions) && environmentOptions is not null)
+        {
+            return environmentOptions;
+        }
+
+        try
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<SettingsDbContext>();
+            optionsBuilder.UseSqlite("Data Source=settings.db");
+            using var context = new SettingsDbContext(optionsBuilder.Options);
+            context.Database.EnsureCreated();
+
+            var settingsService = new SettingsService(context);
+            var storedSettings = settingsService.GetDataverseSettingsAsync().GetAwaiter().GetResult();
+            return DataverseConnectionOptions.FromSettings(storedSettings);
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new InvalidOperationException("Configure Dataverse credentials in Settings before selecting the Dataverse backend.", ex);
+        }
     }
 
     private async Task DisposeHostAsync()
