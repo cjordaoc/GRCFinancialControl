@@ -53,7 +53,7 @@
                         Command="{Binding UnlockCommand}"
                         CommandParameter="{Binding SelectedFiscalYear}"/>
             </StackPanel>
-            <TextBlock Foreground="#FFB8860B" Text="{Binding StatusMessage}"/>
+            <TextBlock Foreground="{StaticResource BrushWarning}" Text="{Binding StatusMessage}"/>
         </StackPanel>
     </Grid>
 </UserControl>

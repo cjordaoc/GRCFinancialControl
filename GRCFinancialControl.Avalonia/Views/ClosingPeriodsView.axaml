@@ -43,9 +43,9 @@
         </StackPanel>
 
         <StackPanel Grid.Row="3" Orientation="Vertical" Margin="0,5,0,0">
-            <TextBlock Text="{Binding StatusMessage}" Foreground="#FFB8860B"/>
+            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource BrushWarning}"/>
             <TextBlock Text="All fiscal years are locked. Unlock a fiscal year to manage closing periods."
-                       Foreground="#FF6347"
+                       Foreground="{StaticResource BrushError}"
                        IsVisible="{Binding AreAllFiscalYearsLocked}"/>
         </StackPanel>
     </Grid>

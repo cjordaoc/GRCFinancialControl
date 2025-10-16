@@ -70,7 +70,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             "budget expenses"
         };
 
-        private static readonly string[] EtcpHoursHeaders =
+        private static readonly string[] EstimatedToCompleteHoursHeaders =
         {
             "etcp hours",
             "hours etc-p",
@@ -309,9 +309,9 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         engagement.OpeningExpenses = row.BudgetExpenses.Value;
                     }
 
-                    if (row.EtcpHours.HasValue)
+                    if (row.EstimatedToCompleteHours.HasValue)
                     {
-                        engagement.EtcpHours = row.EtcpHours.Value;
+                        engagement.EstimatedToCompleteHours = row.EstimatedToCompleteHours.Value;
                     }
 
                     if (row.EtcpValue.HasValue)
@@ -356,7 +356,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         context,
                         engagement,
                         closingPeriod.Name,
-                        row.EtcpHours,
+                        row.EstimatedToCompleteHours,
                         row.EtcpValue,
                         row.EtcpMargin,
                         row.EtcpExpenses);
@@ -451,7 +451,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             var budgetValueIndex = GetOptionalColumnIndex(headerMap, BudgetValueHeaders);
             var budgetMarginIndex = GetOptionalColumnIndex(headerMap, BudgetMarginHeaders);
             var budgetExpensesIndex = GetOptionalColumnIndex(headerMap, BudgetExpensesHeaders);
-            var etcpHoursIndex = GetOptionalColumnIndex(headerMap, EtcpHoursHeaders);
+            var estimatedToCompleteHoursIndex = GetOptionalColumnIndex(headerMap, EstimatedToCompleteHoursHeaders);
             var etcpValueIndex = GetOptionalColumnIndex(headerMap, EtcpValueHeaders);
             var etcpMarginIndex = GetOptionalColumnIndex(headerMap, EtcpMarginHeaders);
             var etcpExpensesIndex = GetOptionalColumnIndex(headerMap, EtcpExpensesHeaders);
@@ -494,7 +494,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     BudgetValue = budgetValueIndex.HasValue ? ParseDecimal(row[budgetValueIndex.Value], 2) : null,
                     BudgetMargin = budgetMarginIndex.HasValue ? ParsePercent(row[budgetMarginIndex.Value]) : null,
                     BudgetExpenses = budgetExpensesIndex.HasValue ? ParseDecimal(row[budgetExpensesIndex.Value], 2) : null,
-                    EtcpHours = etcpHoursIndex.HasValue ? ParseDecimal(row[etcpHoursIndex.Value], 2) : null,
+                    EstimatedToCompleteHours = estimatedToCompleteHoursIndex.HasValue ? ParseDecimal(row[estimatedToCompleteHoursIndex.Value], 2) : null,
                     EtcpValue = etcpValueIndex.HasValue ? ParseDecimal(row[etcpValueIndex.Value], 2) : null,
                     EtcpMargin = etcpMarginIndex.HasValue ? ParsePercent(row[etcpMarginIndex.Value]) : null,
                     EtcpExpenses = etcpExpensesIndex.HasValue ? ParseDecimal(row[etcpExpensesIndex.Value], 2) : null,
@@ -862,7 +862,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             public decimal? BudgetValue { get; init; }
             public decimal? BudgetMargin { get; init; }
             public decimal? BudgetExpenses { get; init; }
-            public decimal? EtcpHours { get; init; }
+            public decimal? EstimatedToCompleteHours { get; init; }
             public decimal? EtcpValue { get; init; }
             public decimal? EtcpMargin { get; init; }
             public decimal? EtcpExpenses { get; init; }

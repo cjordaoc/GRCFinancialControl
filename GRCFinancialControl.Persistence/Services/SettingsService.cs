@@ -12,7 +12,7 @@ using MySqlConnector;
 
 namespace GRCFinancialControl.Persistence.Services
 {
-    public class SettingsService : ISettingsService
+    public sealed class SettingsService : ISettingsService
     {
         private const string ConnectionSuccessfulMessage = "Connection successful.";
         private const string ConnectionFailedPrefix = "Connection failed: ";

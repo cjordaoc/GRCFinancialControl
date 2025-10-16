@@ -19,12 +19,12 @@ public sealed class DataverseManagerService : DataverseServiceBase, IManagerServ
     private readonly DataverseEntityMetadata _metadata;
 
     public DataverseManagerService(
-        IDataverseServiceClientFactory clientFactory,
+        IDataverseRepository repository,
         DataverseEntityMetadataRegistry metadataRegistry,
         ILogger<DataverseManagerService> logger)
-        : base(clientFactory, metadataRegistry, logger)
+        : base(repository, metadataRegistry, logger)
     {
-        _metadata = metadataRegistry.Get("Managers");
+        _metadata = GetMetadata("Managers");
     }
 
     public Task<List<Manager>> GetAllAsync()

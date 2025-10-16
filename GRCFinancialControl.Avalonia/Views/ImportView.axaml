@@ -50,7 +50,7 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
                         <TextBlock Text="All closing periods are locked. Unlock a fiscal year to import ETC-P data."
-                                   Foreground="#FF6347"
+                                   Foreground="{StaticResource BrushError}"
                                    Margin="8,0,0,0"
                                    VerticalAlignment="Center"
                                    IsVisible="{Binding IsClosingPeriodSelectionUnavailable}"/>

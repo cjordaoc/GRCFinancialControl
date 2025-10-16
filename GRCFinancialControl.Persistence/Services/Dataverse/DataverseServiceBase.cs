@@ -10,18 +10,18 @@ namespace GRCFinancialControl.Persistence.Services.Dataverse;
 /// <summary>
 /// Provides shared helpers for Dataverse-backed services.
 /// </summary>
-public abstract class DataverseServiceBase
+public abstract class DataverseServiceBase : IDataverseService
 {
-    private readonly IDataverseServiceClientFactory _clientFactory;
+    private readonly IDataverseRepository _repository;
     protected readonly DataverseEntityMetadataRegistry MetadataRegistry;
     protected readonly ILogger Logger;
 
     protected DataverseServiceBase(
-        IDataverseServiceClientFactory clientFactory,
+        IDataverseRepository repository,
         DataverseEntityMetadataRegistry metadataRegistry,
         ILogger logger)
     {
-        _clientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
+        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         MetadataRegistry = metadataRegistry ?? throw new ArgumentNullException(nameof(metadataRegistry));
         Logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -33,8 +33,7 @@ public abstract class DataverseServiceBase
             throw new ArgumentNullException(nameof(operation));
         }
 
-        using var client = await _clientFactory.CreateClientAsync(cancellationToken).ConfigureAwait(false);
-        return await operation(client).ConfigureAwait(false);
+        return await _repository.ExecuteAsync(operation, cancellationToken).ConfigureAwait(false);
     }
 
     protected async Task ExecuteAsync(Func<ServiceClient, Task> operation, CancellationToken cancellationToken = default)
@@ -44,8 +43,17 @@ public abstract class DataverseServiceBase
             throw new ArgumentNullException(nameof(operation));
         }
 
-        using var client = await _clientFactory.CreateClientAsync(cancellationToken).ConfigureAwait(false);
-        await operation(client).ConfigureAwait(false);
+        await _repository.ExecuteAsync(operation, cancellationToken).ConfigureAwait(false);
+    }
+
+    protected DataverseEntityMetadata GetMetadata(string logicalName)
+    {
+        if (string.IsNullOrWhiteSpace(logicalName))
+        {
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(logicalName));
+        }
+
+        return MetadataRegistry.Get(logicalName);
     }
 
     protected Task<Guid?> TryResolveRecordIdAsync(
@@ -72,5 +80,20 @@ public abstract class DataverseServiceBase
 
             return result.Entities[0].Id;
         }, cancellationToken);
+    }
+
+    Task<TResult> IDataverseService.ExecuteAsync<TResult>(Func<ServiceClient, Task<TResult>> operation, CancellationToken cancellationToken)
+    {
+        return ExecuteAsync(operation, cancellationToken);
+    }
+
+    Task IDataverseService.ExecuteAsync(Func<ServiceClient, Task> operation, CancellationToken cancellationToken)
+    {
+        return ExecuteAsync(operation, cancellationToken);
+    }
+
+    DataverseEntityMetadata IDataverseService.GetEntityMetadata(string logicalName)
+    {
+        return GetMetadata(logicalName);
     }
 }

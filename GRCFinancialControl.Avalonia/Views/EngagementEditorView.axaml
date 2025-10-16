@@ -66,8 +66,8 @@
                     <TextBlock Grid.Row="6" Grid.Column="0" Text="Planned Hours:" VerticalAlignment="Center"/>
                     <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding InitialHoursBudget}" Margin="10,4,0,0" IsReadOnly="{Binding IsFinancialSnapshotReadOnly}"/>
 
-                    <TextBlock Grid.Row="6" Grid.Column="3" Text="ETC-P Hours:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="6" Grid.Column="4" Text="{Binding EtcpHours}" Margin="10,4,0,0" IsReadOnly="{Binding IsGeneralFieldReadOnly}"/>
+                    <TextBlock Grid.Row="6" Grid.Column="3" Text="Estimated Hours:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="6" Grid.Column="4" Text="{Binding EstimatedToCompleteHours}" Margin="10,4,0,0" IsReadOnly="{Binding IsGeneralFieldReadOnly}"/>
 
                     <TextBlock Grid.Row="7" Grid.Column="0" Text="Margin % Budget:" VerticalAlignment="Center"/>
                     <TextBox Grid.Row="7" Grid.Column="1" Text="{Binding MarginPctBudget}" Margin="10,4,0,0" IsReadOnly="{Binding IsFinancialSnapshotReadOnly}"/>

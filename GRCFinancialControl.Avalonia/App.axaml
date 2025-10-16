@@ -11,6 +11,6 @@
 
     <Application.Styles>
         <FluentTheme/>
-        <StyleInclude Source="avares://GRCFinancialControl.Avalonia/Styles/Styles.axaml"/>
+        <StyleInclude Source="avares://App.Presentation/Styles/Styles.xaml"/>
     </Application.Styles>
 </Application>

@@ -3,11 +3,13 @@
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels.Dialogs"
              x:Class="GRCFinancialControl.Avalonia.Views.Dialogs.ConfirmationDialogView"
              x:DataType="vm:ConfirmationDialogViewModel">
-  <Border Padding="16" Background="#2B2B2B" CornerRadius="8">
-    <StackPanel Spacing="12">
-      <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="Bold"/>
+  <Border Padding="{StaticResource DialogContentPadding}"
+          Background="{StaticResource BrushSurfaceMuted}"
+          CornerRadius="{StaticResource CornerRadiusMD}">
+    <StackPanel Spacing="{StaticResource Space12}">
+      <TextBlock Text="{Binding Title}" FontSize="{StaticResource FontSizeLG}" FontWeight="Bold"/>
       <TextBlock Text="{Binding Message}" TextWrapping="Wrap"/>
-      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="{StaticResource Space8}">
         <Button Content="Cancel" Command="{Binding CancelCommand}"/>
         <Button Content="Confirm" Command="{Binding ConfirmCommand}"/>
       </StackPanel>

@@ -19,12 +19,16 @@
     <Grid ColumnDefinitions="220,*">
         <Border Background="{DynamicResource SystemAccentColor}" Margin="0" Padding="0,20">
             <StackPanel>
-                <TextBlock Text="GRC Control" FontSize="20" FontWeight="Bold" Foreground="White" Margin="20,0,20,20"/>
+                <TextBlock Text="GRC Control"
+                           FontSize="{StaticResource FontSizeXL}"
+                           FontWeight="Bold"
+                           Foreground="{StaticResource BrushOnSurface}"
+                           Margin="20,0,20,20"/>
                 <TreeView ItemsSource="{Binding NavigationItems}"
                           SelectedItem="{Binding SelectedNavigationItem}"
                           Background="Transparent"
                           BorderThickness="0"
-                          Foreground="White">
+                          Foreground="{StaticResource BrushOnSurface}">
                     <TreeView.ItemTemplate>
                         <TreeDataTemplate ItemsSource="{Binding Children}">
                             <TextBlock Text="{Binding Title}" Margin="20,6" FontSize="16"/>
@@ -34,13 +38,13 @@
             </StackPanel>
         </Border>
 
-        <Border Grid.Column="1" Padding="20">
+        <Border Grid.Column="1" Padding="{StaticResource SpaceThickness20}">
             <ContentControl Content="{Binding ActiveView}"
                             IsVisible="{Binding ActiveView, Converter={x:Static converters:ObjectConverters.IsNotNull}}"/>
         </Border>
 
         <Panel Grid.ColumnSpan="2"
-               Background="#CC000000"
+               Background="{StaticResource BrushOverlayStrong}"
                IsVisible="{Binding CurrentDialog, Converter={x:Static converters:ObjectConverters.IsNotNull}}">
             <ContentControl Content="{Binding CurrentDialog}"
                             HorizontalAlignment="Center"

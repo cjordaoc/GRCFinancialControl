@@ -7,8 +7,10 @@ using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Core.Configuration;
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Persistence;
+using GRCFinancialControl.Persistence.Configuration;
 using GRCFinancialControl.Persistence.Services;
 using GRCFinancialControl.Persistence.Services.Dataverse;
+using GRCFinancialControl.Persistence.Services.Dataverse.Provisioning;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using GRCFinancialControl.Persistence.Services.People;
 using Invoices.Core.Validation;
@@ -18,17 +20,17 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
+using System.IO;
 using InvoicePlanner.Avalonia.Services;
 using InvoicePlanner.Avalonia.ViewModels;
 using InvoicePlanner.Avalonia.Views;
-using System.Linq;
 
 namespace InvoicePlanner.Avalonia;
 
 public partial class App : Application
 {
     private IHost? _host;
+    private bool _disposed;
 
     public IServiceProvider Services => _host?.Services ?? throw new InvalidOperationException("Host not initialised.");
 
@@ -51,45 +53,34 @@ public partial class App : Application
             {
                 services.AddLogging(logging => logging.AddConsole());
 
-                var dataBackend = ResolveBackendPreference();
-                services.AddSingleton(new DataBackendOptions(dataBackend));
+                services.AddSingleton(new DataBackendOptions(DataBackend.Dataverse));
+                services.AddSingleton<IDbContextFactory<ApplicationDbContext>, UnsupportedApplicationDbContextFactory>();
 
-                if (dataBackend == DataBackend.MySql)
+                var dataverseOptions = DataverseConnectionOptionsProvider.Resolve(CreateSettingsDbContext);
+                services.AddSingleton(dataverseOptions);
+                services.AddSingleton(_ => DataverseEntityMetadataRegistry.CreateDefault());
+                services.AddSingleton<IDataverseServiceClientFactory, DataverseServiceClientFactory>();
+                services.AddSingleton<IDataverseRepository, DataverseRepository>();
+                services.AddSingleton<SqlForeignKeyParser>();
+                services.Configure<DataverseProvisioningOptions>(options =>
                 {
-                    services.AddDbContextFactory<ApplicationDbContext>(options =>
-                    {
-                        const string fallback = "Server=localhost;Database=InvoicePlanner;User ID=planner;Password=planner;";
-                        var connectionString = context.Configuration.GetConnectionString("MySql");
-                        var serverVersion = new MySqlServerVersion(new Version(8, 0, 36));
-                        options.UseMySql(string.IsNullOrWhiteSpace(connectionString) ? fallback : connectionString, serverVersion);
-                    });
-                    services.AddSingleton<IPersonDirectory, NullPersonDirectory>();
-                }
-                else
+                    options.MetadataPath = Path.Combine(AppContext.BaseDirectory, "artifacts", "dataverse", "metadata_changes.json");
+                    options.SqlSchemaPath = Path.Combine(AppContext.BaseDirectory, "artifacts", "mysql", "rebuild_schema.sql");
+                });
+                services.AddSingleton<IDataverseProvisioningService, DataverseProvisioningService>();
+                services.AddSingleton(_ => DataversePeopleOptions.FromEnvironment());
+                services.AddSingleton<NullPersonDirectory>();
+                services.AddSingleton<DataversePersonDirectory>();
+                services.AddSingleton<IPersonDirectory>(provider =>
                 {
-                    services.AddSingleton<IDbContextFactory<ApplicationDbContext>, UnsupportedApplicationDbContextFactory>();
-                    var dataverseOptions = ResolveDataverseOptions();
-                    services.AddSingleton(dataverseOptions);
-                    services.AddSingleton(provider =>
-                    {
-                        var prefix = Environment.GetEnvironmentVariable("DV_CUSTOMIZATION_PREFIX");
-                        return DataverseEntityMetadataRegistry.CreateDefault(string.IsNullOrWhiteSpace(prefix) ? "grc" : prefix);
-                    });
-                    services.AddSingleton<IDataverseServiceClientFactory, DataverseServiceClientFactory>();
-                    services.AddSingleton(_ => DataversePeopleOptions.FromEnvironment());
-                    services.AddSingleton<NullPersonDirectory>();
-                    services.AddSingleton<DataversePersonDirectory>();
-                    services.AddSingleton<IPersonDirectory>(provider =>
-                    {
-                        var options = provider.GetRequiredService<DataversePeopleOptions>();
-                        return options.EnablePeopleEnrichment
-                            ? provider.GetRequiredService<DataversePersonDirectory>()
-                            : provider.GetRequiredService<NullPersonDirectory>();
-                    });
-                }
+                    var options = provider.GetRequiredService<DataversePeopleOptions>();
+                    return options.EnablePeopleEnrichment
+                        ? provider.GetRequiredService<DataversePersonDirectory>()
+                        : provider.GetRequiredService<NullPersonDirectory>();
+                });
+                services.AddTransient<IInvoicePlanRepository, DataverseInvoicePlanRepository>();
 
                 services.AddSingleton<IInvoicePlanValidator, InvoicePlanValidator>();
-                services.AddTransient<IInvoicePlanRepository, InvoicePlanRepository>();
                 services.AddSingleton<InvoiceSummaryExporter>();
                 services.AddSingleton<IErrorDialogService, ErrorDialogService>();
                 services.AddSingleton<IGlobalErrorHandler, GlobalErrorHandler>();
@@ -123,78 +114,43 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
-    private static DataBackend ResolveBackendPreference()
+    private static SettingsDbContext CreateSettingsDbContext()
     {
-        var environmentValue = Environment.GetEnvironmentVariable(DataBackendConfiguration.EnvironmentVariableName);
-        if (!string.IsNullOrWhiteSpace(environmentValue) && Enum.TryParse(environmentValue, ignoreCase: true, out DataBackend backendFromEnvironment))
-        {
-            return backendFromEnvironment;
-        }
-
-        try
-        {
-            var optionsBuilder = new DbContextOptionsBuilder<SettingsDbContext>();
-            optionsBuilder.UseSqlite("Data Source=settings.db");
-            using var context = new SettingsDbContext(optionsBuilder.Options);
-            context.Database.EnsureCreated();
-
-            var storedValue = context.Settings.AsNoTracking()
-                .FirstOrDefault(s => s.Key == SettingKeys.DataBackendPreference)?.Value;
-
-            if (!string.IsNullOrWhiteSpace(storedValue) && Enum.TryParse(storedValue, ignoreCase: true, out DataBackend storedBackend))
-            {
-                return storedBackend;
-            }
-        }
-        catch
-        {
-            // Ignore errors and fall back to MySQL.
-        }
-
-        return DataBackend.MySql;
-    }
-
-    private static DataverseConnectionOptions ResolveDataverseOptions()
-    {
-        if (DataverseConnectionOptions.TryFromEnvironment(out var environmentOptions) && environmentOptions is not null)
-        {
-            return environmentOptions;
-        }
-
-        try
-        {
-            var optionsBuilder = new DbContextOptionsBuilder<SettingsDbContext>();
-            optionsBuilder.UseSqlite("Data Source=settings.db");
-            using var context = new SettingsDbContext(optionsBuilder.Options);
-            context.Database.EnsureCreated();
-
-            var settingsService = new SettingsService(context);
-            var storedSettings = settingsService.GetDataverseSettingsAsync().GetAwaiter().GetResult();
-            return DataverseConnectionOptions.FromSettings(storedSettings);
-        }
-        catch (InvalidOperationException ex)
-        {
-            throw new InvalidOperationException("Configure Dataverse credentials in Settings before selecting the Dataverse backend.", ex);
-        }
+        var optionsBuilder = new DbContextOptionsBuilder<SettingsDbContext>();
+        optionsBuilder.UseSqlite(SettingsDatabaseOptions.BuildConnectionString());
+        return new SettingsDbContext(optionsBuilder.Options);
     }
 
     private async Task DisposeHostAsync()
     {
-        if (Services is IServiceProvider provider)
+        if (_disposed)
         {
-            if (provider.GetService(typeof(IGlobalErrorHandler)) is IDisposable disposableHandler)
-            {
-                disposableHandler.Dispose();
-            }
+            return;
         }
 
-        if (_host is IAsyncDisposable asyncDisposable)
+        _disposed = true;
+
+        var host = _host;
+        if (host is null)
+        {
+            return;
+        }
+
+        var provider = host.Services;
+        if (provider.GetService(typeof(IGlobalErrorHandler)) is IDisposable disposableHandler)
+        {
+            disposableHandler.Dispose();
+        }
+
+        if (host is IAsyncDisposable asyncDisposable)
         {
             await asyncDisposable.DisposeAsync().ConfigureAwait(false);
         }
         else
         {
-            _host?.Dispose();
+            host.Dispose();
         }
+
+        _host = null;
     }
 }

@@ -5,7 +5,7 @@ namespace GRCFinancialControl.Core.Models.Reporting
         public string EngagementId { get; set; } = string.Empty;
         public string EngagementDescription { get; set; } = string.Empty;
         public decimal InitialHoursBudget { get; set; }
-        public decimal EtcpHours { get; set; }
+        public decimal EstimatedToCompleteHours { get; set; }
         public List<RankBudget> RankBudgets { get; set; } = [];
     }
 

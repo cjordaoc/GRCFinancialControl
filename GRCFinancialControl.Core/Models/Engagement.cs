@@ -23,7 +23,7 @@ namespace GRCFinancialControl.Core.Models
         public EngagementSource Source { get; set; } = EngagementSource.GrcProject;
         public decimal OpeningExpenses { get; set; }
         public decimal InitialHoursBudget { get; set; }
-        public decimal EtcpHours { get; set; }
+        public decimal EstimatedToCompleteHours { get; set; }
         public decimal ValueEtcp { get; set; }
         public decimal ExpensesEtcp { get; set; }
 
@@ -71,8 +71,8 @@ namespace GRCFinancialControl.Core.Models
         {
             get
             {
-                return EtcpHours > 0m
-                    ? EtcpHours
+                return EstimatedToCompleteHours > 0m
+                    ? EstimatedToCompleteHours
                     : InitialHoursBudget > 0m
                         ? InitialHoursBudget
                         : 0m;

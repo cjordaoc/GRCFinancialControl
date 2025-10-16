@@ -16,14 +16,14 @@ public sealed class DataversePersonDirectory : DataverseServiceBase, IPersonDire
     private readonly object _syncRoot = new();
 
     public DataversePersonDirectory(
-        IDataverseServiceClientFactory clientFactory,
+        IDataverseRepository repository,
         DataverseEntityMetadataRegistry metadataRegistry,
         DataversePeopleOptions options,
         ILogger<DataversePersonDirectory> logger)
-        : base(clientFactory, metadataRegistry, logger)
+        : base(repository, metadataRegistry, logger)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
-        _systemUsersMetadata = metadataRegistry.Get("SystemUsers");
+        _systemUsersMetadata = GetMetadata("SystemUsers");
     }
 
     public string? TryGetDisplayName(string identifier)

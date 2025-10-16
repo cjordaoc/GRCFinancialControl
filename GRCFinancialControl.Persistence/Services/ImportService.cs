@@ -130,7 +130,7 @@ namespace GRCFinancialControl.Persistence.Services
                     EngagementId = engagementKey,
                     Description = engagementDescription,
                     InitialHoursBudget = totalBudgetHours,
-                    EtcpHours = 0m
+                    EstimatedToCompleteHours = 0m
                 };
 
                 await context.Engagements.AddAsync(engagement);
@@ -936,7 +936,7 @@ namespace GRCFinancialControl.Persistence.Services
                         context,
                         engagement,
                         closingPeriod.Name,
-                        parsedRow.EtcpHours,
+                        parsedRow.EstimatedToCompleteHours,
                         parsedRow.EtcpValue,
                         parsedRow.MarginEtcp,
                         parsedRow.EtcpExpenses);
@@ -1190,7 +1190,7 @@ namespace GRCFinancialControl.Persistence.Services
             var statusText = NormalizeWhitespace(Convert.ToString(row[4], CultureInfo.InvariantCulture));
 
             var budgetHours = ParsePtBrNumber(row[8]);
-            var etcpHours = ParsePtBrNumber(row[9]);
+            var estimatedToCompleteHours = ParsePtBrNumber(row[9]);
             var budgetValue = ParsePtBrMoney(row[11]);
             var etcpValue = ParsePtBrMoney(row[12]);
             var marginBudget = ParsePtBrPercent(row[14]);
@@ -1209,7 +1209,7 @@ namespace GRCFinancialControl.Persistence.Services
                 Currency = currency,
                 StatusText = statusText,
                 BudgetHours = budgetHours,
-                EtcpHours = etcpHours,
+                EstimatedToCompleteHours = estimatedToCompleteHours,
                 BudgetValue = budgetValue,
                 EtcpValue = etcpValue,
                 MarginBudget = marginBudget,
@@ -1682,7 +1682,7 @@ namespace GRCFinancialControl.Persistence.Services
             }
 
             engagement.MarginPctEtcp = row.MarginEtcp;
-            engagement.EtcpHours = row.EtcpHours ?? 0m;
+            engagement.EstimatedToCompleteHours = row.EstimatedToCompleteHours ?? 0m;
             engagement.ValueEtcp = row.EtcpValue ?? 0m;
             engagement.ExpensesEtcp = row.EtcpExpenses ?? 0m;
             var lastEtcDate = DetermineLastEtcDate(etcpAsOfDate, row.EtcpAgeDays, closingPeriod);
@@ -1770,7 +1770,7 @@ namespace GRCFinancialControl.Persistence.Services
             public string Currency { get; init; } = string.Empty;
             public string StatusText { get; init; } = string.Empty;
             public decimal? BudgetHours { get; init; }
-            public decimal? EtcpHours { get; init; }
+            public decimal? EstimatedToCompleteHours { get; init; }
             public decimal? BudgetValue { get; init; }
             public decimal? EtcpValue { get; init; }
             public decimal? MarginBudget { get; init; }
