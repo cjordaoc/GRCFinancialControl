@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute name="xml:space" default="preserve" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="EngagementIdRequired" xml:space="preserve">
+    <value>Engagement ID is required.</value>
+  </data>
+  <data name="NumInvoicesMinimum" xml:space="preserve">
+    <value>Number of invoices must be at least 1.</value>
+  </data>
+  <data name="PaymentTermsNegative" xml:space="preserve">
+    <value>Payment terms cannot be negative.</value>
+  </data>
+  <data name="CustomerFocalPointNameRequired" xml:space="preserve">
+    <value>Customer focal point name is required.</value>
+  </data>
+  <data name="CustomerFocalPointEmailRequired" xml:space="preserve">
+    <value>Customer focal point email is required.</value>
+  </data>
+  <data name="CustomerFocalPointEmailInvalid" xml:space="preserve">
+    <value>Customer focal point email is not in a valid format.</value>
+  </data>
+  <data name="FirstEmissionRequired" xml:space="preserve">
+    <value>First emission date is required for ByDate plans.</value>
+  </data>
+  <data name="ItemsRequired" xml:space="preserve">
+    <value>At least one invoice line is required.</value>
+  </data>
+  <data name="ItemsCountMismatch" xml:space="preserve">
+    <value>The number of invoice lines must match the header count.</value>
+  </data>
+  <data name="TotalPercentageInvalid" xml:space="preserve">
+    <value>Total percentage must be exactly 100.0000 (current {0}).</value>
+  </data>
+  <data name="TotalAmountInvalid" xml:space="preserve">
+    <value>Total amount must equal the planning base value ({0}).</value>
+  </data>
+  <data name="SequenceContiguous" xml:space="preserve">
+    <value>Invoice lines must have contiguous sequence numbers starting from 1.</value>
+  </data>
+  <data name="EmissionDateRequired" xml:space="preserve">
+    <value>Emission date is required for invoice line #{0}.</value>
+  </data>
+  <data name="DueDateMustMatch" xml:space="preserve">
+    <value>Due date for invoice line #{0} must be emission date + payment terms.</value>
+  </data>
+  <data name="DeliveryDescriptionRequired" xml:space="preserve">
+    <value>Delivery description is required for invoice line #{0}.</value>
+  </data>
+  <data name="AdditionalEmailBlank" xml:space="preserve">
+    <value>Additional recipient emails cannot be blank.</value>
+  </data>
+  <data name="AdditionalEmailInvalid" xml:space="preserve">
+    <value>Additional email '{0}' is not valid.</value>
+  </data>
+</root>

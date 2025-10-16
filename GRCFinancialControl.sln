@@ -9,6 +9,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GRCFinancialControl.Persist
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GRCFinancialControl.Avalonia", "GRCFinancialControl.Avalonia\GRCFinancialControl.Avalonia.csproj", "{33A024B6-A150-40DB-AB1D-253FE5E25CA8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Invoices.Core", "Invoices.Core\Invoices.Core.csproj", "{CE3EF96B-D248-4ABC-866C-9EAE97974AA4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Invoices.Data", "Invoices.Data\Invoices.Data.csproj", "{76512355-3548-42EC-AEEE-543A828A0647}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvoicePlanner.Avalonia", "InvoicePlanner.Avalonia\InvoicePlanner.Avalonia.csproj", "{C20054C8-5A08-4BD9-8818-51C1E1E90012}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Invoices.Data.Tests", "Invoices.Data.Tests\Invoices.Data.Tests.csproj", "{DADEC6BC-4166-4C20-A474-2E30E5EFD5B0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +38,21 @@ Global
 		{33A024B6-A150-40DB-AB1D-253FE5E25CA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{33A024B6-A150-40DB-AB1D-253FE5E25CA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{33A024B6-A150-40DB-AB1D-253FE5E25CA8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE3EF96B-D248-4ABC-866C-9EAE97974AA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE3EF96B-D248-4ABC-866C-9EAE97974AA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE3EF96B-D248-4ABC-866C-9EAE97974AA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE3EF96B-D248-4ABC-866C-9EAE97974AA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{76512355-3548-42EC-AEEE-543A828A0647}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76512355-3548-42EC-AEEE-543A828A0647}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76512355-3548-42EC-AEEE-543A828A0647}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76512355-3548-42EC-AEEE-543A828A0647}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C20054C8-5A08-4BD9-8818-51C1E1E90012}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C20054C8-5A08-4BD9-8818-51C1E1E90012}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C20054C8-5A08-4BD9-8818-51C1E1E90012}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C20054C8-5A08-4BD9-8818-51C1E1E90012}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DADEC6BC-4166-4C20-A474-2E30E5EFD5B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DADEC6BC-4166-4C20-A474-2E30E5EFD5B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DADEC6BC-4166-4C20-A474-2E30E5EFD5B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DADEC6BC-4166-4C20-A474-2E30E5EFD5B0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

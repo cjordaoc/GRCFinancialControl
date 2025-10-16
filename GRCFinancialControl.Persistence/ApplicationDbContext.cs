@@ -1,5 +1,7 @@
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
+using Invoices.Core.Enums;
+using Invoices.Core.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace GRCFinancialControl.Persistence
@@ -21,6 +23,12 @@ namespace GRCFinancialControl.Persistence
         public DbSet<EngagementFiscalYearAllocation> EngagementFiscalYearAllocations { get; set; }
         public DbSet<EngagementFiscalYearRevenueAllocation> EngagementFiscalYearRevenueAllocations { get; set; }
         public DbSet<FiscalYear> FiscalYears { get; set; }
+        public DbSet<InvoicePlan> InvoicePlans { get; set; }
+        public DbSet<InvoicePlanEmail> InvoicePlanEmails { get; set; }
+        public DbSet<InvoiceItem> InvoiceItems { get; set; }
+        public DbSet<MailOutbox> MailOutboxEntries { get; set; }
+        public DbSet<MailOutboxLog> MailOutboxLogs { get; set; }
+        public DbSet<InvoiceNotificationPreview> InvoiceNotificationPreviews { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -343,6 +351,238 @@ namespace GRCFinancialControl.Persistence
             modelBuilder.Entity<FiscalYear>()
                 .Property(fy => fy.EndDate)
                 .HasColumnType("datetime(6)");
+
+            modelBuilder.Entity<InvoicePlan>()
+                .ToTable("InvoicePlan");
+
+            modelBuilder.Entity<InvoicePlan>()
+                .Property(plan => plan.EngagementId)
+                .HasMaxLength(64);
+
+            modelBuilder.Entity<InvoicePlan>()
+                .Property(plan => plan.Type)
+                .HasConversion<string>()
+                .HasMaxLength(16);
+
+            modelBuilder.Entity<InvoicePlan>()
+                .Property(plan => plan.CustomerFocalPointName)
+                .HasMaxLength(120);
+
+            modelBuilder.Entity<InvoicePlan>()
+                .Property(plan => plan.CustomerFocalPointEmail)
+                .HasMaxLength(200);
+
+            modelBuilder.Entity<InvoicePlan>()
+                .Property(plan => plan.CustomInstructions)
+                .HasColumnType("text");
+
+            modelBuilder.Entity<InvoicePlan>()
+                .Property(plan => plan.FirstEmissionDate)
+                .HasColumnType("date");
+
+            modelBuilder.Entity<InvoicePlan>()
+                .Property(plan => plan.CreatedAt)
+                .HasColumnType("timestamp");
+
+            modelBuilder.Entity<InvoicePlan>()
+                .Property(plan => plan.UpdatedAt)
+                .HasColumnType("timestamp");
+
+            modelBuilder.Entity<InvoicePlan>()
+                .HasIndex(plan => plan.EngagementId)
+                .HasDatabaseName("IX_InvoicePlan_Engagement");
+
+            modelBuilder.Entity<InvoicePlan>()
+                .HasMany(plan => plan.Items)
+                .WithOne(item => item.Plan)
+                .HasForeignKey(item => item.PlanId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<InvoicePlan>()
+                .HasMany(plan => plan.AdditionalEmails)
+                .WithOne(email => email.Plan)
+                .HasForeignKey(email => email.PlanId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<InvoicePlanEmail>()
+                .ToTable("InvoicePlanEmail");
+
+            modelBuilder.Entity<InvoicePlanEmail>()
+                .Property(email => email.Email)
+                .HasMaxLength(200);
+
+            modelBuilder.Entity<InvoicePlanEmail>()
+                .Property(email => email.CreatedAt)
+                .HasColumnType("timestamp");
+
+            modelBuilder.Entity<InvoicePlanEmail>()
+                .HasIndex(email => email.PlanId)
+                .HasDatabaseName("IX_InvoicePlanEmail_Plan");
+
+            modelBuilder.Entity<InvoiceItem>()
+                .ToTable("InvoiceItem");
+
+            modelBuilder.Entity<InvoiceItem>()
+                .Property(item => item.Percentage)
+                .HasPrecision(9, 4);
+
+            modelBuilder.Entity<InvoiceItem>()
+                .Property(item => item.Amount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<InvoiceItem>()
+                .Property(item => item.EmissionDate)
+                .HasColumnType("date");
+
+            modelBuilder.Entity<InvoiceItem>()
+                .Property(item => item.DueDate)
+                .HasColumnType("date");
+
+            modelBuilder.Entity<InvoiceItem>()
+                .Property(item => item.PayerCnpj)
+                .HasMaxLength(20);
+
+            modelBuilder.Entity<InvoiceItem>()
+                .Property(item => item.PoNumber)
+                .HasMaxLength(64);
+
+            modelBuilder.Entity<InvoiceItem>()
+                .Property(item => item.FrsNumber)
+                .HasMaxLength(64);
+
+            modelBuilder.Entity<InvoiceItem>()
+                .Property(item => item.CustomerTicket)
+                .HasMaxLength(64);
+
+            modelBuilder.Entity<InvoiceItem>()
+                .Property(item => item.DeliveryDescription)
+                .HasMaxLength(255);
+
+            modelBuilder.Entity<InvoiceItem>()
+                .Property(item => item.Status)
+                .HasConversion<string>()
+                .HasMaxLength(16);
+
+            modelBuilder.Entity<InvoiceItem>()
+                .Property(item => item.RequestDate)
+                .HasColumnType("date");
+
+            modelBuilder.Entity<InvoiceItem>()
+                .Property(item => item.EmittedAt)
+                .HasColumnType("date");
+
+            modelBuilder.Entity<InvoiceItem>()
+                .Property(item => item.CanceledAt)
+                .HasColumnType("date");
+
+            modelBuilder.Entity<InvoiceItem>()
+                .Property(item => item.CreatedAt)
+                .HasColumnType("timestamp");
+
+            modelBuilder.Entity<InvoiceItem>()
+                .Property(item => item.UpdatedAt)
+                .HasColumnType("timestamp");
+
+            modelBuilder.Entity<InvoiceItem>()
+                .HasIndex(item => new { item.PlanId, item.SeqNo })
+                .IsUnique()
+                .HasDatabaseName("UQ_InvoiceItem_PlanSeq");
+
+            modelBuilder.Entity<InvoiceItem>()
+                .HasIndex(item => item.EmissionDate)
+                .HasDatabaseName("IX_InvoiceItem_EmissionDate");
+
+            modelBuilder.Entity<InvoiceItem>()
+                .HasIndex(item => item.Status)
+                .HasDatabaseName("IX_InvoiceItem_Status");
+
+            modelBuilder.Entity<InvoiceItem>()
+                .HasOne(item => item.ReplacementItem)
+                .WithMany()
+                .HasForeignKey(item => item.ReplacementItemId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<MailOutbox>()
+                .ToTable("MailOutbox");
+
+            modelBuilder.Entity<MailOutbox>()
+                .Property(outbox => outbox.NotificationDate)
+                .HasColumnType("date");
+
+            modelBuilder.Entity<MailOutbox>()
+                .Property(outbox => outbox.ToName)
+                .HasMaxLength(120);
+
+            modelBuilder.Entity<MailOutbox>()
+                .Property(outbox => outbox.ToEmail)
+                .HasMaxLength(200);
+
+            modelBuilder.Entity<MailOutbox>()
+                .Property(outbox => outbox.Subject)
+                .HasMaxLength(255);
+
+            modelBuilder.Entity<MailOutbox>()
+                .Property(outbox => outbox.SendToken)
+                .HasMaxLength(36);
+
+            modelBuilder.Entity<MailOutbox>()
+                .Property(outbox => outbox.CreatedAt)
+                .HasColumnType("timestamp");
+
+            modelBuilder.Entity<MailOutbox>()
+                .Property(outbox => outbox.SentAt)
+                .HasColumnType("timestamp");
+
+            modelBuilder.Entity<MailOutbox>()
+                .HasIndex(outbox => outbox.NotificationDate)
+                .HasDatabaseName("IX_MailOutbox_Notification");
+
+            modelBuilder.Entity<MailOutbox>()
+                .HasIndex(outbox => new { outbox.NotificationDate, outbox.SentAt, outbox.SendToken })
+                .HasDatabaseName("IX_MailOutbox_Pending");
+
+            modelBuilder.Entity<MailOutbox>()
+                .HasOne(outbox => outbox.InvoiceItem)
+                .WithMany(item => item.OutboxEntries)
+                .HasForeignKey(outbox => outbox.InvoiceItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<MailOutboxLog>()
+                .ToTable("MailOutboxLog");
+
+            modelBuilder.Entity<MailOutboxLog>()
+                .Property(log => log.AttemptAt)
+                .HasColumnType("timestamp");
+
+            modelBuilder.Entity<MailOutboxLog>()
+                .Property(log => log.ErrorMessage)
+                .HasMaxLength(500);
+
+            modelBuilder.Entity<MailOutboxLog>()
+                .HasIndex(log => log.OutboxId)
+                .HasDatabaseName("IX_MailOutboxLog_Outbox");
+
+            modelBuilder.Entity<MailOutboxLog>()
+                .HasOne(log => log.Outbox)
+                .WithMany(outbox => outbox.Logs)
+                .HasForeignKey(log => log.OutboxId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<InvoiceNotificationPreview>()
+                .HasNoKey()
+                .ToView("vw_InvoiceNotifyOnDate");
+
+            modelBuilder.Entity<InvoiceNotificationPreview>()
+                .Property(view => view.NotifyDate)
+                .HasColumnType("date");
+
+            modelBuilder.Entity<InvoiceNotificationPreview>()
+                .Property(view => view.EmissionDate)
+                .HasColumnType("date");
+
+            modelBuilder.Entity<InvoiceNotificationPreview>()
+                .Property(view => view.ComputedDueDate)
+                .HasColumnType("date");
         }
     }
 }
