@@ -85,7 +85,7 @@
 
                     <TextBlock Grid.Row="8" Grid.Column="3" Text="Last Closing Period:" VerticalAlignment="Center"/>
                     <TextBox Grid.Row="8" Grid.Column="4"
-                             Text="{Binding LastClosingPeriodId}"
+                             Text="{Binding LastClosingPeriodDisplay}"
                              Margin="10,4,0,0"
                              IsReadOnly="True"
                              IsHitTestVisible="False"

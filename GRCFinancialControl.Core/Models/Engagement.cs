@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 using GRCFinancialControl.Core.Enums;
 
 namespace GRCFinancialControl.Core.Models
@@ -24,7 +26,9 @@ namespace GRCFinancialControl.Core.Models
         public decimal EtcpHours { get; set; }
         public decimal ValueEtcp { get; set; }
         public decimal ExpensesEtcp { get; set; }
-        public string? LastClosingPeriodId { get; set; }
+
+        public int? LastClosingPeriodId { get; set; }
+        public ClosingPeriod? LastClosingPeriod { get; set; }
 
         public int? CustomerId { get; set; }
         public Customer? Customer { get; set; }
@@ -35,13 +39,17 @@ namespace GRCFinancialControl.Core.Models
         public ICollection<FinancialEvolution> FinancialEvolutions { get; set; } = [];
         public ICollection<EngagementFiscalYearAllocation> Allocations { get; set; } = [];
         public ICollection<EngagementFiscalYearRevenueAllocation> RevenueAllocations { get; set; } = [];
-        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+
+        [NotMapped]
+        public bool IsManualOnly => Source == EngagementSource.S4Project;
+
+        [NotMapped]
         public decimal CurrentHoursAllocation => Allocations.Sum(a => a.PlannedHours);
 
-        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        [NotMapped]
         public string CustomerName => Customer?.Name ?? string.Empty;
 
-        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        [NotMapped]
         public int? EtcpAgeDays
         {
             get
@@ -58,7 +66,7 @@ namespace GRCFinancialControl.Core.Models
             }
         }
 
-        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        [NotMapped]
         public decimal HoursToAllocate
         {
             get
@@ -71,16 +79,16 @@ namespace GRCFinancialControl.Core.Models
             }
         }
 
-        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        [NotMapped]
         public decimal AllocationVariance => CurrentHoursAllocation - HoursToAllocate;
 
-        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        [NotMapped]
         public bool RequiresAllocationReview => Math.Abs(AllocationVariance) > 0.01m;
 
-        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
-        public decimal CurrentRevenueAllocation => RevenueAllocations.Sum(a => a.PlannedValue);
+        [NotMapped]
+        public decimal CurrentRevenueAllocation => RevenueAllocations.Sum(a => a.ToGoValue + a.ToDateValue);
 
-        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        [NotMapped]
         public decimal ValueToAllocate
         {
             get
@@ -93,10 +101,13 @@ namespace GRCFinancialControl.Core.Models
             }
         }
 
-        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        [NotMapped]
         public decimal RevenueAllocationVariance => CurrentRevenueAllocation - ValueToAllocate;
 
-        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        [NotMapped]
         public bool RequiresRevenueAllocationReview => Math.Abs(RevenueAllocationVariance) > 0.01m;
+
+        [NotMapped]
+        public string LastClosingPeriodName => LastClosingPeriod?.Name ?? string.Empty;
     }
 }

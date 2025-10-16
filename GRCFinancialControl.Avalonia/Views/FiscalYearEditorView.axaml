@@ -12,14 +12,14 @@
     </UserControl.Resources>
     <StackPanel Spacing="10" Margin="10">
         <TextBlock Text="Fiscal Year Details" FontSize="18" FontWeight="Bold"/>
-        <TextBox Text="{Binding Name}" Watermark="Name (e.g., FY2025)"/>
-        <DatePicker SelectedDate="{Binding StartDateOffset}" />
-        <DatePicker SelectedDate="{Binding EndDateOffset}" />
+        <TextBox Text="{Binding Name}" Watermark="Name (e.g., FY2025)" IsEnabled="{Binding AllowEditing}"/>
+        <DatePicker SelectedDate="{Binding StartDateOffset}" IsEnabled="{Binding AllowEditing}"/>
+        <DatePicker SelectedDate="{Binding EndDateOffset}" IsEnabled="{Binding AllowEditing}"/>
         <TextBlock Text="{Binding StatusMessage}" Foreground="Red"/>
-        <TextBox Text="{Binding AreaSalesTarget, Converter={StaticResource NumericConverter}}" Watermark="Area Sales Target"/>
-        <TextBox Text="{Binding AreaRevenueTarget, Converter={StaticResource NumericConverter}}" Watermark="Area Revenue Target"/>
+        <TextBox Text="{Binding AreaSalesTarget, Converter={StaticResource NumericConverter}}" Watermark="Area Sales Target" IsEnabled="{Binding AllowEditing}"/>
+        <TextBox Text="{Binding AreaRevenueTarget, Converter={StaticResource NumericConverter}}" Watermark="Area Revenue Target" IsEnabled="{Binding AllowEditing}"/>
         <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">
-            <Button Content="Save" Command="{Binding SaveCommand}"/>
+            <Button Content="Save" Command="{Binding SaveCommand}" IsEnabled="{Binding AllowEditing}"/>
             <Button Content="Close" Command="{Binding CloseCommand}"/>
         </StackPanel>
     </StackPanel>

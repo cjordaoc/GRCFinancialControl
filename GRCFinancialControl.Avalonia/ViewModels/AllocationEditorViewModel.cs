@@ -62,11 +62,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private string _allocationVarianceTooltip = string.Empty;
 
+        [ObservableProperty]
+        private string? _statusMessage;
+
+        [ObservableProperty]
+        private bool _isReadOnlyMode;
+
         public AllocationEditorViewModel(Engagement engagement,
                                          List<FiscalYear> fiscalYears,
                                          IEngagementService engagementService,
                                          IMessenger messenger,
-                                         AllocationKind kind)
+                                         AllocationKind kind,
+                                         bool isReadOnlyMode = false)
             : base(messenger ?? throw new ArgumentNullException(nameof(messenger)))
         {
             ArgumentNullException.ThrowIfNull(engagement);
@@ -83,7 +90,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 fiscalYears.Select(fy => new AllocationEntry
                 {
                     FiscalYear = fy,
-                    PlannedAmount = GetExistingAllocationAmount(engagement, fy.Id)
+                    PlannedAmount = GetExistingAllocationAmount(engagement, fy.Id),
+                    IsLocked = fy.IsLocked
                 })
             );
 
@@ -100,6 +108,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     }
                 };
             }
+
+            IsReadOnlyMode = isReadOnlyMode;
         }
 
         public string TargetLabel => _kind == AllocationKind.Hours ? HoursTargetLabel : ValueTargetLabel;
@@ -112,13 +122,17 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             ? HoursValidationMessage
             : ValueValidationMessage;
 
-        [RelayCommand]
+        public bool AllowEditing => !IsReadOnlyMode;
+
+        [RelayCommand(CanExecute = nameof(CanSave))]
         private async Task SaveAsync()
         {
-            if (HasAllocationVariance)
+            if (!CanSave())
             {
                 return;
             }
+
+            StatusMessage = null;
 
             if (_kind == AllocationKind.Hours)
             {
@@ -142,13 +156,21 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     {
                         EngagementId = Engagement.Id,
                         FiscalYearId = allocation.FiscalYear.Id,
-                        PlannedValue = decimal.Round(allocation.PlannedAmount, 2)
+                        ToGoValue = decimal.Round(allocation.PlannedAmount, 2),
+                        ToDateValue = 0m
                     });
                 }
             }
 
-            await _engagementService.UpdateAsync(Engagement);
-            Messenger.Send(new CloseDialogMessage(true));
+            try
+            {
+                await _engagementService.UpdateAsync(Engagement);
+                Messenger.Send(new CloseDialogMessage(true));
+            }
+            catch (InvalidOperationException ex)
+            {
+                StatusMessage = ex.Message;
+            }
         }
 
         [RelayCommand]
@@ -185,6 +207,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             ValidationMessage = HasAllocationVariance ? ValidationErrorMessage : null;
         }
 
+        private bool CanSave() => !HasAllocationVariance && !IsReadOnlyMode;
+
+        partial void OnHasAllocationVarianceChanged(bool value)
+        {
+            SaveCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnIsReadOnlyModeChanged(bool value)
+        {
+            SaveCommand.NotifyCanExecuteChanged();
+            OnPropertyChanged(nameof(AllowEditing));
+        }
+
         private decimal GetTargetAmount(Engagement engagement)
         {
             return _kind == AllocationKind.Hours ? engagement.HoursToAllocate : engagement.ValueToAllocate;
@@ -197,7 +232,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return engagement.Allocations.FirstOrDefault(a => a.FiscalYearId == fiscalYearId)?.PlannedHours ?? 0m;
             }
 
-            return engagement.RevenueAllocations.FirstOrDefault(a => a.FiscalYearId == fiscalYearId)?.PlannedValue ?? 0m;
+            var allocation = engagement.RevenueAllocations.FirstOrDefault(a => a.FiscalYearId == fiscalYearId);
+            return allocation is null ? 0m : allocation.ToGoValue + allocation.ToDateValue;
         }
 
         private string GetVarianceSuffix()
@@ -234,5 +270,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         [ObservableProperty]
         private decimal _plannedAmount;
+
+        [ObservableProperty]
+        private bool _isLocked;
+
+        partial void OnIsLockedChanged(bool value)
+        {
+            OnPropertyChanged(nameof(IsEditable));
+        }
+
+        public bool IsEditable => !IsLocked;
     }
 }

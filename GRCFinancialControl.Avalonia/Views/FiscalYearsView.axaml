@@ -20,21 +20,40 @@
                 <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
                 <DataGridTextColumn Header="Start Date" Binding="{Binding StartDate, StringFormat='{}{0:yyyy-MM-dd}'}" Width="*"/>
                 <DataGridTextColumn Header="End Date" Binding="{Binding EndDate, StringFormat='{}{0:yyyy-MM-dd}'}" Width="*"/>
+                <DataGridCheckBoxColumn Header="Locked" Binding="{Binding IsLocked}" Width="Auto"/>
+                <DataGridTextColumn Header="Locked At" Binding="{Binding LockedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" Width="*"/>
+                <DataGridTextColumn Header="Locked By" Binding="{Binding LockedBy}" Width="*"/>
             </DataGrid.Columns>
         </DataGrid>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="5" Margin="0,10,0,0">
-            <Button Content="Add New" Command="{Binding AddCommand}"/>
-            <Button Content="Edit"
-                    Command="{Binding EditCommand}"
-                    CommandParameter="{Binding SelectedFiscalYear}"/>
-            <Button Content="Delete"
-                    Command="{Binding DeleteCommand}"
-                    CommandParameter="{Binding SelectedFiscalYear}"/>
-            <Button Content="Delete Data"
-                    Command="{Binding DeleteDataCommand}"
-                    CommandParameter="{Binding SelectedFiscalYear}"
-                    Classes="danger"/>
+        <StackPanel Grid.Row="2" Orientation="Vertical" Spacing="8" Margin="0,10,0,0">
+            <StackPanel Orientation="Horizontal" Spacing="5">
+                <Button Content="Add New" Command="{Binding AddCommand}"/>
+                <Button Content="Edit"
+                        Command="{Binding EditCommand}"
+                        CommandParameter="{Binding SelectedFiscalYear}"/>
+                <Button Content="View"
+                        Command="{Binding ViewCommand}"
+                        CommandParameter="{Binding SelectedFiscalYear}"/>
+                <Button Content="Delete"
+                        Command="{Binding DeleteCommand}"
+                        CommandParameter="{Binding SelectedFiscalYear}"/>
+                <Button Content="Delete Data"
+                        Command="{Binding DeleteDataCommand}"
+                        CommandParameter="{Binding SelectedFiscalYear}"
+                        Classes="danger"/>
+                <Button Content="Close Fiscal Year"
+                        Command="{Binding CloseCommand}"
+                        CommandParameter="{Binding SelectedFiscalYear}"
+                        Classes="accent"/>
+                <Button Content="Lock"
+                        Command="{Binding LockCommand}"
+                        CommandParameter="{Binding SelectedFiscalYear}"/>
+                <Button Content="Unlock"
+                        Command="{Binding UnlockCommand}"
+                        CommandParameter="{Binding SelectedFiscalYear}"/>
+            </StackPanel>
+            <TextBlock Foreground="#FFB8860B" Text="{Binding StatusMessage}"/>
         </StackPanel>
     </Grid>
 </UserControl>

@@ -8,14 +8,15 @@
              x:DataType="vm:ManagerEditorViewModel">
     <StackPanel Spacing="10" Margin="10">
         <TextBlock Text="Manager Details" FontSize="18" FontWeight="Bold"/>
-        <TextBox Text="{Binding Name}" Watermark="Name" Width="280"/>
-        <TextBox Text="{Binding Email}" Watermark="Email" Width="280"/>
+        <TextBox Text="{Binding Name}" Watermark="Name" Width="280" IsEnabled="{Binding AllowEditing}"/>
+        <TextBox Text="{Binding Email}" Watermark="Email" Width="280" IsEnabled="{Binding AllowEditing}"/>
         <ComboBox ItemsSource="{Binding PositionOptions}"
                   SelectedItem="{Binding Position}"
                   PlaceholderText="Position"
-                  Width="280"/>
+                  Width="280"
+                  IsEnabled="{Binding AllowEditing}"/>
         <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">
-            <Button Content="Save" Command="{Binding SaveCommand}"/>
+            <Button Content="Save" Command="{Binding SaveCommand}" IsEnabled="{Binding AllowEditing}"/>
             <Button Content="Close" Command="{Binding CloseCommand}"/>
         </StackPanel>
     </StackPanel>

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -12,6 +13,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 {
     public partial class ImportViewModel : ViewModelBase
     {
+        private const string LockedClosingPeriodsMessage = "All closing periods belong to locked fiscal years. Unlock a fiscal year to import ETC-P data.";
+
         private readonly IFilePickerService _filePickerService;
         private readonly IImportService _importService;
         private readonly IClosingPeriodService _closingPeriodService;
@@ -32,6 +35,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public string? FileTypeDisplayName => FileType switch
         {
             "Actuals" => "ETC-P",
+            "FcsBacklog" => "FCS Revenue Backlog",
+            "FullManagement" => "Full Management Data",
             _ => FileType
         };
 
@@ -44,21 +49,24 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _loggingService.OnLogMessage += (message) => StatusMessage = message;
 
             SetImportTypeCommand = new RelayCommand<string>(SetImportType);
-            ImportCommand = new AsyncRelayCommand(ImportAsync);
+            ImportCommand = new AsyncRelayCommand(ImportAsync, CanImport);
         }
 
         public IRelayCommand SetImportTypeCommand { get; }
         public IAsyncRelayCommand ImportCommand { get; }
 
-        partial void OnFileTypeChanged(string? value)
-        {
-            OnPropertyChanged(nameof(FileTypeDisplayName));
-        }
-
         private void SetImportType(string? fileType)
         {
             FileType = fileType;
-            StatusMessage = null;
+            if (RequiresClosingPeriodSelection && !HasUnlockedClosingPeriods)
+            {
+                StatusMessage = LockedClosingPeriodsMessage;
+            }
+            else
+            {
+                StatusMessage = null;
+            }
+            ImportCommand.NotifyCanExecuteChanged();
         }
 
         private async Task ImportAsync()
@@ -87,6 +95,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 {
                     result = await _importService.ImportActualsAsync(filePath, SelectedClosingPeriod!.Id);
                 }
+                else if (FileType == "FcsBacklog")
+                {
+                    result = await _importService.ImportFcsRevenueBacklogAsync(filePath);
+                }
+                else if (FileType == "FullManagement")
+                {
+                    result = await _importService.ImportFullManagementDataAsync(filePath);
+                }
                 else
                 {
                     result = "Invalid import type selected.";
@@ -99,10 +115,30 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
+        private bool CanImport()
+        {
+            if (string.IsNullOrEmpty(FileType))
+            {
+                return false;
+            }
+
+            if (FileType == "Actuals")
+            {
+                return SelectedClosingPeriod is not null;
+            }
+
+            return true;
+        }
+
         public override async Task LoadDataAsync()
         {
             var periods = await _closingPeriodService.GetAllAsync();
-            ClosingPeriods = new ObservableCollection<ClosingPeriod>(periods);
+            var unlockedPeriods = periods
+                .Where(p => !(p.FiscalYear?.IsLocked ?? false))
+                .OrderBy(p => p.PeriodStart)
+                .ToList();
+
+            ClosingPeriods = new ObservableCollection<ClosingPeriod>(unlockedPeriods);
 
             if (SelectedClosingPeriod == null)
             {
@@ -112,6 +148,60 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 SelectedClosingPeriod = ClosingPeriods.FirstOrDefault();
             }
+
+            if (FileType == "Actuals" && ClosingPeriods.Count == 0)
+            {
+                StatusMessage ??= LockedClosingPeriodsMessage;
+            }
+            else if (FileType == "Actuals" && string.Equals(StatusMessage, LockedClosingPeriodsMessage, StringComparison.Ordinal))
+            {
+                StatusMessage = null;
+            }
+        }
+
+        public bool HasUnlockedClosingPeriods => ClosingPeriods.Count > 0;
+
+        public bool RequiresClosingPeriodSelection => string.Equals(FileType, "Actuals", StringComparison.Ordinal);
+
+        public bool IsClosingPeriodSelectionUnavailable => RequiresClosingPeriodSelection && !HasUnlockedClosingPeriods;
+
+        partial void OnClosingPeriodsChanging(ObservableCollection<ClosingPeriod> value)
+        {
+            if (value != null)
+            {
+                value.CollectionChanged -= OnClosingPeriodsCollectionChanged;
+            }
+        }
+
+        partial void OnClosingPeriodsChanged(ObservableCollection<ClosingPeriod> value)
+        {
+            if (value != null)
+            {
+                value.CollectionChanged += OnClosingPeriodsCollectionChanged;
+            }
+            ImportCommand.NotifyCanExecuteChanged();
+            OnPropertyChanged(nameof(HasUnlockedClosingPeriods));
+            OnPropertyChanged(nameof(IsClosingPeriodSelectionUnavailable));
+        }
+
+        private void OnClosingPeriodsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            ImportCommand.NotifyCanExecuteChanged();
+            OnPropertyChanged(nameof(HasUnlockedClosingPeriods));
+            OnPropertyChanged(nameof(IsClosingPeriodSelectionUnavailable));
+        }
+
+        partial void OnSelectedClosingPeriodChanged(ClosingPeriod? value)
+        {
+            ImportCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnFileTypeChanged(string? value)
+        {
+            OnPropertyChanged(nameof(FileTypeDisplayName));
+            OnPropertyChanged(nameof(RequiresClosingPeriodSelection));
+            OnPropertyChanged(nameof(IsClosingPeriodSelectionUnavailable));
+            ImportCommand.NotifyCanExecuteChanged();
         }
     }
 }

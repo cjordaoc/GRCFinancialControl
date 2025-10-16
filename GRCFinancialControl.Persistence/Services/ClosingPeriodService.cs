@@ -20,11 +20,60 @@ namespace GRCFinancialControl.Persistence.Services
 
         protected override DbSet<ClosingPeriod> Set(ApplicationDbContext context) => context.ClosingPeriods;
 
+        protected override IQueryable<ClosingPeriod> BuildQuery(ApplicationDbContext context)
+        {
+            return base.BuildQuery(context)
+                .Include(cp => cp.FiscalYear);
+        }
+
         public Task<List<ClosingPeriod>> GetAllAsync() => GetAllInternalAsync(static query => query.AsNoTracking().OrderBy(cp => cp.PeriodStart));
 
-        public Task AddAsync(ClosingPeriod period) => AddEntityAsync(period);
+        public async Task AddAsync(ClosingPeriod period)
+        {
+            ArgumentNullException.ThrowIfNull(period);
 
-        public Task UpdateAsync(ClosingPeriod period) => UpdateEntityAsync(period);
+            if (period.FiscalYearId <= 0)
+            {
+                throw new InvalidOperationException("A fiscal year must be selected before adding a closing period.");
+            }
+
+            await using var context = await CreateContextAsync();
+            await FiscalYearLockGuard.EnsureFiscalYearUnlockedAsync(context, period.FiscalYearId, "add a closing period");
+
+            await context.ClosingPeriods.AddAsync(period);
+            await context.SaveChangesAsync();
+        }
+
+        public async Task UpdateAsync(ClosingPeriod period)
+        {
+            ArgumentNullException.ThrowIfNull(period);
+
+            if (period.FiscalYearId <= 0)
+            {
+                throw new InvalidOperationException("A fiscal year must be selected before updating a closing period.");
+            }
+
+            await using var context = await CreateContextAsync();
+
+            var existing = await context.ClosingPeriods
+                .Include(cp => cp.FiscalYear)
+                .FirstOrDefaultAsync(cp => cp.Id == period.Id);
+
+            if (existing is null)
+            {
+                return;
+            }
+
+            await FiscalYearLockGuard.EnsureFiscalYearUnlockedAsync(context, existing.FiscalYearId, "update the closing period");
+
+            if (existing.FiscalYearId != period.FiscalYearId)
+            {
+                await FiscalYearLockGuard.EnsureFiscalYearUnlockedAsync(context, period.FiscalYearId, "update the closing period");
+            }
+
+            context.Entry(existing).CurrentValues.SetValues(period);
+            await context.SaveChangesAsync();
+        }
 
         public async Task DeleteAsync(int id)
         {
@@ -40,6 +89,8 @@ namespace GRCFinancialControl.Persistence.Services
             {
                 return;
             }
+
+            await FiscalYearLockGuard.EnsureFiscalYearUnlockedAsync(context, period.FiscalYearId, "delete the closing period");
 
             var hasActuals = await context.ActualsEntries.AnyAsync(a => a.ClosingPeriodId == id);
             if (hasActuals)
@@ -59,6 +110,8 @@ namespace GRCFinancialControl.Persistence.Services
             }
 
             await using var context = await CreateContextAsync();
+
+            await FiscalYearLockGuard.EnsureClosingPeriodUnlockedAsync(context, closingPeriodId, "delete data for the closing period");
 
             await context.ActualsEntries
                 .Where(a => a.ClosingPeriodId == closingPeriodId)

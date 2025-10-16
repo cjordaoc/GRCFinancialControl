@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GRCFinancialControl.Core.Models;
+using GRCFinancialControl.Persistence.Services.Infrastructure;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,17 +30,94 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task SaveAllocationsForEngagementAsync(int engagementId, List<PlannedAllocation> allocations)
         {
+            ArgumentNullException.ThrowIfNull(allocations);
+
             await using var context = await _contextFactory.CreateDbContextAsync();
 
-            await context.PlannedAllocations
+            await EngagementMutationGuard.EnsureCanMutateAsync(
+                context,
+                engagementId,
+                "Saving planned allocations");
+
+            var existingAllocations = await context.PlannedAllocations
                 .Where(pa => pa.EngagementId == engagementId)
+                .Include(pa => pa.ClosingPeriod)
+                    .ThenInclude(cp => cp.FiscalYear)
+                .ToListAsync();
+
+            var relevantClosingPeriodIds = existingAllocations
+                .Select(a => a.ClosingPeriodId)
+                .Concat(allocations.Select(a => a.ClosingPeriodId))
+                .Distinct()
+                .ToList();
+
+            var closingPeriods = await context.ClosingPeriods
+                .Include(cp => cp.FiscalYear)
+                .Where(cp => relevantClosingPeriodIds.Contains(cp.Id))
+                .ToDictionaryAsync(cp => cp.Id);
+
+            var lockedPeriods = closingPeriods.Values
+                .Where(cp => cp.FiscalYear is not null && cp.FiscalYear.IsLocked)
+                .ToList();
+
+            var lockedPeriodIds = lockedPeriods
+                .Select(cp => cp.Id)
+                .ToHashSet();
+
+            foreach (var lockedPeriod in lockedPeriods)
+            {
+                var existing = existingAllocations.FirstOrDefault(a => a.ClosingPeriodId == lockedPeriod.Id);
+                var incoming = allocations.FirstOrDefault(a => a.ClosingPeriodId == lockedPeriod.Id);
+
+                var fiscalYearName = string.IsNullOrWhiteSpace(lockedPeriod.FiscalYear?.Name)
+                    ? $"Id={lockedPeriod.FiscalYear?.Id ?? 0}"
+                    : lockedPeriod.FiscalYear!.Name;
+
+                if (incoming is null)
+                {
+                    if (existing != null)
+                    {
+                        throw new InvalidOperationException($"Cannot remove planned allocation for locked fiscal year '{fiscalYearName}'. Unlock it before making changes.");
+                    }
+
+                    continue;
+                }
+
+                if (existing is null)
+                {
+                    throw new InvalidOperationException($"Cannot add a new planned allocation for locked fiscal year '{fiscalYearName}'. Unlock it before making changes.");
+                }
+
+                if (Math.Round(existing.AllocatedHours, 2, MidpointRounding.AwayFromZero) !=
+                    Math.Round(incoming.AllocatedHours, 2, MidpointRounding.AwayFromZero))
+                {
+                    throw new InvalidOperationException($"Cannot change planned allocation hours for locked fiscal year '{fiscalYearName}'. Unlock it before making changes.");
+                }
+            }
+
+            var unlockedPeriodIds = closingPeriods.Values
+                .Where(cp => !(cp.FiscalYear?.IsLocked ?? false))
+                .Select(cp => cp.Id)
+                .ToHashSet();
+
+            await context.PlannedAllocations
+                .Where(pa => pa.EngagementId == engagementId && unlockedPeriodIds.Contains(pa.ClosingPeriodId))
                 .ExecuteDeleteAsync();
 
-            // Add the new allocations
-            foreach (var allocation in allocations)
+            foreach (var allocation in allocations.Where(a => unlockedPeriodIds.Contains(a.ClosingPeriodId)))
             {
+                if (!closingPeriods.ContainsKey(allocation.ClosingPeriodId))
+                {
+                    throw new InvalidOperationException($"Closing period Id={allocation.ClosingPeriodId} could not be found. Refresh and try again.");
+                }
+
                 allocation.EngagementId = engagementId;
-                await context.PlannedAllocations.AddAsync(allocation);
+                await context.PlannedAllocations.AddAsync(new PlannedAllocation
+                {
+                    EngagementId = engagementId,
+                    ClosingPeriodId = allocation.ClosingPeriodId,
+                    AllocatedHours = allocation.AllocatedHours
+                });
             }
 
             await context.SaveChangesAsync();

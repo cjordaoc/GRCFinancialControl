@@ -27,6 +27,7 @@
         <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="5" Margin="0,10,0,0">
             <Button Content="Add New" Command="{Binding AddCommand}"/>
             <Button Content="Edit" Command="{Binding EditCommand}" CommandParameter="{Binding SelectedPapd}"/>
+            <Button Content="View" Command="{Binding ViewCommand}" CommandParameter="{Binding SelectedPapd}"/>
             <Button Content="Delete" Command="{Binding DeleteCommand}" CommandParameter="{Binding SelectedPapd}"/>
             <Button Content="Delete Data" Command="{Binding DeleteDataCommand}" CommandParameter="{Binding SelectedPapd}" Classes="danger"/>
         </StackPanel>

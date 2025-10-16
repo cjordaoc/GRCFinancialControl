@@ -13,14 +13,16 @@
             <TextBlock Text="Engagement"/>
             <ComboBox ItemsSource="{Binding Engagements}"
                       SelectedItem="{Binding SelectedEngagement}"
-                      Width="280"/>
+                      Width="280"
+                      IsEnabled="{Binding AllowEditing}"/>
         </StackPanel>
 
         <StackPanel Spacing="4">
             <TextBlock Text="Manager"/>
             <ComboBox ItemsSource="{Binding Managers}"
                       SelectedItem="{Binding SelectedManager}"
-                      Width="280">
+                      Width="280"
+                      IsEnabled="{Binding AllowEditing}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding Name}"/>
@@ -32,16 +34,16 @@
         <StackPanel Orientation="Horizontal" Spacing="12">
             <StackPanel Width="160" Spacing="4">
                 <TextBlock Text="Begin"/>
-                <DatePicker SelectedDate="{Binding BeginDateOffset}"/>
+                <DatePicker SelectedDate="{Binding BeginDateOffset}" IsEnabled="{Binding AllowEditing}"/>
             </StackPanel>
             <StackPanel Width="160" Spacing="4">
                 <TextBlock Text="End"/>
-                <DatePicker SelectedDate="{Binding EndDateOffset}"/>
+                <DatePicker SelectedDate="{Binding EndDateOffset}" IsEnabled="{Binding AllowEditing}"/>
             </StackPanel>
         </StackPanel>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-            <Button Content="Save" Command="{Binding SaveCommand}"/>
+            <Button Content="Save" Command="{Binding SaveCommand}" IsEnabled="{Binding AllowEditing}"/>
             <Button Content="Cancel" Command="{Binding CloseCommand}"/>
         </StackPanel>
     </StackPanel>

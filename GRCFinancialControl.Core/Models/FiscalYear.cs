@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace GRCFinancialControl.Core.Models
 {
     /// <summary>
@@ -11,5 +14,10 @@ namespace GRCFinancialControl.Core.Models
         public DateTime EndDate { get; set; }
         public decimal AreaSalesTarget { get; set; }
         public decimal AreaRevenueTarget { get; set; }
+        public bool IsLocked { get; set; }
+        public DateTime? LockedAt { get; set; }
+        public string? LockedBy { get; set; }
+
+        public ICollection<ClosingPeriod> ClosingPeriods { get; set; } = [];
     }
 }
