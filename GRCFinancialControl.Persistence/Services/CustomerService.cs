@@ -49,11 +49,6 @@ namespace GRCFinancialControl.Persistence.Services
                 .Select(pair => pair.Id)
                 .ToList();
 
-            var engagementBusinessKeys = engagementKeyPairs
-                .Select(pair => pair.EngagementId)
-                .Where(key => !string.IsNullOrWhiteSpace(key))
-                .ToList();
-
             await context.ActualsEntries
                 .Where(a => engagementIds.Contains(a.EngagementId))
                 .ExecuteDeleteAsync();
@@ -70,12 +65,9 @@ namespace GRCFinancialControl.Persistence.Services
                 .Where(rb => engagementIds.Contains(rb.EngagementId))
                 .ExecuteDeleteAsync();
 
-            if (engagementBusinessKeys.Count > 0)
-            {
-                await context.FinancialEvolutions
-                    .Where(fe => engagementBusinessKeys.Contains(fe.EngagementId))
-                    .ExecuteDeleteAsync();
-            }
+            await context.FinancialEvolutions
+                .Where(fe => engagementIds.Contains(fe.EngagementId))
+                .ExecuteDeleteAsync();
 
             await context.EngagementFiscalYearAllocations
                 .Where(a => engagementIds.Contains(a.EngagementId))

@@ -19,8 +19,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public Customer Customer { get; }
 
-        public CustomerEditorViewModel(Customer customer, ICustomerService customerService, IMessenger messenger)
-            : base(messenger ?? throw new ArgumentNullException(nameof(messenger)))
+        public CustomerEditorViewModel(
+            Customer customer,
+            ICustomerService customerService,
+            IMessenger messenger,
+            bool isReadOnlyMode = false)
+            : base(messenger ?? throw new ArgumentNullException(nameof(messenger)), isReadOnlyMode)
         {
             Customer = customer ?? throw new ArgumentNullException(nameof(customer));
             _customerService = customerService ?? throw new ArgumentNullException(nameof(customerService));

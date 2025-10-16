@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
+using GRCFinancialControl.Persistence.Services.Infrastructure;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -33,13 +35,12 @@ namespace GRCFinancialControl.Persistence.Services
                 .ToListAsync();
 
             var closingPeriods = closingPeriodRecords
-                .GroupBy(cp => cp.Name.Trim(), StringComparer.OrdinalIgnoreCase)
+                .GroupBy(cp => cp.Name!.Trim(), StringComparer.OrdinalIgnoreCase)
                 .ToDictionary(
                     group => group.Key,
                     group => group
                         .OrderByDescending(cp => cp.PeriodEnd)
-                        .First()
-                        .PeriodEnd,
+                        .First(),
                     StringComparer.OrdinalIgnoreCase);
 
             var engagements = await context.Engagements
@@ -55,6 +56,7 @@ namespace GRCFinancialControl.Persistence.Services
                 .Include(e => e.RevenueAllocations)
                     .ThenInclude(a => a.FiscalYear)
                 .Include(e => e.FinancialEvolutions)
+                .Include(e => e.LastClosingPeriod)
                 .ToListAsync();
 
             ApplyFinancialControlSnapshots(engagements, closingPeriods);
@@ -73,13 +75,12 @@ namespace GRCFinancialControl.Persistence.Services
                 .ToListAsync();
 
             var closingPeriods = closingPeriodRecords
-                .GroupBy(cp => cp.Name.Trim(), StringComparer.OrdinalIgnoreCase)
+                .GroupBy(cp => cp.Name!.Trim(), StringComparer.OrdinalIgnoreCase)
                 .ToDictionary(
                     group => group.Key,
                     group => group
                         .OrderByDescending(cp => cp.PeriodEnd)
-                        .First()
-                        .PeriodEnd,
+                        .First(),
                     StringComparer.OrdinalIgnoreCase);
 
             var engagement = await context.Engagements
@@ -95,6 +96,7 @@ namespace GRCFinancialControl.Persistence.Services
                 .Include(e => e.RevenueAllocations)
                     .ThenInclude(a => a.FiscalYear)
                 .Include(e => e.FinancialEvolutions)
+                .Include(e => e.LastClosingPeriod)
                 .FirstOrDefaultAsync(e => e.Id == id);
 
             if (engagement != null)
@@ -120,7 +122,7 @@ namespace GRCFinancialControl.Persistence.Services
             return assignment?.Papd;
         }
 
-        private static void ApplyFinancialControlSnapshots(IEnumerable<Engagement> engagements, IReadOnlyDictionary<string, DateTime> closingPeriods)
+        private static void ApplyFinancialControlSnapshots(IEnumerable<Engagement> engagements, IReadOnlyDictionary<string, ClosingPeriod> closingPeriods)
         {
             foreach (var engagement in engagements)
             {
@@ -128,7 +130,7 @@ namespace GRCFinancialControl.Persistence.Services
             }
         }
 
-        private static void ApplyFinancialControlSnapshot(Engagement engagement, IReadOnlyDictionary<string, DateTime> closingPeriods)
+        private static void ApplyFinancialControlSnapshot(Engagement engagement, IReadOnlyDictionary<string, ClosingPeriod> closingPeriods)
         {
             if (engagement.FinancialEvolutions == null || engagement.FinancialEvolutions.Count == 0)
             {
@@ -141,6 +143,7 @@ namespace GRCFinancialControl.Persistence.Services
                 engagement.ExpensesEtcp = 0m;
                 engagement.MarginPctEtcp = null;
                 engagement.LastClosingPeriodId = null;
+                engagement.LastClosingPeriod = null;
                 return;
             }
 
@@ -181,7 +184,19 @@ namespace GRCFinancialControl.Persistence.Services
                 engagement.ValueEtcp = latestSnapshot.ValueData ?? 0m;
                 engagement.ExpensesEtcp = latestSnapshot.ExpenseData ?? 0m;
                 engagement.MarginPctEtcp = latestSnapshot.MarginData;
-                engagement.LastClosingPeriodId = NormalizeClosingPeriodId(latestSnapshot.ClosingPeriodId);
+                var normalizedClosingPeriodId = NormalizeClosingPeriodId(latestSnapshot.ClosingPeriodId);
+
+                if (!string.IsNullOrEmpty(normalizedClosingPeriodId) &&
+                    closingPeriods.TryGetValue(normalizedClosingPeriodId, out var closingPeriod))
+                {
+                    engagement.LastClosingPeriodId = closingPeriod.Id;
+                    engagement.LastClosingPeriod = closingPeriod;
+                }
+                else
+                {
+                    engagement.LastClosingPeriodId = null;
+                    engagement.LastClosingPeriod = null;
+                }
             }
             else
             {
@@ -190,18 +205,19 @@ namespace GRCFinancialControl.Persistence.Services
                 engagement.ExpensesEtcp = 0m;
                 engagement.MarginPctEtcp = null;
                 engagement.LastClosingPeriodId = null;
+                engagement.LastClosingPeriod = null;
             }
         }
 
         private static (int Priority, DateTime SortDate, int NumericValue, string NormalizedId) BuildFinancialEvolutionSortKey(
             FinancialEvolution evolution,
-            IReadOnlyDictionary<string, DateTime> closingPeriods)
+            IReadOnlyDictionary<string, ClosingPeriod> closingPeriods)
         {
             var closingPeriodId = NormalizeClosingPeriodId(evolution.ClosingPeriodId);
 
-            if (!string.IsNullOrEmpty(closingPeriodId) && closingPeriods.TryGetValue(closingPeriodId, out var periodEnd))
+            if (!string.IsNullOrEmpty(closingPeriodId) && closingPeriods.TryGetValue(closingPeriodId, out var closingPeriod))
             {
-                return (3, periodEnd, int.MaxValue, closingPeriodId);
+                return (3, closingPeriod.PeriodEnd, int.MaxValue, closingPeriodId);
             }
 
             if (!string.IsNullOrEmpty(closingPeriodId) && TryParsePeriodDate(closingPeriodId, out var parsedDate))
@@ -261,86 +277,179 @@ namespace GRCFinancialControl.Persistence.Services
             var existingEngagement = await context.Engagements
                 .Include(e => e.EngagementPapds)
                 .Include(e => e.Allocations)
+                    .ThenInclude(a => a.FiscalYear)
                 .Include(e => e.RevenueAllocations)
+                    .ThenInclude(a => a.FiscalYear)
                 .Include(e => e.FinancialEvolutions)
                 .FirstOrDefaultAsync(e => e.Id == engagement.Id);
 
-            if (existingEngagement != null)
+            if (existingEngagement == null)
             {
-                context.Entry(existingEngagement).CurrentValues.SetValues(engagement);
-
-                context.EngagementPapds.RemoveRange(existingEngagement.EngagementPapds);
-                existingEngagement.EngagementPapds.Clear();
-
-                foreach (var assignment in engagement.EngagementPapds.OrderBy(a => a.EffectiveDate))
-                {
-                    var papdId = assignment.PapdId;
-                    if (papdId == 0 && assignment.Papd != null)
-                    {
-                        papdId = assignment.Papd.Id;
-                    }
-
-                    if (papdId == 0)
-                    {
-                        throw new InvalidOperationException("Cannot update engagement PAPD assignments without a valid PapdId.");
-                    }
-
-                    existingEngagement.EngagementPapds.Add(new EngagementPapd
-                    {
-                        EngagementId = existingEngagement.Id,
-                        PapdId = papdId,
-                        EffectiveDate = assignment.EffectiveDate
-                    });
-                }
-
-                context.FinancialEvolutions.RemoveRange(existingEngagement.FinancialEvolutions);
-                existingEngagement.FinancialEvolutions.Clear();
-
-                var financialEvolutions = engagement.FinancialEvolutions
-                    .Where(e => !string.IsNullOrWhiteSpace(e.ClosingPeriodId))
-                    .GroupBy(e => e.ClosingPeriodId!, StringComparer.OrdinalIgnoreCase)
-                    .Select(g => g.OrderByDescending(e => e.Id).First());
-
-                foreach (var evolution in financialEvolutions)
-                {
-                    var closingPeriodId = (evolution.ClosingPeriodId ?? string.Empty).Trim();
-                    existingEngagement.FinancialEvolutions.Add(new FinancialEvolution
-                    {
-                        ClosingPeriodId = closingPeriodId,
-                        EngagementId = existingEngagement.EngagementId,
-                        HoursData = evolution.HoursData,
-                        ValueData = evolution.ValueData,
-                        MarginData = evolution.MarginData,
-                        ExpenseData = evolution.ExpenseData
-                    });
-                }
-
-                context.EngagementFiscalYearAllocations.RemoveRange(existingEngagement.Allocations);
-
-                foreach (var allocation in engagement.Allocations)
-                {
-                    existingEngagement.Allocations.Add(new EngagementFiscalYearAllocation
-                    {
-                        FiscalYearId = allocation.FiscalYearId,
-                        PlannedHours = allocation.PlannedHours,
-                        EngagementId = existingEngagement.Id
-                    });
-                }
-
-                context.EngagementFiscalYearRevenueAllocations.RemoveRange(existingEngagement.RevenueAllocations);
-
-                foreach (var allocation in engagement.RevenueAllocations)
-                {
-                    existingEngagement.RevenueAllocations.Add(new EngagementFiscalYearRevenueAllocation
-                    {
-                        FiscalYearId = allocation.FiscalYearId,
-                        PlannedValue = allocation.PlannedValue,
-                        EngagementId = existingEngagement.Id
-                    });
-                }
-
-                await context.SaveChangesAsync();
+                throw new InvalidOperationException($"Engagement with Id={engagement.Id} could not be found.");
             }
+
+            if (existingEngagement.Source == EngagementSource.S4Project)
+            {
+                throw new InvalidOperationException(
+                    $"Engagement '{existingEngagement.EngagementId}' is sourced from S/4Project and must be managed manually. " +
+                    "Updates through the application are blocked.");
+            }
+
+            static string FormatFiscalYearName(FiscalYear fiscalYear) => string.IsNullOrWhiteSpace(fiscalYear.Name)
+                ? $"Id={fiscalYear.Id}"
+                : fiscalYear.Name;
+
+            var lockedHourAllocations = existingEngagement.Allocations
+                .Where(a => a.FiscalYear?.IsLocked ?? false)
+                .ToDictionary(a => a.FiscalYearId, a => a.FiscalYear!);
+
+            var lockedRevenueAllocations = existingEngagement.RevenueAllocations
+                .Where(a => a.FiscalYear?.IsLocked ?? false)
+                .ToDictionary(a => a.FiscalYearId, a => a.FiscalYear!);
+
+            var incomingHourAllocations = engagement.Allocations.ToDictionary(a => a.FiscalYearId, a => a);
+            foreach (var (fiscalYearId, fiscalYear) in lockedHourAllocations)
+            {
+                if (!incomingHourAllocations.TryGetValue(fiscalYearId, out var incomingAllocation))
+                {
+                    throw new InvalidOperationException($"Cannot remove planned hours allocation for locked fiscal year '{FormatFiscalYearName(fiscalYear)}'. Unlock it before making changes.");
+                }
+
+                var existingAllocation = existingEngagement.Allocations.First(a => a.FiscalYearId == fiscalYearId);
+
+                if (Math.Round(existingAllocation.PlannedHours, 2, MidpointRounding.AwayFromZero) !=
+                    Math.Round(incomingAllocation.PlannedHours, 2, MidpointRounding.AwayFromZero))
+                {
+                    throw new InvalidOperationException($"Cannot change planned hours allocation for locked fiscal year '{FormatFiscalYearName(fiscalYear)}'. Unlock it before making changes.");
+                }
+            }
+
+            var incomingRevenueAllocations = engagement.RevenueAllocations.ToDictionary(a => a.FiscalYearId, a => a);
+            foreach (var (fiscalYearId, fiscalYear) in lockedRevenueAllocations)
+            {
+                if (!incomingRevenueAllocations.TryGetValue(fiscalYearId, out var incomingAllocation))
+                {
+                    throw new InvalidOperationException($"Cannot remove revenue allocation for locked fiscal year '{FormatFiscalYearName(fiscalYear)}'. Unlock it before making changes.");
+                }
+
+                var existingAllocation = existingEngagement.RevenueAllocations.First(a => a.FiscalYearId == fiscalYearId);
+
+                var existingTotal = Math.Round(existingAllocation.ToGoValue + existingAllocation.ToDateValue, 2, MidpointRounding.AwayFromZero);
+                var incomingTotal = Math.Round(incomingAllocation.ToGoValue + incomingAllocation.ToDateValue, 2, MidpointRounding.AwayFromZero);
+
+                if (existingTotal != incomingTotal)
+                {
+                    throw new InvalidOperationException($"Cannot change revenue allocation for locked fiscal year '{FormatFiscalYearName(fiscalYear)}'. Unlock it before making changes.");
+                }
+            }
+
+            var unlockedHourFiscalYearIds = engagement.Allocations
+                .Select(a => a.FiscalYearId)
+                .Where(id => !lockedHourAllocations.ContainsKey(id))
+                .ToList();
+
+            await FiscalYearLockGuard.EnsureFiscalYearsUnlockedAsync(context, unlockedHourFiscalYearIds, "update planned hours allocations");
+
+            var unlockedRevenueFiscalYearIds = engagement.RevenueAllocations
+                .Select(a => a.FiscalYearId)
+                .Where(id => !lockedRevenueAllocations.ContainsKey(id))
+                .ToList();
+
+            await FiscalYearLockGuard.EnsureFiscalYearsUnlockedAsync(context, unlockedRevenueFiscalYearIds, "update revenue allocations");
+
+            context.Entry(existingEngagement).CurrentValues.SetValues(engagement);
+
+            context.EngagementPapds.RemoveRange(existingEngagement.EngagementPapds);
+            existingEngagement.EngagementPapds.Clear();
+
+            foreach (var assignment in engagement.EngagementPapds.OrderBy(a => a.EffectiveDate))
+            {
+                var papdId = assignment.PapdId;
+                if (papdId == 0 && assignment.Papd != null)
+                {
+                    papdId = assignment.Papd.Id;
+                }
+
+                if (papdId == 0)
+                {
+                    throw new InvalidOperationException("Cannot update engagement PAPD assignments without a valid PapdId.");
+                }
+
+                existingEngagement.EngagementPapds.Add(new EngagementPapd
+                {
+                    EngagementId = existingEngagement.Id,
+                    PapdId = papdId,
+                    EffectiveDate = assignment.EffectiveDate
+                });
+            }
+
+            context.FinancialEvolutions.RemoveRange(existingEngagement.FinancialEvolutions);
+            existingEngagement.FinancialEvolutions.Clear();
+
+            var financialEvolutions = engagement.FinancialEvolutions
+                .Where(e => !string.IsNullOrWhiteSpace(e.ClosingPeriodId))
+                .GroupBy(e => e.ClosingPeriodId!, StringComparer.OrdinalIgnoreCase)
+                .Select(g => g.OrderByDescending(e => e.Id).First());
+
+            foreach (var evolution in financialEvolutions)
+            {
+                var closingPeriodId = (evolution.ClosingPeriodId ?? string.Empty).Trim();
+                existingEngagement.FinancialEvolutions.Add(new FinancialEvolution
+                {
+                    ClosingPeriodId = closingPeriodId,
+                    EngagementId = existingEngagement.Id,
+                    Engagement = existingEngagement,
+                    HoursData = evolution.HoursData,
+                    ValueData = evolution.ValueData,
+                    MarginData = evolution.MarginData,
+                    ExpenseData = evolution.ExpenseData
+                });
+            }
+
+            var removableHourAllocations = existingEngagement.Allocations
+                .Where(a => !lockedHourAllocations.ContainsKey(a.FiscalYearId))
+                .ToList();
+
+            context.EngagementFiscalYearAllocations.RemoveRange(removableHourAllocations);
+
+            foreach (var allocation in removableHourAllocations)
+            {
+                existingEngagement.Allocations.Remove(allocation);
+            }
+
+            foreach (var allocation in engagement.Allocations.Where(a => !lockedHourAllocations.ContainsKey(a.FiscalYearId)))
+            {
+                existingEngagement.Allocations.Add(new EngagementFiscalYearAllocation
+                {
+                    FiscalYearId = allocation.FiscalYearId,
+                    PlannedHours = allocation.PlannedHours,
+                    EngagementId = existingEngagement.Id
+                });
+            }
+
+            var removableRevenueAllocations = existingEngagement.RevenueAllocations
+                .Where(a => !lockedRevenueAllocations.ContainsKey(a.FiscalYearId))
+                .ToList();
+
+            context.EngagementFiscalYearRevenueAllocations.RemoveRange(removableRevenueAllocations);
+
+            foreach (var allocation in removableRevenueAllocations)
+            {
+                existingEngagement.RevenueAllocations.Remove(allocation);
+            }
+
+            foreach (var allocation in engagement.RevenueAllocations.Where(a => !lockedRevenueAllocations.ContainsKey(a.FiscalYearId)))
+            {
+                existingEngagement.RevenueAllocations.Add(new EngagementFiscalYearRevenueAllocation
+                {
+                    FiscalYearId = allocation.FiscalYearId,
+                    ToGoValue = allocation.ToGoValue,
+                    ToDateValue = allocation.ToDateValue,
+                    EngagementId = existingEngagement.Id
+                });
+            }
+
+            await context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(int id)
@@ -351,6 +460,13 @@ namespace GRCFinancialControl.Persistence.Services
                 .FirstOrDefaultAsync(e => e.Id == id);
             if (engagement != null)
             {
+                if (engagement.Source == EngagementSource.S4Project)
+                {
+                    throw new InvalidOperationException(
+                        $"Engagement '{engagement.EngagementId}' is sourced from S/4Project and must be managed manually. " +
+                        "Deletion is not permitted.");
+                }
+
                 context.Engagements.Remove(engagement);
                 await context.SaveChangesAsync();
             }
@@ -365,10 +481,57 @@ namespace GRCFinancialControl.Persistence.Services
                 .Include(e => e.RankBudgets)
                 .Include(e => e.FinancialEvolutions)
                 .Include(e => e.Allocations)
+                    .ThenInclude(a => a.FiscalYear)
                 .Include(e => e.RevenueAllocations)
+                    .ThenInclude(a => a.FiscalYear)
                 .FirstOrDefaultAsync(e => e.Id == engagementId);
 
-            if (engagement == null) return;
+            if (engagement == null)
+            {
+                return;
+            }
+
+            if (engagement.Source == EngagementSource.S4Project)
+            {
+                throw new InvalidOperationException(
+                    $"Engagement '{engagement.EngagementId}' is sourced from S/4Project and must be managed manually. " +
+                    "Data deletion is not permitted.");
+            }
+
+            var lockedFiscalYears = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var allocation in engagement.Allocations.Where(a => a.FiscalYear?.IsLocked ?? false))
+            {
+                lockedFiscalYears.Add(FormatFiscalYearName(allocation.FiscalYear!, allocation.FiscalYearId));
+            }
+
+            foreach (var allocation in engagement.RevenueAllocations.Where(a => a.FiscalYear?.IsLocked ?? false))
+            {
+                lockedFiscalYears.Add(FormatFiscalYearName(allocation.FiscalYear!, allocation.FiscalYearId));
+            }
+
+            var lockedActualFiscalYears = await context.ActualsEntries
+                .Where(a => a.EngagementId == engagement.Id)
+                .Join(context.ClosingPeriods.Include(cp => cp.FiscalYear),
+                    a => a.ClosingPeriodId,
+                    cp => cp.Id,
+                    (a, cp) => cp.FiscalYear)
+                .Where(fy => fy.IsLocked)
+                .Select(fy => new { fy.Id, fy.Name })
+                .Distinct()
+                .ToListAsync();
+
+            foreach (var fiscalYear in lockedActualFiscalYears)
+            {
+                var name = string.IsNullOrWhiteSpace(fiscalYear.Name) ? $"Id={fiscalYear.Id}" : fiscalYear.Name;
+                lockedFiscalYears.Add(name);
+            }
+
+            if (lockedFiscalYears.Count > 0)
+            {
+                var formatted = string.Join(", ", lockedFiscalYears);
+                throw new InvalidOperationException($"Cannot delete engagement data because the following fiscal year(s) are locked: {formatted}. Unlock them before retrying.");
+            }
 
             var actualsToDelete = await context.ActualsEntries
                 .Where(a => a.EngagementId == engagement.Id)
@@ -387,6 +550,13 @@ namespace GRCFinancialControl.Persistence.Services
             context.EngagementFiscalYearRevenueAllocations.RemoveRange(engagement.RevenueAllocations);
 
             await context.SaveChangesAsync();
+        }
+
+        private static string FormatFiscalYearName(FiscalYear fiscalYear, int fiscalYearId)
+        {
+            return string.IsNullOrWhiteSpace(fiscalYear?.Name)
+                ? $"Id={fiscalYearId}"
+                : fiscalYear!.Name;
         }
     }
 }

@@ -32,13 +32,17 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
         [ObservableProperty]
         private DateTime? _effectiveDate = DateTime.Today;
 
+        [ObservableProperty]
+        private bool _isReadOnlyMode;
+
         public Papd Papd { get; }
 
-        public PapdEngagementAssignmentViewModel(Papd papd, IEngagementService engagementService, IMessenger messenger)
+        public PapdEngagementAssignmentViewModel(Papd papd, IEngagementService engagementService, IMessenger messenger, bool isReadOnlyMode = false)
             : base(messenger)
         {
             Papd = papd;
             _engagementService = engagementService;
+            IsReadOnlyMode = isReadOnlyMode;
         }
 
         public DateTimeOffset? EffectiveDateOffset
@@ -144,9 +148,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             Messenger.Send(new CloseDialogMessage(false));
         }
 
-        private bool CanAssign() => SelectedEngagement is not null && EffectiveDate is not null;
+        private bool CanAssign() => SelectedEngagement is not null && EffectiveDate is not null && !IsReadOnlyMode;
 
-        private bool CanRemoveAssignment() => SelectedAssignment is not null;
+        private bool CanRemoveAssignment() => SelectedAssignment is not null && !IsReadOnlyMode;
 
         partial void OnSelectedAssignmentChanged(PapdAssignmentItem? value)
         {
@@ -163,6 +167,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             OnPropertyChanged(nameof(EffectiveDateOffset));
             AssignCommand.NotifyCanExecuteChanged();
         }
+
+        partial void OnIsReadOnlyModeChanged(bool value)
+        {
+            AssignCommand.NotifyCanExecuteChanged();
+            RemoveAssignmentCommand.NotifyCanExecuteChanged();
+            OnPropertyChanged(nameof(AllowEditing));
+        }
+
+        public bool AllowEditing => !IsReadOnlyMode;
     }
 
     public record PapdAssignmentItem(int AssignmentId, int InternalEngagementId, string EngagementId, string EngagementDescription, DateTime EffectiveDate);

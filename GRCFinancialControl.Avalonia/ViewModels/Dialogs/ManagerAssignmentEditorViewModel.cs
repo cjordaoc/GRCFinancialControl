@@ -35,6 +35,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
         [ObservableProperty]
         private DateTime? _endDate;
 
+        [ObservableProperty]
+        private bool _isReadOnlyMode;
+
         public string Title => _assignment.Id == 0 ? "Add Manager Assignment" : "Edit Manager Assignment";
 
         public ManagerAssignmentEditorViewModel(
@@ -42,7 +45,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             ObservableCollection<EngagementOption> engagements,
             ObservableCollection<Manager> managers,
             IManagerAssignmentService assignmentService,
-            IMessenger messenger)
+            IMessenger messenger,
+            bool isReadOnlyMode = false)
             : base(messenger)
         {
             _assignment = assignment;
@@ -52,7 +56,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
 
             _beginDate = assignment.BeginDate == default ? DateTime.Today : assignment.BeginDate;
             _endDate = assignment.EndDate;
+            IsReadOnlyMode = isReadOnlyMode;
         }
+
+        public bool AllowEditing => !IsReadOnlyMode;
 
         public DateTimeOffset? BeginDateOffset
         {
@@ -120,7 +127,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             Messenger.Send(new CloseDialogMessage(false));
         }
 
-        private bool CanSave() => SelectedEngagement is not null && SelectedManager is not null && BeginDate.HasValue;
+        private bool CanSave() => SelectedEngagement is not null && SelectedManager is not null && BeginDate.HasValue && !IsReadOnlyMode;
 
         partial void OnSelectedEngagementChanged(EngagementOption? value)
         {
@@ -141,6 +148,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
         partial void OnEndDateChanged(DateTime? value)
         {
             OnPropertyChanged(nameof(EndDateOffset));
+        }
+
+        partial void OnIsReadOnlyModeChanged(bool value)
+        {
+            SaveCommand.NotifyCanExecuteChanged();
+            OnPropertyChanged(nameof(AllowEditing));
         }
     }
 }

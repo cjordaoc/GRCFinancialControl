@@ -13,6 +13,8 @@
         <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,10,0,0">
             <Button Content="Import Budget File" Command="{Binding SetImportTypeCommand}" CommandParameter="Budget" Classes="accent"/>
             <Button Content="Import Margin Data" Command="{Binding SetImportTypeCommand}" CommandParameter="Actuals" Classes="accent"/>
+            <Button Content="Import FCS Backlog" Command="{Binding SetImportTypeCommand}" CommandParameter="FcsBacklog" Classes="accent"/>
+            <Button Content="Import Full Management Data" Command="{Binding SetImportTypeCommand}" CommandParameter="FullManagement" Classes="accent"/>
         </StackPanel>
 
         <Panel IsVisible="{Binding FileType, Converter={x:Static converters:ObjectConverters.IsNotNull}}">
@@ -28,7 +30,8 @@
                         <TextBlock Text="Closing Period:" VerticalAlignment="Center"/>
                         <ComboBox Width="260"
                                   ItemsSource="{Binding ClosingPeriods}"
-                                  SelectedItem="{Binding SelectedClosingPeriod}">
+                                  SelectedItem="{Binding SelectedClosingPeriod}"
+                                  IsEnabled="{Binding HasUnlockedClosingPeriods}">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" Spacing="6">
@@ -46,6 +49,11 @@
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
+                        <TextBlock Text="All closing periods are locked. Unlock a fiscal year to import ETC-P data."
+                                   Foreground="#FF6347"
+                                   Margin="8,0,0,0"
+                                   VerticalAlignment="Center"
+                                   IsVisible="{Binding IsClosingPeriodSelectionUnavailable}"/>
                     </StackPanel>
 
                     <Button Content="Select File and Import" Command="{Binding ImportCommand}" Classes="accent"/>

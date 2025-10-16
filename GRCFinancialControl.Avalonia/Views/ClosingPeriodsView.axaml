@@ -20,13 +20,18 @@
                 <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2*"/>
                 <DataGridTextColumn Header="Start" Binding="{Binding PeriodStart, StringFormat='yyyy-MM-dd'}" Width="*"/>
                 <DataGridTextColumn Header="End" Binding="{Binding PeriodEnd, StringFormat='yyyy-MM-dd'}" Width="*"/>
+                <DataGridTextColumn Header="Fiscal Year" Binding="{Binding FiscalYear.Name}" Width="*"/>
+                <DataGridCheckBoxColumn Header="Locked" Binding="{Binding FiscalYear.IsLocked}" IsReadOnly="True" Width="Auto"/>
             </DataGrid.Columns>
         </DataGrid>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="5" Margin="0,10,0,0">
-            <Button Content="Add" Command="{Binding AddCommand}"/>
+            <Button Content="Add" Command="{Binding AddCommand}" IsEnabled="{Binding HasUnlockedFiscalYears}"/>
             <Button Content="Edit"
                     Command="{Binding EditCommand}"
+                    CommandParameter="{Binding SelectedClosingPeriod}"/>
+            <Button Content="View"
+                    Command="{Binding ViewCommand}"
                     CommandParameter="{Binding SelectedClosingPeriod}"/>
             <Button Content="Delete"
                     Command="{Binding DeleteCommand}"
@@ -37,9 +42,11 @@
                     Classes="danger"/>
         </StackPanel>
 
-        <TextBlock Grid.Row="3"
-                   Text="{Binding StatusMessage}"
-                   Foreground="Red"
-                   Margin="0,5,0,0"/>
+        <StackPanel Grid.Row="3" Orientation="Vertical" Margin="0,5,0,0">
+            <TextBlock Text="{Binding StatusMessage}" Foreground="#FFB8860B"/>
+            <TextBlock Text="All fiscal years are locked. Unlock a fiscal year to manage closing periods."
+                       Foreground="#FF6347"
+                       IsVisible="{Binding AreAllFiscalYearsLocked}"/>
+        </StackPanel>
     </Grid>
 </UserControl>

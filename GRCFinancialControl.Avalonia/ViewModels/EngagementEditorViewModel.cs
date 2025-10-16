@@ -20,6 +20,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly ICustomerService _customerService;
         private readonly IClosingPeriodService _closingPeriodService;
         private readonly IMessenger _messenger;
+        private readonly int? _initialLastClosingPeriodId;
 
         private static readonly string[] DefaultStatusTextChoices =
         {
@@ -109,7 +110,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private string? _selectedStatusText;
 
         [ObservableProperty]
-        private string? _lastClosingPeriodId;
+        [NotifyPropertyChangedFor(nameof(LastClosingPeriodDisplay))]
+        private ClosingPeriod? _lastClosingPeriod;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(LastClosingPeriodDisplay))]
+        private string? _lastClosingPeriodFallbackName;
 
         [ObservableProperty]
         private ObservableCollection<EngagementPapd> _papdAssignments = new();
@@ -141,6 +147,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public bool IsGeneralFieldReadOnly => IsReadOnlyMode;
 
+        public string LastClosingPeriodDisplay => LastClosingPeriod?.Name ?? LastClosingPeriodFallbackName ?? string.Empty;
+
         public EngagementEditorViewModel(
             Engagement engagement,
             IEngagementService engagementService,
@@ -149,6 +157,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             IMessenger messenger,
             bool isReadOnlyMode = false)
         {
+            _initialLastClosingPeriodId = engagement.LastClosingPeriodId;
             Engagement = engagement;
             _engagementService = engagementService;
             _customerService = customerService;
@@ -171,7 +180,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 ProposedNextEtcDate = engagement.ProposedNextEtcDate;
             }
-            LastClosingPeriodId = engagement.LastClosingPeriodId;
+            LastClosingPeriod = engagement.LastClosingPeriod;
+            LastClosingPeriodFallbackName = string.IsNullOrWhiteSpace(engagement.LastClosingPeriodName)
+                ? null
+                : engagement.LastClosingPeriodName;
             InitializeStatusSelection(engagement.StatusText, engagement.Status);
             InitializeSourceSelection(engagement.Source);
             PapdAssignments = new ObservableCollection<EngagementPapd>(
@@ -222,6 +234,24 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             foreach (var period in orderedPeriods)
             {
                 ClosingPeriods.Add(period);
+            }
+
+            if (LastClosingPeriod is null && _initialLastClosingPeriodId.HasValue)
+            {
+                var matched = orderedPeriods.FirstOrDefault(p => p.Id == _initialLastClosingPeriodId.Value);
+                if (matched is not null)
+                {
+                    LastClosingPeriod = matched;
+                    LastClosingPeriodFallbackName = matched.Name;
+                }
+            }
+            else if (LastClosingPeriod is not null)
+            {
+                var matched = orderedPeriods.FirstOrDefault(p => p.Id == LastClosingPeriod.Id);
+                if (matched is not null)
+                {
+                    LastClosingPeriod = matched;
+                }
             }
 
             RefreshFinancialEvolutionSelections();
@@ -319,9 +349,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 entry.SelectedClosingPeriod = ClosingPeriods.First();
             }
-            else if (!string.IsNullOrWhiteSpace(LastClosingPeriodId))
+            else if (!string.IsNullOrWhiteSpace(LastClosingPeriodDisplay))
             {
-                entry.ClosingPeriodId = LastClosingPeriodId!;
+                entry.ClosingPeriodId = LastClosingPeriodDisplay;
             }
 
             FinancialEvolutionEntries.Add(entry);
@@ -373,7 +403,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Engagement.MarginPctBudget = MarginPctBudget;
             Engagement.LastEtcDate = LastEtcDate;
             Engagement.ProposedNextEtcDate = ProposedNextEtcDate;
-            Engagement.LastClosingPeriodId = string.IsNullOrWhiteSpace(LastClosingPeriodId) ? null : LastClosingPeriodId.Trim();
+            Engagement.LastClosingPeriodId = LastClosingPeriod?.Id;
+            Engagement.LastClosingPeriod = LastClosingPeriod;
             Engagement.Source = (SelectedSource?.Value) ?? EngagementSource.GrcProject;
 
             var papdAssignments = PapdAssignments
@@ -397,7 +428,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 {
                     Id = e.Id,
                     ClosingPeriodId = e.ClosingPeriodId.Trim(),
-                    EngagementId = Engagement.EngagementId,
+                    EngagementId = Engagement.Id,
                     Engagement = Engagement,
                     HoursData = e.Hours,
                     ValueData = e.Value,
@@ -544,7 +575,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             if (FinancialEvolutionEntries.Count == 0)
             {
-                LastClosingPeriodId = null;
+                LastClosingPeriod = null;
+                LastClosingPeriodFallbackName = null;
                 return;
             }
 
@@ -562,7 +594,26 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 .ThenByDescending(tuple => tuple.normalizedId, StringComparer.OrdinalIgnoreCase)
                 .FirstOrDefault();
 
-            LastClosingPeriodId = latest.normalizedId;
+            if (latest.entry is null)
+            {
+                LastClosingPeriod = null;
+                LastClosingPeriodFallbackName = null;
+                return;
+            }
+
+            var matched = ClosingPeriods.FirstOrDefault(p =>
+                string.Equals(p.Name, latest.normalizedId, StringComparison.OrdinalIgnoreCase));
+
+            if (matched is not null)
+            {
+                LastClosingPeriod = matched;
+                LastClosingPeriodFallbackName = matched.Name;
+            }
+            else
+            {
+                LastClosingPeriod = null;
+                LastClosingPeriodFallbackName = latest.normalizedId;
+            }
         }
     }
 }

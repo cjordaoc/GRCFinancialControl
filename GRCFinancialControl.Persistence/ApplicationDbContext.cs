@@ -74,6 +74,12 @@ namespace GRCFinancialControl.Persistence
                 .Property(cp => cp.PeriodEnd)
                 .HasColumnType("datetime(6)");
 
+            modelBuilder.Entity<ClosingPeriod>()
+                .HasOne(cp => cp.FiscalYear)
+                .WithMany(fy => fy.ClosingPeriods)
+                .HasForeignKey(cp => cp.FiscalYearId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Engagement>()
                 .HasMany(e => e.EngagementPapds)
                 .WithOne(ep => ep.Engagement)
@@ -149,8 +155,10 @@ namespace GRCFinancialControl.Persistence
                 .HasDefaultValue(0m);
 
             modelBuilder.Entity<Engagement>()
-                .Property(e => e.LastClosingPeriodId)
-                .HasMaxLength(100);
+                .HasOne(e => e.LastClosingPeriod)
+                .WithMany(cp => cp.Engagements)
+                .HasForeignKey(e => e.LastClosingPeriodId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Papd>()
                 .HasMany<EngagementPapd>() // A PAPD can be linked to many EngagementPapd records
@@ -214,6 +222,9 @@ namespace GRCFinancialControl.Persistence
                 .HasForeignKey(pa => pa.ClosingPeriodId);
 
             modelBuilder.Entity<PlannedAllocation>()
+                .HasIndex(pa => pa.ClosingPeriodId);
+
+            modelBuilder.Entity<PlannedAllocation>()
                 .Property(pa => pa.AllocatedHours)
                 .HasPrecision(18, 2);
 
@@ -239,6 +250,20 @@ namespace GRCFinancialControl.Persistence
             modelBuilder.Entity<ActualsEntry>()
                 .Property(ae => ae.ImportBatchId)
                 .HasMaxLength(100);
+
+            modelBuilder.Entity<ActualsEntry>()
+                .HasIndex(ae => new { ae.EngagementId, ae.Date });
+
+            modelBuilder.Entity<ActualsEntry>()
+                .HasIndex(ae => ae.ClosingPeriodId);
+
+            modelBuilder.Entity<ActualsEntry>()
+                .HasIndex(ae => ae.ImportBatchId);
+
+            modelBuilder.Entity<ExceptionEntry>()
+                .Property(ee => ee.Timestamp)
+                .HasColumnType("datetime(6)")
+                .ValueGeneratedOnAdd();
 
             modelBuilder.Entity<ExceptionEntry>()
                 .Property(ee => ee.SourceFile)
@@ -272,12 +297,7 @@ namespace GRCFinancialControl.Persistence
                 .HasOne(fe => fe.Engagement)
                 .WithMany(e => e.FinancialEvolutions)
                 .HasForeignKey(fe => fe.EngagementId)
-                .HasPrincipalKey(e => e.EngagementId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<FinancialEvolution>()
-                .Property(fe => fe.EngagementId)
-                .HasMaxLength(64);
 
             modelBuilder.Entity<FinancialEvolution>()
                 .Property(fe => fe.ClosingPeriodId)
@@ -334,8 +354,16 @@ namespace GRCFinancialControl.Persistence
                 .HasForeignKey(e => e.FiscalYearId);
 
             modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
-                .Property(e => e.PlannedValue)
+                .Property(e => e.ToGoValue)
                 .HasPrecision(18, 2);
+
+            modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
+                .Property(e => e.ToDateValue)
+                .HasPrecision(18, 2)
+                .HasDefaultValue(0m);
+
+            modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
+                .HasIndex(e => e.FiscalYearId);
 
             modelBuilder.Entity<FiscalYear>()
                 .HasKey(e => e.Id);
@@ -583,6 +611,27 @@ namespace GRCFinancialControl.Persistence
             modelBuilder.Entity<InvoiceNotificationPreview>()
                 .Property(view => view.ComputedDueDate)
                 .HasColumnType("date");
+            modelBuilder.Entity<FiscalYear>()
+                .Property(fy => fy.AreaSalesTarget)
+                .HasPrecision(18, 2)
+                .HasDefaultValue(0m);
+
+            modelBuilder.Entity<FiscalYear>()
+                .Property(fy => fy.AreaRevenueTarget)
+                .HasPrecision(18, 2)
+                .HasDefaultValue(0m);
+
+            modelBuilder.Entity<FiscalYear>()
+                .Property(fy => fy.IsLocked)
+                .HasDefaultValue(false);
+
+            modelBuilder.Entity<FiscalYear>()
+                .Property(fy => fy.LockedAt)
+                .HasColumnType("datetime(6)");
+
+            modelBuilder.Entity<FiscalYear>()
+                .Property(fy => fy.LockedBy)
+                .HasMaxLength(100);
         }
     }
 }

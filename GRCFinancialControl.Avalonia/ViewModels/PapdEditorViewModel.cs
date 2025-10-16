@@ -23,8 +23,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public Papd Papd { get; }
 
-        public PapdEditorViewModel(Papd papd, IPapdService papdService, IMessenger messenger)
-            : base(messenger ?? throw new ArgumentNullException(nameof(messenger)))
+        public PapdEditorViewModel(
+            Papd papd,
+            IPapdService papdService,
+            IMessenger messenger,
+            bool isReadOnlyMode = false)
+            : base(messenger ?? throw new ArgumentNullException(nameof(messenger)), isReadOnlyMode)
         {
             Papd = papd ?? throw new ArgumentNullException(nameof(papd));
             _papdService = papdService ?? throw new ArgumentNullException(nameof(papdService));

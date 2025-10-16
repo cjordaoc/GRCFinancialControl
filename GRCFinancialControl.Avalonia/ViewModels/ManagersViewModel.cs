@@ -55,6 +55,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         }
 
         [RelayCommand(CanExecute = nameof(CanModifySelection))]
+        private async Task View(Manager manager)
+        {
+            if (manager is null)
+            {
+                return;
+            }
+
+            var editorViewModel = new ManagerEditorViewModel(manager, _managerService, Messenger, isReadOnlyMode: true);
+            await _dialogService.ShowDialogAsync(editorViewModel);
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModifySelection))]
         private async Task Delete(Manager manager)
         {
             if (manager is null)
@@ -72,6 +84,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             EditCommand.NotifyCanExecuteChanged();
             DeleteCommand.NotifyCanExecuteChanged();
+            ViewCommand.NotifyCanExecuteChanged();
         }
     }
 }

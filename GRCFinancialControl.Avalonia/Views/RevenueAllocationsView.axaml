@@ -37,9 +37,14 @@
                 <DataGridTemplateColumn Header="Actions">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate x:DataType="models:Engagement">
-                            <Button Content="Edit"
-                                    Command="{Binding DataContext.EditAllocationCommand, ElementName=RevenueAllocationsViewRoot}"
-                                    CommandParameter="{Binding}"/>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Button Content="View"
+                                        Command="{Binding DataContext.ViewAllocationCommand, ElementName=RevenueAllocationsViewRoot}"
+                                        CommandParameter="{Binding}"/>
+                                <Button Content="Edit"
+                                        Command="{Binding DataContext.EditAllocationCommand, ElementName=RevenueAllocationsViewRoot}"
+                                        CommandParameter="{Binding}"/>
+                            </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
