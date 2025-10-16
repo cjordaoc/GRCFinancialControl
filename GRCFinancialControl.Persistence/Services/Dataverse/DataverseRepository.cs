@@ -10,9 +10,9 @@ namespace GRCFinancialControl.Persistence.Services.Dataverse;
 /// </summary>
 public sealed class DataverseRepository : IDataverseRepository
 {
-    private readonly IDataverseServiceClientFactory _clientFactory;
+    private readonly IDataverseClientFactory _clientFactory;
 
-    public DataverseRepository(IDataverseServiceClientFactory clientFactory)
+    public DataverseRepository(IDataverseClientFactory clientFactory)
     {
         _clientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
     }
@@ -24,8 +24,8 @@ public sealed class DataverseRepository : IDataverseRepository
             throw new ArgumentNullException(nameof(operation));
         }
 
-        using var client = await _clientFactory.CreateClientAsync(cancellationToken).ConfigureAwait(false);
-        return await operation(client).ConfigureAwait(false);
+        using var client = await _clientFactory.CreateAsync(cancellationToken);
+        return await operation(client);
     }
 
     public async Task ExecuteAsync(Func<ServiceClient, Task> operation, CancellationToken cancellationToken = default)
@@ -35,7 +35,7 @@ public sealed class DataverseRepository : IDataverseRepository
             throw new ArgumentNullException(nameof(operation));
         }
 
-        using var client = await _clientFactory.CreateClientAsync(cancellationToken).ConfigureAwait(false);
-        await operation(client).ConfigureAwait(false);
+        using var client = await _clientFactory.CreateAsync(cancellationToken);
+        await operation(client);
     }
 }

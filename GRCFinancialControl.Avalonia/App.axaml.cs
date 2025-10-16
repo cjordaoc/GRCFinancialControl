@@ -1,3 +1,4 @@
+using App.Presentation.Views;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -7,9 +8,11 @@ using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Avalonia.ViewModels;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRCFinancialControl.Avalonia.Views;
+using GRCFinancialControl.Core.Authentication;
 using GRCFinancialControl.Core.Configuration;
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Persistence;
+using GRCFinancialControl.Persistence.Authentication;
 using GRCFinancialControl.Persistence.Configuration;
 using GRCFinancialControl.Persistence.Services;
 using GRCFinancialControl.Persistence.Services.Importers;
@@ -25,6 +28,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using AvaloniaWebView;
 
 namespace GRCFinancialControl.Avalonia
@@ -106,8 +111,19 @@ namespace GRCFinancialControl.Avalonia
                 services.AddSingleton<IDbContextFactory<ApplicationDbContext>, UnsupportedApplicationDbContextFactory>();
                 var dataverseOptions = DataverseConnectionOptionsProvider.Resolve(CreateSettingsDbContext);
                 services.AddSingleton(dataverseOptions);
+                services.AddSingleton<IAuthConfig>(provider =>
+                {
+                    var options = provider.GetRequiredService<DataverseConnectionOptions>();
+                    var authority = string.IsNullOrWhiteSpace(options.TenantId)
+                        ? "https://login.microsoftonline.com/common"
+                        : $"https://login.microsoftonline.com/{options.TenantId}";
+                    var orgUri = new Uri(options.OrgUrl);
+                    var scope = $"{orgUri.AbsoluteUri.TrimEnd('/')}/user_impersonation";
+                    return new AuthConfig(options.ClientId, authority, orgUri, new[] { scope });
+                });
+                services.AddSingleton<IInteractiveAuthService, InteractiveAuthService>();
+                services.AddSingleton<IDataverseClientFactory, DataverseClientFactory>();
                 services.AddSingleton(_ => DataverseEntityMetadataRegistry.CreateDefault());
-                services.AddSingleton<IDataverseServiceClientFactory, DataverseServiceClientFactory>();
                 services.AddSingleton<IDataverseRepository, DataverseRepository>();
                 services.AddSingleton<SqlForeignKeyParser>();
                 services.Configure<DataverseProvisioningOptions>(options =>
@@ -203,16 +219,12 @@ namespace GRCFinancialControl.Avalonia
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 var mainWindow = new MainWindow();
-
-                // Register FilePickerService with the created main window
                 services.AddSingleton<IFilePickerService>(new FilePickerService(mainWindow));
 
                 Services = services.BuildServiceProvider();
 
-                desktop.MainWindow = mainWindow;
-                desktop.MainWindow.DataContext = Services.GetRequiredService<MainWindowViewModel>();
+                mainWindow.DataContext = Services.GetRequiredService<MainWindowViewModel>();
 
-                // Apply migrations at startup
                 using (var scope = Services.CreateScope())
                 {
                     var schemaInitializer = scope.ServiceProvider.GetRequiredService<IDatabaseSchemaInitializer>();
@@ -226,9 +238,91 @@ namespace GRCFinancialControl.Avalonia
                         settingsDbContext.Database.Migrate();
                     }
                 }
+
+                if (dataBackend == DataBackend.Dataverse)
+                {
+                    var splash = new AuthenticationSplashWindow();
+                    desktop.MainWindow = splash;
+
+                    splash.Opened += async (_, _) =>
+                    {
+                        var failureMessage = await TryAuthenticateOnStartupAsync(splash).ConfigureAwait(true);
+
+                        if (!string.IsNullOrEmpty(failureMessage))
+                        {
+                            async void Handler(object? sender, EventArgs args)
+                            {
+                                mainWindow.Opened -= Handler;
+                                var dialogService = Services.GetRequiredService<IDialogService>();
+                                await dialogService.ShowConfirmationAsync("Dataverse sign-in", failureMessage);
+                            }
+
+                            mainWindow.Opened += Handler;
+                        }
+
+                        desktop.MainWindow = mainWindow;
+                        mainWindow.Show();
+                        splash.Close();
+                    };
+                }
+                else
+                {
+                    desktop.MainWindow = mainWindow;
+                    mainWindow.Show();
+                }
             }
 
             base.OnFrameworkInitializationCompleted();
+        }
+
+        private async Task<string?> TryAuthenticateOnStartupAsync(AuthenticationSplashWindow splashWindow)
+        {
+            var options = Services.GetService<DataverseConnectionOptions>();
+            if (options is null)
+            {
+                return null;
+            }
+
+            if (options.AuthMode != DataverseAuthMode.Interactive)
+            {
+                splashWindow.SetStatus("Using application authentication.");
+                await Task.Delay(400).ConfigureAwait(true);
+                return null;
+            }
+
+            var authService = Services.GetRequiredService<IInteractiveAuthService>();
+            var authConfig = Services.GetRequiredService<IAuthConfig>();
+            var scopes = authConfig.Scopes?.ToArray() ?? Array.Empty<string>();
+
+            splashWindow.SetStatus("Signing in to Dataverse...");
+
+            try
+            {
+                var result = await authService.AcquireTokenAsync(scopes).ConfigureAwait(true);
+                var user = result.User;
+
+                if (user is not null)
+                {
+                    var name = !string.IsNullOrWhiteSpace(user.DisplayName)
+                        ? user.DisplayName
+                        : user.UserPrincipalName ?? "Dataverse user";
+                    splashWindow.SetStatus($"Signed in as {name}.");
+                }
+                else
+                {
+                    splashWindow.SetStatus("Signed in to Dataverse.");
+                }
+
+                await Task.Delay(650).ConfigureAwait(true);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                var message = AuthenticationMessageFormatter.GetFriendlyMessage(ex);
+                splashWindow.ShowError(message);
+                await Task.Delay(2000).ConfigureAwait(true);
+                return message;
+            }
         }
 
         private static SettingsDbContext CreateSettingsDbContext()

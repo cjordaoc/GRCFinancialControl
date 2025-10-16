@@ -16,4 +16,5 @@ public static class SettingKeys
     public const string DataverseTenantId = "DataverseTenantId";
     public const string DataverseClientId = "DataverseClientId";
     public const string DataverseClientSecret = "DataverseClientSecret";
+    public const string DataverseAuthMode = "DataverseAuthMode";
 }

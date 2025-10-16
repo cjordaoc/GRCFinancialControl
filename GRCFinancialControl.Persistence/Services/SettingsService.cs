@@ -144,12 +144,18 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task<DataverseSettings> GetDataverseSettingsAsync()
         {
+            var authModeValue = await FindValueAsync(SettingKeys.DataverseAuthMode);
+            var authMode = Enum.TryParse(authModeValue, ignoreCase: true, out DataverseAuthMode parsedMode)
+                ? parsedMode
+                : DataverseAuthMode.Interactive;
+
             return new DataverseSettings
             {
                 OrgUrl = await FindValueAsync(SettingKeys.DataverseOrgUrl) ?? string.Empty,
                 TenantId = await FindValueAsync(SettingKeys.DataverseTenantId) ?? string.Empty,
                 ClientId = await FindValueAsync(SettingKeys.DataverseClientId) ?? string.Empty,
-                ClientSecret = await FindValueAsync(SettingKeys.DataverseClientSecret) ?? string.Empty
+                ClientSecret = await FindValueAsync(SettingKeys.DataverseClientSecret) ?? string.Empty,
+                AuthMode = authMode
             };
         }
 
@@ -161,6 +167,7 @@ namespace GRCFinancialControl.Persistence.Services
             await UpsertSettingAsync(SettingKeys.DataverseTenantId, settings.TenantId ?? string.Empty);
             await UpsertSettingAsync(SettingKeys.DataverseClientId, settings.ClientId ?? string.Empty);
             await UpsertSettingAsync(SettingKeys.DataverseClientSecret, settings.ClientSecret ?? string.Empty);
+            await UpsertSettingAsync(SettingKeys.DataverseAuthMode, settings.AuthMode.ToString());
 
             await _context.SaveChangesAsync();
         }
