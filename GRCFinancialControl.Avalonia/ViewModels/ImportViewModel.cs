@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
-using GRCFinancialControl.Core.Configuration;
-using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -21,7 +19,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly IImportService _importService;
         private readonly IClosingPeriodService _closingPeriodService;
         private readonly ILoggingService _loggingService;
-        private readonly DataBackendOptions _dataBackendOptions;
 
         [ObservableProperty]
         private string? _statusMessage;
@@ -43,13 +40,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _ => FileType
         };
 
-        public ImportViewModel(IFilePickerService filePickerService, IImportService importService, IClosingPeriodService closingPeriodService, ILoggingService loggingService, DataBackendOptions dataBackendOptions)
+        public ImportViewModel(IFilePickerService filePickerService, IImportService importService, IClosingPeriodService closingPeriodService, ILoggingService loggingService)
         {
             _filePickerService = filePickerService;
             _importService = importService;
             _closingPeriodService = closingPeriodService;
             _loggingService = loggingService;
-            _dataBackendOptions = dataBackendOptions;
             _loggingService.OnLogMessage += (message) => StatusMessage = message;
 
             SetImportTypeCommand = new RelayCommand<string>(SetImportType);
@@ -121,7 +117,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private bool CanImport()
         {
-            if (!IsImportSupported || string.IsNullOrEmpty(FileType))
+            if (string.IsNullOrEmpty(FileType))
             {
                 return false;
             }
@@ -136,11 +132,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public override async Task LoadDataAsync()
         {
-            if (!IsImportSupported)
-            {
-                StatusMessage = "Imports are not available when the Dataverse backend is active.";
-            }
-
             var periods = await _closingPeriodService.GetAllAsync();
             var unlockedPeriods = periods
                 .Where(p => !(p.FiscalYear?.IsLocked ?? false))
@@ -173,8 +164,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public bool RequiresClosingPeriodSelection => string.Equals(FileType, "Actuals", StringComparison.Ordinal);
 
         public bool IsClosingPeriodSelectionUnavailable => RequiresClosingPeriodSelection && !HasUnlockedClosingPeriods;
-
-        private bool IsImportSupported => _dataBackendOptions.Backend == DataBackend.MySql;
 
         partial void OnClosingPeriodsChanging(ObservableCollection<ClosingPeriod> value)
         {

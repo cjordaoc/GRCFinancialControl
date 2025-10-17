@@ -21,6 +21,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public SettingsViewModel Settings { get; }
         public ClosingPeriodsViewModel ClosingPeriods { get; }
         public CustomersViewModel Customers { get; }
+        public TasksViewModel Tasks { get; }
 
         public ObservableCollection<NavigationItem> NavigationItems { get; }
 
@@ -42,6 +43,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                                    SettingsViewModel settingsViewModel,
                                    ClosingPeriodsViewModel closingPeriodsViewModel,
                                    CustomersViewModel customersViewModel,
+                                   TasksViewModel tasksViewModel,
                                    ILoggingService loggingService,
                                    IMessenger messenger)
             : base(messenger)
@@ -58,10 +60,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Settings = settingsViewModel;
             ClosingPeriods = closingPeriodsViewModel;
             Customers = customersViewModel;
+            Tasks = tasksViewModel;
 
             NavigationItems = new ObservableCollection<NavigationItem>
             {
                 new("Import", Import),
+                new("Tasks", Tasks),
                 new("Closing Periods", ClosingPeriods),
                 new("Engagements", Engagements),
                 new("Customers", Customers),

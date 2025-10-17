@@ -3,64 +3,10 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
-             xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
-    <UserControl.Resources>
-        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
-    </UserControl.Resources>
     <StackPanel Spacing="10" Margin="10">
-        <TextBlock Text="Data Backend" FontSize="24" FontWeight="Bold"/>
-        <StackPanel Spacing="6">
-            <ToggleSwitch Content="Use Dataverse backend" IsChecked="{Binding IsDataverseSelected, Mode=TwoWay}"/>
-            <TextBlock Text="Restart the application after changing the backend." FontStyle="Italic"/>
-        </StackPanel>
-
-        <StackPanel Spacing="6" Margin="0,10,0,0" IsVisible="{Binding IsDataverseSelected}">
-            <TextBlock Text="Dataverse Connection Settings" FontSize="20" FontWeight="SemiBold"/>
-            <StackPanel Orientation="Horizontal" Spacing="10">
-                <RadioButton Content="Interactive (User)"
-                             GroupName="DataverseAuth"
-                             IsChecked="{Binding IsInteractiveAuthSelected, Mode=TwoWay}"
-                             IsEnabled="{Binding CanEditDataverseSettings}"/>
-                <RadioButton Content="App (Client Secret)"
-                             GroupName="DataverseAuth"
-                             IsChecked="{Binding IsClientSecretAuthSelected, Mode=TwoWay}"
-                             IsEnabled="{Binding CanEditDataverseSettings}"/>
-            </StackPanel>
-            <TextBlock Text="Environment variables override these values when present."
-                       FontStyle="Italic"/>
-            <TextBlock Text="Environment-managed credentials are read-only."
-                       FontStyle="Italic"
-                       IsVisible="{Binding IsEnvironmentOverride}"/>
-            <TextBox Text="{Binding DataverseOrgUrl}" Watermark="Organization URL" IsEnabled="{Binding CanEditDataverseSettings}"/>
-            <TextBox Text="{Binding DataverseTenantId}" Watermark="Tenant (optional)" IsEnabled="{Binding CanEditDataverseSettings}"/>
-            <TextBox Text="{Binding DataverseClientId}" Watermark="Client Id" IsEnabled="{Binding CanEditDataverseSettings}"/>
-            <TextBox Text="{Binding DataverseClientSecret}" Watermark="Client Secret" PasswordChar="*" IsVisible="{Binding IsClientSecretAuthSelected}" IsEnabled="{Binding CanEditDataverseSettings}"/>
-            <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
-                <Button Content="Load Settings" Command="{Binding LoadSettingsCommand}"/>
-                <Button Content="Save Settings" Command="{Binding SaveSettingsCommand}" IsEnabled="{Binding CanEditDataverseSettings}"/>
-                <Button Content="Test Connection" Command="{Binding TestDataverseConnectionCommand}" IsEnabled="{Binding CanEditDataverseSettings}"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
-                <Button Content="Sign In" Command="{Binding SignInCommand}" IsEnabled="{Binding CanEditDataverseSettings}"/>
-                <Button Content="Sign Out" Command="{Binding SignOutCommand}" IsEnabled="{Binding CanEditDataverseSettings}"/>
-                <ProgressBar Width="140" Margin="10,0,0,0" IsIndeterminate="True" IsVisible="{Binding IsAuthOperationInProgress}"/>
-            </StackPanel>
-            <TextBlock Text="{Binding DataverseCurrentUser}" FontStyle="Italic"/>
-            <TextBlock Text="{Binding StatusMessage}"
-                       TextWrapping="Wrap"
-                       Margin="0,4,0,0"
-                       IsVisible="{Binding IsDataverseSelected}"/>
-            <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,10,0,0">
-                <Button Content="Drop and Recreate Dataverse Tables" Command="{Binding ProvisionDataverseCommand}" IsEnabled="{Binding CanEditDataverseSettings}"/>
-                <ProgressBar Width="160" IsIndeterminate="True" IsVisible="{Binding IsProvisioningDataverse}"/>
-            </StackPanel>
-        </StackPanel>
-
-        <Separator Margin="0,10,0,0"/>
-
         <TextBlock Text="MySQL Connection Settings" FontSize="24" FontWeight="Bold"/>
         <TextBox Text="{Binding Server}" Watermark="Server"/>
         <TextBox Text="{Binding Database}" Watermark="Database"/>
@@ -76,14 +22,10 @@
         </StackPanel>
         <TextBlock Text="{Binding StatusMessage}"
                    Margin="0,5,0,0"
-                   TextWrapping="Wrap"
-                   IsVisible="{Binding IsDataverseSelected, Converter={StaticResource InverseBooleanConverter}}"/>
+                   TextWrapping="Wrap"/>
         <Separator Margin="0,20,0,0"/>
         <TextBlock Text="Power BI Embedding" FontSize="24" FontWeight="Bold"/>
-        <TextBlock Text="Provide either a Publish to Web URL or the workspace/report identifiers for app-owned embedding." TextWrapping="Wrap"/>
+        <TextBlock Text="Provide a Publish to Web URL to show the dashboard without Azure AD sign-in." TextWrapping="Wrap"/>
         <TextBox Text="{Binding PowerBiEmbedUrl}" Watermark="Publish to Web URL"/>
-        <TextBox Text="{Binding PowerBiWorkspaceId}" Watermark="Workspace (Group) Id"/>
-        <TextBox Text="{Binding PowerBiReportId}" Watermark="Report Id"/>
-        <TextBox Text="{Binding PowerBiEmbedToken}" Watermark="Embed Token" PasswordChar="*"/>
     </StackPanel>
 </UserControl>

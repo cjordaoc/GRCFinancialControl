@@ -11,14 +11,9 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.10" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
     <PackageReference Include="MySqlConnector" Version="2.4.0" />
-    <PackageReference Include="Microsoft.Identity.Client" Version="4.77.1" />
-    <PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="4.77.1" />
-    <PackageReference Include="Microsoft.Identity.Client.Broker" Version="4.77.1" />
-    <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.2.10" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\artifacts\dataverse\metadata_changes.json" Link="artifacts\dataverse\metadata_changes.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\artifacts\mysql\rebuild_schema.sql" Link="artifacts\mysql\rebuild_schema.sql" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

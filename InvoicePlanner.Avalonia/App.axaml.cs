@@ -1,35 +1,25 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
-using App.Presentation.Views;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using CommunityToolkit.Mvvm.Messaging;
-using GRCFinancialControl.Core.Authentication;
-using GRCFinancialControl.Core.Configuration;
-using GRCFinancialControl.Core.Enums;
-using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence;
-using GRCFinancialControl.Persistence.Authentication;
 using GRCFinancialControl.Persistence.Configuration;
 using GRCFinancialControl.Persistence.Services;
-using GRCFinancialControl.Persistence.Services.Dataverse;
-using GRCFinancialControl.Persistence.Services.Dataverse.Provisioning;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using GRCFinancialControl.Persistence.Services.People;
+using GRCFinancialControl.Core.Configuration;
 using Invoices.Core.Validation;
 using Invoices.Data.Repositories;
+using InvoicePlanner.Avalonia.Services;
+using InvoicePlanner.Avalonia.ViewModels;
+using InvoicePlanner.Avalonia.Views;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.IO;
-using InvoicePlanner.Avalonia.Configuration;
-using InvoicePlanner.Avalonia.Services;
-using InvoicePlanner.Avalonia.ViewModels;
-using InvoicePlanner.Avalonia.Views;
 
 namespace InvoicePlanner.Avalonia;
 
@@ -55,74 +45,40 @@ public partial class App : Application
                 config.AddJsonFile($"appsettings.{context.HostingEnvironment.EnvironmentName}.json", optional: true);
                 config.AddEnvironmentVariables(prefix: "INVOICEPLANNER_");
             })
-            .ConfigureServices((context, services) =>
+            .ConfigureServices((_, services) =>
             {
                 services.AddLogging(logging => logging.AddConsole());
 
-                services.AddSingleton(new DataBackendOptions(DataBackend.Dataverse));
-                services.AddSingleton<IDbContextFactory<ApplicationDbContext>, UnsupportedApplicationDbContextFactory>();
+                services.AddDbContext<SettingsDbContext>(options =>
+                    options.UseSqlite(SettingsDatabaseOptions.BuildConnectionString()));
+                services.AddTransient<ISettingsService, SettingsService>();
 
-                ApplyDataverseDefaults(context.Configuration);
-                var hasDataverseOptions = DataverseConnectionOptionsProvider.TryResolve(
-                    CreateSettingsDbContext,
-                    out var dataverseOptions,
-                    out var dataverseFailureReason);
-
-                var startupStatus = hasDataverseOptions && dataverseOptions is not null
-                    ? new DataverseStartupStatus(true, null)
-                    : new DataverseStartupStatus(false, string.IsNullOrWhiteSpace(dataverseFailureReason)
-                        ? "Configure Dataverse credentials in Settings before launching Invoice Planner."
-                        : dataverseFailureReason);
-
-                services.AddSingleton(startupStatus);
-
-                services.AddSingleton(_ => DataverseEntityMetadataRegistry.CreateDefault());
-                services.AddSingleton<IDataverseRepository, DataverseRepository>();
-                services.AddSingleton<SqlForeignKeyParser>();
-
-                if (startupStatus.IsConfigured && dataverseOptions is not null)
+                using (var tempProvider = services.BuildServiceProvider())
                 {
-                    services.AddSingleton(dataverseOptions);
-                    services.AddSingleton<IAuthConfig>(provider =>
-                    {
-                        var options = provider.GetRequiredService<DataverseConnectionOptions>();
-                        var authority = string.IsNullOrWhiteSpace(options.TenantId)
-                            ? "https://login.microsoftonline.com/common"
-                            : $"https://login.microsoftonline.com/{options.TenantId}";
-                        var orgUri = new Uri(options.OrgUrl);
-                        var scope = $"{orgUri.AbsoluteUri.TrimEnd('/')}/user_impersonation";
-                        return new AuthConfig(options.ClientId, authority, orgUri, new[] { scope });
-                    });
-                    services.AddSingleton<IInteractiveAuthService, InteractiveAuthService>();
-                    services.AddSingleton<IDataverseClientFactory, DataverseClientFactory>();
-                    services.Configure<DataverseProvisioningOptions>(options =>
-                    {
-                        options.MetadataPath = Path.Combine(AppContext.BaseDirectory, "artifacts", "dataverse", "metadata_changes.json");
-                        options.SqlSchemaPath = Path.Combine(AppContext.BaseDirectory, "artifacts", "mysql", "rebuild_schema.sql");
-                    });
-                    services.AddSingleton<IDataverseProvisioningService, DataverseProvisioningService>();
-                    services.AddSingleton(_ => DataversePeopleOptions.FromEnvironment());
-                    services.AddSingleton<NullPersonDirectory>();
-                    services.AddSingleton<DataversePersonDirectory>();
-                    services.AddSingleton<IPersonDirectory>(provider =>
-                    {
-                        var options = provider.GetRequiredService<DataversePeopleOptions>();
-                        return options.EnablePeopleEnrichment
-                            ? provider.GetRequiredService<DataversePersonDirectory>()
-                            : provider.GetRequiredService<NullPersonDirectory>();
-                    });
-                }
-                else
-                {
-                    services.AddSingleton<IDataverseClientFactory, DisabledDataverseClientFactory>();
-                    services.AddSingleton<IDataverseProvisioningService, DisabledDataverseProvisioningService>();
-                    services.AddSingleton<IInteractiveAuthService, DisabledInteractiveAuthService>();
-                    services.AddSingleton<NullPersonDirectory>();
-                    services.AddSingleton<IPersonDirectory>(provider => provider.GetRequiredService<NullPersonDirectory>());
+                    using var scope = tempProvider.CreateScope();
+                    var scopedProvider = scope.ServiceProvider;
+                    var settingsDbContext = scopedProvider.GetRequiredService<SettingsDbContext>();
+                    settingsDbContext.Database.EnsureCreated();
+
+                    var settingsService = scopedProvider.GetRequiredService<ISettingsService>();
+                    var settings = settingsService.GetAllAsync().GetAwaiter().GetResult();
+                    settings.TryGetValue(SettingKeys.Server, out var server);
+                    settings.TryGetValue(SettingKeys.Database, out var database);
+                    settings.TryGetValue(SettingKeys.User, out var user);
+                    settings.TryGetValue(SettingKeys.Password, out var password);
+
+                    var connectionString = $"Server={server};Database={database};User ID={user};Password={password};";
+                    services.AddDbContextFactory<ApplicationDbContext>(options =>
+                        options.UseMySql(
+                            connectionString,
+                            new MySqlServerVersion(new Version(8, 0, 29)),
+                            mySqlOptions => mySqlOptions.EnableRetryOnFailure()));
                 }
 
-                services.AddTransient<IInvoicePlanRepository, DataverseInvoicePlanRepository>();
+                services.AddSingleton<IPersonDirectory, NullPersonDirectory>();
+                services.AddSingleton<IDatabaseSchemaInitializer, DatabaseSchemaInitializer>();
 
+                services.AddTransient<IInvoicePlanRepository, InvoicePlanRepository>();
                 services.AddSingleton<IInvoicePlanValidator, InvoicePlanValidator>();
                 services.AddSingleton<InvoiceSummaryExporter>();
                 services.AddSingleton<IErrorDialogService, ErrorDialogService>();
@@ -138,17 +94,10 @@ public partial class App : Application
                 services.AddSingleton<HomeViewModel>();
                 services.AddSingleton<MainWindowViewModel>();
                 services.AddSingleton<MainWindow>();
-                services.AddTransient<IStartupAuthenticationService, StartupAuthenticationService>();
             })
             .Build();
 
         _host.Start();
-
-        var startupStatus = Services.GetRequiredService<DataverseStartupStatus>();
-        if (startupStatus.IsConfigured)
-        {
-            EnsureDataverseDefaultsPersisted(Services.GetRequiredService<IConfiguration>());
-        }
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
@@ -157,65 +106,25 @@ public partial class App : Application
             var errorHandler = Services.GetRequiredService<IGlobalErrorHandler>();
             errorHandler.Register(desktop);
 
-            if (!startupStatus.IsConfigured)
-            {
-                var dialogService = Services.GetRequiredService<IErrorDialogService>();
-                var message = startupStatus.ErrorMessage ?? "Configure Dataverse credentials in Settings before launching Invoice Planner.";
-                var showTask = dialogService.ShowErrorAsync(null, message, "Dataverse configuration");
-                showTask.ContinueWith(_ => desktop.Shutdown(), TaskScheduler.FromCurrentSynchronizationContext());
-                base.OnFrameworkInitializationCompleted();
-                return;
-            }
-
             var mainWindow = Services.GetRequiredService<MainWindow>();
             mainWindow.DataContext = Services.GetRequiredService<MainWindowViewModel>();
 
-            var backendOptions = Services.GetRequiredService<DataBackendOptions>();
-            if (backendOptions.Backend == DataBackend.Dataverse)
+            using (var scope = Services.CreateScope())
             {
-                var splashVm = new global::App.Presentation.ViewModels.AuthenticationSplashWindowViewModel();
-                var splash = new AuthenticationSplashWindow
-                {
-                    DataContext = splashVm
-                };
-                desktop.MainWindow = splash;
+                var provider = scope.ServiceProvider;
+                var schemaInitializer = provider.GetRequiredService<IDatabaseSchemaInitializer>();
+                schemaInitializer.EnsureSchemaAsync().GetAwaiter().GetResult();
 
-                splash.Opened += async (_, _) =>
-                {
-                    var failureMessage = await TryAuthenticateOnStartupAsync(splashVm).ConfigureAwait(true);
-
-                    if (!string.IsNullOrEmpty(failureMessage))
-                    {
-                        async void Handler(object? sender, EventArgs args)
-                        {
-                            mainWindow.Opened -= Handler;
-                            var dialogService = Services.GetRequiredService<IErrorDialogService>();
-                            await dialogService.ShowErrorAsync(mainWindow, failureMessage, "Dataverse sign-in");
-                        }
-
-                        mainWindow.Opened += Handler;
-                    }
-
-                    desktop.MainWindow = mainWindow;
-                    mainWindow.Show();
-                    splash.Close();
-                };
+                var settingsDbContext = provider.GetRequiredService<SettingsDbContext>();
+                settingsDbContext.Database.EnsureCreated();
+                settingsDbContext.Database.Migrate();
             }
-            else
-            {
-                desktop.MainWindow = mainWindow;
-                mainWindow.Show();
-            }
+
+            desktop.MainWindow = mainWindow;
+            mainWindow.Show();
         }
 
         base.OnFrameworkInitializationCompleted();
-    }
-
-    private static SettingsDbContext CreateSettingsDbContext()
-    {
-        var optionsBuilder = new DbContextOptionsBuilder<SettingsDbContext>();
-        optionsBuilder.UseSqlite(SettingsDatabaseOptions.BuildConnectionString());
-        return new SettingsDbContext(optionsBuilder.Options);
     }
 
     private async Task DisposeHostAsync()
@@ -249,105 +158,5 @@ public partial class App : Application
         }
 
         _host = null;
-    }
-
-    private static void ApplyDataverseDefaults(IConfiguration configuration)
-    {
-        var section = configuration.GetSection("Dataverse");
-        if (!section.Exists())
-        {
-            return;
-        }
-
-        SetEnvironmentIfMissing("DV_ORG_URL", section["OrgUrl"]);
-        if (IsMeaningfulClientId(section["ClientId"]))
-        {
-            SetEnvironmentIfMissing("DV_CLIENT_ID", section["ClientId"]);
-        }
-        SetEnvironmentIfMissing("DV_TENANT_ID", section["TenantId"]);
-        SetEnvironmentIfMissing("DV_AUTH_MODE", section["AuthMode"] ?? "Interactive");
-    }
-
-    private static void SetEnvironmentIfMissing(string variable, string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(variable)))
-        {
-            Environment.SetEnvironmentVariable(variable, value);
-        }
-    }
-
-    private static void EnsureDataverseDefaultsPersisted(IConfiguration configuration)
-    {
-        var section = configuration.GetSection("Dataverse");
-        var orgUrl = section["OrgUrl"];
-        var clientId = section["ClientId"];
-
-        if (string.IsNullOrWhiteSpace(orgUrl) || !IsMeaningfulClientId(clientId))
-        {
-            return;
-        }
-
-        using var context = CreateSettingsDbContext();
-        context.Database.EnsureCreated();
-
-        var settingsService = new SettingsService(context);
-        var existingSettings = settingsService.GetDataverseSettingsAsync().GetAwaiter().GetResult();
-
-        if (!existingSettings.IsComplete())
-        {
-            var authModeValue = section["AuthMode"];
-            var authMode = Enum.TryParse(authModeValue, ignoreCase: true, out DataverseAuthMode parsedMode)
-                ? parsedMode
-                : DataverseAuthMode.Interactive;
-
-            var tenantId = string.IsNullOrWhiteSpace(section["TenantId"])
-                ? "common"
-                : section["TenantId"]!;
-
-            var dataverseSettings = new DataverseSettings
-            {
-                OrgUrl = orgUrl!,
-                ClientId = clientId!,
-                TenantId = tenantId,
-                ClientSecret = string.Empty,
-                AuthMode = authMode
-            };
-
-            settingsService.SaveDataverseSettingsAsync(dataverseSettings).GetAwaiter().GetResult();
-        }
-
-        settingsService.SetBackendPreferenceAsync(DataBackend.Dataverse).GetAwaiter().GetResult();
-    }
-
-    private static bool IsMeaningfulClientId(string? value)
-    {
-        return Guid.TryParse(value, out var clientId) && clientId != Guid.Empty;
-    }
-
-    private async Task<string?> TryAuthenticateOnStartupAsync(global::App.Presentation.ViewModels.AuthenticationSplashWindowViewModel splashVm)
-    {
-        var options = Services.GetService<DataverseConnectionOptions>();
-        if (options is null)
-        {
-            return null;
-        }
-
-        if (options.AuthMode != DataverseAuthMode.Interactive)
-        {
-            splashVm.StatusText = "Using application authentication.";
-            await Task.Delay(400).ConfigureAwait(true);
-            return null;
-        }
-
-        var authService = Services.GetRequiredService<IStartupAuthenticationService>();
-        return await authService.AuthenticateAsync(
-            status => splashVm.StatusText = status,
-            isProgressVisible => splashVm.IsProgressVisible = isProgressVisible
-        ).ConfigureAwait(true);
     }
 }

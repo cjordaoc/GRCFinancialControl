@@ -24,7 +24,7 @@
                 IsVisible="{Binding DashboardUri, Converter={x:Static converters:ObjectConverters.IsNull}}">
             <StackPanel Spacing="{StaticResource Space6}">
                 <TextBlock Text="Connect Power BI" FontSize="{StaticResource FontSizeXL}" FontWeight="SemiBold"/>
-                <TextBlock Text="Add a Publish to Web URL or workspace/report identifiers in Settings to load the dashboard." TextWrapping="Wrap"/>
+                <TextBlock Text="Add a Publish to Web URL in Settings to load the dashboard." TextWrapping="Wrap"/>
                 <TextBlock Text="Status:" FontWeight="SemiBold"/>
                 <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
             </StackPanel>
@@ -33,16 +33,6 @@
         <Grid Grid.Row="2">
             <WebView Url="{Binding DashboardUrl}"
                      IsVisible="{Binding DashboardUri, Converter={x:Static converters:ObjectConverters.IsNotNull}}"/>
-            <Border Background="{StaticResource BrushOverlay}"
-                    IsVisible="{Binding RequiresAuthentication}"
-                    Padding="{StaticResource SpaceThickness16}"
-                    CornerRadius="{StaticResource CornerRadiusSM}"
-                    HorizontalAlignment="Center" VerticalAlignment="Top" Margin="{StaticResource SpaceThickness16}">
-                <StackPanel Spacing="{StaticResource Space6}">
-                    <TextBlock Text="Sign-in Required" FontSize="{StaticResource FontSizeLG}" FontWeight="SemiBold" Foreground="{StaticResource BrushOnSurface}"/>
-                    <TextBlock Text="This dashboard requires Azure AD authentication. Ensure the embed token is supplied and the user is authorized." Foreground="{StaticResource BrushOnSurface}" TextWrapping="Wrap" Width="360"/>
-                </StackPanel>
-            </Border>
         </Grid>
     </Grid>
 </UserControl>

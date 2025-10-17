@@ -1,0 +1,17 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="GRCFinancialControl.Avalonia.Views.TasksView"
+             x:DataType="vm:TasksViewModel">
+    <StackPanel Spacing="10" Margin="20">
+        <TextBlock Text="Tasks" FontSize="28" FontWeight="Bold"/>
+        <TextBlock Text="Gere o arquivo semanal de tarefas administrativas para envio de e-mails." TextWrapping="Wrap"/>
+        <Button Content="Generate Tasks file" Command="{Binding GenerateTasksFileCommand}" Width="220"/>
+        <TextBlock Text="{Binding StatusMessage}"
+                   TextWrapping="Wrap"
+                   Margin="0,10,0,0"/>
+    </StackPanel>
+</UserControl>

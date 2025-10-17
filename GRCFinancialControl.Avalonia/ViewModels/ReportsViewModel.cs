@@ -17,12 +17,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private Uri? _dashboardUri;
 
         [ObservableProperty]
-        private string? _embedToken;
-
-        [ObservableProperty]
-        private bool _requiresAuthentication;
-
-        [ObservableProperty]
         private string? _statusMessage;
 
         public ReportsViewModel(IPowerBiEmbeddingService embeddingService, ILoggingService loggingService, IMessenger messenger)
@@ -50,8 +44,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 var configuration = await _embeddingService.GetConfigurationAsync();
 
                 DashboardUri = configuration.DashboardUri;
-                EmbedToken = configuration.EmbedToken;
-                RequiresAuthentication = configuration.RequiresAuthentication;
                 StatusMessage = configuration.StatusMessage;
             }
             catch (Exception ex)
@@ -59,8 +51,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 _loggingService.LogError($"Failed to load Power BI configuration: {ex.Message}");
                 StatusMessage = "Unable to load the Power BI dashboard configuration.";
                 DashboardUri = null;
-                EmbedToken = null;
-                RequiresAuthentication = false;
             }
             finally
             {

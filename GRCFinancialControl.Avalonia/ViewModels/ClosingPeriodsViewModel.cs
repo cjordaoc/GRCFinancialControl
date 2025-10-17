@@ -9,8 +9,6 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
-using GRCFinancialControl.Core.Configuration;
-using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -21,7 +19,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly IClosingPeriodService _closingPeriodService;
         private readonly IFiscalYearService _fiscalYearService;
         private readonly IDialogService _dialogService;
-        private readonly DataBackendOptions _dataBackendOptions;
 
         [ObservableProperty]
         private ObservableCollection<ClosingPeriod> _closingPeriods = new();
@@ -39,14 +36,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             IClosingPeriodService closingPeriodService,
             IFiscalYearService fiscalYearService,
             IDialogService dialogService,
-            IMessenger messenger,
-            DataBackendOptions dataBackendOptions)
+            IMessenger messenger)
             : base(messenger)
         {
             _closingPeriodService = closingPeriodService;
             _fiscalYearService = fiscalYearService;
             _dialogService = dialogService;
-            _dataBackendOptions = dataBackendOptions;
         }
 
         public bool HasUnlockedFiscalYears => FiscalYears.Any(fy => !fy.IsLocked);
@@ -56,10 +51,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public override async Task LoadDataAsync()
         {
             StatusMessage = null;
-            if (!IsMutationSupported)
-            {
-                StatusMessage = "Closing period maintenance is read-only when the Dataverse backend is active.";
-            }
             var periods = await _closingPeriodService.GetAllAsync();
             ClosingPeriods = new ObservableCollection<ClosingPeriod>(periods);
 
@@ -274,6 +265,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             return $"Id={closingPeriod.FiscalYearId}";
         }
 
-        private bool IsMutationSupported => _dataBackendOptions.Backend == DataBackend.MySql;
+        private const bool IsMutationSupported = true;
     }
 }

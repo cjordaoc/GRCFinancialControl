@@ -28,36 +28,30 @@ namespace GRCFinancialControl.Avalonia.Services
         private static PowerBiEmbedConfiguration BuildConfiguration(Dictionary<string, string> settings)
         {
             settings.TryGetValue(SettingKeys.PowerBiEmbedUrl, out var embedUrl);
-            settings.TryGetValue(SettingKeys.PowerBiWorkspaceId, out var workspaceId);
-            settings.TryGetValue(SettingKeys.PowerBiReportId, out var reportId);
-            settings.TryGetValue(SettingKeys.PowerBiEmbedToken, out var embedToken);
 
             var statusMessage = string.Empty;
             Uri? dashboardUri = null;
 
-            if (!string.IsNullOrWhiteSpace(embedUrl) && Uri.TryCreate(embedUrl, UriKind.Absolute, out var parsedUri))
+            if (!string.IsNullOrWhiteSpace(embedUrl))
             {
-                dashboardUri = parsedUri;
-            }
-            else if (!string.IsNullOrWhiteSpace(workspaceId) && !string.IsNullOrWhiteSpace(reportId))
-            {
-                var builder = new UriBuilder("https://app.powerbi.com/reportEmbed")
+                if (Uri.TryCreate(embedUrl, UriKind.Absolute, out var parsedUri))
                 {
-                    Query = $"reportId={reportId}&groupId={workspaceId}"
-                };
-                dashboardUri = builder.Uri;
-                statusMessage = "Embed URL assembled from workspace and report identifiers. Ensure authentication is configured.";
+                    dashboardUri = parsedUri;
+                    statusMessage = "Dashboard ready.";
+                }
+                else
+                {
+                    statusMessage = "The configured Publish to Web URL is invalid.";
+                }
             }
             else
             {
-                statusMessage = "Add a Publish to Web URL or both workspace and report identifiers in Settings.";
+                statusMessage = "Add a Publish to Web URL in Settings to view the dashboard.";
             }
 
             return new PowerBiEmbedConfiguration
             {
                 DashboardUri = dashboardUri,
-                EmbedToken = string.IsNullOrWhiteSpace(embedToken) ? null : embedToken,
-                RequiresAuthentication = !string.IsNullOrWhiteSpace(workspaceId) && !string.IsNullOrWhiteSpace(reportId) && string.IsNullOrWhiteSpace(embedUrl),
                 StatusMessage = statusMessage
             };
         }
