@@ -29,7 +29,10 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task<Dictionary<string, string>> GetAllAsync()
         {
-            return await _context.Settings.ToDictionaryAsync(s => s.Key, s => s.Value);
+            return await _context.Settings
+                .AsNoTracking()
+                .ToDictionaryAsync(s => s.Key, s => s.Value)
+                .ConfigureAwait(false);
         }
 
         public async Task SaveAllAsync(Dictionary<string, string> settings)
@@ -43,18 +46,21 @@ namespace GRCFinancialControl.Persistence.Services
                     throw new ArgumentException("Setting keys must be provided.", nameof(settings));
                 }
 
-                var existingSetting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == setting.Key);
+                var existingSetting = await _context.Settings
+                    .FirstOrDefaultAsync(s => s.Key == setting.Key)
+                    .ConfigureAwait(false);
                 if (existingSetting != null)
                 {
                     existingSetting.Value = setting.Value;
                 }
                 else
                 {
-                    await _context.Settings.AddAsync(new Setting { Key = setting.Key, Value = setting.Value });
+                    await _context.Settings.AddAsync(new Setting { Key = setting.Key, Value = setting.Value })
+                        .ConfigureAwait(false);
                 }
             }
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
         }
 
         public async Task<ConnectionTestResult> TestConnectionAsync(string server, string database, string user, string password)
@@ -77,7 +83,7 @@ namespace GRCFinancialControl.Persistence.Services
             try
             {
                 await using var connection = new MySqlConnection(builder.ConnectionString);
-                await connection.OpenAsync();
+                await connection.OpenAsync().ConfigureAwait(false);
                 return new ConnectionTestResult(true, ConnectionSuccessfulMessage);
             }
             catch (Exception ex)
@@ -88,7 +94,9 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task<int?> GetDefaultFiscalYearIdAsync()
         {
-            var setting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == SettingKeys.DefaultFiscalYearId);
+            var setting = await _context.Settings
+                .FirstOrDefaultAsync(s => s.Key == SettingKeys.DefaultFiscalYearId)
+                .ConfigureAwait(false);
             if (setting == null || string.IsNullOrWhiteSpace(setting.Value))
             {
                 return null;
@@ -104,7 +112,9 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task SetDefaultFiscalYearIdAsync(int? fiscalYearId)
         {
-            var existingSetting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == SettingKeys.DefaultFiscalYearId);
+            var existingSetting = await _context.Settings
+                .FirstOrDefaultAsync(s => s.Key == SettingKeys.DefaultFiscalYearId)
+                .ConfigureAwait(false);
 
             if (fiscalYearId.HasValue)
             {
@@ -119,7 +129,7 @@ namespace GRCFinancialControl.Persistence.Services
                     {
                         Key = SettingKeys.DefaultFiscalYearId,
                         Value = value
-                    });
+                    }).ConfigureAwait(false);
                 }
             }
             else if (existingSetting != null)
@@ -127,34 +137,34 @@ namespace GRCFinancialControl.Persistence.Services
                 _context.Settings.Remove(existingSetting);
             }
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
         }
 
         public async Task<DataBackend> GetBackendPreferenceAsync()
         {
-            var value = await FindValueAsync(SettingKeys.DataBackendPreference);
+            var value = await FindValueAsync(SettingKeys.DataBackendPreference).ConfigureAwait(false);
             return Enum.TryParse(value, ignoreCase: true, out DataBackend backend) ? backend : DataBackend.MySql;
         }
 
         public async Task SetBackendPreferenceAsync(DataBackend backend)
         {
-            await UpsertSettingAsync(SettingKeys.DataBackendPreference, backend.ToString());
-            await _context.SaveChangesAsync();
+            await UpsertSettingAsync(SettingKeys.DataBackendPreference, backend.ToString()).ConfigureAwait(false);
+            await _context.SaveChangesAsync().ConfigureAwait(false);
         }
 
         public async Task<DataverseSettings> GetDataverseSettingsAsync()
         {
-            var authModeValue = await FindValueAsync(SettingKeys.DataverseAuthMode);
+            var authModeValue = await FindValueAsync(SettingKeys.DataverseAuthMode).ConfigureAwait(false);
             var authMode = Enum.TryParse(authModeValue, ignoreCase: true, out DataverseAuthMode parsedMode)
                 ? parsedMode
                 : DataverseAuthMode.Interactive;
 
             return new DataverseSettings
             {
-                OrgUrl = await FindValueAsync(SettingKeys.DataverseOrgUrl) ?? string.Empty,
-                TenantId = await FindValueAsync(SettingKeys.DataverseTenantId) ?? string.Empty,
-                ClientId = await FindValueAsync(SettingKeys.DataverseClientId) ?? string.Empty,
-                ClientSecret = await FindValueAsync(SettingKeys.DataverseClientSecret) ?? string.Empty,
+                OrgUrl = await FindValueAsync(SettingKeys.DataverseOrgUrl).ConfigureAwait(false) ?? string.Empty,
+                TenantId = await FindValueAsync(SettingKeys.DataverseTenantId).ConfigureAwait(false) ?? string.Empty,
+                ClientId = await FindValueAsync(SettingKeys.DataverseClientId).ConfigureAwait(false) ?? string.Empty,
+                ClientSecret = await FindValueAsync(SettingKeys.DataverseClientSecret).ConfigureAwait(false) ?? string.Empty,
                 AuthMode = authMode
             };
         }
@@ -163,31 +173,37 @@ namespace GRCFinancialControl.Persistence.Services
         {
             ArgumentNullException.ThrowIfNull(settings);
 
-            await UpsertSettingAsync(SettingKeys.DataverseOrgUrl, settings.OrgUrl ?? string.Empty);
-            await UpsertSettingAsync(SettingKeys.DataverseTenantId, settings.TenantId ?? string.Empty);
-            await UpsertSettingAsync(SettingKeys.DataverseClientId, settings.ClientId ?? string.Empty);
-            await UpsertSettingAsync(SettingKeys.DataverseClientSecret, settings.ClientSecret ?? string.Empty);
-            await UpsertSettingAsync(SettingKeys.DataverseAuthMode, settings.AuthMode.ToString());
+            await UpsertSettingAsync(SettingKeys.DataverseOrgUrl, settings.OrgUrl ?? string.Empty).ConfigureAwait(false);
+            await UpsertSettingAsync(SettingKeys.DataverseTenantId, settings.TenantId ?? string.Empty).ConfigureAwait(false);
+            await UpsertSettingAsync(SettingKeys.DataverseClientId, settings.ClientId ?? string.Empty).ConfigureAwait(false);
+            await UpsertSettingAsync(SettingKeys.DataverseClientSecret, settings.ClientSecret ?? string.Empty).ConfigureAwait(false);
+            await UpsertSettingAsync(SettingKeys.DataverseAuthMode, settings.AuthMode.ToString()).ConfigureAwait(false);
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
         }
 
         private async Task<string?> FindValueAsync(string key)
         {
-            var setting = await _context.Settings.AsNoTracking().FirstOrDefaultAsync(s => s.Key == key);
+            var setting = await _context.Settings
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Key == key)
+                .ConfigureAwait(false);
             return setting?.Value;
         }
 
         private async Task UpsertSettingAsync(string key, string value)
         {
-            var existingSetting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == key);
+            var existingSetting = await _context.Settings
+                .FirstOrDefaultAsync(s => s.Key == key)
+                .ConfigureAwait(false);
             if (existingSetting != null)
             {
                 existingSetting.Value = value;
             }
             else
             {
-                await _context.Settings.AddAsync(new Setting { Key = key, Value = value });
+                await _context.Settings.AddAsync(new Setting { Key = key, Value = value })
+                    .ConfigureAwait(false);
             }
         }
     }
