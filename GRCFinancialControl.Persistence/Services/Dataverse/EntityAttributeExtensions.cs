@@ -117,6 +117,16 @@ public static class EntityAttributeExtensions
         return GetAliasedRaw(entity, alias, attribute) as string;
     }
 
+    public static DateTime? GetAliasedDateTime(this Entity entity, string alias, string attribute)
+    {
+        var raw = GetAliasedRaw(entity, alias, attribute);
+        return raw switch
+        {
+            DateTime value => DateTime.SpecifyKind(value, value.Kind == DateTimeKind.Unspecified ? DateTimeKind.Utc : value.Kind),
+            _ => null,
+        };
+    }
+
     private static object? GetAliasedRaw(Entity entity, string alias, string attribute)
     {
         ArgumentNullException.ThrowIfNull(entity);
