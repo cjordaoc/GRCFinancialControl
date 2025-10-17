@@ -29,6 +29,7 @@ public sealed class InteractiveAuthService : IInteractiveAuthService, IDisposabl
 
     private readonly IAuthConfig _config;
     private readonly ILogger<InteractiveAuthService> _logger;
+    private readonly IParentWindowProvider _parentWindowProvider;
     private readonly SemaphoreSlim _clientLock = new(1, 1);
     private readonly string[] _defaultScopes;
     private readonly string[] _fallbackScopes;
@@ -37,10 +38,11 @@ public sealed class InteractiveAuthService : IInteractiveAuthService, IDisposabl
     private MsalCacheHelper? _cacheHelper;
     private UserInfo? _currentUser;
 
-    public InteractiveAuthService(IAuthConfig config, ILogger<InteractiveAuthService> logger)
+    public InteractiveAuthService(IAuthConfig config, ILogger<InteractiveAuthService> logger, IParentWindowProvider parentWindowProvider)
     {
         _config = config ?? throw new ArgumentNullException(nameof(config));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _parentWindowProvider = parentWindowProvider ?? throw new ArgumentNullException(nameof(parentWindowProvider));
 
         var configuredScopes = (config.Scopes ?? Array.Empty<string>())
             .Where(scope => !string.IsNullOrWhiteSpace(scope))
@@ -175,7 +177,10 @@ public sealed class InteractiveAuthService : IInteractiveAuthService, IDisposabl
         }
 
         _logger.LogInformation("Falling back to interactive sign-in for scopes {Scopes}.", scopes);
+        var parentHandle = _parentWindowProvider.GetMainWindowHandle();
+
         var interactiveBuilder = client.AcquireTokenInteractive(scopes)
+            .WithParentActivityOrWindow(parentHandle)
             .WithPrompt(Prompt.SelectAccount);
 
         if (OperatingSystem.IsWindows())
