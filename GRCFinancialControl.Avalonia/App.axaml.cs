@@ -242,8 +242,11 @@ namespace GRCFinancialControl.Avalonia
 
                 using (var scope = Services.CreateScope())
                 {
-                    var schemaInitializer = scope.ServiceProvider.GetRequiredService<IDatabaseSchemaInitializer>();
-                    schemaInitializer.EnsureSchemaAsync().GetAwaiter().GetResult();
+                    if (dataBackend == DataBackend.MySql)
+                    {
+                        var schemaInitializer = scope.ServiceProvider.GetRequiredService<IDatabaseSchemaInitializer>();
+                        schemaInitializer.EnsureSchemaAsync().GetAwaiter().GetResult();
+                    }
 
                     var settingsDbContext = scope.ServiceProvider.GetRequiredService<SettingsDbContext>();
                     settingsDbContext.Database.EnsureCreated();
