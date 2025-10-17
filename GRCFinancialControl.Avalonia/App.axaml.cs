@@ -147,16 +147,16 @@ namespace GRCFinancialControl.Avalonia
             }
 
             // Register other services
-            services.AddTransient<IEngagementService, EngagementService>();
-            services.AddTransient<IFiscalYearService, FiscalYearService>();
-            services.AddTransient<IFullManagementDataImporter, FullManagementDataImporter>();
-            services.AddTransient<IImportService, ImportService>();
-            services.AddTransient<IClosingPeriodService, ClosingPeriodService>();
-            services.AddTransient<IPlannedAllocationService, PlannedAllocationService>();
-            services.AddTransient<IReportService, ReportService>();
-            services.AddTransient<IPapdService, PapdService>();
             if (dataBackend == DataBackend.MySql)
             {
+                services.AddTransient<IEngagementService, EngagementService>();
+                services.AddTransient<IFiscalYearService, FiscalYearService>();
+                services.AddTransient<IFullManagementDataImporter, FullManagementDataImporter>();
+                services.AddTransient<IImportService, ImportService>();
+                services.AddTransient<IClosingPeriodService, ClosingPeriodService>();
+                services.AddTransient<IPlannedAllocationService, PlannedAllocationService>();
+                services.AddTransient<IReportService, ReportService>();
+                services.AddTransient<IPapdService, PapdService>();
                 services.AddTransient<IManagerService, ManagerService>();
                 services.AddTransient<IManagerAssignmentService, ManagerAssignmentService>();
                 services.AddTransient<IExceptionService, ExceptionService>();
@@ -164,6 +164,14 @@ namespace GRCFinancialControl.Avalonia
             }
             else
             {
+                services.AddTransient<IEngagementService, DataverseEngagementService>();
+                services.AddTransient<IFiscalYearService, DataverseFiscalYearService>();
+                services.AddTransient<IFullManagementDataImporter, DataverseFullManagementDataImporter>();
+                services.AddTransient<IImportService, DataverseImportService>();
+                services.AddTransient<IClosingPeriodService, DataverseClosingPeriodService>();
+                services.AddTransient<IPlannedAllocationService, DataversePlannedAllocationService>();
+                services.AddTransient<IReportService, DataverseReportService>();
+                services.AddTransient<IPapdService, DataversePapdService>();
                 services.AddTransient<IManagerService, DataverseManagerService>();
                 services.AddTransient<IManagerAssignmentService, ManagerAssignmentService>();
                 services.AddTransient<IExceptionService, ExceptionService>();
