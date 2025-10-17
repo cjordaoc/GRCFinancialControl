@@ -14,6 +14,22 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AvaloniaXaml Update="App.axaml">
+      <Generator>MSBuild:Compile</Generator>
+      <XamlCompilation>Compile</XamlCompilation>
+    </AvaloniaXaml>
+    <Compile Update="App.axaml.cs">
+      <DependentUpon>App.axaml</DependentUpon>
+    </Compile>
+    <AvaloniaXaml Update="Views\**\*.axaml">
+      <Generator>MSBuild:Compile</Generator>
+    </AvaloniaXaml>
+    <Compile Update="Views\**\*.axaml.cs">
+      <DependentUpon>%(Filename).axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="..\settings.db">
       <Link>settings.db</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
