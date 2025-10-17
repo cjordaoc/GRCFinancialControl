@@ -11,11 +11,27 @@ namespace GRCFinancialControl.Persistence.Configuration
     {
         public static DataverseConnectionOptions Resolve(Func<SettingsDbContext> contextFactory, Func<SettingsDbContext, ISettingsService>? settingsServiceFactory = null)
         {
+            if (TryResolve(contextFactory, out var options, out var failureReason, settingsServiceFactory) && options is not null)
+            {
+                return options;
+            }
+
+            throw new InvalidOperationException(failureReason ?? "Configure Dataverse credentials in Settings before selecting the Dataverse backend.");
+        }
+
+        public static bool TryResolve(
+            Func<SettingsDbContext> contextFactory,
+            out DataverseConnectionOptions? options,
+            out string? failureReason,
+            Func<SettingsDbContext, ISettingsService>? settingsServiceFactory = null)
+        {
             ArgumentNullException.ThrowIfNull(contextFactory);
 
             if (DataverseConnectionOptions.TryFromEnvironment(out var environmentOptions) && environmentOptions is not null)
             {
-                return environmentOptions;
+                options = environmentOptions;
+                failureReason = null;
+                return true;
             }
 
             try
@@ -26,11 +42,15 @@ namespace GRCFinancialControl.Persistence.Configuration
                 var settingsService = settingsServiceFactory?.Invoke(context) ?? new SettingsService(context);
                 ArgumentNullException.ThrowIfNull(settingsService);
                 var storedSettings = settingsService.GetDataverseSettingsAsync().GetAwaiter().GetResult();
-                return DataverseConnectionOptions.FromSettings(storedSettings);
+                options = DataverseConnectionOptions.FromSettings(storedSettings);
+                failureReason = null;
+                return true;
             }
             catch (InvalidOperationException ex)
             {
-                throw new InvalidOperationException("Configure Dataverse credentials in Settings before selecting the Dataverse backend.", ex);
+                options = null;
+                failureReason = ex.InnerException?.Message ?? ex.Message;
+                return false;
             }
         }
     }
