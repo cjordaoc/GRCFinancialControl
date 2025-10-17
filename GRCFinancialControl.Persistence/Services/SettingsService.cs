@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using GRCFinancialControl.Core.Configuration;
-using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -140,71 +139,5 @@ namespace GRCFinancialControl.Persistence.Services
             await _context.SaveChangesAsync().ConfigureAwait(false);
         }
 
-        public async Task<DataBackend> GetBackendPreferenceAsync()
-        {
-            var value = await FindValueAsync(SettingKeys.DataBackendPreference).ConfigureAwait(false);
-            return Enum.TryParse(value, ignoreCase: true, out DataBackend backend) ? backend : DataBackend.MySql;
-        }
-
-        public async Task SetBackendPreferenceAsync(DataBackend backend)
-        {
-            await UpsertSettingAsync(SettingKeys.DataBackendPreference, backend.ToString()).ConfigureAwait(false);
-            await _context.SaveChangesAsync().ConfigureAwait(false);
-        }
-
-        public async Task<DataverseSettings> GetDataverseSettingsAsync()
-        {
-            var authModeValue = await FindValueAsync(SettingKeys.DataverseAuthMode).ConfigureAwait(false);
-            var authMode = Enum.TryParse(authModeValue, ignoreCase: true, out DataverseAuthMode parsedMode)
-                ? parsedMode
-                : DataverseAuthMode.Interactive;
-
-            return new DataverseSettings
-            {
-                OrgUrl = await FindValueAsync(SettingKeys.DataverseOrgUrl).ConfigureAwait(false) ?? string.Empty,
-                TenantId = await FindValueAsync(SettingKeys.DataverseTenantId).ConfigureAwait(false) ?? string.Empty,
-                ClientId = await FindValueAsync(SettingKeys.DataverseClientId).ConfigureAwait(false) ?? string.Empty,
-                ClientSecret = await FindValueAsync(SettingKeys.DataverseClientSecret).ConfigureAwait(false) ?? string.Empty,
-                AuthMode = authMode
-            };
-        }
-
-        public async Task SaveDataverseSettingsAsync(DataverseSettings settings)
-        {
-            ArgumentNullException.ThrowIfNull(settings);
-
-            await UpsertSettingAsync(SettingKeys.DataverseOrgUrl, settings.OrgUrl ?? string.Empty).ConfigureAwait(false);
-            await UpsertSettingAsync(SettingKeys.DataverseTenantId, settings.TenantId ?? string.Empty).ConfigureAwait(false);
-            await UpsertSettingAsync(SettingKeys.DataverseClientId, settings.ClientId ?? string.Empty).ConfigureAwait(false);
-            await UpsertSettingAsync(SettingKeys.DataverseClientSecret, settings.ClientSecret ?? string.Empty).ConfigureAwait(false);
-            await UpsertSettingAsync(SettingKeys.DataverseAuthMode, settings.AuthMode.ToString()).ConfigureAwait(false);
-
-            await _context.SaveChangesAsync().ConfigureAwait(false);
-        }
-
-        private async Task<string?> FindValueAsync(string key)
-        {
-            var setting = await _context.Settings
-                .AsNoTracking()
-                .FirstOrDefaultAsync(s => s.Key == key)
-                .ConfigureAwait(false);
-            return setting?.Value;
-        }
-
-        private async Task UpsertSettingAsync(string key, string value)
-        {
-            var existingSetting = await _context.Settings
-                .FirstOrDefaultAsync(s => s.Key == key)
-                .ConfigureAwait(false);
-            if (existingSetting != null)
-            {
-                existingSetting.Value = value;
-            }
-            else
-            {
-                await _context.Settings.AddAsync(new Setting { Key = key, Value = value })
-                    .ConfigureAwait(false);
-            }
-        }
     }
 }

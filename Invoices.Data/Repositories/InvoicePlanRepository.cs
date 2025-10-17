@@ -669,7 +669,7 @@ public class InvoicePlanRepository : IInvoicePlanRepository
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to resolve Dataverse people metadata for notification preview.");
+            _logger.LogWarning(ex, "Failed to resolve person metadata for notification preview.");
             return;
         }
 

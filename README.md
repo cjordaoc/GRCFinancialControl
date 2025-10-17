@@ -21,6 +21,7 @@ The primary goal of this application is to provide a single source of truth for 
 - File pickers only accept and produce `.xlsx` files, aligning imports (e.g., `DataTemplate/data.xlsx` for margin actuals) with the supported Excel format. Revenue actuals remain a future enhancement.
 - Custom UI styles have been consolidated in `Styles/Controls.axaml`, making DataGrid look-and-feel changes easier to maintain from a single resource dictionary.
 - The MySQL rebuild script seeds closing periods from July 2024 through June 2031 and pre-populates fiscal years FY25–FY31 following the July-to-June calendar while leaving PAPD ownership to be defined in-app.
+- A new **Tasks** workspace lets controllers generate the weekly administrative JSON file. The "Generate Tasks file" button opens a save dialog, schedules delivery for the upcoming Monday in the São Paulo timezone, and pre-fills invoice entries so reminders always go out at least seven days ahead of their emission dates.
 
 ## 2. Personas & User Journeys
 
