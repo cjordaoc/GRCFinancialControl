@@ -225,6 +225,7 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<ClosingPeriodEditorViewModel>();
             services.AddTransient<CustomersViewModel>();
             services.AddTransient<CustomerEditorViewModel>();
+            services.AddTransient<IStartupAuthenticationService, StartupAuthenticationService>();
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
@@ -251,12 +252,16 @@ namespace GRCFinancialControl.Avalonia
 
                 if (dataBackend == DataBackend.Dataverse)
                 {
-                    var splash = new AuthenticationSplashWindow();
+                    var splashVm = new global::App.Presentation.ViewModels.AuthenticationSplashWindowViewModel();
+                    var splash = new AuthenticationSplashWindow
+                    {
+                        DataContext = splashVm
+                    };
                     desktop.MainWindow = splash;
 
                     splash.Opened += async (_, _) =>
                     {
-                        var failureMessage = await TryAuthenticateOnStartupAsync(splash).ConfigureAwait(true);
+                        var failureMessage = await TryAuthenticateOnStartupAsync(splashVm).ConfigureAwait(true);
 
                         if (!string.IsNullOrEmpty(failureMessage))
                         {
@@ -285,7 +290,7 @@ namespace GRCFinancialControl.Avalonia
             base.OnFrameworkInitializationCompleted();
         }
 
-        private async Task<string?> TryAuthenticateOnStartupAsync(AuthenticationSplashWindow splashWindow)
+        private async Task<string?> TryAuthenticateOnStartupAsync(global::App.Presentation.ViewModels.AuthenticationSplashWindowViewModel splashVm)
         {
             var options = Services.GetService<DataverseConnectionOptions>();
             if (options is null)
@@ -295,44 +300,16 @@ namespace GRCFinancialControl.Avalonia
 
             if (options.AuthMode != DataverseAuthMode.Interactive)
             {
-                splashWindow.SetStatus("Using application authentication.");
+                splashVm.StatusText = "Using application authentication.";
                 await Task.Delay(400).ConfigureAwait(true);
                 return null;
             }
 
-            var authService = Services.GetRequiredService<IInteractiveAuthService>();
-            var authConfig = Services.GetRequiredService<IAuthConfig>();
-            var scopes = authConfig.Scopes?.ToArray() ?? Array.Empty<string>();
-
-            splashWindow.SetStatus("Signing in to Dataverse...");
-
-            try
-            {
-                var result = await authService.AcquireTokenAsync(scopes).ConfigureAwait(true);
-                var user = result.User;
-
-                if (user is not null)
-                {
-                    var name = !string.IsNullOrWhiteSpace(user.DisplayName)
-                        ? user.DisplayName
-                        : user.UserPrincipalName ?? "Dataverse user";
-                    splashWindow.SetStatus($"Signed in as {name}.");
-                }
-                else
-                {
-                    splashWindow.SetStatus("Signed in to Dataverse.");
-                }
-
-                await Task.Delay(650).ConfigureAwait(true);
-                return null;
-            }
-            catch (Exception ex)
-            {
-                var message = AuthenticationMessageFormatter.GetFriendlyMessage(ex);
-                splashWindow.ShowError(message);
-                await Task.Delay(2000).ConfigureAwait(true);
-                return message;
-            }
+            var authService = Services.GetRequiredService<IStartupAuthenticationService>();
+            return await authService.AuthenticateAsync(
+                status => splashVm.StatusText = status,
+                isProgressVisible => splashVm.IsProgressVisible = isProgressVisible
+            ).ConfigureAwait(true);
         }
 
         private static SettingsDbContext CreateSettingsDbContext()
