@@ -1,13 +1,17 @@
+using System;
+using System.Collections.ObjectModel;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
-using System.Collections.ObjectModel;
-using System.Linq;
+using GRCFinancialControl.Avalonia.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
     public partial class MainWindowViewModel : ViewModelBase, IRecipient<OpenDialogMessage>, IRecipient<CloseDialogMessage>
     {
+        private readonly ILoggingService _loggingService;
+
         public EngagementsViewModel Engagements { get; }
         public FiscalYearsViewModel FiscalYears { get; }
         public GrcTeamViewModel GrcTeam { get; }
@@ -30,17 +34,21 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private ViewModelBase? _activeView;
 
         public MainWindowViewModel(EngagementsViewModel engagementsViewModel,
-                                 FiscalYearsViewModel fiscalYearsViewModel,
-                                 GrcTeamViewModel grcTeamViewModel,
-                                 ImportViewModel importViewModel,
-                                 AllocationsViewModel allocationsViewModel,
-                                 ReportsViewModel reportsViewModel,
-                                 SettingsViewModel settingsViewModel,
-                                 ClosingPeriodsViewModel closingPeriodsViewModel,
-                                 CustomersViewModel customersViewModel,
-                                 IMessenger messenger)
+                                   FiscalYearsViewModel fiscalYearsViewModel,
+                                   GrcTeamViewModel grcTeamViewModel,
+                                   ImportViewModel importViewModel,
+                                   AllocationsViewModel allocationsViewModel,
+                                   ReportsViewModel reportsViewModel,
+                                   SettingsViewModel settingsViewModel,
+                                   ClosingPeriodsViewModel closingPeriodsViewModel,
+                                   CustomersViewModel customersViewModel,
+                                   ILoggingService loggingService,
+                                   IMessenger messenger)
             : base(messenger)
         {
+            ArgumentNullException.ThrowIfNull(loggingService);
+
+            _loggingService = loggingService;
             Engagements = engagementsViewModel;
             FiscalYears = fiscalYearsViewModel;
             GrcTeam = grcTeamViewModel;
@@ -86,9 +94,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
 
             ActiveView = value?.ViewModel;
-            if (ActiveView is not null)
+            if (ActiveView is null)
+            {
+                return;
+            }
+
+            try
             {
                 await ActiveView.LoadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                var sectionName = value?.Title ?? ActiveView.GetType().Name;
+                _loggingService.LogError($"Failed to load '{sectionName}': {ex.Message}");
             }
         }
     }
