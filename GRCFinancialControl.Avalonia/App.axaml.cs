@@ -95,7 +95,10 @@ namespace GRCFinancialControl.Avalonia
 
                     // Register ApplicationDbContext with MySQL
                     services.AddDbContextFactory<ApplicationDbContext>(options =>
-                        options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 29))));
+                        options.UseMySql(
+                            connectionString,
+                            new MySqlServerVersion(new Version(8, 0, 29)),
+                            mySqlOptions => mySqlOptions.EnableRetryOnFailure()));
                     services.AddSingleton<IPersonDirectory, NullPersonDirectory>();
                 }
 
