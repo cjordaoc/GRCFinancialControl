@@ -123,6 +123,7 @@ namespace GRCFinancialControl.Avalonia
                     var scope = $"{orgUri.AbsoluteUri.TrimEnd('/')}/user_impersonation";
                     return new AuthConfig(options.ClientId, authority, orgUri, new[] { scope });
                 });
+                services.AddSingleton<IParentWindowProvider, AvaloniaParentWindowProvider>();
                 services.AddSingleton<IInteractiveAuthService, InteractiveAuthService>();
                 services.AddSingleton<IDataverseClientFactory, DataverseClientFactory>();
                 services.AddSingleton(_ => DataverseEntityMetadataRegistry.CreateDefault());
