@@ -35,6 +35,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         AvailablePlans.CollectionChanged += OnAvailablePlansChanged;
 
         _loadPlanCommand = new RelayCommand(LoadSelectedPlan, () => SelectedPlan is not null);
+        ClosePlanDetailsCommand = new RelayCommand(ClosePlanDetails);
 
         _messenger.Register<ConnectionSettingsImportedMessage>(this, (_, _) => LoadAvailablePlans());
 
@@ -72,6 +73,9 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
     [ObservableProperty]
     private string? planSelectionMessage;
 
+    [ObservableProperty]
+    private bool isPlanDetailsVisible;
+
     public bool HasLines => Lines.Count > 0;
 
     public bool HasValidationMessage => !string.IsNullOrWhiteSpace(ValidationMessage);
@@ -81,6 +85,8 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
     public bool HasAvailablePlans => AvailablePlans.Count > 0;
 
     public IRelayCommand LoadPlanCommand => _loadPlanCommand;
+
+    public IRelayCommand ClosePlanDetailsCommand { get; }
 
     partial void OnValidationMessageChanged(string? value) => OnPropertyChanged(nameof(HasValidationMessage));
 
@@ -123,6 +129,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         if (SelectedPlan is null)
         {
             ValidationMessage = Strings.Get("EmissionValidationPlanSelection");
+            IsPlanDetailsVisible = false;
             return;
         }
 
@@ -188,11 +195,14 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
             {
                 StatusMessage = Strings.Format("EmissionStatusPlanLoaded", plan.Id, Lines.Count);
             }
+
+            IsPlanDetailsVisible = Lines.Count > 0;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load invoice plan {PlanId} for emission confirmation.", planId);
             ValidationMessage = Strings.Format("EmissionValidationLoadFailed", ex.Message);
+            IsPlanDetailsVisible = false;
         }
     }
 
@@ -330,6 +340,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         Lines.Clear();
         RefreshSummaries();
         OnPropertyChanged(nameof(HasLines));
+        IsPlanDetailsVisible = false;
     }
 
     private void LoadAvailablePlans()
@@ -373,5 +384,10 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
 
         var planned = SelectedPlan.PlannedItemCount;
         SelectedPlan.UpdateCounts(planned, RequestedCount, ClosedCount, CanceledCount);
+    }
+
+    private void ClosePlanDetails()
+    {
+        IsPlanDetailsVisible = false;
     }
 }

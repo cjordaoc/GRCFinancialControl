@@ -35,13 +35,12 @@ public partial class PlanEditorViewModel : ViewModelBase
         _isInitializing = true;
 
         Items.CollectionChanged += OnItemsCollectionChanged;
-        AdditionalEmails.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasAdditionalEmails));
 
         PlanTypes = Enum.GetValues<InvoicePlanType>();
 
-        RebalanceCommand = new RelayCommand(RebalanceTotals);
         SavePlanCommand = new RelayCommand(SavePlan);
         CreatePlanCommand = new RelayCommand(CreatePlan, CanCreatePlan);
+        ClosePlanFormCommand = new RelayCommand(() => IsPlanFormVisible = false);
 
         // Seed with default values so the editor presents a useful layout.
         PlanType = InvoicePlanType.ByDate;
@@ -50,8 +49,8 @@ public partial class PlanEditorViewModel : ViewModelBase
         PaymentTermDays = 0;
         FirstEmissionDate = DateTime.Today;
         CustomerFocalPointName = string.Empty;
-        CustomerFocalPointEmail = string.Empty;
         CustomInstructions = string.Empty;
+        RecipientEmails = string.Empty;
 
         _isInitializing = false;
         EnsureItemCount();
@@ -64,8 +63,6 @@ public partial class PlanEditorViewModel : ViewModelBase
     public ObservableCollection<EngagementOptionViewModel> Engagements { get; } = new();
 
     public ObservableCollection<InvoicePlanLineViewModel> Items { get; } = new();
-
-    public ObservableCollection<PlanEmailViewModel> AdditionalEmails { get; } = new();
 
     public IReadOnlyList<InvoicePlanType> PlanTypes { get; }
 
@@ -88,10 +85,10 @@ public partial class PlanEditorViewModel : ViewModelBase
     private string customerFocalPointName = string.Empty;
 
     [ObservableProperty]
-    private string customerFocalPointEmail = string.Empty;
+    private string? customInstructions;
 
     [ObservableProperty]
-    private string? customInstructions;
+    private string? recipientEmails;
 
     [ObservableProperty]
     private DateTime? firstEmissionDate;
@@ -166,7 +163,9 @@ public partial class PlanEditorViewModel : ViewModelBase
         RecalculateTotals();
     }
 
-    public bool HasAdditionalEmails => AdditionalEmails.Any(email => !string.IsNullOrWhiteSpace(email.Email));
+    public IRelayCommand ClosePlanFormCommand { get; }
+
+    public bool HasRecipientEmails => !string.IsNullOrWhiteSpace(RecipientEmails);
 
     public bool HasValidationMessage => !string.IsNullOrWhiteSpace(ValidationMessage);
 
@@ -226,7 +225,10 @@ public partial class PlanEditorViewModel : ViewModelBase
         CreatePlanCommand.NotifyCanExecuteChanged();
     }
 
-    public IRelayCommand RebalanceCommand { get; }
+    partial void OnRecipientEmailsChanged(string? value)
+    {
+        OnPropertyChanged(nameof(HasRecipientEmails));
+    }
 
     public IRelayCommand SavePlanCommand { get; }
 
@@ -271,7 +273,6 @@ public partial class PlanEditorViewModel : ViewModelBase
             PlanType = plan.Type;
             PaymentTermDays = plan.PaymentTermDays;
             CustomerFocalPointName = plan.CustomerFocalPointName;
-            CustomerFocalPointEmail = plan.CustomerFocalPointEmail;
             CustomInstructions = plan.CustomInstructions;
             FirstEmissionDate = plan.FirstEmissionDate;
             _numInvoices = plan.NumInvoices;
@@ -290,20 +291,16 @@ public partial class PlanEditorViewModel : ViewModelBase
                     Amount = item.Amount,
                     CanEditEmissionDate = plan.Type != InvoicePlanType.ByDate,
                     ShowDeliveryDescription = plan.Type == InvoicePlanType.ByDelivery,
+                    PayerCnpj = item.PayerCnpj,
+                    PoNumber = item.PoNumber,
+                    FrsNumber = item.FrsNumber,
+                    CustomerTicket = item.CustomerTicket,
                 };
 
                 Items.Add(line);
             }
 
-            AdditionalEmails.Clear();
-            foreach (var email in plan.AdditionalEmails)
-            {
-                AdditionalEmails.Add(new PlanEmailViewModel
-                {
-                    Id = email.Id,
-                    Email = email.Email,
-                });
-            }
+            RecipientEmails = BuildRecipientList(plan);
 
             PlanningBaseValue = Math.Round(plan.Items.Sum(item => item.Amount), 2, MidpointRounding.AwayFromZero);
         }
@@ -316,7 +313,7 @@ public partial class PlanEditorViewModel : ViewModelBase
             ApplyEmissionDateRule();
             RecalculateTotals();
             OnPropertyChanged(nameof(RequiresFirstEmissionDate));
-            OnPropertyChanged(nameof(HasAdditionalEmails));
+            OnPropertyChanged(nameof(HasRecipientEmails));
             IsPlanFormVisible = true;
         }
     }
@@ -364,6 +361,10 @@ public partial class PlanEditorViewModel : ViewModelBase
                 EmissionDate = DateTime.Today,
                 CanEditEmissionDate = PlanType != InvoicePlanType.ByDate,
                 ShowDeliveryDescription = PlanType == InvoicePlanType.ByDelivery,
+                PayerCnpj = string.Empty,
+                PoNumber = string.Empty,
+                FrsNumber = string.Empty,
+                CustomerTicket = string.Empty,
             };
 
             Items.Add(line);
@@ -522,10 +523,12 @@ public partial class PlanEditorViewModel : ViewModelBase
             NumInvoices = NumInvoices,
             PaymentTermDays = PaymentTermDays,
             CustomerFocalPointName = CustomerFocalPointName?.Trim() ?? string.Empty,
-            CustomerFocalPointEmail = CustomerFocalPointEmail?.Trim() ?? string.Empty,
             CustomInstructions = string.IsNullOrWhiteSpace(CustomInstructions) ? null : CustomInstructions!.Trim(),
             FirstEmissionDate = FirstEmissionDate,
         };
+
+        var recipients = ParseRecipientEmails(RecipientEmails);
+        plan.CustomerFocalPointEmail = recipients.FirstOrDefault() ?? string.Empty;
 
         foreach (var line in Items.OrderBy(line => line.Sequence))
         {
@@ -540,29 +543,67 @@ public partial class PlanEditorViewModel : ViewModelBase
                 EmissionDate = emissionDate,
                 DueDate = emissionDate?.AddDays(PaymentTermDays),
                 DeliveryDescription = string.IsNullOrWhiteSpace(line.DeliveryDescription) ? null : line.DeliveryDescription.Trim(),
-                PayerCnpj = string.Empty,
+                PayerCnpj = line.PayerCnpj?.Trim() ?? string.Empty,
+                PoNumber = string.IsNullOrWhiteSpace(line.PoNumber) ? null : line.PoNumber.Trim(),
+                FrsNumber = string.IsNullOrWhiteSpace(line.FrsNumber) ? null : line.FrsNumber.Trim(),
+                CustomerTicket = string.IsNullOrWhiteSpace(line.CustomerTicket) ? null : line.CustomerTicket.Trim(),
             };
 
             plan.Items.Add(item);
         }
 
-        foreach (var email in AdditionalEmails)
-        {
-            var trimmed = email.Email?.Trim();
-            if (string.IsNullOrWhiteSpace(trimmed))
-            {
-                continue;
-            }
+        var additionalRecipients = recipients.Skip(1)
+            .Where(email => !string.IsNullOrWhiteSpace(email))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
 
+        foreach (var email in additionalRecipients)
+        {
             plan.AdditionalEmails.Add(new InvoicePlanEmail
             {
-                Id = email.Id,
                 PlanId = PlanId,
-                Email = trimmed,
+                Email = email,
             });
         }
 
         return plan;
+    }
+
+    private static string BuildRecipientList(InvoicePlan plan)
+    {
+        var recipients = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(plan.CustomerFocalPointEmail))
+        {
+            recipients.Add(plan.CustomerFocalPointEmail.Trim());
+        }
+
+        foreach (var email in plan.AdditionalEmails)
+        {
+            var trimmed = email.Email?.Trim();
+            if (!string.IsNullOrWhiteSpace(trimmed))
+            {
+                recipients.Add(trimmed);
+            }
+        }
+
+        return string.Join(Environment.NewLine, recipients.Distinct(StringComparer.OrdinalIgnoreCase));
+    }
+
+    private static List<string> ParseRecipientEmails(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return new List<string>();
+        }
+
+        var separators = new[] { ';', '\n', '\r', ',' };
+        return input
+            .Split(separators, StringSplitOptions.RemoveEmptyEntries)
+            .Select(entry => entry.Trim())
+            .Where(entry => !string.IsNullOrWhiteSpace(entry))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     private void LoadEngagements()
@@ -622,10 +663,9 @@ public partial class PlanEditorViewModel : ViewModelBase
             PlanningBaseValue = 0m;
             FirstEmissionDate = DateTime.Today;
             CustomerFocalPointName = string.Empty;
-            CustomerFocalPointEmail = string.Empty;
             CustomInstructions = string.Empty;
+            RecipientEmails = string.Empty;
             Items.Clear();
-            AdditionalEmails.Clear();
             ValidationMessage = null;
             StatusMessage = null;
         }
@@ -636,7 +676,7 @@ public partial class PlanEditorViewModel : ViewModelBase
 
         EnsureItemCount();
         RecalculateTotals();
-        OnPropertyChanged(nameof(HasAdditionalEmails));
+        OnPropertyChanged(nameof(HasRecipientEmails));
     }
 
     private void AdjustLastLineForTotals()

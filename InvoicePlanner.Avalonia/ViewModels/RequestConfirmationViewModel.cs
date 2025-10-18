@@ -35,6 +35,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         AvailablePlans.CollectionChanged += OnAvailablePlansChanged;
 
         _loadPlanCommand = new RelayCommand(LoadSelectedPlan, () => SelectedPlan is not null);
+        ClosePlanDetailsCommand = new RelayCommand(ClosePlanDetails);
 
         _messenger.Register<ConnectionSettingsImportedMessage>(this, (_, _) => LoadAvailablePlans());
 
@@ -69,6 +70,9 @@ public partial class RequestConfirmationViewModel : ViewModelBase
     [ObservableProperty]
     private string? planSelectionMessage;
 
+    [ObservableProperty]
+    private bool isPlanDetailsVisible;
+
     public bool HasLines => Lines.Count > 0;
 
     public bool HasValidationMessage => !string.IsNullOrWhiteSpace(ValidationMessage);
@@ -78,6 +82,8 @@ public partial class RequestConfirmationViewModel : ViewModelBase
     public bool HasAvailablePlans => AvailablePlans.Count > 0;
 
     public IRelayCommand LoadPlanCommand => _loadPlanCommand;
+
+    public IRelayCommand ClosePlanDetailsCommand { get; }
 
     partial void OnValidationMessageChanged(string? value) => OnPropertyChanged(nameof(HasValidationMessage));
 
@@ -122,6 +128,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         if (SelectedPlan is null)
         {
             ValidationMessage = Strings.Get("RequestValidationPlanSelection");
+            IsPlanDetailsVisible = false;
             return;
         }
 
@@ -168,11 +175,13 @@ public partial class RequestConfirmationViewModel : ViewModelBase
             RefreshSummaries();
 
             StatusMessage = Strings.Format("RequestStatusPlanLoaded", plan.Id, Lines.Count);
+            IsPlanDetailsVisible = Lines.Count > 0;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load invoice plan {PlanId}.", SelectedPlan.Id);
             ValidationMessage = Strings.Format("RequestValidationLoadFailed", ex.Message);
+            IsPlanDetailsVisible = false;
         }
     }
 
@@ -285,6 +294,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         Lines.Clear();
         RefreshSummaries();
         OnPropertyChanged(nameof(HasLines));
+        IsPlanDetailsVisible = false;
     }
 
     private void LoadAvailablePlans()
@@ -317,6 +327,11 @@ public partial class RequestConfirmationViewModel : ViewModelBase
                 ex,
                 Strings.Format("RequestPlansLoadError", ex.Message));
         }
+    }
+
+    private void ClosePlanDetails()
+    {
+        IsPlanDetailsVisible = false;
     }
 
     private void UpdateSelectedPlanSummaryCounts()
