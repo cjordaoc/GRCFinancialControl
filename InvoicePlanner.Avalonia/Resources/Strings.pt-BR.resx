@@ -24,6 +24,48 @@
   <data name="HomeWelcome" xml:space="preserve">
     <value>Configure o plano de faturas, confirme as solicitações e finalize as emissões quando estiver pronto.</value>
   </data>
+  <data name="NavConnectionSettings" xml:space="preserve">
+    <value>Configurar conexão</value>
+  </data>
+  <data name="ConnectionSetupTitle" xml:space="preserve">
+    <value>Conexão com banco de dados</value>
+  </data>
+  <data name="ConnectionSetupDescription" xml:space="preserve">
+    <value>Importe o pacote criptografado gerado no GRC Financial Control para configurar o banco de dados compartilhado.</value>
+  </data>
+  <data name="ConnectionSetupPackagePlaceholder" xml:space="preserve">
+    <value>Selecione o pacote de conexão</value>
+  </data>
+  <data name="ConnectionBrowseButton" xml:space="preserve">
+    <value>Procurar…</value>
+  </data>
+  <data name="ConnectionBrowseTitle" xml:space="preserve">
+    <value>Abrir pacote de conexão</value>
+  </data>
+  <data name="ConnectionPassphrasePlaceholder" xml:space="preserve">
+    <value>Senha do pacote</value>
+  </data>
+  <data name="ConnectionImportButton" xml:space="preserve">
+    <value>Importar conexão</value>
+  </data>
+  <data name="ConnectionImportSelectPackage" xml:space="preserve">
+    <value>Selecione um pacote de conexão antes de importar.</value>
+  </data>
+  <data name="ConnectionImportEnterPassphrase" xml:space="preserve">
+    <value>Informe a senha do pacote para continuar.</value>
+  </data>
+  <data name="ConnectionImportInProgress" xml:space="preserve">
+    <value>Importando configurações de conexão…</value>
+  </data>
+  <data name="ConnectionImportSuccess" xml:space="preserve">
+    <value>Configurações de conexão importadas com sucesso. O aplicativo está pronto para uso.</value>
+  </data>
+  <data name="ConnectionImportFailure" xml:space="preserve">
+    <value>Falha na importação: {0}</value>
+  </data>
+  <data name="ConnectionSetupPrompt" xml:space="preserve">
+    <value>Importe um pacote de conexão para começar a usar o Invoice Planner.</value>
+  </data>
   <data name="CommonWatermarkCode" xml:space="preserve">
     <value>Código</value>
   </data>

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
@@ -28,7 +29,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             StatusMessage = null;
 
             var defaultFileName = $"Tasks_{DateTime.Now:yyyyMMdd}.json";
-            var filePath = await _filePickerService.SaveFileAsync(defaultFileName);
+            var filePath = await _filePickerService.SaveFileAsync(
+                defaultFileName,
+                title: "Salvar arquivo de tarefas",
+                defaultExtension: ".json",
+                allowedPatterns: new[] { "*.json" });
             if (string.IsNullOrWhiteSpace(filePath))
             {
                 StatusMessage = "Geração cancelada.";

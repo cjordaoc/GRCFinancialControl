@@ -1,3 +1,4 @@
+using App.Presentation.Services;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -103,6 +104,7 @@ namespace GRCFinancialControl.Avalonia
             services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
             services.AddSingleton<IDialogService, DialogService>();
             services.AddTransient<IExportService, ExportService>();
+            services.AddSingleton<IConnectionPackageService, ConnectionPackageService>();
             services.AddSingleton<IPowerBiEmbeddingService, PowerBiEmbeddingService>();
 
             services.AddTransient<MainWindowViewModel>();

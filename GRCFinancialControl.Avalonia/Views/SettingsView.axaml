@@ -20,6 +20,14 @@
         <StackPanel Orientation="Horizontal" Spacing="5" Margin="0,20,0,0">
             <Button Content="Clear All Data" Command="{Binding ClearAllDataCommand}" Classes="danger"/>
         </StackPanel>
+        <Separator Margin="0,20,0,0"/>
+        <TextBlock Text="Connection Package" FontSize="24" FontWeight="Bold"/>
+        <TextBlock Text="Generate an encrypted package to configure the Invoice Planner app." TextWrapping="Wrap"/>
+        <TextBox Text="{Binding ExportPassphrase}" Watermark="Passphrase" PasswordChar="*"/>
+        <TextBox Text="{Binding ConfirmExportPassphrase}" Watermark="Confirm Passphrase" PasswordChar="*"/>
+        <Button Content="Export Connection Package"
+                Command="{Binding ExportConnectionPackageCommand}"
+                HorizontalAlignment="Left"/>
         <TextBlock Text="{Binding StatusMessage}"
                    Margin="0,5,0,0"
                    TextWrapping="Wrap"/>

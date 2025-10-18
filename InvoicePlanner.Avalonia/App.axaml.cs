@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using App.Presentation.Services;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -27,6 +29,7 @@ public partial class App : Application
 {
     private IHost? _host;
     private bool _disposed;
+    private bool _hasConnectionSettings;
 
     public IServiceProvider Services => _host?.Services ?? throw new InvalidOperationException("Host not initialised.");
 
@@ -52,6 +55,7 @@ public partial class App : Application
                 services.AddDbContext<SettingsDbContext>(options =>
                     options.UseSqlite(SettingsDatabaseOptions.BuildConnectionString()));
                 services.AddTransient<ISettingsService, SettingsService>();
+                services.AddSingleton<IConnectionPackageService, ConnectionPackageService>();
 
                 using (var tempProvider = services.BuildServiceProvider())
                 {
@@ -61,19 +65,26 @@ public partial class App : Application
                     settingsDbContext.Database.EnsureCreated();
 
                     var settingsService = scopedProvider.GetRequiredService<ISettingsService>();
-                    var settings = settingsService.GetAllAsync().GetAwaiter().GetResult();
-                    settings.TryGetValue(SettingKeys.Server, out var server);
-                    settings.TryGetValue(SettingKeys.Database, out var database);
-                    settings.TryGetValue(SettingKeys.User, out var user);
-                    settings.TryGetValue(SettingKeys.Password, out var password);
-
-                    var connectionString = $"Server={server};Database={database};User ID={user};Password={password};";
-                    services.AddDbContextFactory<ApplicationDbContext>(options =>
-                        options.UseMySql(
-                            connectionString,
-                            new MySqlServerVersion(new Version(8, 0, 29)),
-                            mySqlOptions => mySqlOptions.EnableRetryOnFailure()));
+                    var initialSettings = settingsService.GetAllAsync().GetAwaiter().GetResult();
+                    string? initialConnection;
+                    _hasConnectionSettings = TryBuildConnectionString(initialSettings, out initialConnection);
                 }
+
+                services.AddDbContextFactory<ApplicationDbContext>((provider, options) =>
+                {
+                    var settingsService = provider.GetRequiredService<ISettingsService>();
+                    var settings = settingsService.GetAllAsync().GetAwaiter().GetResult();
+
+                    if (!TryBuildConnectionString(settings, out var connectionString))
+                    {
+                        return;
+                    }
+
+                    options.UseMySql(
+                        connectionString,
+                        new MySqlServerVersion(new Version(8, 0, 29)),
+                        mySqlOptions => mySqlOptions.EnableRetryOnFailure());
+                });
 
                 services.AddSingleton<IPersonDirectory, NullPersonDirectory>();
                 services.AddSingleton<IDatabaseSchemaInitializer, DatabaseSchemaInitializer>();
@@ -92,8 +103,14 @@ public partial class App : Application
                 services.AddSingleton<InvoiceSummaryViewModel>();
                 services.AddSingleton<NotificationPreviewViewModel>();
                 services.AddSingleton<HomeViewModel>();
+                services.AddSingleton<ConnectionSettingsViewModel>();
                 services.AddSingleton<MainWindowViewModel>();
                 services.AddSingleton<MainWindow>();
+                services.AddSingleton<IFilePickerService>(provider =>
+                {
+                    var mainWindow = provider.GetRequiredService<MainWindow>();
+                    return new FilePickerService(mainWindow);
+                });
             })
             .Build();
 
@@ -112,8 +129,11 @@ public partial class App : Application
             using (var scope = Services.CreateScope())
             {
                 var provider = scope.ServiceProvider;
-                var schemaInitializer = provider.GetRequiredService<IDatabaseSchemaInitializer>();
-                schemaInitializer.EnsureSchemaAsync().GetAwaiter().GetResult();
+                if (_hasConnectionSettings)
+                {
+                    var schemaInitializer = provider.GetRequiredService<IDatabaseSchemaInitializer>();
+                    schemaInitializer.EnsureSchemaAsync().GetAwaiter().GetResult();
+                }
 
                 var settingsDbContext = provider.GetRequiredService<SettingsDbContext>();
                 settingsDbContext.Database.EnsureCreated();
@@ -125,6 +145,39 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private static bool TryBuildConnectionString(IReadOnlyDictionary<string, string> settings, out string connectionString)
+    {
+        connectionString = string.Empty;
+
+        if (settings is null)
+        {
+            return false;
+        }
+
+        if (!settings.TryGetValue(SettingKeys.Server, out var server) || string.IsNullOrWhiteSpace(server))
+        {
+            return false;
+        }
+
+        if (!settings.TryGetValue(SettingKeys.Database, out var database) || string.IsNullOrWhiteSpace(database))
+        {
+            return false;
+        }
+
+        if (!settings.TryGetValue(SettingKeys.User, out var user) || string.IsNullOrWhiteSpace(user))
+        {
+            return false;
+        }
+
+        if (!settings.TryGetValue(SettingKeys.Password, out var password) || string.IsNullOrWhiteSpace(password))
+        {
+            return false;
+        }
+
+        connectionString = $"Server={server};Database={database};User ID={user};Password={password};";
+        return true;
     }
 
     private async Task DisposeHostAsync()

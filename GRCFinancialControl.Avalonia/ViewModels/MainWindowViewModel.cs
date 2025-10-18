@@ -65,7 +65,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             NavigationItems = new ObservableCollection<NavigationItem>
             {
                 new("Import", Import),
-                new("Tasks", Tasks),
                 new("Closing Periods", ClosingPeriods),
                 new("Engagements", Engagements),
                 new("Customers", Customers),
@@ -73,6 +72,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 new("GRC Team", GrcTeam),
                 new("Allocations", Allocations),
                 new("Reports", Reports),
+                new("Tasks", Tasks),
                 new("Settings", Settings)
             };
 
