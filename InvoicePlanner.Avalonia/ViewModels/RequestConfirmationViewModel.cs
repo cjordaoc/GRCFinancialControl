@@ -1,10 +1,11 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Globalization;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using InvoicePlanner.Avalonia.Messages;
 using InvoicePlanner.Avalonia.Resources;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
@@ -17,23 +18,34 @@ public partial class RequestConfirmationViewModel : ViewModelBase
 {
     private readonly IInvoicePlanRepository _repository;
     private readonly ILogger<RequestConfirmationViewModel> _logger;
+    private readonly IMessenger _messenger;
+    private readonly RelayCommand _loadPlanCommand;
 
     public RequestConfirmationViewModel(
         IInvoicePlanRepository repository,
-        ILogger<RequestConfirmationViewModel> logger)
+        ILogger<RequestConfirmationViewModel> logger,
+        IMessenger messenger)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _messenger = messenger ?? throw new ArgumentNullException(nameof(messenger));
 
         Lines.CollectionChanged += OnLinesCollectionChanged;
+        AvailablePlans.CollectionChanged += OnAvailablePlansChanged;
 
-        LoadPlanCommand = new RelayCommand(LoadPlan);
+        _loadPlanCommand = new RelayCommand(LoadSelectedPlan, () => SelectedPlan is not null);
+
+        _messenger.Register<ConnectionSettingsImportedMessage>(this, (_, _) => LoadAvailablePlans());
+
+        LoadAvailablePlans();
     }
 
     public ObservableCollection<RequestConfirmationLineViewModel> Lines { get; } = new();
 
+    public ObservableCollection<InvoicePlanSummaryViewModel> AvailablePlans { get; } = new();
+
     [ObservableProperty]
-    private string planIdText = string.Empty;
+    private InvoicePlanSummaryViewModel? selectedPlan;
 
     [ObservableProperty]
     private int currentPlanId;
@@ -53,22 +65,26 @@ public partial class RequestConfirmationViewModel : ViewModelBase
     [ObservableProperty]
     private int requestedCount;
 
+    [ObservableProperty]
+    private string? planSelectionMessage;
+
     public bool HasLines => Lines.Count > 0;
 
     public bool HasValidationMessage => !string.IsNullOrWhiteSpace(ValidationMessage);
 
     public bool HasStatusMessage => !string.IsNullOrWhiteSpace(StatusMessage);
 
-    public IRelayCommand LoadPlanCommand { get; }
+    public bool HasAvailablePlans => AvailablePlans.Count > 0;
 
-    partial void OnValidationMessageChanged(string? value)
-    {
-        OnPropertyChanged(nameof(HasValidationMessage));
-    }
+    public IRelayCommand LoadPlanCommand => _loadPlanCommand;
 
-    partial void OnStatusMessageChanged(string? value)
+    partial void OnValidationMessageChanged(string? value) => OnPropertyChanged(nameof(HasValidationMessage));
+
+    partial void OnStatusMessageChanged(string? value) => OnPropertyChanged(nameof(HasStatusMessage));
+
+    partial void OnSelectedPlanChanged(InvoicePlanSummaryViewModel? value)
     {
-        OnPropertyChanged(nameof(HasStatusMessage));
+        _loadPlanCommand.NotifyCanExecuteChanged();
     }
 
     private void OnLinesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -93,30 +109,34 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         RefreshSummaries();
     }
 
-    private void LoadPlan()
+    private void OnAvailablePlansChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(HasAvailablePlans));
+    }
+
+    private void LoadSelectedPlan()
     {
         ResetMessages();
 
-        if (!TryResolvePlanId(out var planId))
+        if (SelectedPlan is null)
         {
-            ValidationMessage = Strings.Get("RequestValidationPlanId");
+            ValidationMessage = Strings.Get("RequestValidationPlanSelection");
             return;
         }
 
         try
         {
-            var plan = _repository.GetPlan(planId);
+            var plan = _repository.GetPlan(SelectedPlan.Id);
             if (plan is null)
             {
                 ClearLines();
                 EngagementId = string.Empty;
                 CurrentPlanId = 0;
-                ValidationMessage = Strings.Format("RequestValidationNotFound", planId);
+                ValidationMessage = Strings.Format("RequestValidationNotFound", SelectedPlan.Id);
                 return;
             }
 
             CurrentPlanId = plan.Id;
-            PlanIdText = plan.Id.ToString(CultureInfo.InvariantCulture);
             EngagementId = plan.EngagementId;
 
             ClearLines();
@@ -138,13 +158,19 @@ public partial class RequestConfirmationViewModel : ViewModelBase
                 Lines.Add(line);
             }
 
+            SelectedPlan.UpdateCounts(
+                plan.Items.Count(item => item.Status == InvoiceItemStatus.Planned),
+                plan.Items.Count(item => item.Status == InvoiceItemStatus.Requested),
+                plan.Items.Count(item => item.Status == InvoiceItemStatus.Closed),
+                plan.Items.Count(item => item.Status == InvoiceItemStatus.Canceled));
+
             RefreshSummaries();
 
             StatusMessage = Strings.Format("RequestStatusPlanLoaded", plan.Id, Lines.Count);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to load invoice plan {PlanId}.", planId);
+            _logger.LogError(ex, "Failed to load invoice plan {PlanId}.", SelectedPlan.Id);
             ValidationMessage = Strings.Format("RequestValidationLoadFailed", ex.Message);
         }
     }
@@ -239,6 +265,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
     {
         PlannedCount = Lines.Count(line => line.Status == InvoiceItemStatus.Planned);
         RequestedCount = Lines.Count(line => line.Status == InvoiceItemStatus.Requested);
+        UpdateSelectedPlanSummaryCounts();
     }
 
     private void ResetMessages()
@@ -259,29 +286,46 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasLines));
     }
 
-    private bool TryResolvePlanId(out int planId)
+    private void LoadAvailablePlans()
     {
-        if (!string.IsNullOrWhiteSpace(PlanIdText))
-        {
-            var trimmed = PlanIdText.Trim();
+        var previouslySelectedId = SelectedPlan?.Id;
 
-            if (int.TryParse(trimmed, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) && parsed > 0)
+        try
+        {
+            var plans = _repository.ListPlansForRequestStage();
+
+            AvailablePlans.Clear();
+
+            foreach (var summary in plans)
             {
-                planId = parsed;
-                return true;
+                AvailablePlans.Add(InvoicePlanSummaryViewModel.FromSummary(summary));
             }
 
-            planId = 0;
-            return false;
-        }
+            PlanSelectionMessage = plans.Count == 0
+                ? Strings.Get("RequestPlansEmpty")
+                : Strings.Get("RequestPlansSelectHint");
 
-        if (CurrentPlanId > 0)
+            SelectedPlan = AvailablePlans.FirstOrDefault(plan => plan.Id == previouslySelectedId);
+        }
+        catch (Exception ex)
         {
-            planId = CurrentPlanId;
-            return true;
+            _logger.LogError(ex, "Failed to load available plans for request confirmation.");
+            AvailablePlans.Clear();
+            SelectedPlan = null;
+            PlanSelectionMessage = Strings.Format("RequestPlansLoadError", ex.Message);
+        }
+    }
+
+    private void UpdateSelectedPlanSummaryCounts()
+    {
+        if (SelectedPlan is null || SelectedPlan.Id != CurrentPlanId)
+        {
+            return;
         }
 
-        planId = 0;
-        return false;
+        var closed = Lines.Count(line => line.Status == InvoiceItemStatus.Closed);
+        var canceled = Lines.Count(line => line.Status == InvoiceItemStatus.Canceled);
+
+        SelectedPlan.UpdateCounts(PlannedCount, RequestedCount, closed, canceled);
     }
 }

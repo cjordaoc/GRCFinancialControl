@@ -45,11 +45,17 @@
   <data name="ConnectionSetupPackagePlaceholder" xml:space="preserve">
     <value>Select the connection package</value>
   </data>
+  <data name="ConnectionPackageLabel" xml:space="preserve">
+    <value>Configuration package</value>
+  </data>
   <data name="ConnectionBrowseButton" xml:space="preserve">
     <value>Browse…</value>
   </data>
   <data name="ConnectionBrowseTitle" xml:space="preserve">
     <value>Open connection package</value>
+  </data>
+  <data name="ConnectionPassphraseLabel" xml:space="preserve">
+    <value>Package passphrase</value>
   </data>
   <data name="ConnectionPassphrasePlaceholder" xml:space="preserve">
     <value>Package passphrase</value>
@@ -68,6 +74,9 @@
   </data>
   <data name="ConnectionImportSuccess" xml:space="preserve">
     <value>Connection settings imported successfully. The application is ready to use.</value>
+  </data>
+  <data name="ConnectionImportIncompleteSettings" xml:space="preserve">
+    <value>Connection settings are incomplete. Verify the package and try again.</value>
   </data>
   <data name="ConnectionImportFailure" xml:space="preserve">
     <value>Import failed: {0}</value>
@@ -105,9 +114,6 @@
   <data name="ButtonSaveDraft" xml:space="preserve">
     <value>Save draft</value>
   </data>
-  <data name="ButtonLoadPlan" xml:space="preserve">
-    <value>Load plan</value>
-  </data>
   <data name="ButtonMarkRequested" xml:space="preserve">
     <value>Mark requested</value>
   </data>
@@ -140,6 +146,36 @@
   </data>
   <data name="ButtonClose" xml:space="preserve">
     <value>Close</value>
+  </data>
+  <data name="ButtonInsertRequestData" xml:space="preserve">
+    <value>Insert request data</value>
+  </data>
+  <data name="ButtonInsertBzData" xml:space="preserve">
+    <value>Insert BZ data</value>
+  </data>
+  <data name="PlanSelectionColumnPlanId" xml:space="preserve">
+    <value>Plan</value>
+  </data>
+  <data name="PlanSelectionColumnEngagement" xml:space="preserve">
+    <value>Engagement</value>
+  </data>
+  <data name="PlanSelectionColumnType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="PlanSelectionColumnFirstEmission" xml:space="preserve">
+    <value>First emission</value>
+  </data>
+  <data name="PlanSelectionColumnPendingRequests" xml:space="preserve">
+    <value>Pending requests</value>
+  </data>
+  <data name="PlanSelectionColumnRequested" xml:space="preserve">
+    <value>Requested</value>
+  </data>
+  <data name="PlanSelectionColumnClosed" xml:space="preserve">
+    <value>Closed</value>
+  </data>
+  <data name="PlanSelectionColumnCanceled" xml:space="preserve">
+    <value>Canceled</value>
   </data>
   <data name="PlanEditorTitle" xml:space="preserve">
     <value>Invoice plan</value>
@@ -240,8 +276,17 @@
   <data name="RequestConfirmationDescription" xml:space="preserve">
     <value>Capture RITM, COE, and request date to move invoices from Planned to Requested.</value>
   </data>
-  <data name="RequestConfirmationPlanIdLabel" xml:space="preserve">
-    <value>Plan ID</value>
+  <data name="RequestPlansHeader" xml:space="preserve">
+    <value>Available plans</value>
+  </data>
+  <data name="RequestPlansSelectHint" xml:space="preserve">
+    <value>Select a plan with pending invoices to insert request details.</value>
+  </data>
+  <data name="RequestPlansEmpty" xml:space="preserve">
+    <value>No plans currently require request confirmation.</value>
+  </data>
+  <data name="RequestPlansLoadError" xml:space="preserve">
+    <value>Could not load plans: {0}</value>
   </data>
   <data name="RequestConfirmationStatusEngagementFormat" xml:space="preserve">
     <value>Engagement: {0}</value>
@@ -252,8 +297,8 @@
   <data name="RequestConfirmationStatusRequestedFormat" xml:space="preserve">
     <value>Requested: {0}</value>
   </data>
-  <data name="RequestValidationPlanId" xml:space="preserve">
-    <value>Provide a valid plan id to load.</value>
+  <data name="RequestValidationPlanSelection" xml:space="preserve">
+    <value>Select a plan before inserting request data.</value>
   </data>
   <data name="RequestValidationNotFound" xml:space="preserve">
     <value>Invoice plan {0} was not found.</value>
@@ -312,6 +357,18 @@
   <data name="EmissionConfirmationDescription" xml:space="preserve">
     <value>Capture BZ codes to close requested invoices or cancel lines that must be reissued.</value>
   </data>
+  <data name="EmissionPlansHeader" xml:space="preserve">
+    <value>Plans ready for BZ capture</value>
+  </data>
+  <data name="EmissionPlansSelectHint" xml:space="preserve">
+    <value>Select a plan to confirm emissions or request reissues.</value>
+  </data>
+  <data name="EmissionPlansEmpty" xml:space="preserve">
+    <value>No plans are waiting for BZ confirmation.</value>
+  </data>
+  <data name="EmissionPlansLoadError" xml:space="preserve">
+    <value>Could not load emission plans: {0}</value>
+  </data>
   <data name="EmissionStatusEngagementFormat" xml:space="preserve">
     <value>Engagement: {0}</value>
   </data>
@@ -324,9 +381,6 @@
   <data name="EmissionStatusCanceledFormat" xml:space="preserve">
     <value>Canceled: {0}</value>
   </data>
-  <data name="EmissionValidationPlanId" xml:space="preserve">
-    <value>Provide a valid plan id to load.</value>
-  </data>
   <data name="EmissionValidationNotFound" xml:space="preserve">
     <value>Invoice plan {0} was not found.</value>
   </data>
@@ -338,6 +392,9 @@
   </data>
   <data name="EmissionValidationPlanRequired" xml:space="preserve">
     <value>Load a plan before closing invoices.</value>
+  </data>
+  <data name="EmissionValidationPlanSelection" xml:space="preserve">
+    <value>Select a plan before inserting BZ data.</value>
   </data>
   <data name="EmissionValidationEmissionDate" xml:space="preserve">
     <value>Provide an emission date before closing the invoice.</value>

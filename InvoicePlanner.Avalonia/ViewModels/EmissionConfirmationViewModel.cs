@@ -1,10 +1,11 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Globalization;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using InvoicePlanner.Avalonia.Messages;
 using InvoicePlanner.Avalonia.Resources;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
@@ -17,23 +18,34 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
 {
     private readonly IInvoicePlanRepository _repository;
     private readonly ILogger<EmissionConfirmationViewModel> _logger;
+    private readonly IMessenger _messenger;
+    private readonly RelayCommand _loadPlanCommand;
 
     public EmissionConfirmationViewModel(
         IInvoicePlanRepository repository,
-        ILogger<EmissionConfirmationViewModel> logger)
+        ILogger<EmissionConfirmationViewModel> logger,
+        IMessenger messenger)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _messenger = messenger ?? throw new ArgumentNullException(nameof(messenger));
 
         Lines.CollectionChanged += OnLinesCollectionChanged;
+        AvailablePlans.CollectionChanged += OnAvailablePlansChanged;
 
-        LoadPlanCommand = new RelayCommand(LoadPlan);
+        _loadPlanCommand = new RelayCommand(LoadSelectedPlan, () => SelectedPlan is not null);
+
+        _messenger.Register<ConnectionSettingsImportedMessage>(this, (_, _) => LoadAvailablePlans());
+
+        LoadAvailablePlans();
     }
 
     public ObservableCollection<EmissionConfirmationLineViewModel> Lines { get; } = new();
 
+    public ObservableCollection<InvoicePlanSummaryViewModel> AvailablePlans { get; } = new();
+
     [ObservableProperty]
-    private string planIdText = string.Empty;
+    private InvoicePlanSummaryViewModel? selectedPlan;
 
     [ObservableProperty]
     private int currentPlanId;
@@ -56,22 +68,26 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
     [ObservableProperty]
     private int canceledCount;
 
+    [ObservableProperty]
+    private string? planSelectionMessage;
+
     public bool HasLines => Lines.Count > 0;
 
     public bool HasValidationMessage => !string.IsNullOrWhiteSpace(ValidationMessage);
 
     public bool HasStatusMessage => !string.IsNullOrWhiteSpace(StatusMessage);
 
-    public IRelayCommand LoadPlanCommand { get; }
+    public bool HasAvailablePlans => AvailablePlans.Count > 0;
 
-    partial void OnValidationMessageChanged(string? value)
-    {
-        OnPropertyChanged(nameof(HasValidationMessage));
-    }
+    public IRelayCommand LoadPlanCommand => _loadPlanCommand;
 
-    partial void OnStatusMessageChanged(string? value)
+    partial void OnValidationMessageChanged(string? value) => OnPropertyChanged(nameof(HasValidationMessage));
+
+    partial void OnStatusMessageChanged(string? value) => OnPropertyChanged(nameof(HasStatusMessage));
+
+    partial void OnSelectedPlanChanged(InvoicePlanSummaryViewModel? value)
     {
-        OnPropertyChanged(nameof(HasStatusMessage));
+        _loadPlanCommand.NotifyCanExecuteChanged();
     }
 
     private void OnLinesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -96,22 +112,26 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         RefreshSummaries();
     }
 
-    private void LoadPlan()
+    private void OnAvailablePlansChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        ResetMessages();
+        OnPropertyChanged(nameof(HasAvailablePlans));
+    }
 
-        if (!TryResolvePlanId(out var planId))
+    private void LoadSelectedPlan()
+    {
+        if (SelectedPlan is null)
         {
-            ValidationMessage = "Provide a valid plan id to load.";
+            ValidationMessage = Strings.Get("EmissionValidationPlanSelection");
             return;
         }
 
-        LoadPlanById(planId, suppressStatusMessage: false);
+        LoadPlanById(SelectedPlan.Id, suppressStatusMessage: false);
     }
 
     private void LoadPlanById(int planId, bool suppressStatusMessage)
     {
         ValidationMessage = null;
+        ResetMessages();
 
         try
         {
@@ -126,7 +146,6 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
             }
 
             CurrentPlanId = plan.Id;
-            PlanIdText = plan.Id.ToString(CultureInfo.InvariantCulture);
             EngagementId = plan.EngagementId;
 
             ClearLines();
@@ -151,6 +170,15 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
                 };
 
                 Lines.Add(line);
+            }
+
+            if (SelectedPlan is not null && SelectedPlan.Id == plan.Id)
+            {
+                SelectedPlan.UpdateCounts(
+                    plan.Items.Count(item => item.Status == InvoiceItemStatus.Planned),
+                    plan.Items.Count(item => item.Status == InvoiceItemStatus.Requested),
+                    plan.Items.Count(item => item.Status == InvoiceItemStatus.Closed),
+                    plan.Items.Count(item => item.Status == InvoiceItemStatus.Canceled));
             }
 
             RefreshSummaries();
@@ -282,6 +310,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         RequestedCount = Lines.Count(line => line.Status == InvoiceItemStatus.Requested);
         ClosedCount = Lines.Count(line => line.Status == InvoiceItemStatus.Closed);
         CanceledCount = Lines.Count(line => line.Status == InvoiceItemStatus.Canceled);
+        UpdateSelectedPlanSummaryCounts();
     }
 
     private void ResetMessages()
@@ -302,29 +331,44 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasLines));
     }
 
-    private bool TryResolvePlanId(out int planId)
+    private void LoadAvailablePlans()
     {
-        if (!string.IsNullOrWhiteSpace(PlanIdText))
-        {
-            var trimmed = PlanIdText.Trim();
+        var previouslySelectedId = SelectedPlan?.Id;
 
-            if (int.TryParse(trimmed, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) && parsed > 0)
+        try
+        {
+            var plans = _repository.ListPlansForEmissionStage();
+
+            AvailablePlans.Clear();
+
+            foreach (var summary in plans)
             {
-                planId = parsed;
-                return true;
+                AvailablePlans.Add(InvoicePlanSummaryViewModel.FromSummary(summary));
             }
 
-            planId = 0;
-            return false;
-        }
+            PlanSelectionMessage = plans.Count == 0
+                ? Strings.Get("EmissionPlansEmpty")
+                : Strings.Get("EmissionPlansSelectHint");
 
-        if (CurrentPlanId > 0)
+            SelectedPlan = AvailablePlans.FirstOrDefault(plan => plan.Id == previouslySelectedId);
+        }
+        catch (Exception ex)
         {
-            planId = CurrentPlanId;
-            return true;
+            _logger.LogError(ex, "Failed to load available plans for emission confirmation.");
+            AvailablePlans.Clear();
+            SelectedPlan = null;
+            PlanSelectionMessage = Strings.Format("EmissionPlansLoadError", ex.Message);
+        }
+    }
+
+    private void UpdateSelectedPlanSummaryCounts()
+    {
+        if (SelectedPlan is null || SelectedPlan.Id != CurrentPlanId)
+        {
+            return;
         }
 
-        planId = 0;
-        return false;
+        var planned = SelectedPlan.PlannedItemCount;
+        SelectedPlan.UpdateCounts(planned, RequestedCount, ClosedCount, CanceledCount);
     }
 }
