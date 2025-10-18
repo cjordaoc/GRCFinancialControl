@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Persistence.Services.Interfaces;
+using InvoicePlanner.Avalonia.Messages;
 using InvoicePlanner.Avalonia.Resources;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
@@ -16,9 +18,12 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
     private readonly IConnectionPackageService _connectionPackageService;
     private readonly ISettingsService _settingsService;
     private readonly IDatabaseSchemaInitializer _schemaInitializer;
+    private readonly IMessenger _messenger;
 
     [ObservableProperty]
     private string? selectedPackagePath;
+
+    public bool HasSelectedFile => !string.IsNullOrWhiteSpace(SelectedPackagePath);
 
     [ObservableProperty]
     private string? passphrase;
@@ -29,16 +34,20 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool isImporting;
 
+    public bool HasStatusMessage => !string.IsNullOrWhiteSpace(StatusMessage);
+
     public ConnectionSettingsViewModel(
         IFilePickerService filePickerService,
         IConnectionPackageService connectionPackageService,
         ISettingsService settingsService,
-        IDatabaseSchemaInitializer schemaInitializer)
+        IDatabaseSchemaInitializer schemaInitializer,
+        IMessenger messenger)
     {
         _filePickerService = filePickerService ?? throw new ArgumentNullException(nameof(filePickerService));
         _connectionPackageService = connectionPackageService ?? throw new ArgumentNullException(nameof(connectionPackageService));
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         _schemaInitializer = schemaInitializer ?? throw new ArgumentNullException(nameof(schemaInitializer));
+        _messenger = messenger ?? throw new ArgumentNullException(nameof(messenger));
 
         BrowseCommand = new AsyncRelayCommand(BrowseAsync);
         ImportCommand = new AsyncRelayCommand(ImportAsync, CanImport);
@@ -90,10 +99,11 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
             StatusMessage = Strings.Get("ConnectionImportInProgress");
 
             var importedSettings = await _connectionPackageService.ImportAsync(SelectedPackagePath, Passphrase);
-            await _settingsService.SaveAllAsync(new Dictionary<string, string>(importedSettings));
-            await _schemaInitializer.EnsureSchemaAsync();
+            await _settingsService.SaveAllAsync(new Dictionary<string, string>(importedSettings)).ConfigureAwait(false);
+            await _schemaInitializer.EnsureSchemaAsync().ConfigureAwait(false);
 
             StatusMessage = Strings.Get("ConnectionImportSuccess");
+            _messenger.Send(ConnectionSettingsImportedMessage.Instance);
         }
         catch (InvalidOperationException ex)
         {
@@ -113,6 +123,7 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
 
     partial void OnSelectedPackagePathChanged(string? value)
     {
+        OnPropertyChanged(nameof(HasSelectedFile));
         OnPropertyChanged(nameof(SelectedFileName));
         ImportCommand.NotifyCanExecuteChanged();
     }
@@ -126,4 +137,10 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
     {
         ImportCommand.NotifyCanExecuteChanged();
     }
+
+    partial void OnStatusMessageChanged(string? value)
+    {
+        OnPropertyChanged(nameof(HasStatusMessage));
+    }
+
 }

@@ -6,10 +6,9 @@
         x:Class="InvoicePlanner.Avalonia.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         mc:Ignorable="d"
-        Width="1000"
-        Height="720"
         MinWidth="960"
         MinHeight="640"
+        WindowState="Maximized"
         Title="{Binding Title}">
     <Grid ColumnDefinitions="240,*" Margin="16">
         <Grid.Styles>

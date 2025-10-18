@@ -44,9 +44,9 @@ public partial class PlanEditorViewModel : ViewModelBase
 
         // Seed with default values so the editor presents a useful layout.
         PlanType = InvoicePlanType.ByDate;
-        PlanningBaseValue = 10000m;
-        NumInvoices = 3;
-        PaymentTermDays = 30;
+        PlanningBaseValue = 0m;
+        NumInvoices = 1;
+        PaymentTermDays = 0;
         FirstEmissionDate = DateTime.Today;
         CustomerFocalPointName = string.Empty;
         CustomerFocalPointEmail = string.Empty;
@@ -67,10 +67,10 @@ public partial class PlanEditorViewModel : ViewModelBase
     private int planId;
 
     [ObservableProperty]
-    private string engagementId = "ENG-001";
+    private string engagementId = string.Empty;
 
     [ObservableProperty]
-    private string engagementName = "Sample Engagement";
+    private string engagementName = string.Empty;
 
     [ObservableProperty]
     private InvoicePlanType planType;

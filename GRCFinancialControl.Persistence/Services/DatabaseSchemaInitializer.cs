@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using GRCFinancialControl.Core.Configuration;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
 namespace GRCFinancialControl.Persistence.Services
 {
@@ -30,45 +33,119 @@ namespace GRCFinancialControl.Persistence.Services
         };
 
         private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
+        private readonly ISettingsService _settingsService;
 
-        public DatabaseSchemaInitializer(IDbContextFactory<ApplicationDbContext> contextFactory)
+        public DatabaseSchemaInitializer(
+            IDbContextFactory<ApplicationDbContext> contextFactory,
+            ISettingsService settingsService)
         {
             ArgumentNullException.ThrowIfNull(contextFactory);
+            ArgumentNullException.ThrowIfNull(settingsService);
 
             _contextFactory = contextFactory;
+            _settingsService = settingsService;
         }
 
         public async Task EnsureSchemaAsync()
         {
-            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
-            ArgumentNullException.ThrowIfNull(context);
-            await context.Database.EnsureCreatedAsync().ConfigureAwait(false);
+            await ExecuteWithContextAsync(context => context.Database.EnsureCreatedAsync()).ConfigureAwait(false);
         }
 
         public async Task ClearAllDataAsync()
         {
-            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
-            ArgumentNullException.ThrowIfNull(context);
-            await using var transaction = await context.Database.BeginTransactionAsync().ConfigureAwait(false);
+            await ExecuteWithContextAsync(async context =>
+            {
+                await using var transaction = await context.Database.BeginTransactionAsync().ConfigureAwait(false);
 
-            await context.Database.ExecuteSqlRawAsync(DisableForeignKeyChecksSql).ConfigureAwait(false);
+                await context.Database.ExecuteSqlRawAsync(DisableForeignKeyChecksSql).ConfigureAwait(false);
+
+                try
+                {
+                    foreach (var statement in DeleteStatements)
+                    {
+                        await context.Database.ExecuteSqlRawAsync(statement).ConfigureAwait(false);
+                    }
+
+                    await context.Database.ExecuteSqlRawAsync(EnableForeignKeyChecksSql).ConfigureAwait(false);
+                    await transaction.CommitAsync().ConfigureAwait(false);
+                }
+                catch
+                {
+                    await transaction.RollbackAsync().ConfigureAwait(false);
+                    await context.Database.ExecuteSqlRawAsync(EnableForeignKeyChecksSql).ConfigureAwait(false);
+                    throw;
+                }
+            }).ConfigureAwait(false);
+        }
+
+        private async Task ExecuteWithContextAsync(Func<ApplicationDbContext, Task> action)
+        {
+            ArgumentNullException.ThrowIfNull(action);
 
             try
             {
-                foreach (var statement in DeleteStatements)
-                {
-                    await context.Database.ExecuteSqlRawAsync(statement).ConfigureAwait(false);
-                }
-
-                await context.Database.ExecuteSqlRawAsync(EnableForeignKeyChecksSql).ConfigureAwait(false);
-                await transaction.CommitAsync().ConfigureAwait(false);
+                await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+                ArgumentNullException.ThrowIfNull(context);
+                await action(context).ConfigureAwait(false);
             }
-            catch
+            catch (InvalidOperationException ex) when (IsProviderMissing(ex))
             {
-                await transaction.RollbackAsync().ConfigureAwait(false);
-                await context.Database.ExecuteSqlRawAsync(EnableForeignKeyChecksSql).ConfigureAwait(false);
-                throw;
+                await using var context = await CreateContextFromSettingsAsync().ConfigureAwait(false);
+                await action(context).ConfigureAwait(false);
             }
+        }
+
+        private async Task<ApplicationDbContext> CreateContextFromSettingsAsync()
+        {
+            var settings = await _settingsService.GetAllAsync().ConfigureAwait(false);
+
+            if (!TryBuildConnectionString(settings, out var connectionString))
+            {
+                throw new InvalidOperationException("Connection settings are incomplete. Import the connection package again.");
+            }
+
+            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
+            optionsBuilder.UseMySql(
+                connectionString,
+                new MySqlServerVersion(new Version(8, 0, 29)),
+                options => options.EnableRetryOnFailure());
+
+            return new ApplicationDbContext(optionsBuilder.Options);
+        }
+
+        private static bool TryBuildConnectionString(
+            IReadOnlyDictionary<string, string> settings,
+            out string connectionString)
+        {
+            connectionString = string.Empty;
+
+            if (!settings.TryGetValue(SettingKeys.Server, out var server) || string.IsNullOrWhiteSpace(server))
+            {
+                return false;
+            }
+
+            if (!settings.TryGetValue(SettingKeys.Database, out var database) || string.IsNullOrWhiteSpace(database))
+            {
+                return false;
+            }
+
+            if (!settings.TryGetValue(SettingKeys.User, out var user) || string.IsNullOrWhiteSpace(user))
+            {
+                return false;
+            }
+
+            if (!settings.TryGetValue(SettingKeys.Password, out var password) || string.IsNullOrWhiteSpace(password))
+            {
+                return false;
+            }
+
+            connectionString = $"Server={server};Database={database};User ID={user};Password={password};";
+            return true;
+        }
+
+        private static bool IsProviderMissing(InvalidOperationException exception)
+        {
+            return exception.Message.Contains("No database provider has been configured", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

@@ -9,15 +9,58 @@
              x:DataType="vm:ConnectionSettingsViewModel"
              d:DesignWidth="800"
              d:DesignHeight="450">
-    <StackPanel Spacing="12" Margin="20">
-        <TextBlock Text="{loc:Loc Key=ConnectionSetupTitle}" FontSize="24" FontWeight="SemiBold"/>
-        <TextBlock Text="{loc:Loc Key=ConnectionSetupDescription}" TextWrapping="Wrap"/>
-        <StackPanel Orientation="Horizontal" Spacing="8">
-            <TextBox Text="{Binding SelectedPackagePath}" Width="420" Watermark="{loc:Loc Key=ConnectionSetupPackagePlaceholder}" IsReadOnly="True"/>
-            <Button Content="{loc:Loc Key=ConnectionBrowseButton}" Command="{Binding BrowseCommand}" Width="120"/>
+    <ScrollViewer>
+        <StackPanel Margin="24" Spacing="16">
+            <Border Classes="Card" Padding="24">
+                <StackPanel Spacing="18">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="{loc:Loc Key=ConnectionSetupTitle}" FontSize="24" FontWeight="SemiBold"/>
+                        <TextBlock Text="{loc:Loc Key=ConnectionSetupDescription}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <Grid ColumnDefinitions="Auto,16,*" RowDefinitions="Auto,Auto">
+                        <TextBlock Grid.Row="0"
+                                   Text="{loc:Loc Key=ConnectionPackageLabel}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,8,0"/>
+                        <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                            <TextBox Width="320"
+                                     Text="{Binding SelectedPackagePath}"
+                                     Watermark="{loc:Loc Key=ConnectionSetupPackagePlaceholder}"
+                                     IsReadOnly="True"/>
+                            <Button Content="{loc:Loc Key=ConnectionBrowseButton}"
+                                    Command="{Binding BrowseCommand}"
+                                    MinWidth="120"/>
+                        </StackPanel>
+                        <TextBlock Grid.Row="1"
+                                   Text="{loc:Loc Key=ConnectionPassphraseLabel}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,8,8,0"/>
+                        <TextBox Grid.Row="1"
+                                 Grid.Column="2"
+                                 Margin="0,8,0,0"
+                                 Text="{Binding Passphrase}"
+                                 Watermark="{loc:Loc Key=ConnectionPassphrasePlaceholder}"
+                                 PasswordChar="*"
+                                 MinWidth="240"/>
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Button Content="{loc:Loc Key=ConnectionImportButton}"
+                                Command="{Binding ImportCommand}"
+                                MinWidth="160"/>
+                        <TextBlock Text="{Binding SelectedFileName}"
+                                   VerticalAlignment="Center"
+                                   Opacity="0.7"
+                                   IsVisible="{Binding HasSelectedFile}"/>
+                    </StackPanel>
+                    <Border Background="{StaticResource BrushSurfaceVariant}"
+                            CornerRadius="6"
+                            Padding="12"
+                            IsVisible="{Binding HasStatusMessage}">
+                        <TextBlock Text="{Binding StatusMessage}"
+                                   TextWrapping="Wrap"/>
+                    </Border>
+                </StackPanel>
+            </Border>
         </StackPanel>
-        <TextBox Text="{Binding Passphrase}" Watermark="{loc:Loc Key=ConnectionPassphrasePlaceholder}" PasswordChar="*" Width="300"/>
-        <Button Content="{loc:Loc Key=ConnectionImportButton}" Command="{Binding ImportCommand}" Width="200"/>
-        <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" Foreground="{DynamicResource ThemeForegroundBrush}"/>
-    </StackPanel>
+    </ScrollViewer>
 </UserControl>
