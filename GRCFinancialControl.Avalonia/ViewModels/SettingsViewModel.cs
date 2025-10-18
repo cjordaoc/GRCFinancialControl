@@ -48,6 +48,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private string _importPassphrase = string.Empty;
 
+        [ObservableProperty]
+        private string? _selectedImportPackagePath;
+
+        [ObservableProperty]
+        private string _selectedImportPackageFileName = string.Empty;
+
         public SettingsViewModel(
             ISettingsService settingsService,
             IDatabaseSchemaInitializer schemaInitializer,
