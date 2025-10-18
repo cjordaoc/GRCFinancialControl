@@ -93,31 +93,63 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
             return;
         }
 
+        var previousSettings = await _settingsService.GetAllAsync();
+        var newSettingsPersisted = false;
+
         try
         {
             IsImporting = true;
             StatusMessage = Strings.Get("ConnectionImportInProgress");
 
             var importedSettings = await _connectionPackageService.ImportAsync(SelectedPackagePath, Passphrase);
-            await _settingsService.SaveAllAsync(new Dictionary<string, string>(importedSettings)).ConfigureAwait(false);
-            await _schemaInitializer.EnsureSchemaAsync().ConfigureAwait(false);
+            await _settingsService.SaveAllAsync(new Dictionary<string, string>(importedSettings));
+            newSettingsPersisted = true;
+
+            await _schemaInitializer.EnsureSchemaAsync();
 
             StatusMessage = Strings.Get("ConnectionImportSuccess");
             _messenger.Send(ConnectionSettingsImportedMessage.Instance);
         }
         catch (InvalidOperationException ex)
         {
-            StatusMessage = ex.Message;
+            var restoreMessage = await TryRestorePreviousSettingsAsync(previousSettings, newSettingsPersisted);
+            StatusMessage = string.IsNullOrWhiteSpace(restoreMessage)
+                ? ex.Message
+                : string.Concat(ex.Message, " ", restoreMessage);
         }
         catch (Exception ex)
         {
-            StatusMessage = string.Format(Strings.Get("ConnectionImportFailure"), ex.Message);
+            var restoreMessage = await TryRestorePreviousSettingsAsync(previousSettings, newSettingsPersisted);
+            var failureMessage = string.Format(Strings.Get("ConnectionImportFailure"), ex.Message);
+            StatusMessage = string.IsNullOrWhiteSpace(restoreMessage)
+                ? failureMessage
+                : string.Concat(failureMessage, " ", restoreMessage);
         }
         finally
         {
             IsImporting = false;
             Passphrase = string.Empty;
             ImportCommand.NotifyCanExecuteChanged();
+        }
+    }
+
+    private async Task<string?> TryRestorePreviousSettingsAsync(
+        IReadOnlyDictionary<string, string> previousSettings,
+        bool shouldRestore)
+    {
+        if (!shouldRestore)
+        {
+            return null;
+        }
+
+        try
+        {
+            await _settingsService.SaveAllAsync(new Dictionary<string, string>(previousSettings));
+            return null;
+        }
+        catch (Exception ex)
+        {
+            return string.Format(Strings.Get("ConnectionImportRestoreFailed"), ex.Message);
         }
     }
 
