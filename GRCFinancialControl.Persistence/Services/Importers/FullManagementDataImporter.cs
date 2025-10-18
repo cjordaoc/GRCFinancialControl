@@ -182,243 +182,257 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     Array.Empty<string>());
             }
 
-            await using var context = await _contextFactory.CreateDbContextAsync();
-            await using var transaction = await context.Database.BeginTransactionAsync();
+            await using var strategyContext = await _contextFactory.CreateDbContextAsync();
+            var strategy = strategyContext.Database.CreateExecutionStrategy();
 
-            var engagementIds = parsedRows.Select(r => r.EngagementId).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-            var closingPeriodNames = parsedRows
-                .Select(r => r.ClosingPeriodName)
-                .Where(name => !string.IsNullOrWhiteSpace(name))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            var engagements = await context.Engagements
-                .Include(e => e.FinancialEvolutions)
-                .Where(e => engagementIds.Contains(e.EngagementId))
-                .ToListAsync();
-
-            var engagementLookup = engagements.ToDictionary(e => e.EngagementId, StringComparer.OrdinalIgnoreCase);
-
-            var closingPeriods = await context.ClosingPeriods
-                .Include(cp => cp.FiscalYear)
-                .Where(cp => closingPeriodNames.Contains(cp.Name))
-                .ToListAsync();
-
-            var closingPeriodLookup = closingPeriods.ToDictionary(cp => cp.Name, StringComparer.OrdinalIgnoreCase);
-
-            var createdEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var updatedEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var manualOnlySkips = new List<string>();
-            var lockedFiscalYearSkips = new List<string>();
-            var missingClosingPeriodSkips = new List<string>();
-            var errors = new List<string>();
-
-            var financialEvolutionUpserts = 0;
-
-            foreach (var row in parsedRows)
+            return await strategy.ExecuteAsync(async () =>
             {
+                await using var context = await _contextFactory.CreateDbContextAsync();
+                await using var transaction = await context.Database.BeginTransactionAsync();
+
                 try
                 {
-                    if (!closingPeriodLookup.TryGetValue(row.ClosingPeriodName, out var closingPeriod))
-                    {
-                        var missingLabel = string.IsNullOrWhiteSpace(row.ClosingPeriodName)
-                            ? "<blank>"
-                            : row.ClosingPeriodName;
-                        missingClosingPeriodSkips.Add($"{missingLabel} (row {row.RowNumber})");
-                        _logger.LogWarning(
-                            "Skipping row {RowNumber} for engagement {EngagementId} because closing period '{ClosingPeriod}' was not found.",
-                            row.RowNumber,
-                            row.EngagementId,
-                            row.ClosingPeriodName);
-                        continue;
-                    }
+                    var engagementIds = parsedRows.Select(r => r.EngagementId).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+                    var closingPeriodNames = parsedRows
+                        .Select(r => r.ClosingPeriodName)
+                        .Where(name => !string.IsNullOrWhiteSpace(name))
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .ToList();
 
-                    if (closingPeriod.FiscalYear?.IsLocked ?? false)
-                    {
-                        var fiscalYearName = string.IsNullOrWhiteSpace(closingPeriod.FiscalYear.Name)
-                            ? $"Id={closingPeriod.FiscalYear.Id}"
-                            : closingPeriod.FiscalYear.Name;
-                        lockedFiscalYearSkips.Add($"{row.EngagementId} ({fiscalYearName}, row {row.RowNumber})");
-                        _logger.LogInformation(
-                            "Skipping row {RowNumber} for engagement {EngagementId} because fiscal year '{FiscalYear}' is locked.",
-                            row.RowNumber,
-                            row.EngagementId,
-                            fiscalYearName);
-                        continue;
-                    }
+                    var engagements = await context.Engagements
+                        .Include(e => e.FinancialEvolutions)
+                        .Where(e => engagementIds.Contains(e.EngagementId))
+                        .ToListAsync();
 
-                    if (!engagementLookup.TryGetValue(row.EngagementId, out var engagement))
+                    var engagementLookup = engagements.ToDictionary(e => e.EngagementId, StringComparer.OrdinalIgnoreCase);
+
+                    var closingPeriods = await context.ClosingPeriods
+                        .Include(cp => cp.FiscalYear)
+                        .Where(cp => closingPeriodNames.Contains(cp.Name))
+                        .ToListAsync();
+
+                    var closingPeriodLookup = closingPeriods.ToDictionary(cp => cp.Name, StringComparer.OrdinalIgnoreCase);
+
+                    var createdEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    var updatedEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    var manualOnlySkips = new List<string>();
+                    var lockedFiscalYearSkips = new List<string>();
+                    var missingClosingPeriodSkips = new List<string>();
+                    var errors = new List<string>();
+
+                    var financialEvolutionUpserts = 0;
+
+                    foreach (var row in parsedRows)
                     {
-                        engagement = new Engagement
+                        try
                         {
-                            EngagementId = row.EngagementId,
-                            Description = string.IsNullOrWhiteSpace(row.EngagementName)
-                                ? row.EngagementId
-                                : row.EngagementName,
-                            Status = EngagementStatus.Active,
-                            Source = EngagementSource.GrcProject
-                        };
+                            if (!closingPeriodLookup.TryGetValue(row.ClosingPeriodName, out var closingPeriod))
+                            {
+                                var missingLabel = string.IsNullOrWhiteSpace(row.ClosingPeriodName)
+                                    ? "<blank>"
+                                    : row.ClosingPeriodName;
+                                missingClosingPeriodSkips.Add($"{missingLabel} (row {row.RowNumber})");
+                                _logger.LogWarning(
+                                    "Skipping row {RowNumber} for engagement {EngagementId} because closing period '{ClosingPeriod}' was not found.",
+                                    row.RowNumber,
+                                    row.EngagementId,
+                                    row.ClosingPeriodName);
+                                continue;
+                            }
 
-                        await context.Engagements.AddAsync(engagement);
-                        engagementLookup[row.EngagementId] = engagement;
-                        createdEngagements.Add(row.EngagementId);
-                    }
-                    else
-                    {
-                        if (engagement.Source == EngagementSource.S4Project)
-                        {
-                            manualOnlySkips.Add($"{engagement.EngagementId} (row {row.RowNumber})");
-                            _logger.LogInformation(
-                                "Skipping row {RowNumber} for engagement {EngagementId} because the engagement is sourced from S/4Project and must be managed manually.",
-                                row.RowNumber,
-                                engagement.EngagementId);
-                            continue;
+                            if (closingPeriod.FiscalYear?.IsLocked ?? false)
+                            {
+                                var fiscalYearName = string.IsNullOrWhiteSpace(closingPeriod.FiscalYear.Name)
+                                    ? $"Id={closingPeriod.FiscalYear.Id}"
+                                    : closingPeriod.FiscalYear.Name;
+                                lockedFiscalYearSkips.Add($"{row.EngagementId} ({fiscalYearName}, row {row.RowNumber})");
+                                _logger.LogInformation(
+                                    "Skipping row {RowNumber} for engagement {EngagementId} because fiscal year '{FiscalYear}' is locked.",
+                                    row.RowNumber,
+                                    row.EngagementId,
+                                    fiscalYearName);
+                                continue;
+                            }
+
+                            if (!engagementLookup.TryGetValue(row.EngagementId, out var engagement))
+                            {
+                                engagement = new Engagement
+                                {
+                                    EngagementId = row.EngagementId,
+                                    Description = string.IsNullOrWhiteSpace(row.EngagementName)
+                                        ? row.EngagementId
+                                        : row.EngagementName,
+                                    Status = EngagementStatus.Active,
+                                    Source = EngagementSource.GrcProject
+                                };
+
+                                await context.Engagements.AddAsync(engagement);
+                                engagementLookup[row.EngagementId] = engagement;
+                                createdEngagements.Add(row.EngagementId);
+                            }
+                            else
+                            {
+                                if (engagement.Source == EngagementSource.S4Project)
+                                {
+                                    manualOnlySkips.Add($"{engagement.EngagementId} (row {row.RowNumber})");
+                                    _logger.LogInformation(
+                                        "Skipping row {RowNumber} for engagement {EngagementId} because the engagement is sourced from S/4Project and must be managed manually.",
+                                        row.RowNumber,
+                                        engagement.EngagementId);
+                                    continue;
+                                }
+
+                                updatedEngagements.Add(engagement.EngagementId);
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(row.EngagementName))
+                            {
+                                engagement.Description = row.EngagementName;
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(row.StatusText))
+                            {
+                                engagement.StatusText = row.StatusText;
+                                engagement.Status = ParseStatus(row.StatusText);
+                            }
+
+                            if (row.BudgetHours.HasValue)
+                            {
+                                engagement.InitialHoursBudget = row.BudgetHours.Value;
+                            }
+
+                            if (row.BudgetValue.HasValue)
+                            {
+                                engagement.OpeningValue = row.BudgetValue.Value;
+                            }
+
+                            if (row.BudgetMargin.HasValue)
+                            {
+                                engagement.MarginPctBudget = row.BudgetMargin;
+                            }
+
+                            if (row.BudgetExpenses.HasValue)
+                            {
+                                engagement.OpeningExpenses = row.BudgetExpenses.Value;
+                            }
+
+                            if (row.EstimatedToCompleteHours.HasValue)
+                            {
+                                engagement.EstimatedToCompleteHours = row.EstimatedToCompleteHours.Value;
+                            }
+
+                            if (row.EtcpValue.HasValue)
+                            {
+                                engagement.ValueEtcp = row.EtcpValue.Value;
+                            }
+
+                            if (row.EtcpMargin.HasValue)
+                            {
+                                engagement.MarginPctEtcp = row.EtcpMargin;
+                            }
+
+                            if (row.EtcpExpenses.HasValue)
+                            {
+                                engagement.ExpensesEtcp = row.EtcpExpenses.Value;
+                            }
+
+                            var lastEtcDate = ResolveLastEtcDate(row, closingPeriod);
+                            if (lastEtcDate.HasValue)
+                            {
+                                engagement.LastEtcDate = lastEtcDate;
+                                engagement.ProposedNextEtcDate = CalculateProposedNextEtcDate(lastEtcDate);
+                            }
+                            else if (row.NextEtcDate.HasValue)
+                            {
+                                engagement.ProposedNextEtcDate = DateTime.SpecifyKind(row.NextEtcDate.Value.Date, DateTimeKind.Unspecified);
+                            }
+
+                            engagement.LastClosingPeriodId = closingPeriod.Id;
+                            engagement.LastClosingPeriod = closingPeriod;
+
+                            financialEvolutionUpserts += UpsertFinancialEvolution(
+                                context,
+                                engagement,
+                                FinancialEvolutionInitialPeriodId,
+                                row.BudgetHours,
+                                row.BudgetValue,
+                                row.BudgetMargin,
+                                row.BudgetExpenses);
+
+                            financialEvolutionUpserts += UpsertFinancialEvolution(
+                                context,
+                                engagement,
+                                closingPeriod.Name,
+                                row.EstimatedToCompleteHours,
+                                row.EtcpValue,
+                                row.EtcpMargin,
+                                row.EtcpExpenses);
                         }
-
-                        updatedEngagements.Add(engagement.EngagementId);
+                        catch (Exception ex)
+                        {
+                            var errorMessage = $"Row {row.RowNumber}: {ex.Message}";
+                            errors.Add(errorMessage);
+                            _logger.LogError(ex, "Error processing Full Management Data row {RowNumber} for engagement {EngagementId}.", row.RowNumber, row.EngagementId);
+                        }
                     }
 
-                    if (!string.IsNullOrWhiteSpace(row.EngagementName))
+                    await context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>();
+
+                    if (manualOnlySkips.Count > 0)
                     {
-                        engagement.Description = row.EngagementName;
+                        skipReasons["ManualOnly"] = manualOnlySkips;
                     }
 
-                    if (!string.IsNullOrWhiteSpace(row.StatusText))
+                    if (lockedFiscalYearSkips.Count > 0)
                     {
-                        engagement.StatusText = row.StatusText;
-                        engagement.Status = ParseStatus(row.StatusText);
+                        skipReasons["LockedFiscalYear"] = lockedFiscalYearSkips;
                     }
 
-                    if (row.BudgetHours.HasValue)
+                    if (missingClosingPeriodSkips.Count > 0)
                     {
-                        engagement.InitialHoursBudget = row.BudgetHours.Value;
+                        skipReasons["MissingClosingPeriod"] = missingClosingPeriodSkips;
                     }
 
-                    if (row.BudgetValue.HasValue)
+                    if (errors.Count > 0)
                     {
-                        engagement.OpeningValue = row.BudgetValue.Value;
+                        skipReasons["Error"] = errors;
                     }
 
-                    if (row.BudgetMargin.HasValue)
+                    var notes = new List<string>
                     {
-                        engagement.MarginPctBudget = row.BudgetMargin;
-                    }
+                        $"Financial evolution entries upserted: {financialEvolutionUpserts}",
+                        $"Distinct engagements touched: {createdEngagements.Count + updatedEngagements.Count}"
+                    };
 
-                    if (row.BudgetExpenses.HasValue)
-                    {
-                        engagement.OpeningExpenses = row.BudgetExpenses.Value;
-                    }
+                    var summary = ImportSummaryFormatter.Build(
+                        "Full Management Data import",
+                        createdEngagements.Count,
+                        updatedEngagements.Count,
+                        skipReasons,
+                        notes,
+                        parsedRows.Count);
+                    _logger.LogInformation(summary);
 
-                    if (row.EstimatedToCompleteHours.HasValue)
-                    {
-                        engagement.EstimatedToCompleteHours = row.EstimatedToCompleteHours.Value;
-                    }
-
-                    if (row.EtcpValue.HasValue)
-                    {
-                        engagement.ValueEtcp = row.EtcpValue.Value;
-                    }
-
-                    if (row.EtcpMargin.HasValue)
-                    {
-                        engagement.MarginPctEtcp = row.EtcpMargin;
-                    }
-
-                    if (row.EtcpExpenses.HasValue)
-                    {
-                        engagement.ExpensesEtcp = row.EtcpExpenses.Value;
-                    }
-
-                    var lastEtcDate = ResolveLastEtcDate(row, closingPeriod);
-                    if (lastEtcDate.HasValue)
-                    {
-                        engagement.LastEtcDate = lastEtcDate;
-                        engagement.ProposedNextEtcDate = CalculateProposedNextEtcDate(lastEtcDate);
-                    }
-                    else if (row.NextEtcDate.HasValue)
-                    {
-                        engagement.ProposedNextEtcDate = DateTime.SpecifyKind(row.NextEtcDate.Value.Date, DateTimeKind.Unspecified);
-                    }
-
-                    engagement.LastClosingPeriodId = closingPeriod.Id;
-                    engagement.LastClosingPeriod = closingPeriod;
-
-                    financialEvolutionUpserts += UpsertFinancialEvolution(
-                        context,
-                        engagement,
-                        FinancialEvolutionInitialPeriodId,
-                        row.BudgetHours,
-                        row.BudgetValue,
-                        row.BudgetMargin,
-                        row.BudgetExpenses);
-
-                    financialEvolutionUpserts += UpsertFinancialEvolution(
-                        context,
-                        engagement,
-                        closingPeriod.Name,
-                        row.EstimatedToCompleteHours,
-                        row.EtcpValue,
-                        row.EtcpMargin,
-                        row.EtcpExpenses);
+                    return new FullManagementDataImportResult(
+                        summary,
+                        parsedRows.Count,
+                        createdEngagements.Count,
+                        updatedEngagements.Count,
+                        financialEvolutionUpserts,
+                        manualOnlySkips.ToArray(),
+                        lockedFiscalYearSkips.ToArray(),
+                        missingClosingPeriodSkips.ToArray(),
+                        errors.ToArray());
                 }
-                catch (Exception ex)
+                catch
                 {
-                    var errorMessage = $"Row {row.RowNumber}: {ex.Message}";
-                    errors.Add(errorMessage);
-                    _logger.LogError(ex, "Error processing Full Management Data row {RowNumber} for engagement {EngagementId}.", row.RowNumber, row.EngagementId);
+                    await transaction.RollbackAsync();
+                    throw;
                 }
-            }
-
-            await context.SaveChangesAsync();
-            await transaction.CommitAsync();
-
-            var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>();
-
-            if (manualOnlySkips.Count > 0)
-            {
-                skipReasons["ManualOnly"] = manualOnlySkips;
-            }
-
-            if (lockedFiscalYearSkips.Count > 0)
-            {
-                skipReasons["LockedFiscalYear"] = lockedFiscalYearSkips;
-            }
-
-            if (missingClosingPeriodSkips.Count > 0)
-            {
-                skipReasons["MissingClosingPeriod"] = missingClosingPeriodSkips;
-            }
-
-            if (errors.Count > 0)
-            {
-                skipReasons["Error"] = errors;
-            }
-
-            var notes = new List<string>
-            {
-                $"Financial evolution entries upserted: {financialEvolutionUpserts}",
-                $"Distinct engagements touched: {createdEngagements.Count + updatedEngagements.Count}"
-            };
-
-            var summary = ImportSummaryFormatter.Build(
-                "Full Management Data import",
-                createdEngagements.Count,
-                updatedEngagements.Count,
-                skipReasons,
-                notes,
-                parsedRows.Count);
-            _logger.LogInformation(summary);
-
-            return new FullManagementDataImportResult(
-                summary,
-                parsedRows.Count,
-                createdEngagements.Count,
-                updatedEngagements.Count,
-                financialEvolutionUpserts,
-                manualOnlySkips.ToArray(),
-                lockedFiscalYearSkips.ToArray(),
-                missingClosingPeriodSkips.ToArray(),
-                errors.ToArray());
+            });
         }
 
         private static DataTable? ResolveWorksheet(DataSet dataSet)
@@ -428,21 +442,17 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                 return null;
             }
 
-            foreach (DataTable table in dataSet.Tables)
-            {
-                var normalizedName = NormalizeWhitespace(table.TableName).ToLowerInvariant();
-                if (normalizedName.Contains("management") || normalizedName.Contains("full"))
-                {
-                    return table;
-                }
-            }
-
             return dataSet.Tables[0];
         }
 
         private static List<FullManagementDataRow> ParseRows(DataTable worksheet)
         {
-            var headerMap = BuildHeaderMap(worksheet);
+            var (headerMap, headerRowIndex) = BuildHeaderMap(worksheet);
+
+            if (headerRowIndex < 0)
+            {
+                throw new InvalidDataException("Unable to locate the header row in the Full Management Data worksheet. Ensure the first sheet is selected and any filters are cleared before importing.");
+            }
 
             var engagementIdIndex = GetRequiredColumnIndex(headerMap, EngagementIdHeaders, "Engagement ID");
             var closingPeriodIndex = GetRequiredColumnIndex(headerMap, ClosingPeriodHeaders, "Closing Period");
@@ -462,7 +472,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
             var rows = new List<FullManagementDataRow>();
 
-            for (var rowIndex = 1; rowIndex < worksheet.Rows.Count; rowIndex++)
+            for (var rowIndex = headerRowIndex + 1; rowIndex < worksheet.Rows.Count; rowIndex++)
             {
                 var row = worksheet.Rows[rowIndex];
                 var rowNumber = rowIndex + 1; // Excel rows are 1-based
@@ -508,22 +518,48 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             return rows;
         }
 
-        private static Dictionary<int, string> BuildHeaderMap(DataTable table)
+        private static (Dictionary<int, string> Map, int HeaderRowIndex) BuildHeaderMap(DataTable table)
         {
-            var map = new Dictionary<int, string>();
-            if (table.Rows.Count == 0)
+            Dictionary<int, string>? fallbackMap = null;
+            var fallbackIndex = -1;
+
+            for (var rowIndex = 0; rowIndex < table.Rows.Count; rowIndex++)
             {
-                return map;
+                var row = table.Rows[rowIndex];
+                var currentMap = new Dictionary<int, string>();
+                var hasContent = false;
+
+                for (var columnIndex = 0; columnIndex < table.Columns.Count; columnIndex++)
+                {
+                    var headerText = NormalizeWhitespace(Convert.ToString(row[columnIndex], CultureInfo.InvariantCulture));
+                    if (!string.IsNullOrEmpty(headerText))
+                    {
+                        hasContent = true;
+                    }
+
+                    currentMap[columnIndex] = headerText.ToLowerInvariant();
+                }
+
+                if (!hasContent)
+                {
+                    continue;
+                }
+
+                if (ContainsAnyHeader(currentMap, EngagementIdHeaders) && ContainsAnyHeader(currentMap, ClosingPeriodHeaders))
+                {
+                    return (currentMap, rowIndex);
+                }
+
+                fallbackMap ??= currentMap;
+                if (fallbackIndex < 0)
+                {
+                    fallbackIndex = rowIndex;
+                }
             }
 
-            var headerRow = table.Rows[0];
-            for (var columnIndex = 0; columnIndex < table.Columns.Count; columnIndex++)
-            {
-                var headerText = NormalizeWhitespace(Convert.ToString(headerRow[columnIndex], CultureInfo.InvariantCulture));
-                map[columnIndex] = headerText.ToLowerInvariant();
-            }
-
-            return map;
+            return fallbackMap != null
+                ? (fallbackMap, fallbackIndex)
+                : (new Dictionary<int, string>(), -1);
         }
 
         private static int GetRequiredColumnIndex(Dictionary<int, string> headerMap, string[] candidates, string friendlyName)
@@ -531,7 +567,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             var index = GetOptionalColumnIndex(headerMap, candidates);
             if (!index.HasValue)
             {
-                throw new InvalidDataException($"The Full Management Data worksheet is missing required column '{friendlyName}'.");
+                throw new InvalidDataException($"The Full Management Data worksheet is missing required column '{friendlyName}'. Ensure the first sheet is selected and filters are cleared before importing.");
             }
 
             return index.Value;
@@ -551,6 +587,22 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             }
 
             return null;
+        }
+
+        private static bool ContainsAnyHeader(Dictionary<int, string> headerMap, IEnumerable<string> candidates)
+        {
+            foreach (var candidate in candidates)
+            {
+                foreach (var value in headerMap.Values)
+                {
+                    if (!string.IsNullOrEmpty(value) && value.Contains(candidate, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         private static bool IsRowEmpty(DataRow row)
