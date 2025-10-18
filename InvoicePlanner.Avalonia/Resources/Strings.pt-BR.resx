@@ -105,9 +105,6 @@
   <data name="ButtonRemove" xml:space="preserve">
     <value>Remover</value>
   </data>
-  <data name="ButtonRebalance" xml:space="preserve">
-    <value>Rebalancear</value>
-  </data>
   <data name="ButtonSaveDraft" xml:space="preserve">
     <value>Salvar rascunho</value>
   </data>
@@ -234,6 +231,12 @@
   <data name="PlanEditorExtraEmailsLabel" xml:space="preserve">
     <value>E-mails adicionais</value>
   </data>
+  <data name="PlanEditorRecipientsLabel" xml:space="preserve">
+    <value>E-mails de destino</value>
+  </data>
+  <data name="PlanEditorRecipientsWatermark" xml:space="preserve">
+    <value>Informe todos os e-mails separados por ponto e vírgula ou nova linha.</value>
+  </data>
   <data name="PlanEditorInvoiceLinesTitle" xml:space="preserve">
     <value>Linhas de faturamento</value>
   </data>
@@ -245,6 +248,18 @@
   </data>
   <data name="PlanEditorHeaderDeliveryDescription" xml:space="preserve">
     <value>Descrição da entrega</value>
+  </data>
+  <data name="PlanEditorHeaderCnpj" xml:space="preserve">
+    <value>CNPJ do cliente</value>
+  </data>
+  <data name="PlanEditorHeaderPo" xml:space="preserve">
+    <value>PO</value>
+  </data>
+  <data name="PlanEditorHeaderFrs" xml:space="preserve">
+    <value>FRS</value>
+  </data>
+  <data name="PlanEditorHeaderTicket" xml:space="preserve">
+    <value>Ticket do cliente</value>
   </data>
   <data name="PlanEditorHeaderPercent" xml:space="preserve">
     <value>Percentual</value>

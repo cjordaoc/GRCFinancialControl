@@ -107,6 +107,26 @@ public class InvoicePlanValidator : IInvoicePlanValidator
                 errors.Add(ValidationStrings.Format("DeliveryDescriptionRequired", expectedSeq));
             }
 
+            if (string.IsNullOrWhiteSpace(item.PayerCnpj))
+            {
+                errors.Add(ValidationStrings.Format("PayerCnpjRequired", expectedSeq));
+            }
+
+            if (string.IsNullOrWhiteSpace(item.PoNumber))
+            {
+                errors.Add(ValidationStrings.Format("PoNumberRequired", expectedSeq));
+            }
+
+            if (string.IsNullOrWhiteSpace(item.FrsNumber))
+            {
+                errors.Add(ValidationStrings.Format("FrsNumberRequired", expectedSeq));
+            }
+
+            if (string.IsNullOrWhiteSpace(item.CustomerTicket))
+            {
+                errors.Add(ValidationStrings.Format("CustomerTicketRequired", expectedSeq));
+            }
+
         }
 
         foreach (var email in plan.AdditionalEmails)

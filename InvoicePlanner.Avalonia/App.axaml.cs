@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Services;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Persistence;
 using GRCFinancialControl.Persistence.Configuration;
@@ -15,6 +18,7 @@ using GRCFinancialControl.Core.Configuration;
 using Invoices.Core.Validation;
 using Invoices.Data.Repositories;
 using InvoicePlanner.Avalonia.Services;
+using InvoicePlanner.Avalonia.Messages;
 using InvoicePlanner.Avalonia.ViewModels;
 using InvoicePlanner.Avalonia.Views;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +35,8 @@ public partial class App : Application
     private IHost? _host;
     private bool _disposed;
     private bool _hasConnectionSettings;
+    private IMessenger? _messenger;
+    private bool _restartRequested;
 
     public IServiceProvider Services => _host?.Services ?? throw new InvalidOperationException("Host not initialised.");
 
@@ -127,6 +133,9 @@ public partial class App : Application
             var mainWindow = Services.GetRequiredService<MainWindow>();
             mainWindow.DataContext = Services.GetRequiredService<MainWindowViewModel>();
 
+            _messenger = Services.GetRequiredService<IMessenger>();
+            _messenger.Register<ConnectionSettingsImportedMessage>(this, (_, _) => RequestRestart());
+
             using (var scope = Services.CreateScope())
             {
                 var provider = scope.ServiceProvider;
@@ -219,6 +228,12 @@ public partial class App : Application
         }
 
         var provider = host.Services;
+        if (_messenger is not null)
+        {
+            _messenger.Unregister<ConnectionSettingsImportedMessage>(this);
+            _messenger = null;
+        }
+
         if (provider.GetService(typeof(IGlobalErrorHandler)) is IDisposable disposableHandler)
         {
             disposableHandler.Dispose();
@@ -234,5 +249,64 @@ public partial class App : Application
         }
 
         _host = null;
+    }
+
+    private void RequestRestart()
+    {
+        if (_restartRequested)
+        {
+            return;
+        }
+
+        _restartRequested = true;
+        Dispatcher.UIThread.Post(RestartApplication);
+    }
+
+    private void RestartApplication()
+    {
+        if (ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            return;
+        }
+
+        var executablePath = Environment.ProcessPath;
+        if (string.IsNullOrWhiteSpace(executablePath))
+        {
+            executablePath = Process.GetCurrentProcess().MainModule?.FileName;
+        }
+
+        if (!string.IsNullOrWhiteSpace(executablePath))
+        {
+            try
+            {
+                var args = desktop.Args ?? Array.Empty<string>();
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = executablePath,
+                    UseShellExecute = true,
+                };
+
+                if (args.Length > 0)
+                {
+                    startInfo.Arguments = string.Join(' ', args.Select(QuoteArgument));
+                }
+
+                Process.Start(startInfo);
+            }
+            catch (Exception ex)
+            {
+                var logger = Services.GetRequiredService<ILogger<App>>();
+                logger.LogError(ex, "Failed to restart the application after importing connection settings.");
+                _restartRequested = false;
+                return;
+            }
+        }
+
+        desktop.Shutdown();
+    }
+
+    private static string QuoteArgument(string argument)
+    {
+        return argument.Contains(' ') ? $"\"{argument}\"" : argument;
     }
 }

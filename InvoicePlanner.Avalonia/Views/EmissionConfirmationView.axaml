@@ -7,148 +7,183 @@
              x:Class="InvoicePlanner.Avalonia.Views.EmissionConfirmationView"
              x:DataType="vm:EmissionConfirmationViewModel"
              mc:Ignorable="d">
-    <ScrollViewer>
-        <StackPanel Spacing="16" Margin="16">
-            <Border Classes="Card" Padding="24">
-                <StackPanel Spacing="16">
-                    <TextBlock Classes="TitleMedium" Text="{res:Loc Key=EmissionConfirmationTitle}" />
-                    <TextBlock Text="{res:Loc Key=EmissionConfirmationDescription}" />
-                    <StackPanel Spacing="12">
-                        <TextBlock Text="{res:Loc Key=EmissionPlansHeader}" FontWeight="SemiBold" />
-                        <TextBlock Text="{Binding PlanSelectionMessage}" TextWrapping="Wrap" />
-                        <DataGrid ItemsSource="{Binding AvailablePlans}"
-                                  SelectedItem="{Binding SelectedPlan, Mode=TwoWay}"
-                                  AutoGenerateColumns="False"
-                                  HeadersVisibility="Column"
-                                  GridLinesVisibility="All"
-                                  HorizontalScrollBarVisibility="Auto"
-                                  IsVisible="{Binding HasAvailablePlans}"
-                                  MaxHeight="220"
-                                  Margin="0,4,0,0">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="{res:Loc Key=PlanSelectionColumnPlanId}" Binding="{Binding Id}" Width="80"/>
-                                <DataGridTextColumn Header="{res:Loc Key=PlanSelectionColumnEngagement}" Binding="{Binding EngagementId}" Width="160"/>
-                                <DataGridTextColumn Header="{res:Loc Key=PlanSelectionColumnType}" Binding="{Binding TypeName}" Width="120"/>
-                                <DataGridTextColumn Header="{res:Loc Key=PlanSelectionColumnFirstEmission}" Binding="{Binding FirstEmissionDate, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
-                                <DataGridTextColumn Header="{res:Loc Key=PlanSelectionColumnRequested}" Binding="{Binding RequestedItemCount}" Width="140"/>
-                                <DataGridTextColumn Header="{res:Loc Key=PlanSelectionColumnClosed}" Binding="{Binding ClosedItemCount}" Width="120"/>
-                                <DataGridTextColumn Header="{res:Loc Key=PlanSelectionColumnCanceled}" Binding="{Binding CanceledItemCount}" Width="120"/>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                        <Button Content="{res:Loc Key=ButtonInsertBzData}"
-                                Command="{Binding LoadPlanCommand}"
-                                MinWidth="200"/>
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="16" Margin="16">
+                <Border Classes="Card" Padding="24">
+                    <StackPanel Spacing="16">
+                        <TextBlock Classes="TitleMedium" Text="{res:Loc Key=EmissionConfirmationTitle}" />
+                        <TextBlock Text="{res:Loc Key=EmissionConfirmationDescription}" />
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="{res:Loc Key=EmissionPlansHeader}" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding PlanSelectionMessage}" TextWrapping="Wrap" />
+                            <DataGrid ItemsSource="{Binding AvailablePlans}"
+                                      SelectedItem="{Binding SelectedPlan, Mode=TwoWay}"
+                                      AutoGenerateColumns="False"
+                                      HeadersVisibility="Column"
+                                      GridLinesVisibility="All"
+                                      HorizontalScrollBarVisibility="Auto"
+                                      IsVisible="{Binding HasAvailablePlans}"
+                                      MaxHeight="220"
+                                      Margin="0,4,0,0">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="{res:Loc Key=PlanSelectionColumnPlanId}" Binding="{Binding Id}" Width="80"/>
+                                    <DataGridTextColumn Header="{res:Loc Key=PlanSelectionColumnEngagement}" Binding="{Binding EngagementId}" Width="160"/>
+                                    <DataGridTextColumn Header="{res:Loc Key=PlanSelectionColumnType}" Binding="{Binding TypeName}" Width="120"/>
+                                    <DataGridTextColumn Header="{res:Loc Key=PlanSelectionColumnFirstEmission}" Binding="{Binding FirstEmissionDate, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
+                                    <DataGridTextColumn Header="{res:Loc Key=PlanSelectionColumnRequested}" Binding="{Binding RequestedItemCount}" Width="140"/>
+                                    <DataGridTextColumn Header="{res:Loc Key=PlanSelectionColumnClosed}" Binding="{Binding ClosedItemCount}" Width="120"/>
+                                    <DataGridTextColumn Header="{res:Loc Key=PlanSelectionColumnCanceled}" Binding="{Binding CanceledItemCount}" Width="120"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <Button Content="{res:Loc Key=ButtonInsertBzData}"
+                                    Command="{Binding LoadPlanCommand}"
+                                    MinWidth="200"/>
+                        </StackPanel>
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="{Binding ValidationMessage}"
+                                       Foreground="Red"
+                                       FontWeight="SemiBold"
+                                       IsVisible="{Binding HasValidationMessage}" />
+                            <TextBlock Text="{Binding StatusMessage}"
+                                       Foreground="Green"
+                                       FontWeight="SemiBold"
+                                       IsVisible="{Binding HasStatusMessage}" />
+                        </StackPanel>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal" Spacing="16" IsVisible="{Binding HasLines}">
-                        <TextBlock Text="{Binding EngagementId, StringFormat={res:Loc Key=EmissionStatusEngagementFormat}}"/>
-                        <TextBlock Text="{Binding RequestedCount, StringFormat={res:Loc Key=EmissionStatusRequestedFormat}}" />
-                        <TextBlock Text="{Binding ClosedCount, StringFormat={res:Loc Key=EmissionStatusClosedFormat}}" />
-                        <TextBlock Text="{Binding CanceledCount, StringFormat={res:Loc Key=EmissionStatusCanceledFormat}}" />
-                    </StackPanel>
-                    <DataGrid ItemsSource="{Binding Lines}"
-                              AutoGenerateColumns="False"
-                              HeadersVisibility="Column"
-                              GridLinesVisibility="All"
-                              HorizontalScrollBarVisibility="Auto"
-                              IsVisible="{Binding HasLines}">
-                        <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="{res:Loc Key=PlanEditorHeaderSequence}" Width="60">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
-                                        <TextBlock Text="{Binding Sequence}" HorizontalAlignment="Center" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="{res:Loc Key=EmissionGridEmissionHeader}" Width="160">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
-                                        <TextBlock Text="{Binding EmissionDate, StringFormat={}{0:yyyy-MM-dd}}" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="{res:Loc Key=EmissionGridDueHeader}" Width="160">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
-                                        <TextBlock Text="{Binding DueDate, StringFormat={}{0:yyyy-MM-dd}}" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="{res:Loc Key=EmissionGridAmountHeader}" Width="140">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
-                                        <TextBlock Text="{Binding Amount, StringFormat={}{0:F2}}" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="{res:Loc Key=RequestGridRitmHeader}" Width="160">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
-                                        <TextBlock Text="{Binding RitmNumber}" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="{res:Loc Key=EmissionGridBzCodeHeader}" Width="160">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
-                                        <TextBox Text="{Binding BzCode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="{res:Loc Key=EmissionGridEmittedAtHeader}" Width="160">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
-                                        <DatePicker SelectedDate="{Binding EmittedAt, Mode=TwoWay, Converter={StaticResource DateTimeOffsetConverter}}" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="{res:Loc Key=EmissionGridCancelReasonHeader}" Width="220">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
-                                        <TextBox Text="{Binding CancelReason, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                 Watermark="{res:Loc Key=CommonWatermarkReason}" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="{res:Loc Key=EmissionGridNewEmissionHeader}" Width="160">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
-                                        <DatePicker SelectedDate="{Binding ReissueEmissionDate, Mode=TwoWay, Converter={StaticResource DateTimeOffsetConverter}}" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="{res:Loc Key=RequestGridStatusHeader}" Width="140">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
-                                        <TextBlock Text="{Binding Status}" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="{res:Loc Key=EmissionGridActionsHeader}" Width="260">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
-                                        <StackPanel Orientation="Horizontal" Spacing="8">
-                                            <Button Content="{res:Loc Key=ButtonCloseInvoice}"
-                                                    Command="{Binding CloseCommand}" />
-                                            <Button Content="{res:Loc Key=ButtonCancelAndReissue}"
-                                                    Command="{Binding CancelAndReissueCommand}" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                    <StackPanel Spacing="4">
-                        <TextBlock Text="{Binding ValidationMessage}"
-                                   Foreground="Red"
-                                   FontWeight="SemiBold"
-                                   IsVisible="{Binding HasValidationMessage}" />
-                        <TextBlock Text="{Binding StatusMessage}"
-                                   Foreground="Green"
-                                   FontWeight="SemiBold"
-                                   IsVisible="{Binding HasStatusMessage}" />
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-        </StackPanel>
-    </ScrollViewer>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border Background="#80000080"
+                IsVisible="{Binding IsPlanDetailsVisible}"
+                IsHitTestVisible="{Binding IsPlanDetailsVisible}">
+            <Grid>
+                <Border Classes="Card"
+                        Padding="24"
+                        Margin="32"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        MaxWidth="1100"
+                        MaxHeight="720">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                        <StackPanel Spacing="16">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Content="{res:Loc Key=ButtonClose}"
+                                        Command="{Binding ClosePlanDetailsCommand}" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="16">
+                                <TextBlock Text="{Binding EngagementId, StringFormat={res:Loc Key=EmissionStatusEngagementFormat}}" />
+                                <TextBlock Text="{Binding RequestedCount, StringFormat={res:Loc Key=EmissionStatusRequestedFormat}}" />
+                                <TextBlock Text="{Binding ClosedCount, StringFormat={res:Loc Key=EmissionStatusClosedFormat}}" />
+                                <TextBlock Text="{Binding CanceledCount, StringFormat={res:Loc Key=EmissionStatusCanceledFormat}}" />
+                            </StackPanel>
+                            <DataGrid ItemsSource="{Binding Lines}"
+                                      AutoGenerateColumns="False"
+                                      HeadersVisibility="Column"
+                                      GridLinesVisibility="All"
+                                      HorizontalScrollBarVisibility="Auto"
+                                      MaxHeight="360">
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Header="{res:Loc Key=PlanEditorHeaderSequence}" Width="60">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
+                                                <TextBlock Text="{Binding Sequence}" HorizontalAlignment="Center" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="{res:Loc Key=EmissionGridEmissionHeader}" Width="160">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
+                                                <TextBlock Text="{Binding EmissionDate, StringFormat={}{0:yyyy-MM-dd}}" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="{res:Loc Key=EmissionGridDueHeader}" Width="160">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
+                                                <TextBlock Text="{Binding DueDate, StringFormat={}{0:yyyy-MM-dd}}" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="{res:Loc Key=EmissionGridAmountHeader}" Width="140">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
+                                                <TextBlock Text="{Binding Amount, StringFormat={}{0:F2}}" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="{res:Loc Key=RequestGridRitmHeader}" Width="160">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
+                                                <TextBlock Text="{Binding RitmNumber}" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="{res:Loc Key=EmissionGridBzCodeHeader}" Width="160">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
+                                                <TextBox Text="{Binding BzCode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="{res:Loc Key=EmissionGridEmittedAtHeader}" Width="160">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
+                                                <DatePicker SelectedDate="{Binding EmittedAt, Mode=TwoWay, Converter={StaticResource DateTimeOffsetConverter}}" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="{res:Loc Key=EmissionGridCancelReasonHeader}" Width="200">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
+                                                <TextBox Text="{Binding CancelReason, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                         Watermark="{res:Loc Key=CommonWatermarkReason}" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="{res:Loc Key=EmissionGridNewEmissionHeader}" Width="160">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
+                                                <DatePicker SelectedDate="{Binding ReissueEmissionDate, Mode=TwoWay, Converter={StaticResource DateTimeOffsetConverter}}" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="{res:Loc Key=RequestGridStatusHeader}" Width="140">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
+                                                <TextBlock Text="{Binding Status}" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="{res:Loc Key=EmissionGridActionsHeader}" Width="260">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <Button Content="{res:Loc Key=ButtonCloseInvoice}"
+                                                            Command="{Binding CloseCommand}" />
+                                                    <Button Content="{res:Loc Key=ButtonCancelAndReissue}"
+                                                            Command="{Binding CancelAndReissueCommand}" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="{Binding ValidationMessage}"
+                                           Foreground="Red"
+                                           FontWeight="SemiBold"
+                                           IsVisible="{Binding HasValidationMessage}" />
+                                <TextBlock Text="{Binding StatusMessage}"
+                                           Foreground="Green"
+                                           FontWeight="SemiBold"
+                                           IsVisible="{Binding HasStatusMessage}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
 </UserControl>

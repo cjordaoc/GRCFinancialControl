@@ -69,10 +69,10 @@
     <value>Customer focal point name is required.</value>
   </data>
   <data name="CustomerFocalPointEmailRequired" xml:space="preserve">
-    <value>Customer focal point email is required.</value>
+    <value>At least one recipient email is required.</value>
   </data>
   <data name="CustomerFocalPointEmailInvalid" xml:space="preserve">
-    <value>Customer focal point email is not in a valid format.</value>
+    <value>Primary recipient email is not in a valid format.</value>
   </data>
   <data name="FirstEmissionRequired" xml:space="preserve">
     <value>First emission date is required for ByDate plans.</value>
@@ -101,10 +101,22 @@
   <data name="DeliveryDescriptionRequired" xml:space="preserve">
     <value>Delivery description is required for invoice line #{0}.</value>
   </data>
+  <data name="PayerCnpjRequired" xml:space="preserve">
+    <value>Customer CNPJ is required for invoice line #{0}.</value>
+  </data>
+  <data name="PoNumberRequired" xml:space="preserve">
+    <value>PO number is required for invoice line #{0}.</value>
+  </data>
+  <data name="FrsNumberRequired" xml:space="preserve">
+    <value>FRS number is required for invoice line #{0}.</value>
+  </data>
+  <data name="CustomerTicketRequired" xml:space="preserve">
+    <value>Customer ticket is required for invoice line #{0}.</value>
+  </data>
   <data name="AdditionalEmailBlank" xml:space="preserve">
-    <value>Additional recipient emails cannot be blank.</value>
+    <value>Recipient email entries cannot be blank.</value>
   </data>
   <data name="AdditionalEmailInvalid" xml:space="preserve">
-    <value>Additional email '{0}' is not valid.</value>
+    <value>Recipient email '{0}' is not valid.</value>
   </data>
 </root>

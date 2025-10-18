@@ -21,6 +21,18 @@ public partial class InvoicePlanLineViewModel : ObservableObject
     private string? deliveryDescription;
 
     [ObservableProperty]
+    private string payerCnpj = string.Empty;
+
+    [ObservableProperty]
+    private string? poNumber;
+
+    [ObservableProperty]
+    private string? frsNumber;
+
+    [ObservableProperty]
+    private string? customerTicket;
+
+    [ObservableProperty]
     private decimal percentage;
 
     [ObservableProperty]
