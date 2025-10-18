@@ -40,8 +40,18 @@ namespace GRCFinancialControl.Persistence.Services
             await using var context = await CreateContextAsync();
             await FiscalYearLockGuard.EnsureFiscalYearUnlockedAsync(context, period.FiscalYearId, "add a closing period");
 
-            await context.ClosingPeriods.AddAsync(period);
+            var newPeriod = new ClosingPeriod
+            {
+                Name = period.Name,
+                FiscalYearId = period.FiscalYearId,
+                PeriodStart = period.PeriodStart,
+                PeriodEnd = period.PeriodEnd
+            };
+
+            await context.ClosingPeriods.AddAsync(newPeriod);
             await context.SaveChangesAsync();
+
+            period.Id = newPeriod.Id;
         }
 
         public async Task UpdateAsync(ClosingPeriod period)
