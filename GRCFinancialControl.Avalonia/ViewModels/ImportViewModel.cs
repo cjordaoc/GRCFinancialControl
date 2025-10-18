@@ -35,8 +35,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public string? FileTypeDisplayName => FileType switch
         {
+            "Budget" => "Budget",
             "Actuals" => "ETC-P",
-            "FcsBacklog" => "FCS Revenue Backlog",
             "FullManagement" => "Full Management Data",
             _ => FileType
         };
@@ -95,10 +95,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 else if (FileType == "Actuals")
                 {
                     result = await _importService.ImportActualsAsync(filePath, SelectedClosingPeriod!.Id);
-                }
-                else if (FileType == "FcsBacklog")
-                {
-                    result = await _importService.ImportFcsRevenueBacklogAsync(filePath);
                 }
                 else if (FileType == "FullManagement")
                 {

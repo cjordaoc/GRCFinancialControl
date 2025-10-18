@@ -23,10 +23,23 @@ namespace GRCFinancialControl.Persistence.Services
         private readonly ILogger<ImportService> _logger;
         private readonly IFullManagementDataImporter _fullManagementDataImporter;
         private const string FinancialEvolutionInitialPeriodId = "INITIAL";
-        private const int FcsDataStartRowIndex = 11; // Row 12 in Excel (1-based)
-        private const int FcsEngagementIdColumnIndex = 0;
-        private const int FcsCurrentFiscalYearBacklogColumnIndex = 248; // Column IN
-        private const int FcsFutureFiscalYearBacklogColumnIndex = 249;  // Column IO
+        private const int FcsHeaderSearchLimit = 20;
+        private const int FcsDataStartRowIndex = 11; // Default row 12 in Excel (1-based)
+        private static readonly string[] FcsEngagementIdHeaders =
+        {
+            "engagement id",
+            "project id"
+        };
+        private static readonly string[] FcsCurrentFiscalYearBacklogHeaders =
+        {
+            "fytg backlog",
+            "fiscal year to go backlog"
+        };
+        private static readonly string[] FcsFutureFiscalYearBacklogHeaders =
+        {
+            "future fy backlog",
+            "future fiscal year backlog"
+        };
         private static readonly Regex MultiWhitespaceRegex = new Regex("\\s+", RegexOptions.Compiled);
         private static readonly Regex DigitsRegex = new Regex("\\d+", RegexOptions.Compiled);
         private static readonly Regex FiscalYearCodeRegex = new Regex(@"FY\\d{2,4}", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -93,143 +106,157 @@ namespace GRCFinancialControl.Persistence.Services
             var (rankBudgetsFromFile, issues) = ParseResourcing(resourcing);
             var totalBudgetHours = rankBudgetsFromFile.Sum(r => r.hours);
 
-            await using var context = await _contextFactory.CreateDbContextAsync();
-            await using var transaction = await context.Database.BeginTransactionAsync();
+            await using var strategyContext = await _contextFactory.CreateDbContextAsync();
+            var strategy = strategyContext.Database.CreateExecutionStrategy();
 
-            var normalizedCustomerName = customerName;
-            var normalizedCustomerLookup = normalizedCustomerName.ToLowerInvariant();
-            var existingCustomer = await context.Customers
-                .FirstOrDefaultAsync(c => c.Name.ToLower() == normalizedCustomerLookup);
-
-            bool customerCreated = false;
-            Customer customer;
-            if (existingCustomer == null)
+            return await strategy.ExecuteAsync(async () =>
             {
-                customer = new Customer
+                await using var context = await _contextFactory.CreateDbContextAsync();
+                await using var transaction = await context.Database.BeginTransactionAsync();
+
+                try
                 {
-                    Name = normalizedCustomerName
-                };
-                await context.Customers.AddAsync(customer);
-                customerCreated = true;
-            }
-            else
-            {
-                existingCustomer.Name = normalizedCustomerName;
-                customer = existingCustomer;
-            }
+                    var normalizedCustomerName = customerName;
+                    var normalizedCustomerLookup = normalizedCustomerName.ToLowerInvariant();
+                    var existingCustomer = await context.Customers
+                        .FirstOrDefaultAsync(c => c.Name.ToLower() == normalizedCustomerLookup);
 
-            var engagement = await context.Engagements
-                .Include(e => e.RankBudgets)
-                .FirstOrDefaultAsync(e => e.EngagementId == engagementKey);
-
-            bool engagementCreated = false;
-            if (engagement == null)
-            {
-                engagement = new Engagement
-                {
-                    EngagementId = engagementKey,
-                    Description = engagementDescription,
-                    InitialHoursBudget = totalBudgetHours,
-                    EstimatedToCompleteHours = 0m
-                };
-
-                await context.Engagements.AddAsync(engagement);
-                engagementCreated = true;
-            }
-            else
-            {
-                if (engagement.Source == EngagementSource.S4Project)
-                {
-                    var manualOnlyMessage =
-                        $"Engagement '{engagement.EngagementId}' is sourced from S/4Project and must be managed manually. " +
-                        "Budget workbook import skipped.";
-
-                    _logger.LogInformation(
-                        "Skipping budget import for engagement {EngagementId} from file {FilePath} because it is manual-only (source: {Source}).",
-                        engagement.EngagementId,
-                        filePath,
-                        engagement.Source);
-
-                    await transaction.RollbackAsync();
-                    var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>
+                    bool customerCreated = false;
+                    Customer customer;
+                    if (existingCustomer == null)
                     {
-                        ["ManualOnly"] = new[] { engagement.EngagementId }
+                        customer = new Customer
+                        {
+                            Name = normalizedCustomerName
+                        };
+                        await context.Customers.AddAsync(customer);
+                        customerCreated = true;
+                    }
+                    else
+                    {
+                        existingCustomer.Name = normalizedCustomerName;
+                        customer = existingCustomer;
+                    }
+
+                    var engagement = await context.Engagements
+                        .Include(e => e.RankBudgets)
+                        .FirstOrDefaultAsync(e => e.EngagementId == engagementKey);
+
+                    bool engagementCreated = false;
+                    if (engagement == null)
+                    {
+                        engagement = new Engagement
+                        {
+                            EngagementId = engagementKey,
+                            Description = engagementDescription,
+                            InitialHoursBudget = totalBudgetHours,
+                            EstimatedToCompleteHours = 0m
+                        };
+
+                        await context.Engagements.AddAsync(engagement);
+                        engagementCreated = true;
+                    }
+                    else
+                    {
+                        if (engagement.Source == EngagementSource.S4Project)
+                        {
+                            var manualOnlyMessage =
+                                $"Engagement '{engagement.EngagementId}' is sourced from S/4Project and must be managed manually. " +
+                                "Budget workbook import skipped.";
+
+                            _logger.LogInformation(
+                                "Skipping budget import for engagement {EngagementId} from file {FilePath} because it is manual-only (source: {Source}).",
+                                engagement.EngagementId,
+                                filePath,
+                                engagement.Source);
+
+                            await transaction.RollbackAsync();
+                            var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>
+                            {
+                                ["ManualOnly"] = new[] { engagement.EngagementId }
+                            };
+
+                            var skipNotes = new List<string>
+                            {
+                                manualOnlyMessage
+                            };
+
+                            return ImportSummaryFormatter.Build(
+                                "Budget import",
+                                inserted: 0,
+                                updated: 0,
+                                skipReasons,
+                                skipNotes);
+                        }
+
+                        engagement.Description = engagementDescription;
+                        engagement.InitialHoursBudget = totalBudgetHours;
+                    }
+
+                    engagement.Customer = customer;
+                    if (customer.Id > 0)
+                    {
+                        engagement.CustomerId = customer.Id;
+                    }
+
+                    if (engagement.RankBudgets == null)
+                    {
+                        engagement.RankBudgets = new List<EngagementRankBudget>();
+                    }
+                    else
+                    {
+                        // Full replace behavior
+                        engagement.RankBudgets.Clear();
+                    }
+
+                    var now = DateTime.UtcNow;
+                    foreach (var (rankName, hours) in rankBudgetsFromFile)
+                    {
+                        var budget = new EngagementRankBudget
+                        {
+                            Engagement = engagement,
+                            RankName = rankName,
+                            Hours = hours,
+                            CreatedAtUtc = now
+                        };
+
+                        engagement.RankBudgets.Add(budget);
+                    }
+
+                    await context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    var customersInserted = customerCreated ? 1 : 0;
+                    var customersUpdated = customerCreated ? 0 : 1;
+                    var engagementsInserted = engagementCreated ? 1 : 0;
+                    var engagementsUpdated = engagementCreated ? 0 : 1;
+
+                    var notes = new List<string>
+                    {
+                        $"Customers inserted: {customersInserted}, updated: {customersUpdated}",
+                        $"Engagements inserted: {engagementsInserted}, updated: {engagementsUpdated}",
+                        $"Rank budgets processed: {rankBudgetsFromFile.Count}",
+                        $"Initial hours budget total: {totalBudgetHours:F2}"
                     };
 
-                    var skipNotes = new List<string>
+                    if (issues.Count > 0)
                     {
-                        manualOnlyMessage
-                    };
+                        notes.Add($"Notes: {string.Join("; ", issues)}");
+                    }
 
                     return ImportSummaryFormatter.Build(
                         "Budget import",
-                        inserted: 0,
-                        updated: 0,
-                        skipReasons,
-                        skipNotes);
+                        customersInserted + engagementsInserted,
+                        customersUpdated + engagementsUpdated,
+                        null,
+                        notes);
                 }
-
-                engagement.Description = engagementDescription;
-                engagement.InitialHoursBudget = totalBudgetHours;
-            }
-
-            engagement.Customer = customer;
-            if (customer.Id > 0)
-            {
-                engagement.CustomerId = customer.Id;
-            }
-
-            if (engagement.RankBudgets == null)
-            {
-                engagement.RankBudgets = new List<EngagementRankBudget>();
-            }
-            else
-            {
-                // Full replace behavior
-                engagement.RankBudgets.Clear();
-            }
-
-            var now = DateTime.UtcNow;
-            foreach (var (rankName, hours) in rankBudgetsFromFile)
-            {
-                var budget = new EngagementRankBudget
+                catch
                 {
-                    Engagement = engagement,
-                    RankName = rankName,
-                    Hours = hours,
-                    CreatedAtUtc = now
-                };
-
-                engagement.RankBudgets.Add(budget);
-            }
-
-            await context.SaveChangesAsync();
-            await transaction.CommitAsync();
-
-            var customersInserted = customerCreated ? 1 : 0;
-            var customersUpdated = customerCreated ? 0 : 1;
-            var engagementsInserted = engagementCreated ? 1 : 0;
-            var engagementsUpdated = engagementCreated ? 0 : 1;
-
-            var notes = new List<string>
-            {
-                $"Customers inserted: {customersInserted}, updated: {customersUpdated}",
-                $"Engagements inserted: {engagementsInserted}, updated: {engagementsUpdated}",
-                $"Rank budgets processed: {rankBudgetsFromFile.Count}",
-                $"Initial hours budget total: {totalBudgetHours:F2}"
-            };
-
-            if (issues.Count > 0)
-            {
-                notes.Add($"Notes: {string.Join("; ", issues)}");
-            }
-
-            return ImportSummaryFormatter.Build(
-                "Budget import",
-                customersInserted + engagementsInserted,
-                customersUpdated + engagementsUpdated,
-                null,
-                notes);
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            });
         }
 
         private static (List<(string rank, decimal hours)> rows, List<string> issues) ParseResourcing(DataTable resourcing)
@@ -409,6 +436,164 @@ namespace GRCFinancialControl.Persistence.Services
             return Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
         }
 
+        private static (Dictionary<int, string> Map, int HeaderRowIndex) BuildFcsHeaderMap(DataTable worksheet)
+        {
+            Dictionary<int, string>? fallbackMap = null;
+            var fallbackIndex = -1;
+            var searchLimit = Math.Min(worksheet.Rows.Count, FcsHeaderSearchLimit);
+
+            for (var rowIndex = 0; rowIndex < searchLimit; rowIndex++)
+            {
+                var row = worksheet.Rows[rowIndex];
+                var currentMap = new Dictionary<int, string>();
+                var hasContent = false;
+
+                for (var columnIndex = 0; columnIndex < worksheet.Columns.Count; columnIndex++)
+                {
+                    var headerText = NormalizeWhitespace(Convert.ToString(row[columnIndex], CultureInfo.InvariantCulture));
+                    if (!string.IsNullOrEmpty(headerText))
+                    {
+                        hasContent = true;
+                    }
+
+                    currentMap[columnIndex] = headerText.ToLowerInvariant();
+                }
+
+                if (!hasContent)
+                {
+                    continue;
+                }
+
+                if (ContainsAnyHeader(currentMap, FcsEngagementIdHeaders))
+                {
+                    return (currentMap, rowIndex);
+                }
+
+                fallbackMap ??= currentMap;
+                if (fallbackIndex < 0)
+                {
+                    fallbackIndex = rowIndex;
+                }
+            }
+
+            return fallbackMap != null
+                ? (fallbackMap, fallbackIndex)
+                : (new Dictionary<int, string>(), -1);
+        }
+
+        private static int GetRequiredColumnIndex(Dictionary<int, string> headerMap, IEnumerable<string> candidates, string friendlyName)
+        {
+            foreach (var candidate in candidates)
+            {
+                var normalizedCandidate = candidate.ToLowerInvariant();
+                foreach (var kvp in headerMap)
+                {
+                    if (!string.IsNullOrEmpty(kvp.Value) && kvp.Value.Contains(normalizedCandidate, StringComparison.Ordinal))
+                    {
+                        return kvp.Key;
+                    }
+                }
+            }
+
+            throw new InvalidDataException($"The FCS backlog worksheet is missing required column '{friendlyName}'. Ensure the first sheet is selected and filters are cleared before importing.");
+        }
+
+        private static List<int> ResolveFutureFiscalYearColumns(Dictionary<int, string> headerMap, string nextFiscalYearName)
+        {
+            var indices = new List<int>();
+
+            foreach (var candidate in FcsFutureFiscalYearBacklogHeaders)
+            {
+                var normalizedCandidate = candidate.ToLowerInvariant();
+                foreach (var kvp in headerMap)
+                {
+                    if (!string.IsNullOrEmpty(kvp.Value) && kvp.Value.Contains(normalizedCandidate, StringComparison.Ordinal) &&
+                        !kvp.Value.Contains("opp currency", StringComparison.Ordinal) &&
+                        !kvp.Value.Contains("lead", StringComparison.Ordinal))
+                    {
+                        indices.Add(kvp.Key);
+                        return indices;
+                    }
+                }
+            }
+
+            var fiscalYearDigits = ExtractDigits(nextFiscalYearName);
+            foreach (var kvp in headerMap)
+            {
+                var header = kvp.Value;
+                if (string.IsNullOrEmpty(header))
+                {
+                    continue;
+                }
+
+                if (!header.Contains("future", StringComparison.Ordinal) || !header.Contains("backlog", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (header.Contains("opp currency", StringComparison.Ordinal) || header.Contains("lead", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (!string.IsNullOrEmpty(fiscalYearDigits) && !header.Contains(fiscalYearDigits, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                indices.Add(kvp.Key);
+            }
+
+            if (indices.Count == 0)
+            {
+                foreach (var kvp in headerMap)
+                {
+                    var header = kvp.Value;
+                    if (string.IsNullOrEmpty(header))
+                    {
+                        continue;
+                    }
+
+                    if (header.Contains("future fy backlog", StringComparison.Ordinal) &&
+                        !header.Contains("opp currency", StringComparison.Ordinal) &&
+                        !header.Contains("lead", StringComparison.Ordinal))
+                    {
+                        indices.Add(kvp.Key);
+                    }
+                }
+            }
+
+            return indices;
+        }
+
+        private static string ExtractDigits(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            var match = DigitsRegex.Match(value);
+            return match.Success ? match.Value : string.Empty;
+        }
+
+        private static bool ContainsAnyHeader(Dictionary<int, string> headerMap, IEnumerable<string> candidates)
+        {
+            foreach (var candidate in candidates)
+            {
+                var normalizedCandidate = candidate.ToLowerInvariant();
+                foreach (var header in headerMap.Values)
+                {
+                    if (!string.IsNullOrEmpty(header) && header.Contains(normalizedCandidate, StringComparison.Ordinal))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         public async Task<string> ImportFcsRevenueBacklogAsync(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
@@ -443,12 +628,25 @@ namespace GRCFinancialControl.Persistence.Services
             var (currentFiscalYearName, lastUpdateDate) = ParseFcsMetadata(worksheet);
             var nextFiscalYearName = IncrementFiscalYearName(currentFiscalYearName);
 
-            EnsureColumnExists(worksheet, FcsEngagementIdColumnIndex, "Engagement ID");
-            EnsureColumnExists(worksheet, FcsCurrentFiscalYearBacklogColumnIndex, "FYTG Backlog");
-            EnsureColumnExists(worksheet, FcsFutureFiscalYearBacklogColumnIndex, "Future FY Backlog");
+            var (headerMap, headerRowIndex) = BuildFcsHeaderMap(worksheet);
+
+            if (headerMap.Count == 0)
+            {
+                throw new InvalidDataException("Unable to locate the header row in the FCS backlog worksheet. Ensure the first sheet is selected and filters are cleared before importing.");
+            }
+
+            var engagementIdIndex = GetRequiredColumnIndex(headerMap, FcsEngagementIdHeaders, "Engagement ID");
+            var currentFiscalYearBacklogIndex = GetRequiredColumnIndex(headerMap, FcsCurrentFiscalYearBacklogHeaders, "FYTG Backlog");
+            var futureFiscalYearIndexes = ResolveFutureFiscalYearColumns(headerMap, nextFiscalYearName);
+            if (futureFiscalYearIndexes.Count == 0)
+            {
+                throw new InvalidDataException($"The FCS backlog worksheet is missing the Future FY Backlog columns for fiscal year {nextFiscalYearName}.");
+            }
+
+            var dataStartRowIndex = Math.Max(headerRowIndex + 1, FcsDataStartRowIndex);
 
             var parsedRows = new List<FcsBacklogRow>();
-            for (var rowIndex = FcsDataStartRowIndex; rowIndex < worksheet.Rows.Count; rowIndex++)
+            for (var rowIndex = dataStartRowIndex; rowIndex < worksheet.Rows.Count; rowIndex++)
             {
                 var row = worksheet.Rows[rowIndex];
                 if (IsRowEmpty(row))
@@ -456,15 +654,20 @@ namespace GRCFinancialControl.Persistence.Services
                     continue;
                 }
 
-                var engagementIdRaw = Convert.ToString(row[FcsEngagementIdColumnIndex], CultureInfo.InvariantCulture);
+                var engagementIdRaw = Convert.ToString(row[engagementIdIndex], CultureInfo.InvariantCulture);
                 var engagementId = NormalizeWhitespace(engagementIdRaw);
                 if (string.IsNullOrEmpty(engagementId))
                 {
                     continue;
                 }
 
-                var currentBacklog = ParseDecimal(row[FcsCurrentFiscalYearBacklogColumnIndex], 2) ?? 0m;
-                var futureBacklog = ParseDecimal(row[FcsFutureFiscalYearBacklogColumnIndex], 2) ?? 0m;
+                var currentBacklog = ParseDecimal(row[currentFiscalYearBacklogIndex], 2) ?? 0m;
+
+                decimal futureBacklog = 0m;
+                foreach (var index in futureFiscalYearIndexes)
+                {
+                    futureBacklog += ParseDecimal(row[index], 2) ?? 0m;
+                }
 
                 var excelRowNumber = rowIndex + 1; // Excel is 1-based
                 parsedRows.Add(new FcsBacklogRow(engagementId, currentBacklog, futureBacklog, excelRowNumber));
@@ -700,6 +903,26 @@ namespace GRCFinancialControl.Persistence.Services
         private static (string FiscalYearName, DateTime? LastUpdateDate) ParseFcsMetadata(DataTable worksheet)
         {
             var rawValue = GetCellString(worksheet, 3, 0);
+
+            if (string.IsNullOrWhiteSpace(rawValue) || !FiscalYearCodeRegex.IsMatch(NormalizeWhitespace(rawValue)))
+            {
+                for (var rowIndex = 0; rowIndex < Math.Min(worksheet.Rows.Count, FcsHeaderSearchLimit); rowIndex++)
+                {
+                    var candidate = GetCellString(worksheet, rowIndex, 0);
+                    if (string.IsNullOrWhiteSpace(candidate))
+                    {
+                        continue;
+                    }
+
+                    var normalizedCandidate = NormalizeWhitespace(candidate);
+                    if (FiscalYearCodeRegex.IsMatch(normalizedCandidate))
+                    {
+                        rawValue = candidate;
+                        break;
+                    }
+                }
+            }
+
             if (string.IsNullOrWhiteSpace(rawValue))
             {
                 throw new InvalidDataException("Cell A4 must contain the fiscal year metadata for the FCS backlog workbook.");
@@ -707,12 +930,21 @@ namespace GRCFinancialControl.Persistence.Services
 
             var normalized = NormalizeWhitespace(rawValue);
             var match = FiscalYearCodeRegex.Match(normalized);
-            if (!match.Success)
+            string fiscalYearName;
+            if (match.Success)
             {
-                throw new InvalidDataException("Cell A4 must specify the current fiscal year (e.g., FY26).");
+                fiscalYearName = match.Value.ToUpperInvariant();
             }
+            else
+            {
+                var digits = ExtractDigits(normalized);
+                if (string.IsNullOrEmpty(digits))
+                {
+                    throw new InvalidDataException($"Cell A4 must specify the current fiscal year (e.g., FY26). Detected value: '{normalized}'.");
+                }
 
-            var fiscalYearName = match.Value.ToUpperInvariant();
+                fiscalYearName = $"FY{digits}";
+            }
 
             DateTime? lastUpdateDate = null;
             foreach (var token in normalized.Split(' ', StringSplitOptions.RemoveEmptyEntries))

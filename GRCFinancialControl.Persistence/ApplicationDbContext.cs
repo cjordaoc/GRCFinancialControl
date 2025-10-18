@@ -124,6 +124,18 @@ namespace GRCFinancialControl.Persistence
                 .HasMaxLength(100);
 
             modelBuilder.Entity<Engagement>()
+                .Property(e => e.OpeningValue)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Engagement>()
+                .Property(e => e.LastEtcDate)
+                .HasColumnType("datetime(6)");
+
+            modelBuilder.Entity<Engagement>()
+                .Property(e => e.ProposedNextEtcDate)
+                .HasColumnType("datetime(6)");
+
+            modelBuilder.Entity<Engagement>()
                 .HasMany(e => e.RankBudgets)
                 .WithOne(rb => rb.Engagement)
                 .HasForeignKey(rb => rb.EngagementId)

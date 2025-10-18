@@ -13,7 +13,6 @@
         <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,10,0,0">
             <Button Content="Import Budget File" Command="{Binding SetImportTypeCommand}" CommandParameter="Budget" Classes="accent"/>
             <Button Content="Import Margin Data" Command="{Binding SetImportTypeCommand}" CommandParameter="Actuals" Classes="accent"/>
-            <Button Content="Import FCS Backlog" Command="{Binding SetImportTypeCommand}" CommandParameter="FcsBacklog" Classes="accent"/>
             <Button Content="Import Full Management Data" Command="{Binding SetImportTypeCommand}" CommandParameter="FullManagement" Classes="accent"/>
         </StackPanel>
 

@@ -123,12 +123,11 @@ CREATE TABLE `EngagementPapds`
     `Id`           INT         NOT NULL AUTO_INCREMENT,
     `EngagementId` INT         NOT NULL,
     `PapdId`       INT         NOT NULL,
-    `BeginDate`    DATETIME(6) NOT NULL,
-    `EndDate`      DATETIME(6) NULL,
+    `EffectiveDate` DATETIME(6) NOT NULL,
     CONSTRAINT `PK_EngagementPapds` PRIMARY KEY (`Id`),
     CONSTRAINT `FK_EngagementPapds_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
     CONSTRAINT `FK_EngagementPapds_Papds` FOREIGN KEY (`PapdId`) REFERENCES `Papds` (`Id`) ON DELETE CASCADE,
-    CONSTRAINT `UX_EngagementPapds_Assignment` UNIQUE (`EngagementId`, `PapdId`, `BeginDate` )
+    CONSTRAINT `UX_EngagementPapds_Assignment` UNIQUE (`EngagementId`, `PapdId`, `EffectiveDate` )
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 CREATE TABLE `EngagementManagerAssignments`
