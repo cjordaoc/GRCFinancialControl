@@ -39,7 +39,7 @@ namespace GRCFinancialControl.Avalonia
             AvaloniaXamlLoader.Load(this);
         }
 
-        public override void OnFrameworkInitializationCompleted()
+        public override async void OnFrameworkInitializationCompleted()
         {
             LiveCharts.Configure(config =>
                 config
@@ -58,10 +58,10 @@ namespace GRCFinancialControl.Avalonia
                 using var scope = tempProvider.CreateScope();
                 var scopedProvider = scope.ServiceProvider;
                 var settingsDbContext = scopedProvider.GetRequiredService<SettingsDbContext>();
-                settingsDbContext.Database.EnsureCreated();
+                await settingsDbContext.Database.EnsureCreatedAsync();
 
                 var settingsService = scopedProvider.GetRequiredService<ISettingsService>();
-                var settings = settingsService.GetAllAsync().GetAwaiter().GetResult();
+                var settings = await settingsService.GetAllAsync();
                 settings.TryGetValue(SettingKeys.Server, out var server);
                 settings.TryGetValue(SettingKeys.Database, out var database);
                 settings.TryGetValue(SettingKeys.User, out var user);
@@ -137,11 +137,11 @@ namespace GRCFinancialControl.Avalonia
                 {
                     var provider = scope.ServiceProvider;
                     var schemaInitializer = provider.GetRequiredService<IDatabaseSchemaInitializer>();
-                    schemaInitializer.EnsureSchemaAsync().GetAwaiter().GetResult();
+                    await schemaInitializer.EnsureSchemaAsync();
 
                     var settingsDbContext = provider.GetRequiredService<SettingsDbContext>();
-                    settingsDbContext.Database.EnsureCreated();
-                    settingsDbContext.Database.Migrate();
+                    await settingsDbContext.Database.EnsureCreatedAsync();
+                    await settingsDbContext.Database.MigrateAsync();
                 }
 
                 desktop.MainWindow = mainWindow;
