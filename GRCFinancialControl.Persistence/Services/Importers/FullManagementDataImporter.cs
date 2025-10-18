@@ -137,6 +137,25 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        private static readonly IReadOnlyList<string[]> HeaderGroups = new[]
+        {
+            EngagementIdHeaders,
+            EngagementNameHeaders,
+            ClosingPeriodHeaders,
+            BudgetHoursHeaders,
+            BudgetValueHeaders,
+            BudgetMarginHeaders,
+            BudgetExpensesHeaders,
+            EstimatedToCompleteHoursHeaders,
+            EtcpValueHeaders,
+            EtcpMarginHeaders,
+            EtcpExpensesHeaders,
+            StatusHeaders,
+            EtcAgeDaysHeaders,
+            LastEtcDateHeaders,
+            NextEtcDateHeaders
+        };
+
         public async Task<FullManagementDataImportResult> ImportAsync(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
@@ -167,7 +186,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                 throw new InvalidDataException("The Full Management Data workbook does not contain any worksheets.");
             }
 
-            var parsedRows = ParseRows(worksheet);
+            var metadata = ExtractReportMetadata(worksheet);
+            var parsedRows = ParseRows(worksheet, metadata.ClosingPeriodName);
             if (parsedRows.Count == 0)
             {
                 return new FullManagementDataImportResult(
@@ -407,6 +427,16 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         $"Distinct engagements touched: {createdEngagements.Count + updatedEngagements.Count}"
                     };
 
+                    if (!string.IsNullOrWhiteSpace(metadata.ClosingPeriodName))
+                    {
+                        notes.Add($"Workbook closing period: {metadata.ClosingPeriodName}");
+                    }
+
+                    if (metadata.LastUpdateDate.HasValue)
+                    {
+                        notes.Add($"Workbook last update: {metadata.LastUpdateDate:yyyy-MM-dd}");
+                    }
+
                     var summary = ImportSummaryFormatter.Build(
                         "Full Management Data import",
                         createdEngagements.Count,
@@ -445,7 +475,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             return dataSet.Tables[0];
         }
 
-        private static List<FullManagementDataRow> ParseRows(DataTable worksheet)
+        private static List<FullManagementDataRow> ParseRows(DataTable worksheet, string? defaultClosingPeriodName)
         {
             var (headerMap, headerRowIndex) = BuildHeaderMap(worksheet);
 
@@ -455,7 +485,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             }
 
             var engagementIdIndex = GetRequiredColumnIndex(headerMap, EngagementIdHeaders, "Engagement ID");
-            var closingPeriodIndex = GetRequiredColumnIndex(headerMap, ClosingPeriodHeaders, "Closing Period");
+            var closingPeriodIndex = GetOptionalColumnIndex(headerMap, ClosingPeriodHeaders);
             var engagementNameIndex = GetOptionalColumnIndex(headerMap, EngagementNameHeaders);
             var budgetHoursIndex = GetOptionalColumnIndex(headerMap, BudgetHoursHeaders);
             var budgetValueIndex = GetOptionalColumnIndex(headerMap, BudgetValueHeaders);
@@ -469,6 +499,11 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             var etcAgeDaysIndex = GetOptionalColumnIndex(headerMap, EtcAgeDaysHeaders);
             var lastEtcDateIndex = GetOptionalColumnIndex(headerMap, LastEtcDateHeaders);
             var nextEtcDateIndex = GetOptionalColumnIndex(headerMap, NextEtcDateHeaders);
+
+            if (!closingPeriodIndex.HasValue && string.IsNullOrWhiteSpace(defaultClosingPeriodName))
+            {
+                throw new InvalidDataException("The Full Management Data workbook is missing the Closing Period column and cell A4 did not specify a closing period.");
+            }
 
             var rows = new List<FullManagementDataRow>();
 
@@ -488,7 +523,15 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     continue;
                 }
 
-                var closingPeriod = NormalizeWhitespace(Convert.ToString(row[closingPeriodIndex], CultureInfo.InvariantCulture));
+                var closingPeriod = closingPeriodIndex.HasValue
+                    ? NormalizeWhitespace(Convert.ToString(row[closingPeriodIndex.Value], CultureInfo.InvariantCulture))
+                    : defaultClosingPeriodName ?? string.Empty;
+
+                if (string.IsNullOrWhiteSpace(closingPeriod) && !string.IsNullOrWhiteSpace(defaultClosingPeriodName))
+                {
+                    closingPeriod = defaultClosingPeriodName!;
+                }
+
                 if (string.IsNullOrWhiteSpace(closingPeriod))
                 {
                     continue;
@@ -520,8 +563,9 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
         private static (Dictionary<int, string> Map, int HeaderRowIndex) BuildHeaderMap(DataTable table)
         {
-            Dictionary<int, string>? fallbackMap = null;
-            var fallbackIndex = -1;
+            Dictionary<int, string>? bestMap = null;
+            var bestIndex = -1;
+            var bestScore = -1;
 
             for (var rowIndex = 0; rowIndex < table.Rows.Count; rowIndex++)
             {
@@ -545,21 +589,39 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     continue;
                 }
 
-                if (ContainsAnyHeader(currentMap, EngagementIdHeaders) && ContainsAnyHeader(currentMap, ClosingPeriodHeaders))
+                if (!ContainsAnyHeader(currentMap, EngagementIdHeaders))
                 {
-                    return (currentMap, rowIndex);
+                    continue;
                 }
 
-                fallbackMap ??= currentMap;
-                if (fallbackIndex < 0)
+                var score = CountHeaderMatches(currentMap);
+
+                if (score > bestScore)
                 {
-                    fallbackIndex = rowIndex;
+                    bestScore = score;
+                    bestMap = currentMap;
+                    bestIndex = rowIndex;
                 }
             }
 
-            return fallbackMap != null
-                ? (fallbackMap, fallbackIndex)
+            return bestMap != null
+                ? (bestMap, bestIndex)
                 : (new Dictionary<int, string>(), -1);
+        }
+
+        private static int CountHeaderMatches(Dictionary<int, string> headerMap)
+        {
+            var score = 0;
+
+            foreach (var group in HeaderGroups)
+            {
+                if (ContainsAnyHeader(headerMap, group))
+                {
+                    score++;
+                }
+            }
+
+            return score;
         }
 
         private static int GetRequiredColumnIndex(Dictionary<int, string> headerMap, string[] candidates, string friendlyName)
@@ -626,6 +688,92 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             }
 
             return MultiWhitespaceRegex.Replace(value.Trim(), " ");
+        }
+
+        private static string? TryGetCellString(DataTable worksheet, int rowIndex, int columnIndex)
+        {
+            if (rowIndex < 0 || columnIndex < 0 || rowIndex >= worksheet.Rows.Count || columnIndex >= worksheet.Columns.Count)
+            {
+                return null;
+            }
+
+            return Convert.ToString(worksheet.Rows[rowIndex][columnIndex], CultureInfo.InvariantCulture);
+        }
+
+        private static FullManagementReportMetadata ExtractReportMetadata(DataTable worksheet)
+        {
+            var rawValue = TryGetCellString(worksheet, 3, 0);
+
+            if (string.IsNullOrWhiteSpace(rawValue))
+            {
+                var searchLimit = Math.Min(worksheet.Rows.Count, 12);
+                for (var rowIndex = 0; rowIndex < searchLimit; rowIndex++)
+                {
+                    var candidate = TryGetCellString(worksheet, rowIndex, 0);
+                    if (string.IsNullOrWhiteSpace(candidate))
+                    {
+                        continue;
+                    }
+
+                    var normalizedCandidate = NormalizeWhitespace(candidate);
+                    if (normalizedCandidate.Contains("period", StringComparison.OrdinalIgnoreCase) ||
+                        normalizedCandidate.Contains("last update", StringComparison.OrdinalIgnoreCase) ||
+                        normalizedCandidate.Contains("última atualização", StringComparison.OrdinalIgnoreCase) ||
+                        normalizedCandidate.Contains("ultima atualizacao", StringComparison.OrdinalIgnoreCase))
+                    {
+                        rawValue = candidate;
+                        break;
+                    }
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(rawValue))
+            {
+                return new FullManagementReportMetadata(null, null);
+            }
+
+            var normalized = NormalizeWhitespace(rawValue);
+            string? closingPeriod = null;
+            DateTime? lastUpdate = null;
+
+            var segments = normalized.Split('|', StringSplitOptions.RemoveEmptyEntries);
+            if (segments.Length > 0)
+            {
+                closingPeriod = segments[0].Trim();
+            }
+
+            foreach (var segment in segments)
+            {
+                var separatorIndex = segment.IndexOf(':');
+                if (separatorIndex < 0)
+                {
+                    continue;
+                }
+
+                var label = segment[..separatorIndex].Trim();
+                var value = segment[(separatorIndex + 1)..].Trim();
+
+                if (label.Equals("Last Update", StringComparison.OrdinalIgnoreCase) ||
+                    label.Equals("Última Atualização", StringComparison.OrdinalIgnoreCase) ||
+                    label.Equals("Ultima Atualizacao", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (DateTime.TryParse(value, PtBrCulture, DateTimeStyles.AssumeLocal, out var parsedPtBr))
+                    {
+                        lastUpdate = DateTime.SpecifyKind(parsedPtBr.Date, DateTimeKind.Unspecified);
+                    }
+                    else if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var parsedInvariant))
+                    {
+                        lastUpdate = DateTime.SpecifyKind(parsedInvariant.Date, DateTimeKind.Unspecified);
+                    }
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(closingPeriod))
+            {
+                closingPeriod = null;
+            }
+
+            return new FullManagementReportMetadata(closingPeriod, lastUpdate);
         }
 
         private static decimal? ParseDecimal(object? value, int? decimals)
@@ -903,6 +1051,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
             return 1;
         }
+
+        private sealed record FullManagementReportMetadata(string? ClosingPeriodName, DateTime? LastUpdateDate);
 
         private sealed class FullManagementDataRow
         {
