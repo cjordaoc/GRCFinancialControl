@@ -6,6 +6,7 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using InvoicePlanner.Avalonia.Resources;
+using InvoicePlanner.Avalonia.Services;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
 using Invoices.Core.Validation;
@@ -19,8 +20,6 @@ public partial class PlanEditorViewModel : ViewModelBase
     private readonly IInvoicePlanRepository _repository;
     private readonly IInvoicePlanValidator _validator;
     private readonly ILogger<PlanEditorViewModel> _logger;
-    private PlanEmailViewModel? _placeholderEmail;
-    private bool _isUpdatingEmails;
     private bool _suppressLineUpdates;
     private bool _isInitializing;
 
@@ -36,14 +35,13 @@ public partial class PlanEditorViewModel : ViewModelBase
         _isInitializing = true;
 
         Items.CollectionChanged += OnItemsCollectionChanged;
-        AdditionalEmails.CollectionChanged += OnAdditionalEmailsChanged;
+        AdditionalEmails.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasAdditionalEmails));
 
         PlanTypes = Enum.GetValues<InvoicePlanType>();
 
         RebalanceCommand = new RelayCommand(RebalanceTotals);
         SavePlanCommand = new RelayCommand(SavePlan);
-
-        EnsureEmailPlaceholder();
+        CreatePlanCommand = new RelayCommand(CreatePlan, CanCreatePlan);
 
         // Seed with default values so the editor presents a useful layout.
         PlanType = InvoicePlanType.ByDate;
@@ -58,7 +56,12 @@ public partial class PlanEditorViewModel : ViewModelBase
         _isInitializing = false;
         EnsureItemCount();
         RecalculateTotals();
+        IsPlanFormVisible = false;
+
+        LoadEngagements();
     }
+
+    public ObservableCollection<EngagementOptionViewModel> Engagements { get; } = new();
 
     public ObservableCollection<InvoicePlanLineViewModel> Items { get; } = new();
 
@@ -110,6 +113,15 @@ public partial class PlanEditorViewModel : ViewModelBase
 
     private int _numInvoices = 1;
 
+    [ObservableProperty]
+    private EngagementOptionViewModel? selectedEngagement;
+
+    [ObservableProperty]
+    private bool isPlanFormVisible;
+
+    [ObservableProperty]
+    private string? engagementSelectionMessage;
+
     public int NumInvoices
     {
         get => _numInvoices;
@@ -152,32 +164,6 @@ public partial class PlanEditorViewModel : ViewModelBase
 
         RefreshSequences();
         RecalculateTotals();
-    }
-
-    private void OnAdditionalEmailsChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        if (e.Action == NotifyCollectionChangedAction.Reset)
-        {
-            _placeholderEmail = null;
-        }
-
-        if (e.OldItems is not null)
-        {
-            foreach (PlanEmailViewModel email in e.OldItems)
-            {
-                if (ReferenceEquals(email, _placeholderEmail))
-                {
-                    _placeholderEmail = null;
-                }
-            }
-        }
-
-        OnPropertyChanged(nameof(HasAdditionalEmails));
-
-        if (!_isUpdatingEmails)
-        {
-            EnsureEmailPlaceholder();
-        }
     }
 
     public bool HasAdditionalEmails => AdditionalEmails.Any(email => !string.IsNullOrWhiteSpace(email.Email));
@@ -235,9 +221,16 @@ public partial class PlanEditorViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasStatusMessage));
     }
 
+    partial void OnSelectedEngagementChanged(EngagementOptionViewModel? value)
+    {
+        CreatePlanCommand.NotifyCanExecuteChanged();
+    }
+
     public IRelayCommand RebalanceCommand { get; }
 
     public IRelayCommand SavePlanCommand { get; }
+
+    public IRelayCommand CreatePlanCommand { get; }
 
     public bool LoadPlan(int planId)
     {
@@ -273,6 +266,8 @@ public partial class PlanEditorViewModel : ViewModelBase
         {
             PlanId = plan.Id;
             EngagementId = plan.EngagementId;
+            SelectedEngagement = Engagements.FirstOrDefault(option => option.EngagementId == plan.EngagementId);
+            EngagementName = SelectedEngagement?.Name ?? plan.EngagementId;
             PlanType = plan.Type;
             PaymentTermDays = plan.PaymentTermDays;
             CustomerFocalPointName = plan.CustomerFocalPointName;
@@ -300,19 +295,14 @@ public partial class PlanEditorViewModel : ViewModelBase
                 Items.Add(line);
             }
 
-            _isUpdatingEmails = true;
-            try
+            AdditionalEmails.Clear();
+            foreach (var email in plan.AdditionalEmails)
             {
-                AdditionalEmails.Clear();
-                foreach (var email in plan.AdditionalEmails)
+                AdditionalEmails.Add(new PlanEmailViewModel
                 {
-                    AdditionalEmails.Add(CreateEmailViewModel(email.Id, email.Email));
-                }
-            }
-            finally
-            {
-                _isUpdatingEmails = false;
-                EnsureEmailPlaceholder();
+                    Id = email.Id,
+                    Email = email.Email,
+                });
             }
 
             PlanningBaseValue = Math.Round(plan.Items.Sum(item => item.Amount), 2, MidpointRounding.AwayFromZero);
@@ -326,6 +316,8 @@ public partial class PlanEditorViewModel : ViewModelBase
             ApplyEmissionDateRule();
             RecalculateTotals();
             OnPropertyChanged(nameof(RequiresFirstEmissionDate));
+            OnPropertyChanged(nameof(HasAdditionalEmails));
+            IsPlanFormVisible = true;
         }
     }
 
@@ -467,88 +459,6 @@ public partial class PlanEditorViewModel : ViewModelBase
         TotalAmount = Math.Round(Items.Sum(line => line.Amount), 2, MidpointRounding.AwayFromZero);
     }
 
-    private void RemoveEmail(PlanEmailViewModel email)
-    {
-        if (email is null)
-        {
-            return;
-        }
-
-        AdditionalEmails.Remove(email);
-    }
-
-    private void HandleEmailChanged(PlanEmailViewModel email)
-    {
-        if (email is null || _isUpdatingEmails)
-        {
-            return;
-        }
-
-        if (ReferenceEquals(email, _placeholderEmail) && !string.IsNullOrWhiteSpace(email.Email))
-        {
-            _placeholderEmail = null;
-        }
-
-        EnsureEmailPlaceholder();
-        OnPropertyChanged(nameof(HasAdditionalEmails));
-    }
-
-    private PlanEmailViewModel CreateEmailViewModel(int id = 0, string? email = null)
-    {
-        var viewModel = new PlanEmailViewModel(RemoveEmail, HandleEmailChanged)
-        {
-            Id = id,
-            Email = email ?? string.Empty,
-        };
-
-        return viewModel;
-    }
-
-    private void EnsureEmailPlaceholder()
-    {
-        if (_isUpdatingEmails)
-        {
-            return;
-        }
-
-        _isUpdatingEmails = true;
-
-        try
-        {
-            var blanks = AdditionalEmails
-                .Where(email => string.IsNullOrWhiteSpace(email.Email))
-                .ToList();
-
-            if (blanks.Count > 0)
-            {
-                _placeholderEmail = blanks[0];
-
-                for (var index = 1; index < blanks.Count; index++)
-                {
-                    AdditionalEmails.Remove(blanks[index]);
-                }
-
-                if (!ReferenceEquals(AdditionalEmails.LastOrDefault(), _placeholderEmail))
-                {
-                    AdditionalEmails.Remove(_placeholderEmail);
-                    AdditionalEmails.Add(_placeholderEmail);
-                }
-
-                return;
-            }
-
-            _placeholderEmail = null;
-
-            var placeholder = CreateEmailViewModel();
-            _placeholderEmail = placeholder;
-            AdditionalEmails.Add(placeholder);
-        }
-        finally
-        {
-            _isUpdatingEmails = false;
-        }
-    }
-
     private void SavePlan()
     {
         ValidationMessage = null;
@@ -653,6 +563,80 @@ public partial class PlanEditorViewModel : ViewModelBase
         }
 
         return plan;
+    }
+
+    private void LoadEngagements()
+    {
+        try
+        {
+            var engagements = _repository.ListEngagementsForPlanning();
+
+            Engagements.Clear();
+            foreach (var engagement in engagements)
+            {
+                Engagements.Add(new EngagementOptionViewModel(engagement));
+            }
+
+            EngagementSelectionMessage = engagements.Count == 0
+                ? Strings.Get("PlanEditorEngagementsEmpty")
+                : Strings.Get("PlanEditorEngagementsSelectHint");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load engagements for planning.");
+            Engagements.Clear();
+            SelectedEngagement = null;
+            EngagementSelectionMessage = ConnectionErrorMessageFormatter.Format(
+                ex,
+                Strings.Format("PlanEditorEngagementsLoadError", ex.Message));
+        }
+    }
+
+    private bool CanCreatePlan() => SelectedEngagement is not null;
+
+    private void CreatePlan()
+    {
+        if (SelectedEngagement is null)
+        {
+            return;
+        }
+
+        ResetPlanEditor();
+
+        EngagementId = SelectedEngagement.EngagementId;
+        EngagementName = SelectedEngagement.Name;
+        IsPlanFormVisible = true;
+    }
+
+    private void ResetPlanEditor()
+    {
+        _isInitializing = true;
+
+        try
+        {
+            PlanId = 0;
+            PlanType = InvoicePlanType.ByDate;
+            _numInvoices = 1;
+            OnPropertyChanged(nameof(NumInvoices));
+            PaymentTermDays = 0;
+            PlanningBaseValue = 0m;
+            FirstEmissionDate = DateTime.Today;
+            CustomerFocalPointName = string.Empty;
+            CustomerFocalPointEmail = string.Empty;
+            CustomInstructions = string.Empty;
+            Items.Clear();
+            AdditionalEmails.Clear();
+            ValidationMessage = null;
+            StatusMessage = null;
+        }
+        finally
+        {
+            _isInitializing = false;
+        }
+
+        EnsureItemCount();
+        RecalculateTotals();
+        OnPropertyChanged(nameof(HasAdditionalEmails));
     }
 
     private void AdjustLastLineForTotals()

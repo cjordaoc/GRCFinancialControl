@@ -1,11 +1,16 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="using:InvoicePlanner.Avalonia"
+             xmlns:conv="clr-namespace:InvoicePlanner.Avalonia.Converters"
              x:Class="InvoicePlanner.Avalonia.App"
              RequestedThemeVariant="Dark">
     <Application.DataTemplates>
         <local:ViewLocator />
     </Application.DataTemplates>
+
+    <Application.Resources>
+        <conv:DateTimeOffsetConverter x:Key="DateTimeOffsetConverter" />
+    </Application.Resources>
 
     <Application.Styles>
         <FluentTheme />

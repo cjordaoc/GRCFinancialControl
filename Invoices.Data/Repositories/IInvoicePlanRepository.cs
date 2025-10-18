@@ -10,6 +10,8 @@ public interface IInvoicePlanRepository
 
     IReadOnlyList<InvoicePlan> ListPlansForEngagement(string engagementId);
 
+    IReadOnlyList<EngagementLookup> ListEngagementsForPlanning();
+
     IReadOnlyList<InvoicePlanSummary> ListPlansForRequestStage();
 
     IReadOnlyList<InvoicePlanSummary> ListPlansForEmissionStage();

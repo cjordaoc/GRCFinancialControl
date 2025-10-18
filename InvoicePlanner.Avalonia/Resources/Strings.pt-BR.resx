@@ -90,6 +90,9 @@
   <data name="CommonWatermarkReason" xml:space="preserve">
     <value>Motivo</value>
   </data>
+  <data name="CommonConnectionMissing" xml:space="preserve">
+    <value>As configurações de conexão estão ausentes ou inválidas. Abra Configuração da conexão para revisar servidor, banco, usuário e senha.</value>
+  </data>
   <data name="PlanEditorWatermarkDelivery" xml:space="preserve">
     <value>Inclua observações da entrega</value>
   </data>
@@ -167,6 +170,33 @@
   </data>
   <data name="PlanSelectionColumnCanceled" xml:space="preserve">
     <value>Canceladas</value>
+  </data>
+  <data name="PlanEditorSelectionTitle" xml:space="preserve">
+    <value>Selecione um engagement</value>
+  </data>
+  <data name="PlanEditorSelectionDescription" xml:space="preserve">
+    <value>Escolha um engagement na lista para iniciar um novo plano de faturas.</value>
+  </data>
+  <data name="PlanEditorSelectionEngagementHeader" xml:space="preserve">
+    <value>Engagement</value>
+  </data>
+  <data name="PlanEditorSelectionNameHeader" xml:space="preserve">
+    <value>Descrição</value>
+  </data>
+  <data name="PlanEditorSelectionCustomerHeader" xml:space="preserve">
+    <value>Cliente</value>
+  </data>
+  <data name="PlanEditorSelectionCreateButton" xml:space="preserve">
+    <value>Criar plano</value>
+  </data>
+  <data name="PlanEditorEngagementsEmpty" xml:space="preserve">
+    <value>Nenhum engagement disponível. Configure a conexão de dados e tente novamente.</value>
+  </data>
+  <data name="PlanEditorEngagementsSelectHint" xml:space="preserve">
+    <value>Selecione um engagement e clique em Criar plano para abrir o editor de faturas.</value>
+  </data>
+  <data name="PlanEditorEngagementsLoadError" xml:space="preserve">
+    <value>Não foi possível carregar os engagements: {0}</value>
   </data>
   <data name="PlanEditorTitle" xml:space="preserve">
     <value>Plano de faturamento</value>
