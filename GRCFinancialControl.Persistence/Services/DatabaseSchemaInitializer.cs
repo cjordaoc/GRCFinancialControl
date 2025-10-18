@@ -5,6 +5,7 @@ using GRCFinancialControl.Core.Configuration;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
+using MySqlConnector;
 
 namespace GRCFinancialControl.Persistence.Services
 {
@@ -139,7 +140,18 @@ namespace GRCFinancialControl.Persistence.Services
                 return false;
             }
 
-            connectionString = $"Server={server};Database={database};User ID={user};Password={password};";
+            var builder = new MySqlConnectionStringBuilder
+            {
+                Server = server,
+                Database = database,
+                UserID = user,
+                Password = password,
+                SslMode = MySqlSslMode.Preferred,
+                AllowUserVariables = true,
+                ConnectionTimeout = 5
+            };
+
+            connectionString = builder.ConnectionString;
             return true;
         }
 

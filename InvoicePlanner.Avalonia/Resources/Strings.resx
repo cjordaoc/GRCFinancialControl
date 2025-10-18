@@ -81,6 +81,9 @@
   <data name="ConnectionImportFailure" xml:space="preserve">
     <value>Import failed: {0}</value>
   </data>
+  <data name="ConnectionImportRestoreFailed" xml:space="preserve">
+    <value>Failed to restore the previous connection settings: {0}</value>
+  </data>
   <data name="ConnectionSetupPrompt" xml:space="preserve">
     <value>Import a connection package to start using the Invoice Planner.</value>
   </data>

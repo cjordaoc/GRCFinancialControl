@@ -22,6 +22,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using MySqlConnector;
 
 namespace InvoicePlanner.Avalonia;
 
@@ -38,7 +39,7 @@ public partial class App : Application
         AvaloniaXamlLoader.Load(this);
     }
 
-    public override void OnFrameworkInitializationCompleted()
+    public override async void OnFrameworkInitializationCompleted()
     {
         _host = Host.CreateDefaultBuilder()
             .ConfigureAppConfiguration((context, config) =>
@@ -114,11 +115,11 @@ public partial class App : Application
             })
             .Build();
 
-        _host.Start();
+        await _host.StartAsync();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.Exit += (_, _) => DisposeHostAsync().GetAwaiter().GetResult();
+            desktop.Exit += async (_, _) => await DisposeHostAsync();
 
             var errorHandler = Services.GetRequiredService<IGlobalErrorHandler>();
             errorHandler.Register(desktop);
@@ -132,12 +133,23 @@ public partial class App : Application
                 if (_hasConnectionSettings)
                 {
                     var schemaInitializer = provider.GetRequiredService<IDatabaseSchemaInitializer>();
-                    schemaInitializer.EnsureSchemaAsync().GetAwaiter().GetResult();
+                    try
+                    {
+                        await schemaInitializer.EnsureSchemaAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        _hasConnectionSettings = false;
+                        var logger = provider.GetRequiredService<ILogger<App>>();
+                        logger.LogError(
+                            ex,
+                            "Failed to initialize the remote database schema. The application will continue without a database connection.");
+                    }
                 }
 
                 var settingsDbContext = provider.GetRequiredService<SettingsDbContext>();
-                settingsDbContext.Database.EnsureCreated();
-                settingsDbContext.Database.Migrate();
+                await settingsDbContext.Database.EnsureCreatedAsync();
+                await settingsDbContext.Database.MigrateAsync();
             }
 
             desktop.MainWindow = mainWindow;
@@ -176,7 +188,18 @@ public partial class App : Application
             return false;
         }
 
-        connectionString = $"Server={server};Database={database};User ID={user};Password={password};";
+        var builder = new MySqlConnectionStringBuilder
+        {
+            Server = server,
+            Database = database,
+            UserID = user,
+            Password = password,
+            SslMode = MySqlSslMode.Preferred,
+            AllowUserVariables = true,
+            ConnectionTimeout = 5
+        };
+
+        connectionString = builder.ConnectionString;
         return true;
     }
 
