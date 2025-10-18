@@ -58,6 +58,29 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             .ToList();
     }
 
+    public IReadOnlyList<EngagementLookup> ListEngagementsForPlanning()
+    {
+        using var context = _dbContextFactory.CreateDbContext();
+
+        return context.Engagements
+            .AsNoTracking()
+            .Include(engagement => engagement.Customer)
+            .Where(engagement => !string.IsNullOrWhiteSpace(engagement.EngagementId))
+            .OrderBy(engagement => engagement.EngagementId)
+            .Select(engagement => new EngagementLookup
+            {
+                Id = engagement.Id,
+                EngagementId = engagement.EngagementId,
+                Name = string.IsNullOrWhiteSpace(engagement.Description)
+                    ? engagement.EngagementId
+                    : engagement.Description,
+                CustomerName = engagement.Customer == null
+                    ? null
+                    : engagement.Customer.Name,
+            })
+            .ToList();
+    }
+
     public IReadOnlyList<InvoicePlanSummary> ListPlansForRequestStage()
     {
         using var context = _dbContextFactory.CreateDbContext();

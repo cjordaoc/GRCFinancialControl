@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using InvoicePlanner.Avalonia.Messages;
 using InvoicePlanner.Avalonia.Resources;
+using InvoicePlanner.Avalonia.Services;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
 using Invoices.Data.Repositories;
@@ -357,7 +358,9 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
             _logger.LogError(ex, "Failed to load available plans for emission confirmation.");
             AvailablePlans.Clear();
             SelectedPlan = null;
-            PlanSelectionMessage = Strings.Format("EmissionPlansLoadError", ex.Message);
+            PlanSelectionMessage = ConnectionErrorMessageFormatter.Format(
+                ex,
+                Strings.Format("EmissionPlansLoadError", ex.Message));
         }
     }
 

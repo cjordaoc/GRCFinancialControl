@@ -97,7 +97,7 @@
                             <DataGridTemplateColumn Header="{res:Loc Key=EmissionGridEmittedAtHeader}" Width="160">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
-                                        <DatePicker SelectedDate="{Binding EmittedAt, Mode=TwoWay}" />
+                                        <DatePicker SelectedDate="{Binding EmittedAt, Mode=TwoWay, Converter={StaticResource DateTimeOffsetConverter}}" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -112,7 +112,7 @@
                             <DataGridTemplateColumn Header="{res:Loc Key=EmissionGridNewEmissionHeader}" Width="160">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
-                                        <DatePicker SelectedDate="{Binding ReissueEmissionDate, Mode=TwoWay}" />
+                                        <DatePicker SelectedDate="{Binding ReissueEmissionDate, Mode=TwoWay, Converter={StaticResource DateTimeOffsetConverter}}" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

@@ -99,6 +99,9 @@
   <data name="CommonWatermarkReason" xml:space="preserve">
     <value>Reason</value>
   </data>
+  <data name="CommonConnectionMissing" xml:space="preserve">
+    <value>Connection settings are missing or invalid. Open Connection setup to review the server, database, user, and password.</value>
+  </data>
   <data name="PlanEditorWatermarkDelivery" xml:space="preserve">
     <value>Provide delivery notes</value>
   </data>
@@ -176,6 +179,33 @@
   </data>
   <data name="PlanSelectionColumnCanceled" xml:space="preserve">
     <value>Canceled</value>
+  </data>
+  <data name="PlanEditorSelectionTitle" xml:space="preserve">
+    <value>Select an engagement</value>
+  </data>
+  <data name="PlanEditorSelectionDescription" xml:space="preserve">
+    <value>Choose an engagement from the list to start a new invoice plan.</value>
+  </data>
+  <data name="PlanEditorSelectionEngagementHeader" xml:space="preserve">
+    <value>Engagement</value>
+  </data>
+  <data name="PlanEditorSelectionNameHeader" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="PlanEditorSelectionCustomerHeader" xml:space="preserve">
+    <value>Customer</value>
+  </data>
+  <data name="PlanEditorSelectionCreateButton" xml:space="preserve">
+    <value>Create plan</value>
+  </data>
+  <data name="PlanEditorEngagementsEmpty" xml:space="preserve">
+    <value>No engagements are available. Configure the data connection and try again.</value>
+  </data>
+  <data name="PlanEditorEngagementsSelectHint" xml:space="preserve">
+    <value>Select an engagement and choose Create plan to open the invoice editor.</value>
+  </data>
+  <data name="PlanEditorEngagementsLoadError" xml:space="preserve">
+    <value>Could not load engagements: {0}</value>
   </data>
   <data name="PlanEditorTitle" xml:space="preserve">
     <value>Invoice plan</value>
