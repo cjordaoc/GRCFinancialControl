@@ -19,6 +19,8 @@ public partial class PlanEditorViewModel : ViewModelBase
     private readonly IInvoicePlanRepository _repository;
     private readonly IInvoicePlanValidator _validator;
     private readonly ILogger<PlanEditorViewModel> _logger;
+    private PlanEmailViewModel? _placeholderEmail;
+    private bool _isUpdatingEmails;
     private bool _suppressLineUpdates;
     private bool _isInitializing;
 
@@ -38,9 +40,10 @@ public partial class PlanEditorViewModel : ViewModelBase
 
         PlanTypes = Enum.GetValues<InvoicePlanType>();
 
-        AddEmailCommand = new RelayCommand(AddEmail);
         RebalanceCommand = new RelayCommand(RebalanceTotals);
         SavePlanCommand = new RelayCommand(SavePlan);
+
+        EnsureEmailPlaceholder();
 
         // Seed with default values so the editor presents a useful layout.
         PlanType = InvoicePlanType.ByDate;
@@ -153,10 +156,31 @@ public partial class PlanEditorViewModel : ViewModelBase
 
     private void OnAdditionalEmailsChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        if (e.Action == NotifyCollectionChangedAction.Reset)
+        {
+            _placeholderEmail = null;
+        }
+
+        if (e.OldItems is not null)
+        {
+            foreach (PlanEmailViewModel email in e.OldItems)
+            {
+                if (ReferenceEquals(email, _placeholderEmail))
+                {
+                    _placeholderEmail = null;
+                }
+            }
+        }
+
         OnPropertyChanged(nameof(HasAdditionalEmails));
+
+        if (!_isUpdatingEmails)
+        {
+            EnsureEmailPlaceholder();
+        }
     }
 
-    public bool HasAdditionalEmails => AdditionalEmails.Count > 0;
+    public bool HasAdditionalEmails => AdditionalEmails.Any(email => !string.IsNullOrWhiteSpace(email.Email));
 
     public bool HasValidationMessage => !string.IsNullOrWhiteSpace(ValidationMessage);
 
@@ -210,8 +234,6 @@ public partial class PlanEditorViewModel : ViewModelBase
     {
         OnPropertyChanged(nameof(HasStatusMessage));
     }
-
-    public IRelayCommand AddEmailCommand { get; }
 
     public IRelayCommand RebalanceCommand { get; }
 
@@ -278,16 +300,19 @@ public partial class PlanEditorViewModel : ViewModelBase
                 Items.Add(line);
             }
 
-            AdditionalEmails.Clear();
-            foreach (var email in plan.AdditionalEmails)
+            _isUpdatingEmails = true;
+            try
             {
-                var emailVm = new PlanEmailViewModel(RemoveEmail)
+                AdditionalEmails.Clear();
+                foreach (var email in plan.AdditionalEmails)
                 {
-                    Id = email.Id,
-                    Email = email.Email,
-                };
-
-                AdditionalEmails.Add(emailVm);
+                    AdditionalEmails.Add(CreateEmailViewModel(email.Id, email.Email));
+                }
+            }
+            finally
+            {
+                _isUpdatingEmails = false;
+                EnsureEmailPlaceholder();
             }
 
             PlanningBaseValue = Math.Round(plan.Items.Sum(item => item.Amount), 2, MidpointRounding.AwayFromZero);
@@ -440,17 +465,88 @@ public partial class PlanEditorViewModel : ViewModelBase
     {
         TotalPercentage = Math.Round(Items.Sum(line => line.Percentage), 4, MidpointRounding.AwayFromZero);
         TotalAmount = Math.Round(Items.Sum(line => line.Amount), 2, MidpointRounding.AwayFromZero);
-        OnPropertyChanged(nameof(HasAdditionalEmails));
-    }
-
-    private void AddEmail()
-    {
-        AdditionalEmails.Add(new PlanEmailViewModel(RemoveEmail));
     }
 
     private void RemoveEmail(PlanEmailViewModel email)
     {
+        if (email is null)
+        {
+            return;
+        }
+
         AdditionalEmails.Remove(email);
+    }
+
+    private void HandleEmailChanged(PlanEmailViewModel email)
+    {
+        if (email is null || _isUpdatingEmails)
+        {
+            return;
+        }
+
+        if (ReferenceEquals(email, _placeholderEmail) && !string.IsNullOrWhiteSpace(email.Email))
+        {
+            _placeholderEmail = null;
+        }
+
+        EnsureEmailPlaceholder();
+        OnPropertyChanged(nameof(HasAdditionalEmails));
+    }
+
+    private PlanEmailViewModel CreateEmailViewModel(int id = 0, string? email = null)
+    {
+        var viewModel = new PlanEmailViewModel(RemoveEmail, HandleEmailChanged)
+        {
+            Id = id,
+            Email = email ?? string.Empty,
+        };
+
+        return viewModel;
+    }
+
+    private void EnsureEmailPlaceholder()
+    {
+        if (_isUpdatingEmails)
+        {
+            return;
+        }
+
+        _isUpdatingEmails = true;
+
+        try
+        {
+            var blanks = AdditionalEmails
+                .Where(email => string.IsNullOrWhiteSpace(email.Email))
+                .ToList();
+
+            if (blanks.Count > 0)
+            {
+                _placeholderEmail = blanks[0];
+
+                for (var index = 1; index < blanks.Count; index++)
+                {
+                    AdditionalEmails.Remove(blanks[index]);
+                }
+
+                if (!ReferenceEquals(AdditionalEmails.LastOrDefault(), _placeholderEmail))
+                {
+                    AdditionalEmails.Remove(_placeholderEmail);
+                    AdditionalEmails.Add(_placeholderEmail);
+                }
+
+                return;
+            }
+
+            _placeholderEmail = null;
+
+            var placeholder = CreateEmailViewModel();
+            _placeholderEmail = placeholder;
+            AdditionalEmails.Add(placeholder);
+        }
+        finally
+        {
+            _isUpdatingEmails = false;
+        }
     }
 
     private void SavePlan()
