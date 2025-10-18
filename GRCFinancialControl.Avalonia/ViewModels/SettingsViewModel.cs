@@ -210,32 +210,27 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             StatusMessage = null;
 
-            var filePath = await _filePickerService.OpenFileAsync(
-                title: "Import Connection Package",
-                defaultExtension: ".grcconfig",
-                allowedPatterns: new[] { "*.grcconfig" });
-
-            if (!string.IsNullOrWhiteSpace(filePath))
-            {
-                SelectedImportPackagePath = filePath;
-            }
-            else if (string.IsNullOrWhiteSpace(SelectedImportPackagePath))
-            {
-                StatusMessage = "Import cancelled.";
-                return;
-            }
-
             if (string.IsNullOrWhiteSpace(ImportPassphrase))
             {
                 StatusMessage = "Enter the package passphrase before importing.";
                 return;
             }
 
+            var filePath = await _filePickerService.OpenFileAsync(
+                title: "Import Connection Package",
+                defaultExtension: ".grcconfig",
+                allowedPatterns: new[] { "*.grcconfig" });
+
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                StatusMessage = "Import cancelled.";
+                return;
+            }
+
             try
             {
                 StatusMessage = "Importing connection package...";
-                var packagePath = SelectedImportPackagePath!;
-                var importedSettings = await _connectionPackageService.ImportAsync(packagePath, ImportPassphrase);
+                var importedSettings = await _connectionPackageService.ImportAsync(filePath, ImportPassphrase);
                 var existingSettings = await _settingsService.GetAllAsync();
 
                 foreach (var kvp in importedSettings)
@@ -258,10 +253,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     ? password
                     : Password;
 
-                var fileName = Path.GetFileName(packagePath);
-                StatusMessage = $"Connection settings imported from {fileName}.";
+                StatusMessage = $"Connection settings imported from {Path.GetFileName(filePath)}.";
                 Messenger.Send(new RefreshDataMessage());
-                SelectedImportPackagePath = null;
             }
             catch (InvalidOperationException ex)
             {
@@ -275,13 +268,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 ImportPassphrase = string.Empty;
             }
-        }
-
-        partial void OnSelectedImportPackagePathChanged(string? value)
-        {
-            SelectedImportPackageFileName = string.IsNullOrWhiteSpace(value)
-                ? string.Empty
-                : $"Selected package: {Path.GetFileName(value)}";
         }
     }
 }
