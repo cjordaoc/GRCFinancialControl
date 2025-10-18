@@ -53,6 +53,8 @@ namespace GRCFinancialControl.Avalonia
                 options.UseSqlite(SettingsDatabaseOptions.BuildConnectionString()));
             services.AddTransient<ISettingsService, SettingsService>();
 
+            var hasConnectionSettings = false;
+
             using (var tempProvider = services.BuildServiceProvider())
             {
                 using var scope = tempProvider.CreateScope();
@@ -66,6 +68,11 @@ namespace GRCFinancialControl.Avalonia
                 settings.TryGetValue(SettingKeys.Database, out var database);
                 settings.TryGetValue(SettingKeys.User, out var user);
                 settings.TryGetValue(SettingKeys.Password, out var password);
+
+                hasConnectionSettings =
+                    !string.IsNullOrWhiteSpace(server) &&
+                    !string.IsNullOrWhiteSpace(database) &&
+                    !string.IsNullOrWhiteSpace(user);
 
                 var connectionString = $"Server={server};Database={database};User ID={user};Password={password};";
                 services.AddDbContextFactory<ApplicationDbContext>(options =>
@@ -136,12 +143,15 @@ namespace GRCFinancialControl.Avalonia
                 using (var scope = Services.CreateScope())
                 {
                     var provider = scope.ServiceProvider;
-                    var schemaInitializer = provider.GetRequiredService<IDatabaseSchemaInitializer>();
-                    await schemaInitializer.EnsureSchemaAsync();
-
                     var settingsDbContext = provider.GetRequiredService<SettingsDbContext>();
                     await settingsDbContext.Database.EnsureCreatedAsync();
                     await settingsDbContext.Database.MigrateAsync();
+
+                    if (hasConnectionSettings)
+                    {
+                        var schemaInitializer = provider.GetRequiredService<IDatabaseSchemaInitializer>();
+                        await schemaInitializer.EnsureSchemaAsync();
+                    }
                 }
 
                 desktop.MainWindow = mainWindow;
