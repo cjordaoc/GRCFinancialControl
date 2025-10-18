@@ -44,15 +44,29 @@ namespace GRCFinancialControl.Persistence.Services
                 {
                     throw new ArgumentException("Setting keys must be provided.", nameof(settings));
                 }
+            }
 
-                var existingSetting = await _context.Settings
-                    .FirstOrDefaultAsync(s => s.Key == setting.Key)
-                    .ConfigureAwait(false);
-                if (existingSetting != null)
+            var existingSettings = await _context.Settings
+                .ToListAsync()
+                .ConfigureAwait(false);
+
+            var existingMap = existingSettings.ToDictionary(s => s.Key, StringComparer.Ordinal);
+
+            foreach (var existing in existingSettings)
+            {
+                if (settings.TryGetValue(existing.Key, out var value))
                 {
-                    existingSetting.Value = setting.Value;
+                    existing.Value = value;
                 }
                 else
+                {
+                    _context.Settings.Remove(existing);
+                }
+            }
+
+            foreach (var setting in settings)
+            {
+                if (!existingMap.ContainsKey(setting.Key))
                 {
                     await _context.Settings.AddAsync(new Setting { Key = setting.Key, Value = setting.Value })
                         .ConfigureAwait(false);
