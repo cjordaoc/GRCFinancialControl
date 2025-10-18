@@ -13,74 +13,154 @@
                 <StackPanel Spacing="16">
                     <TextBlock Classes="TitleLarge" Text="{res:Loc Key=PlanEditorTitle}" />
                     <TextBlock Text="{res:Loc Key=PlanEditorDescription}" />
-                    <Grid ColumnDefinitions="Auto,*,Auto,*,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="0,12,0,0" ColumnSpacing="16" RowSpacing="8">
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="{res:Loc Key=PlanEditorEngagementLabel}" Classes="Caption" />
-                        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                            <TextBox Width="140" Text="{Binding EngagementId, Mode=TwoWay}" Watermark="{res:Loc Key=CommonWatermarkCode}" />
-                            <TextBox Width="220" Text="{Binding EngagementName, Mode=TwoWay}" Watermark="{res:Loc Key=CommonWatermarkName}" />
-                        </StackPanel>
+                    <Grid Margin="0,12,0,0"
+                          ColumnSpacing="24"
+                          RowSpacing="12"
+                          ColumnDefinitions="Auto,*,Auto,*">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Row="0" Grid.Column="2" Text="{res:Loc Key=PlanEditorPlanTypeLabel}" Classes="Caption" />
-                        <ComboBox Grid.Row="0" Grid.Column="3"
-                                  ItemsSource="{Binding PlanTypes}"
-                                  SelectedItem="{Binding PlanType, Mode=TwoWay}"
-                                  Width="160" />
-
-                        <TextBlock Grid.Row="0" Grid.Column="4" Text="{res:Loc Key=PlanEditorInvoicesLabel}" Classes="Caption" />
-                        <NumericUpDown Grid.Row="0" Grid.Column="5"
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="{res:Loc Key=PlanEditorEngagementLabel}"
+                                   Classes="Caption"
+                                   VerticalAlignment="Center" />
+                        <Grid Grid.Row="0"
+                              Grid.Column="1"
+                              ColumnSpacing="12"
+                              ColumnDefinitions="140,*"
+                              VerticalAlignment="Center">
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding EngagementId, Mode=TwoWay}"
+                                     Watermark="{res:Loc Key=CommonWatermarkCode}" />
+                            <TextBox Grid.Column="1"
+                                     Text="{Binding EngagementName, Mode=TwoWay}"
+                                     Watermark="{res:Loc Key=CommonWatermarkName}" />
+                        </Grid>
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="2"
+                                   Text="{res:Loc Key=PlanEditorInvoicesLabel}"
+                                   Classes="Caption"
+                                   VerticalAlignment="Center" />
+                        <NumericUpDown Grid.Row="0"
+                                       Grid.Column="3"
                                        Minimum="1"
                                        Maximum="48"
+                                       Increment="1"
                                        Value="{Binding NumInvoices, Mode=TwoWay}"
-                                       Increment="1" Width="100" />
+                                       Width="120"
+                                       HorizontalAlignment="Stretch" />
 
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="{res:Loc Key=PlanEditorPaymentTermsLabel}" Classes="Caption" />
-                        <NumericUpDown Grid.Row="1" Grid.Column="1"
+                        <TextBlock Grid.Row="1"
+                                   Grid.Column="0"
+                                   Text="{res:Loc Key=PlanEditorPlanTypeLabel}"
+                                   Classes="Caption"
+                                   VerticalAlignment="Center" />
+                        <ComboBox Grid.Row="1"
+                                  Grid.Column="1"
+                                  ItemsSource="{Binding PlanTypes}"
+                                  SelectedItem="{Binding PlanType, Mode=TwoWay}"
+                                  HorizontalAlignment="Left"
+                                  Width="200" />
+                        <TextBlock Grid.Row="1"
+                                   Grid.Column="2"
+                                   Text="{res:Loc Key=PlanEditorPaymentTermsLabel}"
+                                   Classes="Caption"
+                                   VerticalAlignment="Center" />
+                        <NumericUpDown Grid.Row="1"
+                                       Grid.Column="3"
                                        Minimum="0"
                                        Maximum="120"
+                                       Increment="1"
                                        Value="{Binding PaymentTermDays, Mode=TwoWay}"
-                                       Increment="1" Width="120" />
+                                       Width="140" />
 
-                        <TextBlock Grid.Row="1" Grid.Column="2" Text="{res:Loc Key=PlanEditorBaseValueLabel}" Classes="Caption" />
-                        <NumericUpDown Grid.Row="1" Grid.Column="3"
+                        <TextBlock Grid.Row="2"
+                                   Grid.Column="0"
+                                   Text="{res:Loc Key=PlanEditorBaseValueLabel}"
+                                   Classes="Caption"
+                                   VerticalAlignment="Center" />
+                        <NumericUpDown Grid.Row="2"
+                                       Grid.Column="1"
                                        Minimum="0"
                                        Maximum="100000000"
+                                       Increment="100"
                                        FormatString="F2"
                                        Value="{Binding PlanningBaseValue, Mode=TwoWay}"
-                                       Increment="100" Width="160" />
-
-                        <TextBlock Grid.Row="1" Grid.Column="4" Text="{res:Loc Key=PlanEditorFirstEmissionLabel}" Classes="Caption" />
-                        <DatePicker Grid.Row="1" Grid.Column="5"
+                                       Width="220" />
+                        <TextBlock Grid.Row="2"
+                                   Grid.Column="2"
+                                   Text="{res:Loc Key=PlanEditorFirstEmissionLabel}"
+                                   Classes="Caption"
+                                   VerticalAlignment="Center" />
+                        <DatePicker Grid.Row="2"
+                                    Grid.Column="3"
                                     SelectedDate="{Binding FirstEmissionDate, Mode=TwoWay}"
                                     IsVisible="{Binding RequiresFirstEmissionDate}"
-                                    IsEnabled="{Binding RequiresFirstEmissionDate}" />
+                                    IsEnabled="{Binding RequiresFirstEmissionDate}"
+                                    HorizontalAlignment="Stretch" />
 
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="{res:Loc Key=PlanEditorFocalPointLabel}" Classes="Caption" />
-                        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                            <TextBox Width="180" Text="{Binding CustomerFocalPointName, Mode=TwoWay}" Watermark="{res:Loc Key=CommonWatermarkName}" />
-                            <TextBox Width="220" Text="{Binding CustomerFocalPointEmail, Mode=TwoWay}" Watermark="{res:Loc Key=CommonWatermarkEmail}" />
-                        </StackPanel>
+                        <TextBlock Grid.Row="3"
+                                   Grid.Column="0"
+                                   Text="{res:Loc Key=PlanEditorFocalPointLabel}"
+                                   Classes="Caption"
+                                   VerticalAlignment="Center" />
+                        <Grid Grid.Row="3"
+                              Grid.Column="1"
+                              Grid.ColumnSpan="3"
+                              ColumnDefinitions="*,*"
+                              ColumnSpacing="12">
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding CustomerFocalPointName, Mode=TwoWay}"
+                                     Watermark="{res:Loc Key=CommonWatermarkName}" />
+                            <TextBox Grid.Column="1"
+                                     Text="{Binding CustomerFocalPointEmail, Mode=TwoWay}"
+                                     Watermark="{res:Loc Key=CommonWatermarkEmail}" />
+                        </Grid>
 
-                        <TextBlock Grid.Row="2" Grid.Column="2" Text="{res:Loc Key=PlanEditorInstructionsLabel}" Classes="Caption" />
-                        <TextBox Grid.Row="2" Grid.Column="3" Grid.ColumnSpan="3" TextWrapping="Wrap"
-                                 AcceptsReturn="True" Height="68"
+                        <TextBlock Grid.Row="4"
+                                   Grid.Column="0"
+                                   Text="{res:Loc Key=PlanEditorInstructionsLabel}"
+                                   Classes="Caption"
+                                   VerticalAlignment="Top" />
+                        <TextBox Grid.Row="4"
+                                 Grid.Column="1"
+                                 Grid.ColumnSpan="3"
+                                 TextWrapping="Wrap"
+                                 AcceptsReturn="True"
+                                 MinHeight="80"
                                  Text="{Binding CustomInstructions, Mode=TwoWay}" />
 
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="{res:Loc Key=PlanEditorExtraEmailsLabel}" Classes="Caption" />
-                        <StackPanel Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="5" Spacing="8">
-                            <ItemsControl ItemsSource="{Binding AdditionalEmails}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="vm:PlanEmailViewModel">
-                                        <StackPanel Orientation="Horizontal" Spacing="8">
-                                            <TextBox Width="260" Text="{Binding Email, Mode=TwoWay}" Watermark="user@example.com" />
-                                            <Button Content="{res:Loc Key=ButtonRemove}"
-                                                    Command="{Binding RemoveCommand}" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                            <Button Content="{res:Loc Key=ButtonAddEmail}" Command="{Binding AddEmailCommand}" HorizontalAlignment="Left" />
-                        </StackPanel>
+                        <TextBlock Grid.Row="5"
+                                   Grid.Column="0"
+                                   Text="{res:Loc Key=PlanEditorExtraEmailsLabel}"
+                                   Classes="Caption"
+                                   VerticalAlignment="Top" />
+                        <ItemsControl Grid.Row="5"
+                                      Grid.Column="1"
+                                      Grid.ColumnSpan="3"
+                                      ItemsSource="{Binding AdditionalEmails}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:PlanEmailViewModel">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Margin="0,0,0,8">
+                                        <TextBox Grid.Column="0"
+                                                 Text="{Binding Email, Mode=TwoWay}"
+                                                 Watermark="user@example.com" />
+                                        <Button Grid.Column="1"
+                                                Content="{res:Loc Key=ButtonRemove}"
+                                                Command="{Binding RemoveCommand}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </Grid>
+
                 </StackPanel>
             </Border>
 

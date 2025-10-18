@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Invoices.Core.Models;
 
 namespace Invoices.Data.Repositories;
@@ -8,6 +9,10 @@ public interface IInvoicePlanRepository
     InvoicePlan? GetPlan(int planId);
 
     IReadOnlyList<InvoicePlan> ListPlansForEngagement(string engagementId);
+
+    IReadOnlyList<InvoicePlanSummary> ListPlansForRequestStage();
+
+    IReadOnlyList<InvoicePlanSummary> ListPlansForEmissionStage();
 
     RepositorySaveResult SavePlan(InvoicePlan plan);
 

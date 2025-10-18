@@ -58,6 +58,52 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             .ToList();
     }
 
+    public IReadOnlyList<InvoicePlanSummary> ListPlansForRequestStage()
+    {
+        using var context = _dbContextFactory.CreateDbContext();
+
+        return context.InvoicePlans
+            .Select(plan => new InvoicePlanSummary
+            {
+                Id = plan.Id,
+                EngagementId = plan.EngagementId,
+                Type = plan.Type,
+                CreatedAt = plan.CreatedAt,
+                FirstEmissionDate = plan.FirstEmissionDate,
+                PlannedItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Planned),
+                RequestedItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Requested),
+                ClosedItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Closed),
+                CanceledItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Canceled),
+            })
+            .Where(summary => summary.PlannedItemCount > 0)
+            .OrderByDescending(summary => summary.CreatedAt)
+            .AsNoTracking()
+            .ToList();
+    }
+
+    public IReadOnlyList<InvoicePlanSummary> ListPlansForEmissionStage()
+    {
+        using var context = _dbContextFactory.CreateDbContext();
+
+        return context.InvoicePlans
+            .Select(plan => new InvoicePlanSummary
+            {
+                Id = plan.Id,
+                EngagementId = plan.EngagementId,
+                Type = plan.Type,
+                CreatedAt = plan.CreatedAt,
+                FirstEmissionDate = plan.FirstEmissionDate,
+                PlannedItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Planned),
+                RequestedItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Requested),
+                ClosedItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Closed),
+                CanceledItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Canceled),
+            })
+            .Where(summary => summary.RequestedItemCount > 0 || summary.CanceledItemCount > 0)
+            .OrderByDescending(summary => summary.CreatedAt)
+            .AsNoTracking()
+            .ToList();
+    }
+
     public RepositorySaveResult SavePlan(InvoicePlan plan)
     {
         if (plan is null)

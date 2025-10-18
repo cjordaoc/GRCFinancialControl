@@ -36,11 +36,17 @@
   <data name="ConnectionSetupPackagePlaceholder" xml:space="preserve">
     <value>Selecione o pacote de conexão</value>
   </data>
+  <data name="ConnectionPackageLabel" xml:space="preserve">
+    <value>Pacote de configuração</value>
+  </data>
   <data name="ConnectionBrowseButton" xml:space="preserve">
     <value>Procurar…</value>
   </data>
   <data name="ConnectionBrowseTitle" xml:space="preserve">
     <value>Abrir pacote de conexão</value>
+  </data>
+  <data name="ConnectionPassphraseLabel" xml:space="preserve">
+    <value>Senha do pacote</value>
   </data>
   <data name="ConnectionPassphrasePlaceholder" xml:space="preserve">
     <value>Senha do pacote</value>
@@ -59,6 +65,9 @@
   </data>
   <data name="ConnectionImportSuccess" xml:space="preserve">
     <value>Configurações de conexão importadas com sucesso. O aplicativo está pronto para uso.</value>
+  </data>
+  <data name="ConnectionImportIncompleteSettings" xml:space="preserve">
+    <value>As configurações de conexão estão incompletas. Verifique o pacote e tente novamente.</value>
   </data>
   <data name="ConnectionImportFailure" xml:space="preserve">
     <value>Falha na importação: {0}</value>
@@ -96,9 +105,6 @@
   <data name="ButtonSaveDraft" xml:space="preserve">
     <value>Salvar rascunho</value>
   </data>
-  <data name="ButtonLoadPlan" xml:space="preserve">
-    <value>Carregar plano</value>
-  </data>
   <data name="ButtonMarkRequested" xml:space="preserve">
     <value>Marcar solicitado</value>
   </data>
@@ -131,6 +137,36 @@
   </data>
   <data name="ButtonClose" xml:space="preserve">
     <value>Fechar</value>
+  </data>
+  <data name="ButtonInsertRequestData" xml:space="preserve">
+    <value>Inserir dados da solicitação</value>
+  </data>
+  <data name="ButtonInsertBzData" xml:space="preserve">
+    <value>Inserir dados de BZ</value>
+  </data>
+  <data name="PlanSelectionColumnPlanId" xml:space="preserve">
+    <value>Plano</value>
+  </data>
+  <data name="PlanSelectionColumnEngagement" xml:space="preserve">
+    <value>Engajamento</value>
+  </data>
+  <data name="PlanSelectionColumnType" xml:space="preserve">
+    <value>Tipo</value>
+  </data>
+  <data name="PlanSelectionColumnFirstEmission" xml:space="preserve">
+    <value>Primeira emissão</value>
+  </data>
+  <data name="PlanSelectionColumnPendingRequests" xml:space="preserve">
+    <value>Solicitações pendentes</value>
+  </data>
+  <data name="PlanSelectionColumnRequested" xml:space="preserve">
+    <value>Solicitadas</value>
+  </data>
+  <data name="PlanSelectionColumnClosed" xml:space="preserve">
+    <value>Fechadas</value>
+  </data>
+  <data name="PlanSelectionColumnCanceled" xml:space="preserve">
+    <value>Canceladas</value>
   </data>
   <data name="PlanEditorTitle" xml:space="preserve">
     <value>Plano de faturamento</value>
@@ -231,8 +267,17 @@
   <data name="RequestConfirmationDescription" xml:space="preserve">
     <value>Informe RITM, COE e data de solicitação para mover as faturas de Planejado para Solicitado.</value>
   </data>
-  <data name="RequestConfirmationPlanIdLabel" xml:space="preserve">
-    <value>ID do plano</value>
+  <data name="RequestPlansHeader" xml:space="preserve">
+    <value>Planos disponíveis</value>
+  </data>
+  <data name="RequestPlansSelectHint" xml:space="preserve">
+    <value>Selecione um plano com faturas pendentes para inserir os dados da solicitação.</value>
+  </data>
+  <data name="RequestPlansEmpty" xml:space="preserve">
+    <value>Nenhum plano requer confirmação de solicitação no momento.</value>
+  </data>
+  <data name="RequestPlansLoadError" xml:space="preserve">
+    <value>Não foi possível carregar os planos: {0}</value>
   </data>
   <data name="RequestConfirmationStatusEngagementFormat" xml:space="preserve">
     <value>Engajamento: {0}</value>
@@ -243,8 +288,8 @@
   <data name="RequestConfirmationStatusRequestedFormat" xml:space="preserve">
     <value>Solicitado: {0}</value>
   </data>
-  <data name="RequestValidationPlanId" xml:space="preserve">
-    <value>Informe um plano válido para carregar.</value>
+  <data name="RequestValidationPlanSelection" xml:space="preserve">
+    <value>Selecione um plano antes de inserir os dados da solicitação.</value>
   </data>
   <data name="RequestValidationNotFound" xml:space="preserve">
     <value>Plano de faturamento {0} não encontrado.</value>
@@ -303,6 +348,18 @@
   <data name="EmissionConfirmationDescription" xml:space="preserve">
     <value>Informe códigos BZ para fechar faturas solicitadas ou cancele linhas que devem ser reemitidas.</value>
   </data>
+  <data name="EmissionPlansHeader" xml:space="preserve">
+    <value>Planos prontos para captura BZ</value>
+  </data>
+  <data name="EmissionPlansSelectHint" xml:space="preserve">
+    <value>Selecione um plano para confirmar emissões ou solicitar reemissão.</value>
+  </data>
+  <data name="EmissionPlansEmpty" xml:space="preserve">
+    <value>Nenhum plano aguarda confirmação de BZ.</value>
+  </data>
+  <data name="EmissionPlansLoadError" xml:space="preserve">
+    <value>Não foi possível carregar os planos de emissão: {0}</value>
+  </data>
   <data name="EmissionStatusEngagementFormat" xml:space="preserve">
     <value>Engajamento: {0}</value>
   </data>
@@ -315,8 +372,8 @@
   <data name="EmissionStatusCanceledFormat" xml:space="preserve">
     <value>Cancelado: {0}</value>
   </data>
-  <data name="EmissionValidationPlanId" xml:space="preserve">
-    <value>Informe um plano válido para carregar.</value>
+  <data name="EmissionValidationPlanSelection" xml:space="preserve">
+    <value>Selecione um plano antes de inserir os dados de BZ.</value>
   </data>
   <data name="EmissionValidationNotFound" xml:space="preserve">
     <value>Plano de faturamento {0} não encontrado.</value>
