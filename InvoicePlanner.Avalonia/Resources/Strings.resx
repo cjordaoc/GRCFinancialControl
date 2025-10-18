@@ -33,6 +33,48 @@
   <data name="NavConfirmEmissions" xml:space="preserve">
     <value>Confirm emissions</value>
   </data>
+  <data name="NavConnectionSettings" xml:space="preserve">
+    <value>Connection setup</value>
+  </data>
+  <data name="ConnectionSetupTitle" xml:space="preserve">
+    <value>Database connection</value>
+  </data>
+  <data name="ConnectionSetupDescription" xml:space="preserve">
+    <value>Import the encrypted package generated in GRC Financial Control to configure the shared database.</value>
+  </data>
+  <data name="ConnectionSetupPackagePlaceholder" xml:space="preserve">
+    <value>Select the connection package</value>
+  </data>
+  <data name="ConnectionBrowseButton" xml:space="preserve">
+    <value>Browse…</value>
+  </data>
+  <data name="ConnectionBrowseTitle" xml:space="preserve">
+    <value>Open connection package</value>
+  </data>
+  <data name="ConnectionPassphrasePlaceholder" xml:space="preserve">
+    <value>Package passphrase</value>
+  </data>
+  <data name="ConnectionImportButton" xml:space="preserve">
+    <value>Import connection</value>
+  </data>
+  <data name="ConnectionImportSelectPackage" xml:space="preserve">
+    <value>Select a connection package before importing.</value>
+  </data>
+  <data name="ConnectionImportEnterPassphrase" xml:space="preserve">
+    <value>Enter the package passphrase to continue.</value>
+  </data>
+  <data name="ConnectionImportInProgress" xml:space="preserve">
+    <value>Importing connection settings…</value>
+  </data>
+  <data name="ConnectionImportSuccess" xml:space="preserve">
+    <value>Connection settings imported successfully. The application is ready to use.</value>
+  </data>
+  <data name="ConnectionImportFailure" xml:space="preserve">
+    <value>Import failed: {0}</value>
+  </data>
+  <data name="ConnectionSetupPrompt" xml:space="preserve">
+    <value>Import a connection package to start using the Invoice Planner.</value>
+  </data>
   <data name="CommonWatermarkCode" xml:space="preserve">
     <value>Code</value>
   </data>

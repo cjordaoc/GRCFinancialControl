@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:InvoicePlanner.Avalonia.ViewModels"
+             xmlns:loc="clr-namespace:InvoicePlanner.Avalonia.Resources"
+             mc:Ignorable="d"
+             x:Class="InvoicePlanner.Avalonia.Views.ConnectionSettingsView"
+             x:DataType="vm:ConnectionSettingsViewModel"
+             d:DesignWidth="800"
+             d:DesignHeight="450">
+    <StackPanel Spacing="12" Margin="20">
+        <TextBlock Text="{loc:Loc Key=ConnectionSetupTitle}" FontSize="24" FontWeight="SemiBold"/>
+        <TextBlock Text="{loc:Loc Key=ConnectionSetupDescription}" TextWrapping="Wrap"/>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBox Text="{Binding SelectedPackagePath}" Width="420" Watermark="{loc:Loc Key=ConnectionSetupPackagePlaceholder}" IsReadOnly="True"/>
+            <Button Content="{loc:Loc Key=ConnectionBrowseButton}" Command="{Binding BrowseCommand}" Width="120"/>
+        </StackPanel>
+        <TextBox Text="{Binding Passphrase}" Watermark="{loc:Loc Key=ConnectionPassphrasePlaceholder}" PasswordChar="*" Width="300"/>
+        <Button Content="{loc:Loc Key=ConnectionImportButton}" Command="{Binding ImportCommand}" Width="200"/>
+        <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" Foreground="{DynamicResource ThemeForegroundBrush}"/>
+    </StackPanel>
+</UserControl>
