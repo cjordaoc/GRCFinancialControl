@@ -19,7 +19,7 @@
     </Design.DataContext>
 
     <controls:ModalOverlayHost x:Name="OverlayHost"
-                               OverlayContent="{Binding CurrentDialog}"
+                               OverlayContent="{Binding CurrentDialogContent}"
                                Title="{Binding CurrentDialogTitle}"
                                CanClose="{Binding CanCloseDialog}">
         <Grid ColumnDefinitions="220,*">

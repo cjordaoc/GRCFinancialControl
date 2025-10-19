@@ -1,11 +1,13 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Avalonia.Controls;
 using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRCFinancialControl.Avalonia;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
@@ -27,13 +29,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public ObservableCollection<NavigationItem> NavigationItems { get; }
 
         [ObservableProperty]
-        private ViewModelBase? _currentDialog;
-
-        [ObservableProperty]
         private string? _currentDialogTitle;
 
         [ObservableProperty]
         private bool _canCloseDialog = true;
+
+        [ObservableProperty]
+        private object? _currentDialogContent;
+
+        private readonly ViewLocator _viewLocator = new();
 
         [ObservableProperty]
         private NavigationItem? _selectedNavigationItem;
@@ -88,14 +92,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public void Receive(OpenDialogMessage message)
         {
-            CurrentDialog = message.ViewModel;
+            CurrentDialogContent = ResolveDialogContent(message.ViewModel);
             CurrentDialogTitle = message.Title;
             CanCloseDialog = message.CanClose;
         }
 
         public void Receive(CloseDialogMessage message)
         {
-            CurrentDialog = null;
+            CurrentDialogContent = null;
             CurrentDialogTitle = null;
             CanCloseDialog = true;
         }
@@ -123,6 +127,22 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 var sectionName = value?.Title ?? ActiveView.GetType().Name;
                 _loggingService.LogError($"Failed to load '{sectionName}': {ex.Message}");
             }
+        }
+
+        private object? ResolveDialogContent(ViewModelBase viewModel)
+        {
+            var content = _viewLocator.Build(viewModel);
+            if (content is Control control)
+            {
+                if (control.DataContext is null)
+                {
+                    control.DataContext = viewModel;
+                }
+
+                return control;
+            }
+
+            return viewModel;
         }
     }
 
