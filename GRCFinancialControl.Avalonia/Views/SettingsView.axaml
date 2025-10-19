@@ -4,57 +4,92 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d"
+             d:DesignWidth="800"
+             d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Spacing="10" Margin="10">
-            <TextBlock Text="{loc:Loc Key=Settings.Section.Database.Title}" FontSize="24" FontWeight="Bold"/>
-            <TextBox Text="{Binding Server}" Watermark="{loc:Loc Key=Settings.Label.Server}"/>
-            <TextBox Text="{Binding Database}" Watermark="{loc:Loc Key=Settings.Label.Database}"/>
-            <TextBox Text="{Binding User}" Watermark="{loc:Loc Key=Settings.Label.User}"/>
-            <TextBox Text="{Binding Password}" Watermark="{loc:Loc Key=Settings.Label.Password}" PasswordChar="*"/>
-            <TextBlock Text="{loc:Loc Key=Settings.Section.Localization.Title}" FontSize="18" FontWeight="SemiBold" Margin="0,10,0,0"/>
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="{loc:Loc Key=Settings.Label.Language}" VerticalAlignment="Center"/>
-                <ComboBox ItemsSource="{Binding Languages}"
-                          SelectedItem="{Binding SelectedLanguage}"
-                          MinWidth="200">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding DisplayName}"/>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Spacing="5" Margin="0,10,0,0">
-                <Button Content="{loc:Loc Key=Settings.Button.Load}" Command="{Binding LoadSettingsCommand}"/>
-                <Button Content="{loc:Loc Key=Settings.Button.Save}" Command="{Binding SaveSettingsCommand}"/>
-                <Button Content="{loc:Loc Key=Settings.Button.Test}" Command="{Binding TestConnectionCommand}"/>
-                <Button Content="{loc:Loc Key=Settings.Button.ClearAll}" Command="{Binding ClearAllDataCommand}" Classes="danger"/>
-            </StackPanel>
-            <Separator Margin="0,20,0,0"/>
-            <TextBlock Text="{loc:Loc Key=Settings.Section.Package.Title}" FontSize="24" FontWeight="Bold"/>
-            <TextBlock Text="{loc:Loc Key=Settings.Section.Package.Description}" TextWrapping="Wrap"/>
-            <TextBox Text="{Binding ExportPassphrase}" Watermark="{loc:Loc Key=Settings.Label.Passphrase}" PasswordChar="*"/>
-            <TextBox Text="{Binding ConfirmExportPassphrase}" Watermark="{loc:Loc Key=Settings.Label.ConfirmPassphrase}" PasswordChar="*"/>
-            <Button Content="{loc:Loc Key=Settings.Button.ExportPackage}"
-                    Command="{Binding ExportConnectionPackageCommand}"
-                    HorizontalAlignment="Left"/>
-            <TextBlock Text="{loc:Loc Key=Settings.Section.Package.ImportDescription}" TextWrapping="Wrap" Margin="0,10,0,0"/>
-            <TextBox Text="{Binding ImportPassphrase}" Watermark="{loc:Loc Key=Settings.Label.ImportPassphrase}" PasswordChar="*"/>
-            <Button Content="{loc:Loc Key=Settings.Button.ImportPackage}"
-                    Command="{Binding ImportConnectionPackageCommand}"
-                    HorizontalAlignment="Left"/>
-            <TextBlock Text="{Binding SelectedImportPackageFileName}" FontStyle="Italic" Foreground="Gray"
-                       Margin="0,5,0,0"/>
-            <TextBlock Text="{Binding StatusMessage}"
-                       Margin="0,5,0,0"
-                       TextWrapping="Wrap"/>
-            <Separator Margin="0,20,0,0"/>
-            <TextBlock Text="{loc:Loc Key=Settings.Section.PowerBi.Title}" FontSize="24" FontWeight="Bold"/>
-            <TextBlock Text="{loc:Loc Key=Settings.Section.PowerBi.Description}" TextWrapping="Wrap"/>
-            <TextBox Text="{Binding PowerBiEmbedUrl}" Watermark="{loc:Loc Key=Settings.Label.PowerBiUrl}"/>
+        <StackPanel Margin="24" Spacing="16">
+            <Border Classes="Card" Padding="24">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="{loc:Loc Key=Settings.Section.Localization.Title}" Classes="TitleMedium"/>
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock Text="{loc:Loc Key=Settings.Label.Language}" VerticalAlignment="Center"/>
+                        <ComboBox ItemsSource="{Binding Languages}"
+                                  SelectedItem="{Binding SelectedLanguage}"
+                                  Width="200">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DisplayName}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="Card" Padding="24">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="{loc:Loc Key=Settings.Section.Database.Title}" Classes="TitleLarge"/>
+                    <TextBox Text="{Binding Server}" Watermark="{loc:Loc Key=Settings.Label.Server}"/>
+                    <TextBox Text="{Binding Database}" Watermark="{loc:Loc Key=Settings.Label.Database}"/>
+                    <TextBox Text="{Binding User}" Watermark="{loc:Loc Key=Settings.Label.User}"/>
+                    <TextBox Text="{Binding Password}" Watermark="{loc:Loc Key=Settings.Label.Password}" PasswordChar="*"/>
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Button Content="{loc:Loc Key=Settings.Button.Load}" Command="{Binding LoadSettingsCommand}" MinWidth="120"/>
+                        <Button Content="{loc:Loc Key=Settings.Button.Save}" Command="{Binding SaveSettingsCommand}" MinWidth="120"/>
+                        <Button Content="{loc:Loc Key=Settings.Button.Test}" Command="{Binding TestConnectionCommand}" MinWidth="140"/>
+                        <Button Content="{loc:Loc Key=Settings.Button.ClearAll}" Command="{Binding ClearAllDataCommand}" Classes="danger" MinWidth="140"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="Card" Padding="24">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="{loc:Loc Key=Settings.Section.Package.Title}" Classes="TitleLarge"/>
+                    <TextBlock Text="{loc:Loc Key=Settings.Section.Package.Description}" TextWrapping="Wrap"/>
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="{loc:Loc Key=Settings.Label.Passphrase}"/>
+                        <TextBox Text="{Binding ExportPassphrase}" PasswordChar="*"/>
+                        <TextBlock Text="{loc:Loc Key=Settings.Label.ConfirmPassphrase}"/>
+                        <TextBox Text="{Binding ConfirmExportPassphrase}" PasswordChar="*"/>
+                        <Button Content="{loc:Loc Key=Settings.Button.ExportPackage}"
+                                Command="{Binding ExportConnectionPackageCommand}"
+                                MinWidth="180"
+                                HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <Separator/>
+                    <TextBlock Text="{loc:Loc Key=Settings.Section.Package.ImportDescription}" TextWrapping="Wrap"/>
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="{loc:Loc Key=Settings.Label.ImportPassphrase}"/>
+                        <TextBox Text="{Binding ImportPassphrase}" PasswordChar="*"/>
+                        <Button Content="{loc:Loc Key=Settings.Button.ImportPackage}"
+                                Command="{Binding ImportConnectionPackageCommand}"
+                                MinWidth="180"
+                                HorizontalAlignment="Left"/>
+                        <TextBlock Text="{Binding SelectedImportPackageFileName}"
+                                   Opacity="0.7"
+                                   FontStyle="Italic"
+                                   IsVisible="{Binding HasSelectedImportPackage}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="Card" Padding="24">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="{loc:Loc Key=Settings.Section.PowerBi.Title}" Classes="TitleLarge"/>
+                    <TextBlock Text="{loc:Loc Key=Settings.Section.PowerBi.Description}" TextWrapping="Wrap"/>
+                    <TextBox Text="{Binding PowerBiEmbedUrl}" Watermark="{loc:Loc Key=Settings.Label.PowerBiUrl}"/>
+                </StackPanel>
+            </Border>
+
+            <Border Background="{StaticResource BrushSurfaceVariant}"
+                    Padding="12"
+                    CornerRadius="{StaticResource CornerRadiusMD}"
+                    IsVisible="{Binding HasStatusMessage}">
+                <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
+            </Border>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

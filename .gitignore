@@ -18,6 +18,10 @@
 *.user
 *.userosscache
 *.sln.docstates
+# Local settings store
+settings.db
+settings.db-shm
+settings.db-wal
 
 # Build results
 [Dd]ebug/
