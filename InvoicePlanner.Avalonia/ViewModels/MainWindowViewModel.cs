@@ -31,7 +31,7 @@ public partial class MainWindowViewModel : ViewModelBase
         EmissionConfirmationViewModel emissionConfirmation,
         ConnectionSettingsViewModel connectionSettings,
         ISettingsService settingsService,
-        IWeakReferenceMessenger messenger)
+        IMessenger messenger)
         : base(messenger)
     {
         _planEditor = planEditor;

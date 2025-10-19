@@ -30,7 +30,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         ILogger<EmissionConfirmationViewModel> logger,
         IInvoiceAccessScope accessScope,
         IDialogService dialogService,
-        IWeakReferenceMessenger messenger)
+        IMessenger messenger)
         : base(messenger)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));

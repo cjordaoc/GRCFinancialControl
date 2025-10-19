@@ -49,7 +49,7 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
         IConnectionPackageService connectionPackageService,
         ISettingsService settingsService,
         IDatabaseSchemaInitializer schemaInitializer,
-        IWeakReferenceMessenger messenger)
+        IMessenger messenger)
         : base(messenger)
     {
         _filePickerService = filePickerService ?? throw new ArgumentNullException(nameof(filePickerService));

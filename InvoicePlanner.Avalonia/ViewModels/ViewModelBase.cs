@@ -7,11 +7,16 @@ namespace InvoicePlanner.Avalonia.ViewModels;
 
 public abstract partial class ViewModelBase : ObservableObject
 {
-    protected IWeakReferenceMessenger Messenger { get; }
+    protected IMessenger Messenger { get; }
 
-    protected ViewModelBase(IWeakReferenceMessenger messenger)
+    protected ViewModelBase()
+        : this(WeakReferenceMessenger.Default)
     {
-        Messenger = messenger;
+    }
+
+    protected ViewModelBase(IMessenger messenger)
+    {
+        Messenger = messenger ?? WeakReferenceMessenger.Default;
     }
 
     protected static string GetLoginDisplay(IInvoiceAccessScope accessScope)
