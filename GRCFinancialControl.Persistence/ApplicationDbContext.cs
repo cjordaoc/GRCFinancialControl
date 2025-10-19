@@ -1,3 +1,4 @@
+using System;
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using Invoices.Core.Enums;
@@ -39,6 +40,8 @@ namespace GRCFinancialControl.Persistence
         {
             base.OnModelCreating(modelBuilder);
 
+            var isMySql = Database.ProviderName?.Contains("MySql", StringComparison.OrdinalIgnoreCase) == true;
+
             // Configure composite key for EngagementPapd if not using an auto-incrementing Id
             // modelBuilder.Entity<EngagementPapd>()
             //     .HasKey(ep => new { ep.EngagementId, ep.PapdId, ep.EffectiveDate });
@@ -68,11 +71,11 @@ namespace GRCFinancialControl.Persistence
 
             modelBuilder.Entity<ClosingPeriod>()
                 .Property(cp => cp.PeriodStart)
-                .HasColumnType("datetime(6)");
+                .HasMySqlColumnType("datetime(6)", isMySql);
 
             modelBuilder.Entity<ClosingPeriod>()
                 .Property(cp => cp.PeriodEnd)
-                .HasColumnType("datetime(6)");
+                .HasMySqlColumnType("datetime(6)", isMySql);
 
             modelBuilder.Entity<ClosingPeriod>()
                 .HasOne(cp => cp.FiscalYear)
@@ -129,11 +132,11 @@ namespace GRCFinancialControl.Persistence
 
             modelBuilder.Entity<Engagement>()
                 .Property(e => e.LastEtcDate)
-                .HasColumnType("datetime(6)");
+                .HasMySqlColumnType("datetime(6)", isMySql);
 
             modelBuilder.Entity<Engagement>()
                 .Property(e => e.ProposedNextEtcDate)
-                .HasColumnType("datetime(6)");
+                .HasMySqlColumnType("datetime(6)", isMySql);
 
             modelBuilder.Entity<Engagement>()
                 .HasMany(e => e.RankBudgets)
@@ -197,7 +200,7 @@ namespace GRCFinancialControl.Persistence
 
             modelBuilder.Entity<EngagementPapd>()
                 .Property(ep => ep.EffectiveDate)
-                .HasColumnType("datetime(6)");
+                .HasMySqlColumnType("datetime(6)", isMySql);
 
             modelBuilder.Entity<Manager>()
                 .Property(m => m.Name)
@@ -234,11 +237,11 @@ namespace GRCFinancialControl.Persistence
 
             modelBuilder.Entity<EngagementManagerAssignment>()
                 .Property(a => a.BeginDate)
-                .HasColumnType("datetime(6)");
+                .HasMySqlColumnType("datetime(6)", isMySql);
 
             modelBuilder.Entity<EngagementManagerAssignment>()
                 .Property(a => a.EndDate)
-                .HasColumnType("datetime(6)");
+                .HasMySqlColumnType("datetime(6)", isMySql);
 
             modelBuilder.Entity<PlannedAllocation>()
                 .HasOne(pa => pa.Engagement)
@@ -270,7 +273,7 @@ namespace GRCFinancialControl.Persistence
 
             modelBuilder.Entity<ActualsEntry>()
                 .Property(ae => ae.Date)
-                .HasColumnType("datetime(6)");
+                .HasMySqlColumnType("datetime(6)", isMySql);
 
             modelBuilder.Entity<ActualsEntry>()
                 .Property(ae => ae.Hours)
@@ -291,7 +294,7 @@ namespace GRCFinancialControl.Persistence
 
             modelBuilder.Entity<ExceptionEntry>()
                 .Property(ee => ee.Timestamp)
-                .HasColumnType("datetime(6)")
+                .HasMySqlColumnType("datetime(6)", isMySql)
                 .ValueGeneratedOnAdd();
 
             modelBuilder.Entity<ExceptionEntry>()
@@ -393,15 +396,23 @@ namespace GRCFinancialControl.Persistence
 
             modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
                 .Property(e => e.LastUpdateDate)
-                .HasColumnType("date");
+                .HasMySqlColumnType("date", isMySql);
 
-            modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
+            var updatedAtProperty = modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
                 .Property(e => e.UpdatedAt)
-                .HasColumnType("datetime(6)")
-#if !DEBUG
-                .HasDefaultValueSql("CURRENT_TIMESTAMP(6)")
-#endif
+                .HasMySqlColumnType("datetime(6)", isMySql)
                 .ValueGeneratedOnAddOrUpdate();
+
+#if !DEBUG
+            if (isMySql)
+            {
+                updatedAtProperty.HasMySqlDefaultValueSql("CURRENT_TIMESTAMP(6)", isMySql);
+            }
+            else
+            {
+                updatedAtProperty.HasDefaultValueSql("CURRENT_TIMESTAMP");
+            }
+#endif
 
             modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
                 .HasIndex(e => e.FiscalYearId);
@@ -415,11 +426,11 @@ namespace GRCFinancialControl.Persistence
 
             modelBuilder.Entity<FiscalYear>()
                 .Property(fy => fy.StartDate)
-                .HasColumnType("datetime(6)");
+                .HasMySqlColumnType("datetime(6)", isMySql);
 
             modelBuilder.Entity<FiscalYear>()
                 .Property(fy => fy.EndDate)
-                .HasColumnType("datetime(6)");
+                .HasMySqlColumnType("datetime(6)", isMySql);
 
             modelBuilder.Entity<InvoicePlan>()
                 .ToTable("InvoicePlan");
@@ -443,19 +454,19 @@ namespace GRCFinancialControl.Persistence
 
             modelBuilder.Entity<InvoicePlan>()
                 .Property(plan => plan.CustomInstructions)
-                .HasColumnType("text");
+                .HasMySqlColumnType("text", isMySql);
 
             modelBuilder.Entity<InvoicePlan>()
                 .Property(plan => plan.FirstEmissionDate)
-                .HasColumnType("date");
+                .HasMySqlColumnType("date", isMySql);
 
             modelBuilder.Entity<InvoicePlan>()
                 .Property(plan => plan.CreatedAt)
-                .HasColumnType("timestamp");
+                .HasMySqlColumnType("timestamp", isMySql);
 
             modelBuilder.Entity<InvoicePlan>()
                 .Property(plan => plan.UpdatedAt)
-                .HasColumnType("timestamp");
+                .HasMySqlColumnType("timestamp", isMySql);
 
             modelBuilder.Entity<InvoicePlan>()
                 .HasIndex(plan => plan.EngagementId)
@@ -482,7 +493,7 @@ namespace GRCFinancialControl.Persistence
 
             modelBuilder.Entity<InvoicePlanEmail>()
                 .Property(email => email.CreatedAt)
-                .HasColumnType("timestamp");
+                .HasMySqlColumnType("timestamp", isMySql);
 
             modelBuilder.Entity<InvoicePlanEmail>()
                 .HasIndex(email => email.PlanId)
@@ -501,11 +512,11 @@ namespace GRCFinancialControl.Persistence
 
             modelBuilder.Entity<InvoiceItem>()
                 .Property(item => item.EmissionDate)
-                .HasColumnType("date");
+                .HasMySqlColumnType("date", isMySql);
 
             modelBuilder.Entity<InvoiceItem>()
                 .Property(item => item.DueDate)
-                .HasColumnType("date");
+                .HasMySqlColumnType("date", isMySql);
 
             modelBuilder.Entity<InvoiceItem>()
                 .Property(item => item.PayerCnpj)
@@ -534,23 +545,23 @@ namespace GRCFinancialControl.Persistence
 
             modelBuilder.Entity<InvoiceItem>()
                 .Property(item => item.RequestDate)
-                .HasColumnType("date");
+                .HasMySqlColumnType("date", isMySql);
 
             modelBuilder.Entity<InvoiceItem>()
                 .Property(item => item.EmittedAt)
-                .HasColumnType("date");
+                .HasMySqlColumnType("date", isMySql);
 
             modelBuilder.Entity<InvoiceItem>()
                 .Property(item => item.CanceledAt)
-                .HasColumnType("date");
+                .HasMySqlColumnType("date", isMySql);
 
             modelBuilder.Entity<InvoiceItem>()
                 .Property(item => item.CreatedAt)
-                .HasColumnType("timestamp");
+                .HasMySqlColumnType("timestamp", isMySql);
 
             modelBuilder.Entity<InvoiceItem>()
                 .Property(item => item.UpdatedAt)
-                .HasColumnType("timestamp");
+                .HasMySqlColumnType("timestamp", isMySql);
 
             modelBuilder.Entity<InvoiceItem>()
                 .HasIndex(item => new { item.PlanId, item.SeqNo })
@@ -576,7 +587,7 @@ namespace GRCFinancialControl.Persistence
 
             modelBuilder.Entity<MailOutbox>()
                 .Property(outbox => outbox.NotificationDate)
-                .HasColumnType("date");
+                .HasMySqlColumnType("date", isMySql);
 
             modelBuilder.Entity<MailOutbox>()
                 .Property(outbox => outbox.ToName)
@@ -596,11 +607,11 @@ namespace GRCFinancialControl.Persistence
 
             modelBuilder.Entity<MailOutbox>()
                 .Property(outbox => outbox.CreatedAt)
-                .HasColumnType("timestamp");
+                .HasMySqlColumnType("timestamp", isMySql);
 
             modelBuilder.Entity<MailOutbox>()
                 .Property(outbox => outbox.SentAt)
-                .HasColumnType("timestamp");
+                .HasMySqlColumnType("timestamp", isMySql);
 
             modelBuilder.Entity<MailOutbox>()
                 .HasIndex(outbox => outbox.NotificationDate)
@@ -621,7 +632,7 @@ namespace GRCFinancialControl.Persistence
 
             modelBuilder.Entity<MailOutboxLog>()
                 .Property(log => log.AttemptAt)
-                .HasColumnType("timestamp");
+                .HasMySqlColumnType("timestamp", isMySql);
 
             modelBuilder.Entity<MailOutboxLog>()
                 .Property(log => log.ErrorMessage)
@@ -643,15 +654,15 @@ namespace GRCFinancialControl.Persistence
 
             modelBuilder.Entity<InvoiceNotificationPreview>()
                 .Property(view => view.NotifyDate)
-                .HasColumnType("date");
+                .HasMySqlColumnType("date", isMySql);
 
             modelBuilder.Entity<InvoiceNotificationPreview>()
                 .Property(view => view.EmissionDate)
-                .HasColumnType("date");
+                .HasMySqlColumnType("date", isMySql);
 
             modelBuilder.Entity<InvoiceNotificationPreview>()
                 .Property(view => view.ComputedDueDate)
-                .HasColumnType("date");
+                .HasMySqlColumnType("date", isMySql);
             modelBuilder.Entity<FiscalYear>()
                 .Property(fy => fy.AreaSalesTarget)
                 .HasPrecision(18, 2)
@@ -668,7 +679,7 @@ namespace GRCFinancialControl.Persistence
 
             modelBuilder.Entity<FiscalYear>()
                 .Property(fy => fy.LockedAt)
-                .HasColumnType("datetime(6)");
+                .HasMySqlColumnType("datetime(6)", isMySql);
 
             modelBuilder.Entity<FiscalYear>()
                 .Property(fy => fy.LockedBy)
