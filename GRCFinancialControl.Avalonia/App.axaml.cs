@@ -149,6 +149,9 @@ namespace GRCFinancialControl.Avalonia
                 Services = services.BuildServiceProvider();
 
                 mainWindow.DataContext = Services.GetRequiredService<MainWindowViewModel>();
+                var messenger = Services.GetRequiredService<IMessenger>();
+                var dialogService = Services.GetRequiredService<IDialogService>();
+                mainWindow.ConfigureModalOverlay(messenger, dialogService);
 
                 using (var scope = Services.CreateScope())
                 {

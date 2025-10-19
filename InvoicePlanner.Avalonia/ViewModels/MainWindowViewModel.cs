@@ -1,24 +1,37 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Core.Configuration;
 using GRCFinancialControl.Persistence.Services.Interfaces;
+using InvoicePlanner.Avalonia.Messages;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
-public partial class MainWindowViewModel : ViewModelBase
+public partial class MainWindowViewModel : ViewModelBase, IRecipient<OpenModalOverlayMessage>, IRecipient<CloseModalOverlayMessage>
 {
     private readonly PlanEditorViewModel _planEditor;
     private readonly RequestConfirmationViewModel _requestConfirmation;
     private readonly EmissionConfirmationViewModel _emissionConfirmation;
     private readonly ConnectionSettingsViewModel _connectionSettings;
+    private readonly IMessenger _messenger;
 
     [ObservableProperty]
     private string title = LocalizationRegistry.Get("Shell.Title.Application");
 
     [ObservableProperty]
     private ViewModelBase currentViewModel;
+
+    [ObservableProperty]
+    private object? modalOverlayContent;
+
+    [ObservableProperty]
+    private string? modalOverlayTitle;
+
+    [ObservableProperty]
+    private bool modalOverlayCanClose = true;
 
     public IReadOnlyList<NavigationItemViewModel> MenuItems { get; }
 
@@ -27,12 +40,17 @@ public partial class MainWindowViewModel : ViewModelBase
         RequestConfirmationViewModel requestConfirmation,
         EmissionConfirmationViewModel emissionConfirmation,
         ConnectionSettingsViewModel connectionSettings,
-        ISettingsService settingsService)
+        ISettingsService settingsService,
+        IMessenger messenger)
     {
         _planEditor = planEditor;
         _requestConfirmation = requestConfirmation;
         _emissionConfirmation = emissionConfirmation;
         _connectionSettings = connectionSettings;
+        _messenger = messenger ?? throw new ArgumentNullException(nameof(messenger));
+
+        _messenger.Register<OpenModalOverlayMessage>(this);
+        _messenger.Register<CloseModalOverlayMessage>(this);
 
         var items = new List<NavigationItemViewModel>
         {
@@ -62,6 +80,19 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    void IRecipient<OpenModalOverlayMessage>.Receive(OpenModalOverlayMessage message)
+    {
+        ModalOverlayContent = message.Content;
+        ModalOverlayTitle = message.Title;
+        ModalOverlayCanClose = message.CanClose;
+    }
+
+    void IRecipient<CloseModalOverlayMessage>.Receive(CloseModalOverlayMessage message)
+    {
+        ModalOverlayContent = null;
+        ModalOverlayTitle = null;
+        ModalOverlayCanClose = true;
+    }
     private NavigationItemViewModel CreateNavigationItem(string title, ViewModelBase viewModel)
     {
         NavigationItemViewModel? item = null;

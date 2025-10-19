@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using App.Presentation.Controls;
 using App.Presentation.Localization;
 using App.Presentation.Services;
 using CommunityToolkit.Mvvm.Messaging;
@@ -151,7 +152,7 @@ public sealed class LocalizationAndSettingsTests
 
     private sealed class FakeDialogService : IDialogService
     {
-        public Task<bool> ShowDialogAsync(GrcViewModelBase viewModel)
+        public Task<bool> ShowDialogAsync(GrcViewModelBase viewModel, string? title = null, bool canClose = true)
         {
             return Task.FromResult(false);
         }
@@ -159,6 +160,10 @@ public sealed class LocalizationAndSettingsTests
         public Task<bool> ShowConfirmationAsync(string title, string message)
         {
             return Task.FromResult(false);
+        }
+
+        public void AttachHost(IModalOverlayHost host)
+        {
         }
     }
 

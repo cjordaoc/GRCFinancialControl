@@ -21,19 +21,23 @@ public partial class PlanEditorViewModel : ViewModelBase
     private readonly IInvoicePlanValidator _validator;
     private readonly ILogger<PlanEditorViewModel> _logger;
     private readonly IInvoiceAccessScope _accessScope;
+    private readonly IModalOverlayService _modalOverlayService;
     private bool _suppressLineUpdates;
     private bool _isInitializing;
+    private PlanEditorDialogViewModel? _dialogViewModel;
 
     public PlanEditorViewModel(
         IInvoicePlanRepository repository,
         IInvoicePlanValidator validator,
         ILogger<PlanEditorViewModel> logger,
-        IInvoiceAccessScope accessScope)
+        IInvoiceAccessScope accessScope,
+        IModalOverlayService modalOverlayService)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _accessScope = accessScope ?? throw new ArgumentNullException(nameof(accessScope));
+        _modalOverlayService = modalOverlayService ?? throw new ArgumentNullException(nameof(modalOverlayService));
 
         _accessScope.EnsureInitialized();
 
@@ -45,7 +49,7 @@ public partial class PlanEditorViewModel : ViewModelBase
 
         SavePlanCommand = new RelayCommand(SavePlan);
         CreatePlanCommand = new RelayCommand(CreatePlan, CanCreatePlan);
-        ClosePlanFormCommand = new RelayCommand(() => IsPlanFormVisible = false);
+        ClosePlanFormCommand = new RelayCommand(() => _modalOverlayService.Close(false));
 
         // Seed with default values so the editor presents a useful layout.
         PlanType = InvoicePlanType.ByDate;
@@ -60,7 +64,6 @@ public partial class PlanEditorViewModel : ViewModelBase
         _isInitializing = false;
         EnsureItemCount();
         RecalculateTotals();
-        IsPlanFormVisible = false;
 
         LoadEngagements();
     }
@@ -117,9 +120,6 @@ public partial class PlanEditorViewModel : ViewModelBase
 
     [ObservableProperty]
     private EngagementOptionViewModel? selectedEngagement;
-
-    [ObservableProperty]
-    private bool isPlanFormVisible;
 
     [ObservableProperty]
     private string? engagementSelectionMessage;
@@ -319,7 +319,7 @@ public partial class PlanEditorViewModel : ViewModelBase
             RecalculateTotals();
             OnPropertyChanged(nameof(RequiresFirstEmissionDate));
             OnPropertyChanged(nameof(HasRecipientEmails));
-            IsPlanFormVisible = true;
+            ShowPlanDialog();
         }
     }
 
@@ -656,7 +656,7 @@ public partial class PlanEditorViewModel : ViewModelBase
 
         EngagementId = SelectedEngagement.EngagementId;
         EngagementName = SelectedEngagement.Name;
-        IsPlanFormVisible = true;
+        ShowPlanDialog();
     }
 
     private void ResetPlanEditor()
@@ -687,6 +687,12 @@ public partial class PlanEditorViewModel : ViewModelBase
         EnsureItemCount();
         RecalculateTotals();
         OnPropertyChanged(nameof(HasRecipientEmails));
+    }
+
+    private void ShowPlanDialog()
+    {
+        _dialogViewModel ??= new PlanEditorDialogViewModel(this);
+        _ = _modalOverlayService.ShowAsync(_dialogViewModel, LocalizationRegistry.Get("InvoicePlan.Title.Primary"));
     }
 
     private void AdjustLastLineForTotals()

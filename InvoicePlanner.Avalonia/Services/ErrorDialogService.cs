@@ -1,10 +1,10 @@
 using System;
 using System.Threading.Tasks;
+using App.Presentation.Controls;
+using App.Presentation.Localization;
 using Avalonia.Controls;
 using Avalonia.Threading;
-using App.Presentation.Localization;
 using InvoicePlanner.Avalonia.ViewModels;
-using InvoicePlanner.Avalonia.Views;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace InvoicePlanner.Avalonia.Services;
@@ -12,10 +12,12 @@ namespace InvoicePlanner.Avalonia.Services;
 public class ErrorDialogService : IErrorDialogService
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly IModalOverlayService _modalOverlayService;
 
-    public ErrorDialogService(IServiceProvider serviceProvider)
+    public ErrorDialogService(IServiceProvider serviceProvider, IModalOverlayService modalOverlayService)
     {
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        _modalOverlayService = modalOverlayService ?? throw new ArgumentNullException(nameof(modalOverlayService));
     }
 
     public async Task ShowErrorAsync(Window? owner, string details, string? message = null)
@@ -26,48 +28,32 @@ public class ErrorDialogService : IErrorDialogService
             var viewModel = scope.ServiceProvider.GetRequiredService<ErrorDialogViewModel>();
             viewModel.Initialise(message ?? LocalizationRegistry.Get("Dialogs.Error.Message"), details);
 
-            var dialog = scope.ServiceProvider.GetRequiredService<ErrorDialog>();
-            dialog.DataContext = viewModel;
-
-            void OnOpened(object? sender, EventArgs args)
+            if (owner is not null && owner.IsVisible)
             {
-                viewModel.Clipboard = dialog.Clipboard;
-                dialog.Opened -= OnOpened;
+                viewModel.Clipboard = owner.Clipboard;
             }
-
-            dialog.Opened += OnOpened;
-
-            TaskCompletionSource<object?> tcs = new();
 
             void Handler(object? sender, EventArgs args)
             {
-                viewModel.Clipboard = null;
-                viewModel.CloseRequested -= Handler;
-                dialog.Closed -= ClosedHandler;
-                tcs.TrySetResult(null);
-            }
-
-            void ClosedHandler(object? sender, EventArgs args)
-            {
-                viewModel.Clipboard = null;
-                viewModel.CloseRequested -= Handler;
-                dialog.Closed -= ClosedHandler;
-                tcs.TrySetResult(null);
+                _modalOverlayService.Close(false);
             }
 
             viewModel.CloseRequested += Handler;
-            dialog.Closed += ClosedHandler;
 
-            if (owner is not null && owner.IsVisible)
+            try
             {
-                await dialog.ShowDialog(owner);
+                await _modalOverlayService.ShowAsync(viewModel, viewModel.Title);
             }
-            else
+            finally
             {
-                dialog.Show();
+                viewModel.CloseRequested -= Handler;
+                viewModel.Clipboard = null;
             }
-
-            await tcs.Task;
         });
+    }
+
+    public void AttachHost(IModalOverlayHost host)
+    {
+        _modalOverlayService.AttachHost(host);
     }
 }

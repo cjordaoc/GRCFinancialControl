@@ -5,6 +5,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
+        xmlns:controls="using:App.Presentation.Controls"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
         x:Class="GRCFinancialControl.Avalonia.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -17,40 +18,37 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Grid ColumnDefinitions="220,*">
-        <Border Background="{DynamicResource SystemAccentColor}" Margin="0" Padding="0,20">
-            <StackPanel>
-                <TextBlock Text="{loc:Loc Key=Shell.Brand.Primary}"
-                           FontSize="{StaticResource FontSizeXL}"
-                           FontWeight="Bold"
-                           Foreground="{StaticResource BrushOnSurface}"
-                           Margin="20,0,20,20"/>
-                <TreeView ItemsSource="{Binding NavigationItems}"
-                          SelectedItem="{Binding SelectedNavigationItem}"
-                          Background="Transparent"
-                          BorderThickness="0"
-                          Foreground="{StaticResource BrushOnSurface}">
-                    <TreeView.ItemTemplate>
-                        <TreeDataTemplate ItemsSource="{Binding Children}">
-                            <TextBlock Text="{Binding Title}" Margin="20,6" FontSize="16"/>
-                        </TreeDataTemplate>
-                    </TreeView.ItemTemplate>
-                </TreeView>
-            </StackPanel>
-        </Border>
+    <controls:ModalOverlayHost x:Name="OverlayHost"
+                               OverlayContent="{Binding CurrentDialog}"
+                               Title="{Binding CurrentDialogTitle}"
+                               CanClose="{Binding CanCloseDialog}">
+        <Grid ColumnDefinitions="220,*">
+            <Border Background="{DynamicResource SystemAccentColor}" Margin="0" Padding="0,20">
+                <StackPanel>
+                    <TextBlock Text="{loc:Loc Key=Shell.Brand.Primary}"
+                               FontSize="{StaticResource FontSizeXL}"
+                               FontWeight="Bold"
+                               Foreground="{StaticResource BrushOnSurface}"
+                               Margin="20,0,20,20"/>
+                    <TreeView ItemsSource="{Binding NavigationItems}"
+                              SelectedItem="{Binding SelectedNavigationItem}"
+                              Background="Transparent"
+                              BorderThickness="0"
+                              Foreground="{StaticResource BrushOnSurface}">
+                        <TreeView.ItemTemplate>
+                            <TreeDataTemplate ItemsSource="{Binding Children}">
+                                <TextBlock Text="{Binding Title}" Margin="20,6" FontSize="16"/>
+                            </TreeDataTemplate>
+                        </TreeView.ItemTemplate>
+                    </TreeView>
+                </StackPanel>
+            </Border>
 
-        <Border Grid.Column="1" Padding="{StaticResource SpaceThickness20}">
-            <ContentControl Content="{Binding ActiveView}"
-                            IsVisible="{Binding ActiveView, Converter={x:Static converters:ObjectConverters.IsNotNull}}"/>
-        </Border>
-
-        <Panel Grid.ColumnSpan="2"
-               Background="{StaticResource BrushOverlayStrong}"
-               IsVisible="{Binding CurrentDialog, Converter={x:Static converters:ObjectConverters.IsNotNull}}">
-            <ContentControl Content="{Binding CurrentDialog}"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"/>
-        </Panel>
-    </Grid>
+            <Border Grid.Column="1" Padding="{StaticResource SpaceThickness20}">
+                <ContentControl Content="{Binding ActiveView}"
+                                IsVisible="{Binding ActiveView, Converter={x:Static converters:ObjectConverters.IsNotNull}}"/>
+            </Border>
+        </Grid>
+    </controls:ModalOverlayHost>
 
 </Window>

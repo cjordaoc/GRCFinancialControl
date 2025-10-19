@@ -30,6 +30,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private ViewModelBase? _currentDialog;
 
         [ObservableProperty]
+        private string? _currentDialogTitle;
+
+        [ObservableProperty]
+        private bool _canCloseDialog = true;
+
+        [ObservableProperty]
         private NavigationItem? _selectedNavigationItem;
 
         [ObservableProperty]
@@ -82,12 +88,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public void Receive(OpenDialogMessage message)
         {
-            CurrentDialog = message.Value;
+            CurrentDialog = message.ViewModel;
+            CurrentDialogTitle = message.Title;
+            CanCloseDialog = message.CanClose;
         }
 
         public void Receive(CloseDialogMessage message)
         {
             CurrentDialog = null;
+            CurrentDialogTitle = null;
+            CanCloseDialog = true;
         }
 
         async partial void OnSelectedNavigationItemChanged(NavigationItem? value)

@@ -7,7 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
-public partial class ErrorDialogViewModel : ObservableObject
+public partial class ErrorDialogViewModel : ViewModelBase
 {
     public event EventHandler? CloseRequested;
 

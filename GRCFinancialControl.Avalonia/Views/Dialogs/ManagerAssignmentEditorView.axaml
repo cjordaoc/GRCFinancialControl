@@ -43,9 +43,5 @@
             </StackPanel>
         </StackPanel>
 
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-            <Button Content="{loc:Loc Key=Common.Button.Save}" Command="{Binding SaveCommand}" IsEnabled="{Binding AllowEditing}"/>
-            <Button Content="{loc:Loc Key=Common.Button.Cancel}" Command="{Binding CloseCommand}"/>
-        </StackPanel>
     </StackPanel>
 </UserControl>

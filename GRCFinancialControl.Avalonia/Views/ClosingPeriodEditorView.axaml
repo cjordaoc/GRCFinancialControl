@@ -31,10 +31,6 @@
         <DatePicker SelectedDate="{Binding PeriodStartOffset}" IsEnabled="{Binding AllowEditing}"/>
         <DatePicker SelectedDate="{Binding PeriodEndOffset}" IsEnabled="{Binding AllowEditing}"/>
         <TextBlock Text="{Binding StatusMessage}" Foreground="Red"/>
-        <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">
-            <Button Content="{loc:Loc Key=Common.Button.Save}" Command="{Binding SaveCommand}"/>
-            <Button Content="{loc:Loc Key=Common.Button.Close}" Command="{Binding CloseCommand}"/>
-        </StackPanel>
     </StackPanel>
 </UserControl>
 

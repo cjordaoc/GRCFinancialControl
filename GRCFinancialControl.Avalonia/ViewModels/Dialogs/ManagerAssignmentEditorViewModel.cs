@@ -2,6 +2,8 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Input;
+using App.Presentation.Controls;
 using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -13,7 +15,7 @@ using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
 {
-    public partial class ManagerAssignmentEditorViewModel : ViewModelBase
+    public partial class ManagerAssignmentEditorViewModel : ViewModelBase, IModalOverlayActionProvider
     {
         private readonly IManagerAssignmentService _assignmentService;
         private readonly EngagementManagerAssignment _assignment;
@@ -63,6 +65,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
         }
 
         public bool AllowEditing => !IsReadOnlyMode;
+
+        public bool IsPrimaryActionVisible => AllowEditing;
+
+        public string? PrimaryActionText => LocalizationRegistry.Get("Common.Button.Save");
+
+        public ICommand? PrimaryActionCommand => SaveCommand;
 
         public DateTimeOffset? BeginDateOffset
         {
@@ -157,6 +165,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
         {
             SaveCommand.NotifyCanExecuteChanged();
             OnPropertyChanged(nameof(AllowEditing));
+            OnPropertyChanged(nameof(IsPrimaryActionVisible));
         }
     }
 }

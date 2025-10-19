@@ -10,10 +10,6 @@
     <StackPanel Spacing="{StaticResource Space12}">
       <TextBlock Text="{Binding Title}" FontSize="{StaticResource FontSizeLG}" FontWeight="Bold"/>
       <TextBlock Text="{Binding Message}" TextWrapping="Wrap"/>
-      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="{StaticResource Space8}">
-        <Button Content="{loc:Loc Key=Common.Button.Cancel}" Command="{Binding CancelCommand}"/>
-        <Button Content="{loc:Loc Key=Common.Button.Confirm}" Command="{Binding ConfirmCommand}"/>
-      </StackPanel>
     </StackPanel>
   </Border>
 </UserControl>
