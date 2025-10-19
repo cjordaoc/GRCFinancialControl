@@ -3,21 +3,23 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.Messaging;
-using GRCFinancialControl.Avalonia.Services.Interfaces;
-using GRCFinancialControl.Avalonia.ViewModels;
-using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
-using GRCFinancialControl.Avalonia.Views.Dialogs;
+using InvoicePlanner.Avalonia.Messages;
+using InvoicePlanner.Avalonia.Services.Interfaces;
+using InvoicePlanner.Avalonia.ViewModels;
 
-namespace GRCFinancialControl.Avalonia.Services
+namespace InvoicePlanner.Avalonia.Services
 {
     public class DialogService : IDialogService
     {
-        private readonly IMessenger _messenger;
         private readonly ViewLocator _viewLocator = new();
+        private Window? _currentDialog;
 
-        public DialogService(IMessenger messenger)
+        public DialogService(IWeakReferenceMessenger messenger)
         {
-            _messenger = messenger;
+            messenger.Register<CloseDialogMessage>(this, (r, m) =>
+            {
+                _currentDialog?.Close(m.Value);
+            });
         }
 
         public async Task<bool> ShowDialogAsync(ViewModelBase viewModel, string? title = null)
@@ -34,10 +36,12 @@ namespace GRCFinancialControl.Avalonia.Services
 
             view.DataContext = viewModel;
 
-            var dialog = new DialogWindow
+            _currentDialog = new Window
             {
                 Title = title,
-                Content = view
+                Content = view,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                SizeToContent = SizeToContent.WidthAndHeight
             };
 
             if (desktop.MainWindow is null)
@@ -45,14 +49,8 @@ namespace GRCFinancialControl.Avalonia.Services
                 return false;
             }
 
-            var result = await dialog.ShowDialog<bool?>(desktop.MainWindow);
+            var result = await _currentDialog.ShowDialog<bool?>(desktop.MainWindow);
             return result ?? false;
-        }
-
-        public Task<bool> ShowConfirmationAsync(string title, string message)
-        {
-            var confirmationViewModel = new ConfirmationDialogViewModel(title, message, _messenger);
-            return ShowDialogAsync(confirmationViewModel, title);
         }
     }
 }

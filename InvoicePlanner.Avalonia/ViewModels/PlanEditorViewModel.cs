@@ -6,7 +6,9 @@ using System.Linq;
 using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using InvoicePlanner.Avalonia.Services;
+using CommunityToolkit.Mvvm.Messaging;
+using InvoicePlanner.Avalonia.Messages;
+using InvoicePlanner.Avalonia.Services.Interfaces;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
 using Invoices.Core.Validation;
@@ -21,7 +23,7 @@ public partial class PlanEditorViewModel : ViewModelBase
     private readonly IInvoicePlanValidator _validator;
     private readonly ILogger<PlanEditorViewModel> _logger;
     private readonly IInvoiceAccessScope _accessScope;
-    private readonly IModalOverlayService _modalOverlayService;
+    private readonly IDialogService _dialogService;
     private bool _suppressLineUpdates;
     private bool _isInitializing;
     private PlanEditorDialogViewModel? _dialogViewModel;
@@ -31,13 +33,15 @@ public partial class PlanEditorViewModel : ViewModelBase
         IInvoicePlanValidator validator,
         ILogger<PlanEditorViewModel> logger,
         IInvoiceAccessScope accessScope,
-        IModalOverlayService modalOverlayService)
+        IDialogService dialogService,
+        IWeakReferenceMessenger messenger)
+        : base(messenger)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _accessScope = accessScope ?? throw new ArgumentNullException(nameof(accessScope));
-        _modalOverlayService = modalOverlayService ?? throw new ArgumentNullException(nameof(modalOverlayService));
+        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 
         _accessScope.EnsureInitialized();
 
@@ -49,7 +53,7 @@ public partial class PlanEditorViewModel : ViewModelBase
 
         SavePlanCommand = new RelayCommand(SavePlan);
         CreatePlanCommand = new RelayCommand(CreatePlan, CanCreatePlan);
-        ClosePlanFormCommand = new RelayCommand(() => _modalOverlayService.Close(false));
+        ClosePlanFormCommand = new RelayCommand(() => Messenger.Send(new CloseDialogMessage(false)));
 
         // Seed with default values so the editor presents a useful layout.
         PlanType = InvoicePlanType.ByDate;
@@ -637,9 +641,7 @@ public partial class PlanEditorViewModel : ViewModelBase
             _logger.LogError(ex, "Failed to load engagements for planning.");
             Engagements.Clear();
             SelectedEngagement = null;
-            EngagementSelectionMessage = ConnectionErrorMessageFormatter.Format(
-                ex,
-                LocalizationRegistry.Format("InvoicePlan.Selection.Status.LoadFailure", ex.Message));
+            EngagementSelectionMessage = LocalizationRegistry.Format("InvoicePlan.Selection.Status.LoadFailure", ex.Message);
         }
     }
 
@@ -692,7 +694,7 @@ public partial class PlanEditorViewModel : ViewModelBase
     private void ShowPlanDialog()
     {
         _dialogViewModel ??= new PlanEditorDialogViewModel(this);
-        _ = _modalOverlayService.ShowAsync(_dialogViewModel, LocalizationRegistry.Get("InvoicePlan.Title.Primary"));
+        _ = _dialogService.ShowDialogAsync(_dialogViewModel, LocalizationRegistry.Get("InvoicePlan.Title.Primary"));
     }
 
     private void AdjustLastLineForTotals()

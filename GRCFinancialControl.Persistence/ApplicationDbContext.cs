@@ -398,21 +398,26 @@ namespace GRCFinancialControl.Persistence
                 .Property(e => e.LastUpdateDate)
                 .HasMySqlColumnType("date", isMySql);
 
+            var createdAtProperty = modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
+                .Property(e => e.CreatedAt)
+                .HasMySqlColumnType("datetime(6)", isMySql)
+                .ValueGeneratedOnAdd();
+
             var updatedAtProperty = modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
                 .Property(e => e.UpdatedAt)
                 .HasMySqlColumnType("datetime(6)", isMySql)
                 .ValueGeneratedOnAddOrUpdate();
 
-#if !DEBUG
             if (isMySql)
             {
-                updatedAtProperty.HasMySqlDefaultValueSql("CURRENT_TIMESTAMP(6)", isMySql);
+                createdAtProperty.HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
+                updatedAtProperty.HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
             }
             else
             {
+                createdAtProperty.HasDefaultValueSql("CURRENT_TIMESTAMP");
                 updatedAtProperty.HasDefaultValueSql("CURRENT_TIMESTAMP");
             }
-#endif
 
             modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
                 .HasIndex(e => e.FiscalYearId);

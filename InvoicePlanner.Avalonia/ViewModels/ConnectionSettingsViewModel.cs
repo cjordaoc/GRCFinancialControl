@@ -20,7 +20,6 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
     private readonly IConnectionPackageService _connectionPackageService;
     private readonly ISettingsService _settingsService;
     private readonly IDatabaseSchemaInitializer _schemaInitializer;
-    private readonly IMessenger _messenger;
 
     [ObservableProperty]
     private string? selectedPackagePath;
@@ -50,13 +49,13 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
         IConnectionPackageService connectionPackageService,
         ISettingsService settingsService,
         IDatabaseSchemaInitializer schemaInitializer,
-        IMessenger messenger)
+        IWeakReferenceMessenger messenger)
+        : base(messenger)
     {
         _filePickerService = filePickerService ?? throw new ArgumentNullException(nameof(filePickerService));
         _connectionPackageService = connectionPackageService ?? throw new ArgumentNullException(nameof(connectionPackageService));
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         _schemaInitializer = schemaInitializer ?? throw new ArgumentNullException(nameof(schemaInitializer));
-        _messenger = messenger ?? throw new ArgumentNullException(nameof(messenger));
 
         BrowseCommand = new AsyncRelayCommand(BrowseAsync);
         ImportCommand = new AsyncRelayCommand(ImportAsync, CanImport);
@@ -126,7 +125,7 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
             await _schemaInitializer.EnsureSchemaAsync();
 
             StatusMessage = LocalizationRegistry.Get("Connection.Status.ImportSuccess");
-            _messenger.Send(ConnectionSettingsImportedMessage.Instance);
+            Messenger.Send(ConnectionSettingsImportedMessage.Instance);
         }
         catch (InvalidOperationException ex)
         {

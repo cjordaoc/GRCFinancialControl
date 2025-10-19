@@ -7,7 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using InvoicePlanner.Avalonia.Messages;
-using InvoicePlanner.Avalonia.Services;
+using InvoicePlanner.Avalonia.Services.Interfaces;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
 using Invoices.Data.Repositories;
@@ -19,24 +19,23 @@ public partial class RequestConfirmationViewModel : ViewModelBase
 {
     private readonly IInvoicePlanRepository _repository;
     private readonly ILogger<RequestConfirmationViewModel> _logger;
-    private readonly IMessenger _messenger;
     private readonly IInvoiceAccessScope _accessScope;
     private readonly RelayCommand _loadPlanCommand;
-    private readonly IModalOverlayService _modalOverlayService;
+    private readonly IDialogService _dialogService;
     private RequestConfirmationDialogViewModel? _dialogViewModel;
 
     public RequestConfirmationViewModel(
         IInvoicePlanRepository repository,
         ILogger<RequestConfirmationViewModel> logger,
-        IMessenger messenger,
         IInvoiceAccessScope accessScope,
-        IModalOverlayService modalOverlayService)
+        IDialogService dialogService,
+        IWeakReferenceMessenger messenger)
+        : base(messenger)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _messenger = messenger ?? throw new ArgumentNullException(nameof(messenger));
         _accessScope = accessScope ?? throw new ArgumentNullException(nameof(accessScope));
-        _modalOverlayService = modalOverlayService ?? throw new ArgumentNullException(nameof(modalOverlayService));
+        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 
         _accessScope.EnsureInitialized();
 
@@ -44,9 +43,9 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         AvailablePlans.CollectionChanged += OnAvailablePlansChanged;
 
         _loadPlanCommand = new RelayCommand(LoadSelectedPlan, () => SelectedPlan is not null);
-        ClosePlanDetailsCommand = new RelayCommand(() => _modalOverlayService.Close(false));
+        ClosePlanDetailsCommand = new RelayCommand(() => Messenger.Send(new CloseDialogMessage(false)));
 
-        _messenger.Register<ConnectionSettingsImportedMessage>(this, (_, _) => LoadAvailablePlans());
+        Messenger.Register<ConnectionSettingsImportedMessage>(this, (_, _) => LoadAvailablePlans());
 
         LoadAvailablePlans();
     }
@@ -134,7 +133,6 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         if (SelectedPlan is null)
         {
             ValidationMessage = LocalizationRegistry.Get("Request.Validation.PlanSelection");
-            _modalOverlayService.Close(false);
             return;
         }
 
@@ -185,16 +183,11 @@ public partial class RequestConfirmationViewModel : ViewModelBase
             {
                 ShowPlanDetailsDialog();
             }
-            else
-            {
-                _modalOverlayService.Close(false);
-            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load invoice plan {PlanId}.", SelectedPlan.Id);
             ValidationMessage = LocalizationRegistry.Format("Request.Status.LoadFailureDetail", ex.Message);
-            _modalOverlayService.Close(false);
         }
     }
 
@@ -307,7 +300,6 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         Lines.Clear();
         RefreshSummaries();
         OnPropertyChanged(nameof(HasLines));
-        _modalOverlayService.Close(false);
     }
 
     private void LoadAvailablePlans()
@@ -341,16 +333,14 @@ public partial class RequestConfirmationViewModel : ViewModelBase
             _logger.LogError(ex, "Failed to load available plans for request confirmation.");
             AvailablePlans.Clear();
             SelectedPlan = null;
-            PlanSelectionMessage = ConnectionErrorMessageFormatter.Format(
-                ex,
-                LocalizationRegistry.Format("Request.Status.LoadFailure", ex.Message));
+            PlanSelectionMessage = LocalizationRegistry.Format("Request.Status.LoadFailure", ex.Message);
         }
     }
 
     private void ShowPlanDetailsDialog()
     {
         _dialogViewModel ??= new RequestConfirmationDialogViewModel(this);
-        _ = _modalOverlayService.ShowAsync(_dialogViewModel, LocalizationRegistry.Get("Request.Title.Primary"));
+        _ = _dialogService.ShowDialogAsync(_dialogViewModel, LocalizationRegistry.Get("Request.Title.Primary"));
     }
 
     private void UpdateSelectedPlanSummaryCounts()

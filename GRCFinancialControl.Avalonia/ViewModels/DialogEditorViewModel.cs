@@ -1,6 +1,5 @@
 using System.Threading.Tasks;
 using System.Windows.Input;
-using App.Presentation.Controls;
 using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -9,7 +8,7 @@ using GRCFinancialControl.Avalonia.Messages;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
-    public abstract partial class DialogEditorViewModel<TEntity> : ViewModelBase, IModalOverlayActionProvider
+    public abstract partial class DialogEditorViewModel<TEntity> : ViewModelBase
         where TEntity : class
     {
         protected DialogEditorViewModel(IMessenger messenger, bool isReadOnlyMode = false)
@@ -22,12 +21,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private bool _isReadOnlyMode;
 
         public bool AllowEditing => !IsReadOnlyMode;
-
-        public virtual bool IsPrimaryActionVisible => AllowEditing;
-
-        public virtual string? PrimaryActionText => LocalizationRegistry.Get("Common.Button.Save");
-
-        public virtual ICommand? PrimaryActionCommand => SaveCommand;
 
         [RelayCommand(CanExecute = nameof(CanSave))]
         private async Task SaveAsync()
@@ -53,7 +46,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             SaveCommand.NotifyCanExecuteChanged();
             OnPropertyChanged(nameof(AllowEditing));
-            OnPropertyChanged(nameof(IsPrimaryActionVisible));
         }
 
         protected abstract Task PersistChangesAsync();
