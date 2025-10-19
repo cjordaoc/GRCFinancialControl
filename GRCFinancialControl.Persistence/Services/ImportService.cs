@@ -592,6 +592,55 @@ namespace GRCFinancialControl.Persistence.Services
             return match.Success ? match.Value : string.Empty;
         }
 
+        private static bool TryExtractFiscalYearCode(string? value, out string normalizedValue, out string fiscalYearCode)
+        {
+            normalizedValue = NormalizeWhitespace(value);
+            if (string.IsNullOrEmpty(normalizedValue))
+            {
+                fiscalYearCode = string.Empty;
+                return false;
+            }
+
+            var upper = normalizedValue.ToUpperInvariant();
+            var match = FiscalYearCodeRegex.Match(upper);
+            if (match.Success)
+            {
+                fiscalYearCode = match.Value.ToUpperInvariant();
+                return true;
+            }
+
+            var fyIndex = upper.IndexOf("FY", StringComparison.Ordinal);
+            if (fyIndex >= 0)
+            {
+                var digitsBuilder = new StringBuilder();
+                for (var i = fyIndex + 2; i < upper.Length; i++)
+                {
+                    var ch = upper[i];
+                    if (char.IsDigit(ch))
+                    {
+                        digitsBuilder.Append(ch);
+                    }
+                    else if (digitsBuilder.Length == 0 && !char.IsLetterOrDigit(ch))
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                if (digitsBuilder.Length > 0)
+                {
+                    fiscalYearCode = $"FY{digitsBuilder}";
+                    return true;
+                }
+            }
+
+            fiscalYearCode = string.Empty;
+            return false;
+        }
+
         private static bool ContainsAnyHeader(Dictionary<int, string> headerMap, IEnumerable<string> candidates)
         {
             foreach (var candidate in candidates)
@@ -1058,19 +1107,11 @@ namespace GRCFinancialControl.Persistence.Services
 
         private static FullManagementHeader ParseFullManagementHeader(string headerCell)
         {
-            var normalized = NormalizeWhitespace(headerCell);
-            if (string.IsNullOrEmpty(normalized))
+            if (!TryExtractFiscalYearCode(headerCell, out var normalized, out var currentFiscalYear))
             {
-                throw new InvalidDataException("Cell A4 must contain the fiscal year metadata for the Full Management Data workbook.");
+                var messageValue = string.IsNullOrEmpty(normalized) ? string.Empty : normalized;
+                throw new InvalidDataException($"Cell A4 must specify the current fiscal year (e.g., FY26). Detected value: '{messageValue}'.");
             }
-
-            var match = FiscalYearCodeRegex.Match(normalized);
-            if (!match.Success)
-            {
-                throw new InvalidDataException($"Cell A4 must specify the current fiscal year (e.g., FY26). Detected value: '{normalized}'.");
-            }
-
-            var currentFiscalYear = match.Value.ToUpperInvariant();
             var dateMatch = LastUpdateDateRegex.Match(normalized);
             if (!dateMatch.Success)
             {
@@ -1269,23 +1310,21 @@ namespace GRCFinancialControl.Persistence.Services
         private static (string FiscalYearName, DateTime? LastUpdateDate) ParseFcsMetadata(DataTable worksheet)
         {
             var rawValue = GetCellString(worksheet, 3, 0);
+            string normalized;
+            string fiscalYearName;
 
-            if (string.IsNullOrWhiteSpace(rawValue) || !FiscalYearCodeRegex.IsMatch(NormalizeWhitespace(rawValue)))
+            if (!TryExtractFiscalYearCode(rawValue, out normalized, out fiscalYearName))
             {
                 for (var rowIndex = 0; rowIndex < Math.Min(worksheet.Rows.Count, FcsHeaderSearchLimit); rowIndex++)
                 {
                     var candidate = GetCellString(worksheet, rowIndex, 0);
-                    if (string.IsNullOrWhiteSpace(candidate))
+                    if (!TryExtractFiscalYearCode(candidate, out normalized, out fiscalYearName))
                     {
                         continue;
                     }
 
-                    var normalizedCandidate = NormalizeWhitespace(candidate);
-                    if (FiscalYearCodeRegex.IsMatch(normalizedCandidate))
-                    {
-                        rawValue = candidate;
-                        break;
-                    }
+                    rawValue = candidate;
+                    break;
                 }
             }
 
@@ -1294,14 +1333,12 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new InvalidDataException("Cell A4 must contain the fiscal year metadata for the FCS backlog workbook.");
             }
 
-            var normalized = NormalizeWhitespace(rawValue);
-            var match = FiscalYearCodeRegex.Match(normalized);
-            string fiscalYearName;
-            if (match.Success)
+            if (string.IsNullOrEmpty(normalized))
             {
-                fiscalYearName = match.Value.ToUpperInvariant();
+                normalized = NormalizeWhitespace(rawValue);
             }
-            else
+            var resolvedFiscalYearName = fiscalYearName;
+            if (string.IsNullOrEmpty(resolvedFiscalYearName))
             {
                 var digits = ExtractDigits(normalized);
                 if (string.IsNullOrEmpty(digits))
@@ -1309,7 +1346,7 @@ namespace GRCFinancialControl.Persistence.Services
                     throw new InvalidDataException($"Cell A4 must specify the current fiscal year (e.g., FY26). Detected value: '{normalized}'.");
                 }
 
-                fiscalYearName = $"FY{digits}";
+                resolvedFiscalYearName = $"FY{digits}";
             }
 
             DateTime? lastUpdateDate = null;
@@ -1322,7 +1359,7 @@ namespace GRCFinancialControl.Persistence.Services
                 }
             }
 
-            return (fiscalYearName, lastUpdateDate);
+            return (resolvedFiscalYearName, lastUpdateDate);
         }
 
         private static string IncrementFiscalYearName(string fiscalYearName)
