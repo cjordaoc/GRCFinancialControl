@@ -247,7 +247,7 @@ namespace GRCFinancialControl.Persistence
 
             modelBuilder.Entity<PlannedAllocation>()
                 .HasOne(pa => pa.ClosingPeriod)
-                .WithMany() // A closing period can have multiple planned allocations
+                .WithMany(cp => cp.PlannedAllocations) // A closing period can have multiple planned allocations
                 .HasForeignKey(pa => pa.ClosingPeriodId);
 
             modelBuilder.Entity<PlannedAllocation>()

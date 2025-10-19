@@ -19,6 +19,13 @@ namespace GRCFinancialControl.Persistence.Services
 {
     public class ImportService : IImportService
     {
+        private static readonly FileStreamOptions SharedReadOptions = new()
+        {
+            Access = FileAccess.Read,
+            Mode = FileMode.Open,
+            Share = FileShare.ReadWrite
+        };
+
         private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
         private readonly ILogger<ImportService> _logger;
         private readonly IFullManagementDataImporter _fullManagementDataImporter;
@@ -72,7 +79,7 @@ namespace GRCFinancialControl.Persistence.Services
 
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
-            using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var stream = new FileStream(filePath, SharedReadOptions);
             using var reader = ExcelReaderFactory.CreateReader(stream);
             var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration
             {
@@ -608,7 +615,7 @@ namespace GRCFinancialControl.Persistence.Services
 
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
-            using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var stream = new FileStream(filePath, SharedReadOptions);
             using var reader = ExcelReaderFactory.CreateReader(stream);
             var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration
             {
@@ -1037,7 +1044,7 @@ namespace GRCFinancialControl.Persistence.Services
             var rowsProcessed = 0;
             var manualOnlyDetails = new List<string>();
 
-            using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var stream = new FileStream(filePath, SharedReadOptions);
             using var reader = ExcelReaderFactory.CreateReader(stream);
             var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration
             {

@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\\settings.db">
+    <None Include="..\\settings.db" Condition="Exists('..\\settings.db')">
       <Link>settings.db</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -133,22 +133,9 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             query = query.Where(plan => allowedEngagements.Contains(plan.EngagementId));
         }
 
-        return query
-            .Select(plan => new InvoicePlanSummary
-            {
-                Id = plan.Id,
-                EngagementId = plan.EngagementId,
-                Type = plan.Type,
-                CreatedAt = plan.CreatedAt,
-                FirstEmissionDate = plan.FirstEmissionDate,
-                PlannedItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Planned),
-                RequestedItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Requested),
-                ClosedItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Closed),
-                CanceledItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Canceled),
-            })
+        return ProjectSummaries(query.AsNoTracking())
             .Where(summary => summary.PlannedItemCount > 0)
             .OrderByDescending(summary => summary.CreatedAt)
-            .AsNoTracking()
             .ToList();
     }
 
@@ -168,22 +155,9 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             query = query.Where(plan => allowedEngagements.Contains(plan.EngagementId));
         }
 
-        return query
-            .Select(plan => new InvoicePlanSummary
-            {
-                Id = plan.Id,
-                EngagementId = plan.EngagementId,
-                Type = plan.Type,
-                CreatedAt = plan.CreatedAt,
-                FirstEmissionDate = plan.FirstEmissionDate,
-                PlannedItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Planned),
-                RequestedItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Requested),
-                ClosedItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Closed),
-                CanceledItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Canceled),
-            })
+        return ProjectSummaries(query.AsNoTracking())
             .Where(summary => summary.RequestedItemCount > 0 || summary.CanceledItemCount > 0)
             .OrderByDescending(summary => summary.CreatedAt)
-            .AsNoTracking()
             .ToList();
     }
 
@@ -875,6 +849,22 @@ public class InvoicePlanRepository : IInvoicePlanRepository
                 }
             }
         }
+    }
+
+    private static IQueryable<InvoicePlanSummary> ProjectSummaries(IQueryable<InvoicePlan> query)
+    {
+        return query.Select(plan => new InvoicePlanSummary
+        {
+            Id = plan.Id,
+            EngagementId = plan.EngagementId,
+            Type = plan.Type,
+            CreatedAt = plan.CreatedAt,
+            FirstEmissionDate = plan.FirstEmissionDate,
+            PlannedItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Planned),
+            RequestedItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Requested),
+            ClosedItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Closed),
+            CanceledItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Canceled),
+        });
     }
 
     private bool TryGetAccess(out string[] allowedEngagements, out bool hasFilter)

@@ -822,10 +822,10 @@
   <data name="Connection.Label.Language" xml:space="preserve">
     <value>Idioma</value>
   </data>
-  <data name="Connection.Status.LanguageSaved" xml:space="preserve">
+  <data name="Localization.Language.PreferenceSaved" xml:space="preserve">
     <value>Preferencia de idioma guardada. Reinicie la aplicación para aplicar los cambios.</value>
   </data>
-  <data name="Connection.Status.LanguageSaveFailure" xml:space="preserve">
+  <data name="Localization.Language.PreferenceSaveFailure" xml:space="preserve">
     <value>Error al guardar la preferencia de idioma: {0}</value>
   </data>
 </root>

@@ -158,11 +158,11 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
             var settings = await _settingsService.GetAllAsync();
             settings[SettingKeys.Language] = language.CultureName;
             await _settingsService.SaveAllAsync(new Dictionary<string, string>(settings));
-            StatusMessage = LocalizationRegistry.Get("Connection.Status.LanguageSaved");
+            StatusMessage = LocalizationRegistry.Get("Localization.Language.PreferenceSaved");
         }
         catch (Exception ex)
         {
-            StatusMessage = LocalizationRegistry.Format("Connection.Status.LanguageSaveFailure", ex.Message);
+            StatusMessage = LocalizationRegistry.Format("Localization.Language.PreferenceSaveFailure", ex.Message);
         }
     }
 

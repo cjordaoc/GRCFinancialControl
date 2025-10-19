@@ -16,12 +16,15 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.10" />
-    <PackageReference Include="ClosedXML" Version="0.104.0" />
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\GRCFinancialControl.Persistence\GRCFinancialControl.Persistence.csproj" />
     <ProjectReference Include="..\..\GRCFinancialControl.Core\GRCFinancialControl.Core.csproj" />
+    <ProjectReference Include="..\..\App.Presentation\App.Presentation.csproj" />
+    <ProjectReference Include="..\..\GRCFinancialControl.Avalonia\GRCFinancialControl.Avalonia.csproj" />
+    <ProjectReference Include="..\..\InvoicePlanner.Avalonia\InvoicePlanner.Avalonia.csproj" />
   </ItemGroup>
 </Project>

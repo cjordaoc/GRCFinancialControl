@@ -42,6 +42,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private string? _statusMessage;
 
+        public bool HasStatusMessage => !string.IsNullOrWhiteSpace(StatusMessage);
+
         [ObservableProperty]
         private string _exportPassphrase = string.Empty;
 
@@ -56,6 +58,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         [ObservableProperty]
         private string _selectedImportPackageFileName = string.Empty;
+
+        public bool HasSelectedImportPackage => !string.IsNullOrWhiteSpace(SelectedImportPackageFileName);
 
         public IReadOnlyList<LanguageOption> Languages { get; }
 
@@ -226,6 +230,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private async Task ImportConnectionPackageAsync()
         {
             StatusMessage = null;
+            SelectedImportPackageFileName = string.Empty;
 
             if (string.IsNullOrWhiteSpace(ImportPassphrase))
             {
@@ -271,6 +276,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     : Password;
 
                 StatusMessage = LocalizationRegistry.Format("Settings.Status.ImportSuccess", Path.GetFileName(filePath));
+                SelectedImportPackageFileName = Path.GetFileName(filePath);
                 Messenger.Send(new RefreshDataMessage());
             }
             catch (InvalidOperationException ex)
@@ -295,6 +301,32 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
 
             LocalizationCultureManager.ApplyCulture(value.CultureName);
+            _ = PersistLanguageAsync(value);
+        }
+
+        private async Task PersistLanguageAsync(LanguageOption language)
+        {
+            try
+            {
+                var settings = await _settingsService.GetAllAsync();
+                settings[SettingKeys.Language] = language.CultureName;
+                await _settingsService.SaveAllAsync(settings);
+                StatusMessage = LocalizationRegistry.Get("Localization.Language.PreferenceSaved");
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = LocalizationRegistry.Format("Localization.Language.PreferenceSaveFailure", ex.Message);
+            }
+        }
+
+        partial void OnStatusMessageChanged(string? value)
+        {
+            OnPropertyChanged(nameof(HasStatusMessage));
+        }
+
+        partial void OnSelectedImportPackageFileNameChanged(string value)
+        {
+            OnPropertyChanged(nameof(HasSelectedImportPackage));
         }
     }
 }
