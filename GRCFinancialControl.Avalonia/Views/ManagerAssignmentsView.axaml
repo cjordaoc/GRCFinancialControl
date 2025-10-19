@@ -3,22 +3,23 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.ManagerAssignmentsView"
              x:DataType="vm:ManagerAssignmentsViewModel">
     <StackPanel Margin="16" Spacing="16">
         <StackPanel Spacing="6">
-            <TextBlock Text="Engagement" FontWeight="Bold"/>
+            <TextBlock Text="{loc:Loc Key=Admin.ManagerAssignments.Label.Engagement}" FontWeight="Bold"/>
             <ComboBox ItemsSource="{Binding Engagements}"
                       SelectedItem="{Binding SelectedEngagement}"
                       MinWidth="320"/>
         </StackPanel>
 
         <StackPanel Orientation="Horizontal" Spacing="8">
-            <Button Content="Add" Command="{Binding AddCommand}"/>
-            <Button Content="Edit" Command="{Binding EditCommand}"/>
-            <Button Content="View" Command="{Binding ViewCommand}"/>
-            <Button Content="Delete" Command="{Binding DeleteCommand}"/>
+            <Button Content="{loc:Loc Key=Common.Button.Add}" Command="{Binding AddCommand}"/>
+            <Button Content="{loc:Loc Key=Common.Button.Edit}" Command="{Binding EditCommand}"/>
+            <Button Content="{loc:Loc Key=Common.Button.View}" Command="{Binding ViewCommand}"/>
+            <Button Content="{loc:Loc Key=Common.Button.Delete}" Command="{Binding DeleteCommand}"/>
         </StackPanel>
 
         <DataGrid ItemsSource="{Binding Assignments}"
@@ -29,10 +30,10 @@
                   GridLinesVisibility="All"
                   Height="280">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Manager" Binding="{Binding ManagerName}" Width="*"/>
-                <DataGridTextColumn Header="Position" Binding="{Binding ManagerPosition}" Width="150"/>
-                <DataGridTextColumn Header="Begin" Binding="{Binding BeginDate, StringFormat='{}{0:yyyy-MM-dd}'}" Width="160"/>
-                <DataGridTextColumn Header="End" Binding="{Binding EndDate, StringFormat='{}{0:yyyy-MM-dd}'}" Width="160"/>
+                <DataGridTextColumn Header="{loc:Loc Key=Admin.ManagerAssignments.Header.Manager}" Binding="{Binding ManagerName}" Width="*"/>
+                <DataGridTextColumn Header="{loc:Loc Key=Admin.ManagerAssignments.Header.Position}" Binding="{Binding ManagerPosition}" Width="150"/>
+                <DataGridTextColumn Header="{loc:Loc Key=Admin.ManagerAssignments.Header.Begin}" Binding="{Binding BeginDate, StringFormat='{}{0:yyyy-MM-dd}'}" Width="160"/>
+                <DataGridTextColumn Header="{loc:Loc Key=Admin.ManagerAssignments.Header.End}" Binding="{Binding EndDate, StringFormat='{}{0:yyyy-MM-dd}'}" Width="160"/>
             </DataGrid.Columns>
         </DataGrid>
     </StackPanel>

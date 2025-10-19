@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -184,8 +185,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
 
             var confirmed = await _dialogService.ShowConfirmationAsync(
-                "Remove Assignment",
-                $"Remove {SelectedAssignment.ManagerName} from {SelectedAssignment.EngagementDisplay}?"
+                LocalizationRegistry.Get("Admin.ManagerAssignments.Dialog.Remove.Title"),
+                LocalizationRegistry.Format(
+                    "Admin.ManagerAssignments.Dialog.Remove.Message",
+                    SelectedAssignment.ManagerName,
+                    SelectedAssignment.EngagementDisplay)
             );
 
             if (!confirmed)
@@ -256,6 +260,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         public string EngagementDisplay => string.IsNullOrWhiteSpace(EngagementId)
             ? EngagementDescription
-            : $"{EngagementId} - {EngagementDescription}";
+            : LocalizationRegistry.Format(
+                "Admin.ManagerAssignments.Format.EngagementDisplay",
+                EngagementId,
+                EngagementDescription);
     }
 }

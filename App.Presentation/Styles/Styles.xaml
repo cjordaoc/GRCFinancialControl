@@ -82,6 +82,67 @@
 
   <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
 
+  <Style Selector="Border.Card">
+    <Setter Property="Background" Value="{StaticResource BrushSurfaceVariant}" />
+    <Setter Property="BorderBrush" Value="{StaticResource BrushBorder}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{StaticResource CornerRadiusMD}" />
+  </Style>
+
+  <Style Selector="TextBlock.TitleLarge">
+    <Setter Property="FontFamily" Value="{StaticResource FontFamilyBase}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeXL}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
+  </Style>
+
+  <Style Selector="TextBlock.TitleMedium">
+    <Setter Property="FontFamily" Value="{StaticResource FontFamilyBase}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeLG}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
+  </Style>
+
+  <Style Selector="TextBlock.Caption">
+    <Setter Property="FontFamily" Value="{StaticResource FontFamilyBase}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeSM}" />
+    <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
+    <Setter Property="Opacity" Value="0.8" />
+  </Style>
+
+  <Style Selector="TextBlock.StatusSuccess">
+    <Setter Property="FontFamily" Value="{StaticResource FontFamilyBase}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeMD}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{StaticResource BrushSuccess}" />
+  </Style>
+
+  <Style Selector="TextBlock.StatusError">
+    <Setter Property="FontFamily" Value="{StaticResource FontFamilyBase}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeMD}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{StaticResource BrushError}" />
+  </Style>
+
+  <Style Selector="ToggleButton.NavButton">
+    <Setter Property="HorizontalContentAlignment" Value="Left" />
+    <Setter Property="Padding" Value="{StaticResource ButtonPaddingStandard}" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="FontFamily" Value="{StaticResource FontFamilyBase}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeMD}" />
+    <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
+  </Style>
+
+  <Style Selector="ToggleButton.NavButton:pointerover">
+    <Setter Property="Background" Value="{StaticResource BrushSurfaceVariant}" />
+  </Style>
+
+  <Style Selector="ToggleButton.NavButton:checked">
+    <Setter Property="Background" Value="{StaticResource BrushPrimary}" />
+    <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
+  </Style>
+
   <Style Selector="DataGrid">
     <Setter Property="Background" Value="{StaticResource BrushSurface}" />
     <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />

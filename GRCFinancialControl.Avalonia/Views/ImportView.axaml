@@ -4,16 +4,17 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
              xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.ImportView"
              x:DataType="vm:ImportViewModel">
     <StackPanel Spacing="10" Margin="20">
-        <TextBlock Text="File Import" FontSize="24" FontWeight="Bold"/>
+        <TextBlock Text="{loc:Loc Key=Import.Title.Primary}" FontSize="24" FontWeight="Bold"/>
 
         <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,10,0,0">
-            <Button Content="Import Budget File" Command="{Binding SetImportTypeCommand}" CommandParameter="Budget" Classes="accent"/>
-            <Button Content="Import Margin Data" Command="{Binding SetImportTypeCommand}" CommandParameter="Actuals" Classes="accent"/>
-            <Button Content="Import Full Management Data" Command="{Binding SetImportTypeCommand}" CommandParameter="FullManagement" Classes="accent"/>
+            <Button Content="{loc:Loc Key=Import.Button.Budget}" Command="{Binding SetImportTypeCommand}" CommandParameter="Budget" Classes="accent"/>
+            <Button Content="{loc:Loc Key=Import.Button.Actuals}" Command="{Binding SetImportTypeCommand}" CommandParameter="Actuals" Classes="accent"/>
+            <Button Content="{loc:Loc Key=Import.Button.FullManagement}" Command="{Binding SetImportTypeCommand}" CommandParameter="FullManagement" Classes="accent"/>
         </StackPanel>
 
         <Panel IsVisible="{Binding FileType, Converter={x:Static converters:ObjectConverters.IsNotNull}}">
@@ -22,11 +23,11 @@
                     Padding="15"
                     Margin="0,10,0,0">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="{Binding FileTypeDisplayName, StringFormat='Import {0} Data'}" FontSize="18" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding SelectedImportTitle}" FontSize="18" FontWeight="SemiBold"/>
 
                     <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
                                 IsVisible="{Binding FileType, Converter={x:Static converters:ObjectConverters.AreEqual}, ConverterParameter=Actuals}">
-                        <TextBlock Text="Closing Period:" VerticalAlignment="Center"/>
+                        <TextBlock Text="{loc:Loc Key=Import.Label.ClosingPeriod}" VerticalAlignment="Center"/>
                         <ComboBox Width="260"
                                   ItemsSource="{Binding ClosingPeriods}"
                                   SelectedItem="{Binding SelectedClosingPeriod}"
@@ -48,14 +49,14 @@
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
-                        <TextBlock Text="All closing periods are locked. Unlock a fiscal year to import ETC-P data."
+                        <TextBlock Text="{loc:Loc Key=Import.Status.NoUnlockedClosingPeriods}"
                                    Foreground="{StaticResource BrushError}"
                                    Margin="8,0,0,0"
                                    VerticalAlignment="Center"
                                    IsVisible="{Binding IsClosingPeriodSelectionUnavailable}"/>
                     </StackPanel>
 
-                    <Button Content="Select File and Import" Command="{Binding ImportCommand}" Classes="accent"/>
+                    <Button Content="{loc:Loc Key=Import.Button.SelectFile}" Command="{Binding ImportCommand}" Classes="accent"/>
                     <TextBox Text="{Binding StatusMessage}" Margin="0,10,0,0" TextWrapping="Wrap" IsReadOnly="True" />
                 </StackPanel>
             </Border>

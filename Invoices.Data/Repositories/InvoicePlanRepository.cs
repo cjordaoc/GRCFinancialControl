@@ -16,32 +16,56 @@ public class InvoicePlanRepository : IInvoicePlanRepository
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
     private readonly ILogger<InvoicePlanRepository> _logger;
     private readonly IPersonDirectory _personDirectory;
+    private readonly IInvoiceAccessScope _accessScope;
 
     public InvoicePlanRepository(
         IDbContextFactory<ApplicationDbContext> dbContextFactory,
         ILogger<InvoicePlanRepository> logger,
-        IPersonDirectory personDirectory)
+        IPersonDirectory personDirectory,
+        IInvoiceAccessScope accessScope)
     {
         _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _personDirectory = personDirectory ?? throw new ArgumentNullException(nameof(personDirectory));
+        _accessScope = accessScope ?? throw new ArgumentNullException(nameof(accessScope));
     }
 
     public InvoicePlan? GetPlan(int planId)
     {
+        _accessScope.EnsureInitialized();
+
+        if (_accessScope.IsInitialized && !_accessScope.HasAssignments && string.IsNullOrWhiteSpace(_accessScope.InitializationError))
+        {
+            return null;
+        }
+
         using var context = _dbContextFactory.CreateDbContext();
 
-        return context.InvoicePlans
+        var plan = context.InvoicePlans
             .Include(plan => plan.Items)
             .ThenInclude(item => item.ReplacementItem)
             .Include(plan => plan.AdditionalEmails)
             .AsNoTracking()
             .FirstOrDefault(plan => plan.Id == planId);
+
+        if (plan is null)
+        {
+            return null;
+        }
+
+        return _accessScope.IsEngagementAllowed(plan.EngagementId) ? plan : null;
     }
 
     public IReadOnlyList<InvoicePlan> ListPlansForEngagement(string engagementId)
     {
         if (string.IsNullOrWhiteSpace(engagementId))
+        {
+            return Array.Empty<InvoicePlan>();
+        }
+
+        _accessScope.EnsureInitialized();
+
+        if (!_accessScope.IsEngagementAllowed(engagementId))
         {
             return Array.Empty<InvoicePlan>();
         }
@@ -60,12 +84,24 @@ public class InvoicePlanRepository : IInvoicePlanRepository
 
     public IReadOnlyList<EngagementLookup> ListEngagementsForPlanning()
     {
+        if (!TryGetAccess(out var allowedEngagements, out var hasFilter))
+        {
+            return Array.Empty<EngagementLookup>();
+        }
+
         using var context = _dbContextFactory.CreateDbContext();
 
-        return context.Engagements
+        var query = context.Engagements
             .AsNoTracking()
             .Include(engagement => engagement.Customer)
-            .Where(engagement => !string.IsNullOrWhiteSpace(engagement.EngagementId))
+            .Where(engagement => !string.IsNullOrWhiteSpace(engagement.EngagementId));
+
+        if (hasFilter)
+        {
+            query = query.Where(engagement => allowedEngagements.Contains(engagement.EngagementId));
+        }
+
+        return query
             .OrderBy(engagement => engagement.EngagementId)
             .Select(engagement => new EngagementLookup
             {
@@ -83,9 +119,21 @@ public class InvoicePlanRepository : IInvoicePlanRepository
 
     public IReadOnlyList<InvoicePlanSummary> ListPlansForRequestStage()
     {
+        if (!TryGetAccess(out var allowedEngagements, out var hasFilter))
+        {
+            return Array.Empty<InvoicePlanSummary>();
+        }
+
         using var context = _dbContextFactory.CreateDbContext();
 
-        return context.InvoicePlans
+        var query = context.InvoicePlans.AsQueryable();
+
+        if (hasFilter)
+        {
+            query = query.Where(plan => allowedEngagements.Contains(plan.EngagementId));
+        }
+
+        return query
             .Select(plan => new InvoicePlanSummary
             {
                 Id = plan.Id,
@@ -106,9 +154,21 @@ public class InvoicePlanRepository : IInvoicePlanRepository
 
     public IReadOnlyList<InvoicePlanSummary> ListPlansForEmissionStage()
     {
+        if (!TryGetAccess(out var allowedEngagements, out var hasFilter))
+        {
+            return Array.Empty<InvoicePlanSummary>();
+        }
+
         using var context = _dbContextFactory.CreateDbContext();
 
-        return context.InvoicePlans
+        var query = context.InvoicePlans.AsQueryable();
+
+        if (hasFilter)
+        {
+            query = query.Where(plan => allowedEngagements.Contains(plan.EngagementId));
+        }
+
+        return query
             .Select(plan => new InvoicePlanSummary
             {
                 Id = plan.Id,
@@ -146,6 +206,12 @@ public class InvoicePlanRepository : IInvoicePlanRepository
 
             if (plan.Id == 0)
             {
+                if (!_accessScope.IsEngagementAllowed(plan.EngagementId))
+                {
+                    throw new InvalidOperationException(
+                        $"The current user does not have access to engagement '{plan.EngagementId}'.");
+                }
+
                 PrepareNewPlan(plan, now);
                 context.InvoicePlans.Add(plan);
                 created = 1;
@@ -157,6 +223,8 @@ public class InvoicePlanRepository : IInvoicePlanRepository
                     .Include(p => p.AdditionalEmails)
                     .FirstOrDefault(p => p.Id == plan.Id)
                     ?? throw new InvalidOperationException($"Invoice plan {plan.Id} not found.");
+
+                EnsurePlanAccess(tracked);
 
                 ApplyPlanUpdates(tracked, plan, now, context, ref deleted);
                 updated = 1;
@@ -201,6 +269,8 @@ public class InvoicePlanRepository : IInvoicePlanRepository
                 .Include(p => p.Items)
                 .FirstOrDefault(p => p.Id == planId)
                 ?? throw new InvalidOperationException($"Invoice plan {planId} not found.");
+
+            EnsurePlanAccess(plan);
 
             var now = DateTime.UtcNow;
             var updated = 0;
@@ -289,6 +359,8 @@ public class InvoicePlanRepository : IInvoicePlanRepository
                 .FirstOrDefault(p => p.Id == planId)
                 ?? throw new InvalidOperationException($"Invoice plan {planId} not found.");
 
+            EnsurePlanAccess(plan);
+
             var now = DateTime.UtcNow;
             var updated = 0;
             var itemsById = plan.Items.ToDictionary(item => item.Id);
@@ -357,6 +429,8 @@ public class InvoicePlanRepository : IInvoicePlanRepository
                 .Include(p => p.Items)
                 .FirstOrDefault(p => p.Id == planId)
                 ?? throw new InvalidOperationException($"Invoice plan {planId} not found.");
+
+            EnsurePlanAccess(plan);
 
             var now = DateTime.UtcNow;
             var updated = 0;
@@ -440,6 +514,8 @@ public class InvoicePlanRepository : IInvoicePlanRepository
                 .Include(p => p.Items)
                 .FirstOrDefault(p => p.Id == planId)
                 ?? throw new InvalidOperationException($"Invoice plan {planId} not found.");
+
+            EnsurePlanAccess(plan);
 
             var now = DateTime.UtcNow;
             var created = 0;
@@ -548,6 +624,11 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             throw new ArgumentNullException(nameof(filter));
         }
 
+        if (!TryGetAccess(out var allowedEngagements, out var hasFilter))
+        {
+            return new InvoiceSummaryResult();
+        }
+
         using var context = _dbContextFactory.CreateDbContext();
 
         var statuses = (filter.Statuses ?? Array.Empty<InvoiceItemStatus>())
@@ -565,6 +646,11 @@ public class InvoicePlanRepository : IInvoicePlanRepository
                         Item = item,
                         Engagement = engagement,
                     };
+
+        if (hasFilter)
+        {
+            query = query.Where(row => allowedEngagements.Contains(row.Plan.EngagementId));
+        }
 
         if (!string.IsNullOrWhiteSpace(filter.EngagementId))
         {
@@ -680,13 +766,25 @@ public class InvoicePlanRepository : IInvoicePlanRepository
 
     public IReadOnlyList<InvoiceNotificationPreview> PreviewNotifications(DateTime notificationDate)
     {
+        if (!TryGetAccess(out var allowedEngagements, out var hasFilter))
+        {
+            return Array.Empty<InvoiceNotificationPreview>();
+        }
+
         using var context = _dbContextFactory.CreateDbContext();
 
         var targetDate = notificationDate.Date;
 
-        var previews = context.Set<InvoiceNotificationPreview>()
+        var query = context.Set<InvoiceNotificationPreview>()
             .FromSqlInterpolated($"SELECT * FROM vw_InvoiceNotifyOnDate WHERE NotifyDate = DATE({targetDate})")
-            .AsNoTracking()
+            .AsNoTracking();
+
+        if (hasFilter)
+        {
+            query = query.Where(entry => allowedEngagements.Contains(entry.EngagementId));
+        }
+
+        var previews = query
             .OrderBy(entry => entry.EngagementId)
             .ThenBy(entry => entry.SeqNo)
             .ToList();
@@ -776,6 +874,34 @@ public class InvoicePlanRepository : IInvoicePlanRepository
                     preview.ManagerNames = string.Join(';', names.Distinct(StringComparer.OrdinalIgnoreCase));
                 }
             }
+        }
+    }
+
+    private bool TryGetAccess(out string[] allowedEngagements, out bool hasFilter)
+    {
+        _accessScope.EnsureInitialized();
+
+        hasFilter = _accessScope.HasAssignments;
+        allowedEngagements = hasFilter
+            ? _accessScope.EngagementIds.ToArray()
+            : Array.Empty<string>();
+
+        return !(_accessScope.IsInitialized
+                 && !hasFilter
+                 && string.IsNullOrWhiteSpace(_accessScope.InitializationError));
+    }
+
+    private void EnsurePlanAccess(InvoicePlan plan)
+    {
+        if (plan is null)
+        {
+            throw new ArgumentNullException(nameof(plan));
+        }
+
+        if (!_accessScope.IsEngagementAllowed(plan.EngagementId))
+        {
+            throw new InvalidOperationException(
+                $"The current user does not have access to engagement '{plan.EngagementId}'.");
         }
     }
 

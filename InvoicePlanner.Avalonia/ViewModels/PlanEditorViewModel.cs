@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using InvoicePlanner.Avalonia.Resources;
 using InvoicePlanner.Avalonia.Services;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
@@ -20,17 +20,22 @@ public partial class PlanEditorViewModel : ViewModelBase
     private readonly IInvoicePlanRepository _repository;
     private readonly IInvoicePlanValidator _validator;
     private readonly ILogger<PlanEditorViewModel> _logger;
+    private readonly IInvoiceAccessScope _accessScope;
     private bool _suppressLineUpdates;
     private bool _isInitializing;
 
     public PlanEditorViewModel(
         IInvoicePlanRepository repository,
         IInvoicePlanValidator validator,
-        ILogger<PlanEditorViewModel> logger)
+        ILogger<PlanEditorViewModel> logger,
+        IInvoiceAccessScope accessScope)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _accessScope = accessScope ?? throw new ArgumentNullException(nameof(accessScope));
+
+        _accessScope.EnsureInitialized();
 
         _isInitializing = true;
 
@@ -244,18 +249,18 @@ public partial class PlanEditorViewModel : ViewModelBase
             var plan = _repository.GetPlan(planId);
             if (plan is null)
             {
-                ValidationMessage = Strings.Format("PlanEditorValidationPlanNotFound", planId);
+                ValidationMessage = LocalizationRegistry.Format("InvoicePlan.Validation.PlanNotFound", planId);
                 return false;
             }
 
             ApplyPlan(plan);
-            StatusMessage = Strings.Format("PlanEditorStatusPlanLoaded", planId, Items.Count);
+            StatusMessage = LocalizationRegistry.Format("InvoicePlan.Status.PlanLoaded", planId, Items.Count);
             return true;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load invoice plan {PlanId}.", planId);
-            ValidationMessage = Strings.Format("PlanEditorValidationLoadFailed", ex.Message);
+            ValidationMessage = LocalizationRegistry.Format("InvoicePlan.Status.LoadFailure", ex.Message);
             return false;
         }
     }
@@ -467,13 +472,13 @@ public partial class PlanEditorViewModel : ViewModelBase
 
         if (RequiresFirstEmissionDate && FirstEmissionDate is null)
         {
-            ValidationMessage = Strings.Get("PlanEditorValidationFirstEmissionRequired");
+            ValidationMessage = LocalizationRegistry.Get("InvoicePlan.Validation.FirstEmissionRequired");
             return;
         }
 
         if (Items.Count == 0)
         {
-            ValidationMessage = Strings.Get("PlanEditorValidationNoLines");
+            ValidationMessage = LocalizationRegistry.Get("InvoicePlan.Validation.NoLines");
             return;
         }
 
@@ -496,10 +501,10 @@ public partial class PlanEditorViewModel : ViewModelBase
             ApplyPlan(persisted);
 
             var action = result.Created == 1
-                ? Strings.Get("PlanEditorStatusActionCreated")
-                : Strings.Get("PlanEditorStatusActionUpdated");
-            StatusMessage = Strings.Format(
-                "PlanEditorStatusPlanSaved",
+                ? LocalizationRegistry.Get("InvoicePlan.Status.ActionCreated")
+                : LocalizationRegistry.Get("InvoicePlan.Status.ActionUpdated");
+            StatusMessage = LocalizationRegistry.Format(
+                "InvoicePlan.Status.PlanSaved",
                 PlanId,
                 action,
                 Items.Count,
@@ -509,7 +514,7 @@ public partial class PlanEditorViewModel : ViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to save invoice plan {PlanId}.", plan.Id);
-            ValidationMessage = Strings.Format("PlanEditorValidationSaveFailed", ex.Message);
+            ValidationMessage = LocalizationRegistry.Format("InvoicePlan.Status.SaveFailure", ex.Message);
         }
     }
 
@@ -619,8 +624,13 @@ public partial class PlanEditorViewModel : ViewModelBase
             }
 
             EngagementSelectionMessage = engagements.Count == 0
-                ? Strings.Get("PlanEditorEngagementsEmpty")
-                : Strings.Get("PlanEditorEngagementsSelectHint");
+                ? LocalizationRegistry.Get("InvoicePlan.Selection.Message.Empty")
+                : LocalizationRegistry.Get("InvoicePlan.Selection.Message.SelectHint");
+
+            if (_accessScope.IsInitialized && !_accessScope.HasAssignments && string.IsNullOrWhiteSpace(_accessScope.InitializationError))
+            {
+                EngagementSelectionMessage = LocalizationRegistry.Format("Access.Message.NoAssignments", GetLoginDisplay(_accessScope));
+            }
         }
         catch (Exception ex)
         {
@@ -629,7 +639,7 @@ public partial class PlanEditorViewModel : ViewModelBase
             SelectedEngagement = null;
             EngagementSelectionMessage = ConnectionErrorMessageFormatter.Format(
                 ex,
-                Strings.Format("PlanEditorEngagementsLoadError", ex.Message));
+                LocalizationRegistry.Format("InvoicePlan.Selection.Status.LoadFailure", ex.Message));
         }
     }
 

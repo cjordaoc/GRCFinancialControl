@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
-using InvoicePlanner.Avalonia.Resources;
 using GRCFinancialControl.Core.Configuration;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -15,7 +15,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly ConnectionSettingsViewModel _connectionSettings;
 
     [ObservableProperty]
-    private string title = Strings.Get("AppTitle");
+    private string title = LocalizationRegistry.Get("Shell.Title.Application");
 
     [ObservableProperty]
     private ViewModelBase currentViewModel;
@@ -36,10 +36,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var items = new List<NavigationItemViewModel>
         {
-            CreateNavigationItem(Strings.Get("NavInvoicePlan"), _planEditor),
-            CreateNavigationItem(Strings.Get("NavConfirmRequest"), _requestConfirmation),
-            CreateNavigationItem(Strings.Get("NavConfirmEmissions"), _emissionConfirmation),
-            CreateNavigationItem(Strings.Get("NavConnectionSettings"), _connectionSettings)
+            CreateNavigationItem(LocalizationRegistry.Get("Shell.Navigation.InvoicePlan"), _planEditor),
+            CreateNavigationItem(LocalizationRegistry.Get("Shell.Navigation.ConfirmRequest"), _requestConfirmation),
+            CreateNavigationItem(LocalizationRegistry.Get("Shell.Navigation.ConfirmEmission"), _emissionConfirmation),
+            CreateNavigationItem(LocalizationRegistry.Get("Shell.Navigation.ConnectionSettings"), _connectionSettings)
         };
 
         MenuItems = items;
@@ -57,7 +57,7 @@ public partial class MainWindowViewModel : ViewModelBase
         else
         {
             currentViewModel = _connectionSettings;
-            _connectionSettings.StatusMessage = Strings.Get("ConnectionSetupPrompt");
+            _connectionSettings.StatusMessage = LocalizationRegistry.Get("Connection.Message.SetupPrompt");
             Activate(_connectionSettings, items.Last());
         }
     }

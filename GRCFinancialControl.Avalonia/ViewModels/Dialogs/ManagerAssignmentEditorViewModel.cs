@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -38,7 +39,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
         [ObservableProperty]
         private bool _isReadOnlyMode;
 
-        public string Title => _assignment.Id == 0 ? "Add Manager Assignment" : "Edit Manager Assignment";
+        public string Title => _assignment.Id == 0
+            ? LocalizationRegistry.Get("Admin.ManagerAssignments.Dialog.Add.Title")
+            : LocalizationRegistry.Get("Admin.ManagerAssignments.Dialog.Edit.Title");
 
         public ManagerAssignmentEditorViewModel(
             EngagementManagerAssignment assignment,

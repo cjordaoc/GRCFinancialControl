@@ -3,33 +3,47 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Spacing="10" Margin="10">
-            <TextBlock Text="MySQL Connection Settings" FontSize="24" FontWeight="Bold"/>
-            <TextBox Text="{Binding Server}" Watermark="Server"/>
-            <TextBox Text="{Binding Database}" Watermark="Database"/>
-            <TextBox Text="{Binding User}" Watermark="User"/>
-            <TextBox Text="{Binding Password}" Watermark="Password" PasswordChar="*"/>
+            <TextBlock Text="{loc:Loc Key=Settings.Section.Database.Title}" FontSize="24" FontWeight="Bold"/>
+            <TextBox Text="{Binding Server}" Watermark="{loc:Loc Key=Settings.Label.Server}"/>
+            <TextBox Text="{Binding Database}" Watermark="{loc:Loc Key=Settings.Label.Database}"/>
+            <TextBox Text="{Binding User}" Watermark="{loc:Loc Key=Settings.Label.User}"/>
+            <TextBox Text="{Binding Password}" Watermark="{loc:Loc Key=Settings.Label.Password}" PasswordChar="*"/>
+            <TextBlock Text="{loc:Loc Key=Settings.Section.Localization.Title}" FontSize="18" FontWeight="SemiBold" Margin="0,10,0,0"/>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="{loc:Loc Key=Settings.Label.Language}" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding Languages}"
+                          SelectedItem="{Binding SelectedLanguage}"
+                          MinWidth="200">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding DisplayName}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
             <StackPanel Orientation="Horizontal" Spacing="5" Margin="0,10,0,0">
-                <Button Content="Load Settings" Command="{Binding LoadSettingsCommand}"/>
-                <Button Content="Save Settings" Command="{Binding SaveSettingsCommand}"/>
-                <Button Content="Test Connection" Command="{Binding TestConnectionCommand}"/>
-                <Button Content="Clear All Data" Command="{Binding ClearAllDataCommand}" Classes="danger"/>
+                <Button Content="{loc:Loc Key=Settings.Button.Load}" Command="{Binding LoadSettingsCommand}"/>
+                <Button Content="{loc:Loc Key=Settings.Button.Save}" Command="{Binding SaveSettingsCommand}"/>
+                <Button Content="{loc:Loc Key=Settings.Button.Test}" Command="{Binding TestConnectionCommand}"/>
+                <Button Content="{loc:Loc Key=Settings.Button.ClearAll}" Command="{Binding ClearAllDataCommand}" Classes="danger"/>
             </StackPanel>
             <Separator Margin="0,20,0,0"/>
-            <TextBlock Text="Connection Package" FontSize="24" FontWeight="Bold"/>
-            <TextBlock Text="Generate an encrypted package to configure the Invoice Planner app." TextWrapping="Wrap"/>
-            <TextBox Text="{Binding ExportPassphrase}" Watermark="Passphrase" PasswordChar="*"/>
-            <TextBox Text="{Binding ConfirmExportPassphrase}" Watermark="Confirm Passphrase" PasswordChar="*"/>
-            <Button Content="Export Connection Package"
+            <TextBlock Text="{loc:Loc Key=Settings.Section.Package.Title}" FontSize="24" FontWeight="Bold"/>
+            <TextBlock Text="{loc:Loc Key=Settings.Section.Package.Description}" TextWrapping="Wrap"/>
+            <TextBox Text="{Binding ExportPassphrase}" Watermark="{loc:Loc Key=Settings.Label.Passphrase}" PasswordChar="*"/>
+            <TextBox Text="{Binding ConfirmExportPassphrase}" Watermark="{loc:Loc Key=Settings.Label.ConfirmPassphrase}" PasswordChar="*"/>
+            <Button Content="{loc:Loc Key=Settings.Button.ExportPackage}"
                     Command="{Binding ExportConnectionPackageCommand}"
                     HorizontalAlignment="Left"/>
-            <TextBlock Text="Apply settings from an existing connection package." TextWrapping="Wrap" Margin="0,10,0,0"/>
-            <TextBox Text="{Binding ImportPassphrase}" Watermark="Import Passphrase" PasswordChar="*"/>
-            <Button Content="Import Connection Package"
+            <TextBlock Text="{loc:Loc Key=Settings.Section.Package.ImportDescription}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+            <TextBox Text="{Binding ImportPassphrase}" Watermark="{loc:Loc Key=Settings.Label.ImportPassphrase}" PasswordChar="*"/>
+            <Button Content="{loc:Loc Key=Settings.Button.ImportPackage}"
                     Command="{Binding ImportConnectionPackageCommand}"
                     HorizontalAlignment="Left"/>
             <TextBlock Text="{Binding SelectedImportPackageFileName}" FontStyle="Italic" Foreground="Gray"
@@ -38,9 +52,9 @@
                        Margin="0,5,0,0"
                        TextWrapping="Wrap"/>
             <Separator Margin="0,20,0,0"/>
-            <TextBlock Text="Power BI Embedding" FontSize="24" FontWeight="Bold"/>
-            <TextBlock Text="Provide a Publish to Web URL to show the dashboard without Azure AD sign-in." TextWrapping="Wrap"/>
-            <TextBox Text="{Binding PowerBiEmbedUrl}" Watermark="Publish to Web URL"/>
+            <TextBlock Text="{loc:Loc Key=Settings.Section.PowerBi.Title}" FontSize="24" FontWeight="Bold"/>
+            <TextBlock Text="{loc:Loc Key=Settings.Section.PowerBi.Description}" TextWrapping="Wrap"/>
+            <TextBox Text="{Binding PowerBiEmbedUrl}" Watermark="{loc:Loc Key=Settings.Label.PowerBiUrl}"/>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

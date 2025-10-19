@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:InvoicePlanner.Avalonia.ViewModels"
-             xmlns:res="clr-namespace:InvoicePlanner.Avalonia.Resources"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              xmlns:views="clr-namespace:InvoicePlanner.Avalonia.Views"
              x:Class="InvoicePlanner.Avalonia.Views.HomeView"
              x:DataType="vm:HomeViewModel"
@@ -11,8 +11,8 @@
     <Grid RowDefinitions="Auto,*,Auto,Auto,Auto" RowSpacing="16">
         <Border Grid.Row="0" Classes="Card" Padding="24" Margin="16,16,16,0">
             <StackPanel Spacing="8">
-                <TextBlock Classes="TitleLarge" Text="{res:Loc Key=HomeTitle}" />
-                <TextBlock Text="{res:Loc Key=HomeSubtitle}" />
+                <TextBlock Classes="TitleLarge" Text="{loc:Loc Key=Home.Title.Primary}" />
+                <TextBlock Text="{loc:Loc Key=Home.Description.Primary}" />
                 <TextBlock Text="{Binding WelcomeMessage}" />
             </StackPanel>
         </Border>

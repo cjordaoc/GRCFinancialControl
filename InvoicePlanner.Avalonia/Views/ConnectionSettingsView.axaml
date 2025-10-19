@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:InvoicePlanner.Avalonia.ViewModels"
-             xmlns:loc="clr-namespace:InvoicePlanner.Avalonia.Resources"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              mc:Ignorable="d"
              x:Class="InvoicePlanner.Avalonia.Views.ConnectionSettingsView"
              x:DataType="vm:ConnectionSettingsViewModel"
@@ -14,37 +14,52 @@
             <Border Classes="Card" Padding="24">
                 <StackPanel Spacing="18">
                     <StackPanel Spacing="8">
-                        <TextBlock Text="{loc:Loc Key=ConnectionSetupTitle}" FontSize="24" FontWeight="SemiBold"/>
-                        <TextBlock Text="{loc:Loc Key=ConnectionSetupDescription}" TextWrapping="Wrap"/>
+                        <TextBlock Text="{loc:Loc Key=Connection.Section.Language.Title}" Classes="TitleMedium"/>
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <TextBlock Text="{loc:Loc Key=Connection.Label.Language}" VerticalAlignment="Center"/>
+                            <ComboBox ItemsSource="{Binding Languages}"
+                                      SelectedItem="{Binding SelectedLanguage}"
+                                      Width="200">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding DisplayName}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="{loc:Loc Key=Connection.Title.Setup}" Classes="TitleLarge"/>
+                        <TextBlock Text="{loc:Loc Key=Connection.Description.Setup}" TextWrapping="Wrap"/>
                     </StackPanel>
                     <Grid ColumnDefinitions="Auto,16,*" RowDefinitions="Auto,Auto">
                         <TextBlock Grid.Row="0"
-                                   Text="{loc:Loc Key=ConnectionPackageLabel}"
+                                   Text="{loc:Loc Key=Connection.Label.Package}"
                                    VerticalAlignment="Center"
                                    Margin="0,0,8,0"/>
                         <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Spacing="8">
                             <TextBox Width="320"
                                      Text="{Binding SelectedPackagePath}"
-                                     Watermark="{loc:Loc Key=ConnectionSetupPackagePlaceholder}"
+                                     Watermark="{loc:Loc Key=Connection.Placeholder.Package}"
                                      IsReadOnly="True"/>
-                            <Button Content="{loc:Loc Key=ConnectionBrowseButton}"
+                            <Button Content="{loc:Loc Key=Connection.Button.Browse}"
                                     Command="{Binding BrowseCommand}"
                                     MinWidth="120"/>
                         </StackPanel>
                         <TextBlock Grid.Row="1"
-                                   Text="{loc:Loc Key=ConnectionPassphraseLabel}"
+                                   Text="{loc:Loc Key=Connection.Label.Passphrase}"
                                    VerticalAlignment="Center"
                                    Margin="0,8,8,0"/>
                         <TextBox Grid.Row="1"
                                  Grid.Column="2"
                                  Margin="0,8,0,0"
                                  Text="{Binding Passphrase}"
-                                 Watermark="{loc:Loc Key=ConnectionPassphrasePlaceholder}"
+                                 Watermark="{loc:Loc Key=Connection.Placeholder.Passphrase}"
                                  PasswordChar="*"
                                  MinWidth="240"/>
                     </Grid>
                     <StackPanel Orientation="Horizontal" Spacing="12">
-                        <Button Content="{loc:Loc Key=ConnectionImportButton}"
+                        <Button Content="{loc:Loc Key=Connection.Button.Import}"
                                 Command="{Binding ImportCommand}"
                                 MinWidth="160"/>
                         <TextBlock Text="{Binding SelectedFileName}"

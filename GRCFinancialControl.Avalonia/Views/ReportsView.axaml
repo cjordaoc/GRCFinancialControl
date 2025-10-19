@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
              xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="768"
              x:Class="GRCFinancialControl.Avalonia.Views.ReportsView"
              x:DataType="vm:ReportsViewModel">
@@ -11,10 +12,10 @@
           Margin="{StaticResource SpaceThickness12}"
           RowSpacing="{StaticResource Space8}">
         <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="{StaticResource Space8}">
-            <Button Content="Open in Browser"
+            <Button Content="{loc:Loc Key=Reports.Button.OpenBrowser}"
                     Command="{Binding OpenInBrowserCommand}"
                     IsEnabled="{Binding HasDashboard}"/>
-            <Button Content="Refresh" Command="{Binding RefreshCommand}"/>
+            <Button Content="{loc:Loc Key=Reports.Button.Refresh}" Command="{Binding RefreshCommand}"/>
         </StackPanel>
 
         <Border Grid.Row="1"
@@ -23,9 +24,9 @@
                 CornerRadius="{StaticResource CornerRadiusSM}"
                 IsVisible="{Binding DashboardUri, Converter={x:Static converters:ObjectConverters.IsNull}}">
             <StackPanel Spacing="{StaticResource Space6}">
-                <TextBlock Text="Connect Power BI" FontSize="{StaticResource FontSizeXL}" FontWeight="SemiBold"/>
-                <TextBlock Text="Add a Publish to Web URL in Settings to load the dashboard." TextWrapping="Wrap"/>
-                <TextBlock Text="Status:" FontWeight="SemiBold"/>
+                <TextBlock Text="{loc:Loc Key=Reports.Empty.Title}" FontSize="{StaticResource FontSizeXL}" FontWeight="SemiBold"/>
+                <TextBlock Text="{loc:Loc Key=Reports.Empty.Description}" TextWrapping="Wrap"/>
+                <TextBlock Text="{loc:Loc Key=Reports.Label.Status}" FontWeight="SemiBold"/>
                 <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
             </StackPanel>
         </Border>

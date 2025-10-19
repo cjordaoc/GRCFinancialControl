@@ -808,24 +808,24 @@
     <value>current user</value>
   </data>
   <data name="Localization.Language.English" xml:space="preserve">
-    <value>English</value>
+    <value>Inglés</value>
   </data>
   <data name="Localization.Language.Portuguese" xml:space="preserve">
-    <value>Portuguese (Brazil)</value>
+    <value>Portugués (Brasil)</value>
   </data>
   <data name="Localization.Language.Spanish" xml:space="preserve">
-    <value>Spanish (Peru)</value>
+    <value>Español (Perú)</value>
   </data>
   <data name="Connection.Section.Language.Title" xml:space="preserve">
-    <value>Language</value>
+    <value>Idioma</value>
   </data>
   <data name="Connection.Label.Language" xml:space="preserve">
-    <value>Language</value>
+    <value>Idioma</value>
   </data>
   <data name="Connection.Status.LanguageSaved" xml:space="preserve">
-    <value>Language preference saved. Restart the application to apply changes.</value>
+    <value>Preferencia de idioma guardada. Reinicie la aplicación para aplicar los cambios.</value>
   </data>
   <data name="Connection.Status.LanguageSaveFailure" xml:space="preserve">
-    <value>Failed to save the language preference: {0}</value>
+    <value>Error al guardar la preferencia de idioma: {0}</value>
   </data>
 </root>

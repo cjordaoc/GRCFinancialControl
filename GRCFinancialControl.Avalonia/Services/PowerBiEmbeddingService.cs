@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using App.Presentation.Localization;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Avalonia.Services.Models;
 using GRCFinancialControl.Core.Configuration;
@@ -37,16 +38,16 @@ namespace GRCFinancialControl.Avalonia.Services
                 if (Uri.TryCreate(embedUrl, UriKind.Absolute, out var parsedUri))
                 {
                     dashboardUri = parsedUri;
-                    statusMessage = "Dashboard ready.";
+                    statusMessage = LocalizationRegistry.Get("Reports.Status.DashboardReady");
                 }
                 else
                 {
-                    statusMessage = "The configured Publish to Web URL is invalid.";
+                    statusMessage = LocalizationRegistry.Get("Reports.Status.InvalidUrl");
                 }
             }
             else
             {
-                statusMessage = "Add a Publish to Web URL in Settings to view the dashboard.";
+                statusMessage = LocalizationRegistry.Get("Reports.Status.UrlRequired");
             }
 
             return new PowerBiEmbedConfiguration

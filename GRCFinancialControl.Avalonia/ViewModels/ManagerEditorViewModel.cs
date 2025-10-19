@@ -22,6 +22,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private ManagerPosition _position;
 
+        [ObservableProperty]
+        private string? _windowsLogin;
+
         public IEnumerable<ManagerPosition> PositionOptions => System.Enum.GetValues<ManagerPosition>();
 
         public Manager Manager { get; }
@@ -39,6 +42,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Name = manager.Name;
             Email = manager.Email;
             Position = manager.Position;
+            WindowsLogin = manager.WindowsLogin;
         }
 
         protected override async Task PersistChangesAsync()
@@ -46,6 +50,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Manager.Name = Name;
             Manager.Email = Email;
             Manager.Position = Position;
+            Manager.WindowsLogin = string.IsNullOrWhiteSpace(WindowsLogin)
+                ? null
+                : WindowsLogin.Trim();
 
             if (Manager.Id == 0)
             {

@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using InvoicePlanner.Avalonia.Resources;
 using InvoicePlanner.Avalonia.Services;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
@@ -20,6 +20,7 @@ public partial class InvoiceSummaryViewModel : ViewModelBase
     private readonly IInvoicePlanRepository _repository;
     private readonly InvoiceSummaryExporter _exporter;
     private readonly ILogger<InvoiceSummaryViewModel> _logger;
+    private readonly IInvoiceAccessScope _accessScope;
     private readonly Dictionary<string, EngagementFilterOption> _engagementIndex = new();
     private readonly Dictionary<int, CustomerFilterOption> _customerIndex = new();
     private InvoiceSummaryResult _latestResult = new();
@@ -27,20 +28,24 @@ public partial class InvoiceSummaryViewModel : ViewModelBase
     public InvoiceSummaryViewModel(
         IInvoicePlanRepository repository,
         InvoiceSummaryExporter exporter,
-        ILogger<InvoiceSummaryViewModel> logger)
+        ILogger<InvoiceSummaryViewModel> logger,
+        IInvoiceAccessScope accessScope)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _exporter = exporter ?? throw new ArgumentNullException(nameof(exporter));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _accessScope = accessScope ?? throw new ArgumentNullException(nameof(accessScope));
+
+        _accessScope.EnsureInitialized();
 
         Groups = new ObservableCollection<InvoiceSummaryGroupViewModel>();
         Engagements = new ObservableCollection<EngagementFilterOption>();
         Customers = new ObservableCollection<CustomerFilterOption>();
         StatusFilters = new ObservableCollection<InvoiceSummaryStatusOption>();
 
-        var allEngagements = new EngagementFilterOption(null, Strings.Get("SummaryAllEngagements"));
+        var allEngagements = new EngagementFilterOption(null, LocalizationRegistry.Get("InvoiceSummary.Filter.AllEngagements"));
         Engagements.Add(allEngagements);
-        var allCustomers = new CustomerFilterOption(null, Strings.Get("SummaryAllCustomers"));
+        var allCustomers = new CustomerFilterOption(null, LocalizationRegistry.Get("InvoiceSummary.Filter.AllCustomers"));
         Customers.Add(allCustomers);
         SelectedEngagement = allEngagements;
         SelectedCustomer = allCustomers;
@@ -49,7 +54,7 @@ public partial class InvoiceSummaryViewModel : ViewModelBase
         {
             var option = new InvoiceSummaryStatusOption(status, status is not InvoiceItemStatus.Reissued)
             {
-                DisplayName = Strings.Get(GetStatusResourceKey(status)),
+                DisplayName = LocalizationRegistry.Get(GetStatusResourceKey(status)),
             };
             option.PropertyChanged += (_, _) => OnPropertyChanged(nameof(HasStatusSelection));
             StatusFilters.Add(option);
@@ -119,7 +124,18 @@ public partial class InvoiceSummaryViewModel : ViewModelBase
 
         if (!HasStatusSelection)
         {
-            ValidationMessage = Strings.Get("SummaryValidationStatusRequired");
+            ValidationMessage = LocalizationRegistry.Get("InvoiceSummary.Validation.StatusRequired");
+            return;
+        }
+
+        if (_accessScope.IsInitialized && !_accessScope.HasAssignments && string.IsNullOrWhiteSpace(_accessScope.InitializationError))
+        {
+            Groups.Clear();
+            TotalAmount = 0m;
+            TotalPercentage = 0m;
+            StatusMessage = LocalizationRegistry.Format("Access.Message.NoAssignments", GetLoginDisplay(_accessScope));
+            (ExportExcelCommand as RelayCommand)?.NotifyCanExecuteChanged();
+            (ExportPdfCommand as RelayCommand)?.NotifyCanExecuteChanged();
             return;
         }
 
@@ -143,9 +159,9 @@ public partial class InvoiceSummaryViewModel : ViewModelBase
             UpdateFilterCollections(result);
 
             StatusMessage = result.Groups.Count == 0
-                ? Strings.Get("SummaryStatusEmpty")
-                : Strings.Format(
-                    "SummaryStatusLoaded",
+                ? LocalizationRegistry.Get("InvoiceSummary.Status.Empty")
+                : LocalizationRegistry.Format(
+                    "InvoiceSummary.Status.Loaded",
                     result.Groups.Sum(group => group.Items.Count),
                     result.Groups.Count);
 
@@ -155,7 +171,7 @@ public partial class InvoiceSummaryViewModel : ViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load invoice summary.");
-            ValidationMessage = Strings.Format("SummaryValidationLoadFailed", ex.Message);
+            ValidationMessage = LocalizationRegistry.Format("InvoiceSummary.Status.LoadFailure", ex.Message);
         }
     }
 
@@ -186,7 +202,7 @@ public partial class InvoiceSummaryViewModel : ViewModelBase
             if (group.CustomerId.HasValue)
             {
                 var displayName = string.IsNullOrWhiteSpace(group.CustomerCode)
-                    ? group.CustomerName ?? Strings.Get("SummaryUnknownCustomer")
+                    ? group.CustomerName ?? LocalizationRegistry.Get("InvoiceSummary.Value.UnknownCustomer")
                     : $"{group.CustomerName} ({group.CustomerCode})";
                 var option = new CustomerFilterOption(group.CustomerId, displayName);
                 if (!_customerIndex.ContainsKey(group.CustomerId.Value))
@@ -229,7 +245,7 @@ public partial class InvoiceSummaryViewModel : ViewModelBase
 
         if (_latestResult.Groups.Count == 0)
         {
-            ValidationMessage = Strings.Get("SummaryValidationNoDataToExport");
+            ValidationMessage = LocalizationRegistry.Get("InvoiceSummary.Validation.NoDataToExport");
             return;
         }
 
@@ -240,12 +256,12 @@ public partial class InvoiceSummaryViewModel : ViewModelBase
             var fullPath = Path.Combine(directory, fileName);
             var content = generator(_latestResult);
             File.WriteAllBytes(fullPath, content);
-            StatusMessage = Strings.Format("SummaryStatusExported", entity, fullPath);
+            StatusMessage = LocalizationRegistry.Format("InvoiceSummary.Status.ExportSuccess", entity, fullPath);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to export {Entity} summary.", entity);
-            ValidationMessage = Strings.Format("SummaryValidationExportFailed", ex.Message);
+            ValidationMessage = LocalizationRegistry.Format("InvoiceSummary.Status.ExportFailure", ex.Message);
         }
     }
 
@@ -253,12 +269,12 @@ public partial class InvoiceSummaryViewModel : ViewModelBase
     {
         return status switch
         {
-            InvoiceItemStatus.Planned => "StatusPlanned",
-            InvoiceItemStatus.Requested => "StatusRequested",
-            InvoiceItemStatus.Emitted => "StatusEmitted",
-            InvoiceItemStatus.Closed => "StatusClosed",
-            InvoiceItemStatus.Canceled => "StatusCanceled",
-            InvoiceItemStatus.Reissued => "StatusReissued",
+            InvoiceItemStatus.Planned => "Invoice.Status.Planned",
+            InvoiceItemStatus.Requested => "Invoice.Status.Requested",
+            InvoiceItemStatus.Emitted => "Invoice.Status.Emitted",
+            InvoiceItemStatus.Closed => "Invoice.Status.Closed",
+            InvoiceItemStatus.Canceled => "Invoice.Status.Canceled",
+            InvoiceItemStatus.Reissued => "Invoice.Status.Reissued",
             _ => status.ToString(),
         };
     }

@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
+using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -73,7 +74,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var selectableFiscalYears = GetSelectableFiscalYears(newClosingPeriod);
             if (selectableFiscalYears.Count == 0)
             {
-                StatusMessage = "All fiscal years are locked. Unlock a fiscal year before adding closing periods.";
+                StatusMessage = LocalizationRegistry.Get("ClosingPeriods.Status.AllLocked");
                 return;
             }
 
@@ -95,7 +96,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             if (closingPeriod.FiscalYear?.IsLocked ?? false)
             {
-                StatusMessage = $"Fiscal year '{FormatFiscalYearName(closingPeriod)}' is locked. Unlock it before editing closing periods.";
+                StatusMessage = LocalizationRegistry.Format(
+                    "ClosingPeriods.Status.FiscalYearLockedEdit",
+                    FormatFiscalYearName(closingPeriod));
                 return;
             }
 
@@ -134,7 +137,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
                 if (closingPeriod.FiscalYear?.IsLocked ?? false)
                 {
-                    StatusMessage = $"Fiscal year '{FormatFiscalYearName(closingPeriod)}' is locked. Unlock it before deleting closing periods.";
+                    StatusMessage = LocalizationRegistry.Format(
+                        "ClosingPeriods.Status.FiscalYearLockedDelete",
+                        FormatFiscalYearName(closingPeriod));
                     return;
                 }
 
@@ -156,11 +161,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             if (closingPeriod.FiscalYear?.IsLocked ?? false)
             {
-                StatusMessage = $"Fiscal year '{FormatFiscalYearName(closingPeriod)}' is locked. Unlock it before deleting data.";
+                StatusMessage = LocalizationRegistry.Format(
+                    "ClosingPeriods.Status.FiscalYearLockedData",
+                    FormatFiscalYearName(closingPeriod));
                 return;
             }
 
-            var result = await _dialogService.ShowConfirmationAsync("Delete Data", $"Are you sure you want to delete all data for {closingPeriod.Name}? This action cannot be undone.");
+            var result = await _dialogService.ShowConfirmationAsync(
+                LocalizationRegistry.Get("Common.Dialog.DeleteData.Title"),
+                LocalizationRegistry.Format("Common.Dialog.DeleteData.Message", closingPeriod.Name));
             if (result)
             {
                 try

@@ -3,14 +3,15 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="250"
              x:Class="GRCFinancialControl.Avalonia.Views.ClosingPeriodEditorView"
              x:DataType="vm:ClosingPeriodEditorViewModel">
     <StackPanel Spacing="10" Margin="10">
-        <TextBlock Text="Closing Period Details" FontSize="18" FontWeight="Bold"/>
-        <TextBox Text="{Binding Name}" Watermark="Name (e.g., P01-2025)" IsEnabled="{Binding AllowEditing}"/>
+        <TextBlock Text="{loc:Loc Key=Admin.ClosingPeriods.Title.Editor}" FontSize="18" FontWeight="Bold"/>
+        <TextBox Text="{Binding Name}" Watermark="{loc:Loc Key=Admin.ClosingPeriods.Placeholder.Name}" IsEnabled="{Binding AllowEditing}"/>
         <StackPanel>
-            <TextBlock Text="Fiscal Year"/>
+            <TextBlock Text="{loc:Loc Key=Admin.ClosingPeriods.Label.FiscalYear}"/>
             <ComboBox ItemsSource="{Binding FiscalYears}"
                       SelectedItem="{Binding SelectedFiscalYear}"
                       IsEnabled="{Binding AllowEditing}"
@@ -19,7 +20,7 @@
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <TextBlock Text="{Binding Name}"/>
-                            <TextBlock Text="(Locked)"
+                            <TextBlock Text="{loc:Loc Key=Admin.ClosingPeriods.Label.Locked}"
                                        Foreground="{StaticResource BrushWarning}"
                                        IsVisible="{Binding IsLocked}"/>
                         </StackPanel>
@@ -31,8 +32,8 @@
         <DatePicker SelectedDate="{Binding PeriodEndOffset}" IsEnabled="{Binding AllowEditing}"/>
         <TextBlock Text="{Binding StatusMessage}" Foreground="Red"/>
         <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">
-            <Button Content="Save" Command="{Binding SaveCommand}"/>
-            <Button Content="Close" Command="{Binding CloseCommand}"/>
+            <Button Content="{loc:Loc Key=Common.Button.Save}" Command="{Binding SaveCommand}"/>
+            <Button Content="{loc:Loc Key=Common.Button.Close}" Command="{Binding CloseCommand}"/>
         </StackPanel>
     </StackPanel>
 </UserControl>

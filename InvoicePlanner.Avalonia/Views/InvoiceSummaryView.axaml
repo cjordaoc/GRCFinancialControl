@@ -4,17 +4,17 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:InvoicePlanner.Avalonia.ViewModels"
-             xmlns:res="clr-namespace:InvoicePlanner.Avalonia.Resources"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              x:Class="InvoicePlanner.Avalonia.Views.InvoiceSummaryView"
              x:DataType="vm:InvoiceSummaryViewModel"
              mc:Ignorable="d">
     <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="12">
         <Border Grid.Row="0" Classes="Card" Padding="16" Margin="16,0,16,0">
             <StackPanel Spacing="12">
-                <TextBlock Classes="TitleMedium" Text="{res:Loc Key=SummaryFiltersTitle}" />
+                <TextBlock Classes="TitleMedium" Text="{loc:Loc Key=InvoiceSummary.Title.Filters}" />
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                     <StackPanel Spacing="4">
-                        <TextBlock Text="{res:Loc Key=SummaryEngagementLabel}" />
+                        <TextBlock Text="{loc:Loc Key=InvoiceSummary.Label.Engagement}" />
                         <ComboBox ItemsSource="{Binding Engagements}"
                                   SelectedItem="{Binding SelectedEngagement, Mode=TwoWay}">
                             <ComboBox.ItemTemplate>
@@ -25,7 +25,7 @@
                         </ComboBox>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Spacing="4">
-                        <TextBlock Text="{res:Loc Key=SummaryCustomerLabel}" />
+                        <TextBlock Text="{loc:Loc Key=InvoiceSummary.Label.Customer}" />
                         <ComboBox ItemsSource="{Binding Customers}"
                                   SelectedItem="{Binding SelectedCustomer, Mode=TwoWay}">
                             <ComboBox.ItemTemplate>
@@ -37,7 +37,7 @@
                     </StackPanel>
                 </Grid>
                 <StackPanel Spacing="4">
-                    <TextBlock Text="{res:Loc Key=SummaryStatusesLabel}" />
+                    <TextBlock Text="{loc:Loc Key=InvoiceSummary.Label.Statuses}" />
                     <ItemsControl ItemsSource="{Binding StatusFilters}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -54,10 +54,10 @@
                     </ItemsControl>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                    <Button Content="{res:Loc Key=ButtonApplyFilters}" Command="{Binding RefreshCommand}" />
-                    <Button Content="{res:Loc Key=ButtonClearFilters}" Command="{Binding ClearFiltersCommand}" />
-                    <Button Content="{res:Loc Key=ButtonExportExcel}" Command="{Binding ExportExcelCommand}" />
-                    <Button Content="{res:Loc Key=ButtonExportPdf}" Command="{Binding ExportPdfCommand}" />
+                    <Button Content="{loc:Loc Key=InvoiceSummary.Button.ApplyFilters}" Command="{Binding RefreshCommand}" />
+                    <Button Content="{loc:Loc Key=InvoiceSummary.Button.ClearFilters}" Command="{Binding ClearFiltersCommand}" />
+                    <Button Content="{loc:Loc Key=Common.Button.ExportExcel}" Command="{Binding ExportExcelCommand}" />
+                    <Button Content="{loc:Loc Key=Common.Button.ExportPdf}" Command="{Binding ExportPdfCommand}" />
                 </StackPanel>
             </StackPanel>
         </Border>
@@ -65,19 +65,19 @@
         <Border Grid.Row="1" Classes="Card" Padding="16" Margin="16,0,16,0">
             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                 <StackPanel Spacing="4">
-                    <TextBlock Text="{res:Loc Key=SummaryTotalsAmountLabel}" />
+                    <TextBlock Text="{loc:Loc Key=InvoiceSummary.Section.Totals.Amount}" />
                     <TextBlock Classes="TitleMedium" Text="{Binding TotalAmount, StringFormat=¤\u00A0{0:N2}}" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Spacing="4">
-                    <TextBlock Text="{res:Loc Key=SummaryTotalsPercentageLabel}" />
+                    <TextBlock Text="{loc:Loc Key=InvoiceSummary.Section.Totals.Percentage}" />
                     <TextBlock Classes="TitleMedium" Text="{Binding TotalPercentage, StringFormat={}{0:N4}%}" />
                 </StackPanel>
             </Grid>
         </Border>
 
         <StackPanel Grid.Row="2" Margin="16,0" Spacing="4">
-            <TextBlock Foreground="DarkGreen" Text="{Binding StatusMessage}" IsVisible="{Binding HasStatusMessage}" />
-            <TextBlock Foreground="DarkRed" Text="{Binding ValidationMessage}" IsVisible="{Binding HasValidationMessage}" />
+            <TextBlock Classes="StatusSuccess" Text="{Binding StatusMessage}" IsVisible="{Binding HasStatusMessage}" />
+            <TextBlock Classes="StatusError" Text="{Binding ValidationMessage}" IsVisible="{Binding HasValidationMessage}" />
         </StackPanel>
 
         <ScrollViewer Grid.Row="3" Margin="16" VerticalScrollBarVisibility="Auto">
@@ -107,21 +107,21 @@
                                           IsReadOnly="True"
                                           x:CompileBindings="False">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="{res:Loc Key=SummaryColumnSequence}" Binding="{Binding Sequence}" Width="40" />
-                                        <DataGridTextColumn Header="{res:Loc Key=SummaryColumnPlan}" Binding="{Binding PlanId}" Width="80" />
-                                        <DataGridTextColumn Header="{res:Loc Key=SummaryColumnStatus}" Binding="{Binding StatusDisplay}" Width="100" />
-                                        <DataGridTextColumn Header="{res:Loc Key=SummaryColumnType}" Binding="{Binding PlanType}" Width="100" />
-                                        <DataGridTextColumn Header="{res:Loc Key=SummaryColumnPercent}" Binding="{Binding Percentage, StringFormat={}{0:N4}}" Width="90" />
-                                        <DataGridTextColumn Header="{res:Loc Key=SummaryColumnAmount}" Binding="{Binding Amount, StringFormat={}{0:N2}}" Width="120" />
-                                        <DataGridTextColumn Header="{res:Loc Key=SummaryColumnBase}" Binding="{Binding BaseValue, StringFormat={}{0:N2}}" Width="120" />
-                                        <DataGridTextColumn Header="{res:Loc Key=SummaryColumnEmission}" Binding="{Binding EmissionDate, StringFormat={}{0:yyyy-MM-dd}}" Width="120" />
-                                        <DataGridTextColumn Header="{res:Loc Key=SummaryColumnDue}" Binding="{Binding DueDate, StringFormat={}{0:yyyy-MM-dd}}" Width="120" />
-                                        <DataGridTextColumn Header="{res:Loc Key=SummaryColumnRequest}" Binding="{Binding RequestDate, StringFormat={}{0:yyyy-MM-dd}}" Width="120" />
-                                        <DataGridTextColumn Header="{res:Loc Key=SummaryColumnEmitted}" Binding="{Binding EmittedAt, StringFormat={}{0:yyyy-MM-dd}}" Width="120" />
-                                        <DataGridTextColumn Header="{res:Loc Key=SummaryColumnBz}" Binding="{Binding BzCode}" Width="100" />
-                                        <DataGridTextColumn Header="{res:Loc Key=SummaryColumnRitm}" Binding="{Binding RitmNumber}" Width="140" />
-                                        <DataGridTextColumn Header="{res:Loc Key=SummaryColumnCanceled}" Binding="{Binding CanceledAt, StringFormat={}{0:yyyy-MM-dd}}" Width="120" />
-                                        <DataGridTextColumn Header="{res:Loc Key=SummaryColumnCancelReason}" Binding="{Binding CancelReason}" Width="200" />
+                                        <DataGridTextColumn Header="{loc:Loc Key=InvoiceSummary.TableHeader.Sequence}" Binding="{Binding Sequence}" Width="40" />
+                                        <DataGridTextColumn Header="{loc:Loc Key=InvoiceSummary.TableHeader.Plan}" Binding="{Binding PlanId}" Width="80" />
+                                        <DataGridTextColumn Header="{loc:Loc Key=InvoiceSummary.TableHeader.Status}" Binding="{Binding StatusDisplay}" Width="100" />
+                                        <DataGridTextColumn Header="{loc:Loc Key=InvoiceSummary.TableHeader.Type}" Binding="{Binding PlanType}" Width="100" />
+                                        <DataGridTextColumn Header="{loc:Loc Key=InvoiceSummary.TableHeader.Percent}" Binding="{Binding Percentage, StringFormat={}{0:N4}}" Width="90" />
+                                        <DataGridTextColumn Header="{loc:Loc Key=InvoiceSummary.TableHeader.Amount}" Binding="{Binding Amount, StringFormat={}{0:N2}}" Width="120" />
+                                        <DataGridTextColumn Header="{loc:Loc Key=InvoiceSummary.TableHeader.BaseValue}" Binding="{Binding BaseValue, StringFormat={}{0:N2}}" Width="120" />
+                                        <DataGridTextColumn Header="{loc:Loc Key=InvoiceSummary.TableHeader.EmissionDate}" Binding="{Binding EmissionDate, StringFormat={}{0:yyyy-MM-dd}}" Width="120" />
+                                        <DataGridTextColumn Header="{loc:Loc Key=InvoiceSummary.TableHeader.DueDate}" Binding="{Binding DueDate, StringFormat={}{0:yyyy-MM-dd}}" Width="120" />
+                                        <DataGridTextColumn Header="{loc:Loc Key=InvoiceSummary.TableHeader.RequestDate}" Binding="{Binding RequestDate, StringFormat={}{0:yyyy-MM-dd}}" Width="120" />
+                                        <DataGridTextColumn Header="{loc:Loc Key=InvoiceSummary.TableHeader.EmittedAt}" Binding="{Binding EmittedAt, StringFormat={}{0:yyyy-MM-dd}}" Width="120" />
+                                        <DataGridTextColumn Header="{loc:Loc Key=InvoiceSummary.TableHeader.BzCode}" Binding="{Binding BzCode}" Width="100" />
+                                        <DataGridTextColumn Header="{loc:Loc Key=InvoiceSummary.TableHeader.Ritm}" Binding="{Binding RitmNumber}" Width="140" />
+                                        <DataGridTextColumn Header="{loc:Loc Key=InvoiceSummary.TableHeader.CanceledAt}" Binding="{Binding CanceledAt, StringFormat={}{0:yyyy-MM-dd}}" Width="120" />
+                                        <DataGridTextColumn Header="{loc:Loc Key=InvoiceSummary.TableHeader.CancelReason}" Binding="{Binding CancelReason}" Width="200" />
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </StackPanel>

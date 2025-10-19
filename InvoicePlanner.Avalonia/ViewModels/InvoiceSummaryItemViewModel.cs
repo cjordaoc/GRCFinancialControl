@@ -1,7 +1,7 @@
 
 using System;
+using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
-using InvoicePlanner.Avalonia.Resources;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
 
@@ -73,12 +73,12 @@ public partial class InvoiceSummaryItemViewModel : ObservableObject
     {
         return status switch
         {
-            InvoiceItemStatus.Planned => Strings.Get("StatusPlanned"),
-            InvoiceItemStatus.Requested => Strings.Get("StatusRequested"),
-            InvoiceItemStatus.Emitted => Strings.Get("StatusEmitted"),
-            InvoiceItemStatus.Closed => Strings.Get("StatusClosed"),
-            InvoiceItemStatus.Canceled => Strings.Get("StatusCanceled"),
-            InvoiceItemStatus.Reissued => Strings.Get("StatusReissued"),
+            InvoiceItemStatus.Planned => LocalizationRegistry.Get("Invoice.Status.Planned"),
+            InvoiceItemStatus.Requested => LocalizationRegistry.Get("Invoice.Status.Requested"),
+            InvoiceItemStatus.Emitted => LocalizationRegistry.Get("Invoice.Status.Emitted"),
+            InvoiceItemStatus.Closed => LocalizationRegistry.Get("Invoice.Status.Closed"),
+            InvoiceItemStatus.Canceled => LocalizationRegistry.Get("Invoice.Status.Canceled"),
+            InvoiceItemStatus.Reissued => LocalizationRegistry.Get("Invoice.Status.Reissued"),
             _ => status.ToString(),
         };
     }

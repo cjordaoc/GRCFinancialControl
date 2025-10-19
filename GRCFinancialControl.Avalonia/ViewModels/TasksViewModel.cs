@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
+using App.Presentation.Localization;
 using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -31,12 +32,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var defaultFileName = $"Tasks_{DateTime.Now:yyyyMMdd}.json";
             var filePath = await _filePickerService.SaveFileAsync(
                 defaultFileName,
-                title: "Salvar arquivo de tarefas",
+                title: LocalizationRegistry.Get("Tasks.Dialog.SaveTitle"),
                 defaultExtension: ".json",
                 allowedPatterns: new[] { "*.json" });
             if (string.IsNullOrWhiteSpace(filePath))
             {
-                StatusMessage = "Geração cancelada.";
+                StatusMessage = LocalizationRegistry.Get("Tasks.Status.Cancelled");
                 return;
             }
 
@@ -127,15 +128,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 await using var stream = File.Create(filePath);
                 await JsonSerializer.SerializeAsync(stream, payload, options);
 
-                StatusMessage = $"Arquivo salvo em {Path.GetFileName(filePath)}.";
+                StatusMessage = LocalizationRegistry.Format("Tasks.Status.FileSaved", Path.GetFileName(filePath));
             }
             catch (TimeZoneNotFoundException)
             {
-                StatusMessage = "Fuso horário America/Sao_Paulo não encontrado.";
+                StatusMessage = LocalizationRegistry.Format("Tasks.Status.TimeZoneMissing", "America/Sao_Paulo");
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Falha ao gerar tarefas: {ex.Message}";
+                StatusMessage = LocalizationRegistry.Format("Tasks.Status.GenerationFailure", ex.Message);
             }
         }
     }

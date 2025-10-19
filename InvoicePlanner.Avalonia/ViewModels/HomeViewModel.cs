@@ -1,5 +1,5 @@
+using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
-using InvoicePlanner.Avalonia.Resources;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
@@ -17,7 +17,7 @@ public partial class HomeViewModel : ViewModelBase
         EmissionConfirmation = emissionConfirmation;
         Summary = summary;
         NotificationPreview = notificationPreview;
-        welcomeMessage = Strings.Get("HomeWelcome");
+        welcomeMessage = LocalizationRegistry.Get("Home.Message.Welcome");
     }
 
     [ObservableProperty]

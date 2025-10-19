@@ -10,5 +10,6 @@ namespace GRCFinancialControl.Core.Models
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public PapdLevel Level { get; set; } // e.g., "Partner", "Director"
+        public string? WindowsLogin { get; set; }
     }
 }

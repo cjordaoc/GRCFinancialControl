@@ -8,6 +8,7 @@ namespace GRCFinancialControl.Core.Models
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public ManagerPosition Position { get; set; }
+        public string? WindowsLogin { get; set; }
         public ICollection<EngagementManagerAssignment> EngagementAssignments { get; set; } = [];
     }
 }

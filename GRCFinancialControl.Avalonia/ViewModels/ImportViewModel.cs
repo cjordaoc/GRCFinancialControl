@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
+using App.Presentation.Localization;
 using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -14,7 +15,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 {
     public partial class ImportViewModel : ViewModelBase
     {
-        private const string LockedClosingPeriodsMessage = "All closing periods belong to locked fiscal years. Unlock a fiscal year to import ETC-P data.";
+        private const string BudgetType = "Budget";
+        private const string ActualsType = "Actuals";
+        private const string FullManagementType = "FullManagement";
 
         private readonly IFilePickerService _filePickerService;
         private readonly IImportService _importService;
@@ -35,11 +38,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public string? FileTypeDisplayName => FileType switch
         {
-            "Budget" => "Budget",
-            "Actuals" => "ETC-P",
-            "FullManagement" => "Full Management Data",
+            BudgetType => LocalizationRegistry.Get("Import.FileType.Budget"),
+            ActualsType => LocalizationRegistry.Get("Import.FileType.Actuals"),
+            FullManagementType => LocalizationRegistry.Get("Import.FileType.FullManagement"),
             _ => FileType
         };
+
+        public string? SelectedImportTitle => string.IsNullOrWhiteSpace(FileTypeDisplayName)
+            ? null
+            : LocalizationRegistry.Format("Import.Section.Selected.TitleFormat", FileTypeDisplayName);
 
         public ImportViewModel(IFilePickerService filePickerService, IImportService importService, IClosingPeriodService closingPeriodService, ILoggingService loggingService)
         {
@@ -61,7 +68,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             FileType = fileType;
             if (RequiresClosingPeriodSelection && !HasUnlockedClosingPeriods)
             {
-                StatusMessage = LockedClosingPeriodsMessage;
+                StatusMessage = LocalizationRegistry.Get("Import.Status.LockedClosingPeriods");
             }
             else
             {
@@ -74,9 +81,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             if (string.IsNullOrEmpty(FileType)) return;
 
-            if (FileType == "Actuals" && SelectedClosingPeriod == null)
+            if (FileType == ActualsType && SelectedClosingPeriod == null)
             {
-                StatusMessage = "Please select a closing period before importing ETC-P data.";
+                StatusMessage = LocalizationRegistry.Get("Import.Validation.ClosingPeriodRequired");
                 return;
             }
 
@@ -84,31 +91,31 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (string.IsNullOrEmpty(filePath)) return;
 
             var displayName = FileTypeDisplayName ?? FileType ?? string.Empty;
-            _loggingService.LogInfo($"Importing {displayName} data...");
+            _loggingService.LogInfo(LocalizationRegistry.Format("Import.Status.InProgress", displayName));
             try
             {
                 string result;
-                if (FileType == "Budget")
+                if (FileType == BudgetType)
                 {
                     result = await _importService.ImportBudgetAsync(filePath);
                 }
-                else if (FileType == "Actuals")
+                else if (FileType == ActualsType)
                 {
                     result = await _importService.ImportActualsAsync(filePath, SelectedClosingPeriod!.Id);
                 }
-                else if (FileType == "FullManagement")
+                else if (FileType == FullManagementType)
                 {
                     result = await _importService.ImportFullManagementDataAsync(filePath);
                 }
                 else
                 {
-                    result = "Invalid import type selected.";
+                    result = LocalizationRegistry.Get("Import.Status.InvalidType");
                 }
                 _loggingService.LogInfo(result);
             }
             catch (Exception ex)
             {
-                _loggingService.LogError($"An error occurred during import: {ex.Message}");
+                _loggingService.LogError(LocalizationRegistry.Format("Import.Status.Error", ex.Message));
             }
         }
 
@@ -119,7 +126,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return false;
             }
 
-            if (FileType == "Actuals")
+            if (FileType == ActualsType)
             {
                 return SelectedClosingPeriod is not null;
             }
@@ -146,11 +153,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 SelectedClosingPeriod = ClosingPeriods.FirstOrDefault();
             }
 
-            if (FileType == "Actuals" && ClosingPeriods.Count == 0)
+            var lockedMessage = LocalizationRegistry.Get("Import.Status.LockedClosingPeriods");
+
+            if (FileType == ActualsType && ClosingPeriods.Count == 0)
             {
-                StatusMessage ??= LockedClosingPeriodsMessage;
+                StatusMessage ??= lockedMessage;
             }
-            else if (FileType == "Actuals" && string.Equals(StatusMessage, LockedClosingPeriodsMessage, StringComparison.Ordinal))
+            else if (FileType == ActualsType && string.Equals(StatusMessage, lockedMessage, StringComparison.Ordinal))
             {
                 StatusMessage = null;
             }
@@ -158,7 +167,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public bool HasUnlockedClosingPeriods => ClosingPeriods.Count > 0;
 
-        public bool RequiresClosingPeriodSelection => string.Equals(FileType, "Actuals", StringComparison.Ordinal);
+        public bool RequiresClosingPeriodSelection => string.Equals(FileType, ActualsType, StringComparison.Ordinal);
 
         public bool IsClosingPeriodSelectionUnavailable => RequiresClosingPeriodSelection && !HasUnlockedClosingPeriods;
 
@@ -196,6 +205,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         partial void OnFileTypeChanged(string? value)
         {
             OnPropertyChanged(nameof(FileTypeDisplayName));
+            OnPropertyChanged(nameof(SelectedImportTitle));
             OnPropertyChanged(nameof(RequiresClosingPeriodSelection));
             OnPropertyChanged(nameof(IsClosingPeriodSelectionUnavailable));
             ImportCommand.NotifyCanExecuteChanged();

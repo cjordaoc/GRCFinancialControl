@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -74,7 +75,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             if (papd is null) return;
 
-            var result = await _dialogService.ShowConfirmationAsync("Delete Data", $"Are you sure you want to delete all data for {papd.Name}? This action cannot be undone.");
+            var result = await _dialogService.ShowConfirmationAsync(
+                LocalizationRegistry.Get("Common.Dialog.DeleteData.Title"),
+                LocalizationRegistry.Format("Common.Dialog.DeleteData.Message", papd.Name));
             if (result)
             {
                 await _papdService.DeleteDataAsync(papd.Id);

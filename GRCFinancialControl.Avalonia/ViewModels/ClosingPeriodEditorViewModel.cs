@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -98,7 +99,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             if (SelectedFiscalYear is null)
             {
-                StatusMessage = "No available fiscal years. Unlock or create a fiscal year before updating closing periods.";
+                StatusMessage = LocalizationRegistry.Get("ClosingPeriods.Validation.NoFiscalYears");
             }
 
             IsReadOnlyMode = isReadOnlyMode;
@@ -116,7 +117,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             if (SelectedFiscalYear is null)
             {
-                StatusMessage = "Select a fiscal year before saving.";
+                StatusMessage = LocalizationRegistry.Get("ClosingPeriods.Validation.FiscalYearRequired");
                 return;
             }
 
@@ -126,19 +127,21 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     ? $"Id={SelectedFiscalYear.Id}"
                     : SelectedFiscalYear.Name;
 
-                StatusMessage = $"Fiscal year '{fiscalYearName}' is locked. Unlock it before assigning closing periods.";
+                StatusMessage = LocalizationRegistry.Format(
+                    "ClosingPeriods.Validation.FiscalYearLocked",
+                    fiscalYearName);
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(Name))
             {
-                StatusMessage = "A descriptive name is required.";
+                StatusMessage = LocalizationRegistry.Get("ClosingPeriods.Validation.NameRequired");
                 return;
             }
 
             if (PeriodEnd < PeriodStart)
             {
-                StatusMessage = "The end date must be on or after the start date.";
+                StatusMessage = LocalizationRegistry.Get("ClosingPeriods.Validation.EndDateAfterStart");
                 return;
             }
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using App.Presentation.Localization;
 using App.Presentation.Services;
 using ClosedXML.Excel;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
@@ -30,11 +31,11 @@ namespace GRCFinancialControl.Avalonia.Services
             }
 
             using var workbook = new XLWorkbook();
-            var worksheet = workbook.AddWorksheet("Report");
+            var worksheet = workbook.AddWorksheet(LocalizationRegistry.Get("Exports.Worksheet.Report"));
 
             if (exportItems.Count == 0)
             {
-                worksheet.Cell(1, 1).Value = XLCellValue.FromObject("No data available");
+                worksheet.Cell(1, 1).Value = XLCellValue.FromObject(LocalizationRegistry.Get("Exports.Status.NoData"));
                 workbook.SaveAs(filePath);
                 return;
             }
@@ -52,7 +53,7 @@ namespace GRCFinancialControl.Avalonia.Services
 
             if (properties.Length == 0)
             {
-                worksheet.Cell(1, 1).Value = XLCellValue.FromObject("Value");
+                worksheet.Cell(1, 1).Value = XLCellValue.FromObject(LocalizationRegistry.Get("Exports.Header.Value"));
                 for (var row = 0; row < exportItems.Count; row++)
                 {
                     worksheet.Cell(row + 2, 1).Value = XLCellValue.FromObject(exportItems[row]);

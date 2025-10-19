@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -49,7 +50,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             catch (Exception ex)
             {
                 _loggingService.LogError($"Failed to load Power BI configuration: {ex.Message}");
-                StatusMessage = "Unable to load the Power BI dashboard configuration.";
+                StatusMessage = LocalizationRegistry.Get("Reports.Status.LoadFailure");
                 DashboardUri = null;
             }
             finally
@@ -76,7 +77,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             catch (Exception ex)
             {
                 _loggingService.LogError($"Failed to launch browser: {ex.Message}");
-                StatusMessage = "Unable to launch the external browser for the dashboard.";
+                StatusMessage = LocalizationRegistry.Format("Reports.Status.OpenExternalFailure", ex.Message);
             }
         }
 
