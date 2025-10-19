@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Avalonia.ViewModels;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
+using GRCFinancialControl.Avalonia.Messages;
 
 namespace GRCFinancialControl.Avalonia.Services;
 
@@ -14,10 +15,15 @@ public class DialogService : IDialogService
     private readonly IMessenger _messenger;
     private readonly ViewLocator _viewLocator = new();
     private IModalOverlayHost? _overlayHost;
+    private bool _isClosingFromHost;
 
     public DialogService(IMessenger messenger)
     {
         _messenger = messenger;
+        _messenger.Register<DialogService, CloseDialogMessage>(this, static (recipient, message) =>
+        {
+            recipient.OnCloseDialogRequested(message.Value);
+        });
     }
 
     public async Task<bool> ShowDialogAsync(ViewModelBase viewModel, string? title = null, bool canClose = true)
@@ -57,7 +63,25 @@ public class DialogService : IDialogService
             return;
         }
 
-        _messenger.Send(new Messages.CloseDialogMessage(e.Result));
-        _overlayHost.Close(e.Result);
+        _isClosingFromHost = true;
+        try
+        {
+            _messenger.Send(new CloseDialogMessage(e.Result));
+            _overlayHost.Close(e.Result);
+        }
+        finally
+        {
+            _isClosingFromHost = false;
+        }
+    }
+
+    private void OnCloseDialogRequested(bool result)
+    {
+        if (_isClosingFromHost)
+        {
+            return;
+        }
+
+        _overlayHost?.Close(result);
     }
 }
