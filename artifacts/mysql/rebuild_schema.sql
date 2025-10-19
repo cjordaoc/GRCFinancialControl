@@ -494,12 +494,12 @@ INSERT INTO `FiscalYears` (`Name`, `StartDate`, `EndDate`, `AreaSalesTarget`, `A
     ('FY27', '2026-07-01 00:00:00', '2027-06-30 23:59:59', 0, 0);
     
 INSERT INTO `Papds` (`Name`,`Level`,`WindowsLogin`) VALUES
-    ('Danilo Passos','AssociatePartner',NULL),
-    ('Fernando São Pedro','Director',NULL),
-    ('Alexandre Jucá de Paiva','AssociatePartner',NULL);
+    ('Danilo Passos','AssociatePartner','danilo.passos'),
+    ('Fernando São Pedro','Director','fernando.sao-pedro'),
+    ('Alexandre Jucá de Paiva','AssociatePartner', NULL);
 
 INSERT INTO `Managers` (`Name`,`Email`,`Position`,`WindowsLogin`) VALUES
-    ('Caio Jordão Calisto','caio.calisto@br.ey.com','SeniorManager',NULL),
+    ('Caio Jordão Calisto','caio.calisto@br.ey.com','SeniorManager','caio.calisto'),
     ('Gabriel Cortezia','gabriel.cortezia@br.ey.com','SeniorManager',NULL),
     ('Rafael Gimenis','rafael.gimenis@br.ey.com','SeniorManager',NULL),
     ('Salomão Bruno','salomao.bruno@br.ey.com','SeniorManager',NULL),
