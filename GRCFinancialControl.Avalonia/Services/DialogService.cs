@@ -1,58 +1,64 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using App.Presentation.Controls;
+using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Messaging;
-using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Avalonia.ViewModels;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 
-namespace GRCFinancialControl.Avalonia.Services
+namespace GRCFinancialControl.Avalonia.Services;
+
+public class DialogService : IDialogService
 {
-    public class DialogService : IDialogService, IRecipient<CloseDialogMessage>
+    private readonly IMessenger _messenger;
+    private readonly ViewLocator _viewLocator = new();
+    private IModalOverlayHost? _overlayHost;
+
+    public DialogService(IMessenger messenger)
     {
-        private readonly IMessenger _messenger;
-        private readonly Stack<TaskCompletionSource<bool>> _dialogStack = new();
-        private IModalOverlayHost? _overlayHost;
+        _messenger = messenger;
+    }
 
-        public DialogService(IMessenger messenger)
+    public async Task<bool> ShowDialogAsync(ViewModelBase viewModel, string? title = null, bool canClose = true)
+    {
+        if (_overlayHost is null)
         {
-            _messenger = messenger;
-            _messenger.Register<CloseDialogMessage>(this);
+            throw new InvalidOperationException("The dialog host has not been attached. Please ensure AttachHost is called before showing a dialog.");
         }
 
-        public Task<bool> ShowDialogAsync(ViewModelBase viewModel, string? title = null, bool canClose = true)
+        if (_viewLocator.Build(viewModel) is not UserControl view)
         {
-            var tcs = new TaskCompletionSource<bool>();
-            _dialogStack.Push(tcs);
-            _messenger.Send(new OpenDialogMessage(viewModel, title, canClose));
-            return tcs.Task;
+            throw new InvalidOperationException($"Could not locate a view for the view model '{viewModel.GetType().FullName}'.");
         }
 
-        public Task<bool> ShowConfirmationAsync(string title, string message)
+        view.DataContext = viewModel;
+
+        var result = await _overlayHost.ShowModalAsync(view, title, canClose);
+        return result ?? false;
+    }
+
+    public Task<bool> ShowConfirmationAsync(string title, string message)
+    {
+        var confirmationViewModel = new ConfirmationDialogViewModel(title, message, _messenger);
+        return ShowDialogAsync(confirmationViewModel, title);
+    }
+
+    public void AttachHost(IModalOverlayHost host)
+    {
+        ArgumentNullException.ThrowIfNull(host);
+        _overlayHost = host;
+        _overlayHost.CloseRequested += OnHostCloseRequested;
+    }
+
+    private void OnHostCloseRequested(object? sender, ModalOverlayCloseRequestedEventArgs e)
+    {
+        if (_overlayHost is null)
         {
-            var confirmationViewModel = new ConfirmationDialogViewModel(title, message, _messenger);
-            return ShowDialogAsync(confirmationViewModel, title);
+            return;
         }
 
-        public void AttachHost(IModalOverlayHost host)
-        {
-            ArgumentNullException.ThrowIfNull(host);
-            _overlayHost = host;
-        }
-
-        public void Receive(CloseDialogMessage message)
-        {
-            if (_dialogStack.TryPop(out var tcs))
-            {
-                tcs.TrySetResult(message.Value);
-            }
-
-            if (_overlayHost?.IsOverlayOpen == true)
-            {
-                _overlayHost.Close(message.Value);
-            }
-        }
+        _messenger.Send(new Messages.CloseDialogMessage(e.Result));
+        _overlayHost.Close(e.Result);
     }
 }
