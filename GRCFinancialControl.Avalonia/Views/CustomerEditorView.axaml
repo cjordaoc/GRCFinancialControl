@@ -20,10 +20,6 @@
                 <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding CustomerCode}" Margin="10,10,0,0" IsEnabled="{Binding AllowEditing}"/>
             </Grid>
 
-            <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right" Margin="0,20,0,0">
-                <Button Content="Save" Command="{Binding SaveCommand}" Classes="accent" IsEnabled="{Binding AllowEditing}"/>
-                <Button Content="Close" Command="{Binding CloseCommand}"/>
-            </StackPanel>
         </StackPanel>
     </Panel>
 </UserControl>

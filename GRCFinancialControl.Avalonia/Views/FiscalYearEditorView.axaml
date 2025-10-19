@@ -19,9 +19,5 @@
         <TextBlock Text="{Binding StatusMessage}" Foreground="Red"/>
         <TextBox Text="{Binding AreaSalesTarget, Converter={StaticResource NumericConverter}}" Watermark="{loc:Loc Key=Admin.FiscalYears.Placeholder.AreaSalesTarget}" IsEnabled="{Binding AllowEditing}"/>
         <TextBox Text="{Binding AreaRevenueTarget, Converter={StaticResource NumericConverter}}" Watermark="{loc:Loc Key=Admin.FiscalYears.Placeholder.AreaRevenueTarget}" IsEnabled="{Binding AllowEditing}"/>
-        <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">
-            <Button Content="{loc:Loc Key=Common.Button.Save}" Command="{Binding SaveCommand}" IsEnabled="{Binding AllowEditing}"/>
-            <Button Content="{loc:Loc Key=Common.Button.Close}" Command="{Binding CloseCommand}"/>
-        </StackPanel>
     </StackPanel>
 </UserControl>

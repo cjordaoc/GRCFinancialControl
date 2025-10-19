@@ -22,17 +22,21 @@ public partial class RequestConfirmationViewModel : ViewModelBase
     private readonly IMessenger _messenger;
     private readonly IInvoiceAccessScope _accessScope;
     private readonly RelayCommand _loadPlanCommand;
+    private readonly IModalOverlayService _modalOverlayService;
+    private RequestConfirmationDialogViewModel? _dialogViewModel;
 
     public RequestConfirmationViewModel(
         IInvoicePlanRepository repository,
         ILogger<RequestConfirmationViewModel> logger,
         IMessenger messenger,
-        IInvoiceAccessScope accessScope)
+        IInvoiceAccessScope accessScope,
+        IModalOverlayService modalOverlayService)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _messenger = messenger ?? throw new ArgumentNullException(nameof(messenger));
         _accessScope = accessScope ?? throw new ArgumentNullException(nameof(accessScope));
+        _modalOverlayService = modalOverlayService ?? throw new ArgumentNullException(nameof(modalOverlayService));
 
         _accessScope.EnsureInitialized();
 
@@ -40,7 +44,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         AvailablePlans.CollectionChanged += OnAvailablePlansChanged;
 
         _loadPlanCommand = new RelayCommand(LoadSelectedPlan, () => SelectedPlan is not null);
-        ClosePlanDetailsCommand = new RelayCommand(ClosePlanDetails);
+        ClosePlanDetailsCommand = new RelayCommand(() => _modalOverlayService.Close(false));
 
         _messenger.Register<ConnectionSettingsImportedMessage>(this, (_, _) => LoadAvailablePlans());
 
@@ -74,9 +78,6 @@ public partial class RequestConfirmationViewModel : ViewModelBase
 
     [ObservableProperty]
     private string? planSelectionMessage;
-
-    [ObservableProperty]
-    private bool isPlanDetailsVisible;
 
     public bool HasLines => Lines.Count > 0;
 
@@ -133,7 +134,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         if (SelectedPlan is null)
         {
             ValidationMessage = LocalizationRegistry.Get("Request.Validation.PlanSelection");
-            IsPlanDetailsVisible = false;
+            _modalOverlayService.Close(false);
             return;
         }
 
@@ -180,13 +181,20 @@ public partial class RequestConfirmationViewModel : ViewModelBase
             RefreshSummaries();
 
             StatusMessage = LocalizationRegistry.Format("Request.Status.PlanLoaded", plan.Id, Lines.Count);
-            IsPlanDetailsVisible = Lines.Count > 0;
+            if (Lines.Count > 0)
+            {
+                ShowPlanDetailsDialog();
+            }
+            else
+            {
+                _modalOverlayService.Close(false);
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load invoice plan {PlanId}.", SelectedPlan.Id);
             ValidationMessage = LocalizationRegistry.Format("Request.Status.LoadFailureDetail", ex.Message);
-            IsPlanDetailsVisible = false;
+            _modalOverlayService.Close(false);
         }
     }
 
@@ -299,7 +307,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         Lines.Clear();
         RefreshSummaries();
         OnPropertyChanged(nameof(HasLines));
-        IsPlanDetailsVisible = false;
+        _modalOverlayService.Close(false);
     }
 
     private void LoadAvailablePlans()
@@ -339,9 +347,10 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         }
     }
 
-    private void ClosePlanDetails()
+    private void ShowPlanDetailsDialog()
     {
-        IsPlanDetailsVisible = false;
+        _dialogViewModel ??= new RequestConfirmationDialogViewModel(this);
+        _ = _modalOverlayService.ShowAsync(_dialogViewModel, LocalizationRegistry.Get("Request.Title.Primary"));
     }
 
     private void UpdateSelectedPlanSummaryCounts()

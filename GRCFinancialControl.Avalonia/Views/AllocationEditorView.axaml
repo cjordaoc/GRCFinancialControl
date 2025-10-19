@@ -71,9 +71,5 @@
             </DataGrid.Columns>
         </DataGrid>
         <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource BrushWarning}" Margin="0,5,0,0"/>
-        <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space5}" HorizontalAlignment="Right">
-            <Button Content="Save" Command="{Binding SaveCommand}"/>
-            <Button Content="Close" Command="{Binding CloseCommand}"/>
-        </StackPanel>
     </StackPanel>
 </UserControl>

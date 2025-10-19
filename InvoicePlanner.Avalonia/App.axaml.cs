@@ -108,10 +108,10 @@ public partial class App : Application
                 services.AddTransient<IInvoicePlanRepository, InvoicePlanRepository>();
                 services.AddSingleton<IInvoicePlanValidator, InvoicePlanValidator>();
                 services.AddSingleton<InvoiceSummaryExporter>();
+                services.AddSingleton<IModalOverlayService, ModalOverlayService>();
                 services.AddSingleton<IErrorDialogService, ErrorDialogService>();
                 services.AddSingleton<IGlobalErrorHandler, GlobalErrorHandler>();
                 services.AddTransient<ErrorDialogViewModel>();
-                services.AddTransient<ErrorDialog>();
                 services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
                 services.AddSingleton<PlanEditorViewModel>();
                 services.AddSingleton<RequestConfirmationViewModel>();
@@ -141,6 +141,9 @@ public partial class App : Application
 
             var mainWindow = Services.GetRequiredService<MainWindow>();
             mainWindow.DataContext = Services.GetRequiredService<MainWindowViewModel>();
+            var modalOverlayService = Services.GetRequiredService<IModalOverlayService>();
+            var errorDialogService = Services.GetRequiredService<IErrorDialogService>();
+            mainWindow.ConfigureModalOverlay(modalOverlayService, errorDialogService);
 
             _messenger = Services.GetRequiredService<IMessenger>();
             _messenger.Register<ConnectionSettingsImportedMessage>(this, (_, _) => RequestRestart());

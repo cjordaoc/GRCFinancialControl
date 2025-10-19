@@ -16,9 +16,5 @@
                   Width="280"
                   IsEnabled="{Binding AllowEditing}"/>
         <TextBox Text="{Binding WindowsLogin}" Watermark="{loc:Loc Key=Admin.Papds.Placeholder.WindowsLogin}" Width="280" IsEnabled="{Binding AllowEditing}"/>
-        <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">
-            <Button Content="{loc:Loc Key=Common.Button.Save}" Command="{Binding SaveCommand}" IsEnabled="{Binding AllowEditing}"/>
-            <Button Content="{loc:Loc Key=Common.Button.Close}" Command="{Binding CloseCommand}"/>
-        </StackPanel>
     </StackPanel>
 </UserControl>

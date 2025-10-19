@@ -17,9 +17,5 @@
                   PlaceholderText="{loc:Loc Key=Admin.Managers.Placeholder.Position}"
                   Width="280"
                   IsEnabled="{Binding AllowEditing}"/>
-        <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">
-            <Button Content="{loc:Loc Key=Common.Button.Save}" Command="{Binding SaveCommand}" IsEnabled="{Binding AllowEditing}"/>
-            <Button Content="{loc:Loc Key=Common.Button.Close}" Command="{Binding CloseCommand}"/>
-        </StackPanel>
     </StackPanel>
 </UserControl>
