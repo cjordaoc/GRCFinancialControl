@@ -26,6 +26,11 @@ namespace GRCFinancialControl.Persistence.Services
             Share = FileShare.ReadWrite
         };
 
+        static ImportService()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        }
+
         private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
         private readonly ILogger<ImportService> _logger;
         private readonly IFullManagementDataImporter _fullManagementDataImporter;
@@ -77,17 +82,7 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new FileNotFoundException("Budget workbook could not be found.", filePath);
             }
 
-            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-
-            using var stream = new FileStream(filePath, SharedReadOptions);
-            using var reader = ExcelReaderFactory.CreateReader(stream);
-            var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration
-            {
-                ConfigureDataTable = _ => new ExcelDataTableConfiguration
-                {
-                    UseHeaderRow = false
-                }
-            });
+            var dataSet = LoadWorkbookDataSet(filePath);
 
             var planInfo = ResolveWorksheet(dataSet, "PLAN INFO") ??
                            throw new InvalidDataException("Worksheet 'PLAN INFO' is missing from the budget workbook.");
@@ -443,6 +438,19 @@ namespace GRCFinancialControl.Persistence.Services
             return Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
         }
 
+        private static DataSet LoadWorkbookDataSet(string filePath)
+        {
+            using var stream = new FileStream(filePath, SharedReadOptions);
+            using var reader = ExcelReaderFactory.CreateReader(stream);
+            return reader.AsDataSet(new ExcelDataSetConfiguration
+            {
+                ConfigureDataTable = _ => new ExcelDataTableConfiguration
+                {
+                    UseHeaderRow = false
+                }
+            });
+        }
+
         private static (Dictionary<int, string> Map, int HeaderRowIndex) BuildFcsHeaderMap(DataTable worksheet)
         {
             Dictionary<int, string>? fallbackMap = null;
@@ -613,17 +621,7 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new FileNotFoundException("FCS backlog workbook could not be found.", filePath);
             }
 
-            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-
-            using var stream = new FileStream(filePath, SharedReadOptions);
-            using var reader = ExcelReaderFactory.CreateReader(stream);
-            var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration
-            {
-                ConfigureDataTable = _ => new ExcelDataTableConfiguration
-                {
-                    UseHeaderRow = false
-                }
-            });
+            var dataSet = LoadWorkbookDataSet(filePath);
 
             if (dataSet.Tables.Count == 0)
             {
@@ -1012,8 +1010,6 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new FileNotFoundException("ETC-P workbook could not be found.", filePath);
             }
 
-            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-
             await using var context = await _contextFactory.CreateDbContextAsync();
 
             var closingPeriod = await context.ClosingPeriods
@@ -1044,15 +1040,7 @@ namespace GRCFinancialControl.Persistence.Services
             var rowsProcessed = 0;
             var manualOnlyDetails = new List<string>();
 
-            using var stream = new FileStream(filePath, SharedReadOptions);
-            using var reader = ExcelReaderFactory.CreateReader(stream);
-            var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration
-            {
-                ConfigureDataTable = _ => new ExcelDataTableConfiguration
-                {
-                    UseHeaderRow = false
-                }
-            });
+            var dataSet = LoadWorkbookDataSet(filePath);
 
             var etcpTable = ResolveEtcpWorksheet(dataSet);
             if (etcpTable == null)
