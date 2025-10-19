@@ -3,7 +3,6 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:InvoicePlanner.Avalonia.ViewModels"
-        xmlns:controls="using:App.Presentation.Controls"
         x:Class="InvoicePlanner.Avalonia.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         mc:Ignorable="d"
@@ -11,34 +10,29 @@
         MinHeight="640"
         WindowState="Maximized"
         Title="{Binding Title}">
-    <controls:ModalOverlayHost x:Name="OverlayHost"
-                               OverlayContent="{Binding ModalOverlayContent}"
-                               Title="{Binding ModalOverlayTitle}"
-                               CanClose="{Binding ModalOverlayCanClose}">
-        <Grid ColumnDefinitions="240,*" Margin="16">
-            <Border Grid.Column="0"
-                    Padding="16"
-                    CornerRadius="8"
-                    Background="{StaticResource BrushSurfaceVariant}">
-                <StackPanel Spacing="12">
-                    <TextBlock Text="{Binding Title}" Classes="TitleLarge"/>
-                    <ItemsControl ItemsSource="{Binding MenuItems}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="vm:NavigationItemViewModel">
-                                <ToggleButton Content="{Binding Title}"
-                                              Command="{Binding SelectCommand}"
-                                              IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                                              HorizontalAlignment="Stretch"
-                                              Classes="NavButton"
-                                              Margin="0,4"/>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
-            </Border>
-            <Border Grid.Column="1" Classes="Card" Padding="0" Margin="16,0,0,0">
-                <ContentControl Content="{Binding CurrentViewModel}" />
-            </Border>
-        </Grid>
-    </controls:ModalOverlayHost>
+    <Grid ColumnDefinitions="240,*" Margin="16">
+        <Border Grid.Column="0"
+                Padding="16"
+                CornerRadius="8"
+                Background="{StaticResource BrushSurfaceVariant}">
+            <StackPanel Spacing="12">
+                <TextBlock Text="{Binding Title}" Classes="TitleLarge"/>
+                <ItemsControl ItemsSource="{Binding MenuItems}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:NavigationItemViewModel">
+                            <ToggleButton Content="{Binding Title}"
+                                          Command="{Binding SelectCommand}"
+                                          IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                          HorizontalAlignment="Stretch"
+                                          Classes="NavButton"
+                                          Margin="0,4"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+        <Border Grid.Column="1" Classes="Card" Padding="0" Margin="16,0,0,0">
+            <ContentControl Content="{Binding CurrentViewModel}" />
+        </Border>
+    </Grid>
 </Window>

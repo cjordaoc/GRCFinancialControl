@@ -28,6 +28,7 @@ namespace GRCFinancialControl.Avalonia
 {
     public partial class App : Application
     {
+        public static new App? Current => (App?)Application.Current;
         public IServiceProvider Services { get; private set; } = null!;
 
         public override void RegisterServices()
@@ -149,10 +150,6 @@ namespace GRCFinancialControl.Avalonia
                 Services = services.BuildServiceProvider();
 
                 mainWindow.DataContext = Services.GetRequiredService<MainWindowViewModel>();
-                var messenger = Services.GetRequiredService<IMessenger>();
-                var dialogService = Services.GetRequiredService<IDialogService>();
-                mainWindow.ConfigureModalOverlay(messenger, dialogService);
-
                 using (var scope = Services.CreateScope())
                 {
                     var provider = scope.ServiceProvider;

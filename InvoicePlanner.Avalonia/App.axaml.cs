@@ -20,6 +20,7 @@ using GRCFinancialControl.Core.Configuration;
 using Invoices.Core.Validation;
 using Invoices.Data.Repositories;
 using InvoicePlanner.Avalonia.Services;
+using InvoicePlanner.Avalonia.Services.Interfaces;
 using InvoicePlanner.Avalonia.Messages;
 using InvoicePlanner.Avalonia.ViewModels;
 using InvoicePlanner.Avalonia.Views;
@@ -34,6 +35,7 @@ namespace InvoicePlanner.Avalonia;
 
 public partial class App : Application
 {
+    public static new App? Current => (App?)Application.Current;
     private IHost? _host;
     private bool _disposed;
     private bool _hasConnectionSettings;
@@ -108,19 +110,51 @@ public partial class App : Application
                 services.AddTransient<IInvoicePlanRepository, InvoicePlanRepository>();
                 services.AddSingleton<IInvoicePlanValidator, InvoicePlanValidator>();
                 services.AddSingleton<InvoiceSummaryExporter>();
-                services.AddSingleton<IModalOverlayService, ModalOverlayService>();
-                services.AddSingleton<IErrorDialogService, ErrorDialogService>();
                 services.AddSingleton<IGlobalErrorHandler, GlobalErrorHandler>();
                 services.AddTransient<ErrorDialogViewModel>();
                 services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
-                services.AddSingleton<PlanEditorViewModel>();
-                services.AddSingleton<RequestConfirmationViewModel>();
-                services.AddSingleton<EmissionConfirmationViewModel>();
+                services.AddSingleton<IDialogService>(provider => new DialogService(provider.GetRequiredService<IWeakReferenceMessenger>()));
+                services.AddSingleton(provider => new PlanEditorViewModel(
+                    provider.GetRequiredService<IInvoicePlanRepository>(),
+                    provider.GetRequiredService<IInvoicePlanValidator>(),
+                    provider.GetRequiredService<ILogger<PlanEditorViewModel>>(),
+                    provider.GetRequiredService<IInvoiceAccessScope>(),
+                    provider.GetRequiredService<IDialogService>(),
+                    provider.GetRequiredService<IWeakReferenceMessenger>()));
+                services.AddSingleton(provider => new RequestConfirmationViewModel(
+                    provider.GetRequiredService<IInvoicePlanRepository>(),
+                    provider.GetRequiredService<ILogger<RequestConfirmationViewModel>>(),
+                    provider.GetRequiredService<IInvoiceAccessScope>(),
+                    provider.GetRequiredService<IDialogService>(),
+                    provider.GetRequiredService<IWeakReferenceMessenger>()));
+                services.AddSingleton(provider => new EmissionConfirmationViewModel(
+                    provider.GetRequiredService<IInvoicePlanRepository>(),
+                    provider.GetRequiredService<ILogger<EmissionConfirmationViewModel>>(),
+                    provider.GetRequiredService<IInvoiceAccessScope>(),
+                    provider.GetRequiredService<IDialogService>(),
+                    provider.GetRequiredService<IWeakReferenceMessenger>()));
                 services.AddSingleton<InvoiceSummaryViewModel>();
                 services.AddSingleton<NotificationPreviewViewModel>();
-                services.AddSingleton<HomeViewModel>();
-                services.AddSingleton<ConnectionSettingsViewModel>();
-                services.AddSingleton<MainWindowViewModel>();
+                services.AddSingleton(provider => new HomeViewModel(
+                    provider.GetRequiredService<PlanEditorViewModel>(),
+                    provider.GetRequiredService<RequestConfirmationViewModel>(),
+                    provider.GetRequiredService<EmissionConfirmationViewModel>(),
+                    provider.GetRequiredService<InvoiceSummaryViewModel>(),
+                    provider.GetRequiredService<NotificationPreviewViewModel>(),
+                    provider.GetRequiredService<IWeakReferenceMessenger>()));
+                services.AddSingleton(provider => new ConnectionSettingsViewModel(
+                    provider.GetRequiredService<IFilePickerService>(),
+                    provider.GetRequiredService<IConnectionPackageService>(),
+                    provider.GetRequiredService<ISettingsService>(),
+                    provider.GetRequiredService<IDatabaseSchemaInitializer>(),
+                    provider.GetRequiredService<IWeakReferenceMessenger>()));
+                services.AddSingleton(provider => new MainWindowViewModel(
+                    provider.GetRequiredService<PlanEditorViewModel>(),
+                    provider.GetRequiredService<RequestConfirmationViewModel>(),
+                    provider.GetRequiredService<EmissionConfirmationViewModel>(),
+                    provider.GetRequiredService<ConnectionSettingsViewModel>(),
+                    provider.GetRequiredService<ISettingsService>(),
+                    provider.GetRequiredService<IWeakReferenceMessenger>()));
                 services.AddSingleton<MainWindow>();
                 services.AddSingleton<IFilePickerService>(provider =>
                 {
@@ -141,9 +175,6 @@ public partial class App : Application
 
             var mainWindow = Services.GetRequiredService<MainWindow>();
             mainWindow.DataContext = Services.GetRequiredService<MainWindowViewModel>();
-            var modalOverlayService = Services.GetRequiredService<IModalOverlayService>();
-            var errorDialogService = Services.GetRequiredService<IErrorDialogService>();
-            mainWindow.ConfigureModalOverlay(modalOverlayService, errorDialogService);
 
             _messenger = Services.GetRequiredService<IMessenger>();
             _messenger.Register<ConnectionSettingsImportedMessage>(this, (_, _) => RequestRestart());

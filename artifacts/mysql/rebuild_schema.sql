@@ -249,6 +249,7 @@ CREATE TABLE `EngagementFiscalYearRevenueAllocations`
     `ToGoValue`     DECIMAL(18, 2)  NOT NULL,
     `ToDateValue`   DECIMAL(18, 2)  NOT NULL DEFAULT 0,
     `LastUpdateDate` DATE           NULL,
+    `CreatedAt`     DATETIME(6)     NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     `UpdatedAt`     DATETIME(6)     NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
     CONSTRAINT `PK_EngagementFiscalYearRevenueAllocations` PRIMARY KEY (`Id`),
     CONSTRAINT `FK_EFYRA_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,

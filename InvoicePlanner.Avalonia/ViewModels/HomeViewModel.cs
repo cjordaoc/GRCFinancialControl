@@ -1,5 +1,6 @@
 using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
@@ -10,7 +11,9 @@ public partial class HomeViewModel : ViewModelBase
         RequestConfirmationViewModel requestConfirmation,
         EmissionConfirmationViewModel emissionConfirmation,
         InvoiceSummaryViewModel summary,
-        NotificationPreviewViewModel notificationPreview)
+        NotificationPreviewViewModel notificationPreview,
+        IWeakReferenceMessenger messenger)
+        : base(messenger)
     {
         PlanEditor = planEditor;
         RequestConfirmation = requestConfirmation;

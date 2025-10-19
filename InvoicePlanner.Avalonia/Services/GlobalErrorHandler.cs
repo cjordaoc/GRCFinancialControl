@@ -9,14 +9,12 @@ namespace InvoicePlanner.Avalonia.Services;
 public sealed class GlobalErrorHandler : IGlobalErrorHandler, IDisposable
 {
     private readonly ILogger<GlobalErrorHandler> _logger;
-    private readonly IErrorDialogService _dialogService;
     private IClassicDesktopStyleApplicationLifetime? _lifetime;
     private bool _isRegistered;
 
-    public GlobalErrorHandler(ILogger<GlobalErrorHandler> logger, IErrorDialogService dialogService)
+    public GlobalErrorHandler(ILogger<GlobalErrorHandler> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
     }
 
     public void Register(IClassicDesktopStyleApplicationLifetime lifetime)
@@ -87,8 +85,6 @@ public sealed class GlobalErrorHandler : IGlobalErrorHandler, IDisposable
         try
         {
             _logger.LogError(exception, "Unhandled exception from {Source}", source);
-            var owner = _lifetime?.MainWindow;
-            _ = _dialogService.ShowErrorAsync(owner, exception.ToString());
         }
         catch (Exception handlerEx)
         {

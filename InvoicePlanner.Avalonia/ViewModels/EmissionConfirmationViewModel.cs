@@ -7,11 +7,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using InvoicePlanner.Avalonia.Messages;
-using InvoicePlanner.Avalonia.Services;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
 using Invoices.Data.Repositories;
 using Microsoft.Extensions.Logging;
+using InvoicePlanner.Avalonia.Services.Interfaces;
+using InvoicePlanner.Avalonia.Services;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
@@ -19,24 +20,23 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
 {
     private readonly IInvoicePlanRepository _repository;
     private readonly ILogger<EmissionConfirmationViewModel> _logger;
-    private readonly IMessenger _messenger;
     private readonly IInvoiceAccessScope _accessScope;
     private readonly RelayCommand _loadPlanCommand;
-    private readonly IModalOverlayService _modalOverlayService;
+    private readonly IDialogService _dialogService;
     private EmissionConfirmationDialogViewModel? _dialogViewModel;
 
     public EmissionConfirmationViewModel(
         IInvoicePlanRepository repository,
         ILogger<EmissionConfirmationViewModel> logger,
-        IMessenger messenger,
         IInvoiceAccessScope accessScope,
-        IModalOverlayService modalOverlayService)
+        IDialogService dialogService,
+        IWeakReferenceMessenger messenger)
+        : base(messenger)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _messenger = messenger ?? throw new ArgumentNullException(nameof(messenger));
         _accessScope = accessScope ?? throw new ArgumentNullException(nameof(accessScope));
-        _modalOverlayService = modalOverlayService ?? throw new ArgumentNullException(nameof(modalOverlayService));
+        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 
         _accessScope.EnsureInitialized();
 
@@ -44,9 +44,9 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         AvailablePlans.CollectionChanged += OnAvailablePlansChanged;
 
         _loadPlanCommand = new RelayCommand(LoadSelectedPlan, () => SelectedPlan is not null);
-        ClosePlanDetailsCommand = new RelayCommand(() => _modalOverlayService.Close(false));
+        ClosePlanDetailsCommand = new RelayCommand(() => Messenger.Send(new CloseDialogMessage(false)));
 
-        _messenger.Register<ConnectionSettingsImportedMessage>(this, (_, _) => LoadAvailablePlans());
+        Messenger.Register<ConnectionSettingsImportedMessage>(this, (_, _) => LoadAvailablePlans());
 
         LoadAvailablePlans();
     }
@@ -135,7 +135,6 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         if (SelectedPlan is null)
         {
             ValidationMessage = LocalizationRegistry.Get("Emission.Validation.PlanSelection");
-            _modalOverlayService.Close(false);
             return;
         }
 
@@ -206,16 +205,11 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
             {
                 ShowPlanDetailsDialog();
             }
-            else
-            {
-                _modalOverlayService.Close(false);
-            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load invoice plan {PlanId} for emission confirmation.", planId);
             ValidationMessage = LocalizationRegistry.Format("Emission.Status.LoadFailureDetail", ex.Message);
-            _modalOverlayService.Close(false);
         }
     }
 
@@ -353,7 +347,6 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         Lines.Clear();
         RefreshSummaries();
         OnPropertyChanged(nameof(HasLines));
-        _modalOverlayService.Close(false);
     }
 
     private void LoadAvailablePlans()
@@ -387,9 +380,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
             _logger.LogError(ex, "Failed to load available plans for emission confirmation.");
             AvailablePlans.Clear();
             SelectedPlan = null;
-            PlanSelectionMessage = ConnectionErrorMessageFormatter.Format(
-                ex,
-                LocalizationRegistry.Format("Emission.Status.LoadFailure", ex.Message));
+            PlanSelectionMessage = LocalizationRegistry.Format("Emission.Status.LoadFailure", ex.Message);
         }
     }
 
@@ -407,6 +398,6 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
     private void ShowPlanDetailsDialog()
     {
         _dialogViewModel ??= new EmissionConfirmationDialogViewModel(this);
-        _ = _modalOverlayService.ShowAsync(_dialogViewModel, LocalizationRegistry.Get("Emission.Title.Primary"));
+        _ = _dialogService.ShowDialogAsync(_dialogViewModel, LocalizationRegistry.Get("Emission.Title.Primary"));
     }
 }

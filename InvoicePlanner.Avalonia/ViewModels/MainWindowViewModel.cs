@@ -16,22 +16,12 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly RequestConfirmationViewModel _requestConfirmation;
     private readonly EmissionConfirmationViewModel _emissionConfirmation;
     private readonly ConnectionSettingsViewModel _connectionSettings;
-    private readonly IMessenger _messenger;
 
     [ObservableProperty]
     private string title = LocalizationRegistry.Get("Shell.Title.Application");
 
     [ObservableProperty]
     private ViewModelBase currentViewModel;
-
-    [ObservableProperty]
-    private object? modalOverlayContent;
-
-    [ObservableProperty]
-    private string? modalOverlayTitle;
-
-    [ObservableProperty]
-    private bool modalOverlayCanClose = true;
 
     public IReadOnlyList<NavigationItemViewModel> MenuItems { get; }
 
@@ -41,13 +31,13 @@ public partial class MainWindowViewModel : ViewModelBase
         EmissionConfirmationViewModel emissionConfirmation,
         ConnectionSettingsViewModel connectionSettings,
         ISettingsService settingsService,
-        IMessenger messenger)
+        IWeakReferenceMessenger messenger)
+        : base(messenger)
     {
         _planEditor = planEditor;
         _requestConfirmation = requestConfirmation;
         _emissionConfirmation = emissionConfirmation;
         _connectionSettings = connectionSettings;
-        _messenger = messenger ?? throw new ArgumentNullException(nameof(messenger));
 
         var items = new List<NavigationItemViewModel>
         {
