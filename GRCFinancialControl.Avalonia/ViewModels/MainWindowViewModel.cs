@@ -11,7 +11,7 @@ using GRCFinancialControl.Avalonia;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
-    public partial class MainWindowViewModel : ViewModelBase, IRecipient<OpenDialogMessage>, IRecipient<CloseDialogMessage>
+    public partial class MainWindowViewModel : ViewModelBase
     {
         private readonly ILoggingService _loggingService;
 
@@ -88,20 +88,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             };
 
             SelectedNavigationItem = NavigationItems.FirstOrDefault();
-        }
-
-        public void Receive(OpenDialogMessage message)
-        {
-            CurrentDialogContent = ResolveDialogContent(message.ViewModel);
-            CurrentDialogTitle = message.Title;
-            CanCloseDialog = message.CanClose;
-        }
-
-        public void Receive(CloseDialogMessage message)
-        {
-            CurrentDialogContent = null;
-            CurrentDialogTitle = null;
-            CanCloseDialog = true;
         }
 
         async partial void OnSelectedNavigationItemChanged(NavigationItem? value)

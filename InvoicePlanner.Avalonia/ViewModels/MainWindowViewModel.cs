@@ -10,7 +10,7 @@ using InvoicePlanner.Avalonia.Messages;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
-public partial class MainWindowViewModel : ViewModelBase, IRecipient<OpenModalOverlayMessage>, IRecipient<CloseModalOverlayMessage>
+public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly PlanEditorViewModel _planEditor;
     private readonly RequestConfirmationViewModel _requestConfirmation;
@@ -49,9 +49,6 @@ public partial class MainWindowViewModel : ViewModelBase, IRecipient<OpenModalOv
         _connectionSettings = connectionSettings;
         _messenger = messenger ?? throw new ArgumentNullException(nameof(messenger));
 
-        _messenger.Register<OpenModalOverlayMessage>(this);
-        _messenger.Register<CloseModalOverlayMessage>(this);
-
         var items = new List<NavigationItemViewModel>
         {
             CreateNavigationItem(LocalizationRegistry.Get("Shell.Navigation.InvoicePlan"), _planEditor),
@@ -80,19 +77,6 @@ public partial class MainWindowViewModel : ViewModelBase, IRecipient<OpenModalOv
         }
     }
 
-    void IRecipient<OpenModalOverlayMessage>.Receive(OpenModalOverlayMessage message)
-    {
-        ModalOverlayContent = message.Content;
-        ModalOverlayTitle = message.Title;
-        ModalOverlayCanClose = message.CanClose;
-    }
-
-    void IRecipient<CloseModalOverlayMessage>.Receive(CloseModalOverlayMessage message)
-    {
-        ModalOverlayContent = null;
-        ModalOverlayTitle = null;
-        ModalOverlayCanClose = true;
-    }
     private NavigationItemViewModel CreateNavigationItem(string title, ViewModelBase viewModel)
     {
         NavigationItemViewModel? item = null;
