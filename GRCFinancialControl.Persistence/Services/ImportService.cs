@@ -1112,21 +1112,101 @@ namespace GRCFinancialControl.Persistence.Services
                 var messageValue = string.IsNullOrEmpty(normalized) ? string.Empty : normalized;
                 throw new InvalidDataException($"Cell A4 must specify the current fiscal year (e.g., FY26). Detected value: '{messageValue}'.");
             }
-            var dateMatch = LastUpdateDateRegex.Match(normalized);
-            if (!dateMatch.Success)
-            {
-                throw new InvalidDataException("Cell A4 must specify the last update date (e.g., 'Last Update : 29 Sep 2025').");
-            }
 
-            if (!DateTime.TryParseExact(dateMatch.Groups[1].Value, "dd MMM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
+            if (!TryExtractLastUpdateDate(normalized, out var lastUpdateDate, out var invalidCandidate, out var hasCandidate))
             {
-                throw new InvalidDataException($"Cell A4 contains an unrecognized Last Update date: '{dateMatch.Groups[1].Value}'.");
+                if (hasCandidate && !string.IsNullOrWhiteSpace(invalidCandidate))
+                {
+                    throw new InvalidDataException($"The Full Management Data header contains an unrecognized Last Update date: '{invalidCandidate}'.");
+                }
+
+                throw new InvalidDataException("The Full Management Data header must specify the last update date (e.g., 'Last Update : 29 Sep 2025').");
             }
 
             var nextFiscalYear = IncrementFiscalYearName(currentFiscalYear);
-            var lastUpdateDate = DateTime.SpecifyKind(parsedDate.Date, DateTimeKind.Unspecified);
 
             return new FullManagementHeader(currentFiscalYear, nextFiscalYear, lastUpdateDate);
+        }
+
+        private static bool TryExtractLastUpdateDate(string normalized, out DateTime lastUpdateDate, out string? invalidCandidate, out bool hasCandidate)
+        {
+            invalidCandidate = null;
+            hasCandidate = false;
+
+            var dateMatch = LastUpdateDateRegex.Match(normalized);
+            if (dateMatch.Success)
+            {
+                hasCandidate = true;
+                var candidate = dateMatch.Groups[1].Value;
+                if (TryParseHeaderDate(candidate, out lastUpdateDate))
+                {
+                    return true;
+                }
+
+                invalidCandidate = candidate;
+                lastUpdateDate = default;
+                return false;
+            }
+
+            foreach (var segment in normalized.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                var separatorIndex = segment.IndexOf(':');
+                if (separatorIndex < 0)
+                {
+                    continue;
+                }
+
+                var label = segment[..separatorIndex].Trim();
+                if (!IsLastUpdateLabel(label))
+                {
+                    continue;
+                }
+
+                hasCandidate = true;
+                var value = segment[(separatorIndex + 1)..].Trim();
+                if (TryParseHeaderDate(value, out lastUpdateDate))
+                {
+                    return true;
+                }
+
+                invalidCandidate = value;
+                lastUpdateDate = default;
+                return false;
+            }
+
+            lastUpdateDate = default;
+            return false;
+        }
+
+        private static bool IsLastUpdateLabel(string label)
+        {
+            return label.Equals("Last Update", StringComparison.OrdinalIgnoreCase) ||
+                   label.Equals("Última Atualização", StringComparison.OrdinalIgnoreCase) ||
+                   label.Equals("Ultima Atualizacao", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool TryParseHeaderDate(string candidate, out DateTime date)
+        {
+            if (DateTime.TryParseExact(candidate, "dd MMM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedExact))
+            {
+                date = DateTime.SpecifyKind(parsedExact.Date, DateTimeKind.Unspecified);
+                return true;
+            }
+
+            if (DateTime.TryParse(candidate, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var parsedInvariant))
+            {
+                date = DateTime.SpecifyKind(parsedInvariant.Date, DateTimeKind.Unspecified);
+                return true;
+            }
+
+            if (DateTime.TryParse(candidate, PtBrCulture, DateTimeStyles.AssumeLocal, out var parsedPtBr))
+            {
+                date = DateTime.SpecifyKind(parsedPtBr.Date, DateTimeKind.Unspecified);
+                return true;
+            }
+
+            date = default;
+            return false;
         }
 
         private static int ResolveOpeningColumnIndex(int columnCount)
