@@ -14,7 +14,7 @@ namespace InvoicePlanner.Avalonia.Services
         private readonly ViewLocator _viewLocator = new();
         private Window? _currentDialog;
 
-        public DialogService(IWeakReferenceMessenger messenger)
+        public DialogService(IMessenger messenger)
         {
             messenger.Register<CloseDialogMessage>(this, (r, m) =>
             {

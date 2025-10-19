@@ -29,7 +29,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         ILogger<RequestConfirmationViewModel> logger,
         IInvoiceAccessScope accessScope,
         IDialogService dialogService,
-        IWeakReferenceMessenger messenger)
+        IMessenger messenger)
         : base(messenger)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));

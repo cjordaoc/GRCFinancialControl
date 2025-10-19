@@ -34,7 +34,7 @@ public partial class PlanEditorViewModel : ViewModelBase
         ILogger<PlanEditorViewModel> logger,
         IInvoiceAccessScope accessScope,
         IDialogService dialogService,
-        IWeakReferenceMessenger messenger)
+        IMessenger messenger)
         : base(messenger)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));

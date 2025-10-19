@@ -12,7 +12,7 @@ public partial class HomeViewModel : ViewModelBase
         EmissionConfirmationViewModel emissionConfirmation,
         InvoiceSummaryViewModel summary,
         NotificationPreviewViewModel notificationPreview,
-        IWeakReferenceMessenger messenger)
+        IMessenger messenger)
         : base(messenger)
     {
         PlanEditor = planEditor;

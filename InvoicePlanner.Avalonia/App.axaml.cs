@@ -113,26 +113,26 @@ public partial class App : Application
                 services.AddSingleton<IGlobalErrorHandler, GlobalErrorHandler>();
                 services.AddTransient<ErrorDialogViewModel>();
                 services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
-                services.AddSingleton<IDialogService>(provider => new DialogService(provider.GetRequiredService<IWeakReferenceMessenger>()));
+                services.AddSingleton<IDialogService>(provider => new DialogService(provider.GetRequiredService<IMessenger>()));
                 services.AddSingleton(provider => new PlanEditorViewModel(
                     provider.GetRequiredService<IInvoicePlanRepository>(),
                     provider.GetRequiredService<IInvoicePlanValidator>(),
                     provider.GetRequiredService<ILogger<PlanEditorViewModel>>(),
                     provider.GetRequiredService<IInvoiceAccessScope>(),
                     provider.GetRequiredService<IDialogService>(),
-                    provider.GetRequiredService<IWeakReferenceMessenger>()));
+                    provider.GetRequiredService<IMessenger>()));
                 services.AddSingleton(provider => new RequestConfirmationViewModel(
                     provider.GetRequiredService<IInvoicePlanRepository>(),
                     provider.GetRequiredService<ILogger<RequestConfirmationViewModel>>(),
                     provider.GetRequiredService<IInvoiceAccessScope>(),
                     provider.GetRequiredService<IDialogService>(),
-                    provider.GetRequiredService<IWeakReferenceMessenger>()));
+                    provider.GetRequiredService<IMessenger>()));
                 services.AddSingleton(provider => new EmissionConfirmationViewModel(
                     provider.GetRequiredService<IInvoicePlanRepository>(),
                     provider.GetRequiredService<ILogger<EmissionConfirmationViewModel>>(),
                     provider.GetRequiredService<IInvoiceAccessScope>(),
                     provider.GetRequiredService<IDialogService>(),
-                    provider.GetRequiredService<IWeakReferenceMessenger>()));
+                    provider.GetRequiredService<IMessenger>()));
                 services.AddSingleton<InvoiceSummaryViewModel>();
                 services.AddSingleton<NotificationPreviewViewModel>();
                 services.AddSingleton(provider => new HomeViewModel(
@@ -141,20 +141,20 @@ public partial class App : Application
                     provider.GetRequiredService<EmissionConfirmationViewModel>(),
                     provider.GetRequiredService<InvoiceSummaryViewModel>(),
                     provider.GetRequiredService<NotificationPreviewViewModel>(),
-                    provider.GetRequiredService<IWeakReferenceMessenger>()));
+                    provider.GetRequiredService<IMessenger>()));
                 services.AddSingleton(provider => new ConnectionSettingsViewModel(
                     provider.GetRequiredService<IFilePickerService>(),
                     provider.GetRequiredService<IConnectionPackageService>(),
                     provider.GetRequiredService<ISettingsService>(),
                     provider.GetRequiredService<IDatabaseSchemaInitializer>(),
-                    provider.GetRequiredService<IWeakReferenceMessenger>()));
+                    provider.GetRequiredService<IMessenger>()));
                 services.AddSingleton(provider => new MainWindowViewModel(
                     provider.GetRequiredService<PlanEditorViewModel>(),
                     provider.GetRequiredService<RequestConfirmationViewModel>(),
                     provider.GetRequiredService<EmissionConfirmationViewModel>(),
                     provider.GetRequiredService<ConnectionSettingsViewModel>(),
                     provider.GetRequiredService<ISettingsService>(),
-                    provider.GetRequiredService<IWeakReferenceMessenger>()));
+                    provider.GetRequiredService<IMessenger>()));
                 services.AddSingleton<MainWindow>();
                 services.AddSingleton<IFilePickerService>(provider =>
                 {
