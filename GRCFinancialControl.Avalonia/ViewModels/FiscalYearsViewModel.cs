@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -100,7 +101,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             StatusMessage = null;
 
-            var result = await _dialogService.ShowConfirmationAsync("Delete Data", $"Are you sure you want to delete all data for {fiscalYear.Name}? This action cannot be undone.");
+            var result = await _dialogService.ShowConfirmationAsync(
+                LocalizationRegistry.Get("Common.Dialog.DeleteData.Title"),
+                LocalizationRegistry.Format("Common.Dialog.DeleteData.Message", fiscalYear.Name));
             if (result)
             {
                 try
@@ -130,12 +133,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 if (lockedAtUtc.HasValue)
                 {
                     var lockedAtLocal = DateTime.SpecifyKind(lockedAtUtc.Value, DateTimeKind.Utc).ToLocalTime();
-                    StatusMessage = $"Fiscal year '{fiscalYear.Name}' has been locked by {user} at {lockedAtLocal:G}.";
+                    StatusMessage = LocalizationRegistry.Format("FiscalYears.Status.Locked", fiscalYear.Name, user, lockedAtLocal);
                     _loggingService.LogInfo($"Fiscal year '{fiscalYear.Name}' locked at {lockedAtUtc.Value:O} by {user}.");
                 }
                 else
                 {
-                    StatusMessage = $"Fiscal year '{fiscalYear.Name}' was already locked or unavailable.";
+                    StatusMessage = LocalizationRegistry.Format("FiscalYears.Status.AlreadyLocked", fiscalYear.Name);
                     _loggingService.LogWarning($"Attempted to lock fiscal year '{fiscalYear.Name}', but it was already locked or could not be found.");
                 }
             }
@@ -159,12 +162,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (unlockedAtUtc.HasValue)
             {
                 var unlockedAtLocal = DateTime.SpecifyKind(unlockedAtUtc.Value, DateTimeKind.Utc).ToLocalTime();
-                StatusMessage = $"Fiscal year '{fiscalYear.Name}' has been unlocked by {user} at {unlockedAtLocal:G}.";
+                StatusMessage = LocalizationRegistry.Format("FiscalYears.Status.Unlocked", fiscalYear.Name, user, unlockedAtLocal);
                 _loggingService.LogInfo($"Fiscal year '{fiscalYear.Name}' unlocked at {unlockedAtUtc.Value:O} by {user}.");
             }
             else
             {
-                StatusMessage = $"Fiscal year '{fiscalYear.Name}' was already unlocked or unavailable.";
+                StatusMessage = LocalizationRegistry.Format("FiscalYears.Status.AlreadyUnlocked", fiscalYear.Name);
                 _loggingService.LogWarning($"Attempted to unlock fiscal year '{fiscalYear.Name}', but it was already unlocked or could not be found.");
             }
         }
@@ -180,8 +183,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             StatusMessage = null;
 
             var confirm = await _dialogService.ShowConfirmationAsync(
-                "Close Fiscal Year",
-                $"Closing fiscal year '{fiscalYear.Name}' will lock it and promote the next fiscal year as the default. Continue?");
+                LocalizationRegistry.Get("FiscalYears.Dialog.Close.Title"),
+                LocalizationRegistry.Format("FiscalYears.Dialog.Close.Message", fiscalYear.Name));
 
             if (!confirm)
             {
@@ -202,11 +205,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
                 if (promoted != null)
                 {
-                    StatusMessage = $"Fiscal year '{result.ClosedFiscalYear.Name}' closed. '{promoted.Name}' is now the default fiscal year.";
+                    StatusMessage = LocalizationRegistry.Format(
+                        "FiscalYears.Status.ClosedPromoted",
+                        result.ClosedFiscalYear.Name,
+                        promoted.Name);
                 }
                 else
                 {
-                    StatusMessage = $"Fiscal year '{result.ClosedFiscalYear.Name}' closed. There is no future fiscal year to promote.";
+                    StatusMessage = LocalizationRegistry.Format(
+                        "FiscalYears.Status.ClosedNoPromotion",
+                        result.ClosedFiscalYear.Name);
                 }
 
                 var closedAtUtc = result.ClosedFiscalYear.LockedAt ?? DateTime.UtcNow;

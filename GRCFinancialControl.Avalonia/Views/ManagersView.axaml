@@ -21,6 +21,7 @@
                 <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2*"/>
                 <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="2*"/>
                 <DataGridTextColumn Header="Position" Binding="{Binding Position}" Width="*"/>
+                <DataGridTextColumn Header="Windows Login" Binding="{Binding WindowsLogin}" Width="2*"/>
             </DataGrid.Columns>
         </DataGrid>
 

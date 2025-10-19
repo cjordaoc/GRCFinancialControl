@@ -3,20 +3,22 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
              x:Class="GRCFinancialControl.Avalonia.Views.PapdEditorView"
              x:DataType="vm:PapdEditorViewModel">
     <StackPanel Spacing="10" Margin="10">
-        <TextBlock Text="PAPD Details" FontSize="18" FontWeight="Bold"/>
-        <TextBox Text="{Binding Name}" Watermark="Name" Width="280" IsEnabled="{Binding AllowEditing}"/>
+        <TextBlock Text="{loc:Loc Key=Admin.Papds.Title.Editor}" FontSize="18" FontWeight="Bold"/>
+        <TextBox Text="{Binding Name}" Watermark="{loc:Loc Key=Admin.Papds.Placeholder.Name}" Width="280" IsEnabled="{Binding AllowEditing}"/>
         <ComboBox ItemsSource="{Binding LevelOptions}"
                   SelectedItem="{Binding Level}"
-                  PlaceholderText="Level (e.g., Partner, Director)"
+                  PlaceholderText="{loc:Loc Key=Admin.Papds.Placeholder.Level}"
                   Width="280"
                   IsEnabled="{Binding AllowEditing}"/>
+        <TextBox Text="{Binding WindowsLogin}" Watermark="{loc:Loc Key=Admin.Papds.Placeholder.WindowsLogin}" Width="280" IsEnabled="{Binding AllowEditing}"/>
         <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">
-            <Button Content="Save" Command="{Binding SaveCommand}" IsEnabled="{Binding AllowEditing}"/>
-            <Button Content="Close" Command="{Binding CloseCommand}"/>
+            <Button Content="{loc:Loc Key=Common.Button.Save}" Command="{Binding SaveCommand}" IsEnabled="{Binding AllowEditing}"/>
+            <Button Content="{loc:Loc Key=Common.Button.Close}" Command="{Binding CloseCommand}"/>
         </StackPanel>
     </StackPanel>
 </UserControl>

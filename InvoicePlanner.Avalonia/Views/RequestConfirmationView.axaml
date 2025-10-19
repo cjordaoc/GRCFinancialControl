@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:InvoicePlanner.Avalonia.ViewModels"
-             xmlns:res="clr-namespace:InvoicePlanner.Avalonia.Resources"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              x:Class="InvoicePlanner.Avalonia.Views.RequestConfirmationView"
              x:DataType="vm:RequestConfirmationViewModel"
              mc:Ignorable="d">
@@ -12,10 +12,10 @@
             <StackPanel Spacing="16" Margin="16">
                 <Border Classes="Card" Padding="24">
                     <StackPanel Spacing="16">
-                        <TextBlock Classes="TitleMedium" Text="{res:Loc Key=RequestConfirmationTitle}" />
-                        <TextBlock Text="{res:Loc Key=RequestConfirmationDescription}" />
+                        <TextBlock Classes="TitleMedium" Text="{loc:Loc Key=Request.Title.Primary}" />
+                        <TextBlock Text="{loc:Loc Key=Request.Description.Primary}" />
                         <StackPanel Spacing="12">
-                            <TextBlock Text="{res:Loc Key=RequestPlansHeader}" FontWeight="SemiBold" />
+                            <TextBlock Text="{loc:Loc Key=Request.Section.AvailablePlans.Header}" FontWeight="SemiBold" />
                             <TextBlock Text="{Binding PlanSelectionMessage}" TextWrapping="Wrap" />
                             <DataGrid ItemsSource="{Binding AvailablePlans}"
                                       SelectedItem="{Binding SelectedPlan, Mode=TwoWay}"
@@ -27,28 +27,26 @@
                                       MaxHeight="220"
                                       Margin="0,4,0,0">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="{res:Loc Key=PlanSelectionColumnPlanId}" Binding="{Binding Id}" Width="80"/>
-                                    <DataGridTextColumn Header="{res:Loc Key=PlanSelectionColumnEngagement}" Binding="{Binding EngagementId}" Width="160"/>
-                                    <DataGridTextColumn Header="{res:Loc Key=PlanSelectionColumnType}" Binding="{Binding TypeName}" Width="120"/>
-                                    <DataGridTextColumn Header="{res:Loc Key=PlanSelectionColumnFirstEmission}" Binding="{Binding FirstEmissionDate, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
-                                    <DataGridTextColumn Header="{res:Loc Key=PlanSelectionColumnPendingRequests}" Binding="{Binding PlannedItemCount}" Width="140"/>
-                                    <DataGridTextColumn Header="{res:Loc Key=PlanSelectionColumnRequested}" Binding="{Binding RequestedItemCount}" Width="140"/>
-                                    <DataGridTextColumn Header="{res:Loc Key=PlanSelectionColumnClosed}" Binding="{Binding ClosedItemCount}" Width="120"/>
-                                    <DataGridTextColumn Header="{res:Loc Key=PlanSelectionColumnCanceled}" Binding="{Binding CanceledItemCount}" Width="120"/>
+                                    <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Column.PlanId}" Binding="{Binding Id}" Width="80"/>
+                                    <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Column.Engagement}" Binding="{Binding EngagementId}" Width="160"/>
+                                    <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Column.Type}" Binding="{Binding TypeName}" Width="120"/>
+                                    <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Column.FirstEmission}" Binding="{Binding FirstEmissionDate, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
+                                    <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Column.PendingRequests}" Binding="{Binding PlannedItemCount}" Width="140"/>
+                                    <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Column.Requested}" Binding="{Binding RequestedItemCount}" Width="140"/>
+                                    <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Column.Closed}" Binding="{Binding ClosedItemCount}" Width="120"/>
+                                    <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Column.Canceled}" Binding="{Binding CanceledItemCount}" Width="120"/>
                                 </DataGrid.Columns>
                             </DataGrid>
-                            <Button Content="{res:Loc Key=ButtonInsertRequestData}"
+                            <Button Content="{loc:Loc Key=Request.Button.InsertData}"
                                     Command="{Binding LoadPlanCommand}"
                                     MinWidth="200"/>
                         </StackPanel>
                         <StackPanel Spacing="4">
                             <TextBlock Text="{Binding ValidationMessage}"
-                                       Foreground="Red"
-                                       FontWeight="SemiBold"
+                                       Classes="StatusError"
                                        IsVisible="{Binding HasValidationMessage}" />
                             <TextBlock Text="{Binding StatusMessage}"
-                                       Foreground="Green"
-                                       FontWeight="SemiBold"
+                                       Classes="StatusSuccess"
                                        IsVisible="{Binding HasStatusMessage}" />
                         </StackPanel>
                     </StackPanel>
@@ -56,7 +54,7 @@
             </StackPanel>
         </ScrollViewer>
 
-        <Border Background="#80000080"
+        <Border Background="{StaticResource BrushOverlayStrong}"
                 IsVisible="{Binding IsPlanDetailsVisible}"
                 IsHitTestVisible="{Binding IsPlanDetailsVisible}">
             <Grid>
@@ -70,13 +68,13 @@
                     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                         <StackPanel Spacing="16">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Content="{res:Loc Key=ButtonClose}"
+                                <Button Content="{loc:Loc Key=Common.Button.Close}"
                                         Command="{Binding ClosePlanDetailsCommand}" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="16">
-                                <TextBlock Text="{Binding EngagementId, StringFormat={res:Loc Key=RequestConfirmationStatusEngagementFormat}}" />
-                                <TextBlock Text="{Binding PlannedCount, StringFormat={res:Loc Key=RequestConfirmationStatusPlannedFormat}}" />
-                                <TextBlock Text="{Binding RequestedCount, StringFormat={res:Loc Key=RequestConfirmationStatusRequestedFormat}}" />
+                                <TextBlock Text="{Binding EngagementId, StringFormat={loc:Loc Key=Request.Status.EngagementFormat}}" />
+                                <TextBlock Text="{Binding PlannedCount, StringFormat={loc:Loc Key=Request.Status.PlannedFormat}}" />
+                                <TextBlock Text="{Binding RequestedCount, StringFormat={loc:Loc Key=Request.Status.RequestedFormat}}" />
                             </StackPanel>
                             <DataGrid ItemsSource="{Binding Lines}"
                                       AutoGenerateColumns="False"
@@ -85,62 +83,62 @@
                                       HorizontalScrollBarVisibility="Auto"
                                       MaxHeight="360">
                                 <DataGrid.Columns>
-                                    <DataGridTemplateColumn Header="{res:Loc Key=PlanEditorHeaderSequence}" Width="60">
+                                    <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Sequence}" Width="60">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate x:DataType="vm:RequestConfirmationLineViewModel">
                                                 <TextBlock Text="{Binding Sequence}" HorizontalAlignment="Center" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="{res:Loc Key=RequestGridEmissionHeader}" Width="160">
+                                    <DataGridTemplateColumn Header="{loc:Loc Key=Request.TableHeader.EmissionDate}" Width="160">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate x:DataType="vm:RequestConfirmationLineViewModel">
                                                 <TextBlock Text="{Binding EmissionDate, StringFormat={}{0:yyyy-MM-dd}}" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="{res:Loc Key=RequestGridAmountHeader}" Width="140">
+                                    <DataGridTemplateColumn Header="{loc:Loc Key=Request.TableHeader.Amount}" Width="140">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate x:DataType="vm:RequestConfirmationLineViewModel">
                                                 <TextBlock Text="{Binding Amount, StringFormat={}{0:F2}}" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="{res:Loc Key=RequestGridRitmHeader}" Width="160">
+                                    <DataGridTemplateColumn Header="{loc:Loc Key=Request.TableHeader.Ritm}" Width="160">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate x:DataType="vm:RequestConfirmationLineViewModel">
                                                 <TextBox Text="{Binding RitmNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="{res:Loc Key=RequestGridCoeHeader}" Width="180">
+                                    <DataGridTemplateColumn Header="{loc:Loc Key=Request.TableHeader.Coe}" Width="180">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate x:DataType="vm:RequestConfirmationLineViewModel">
                                                 <TextBox Text="{Binding CoeResponsible, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="{res:Loc Key=RequestGridRequestDateHeader}" Width="160">
+                                    <DataGridTemplateColumn Header="{loc:Loc Key=Request.TableHeader.RequestDate}" Width="160">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate x:DataType="vm:RequestConfirmationLineViewModel">
                                                 <DatePicker SelectedDate="{Binding RequestDate, Mode=TwoWay, Converter={StaticResource DateTimeOffsetConverter}}" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="{res:Loc Key=RequestGridStatusHeader}" Width="140">
+                                    <DataGridTemplateColumn Header="{loc:Loc Key=Request.TableHeader.Status}" Width="140">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate x:DataType="vm:RequestConfirmationLineViewModel">
                                                 <TextBlock Text="{Binding Status}" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="{res:Loc Key=RequestGridActionsHeader}" Width="220">
+                                    <DataGridTemplateColumn Header="{loc:Loc Key=Request.TableHeader.Actions}" Width="220">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate x:DataType="vm:RequestConfirmationLineViewModel">
                                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                                    <Button Content="{res:Loc Key=ButtonMarkRequested}"
+                                                    <Button Content="{loc:Loc Key=Request.Button.MarkRequested}"
                                                             Command="{Binding RequestCommand}" />
-                                                    <Button Content="{res:Loc Key=ButtonUndo}"
+                                                    <Button Content="{loc:Loc Key=Common.Button.Undo}"
                                                             Command="{Binding UndoCommand}" />
                                                 </StackPanel>
                                             </DataTemplate>
@@ -150,12 +148,10 @@
                             </DataGrid>
                             <StackPanel Spacing="4">
                                 <TextBlock Text="{Binding ValidationMessage}"
-                                           Foreground="Red"
-                                           FontWeight="SemiBold"
+                                           Classes="StatusError"
                                            IsVisible="{Binding HasValidationMessage}" />
                                 <TextBlock Text="{Binding StatusMessage}"
-                                           Foreground="Green"
-                                           FontWeight="SemiBold"
+                                           Classes="StatusSuccess"
                                            IsVisible="{Binding HasStatusMessage}" />
                             </StackPanel>
                         </StackPanel>

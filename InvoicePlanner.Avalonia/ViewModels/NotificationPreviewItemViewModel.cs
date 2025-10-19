@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Invoices.Core.Models;
-using InvoicePlanner.Avalonia.Resources;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
@@ -19,7 +19,7 @@ public partial class NotificationPreviewItemViewModel : ObservableObject
             ? preview.EngagementId
             : $"{preview.EngagementDescription} ({preview.EngagementId})";
 
-        SequenceDisplay = Strings.Format("NotificationPreviewSequenceFormat", preview.SeqNo, preview.NumInvoices);
+        SequenceDisplay = LocalizationRegistry.Format("Notifications.Format.Sequence", preview.SeqNo, preview.NumInvoices);
         ToRecipient = BuildToRecipient(preview);
         CcRecipients = BuildCcRecipients(preview);
         Subject = BuildSubject(preview);
@@ -28,16 +28,16 @@ public partial class NotificationPreviewItemViewModel : ObservableObject
         ManagerNames = NormalizeList(preview.ManagerNames);
         CustomerDisplay = string.IsNullOrWhiteSpace(preview.CustomerName)
             ? string.Empty
-            : Strings.Format("NotificationPreviewCustomerFormat", preview.CustomerName);
-        PlanDisplay = Strings.Format("NotificationPreviewPlanFormat", preview.PlanId);
-        NotifyDisplay = Strings.Format("NotificationPreviewNotifyFormat", preview.NotifyDate);
-        EmissionDisplay = Strings.Format("NotificationPreviewEmissionFormat", preview.EmissionDate);
-        DueDisplay = Strings.Format("NotificationPreviewDueFormat", preview.ComputedDueDate);
-        AmountDisplay = Strings.Format("NotificationPreviewAmountFormat", preview.Amount);
-        ToDisplay = Strings.Format("NotificationPreviewToFormat", ToRecipient);
-        CcDisplay = Strings.Format("NotificationPreviewCcFormat", string.IsNullOrWhiteSpace(CcRecipients) ? string.Empty : CcRecipients);
-        RecipientsDisplay = Strings.Format("NotificationPreviewRecipientsFormat", RecipientEmails);
-        ManagersDisplay = Strings.Format("NotificationPreviewManagersFormat", ManagerNames);
+            : LocalizationRegistry.Format("Notifications.Format.Customer", preview.CustomerName);
+        PlanDisplay = LocalizationRegistry.Format("Notifications.Format.Plan", preview.PlanId);
+        NotifyDisplay = LocalizationRegistry.Format("Notifications.Format.NotifyDate", preview.NotifyDate);
+        EmissionDisplay = LocalizationRegistry.Format("Notifications.Format.EmissionDate", preview.EmissionDate);
+        DueDisplay = LocalizationRegistry.Format("Notifications.Format.DueDate", preview.ComputedDueDate);
+        AmountDisplay = LocalizationRegistry.Format("Notifications.Format.Amount", preview.Amount);
+        ToDisplay = LocalizationRegistry.Format("Notifications.Format.ToRecipients", ToRecipient);
+        CcDisplay = LocalizationRegistry.Format("Notifications.Format.CcRecipients", string.IsNullOrWhiteSpace(CcRecipients) ? string.Empty : CcRecipients);
+        RecipientsDisplay = LocalizationRegistry.Format("Notifications.Format.Recipients", RecipientEmails);
+        ManagersDisplay = LocalizationRegistry.Format("Notifications.Format.Managers", ManagerNames);
     }
 
     public InvoiceNotificationPreview Preview { get; }
@@ -151,7 +151,7 @@ public partial class NotificationPreviewItemViewModel : ObservableObject
 
     private static string BuildSubject(InvoiceNotificationPreview preview)
     {
-        return Strings.Format("NotificationPreviewSubjectFormat", preview.EmissionDate, preview.EngagementId, preview.SeqNo, preview.NumInvoices);
+        return LocalizationRegistry.Format("Notifications.Format.Subject", preview.EmissionDate, preview.EngagementId, preview.SeqNo, preview.NumInvoices);
     }
 
     private static string BuildBody(InvoiceNotificationPreview preview)
@@ -162,18 +162,18 @@ public partial class NotificationPreviewItemViewModel : ObservableObject
         var recipientEmails = BuildRecipientEmails(preview);
         var culture = CultureInfo.CurrentUICulture;
 
-        builder.AppendLine(Strings.Get("NotificationPreviewBodyService"));
-        builder.AppendLine(Strings.Format("NotificationPreviewBodyCompetenceFormat", preview.EmissionDate.ToString("MMM/yyyy", culture)));
-        builder.AppendLine(Strings.Format("NotificationPreviewBodyPoFormat", preview.PoNumber ?? string.Empty));
-        builder.AppendLine(Strings.Format("NotificationPreviewBodyFrsFormat", preview.FrsNumber ?? string.Empty));
-        builder.AppendLine(Strings.Format("NotificationPreviewBodyTicketFormat", preview.RitmNumber ?? string.Empty));
-        builder.AppendLine(Strings.Format("NotificationPreviewBodyInstallmentFormat", preview.SeqNo, preview.NumInvoices));
-        builder.AppendLine(Strings.Format("NotificationPreviewBodyAmountFormat", preview.Amount.ToString("C2", CultureInfo.CurrentCulture)));
-        builder.AppendLine(Strings.Format("NotificationPreviewBodyDueFormat", preview.ComputedDueDate.ToString("dd/MM/yyyy", culture)));
-        builder.AppendLine(Strings.Format("NotificationPreviewBodyContactFormat", preview.CustomerName ?? string.Empty, preview.CustomerFocalPointName ?? string.Empty));
-        builder.AppendLine(Strings.Format("NotificationPreviewBodyRecipientsFormat", recipientEmails));
-        builder.AppendLine(Strings.Format("NotificationPreviewBodyManagersFormat", managerNames));
-        builder.Append(Strings.Format("NotificationPreviewBodyManagerEmailsFormat", managerEmails));
+        builder.AppendLine(LocalizationRegistry.Get("Notifications.Template.Service"));
+        builder.AppendLine(LocalizationRegistry.Format("Notifications.Template.Competence", preview.EmissionDate.ToString("MMM/yyyy", culture)));
+        builder.AppendLine(LocalizationRegistry.Format("Notifications.Template.Po", preview.PoNumber ?? string.Empty));
+        builder.AppendLine(LocalizationRegistry.Format("Notifications.Template.Frs", preview.FrsNumber ?? string.Empty));
+        builder.AppendLine(LocalizationRegistry.Format("Notifications.Template.Ticket", preview.RitmNumber ?? string.Empty));
+        builder.AppendLine(LocalizationRegistry.Format("Notifications.Template.Installment", preview.SeqNo, preview.NumInvoices));
+        builder.AppendLine(LocalizationRegistry.Format("Notifications.Template.Amount", preview.Amount.ToString("C2", CultureInfo.CurrentCulture)));
+        builder.AppendLine(LocalizationRegistry.Format("Notifications.Template.DueDate", preview.ComputedDueDate.ToString("dd/MM/yyyy", culture)));
+        builder.AppendLine(LocalizationRegistry.Format("Notifications.Template.Contact", preview.CustomerName ?? string.Empty, preview.CustomerFocalPointName ?? string.Empty));
+        builder.AppendLine(LocalizationRegistry.Format("Notifications.Template.Recipients", recipientEmails));
+        builder.AppendLine(LocalizationRegistry.Format("Notifications.Template.Managers", managerNames));
+        builder.Append(LocalizationRegistry.Format("Notifications.Template.ManagerEmails", managerEmails));
 
         return builder.ToString();
     }

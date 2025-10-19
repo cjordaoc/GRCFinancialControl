@@ -187,6 +187,14 @@ namespace GRCFinancialControl.Persistence
                 .HasConversion<string>()
                 .HasMaxLength(100);
 
+            modelBuilder.Entity<Papd>()
+                .Property(p => p.WindowsLogin)
+                .HasMaxLength(200);
+
+            modelBuilder.Entity<Papd>()
+                .HasIndex(p => p.WindowsLogin)
+                .IsUnique();
+
             modelBuilder.Entity<EngagementPapd>()
                 .Property(ep => ep.EffectiveDate)
                 .HasColumnType("datetime(6)");
@@ -200,9 +208,17 @@ namespace GRCFinancialControl.Persistence
                 .HasMaxLength(254);
 
             modelBuilder.Entity<Manager>()
+                .Property(m => m.WindowsLogin)
+                .HasMaxLength(200);
+
+            modelBuilder.Entity<Manager>()
                 .Property(m => m.Position)
                 .HasConversion<string>()
                 .HasMaxLength(50);
+
+            modelBuilder.Entity<Manager>()
+                .HasIndex(m => m.WindowsLogin)
+                .IsUnique();
 
             modelBuilder.Entity<Manager>()
                 .HasMany(m => m.EngagementAssignments)

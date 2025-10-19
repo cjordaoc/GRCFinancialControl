@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -71,7 +72,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             if (customer is null) return;
 
-            var result = await _dialogService.ShowConfirmationAsync("Delete Data", $"Are you sure you want to delete all data for {customer.Name}? This action cannot be undone.");
+            var result = await _dialogService.ShowConfirmationAsync(
+                LocalizationRegistry.Get("Common.Dialog.DeleteData.Title"),
+                LocalizationRegistry.Format("Common.Dialog.DeleteData.Message", customer.Name));
             if (result)
             {
                 await _customerService.DeleteDataAsync(customer.Id);

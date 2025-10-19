@@ -1,14 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using App.Presentation.Localization;
 using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using GRCFinancialControl.Core.Configuration;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using InvoicePlanner.Avalonia.Messages;
-using InvoicePlanner.Avalonia.Resources;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
@@ -36,6 +38,13 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
 
     public bool HasStatusMessage => !string.IsNullOrWhiteSpace(StatusMessage);
 
+    public IReadOnlyList<LanguageOption> Languages { get; }
+
+    [ObservableProperty]
+    private LanguageOption? selectedLanguage;
+
+    private bool _initializingLanguage = true;
+
     public ConnectionSettingsViewModel(
         IFilePickerService filePickerService,
         IConnectionPackageService connectionPackageService,
@@ -51,6 +60,15 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
 
         BrowseCommand = new AsyncRelayCommand(BrowseAsync);
         ImportCommand = new AsyncRelayCommand(ImportAsync, CanImport);
+
+        Languages = LocalizationLanguageOptions.Create();
+
+        var settings = _settingsService.GetAllAsync().GetAwaiter().GetResult();
+        settings.TryGetValue(SettingKeys.Language, out var language);
+        SelectedLanguage = Languages
+            .FirstOrDefault(option => string.Equals(option.CultureName, language, StringComparison.OrdinalIgnoreCase))
+            ?? Languages.FirstOrDefault();
+        _initializingLanguage = false;
     }
 
     public IAsyncRelayCommand BrowseCommand { get; }
@@ -64,7 +82,7 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
     {
         StatusMessage = null;
         var filePath = await _filePickerService.OpenFileAsync(
-            title: Strings.Get("ConnectionBrowseTitle"),
+            title: LocalizationRegistry.Get("Connection.Dialog.BrowseTitle"),
             defaultExtension: ".grcconfig",
             allowedPatterns: new[] { "*.grcconfig" });
 
@@ -83,13 +101,13 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(SelectedPackagePath))
         {
-            StatusMessage = Strings.Get("ConnectionImportSelectPackage");
+            StatusMessage = LocalizationRegistry.Get("Connection.Validation.PackageRequired");
             return;
         }
 
         if (string.IsNullOrWhiteSpace(Passphrase))
         {
-            StatusMessage = Strings.Get("ConnectionImportEnterPassphrase");
+            StatusMessage = LocalizationRegistry.Get("Connection.Validation.PassphraseRequired");
             return;
         }
 
@@ -99,7 +117,7 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
         try
         {
             IsImporting = true;
-            StatusMessage = Strings.Get("ConnectionImportInProgress");
+            StatusMessage = LocalizationRegistry.Get("Connection.Status.ImportInProgress");
 
             var importedSettings = await _connectionPackageService.ImportAsync(SelectedPackagePath, Passphrase);
             await _settingsService.SaveAllAsync(new Dictionary<string, string>(importedSettings));
@@ -107,7 +125,7 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
 
             await _schemaInitializer.EnsureSchemaAsync();
 
-            StatusMessage = Strings.Get("ConnectionImportSuccess");
+            StatusMessage = LocalizationRegistry.Get("Connection.Status.ImportSuccess");
             _messenger.Send(ConnectionSettingsImportedMessage.Instance);
         }
         catch (InvalidOperationException ex)
@@ -120,7 +138,7 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
         catch (Exception ex)
         {
             var restoreMessage = await TryRestorePreviousSettingsAsync(previousSettings, newSettingsPersisted);
-            var failureMessage = string.Format(Strings.Get("ConnectionImportFailure"), ex.Message);
+            var failureMessage = LocalizationRegistry.Format("Connection.Status.ImportFailure", ex.Message);
             StatusMessage = string.IsNullOrWhiteSpace(restoreMessage)
                 ? failureMessage
                 : string.Concat(failureMessage, " ", restoreMessage);
@@ -130,6 +148,21 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
             IsImporting = false;
             Passphrase = string.Empty;
             ImportCommand.NotifyCanExecuteChanged();
+        }
+    }
+
+    private async Task PersistLanguageAsync(LanguageOption language)
+    {
+        try
+        {
+            var settings = await _settingsService.GetAllAsync();
+            settings[SettingKeys.Language] = language.CultureName;
+            await _settingsService.SaveAllAsync(new Dictionary<string, string>(settings));
+            StatusMessage = LocalizationRegistry.Get("Connection.Status.LanguageSaved");
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = LocalizationRegistry.Format("Connection.Status.LanguageSaveFailure", ex.Message);
         }
     }
 
@@ -149,7 +182,7 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            return string.Format(Strings.Get("ConnectionImportRestoreFailed"), ex.Message);
+            return LocalizationRegistry.Format("Connection.Status.RestoreFailure", ex.Message);
         }
     }
 
@@ -173,6 +206,17 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
     partial void OnStatusMessageChanged(string? value)
     {
         OnPropertyChanged(nameof(HasStatusMessage));
+    }
+
+    partial void OnSelectedLanguageChanged(LanguageOption? value)
+    {
+        if (_initializingLanguage || value is null)
+        {
+            return;
+        }
+
+        LocalizationCultureManager.ApplyCulture(value.CultureName);
+        _ = PersistLanguageAsync(value);
     }
 
 }

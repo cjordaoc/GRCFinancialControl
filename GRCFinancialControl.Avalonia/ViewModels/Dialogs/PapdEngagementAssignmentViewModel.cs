@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -189,7 +190,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
                 return Description;
             }
 
-            return $"{EngagementId} - {Description}";
+            return LocalizationRegistry.Format(
+                "Admin.PapdAssignments.Format.EngagementDisplay",
+                EngagementId,
+                Description);
         }
     }
 }

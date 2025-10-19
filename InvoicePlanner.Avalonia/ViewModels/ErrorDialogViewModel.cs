@@ -1,9 +1,9 @@
 using System;
 using System.Threading.Tasks;
 using Avalonia.Input.Platform;
+using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using InvoicePlanner.Avalonia.Resources;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
@@ -12,16 +12,16 @@ public partial class ErrorDialogViewModel : ObservableObject
     public event EventHandler? CloseRequested;
 
     [ObservableProperty]
-    private string title = Strings.Get("ErrorDialogTitle");
+    private string title = LocalizationRegistry.Get("Dialogs.Error.Title");
 
     [ObservableProperty]
-    private string message = Strings.Get("ErrorDialogMessage");
+    private string message = LocalizationRegistry.Get("Dialogs.Error.Message");
 
     [ObservableProperty]
     private string details = string.Empty;
 
     [ObservableProperty]
-    private string detailsLabel = Strings.Get("ErrorDialogDetailsLabel");
+    private string detailsLabel = LocalizationRegistry.Get("Dialogs.Error.Label.Details");
 
     internal IClipboard? Clipboard { get; set; }
 

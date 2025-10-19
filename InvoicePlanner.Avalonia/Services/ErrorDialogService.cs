@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Threading;
-using InvoicePlanner.Avalonia.Resources;
+using App.Presentation.Localization;
 using InvoicePlanner.Avalonia.ViewModels;
 using InvoicePlanner.Avalonia.Views;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,7 +24,7 @@ public class ErrorDialogService : IErrorDialogService
         {
             using var scope = _serviceProvider.CreateScope();
             var viewModel = scope.ServiceProvider.GetRequiredService<ErrorDialogViewModel>();
-            viewModel.Initialise(message ?? Strings.Get("ErrorDialogMessage"), details);
+            viewModel.Initialise(message ?? LocalizationRegistry.Get("Dialogs.Error.Message"), details);
 
             var dialog = scope.ServiceProvider.GetRequiredService<ErrorDialog>();
             dialog.DataContext = viewModel;

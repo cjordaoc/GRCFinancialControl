@@ -1,3 +1,4 @@
+using App.Presentation.Localization;
 using App.Presentation.Services;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -42,6 +43,10 @@ namespace GRCFinancialControl.Avalonia
 
         public override async void OnFrameworkInitializationCompleted()
         {
+            LocalizationRegistry.Configure(new ResourceManagerLocalizationProvider(
+                "GRCFinancialControl.Avalonia.Resources.Strings",
+                typeof(App).Assembly));
+
             LiveCharts.Configure(config =>
                 config
                     .AddSkiaSharp()
@@ -65,6 +70,9 @@ namespace GRCFinancialControl.Avalonia
 
                 var settingsService = scopedProvider.GetRequiredService<ISettingsService>();
                 var settings = await settingsService.GetAllAsync();
+                settings.TryGetValue(SettingKeys.Language, out var language);
+                LocalizationCultureManager.ApplyCulture(language);
+
                 settings.TryGetValue(SettingKeys.Server, out var server);
                 settings.TryGetValue(SettingKeys.Database, out var database);
                 settings.TryGetValue(SettingKeys.User, out var user);

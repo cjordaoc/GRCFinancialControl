@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -98,13 +99,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             if (string.IsNullOrWhiteSpace(Name))
             {
-                StatusMessage = "A fiscal year name is required.";
+                StatusMessage = LocalizationRegistry.Get("FiscalYears.Validation.NameRequired");
                 return;
             }
 
             if (EndDate < StartDate)
             {
-                StatusMessage = "The end date must be on or after the start date.";
+                StatusMessage = LocalizationRegistry.Get("FiscalYears.Validation.EndDateAfterStart");
                 return;
             }
 

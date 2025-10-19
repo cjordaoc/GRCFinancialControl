@@ -2,11 +2,11 @@ using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using InvoicePlanner.Avalonia.Messages;
-using InvoicePlanner.Avalonia.Resources;
 using InvoicePlanner.Avalonia.Services;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
@@ -20,16 +20,21 @@ public partial class RequestConfirmationViewModel : ViewModelBase
     private readonly IInvoicePlanRepository _repository;
     private readonly ILogger<RequestConfirmationViewModel> _logger;
     private readonly IMessenger _messenger;
+    private readonly IInvoiceAccessScope _accessScope;
     private readonly RelayCommand _loadPlanCommand;
 
     public RequestConfirmationViewModel(
         IInvoicePlanRepository repository,
         ILogger<RequestConfirmationViewModel> logger,
-        IMessenger messenger)
+        IMessenger messenger,
+        IInvoiceAccessScope accessScope)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _messenger = messenger ?? throw new ArgumentNullException(nameof(messenger));
+        _accessScope = accessScope ?? throw new ArgumentNullException(nameof(accessScope));
+
+        _accessScope.EnsureInitialized();
 
         Lines.CollectionChanged += OnLinesCollectionChanged;
         AvailablePlans.CollectionChanged += OnAvailablePlansChanged;
@@ -127,7 +132,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
 
         if (SelectedPlan is null)
         {
-            ValidationMessage = Strings.Get("RequestValidationPlanSelection");
+            ValidationMessage = LocalizationRegistry.Get("Request.Validation.PlanSelection");
             IsPlanDetailsVisible = false;
             return;
         }
@@ -140,7 +145,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
                 ClearLines();
                 EngagementId = string.Empty;
                 CurrentPlanId = 0;
-                ValidationMessage = Strings.Format("RequestValidationNotFound", SelectedPlan.Id);
+                ValidationMessage = LocalizationRegistry.Format("Request.Validation.PlanNotFound", SelectedPlan.Id);
                 return;
             }
 
@@ -174,13 +179,13 @@ public partial class RequestConfirmationViewModel : ViewModelBase
 
             RefreshSummaries();
 
-            StatusMessage = Strings.Format("RequestStatusPlanLoaded", plan.Id, Lines.Count);
+            StatusMessage = LocalizationRegistry.Format("Request.Status.PlanLoaded", plan.Id, Lines.Count);
             IsPlanDetailsVisible = Lines.Count > 0;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load invoice plan {PlanId}.", SelectedPlan.Id);
-            ValidationMessage = Strings.Format("RequestValidationLoadFailed", ex.Message);
+            ValidationMessage = LocalizationRegistry.Format("Request.Status.LoadFailureDetail", ex.Message);
             IsPlanDetailsVisible = false;
         }
     }
@@ -196,13 +201,13 @@ public partial class RequestConfirmationViewModel : ViewModelBase
 
         if (CurrentPlanId <= 0)
         {
-            ValidationMessage = Strings.Get("RequestValidationPlanRequired");
+            ValidationMessage = LocalizationRegistry.Get("Request.Validation.PlanRequired");
             return;
         }
 
         if (line.RequestDate is null)
         {
-            ValidationMessage = Strings.Get("RequestValidationRequestDateRequired");
+            ValidationMessage = LocalizationRegistry.Get("Request.Validation.RequestDateRequired");
             return;
         }
 
@@ -220,13 +225,13 @@ public partial class RequestConfirmationViewModel : ViewModelBase
 
             if (result.Updated == 0)
             {
-                StatusMessage = Strings.Get("RequestStatusNoUpdates");
+                StatusMessage = LocalizationRegistry.Get("Request.Status.NoUpdates");
                 return;
             }
 
             line.ApplyRequestedState(update.RitmNumber, update.CoeResponsible, update.RequestDate.Date);
 
-            StatusMessage = Strings.Format("RequestStatusLineRequested", line.Sequence);
+            StatusMessage = LocalizationRegistry.Format("Request.Status.LineRequested", line.Sequence);
         }
         catch (Exception ex)
         {
@@ -246,7 +251,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
 
         if (CurrentPlanId <= 0)
         {
-            ValidationMessage = Strings.Get("RequestValidationUndoPlanRequired");
+            ValidationMessage = LocalizationRegistry.Get("Request.Validation.UndoPlanRequired");
             return;
         }
 
@@ -256,13 +261,13 @@ public partial class RequestConfirmationViewModel : ViewModelBase
 
             if (result.Updated == 0)
             {
-                StatusMessage = Strings.Get("RequestStatusNoUndo");
+                StatusMessage = LocalizationRegistry.Get("Request.Status.NoUndo");
                 return;
             }
 
             line.ResetToPlanned(DateTime.Today);
 
-            StatusMessage = Strings.Format("RequestStatusLineUndone", line.Sequence);
+            StatusMessage = LocalizationRegistry.Format("Request.Status.LineUndone", line.Sequence);
         }
         catch (Exception ex)
         {
@@ -313,8 +318,13 @@ public partial class RequestConfirmationViewModel : ViewModelBase
             }
 
             PlanSelectionMessage = plans.Count == 0
-                ? Strings.Get("RequestPlansEmpty")
-                : Strings.Get("RequestPlansSelectHint");
+                ? LocalizationRegistry.Get("Request.Message.Empty")
+                : LocalizationRegistry.Get("Request.Message.SelectHint");
+
+            if (_accessScope.IsInitialized && !_accessScope.HasAssignments && string.IsNullOrWhiteSpace(_accessScope.InitializationError))
+            {
+                PlanSelectionMessage = LocalizationRegistry.Format("Access.Message.NoAssignments", GetLoginDisplay(_accessScope));
+            }
 
             SelectedPlan = AvailablePlans.FirstOrDefault(plan => plan.Id == previouslySelectedId);
         }
@@ -325,7 +335,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
             SelectedPlan = null;
             PlanSelectionMessage = ConnectionErrorMessageFormatter.Format(
                 ex,
-                Strings.Format("RequestPlansLoadError", ex.Message));
+                LocalizationRegistry.Format("Request.Status.LoadFailure", ex.Message));
         }
     }
 

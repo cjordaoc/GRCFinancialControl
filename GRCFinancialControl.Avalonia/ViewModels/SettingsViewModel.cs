@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using App.Presentation.Localization;
 using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -20,6 +22,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly IDialogService _dialogService;
         private readonly IConnectionPackageService _connectionPackageService;
         private readonly IFilePickerService _filePickerService;
+        private bool _initializingLanguage;
 
         [ObservableProperty]
         private string _server = string.Empty;
@@ -54,6 +57,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private string _selectedImportPackageFileName = string.Empty;
 
+        public IReadOnlyList<LanguageOption> Languages { get; }
+
+        [ObservableProperty]
+        private LanguageOption? _selectedLanguage;
+
         public SettingsViewModel(
             ISettingsService settingsService,
             IDatabaseSchemaInitializer schemaInitializer,
@@ -73,6 +81,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             ClearAllDataCommand = new AsyncRelayCommand(ClearAllDataAsync);
             ExportConnectionPackageCommand = new AsyncRelayCommand(ExportConnectionPackageAsync);
             ImportConnectionPackageCommand = new AsyncRelayCommand(ImportConnectionPackageAsync);
+
+            Languages = LocalizationLanguageOptions.Create();
         }
 
         public IAsyncRelayCommand LoadSettingsCommand { get; }
@@ -89,19 +99,25 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private async Task LoadSettingsAsync()
         {
+            _initializingLanguage = true;
             var settings = await _settingsService.GetAllAsync();
             settings.TryGetValue(SettingKeys.Server, out var server);
             settings.TryGetValue(SettingKeys.Database, out var database);
             settings.TryGetValue(SettingKeys.User, out var user);
             settings.TryGetValue(SettingKeys.Password, out var password);
             settings.TryGetValue(SettingKeys.PowerBiEmbedUrl, out var embedUrl);
+            settings.TryGetValue(SettingKeys.Language, out var language);
 
             Server = server ?? string.Empty;
             Database = database ?? string.Empty;
             User = user ?? string.Empty;
             Password = password ?? string.Empty;
             PowerBiEmbedUrl = embedUrl ?? string.Empty;
-            StatusMessage = "Settings loaded.";
+            SelectedLanguage = Languages
+                .FirstOrDefault(option => string.Equals(option.CultureName, language, StringComparison.OrdinalIgnoreCase))
+                ?? Languages.FirstOrDefault();
+            _initializingLanguage = false;
+            StatusMessage = LocalizationRegistry.Get("Settings.Status.Loaded");
         }
 
         private Dictionary<string, string> BuildSettingsDictionary()
@@ -112,7 +128,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 [SettingKeys.Database] = Database ?? string.Empty,
                 [SettingKeys.User] = User ?? string.Empty,
                 [SettingKeys.Password] = Password ?? string.Empty,
-                [SettingKeys.PowerBiEmbedUrl] = PowerBiEmbedUrl ?? string.Empty
+                [SettingKeys.PowerBiEmbedUrl] = PowerBiEmbedUrl ?? string.Empty,
+                [SettingKeys.Language] = SelectedLanguage?.CultureName ?? string.Empty
             };
         }
 
@@ -120,12 +137,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             var settings = BuildSettingsDictionary();
             await _settingsService.SaveAllAsync(settings);
-            StatusMessage = "Settings saved.";
+            StatusMessage = LocalizationRegistry.Get("Settings.Status.Saved");
         }
 
         private async Task TestConnectionAsync()
         {
-            StatusMessage = "Testing connection...";
+            StatusMessage = LocalizationRegistry.Get("Settings.Status.Testing");
             var settings = BuildSettingsDictionary();
             var result = await _settingsService.TestConnectionAsync(Server, Database, User, Password);
 
@@ -136,24 +153,24 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
 
             await _settingsService.SaveAllAsync(settings);
-            StatusMessage = "Connection successful. Application data refreshed.";
+            StatusMessage = LocalizationRegistry.Get("Settings.Status.TestSuccess");
             Messenger.Send(new RefreshDataMessage());
         }
 
         private async Task ClearAllDataAsync()
         {
             var confirmed = await _dialogService.ShowConfirmationAsync(
-                "Clear All Data",
-                "Are you sure you want to delete all data? This action cannot be undone.");
+                LocalizationRegistry.Get("Settings.Dialog.ClearAll.Title"),
+                LocalizationRegistry.Get("Settings.Dialog.ClearAll.Message"));
 
             if (!confirmed)
             {
                 return;
             }
 
-            StatusMessage = "Clearing all data...";
+            StatusMessage = LocalizationRegistry.Get("Settings.Status.Clearing");
             await _schemaInitializer.ClearAllDataAsync();
-            StatusMessage = "All data has been cleared.";
+            StatusMessage = LocalizationRegistry.Get("Settings.Status.Cleared");
         }
 
         private async Task ExportConnectionPackageAsync()
@@ -162,34 +179,34 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             if (string.IsNullOrWhiteSpace(ExportPassphrase))
             {
-                StatusMessage = "Enter a passphrase to export the connection package.";
+                StatusMessage = LocalizationRegistry.Get("Settings.Validation.ExportPassphraseRequired");
                 return;
             }
 
             if (!string.Equals(ExportPassphrase, ConfirmExportPassphrase, StringComparison.Ordinal))
             {
-                StatusMessage = "The confirmation passphrase does not match.";
+                StatusMessage = LocalizationRegistry.Get("Settings.Validation.ExportPassphraseMismatch");
                 return;
             }
 
             var defaultFileName = $"GRCConnection_{DateTime.Now:yyyyMMdd_HHmm}.grcconfig";
             var filePath = await _filePickerService.SaveFileAsync(
                 defaultFileName,
-                title: "Export Connection Package",
+                title: LocalizationRegistry.Get("Settings.Dialog.Export.Title"),
                 defaultExtension: ".grcconfig",
                 allowedPatterns: new[] { "*.grcconfig" });
 
             if (string.IsNullOrWhiteSpace(filePath))
             {
-                StatusMessage = "Export cancelled.";
+                StatusMessage = LocalizationRegistry.Get("Settings.Status.ExportCancelled");
                 return;
             }
 
             try
             {
-                StatusMessage = "Exporting connection package...";
+                StatusMessage = LocalizationRegistry.Get("Settings.Status.ExportInProgress");
                 await _connectionPackageService.ExportAsync(filePath, ExportPassphrase);
-                StatusMessage = $"Connection package saved as {Path.GetFileName(filePath)}.";
+                StatusMessage = LocalizationRegistry.Format("Settings.Status.ExportSuccess", Path.GetFileName(filePath));
             }
             catch (InvalidOperationException ex)
             {
@@ -197,7 +214,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Failed to export the connection package: {ex.Message}";
+                StatusMessage = LocalizationRegistry.Format("Settings.Status.ExportFailure", ex.Message);
             }
             finally
             {
@@ -212,24 +229,24 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             if (string.IsNullOrWhiteSpace(ImportPassphrase))
             {
-                StatusMessage = "Enter the package passphrase before importing.";
+                StatusMessage = LocalizationRegistry.Get("Settings.Validation.ImportPassphraseRequired");
                 return;
             }
 
             var filePath = await _filePickerService.OpenFileAsync(
-                title: "Import Connection Package",
+                title: LocalizationRegistry.Get("Settings.Dialog.Import.Title"),
                 defaultExtension: ".grcconfig",
                 allowedPatterns: new[] { "*.grcconfig" });
 
             if (string.IsNullOrWhiteSpace(filePath))
             {
-                StatusMessage = "Import cancelled.";
+                StatusMessage = LocalizationRegistry.Get("Settings.Status.ImportCancelled");
                 return;
             }
 
             try
             {
-                StatusMessage = "Importing connection package...";
+                StatusMessage = LocalizationRegistry.Get("Settings.Status.ImportInProgress");
                 var importedSettings = await _connectionPackageService.ImportAsync(filePath, ImportPassphrase);
                 var existingSettings = await _settingsService.GetAllAsync();
 
@@ -253,7 +270,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     ? password
                     : Password;
 
-                StatusMessage = $"Connection settings imported from {Path.GetFileName(filePath)}.";
+                StatusMessage = LocalizationRegistry.Format("Settings.Status.ImportSuccess", Path.GetFileName(filePath));
                 Messenger.Send(new RefreshDataMessage());
             }
             catch (InvalidOperationException ex)
@@ -262,12 +279,22 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Failed to import the connection package: {ex.Message}";
+                StatusMessage = LocalizationRegistry.Format("Settings.Status.ImportFailure", ex.Message);
             }
             finally
             {
                 ImportPassphrase = string.Empty;
             }
+        }
+
+        partial void OnSelectedLanguageChanged(LanguageOption? value)
+        {
+            if (_initializingLanguage || value is null)
+            {
+                return;
+            }
+
+            LocalizationCultureManager.ApplyCulture(value.CultureName);
         }
     }
 }

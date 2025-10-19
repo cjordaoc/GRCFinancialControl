@@ -2,11 +2,11 @@ using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using InvoicePlanner.Avalonia.Messages;
-using InvoicePlanner.Avalonia.Resources;
 using InvoicePlanner.Avalonia.Services;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
@@ -20,16 +20,21 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
     private readonly IInvoicePlanRepository _repository;
     private readonly ILogger<EmissionConfirmationViewModel> _logger;
     private readonly IMessenger _messenger;
+    private readonly IInvoiceAccessScope _accessScope;
     private readonly RelayCommand _loadPlanCommand;
 
     public EmissionConfirmationViewModel(
         IInvoicePlanRepository repository,
         ILogger<EmissionConfirmationViewModel> logger,
-        IMessenger messenger)
+        IMessenger messenger,
+        IInvoiceAccessScope accessScope)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _messenger = messenger ?? throw new ArgumentNullException(nameof(messenger));
+        _accessScope = accessScope ?? throw new ArgumentNullException(nameof(accessScope));
+
+        _accessScope.EnsureInitialized();
 
         Lines.CollectionChanged += OnLinesCollectionChanged;
         AvailablePlans.CollectionChanged += OnAvailablePlansChanged;
@@ -128,7 +133,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
     {
         if (SelectedPlan is null)
         {
-            ValidationMessage = Strings.Get("EmissionValidationPlanSelection");
+            ValidationMessage = LocalizationRegistry.Get("Emission.Validation.PlanSelection");
             IsPlanDetailsVisible = false;
             return;
         }
@@ -149,7 +154,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
                 ClearLines();
                 EngagementId = string.Empty;
                 CurrentPlanId = 0;
-                ValidationMessage = Strings.Format("EmissionValidationNotFound", planId);
+                ValidationMessage = LocalizationRegistry.Format("Emission.Validation.PlanNotFound", planId);
                 return;
             }
 
@@ -193,7 +198,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
 
             if (!suppressStatusMessage)
             {
-                StatusMessage = Strings.Format("EmissionStatusPlanLoaded", plan.Id, Lines.Count);
+                StatusMessage = LocalizationRegistry.Format("Emission.Status.PlanLoaded", plan.Id, Lines.Count);
             }
 
             IsPlanDetailsVisible = Lines.Count > 0;
@@ -201,7 +206,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load invoice plan {PlanId} for emission confirmation.", planId);
-            ValidationMessage = Strings.Format("EmissionValidationLoadFailed", ex.Message);
+            ValidationMessage = LocalizationRegistry.Format("Emission.Status.LoadFailureDetail", ex.Message);
             IsPlanDetailsVisible = false;
         }
     }
@@ -217,19 +222,19 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
 
         if (CurrentPlanId <= 0)
         {
-            ValidationMessage = Strings.Get("EmissionValidationPlanRequired");
+            ValidationMessage = LocalizationRegistry.Get("Emission.Validation.PlanRequired");
             return;
         }
 
         if (line.EmittedAt is null)
         {
-            ValidationMessage = Strings.Get("EmissionValidationEmissionDate");
+            ValidationMessage = LocalizationRegistry.Get("Emission.Validation.EmissionDate");
             return;
         }
 
         if (string.IsNullOrWhiteSpace(line.BzCode))
         {
-            ValidationMessage = Strings.Get("EmissionValidationBzCode");
+            ValidationMessage = LocalizationRegistry.Get("Emission.Validation.BzCode");
             return;
         }
 
@@ -246,13 +251,13 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
 
             if (result.Updated == 0)
             {
-                StatusMessage = Strings.Get("EmissionStatusNoClosures");
+                StatusMessage = LocalizationRegistry.Get("Emission.Status.NoClosures");
                 return;
             }
 
             line.ApplyClosedState(update.BzCode, update.EmittedAt.Value.Date);
 
-            StatusMessage = Strings.Format("EmissionStatusLineClosed", line.Sequence);
+            StatusMessage = LocalizationRegistry.Format("Emission.Status.LineClosed", line.Sequence);
         }
         catch (Exception ex)
         {
@@ -272,19 +277,19 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
 
         if (CurrentPlanId <= 0)
         {
-            ValidationMessage = Strings.Get("EmissionValidationCancelPlanRequired");
+            ValidationMessage = LocalizationRegistry.Get("Emission.Validation.CancelPlanRequired");
             return;
         }
 
         if (string.IsNullOrWhiteSpace(line.CancelReason))
         {
-            ValidationMessage = Strings.Get("EmissionValidationCancelReason");
+            ValidationMessage = LocalizationRegistry.Get("Emission.Validation.CancelReason");
             return;
         }
 
         if (line.ReissueEmissionDate is null)
         {
-            ValidationMessage = Strings.Get("EmissionValidationReissueDate");
+            ValidationMessage = LocalizationRegistry.Get("Emission.Validation.ReissueDate");
             return;
         }
 
@@ -301,13 +306,13 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
 
             if (result.Updated == 0)
             {
-                StatusMessage = Strings.Get("EmissionStatusNoCancellations");
+                StatusMessage = LocalizationRegistry.Get("Emission.Status.NoCancellations");
                 return;
             }
 
             LoadPlanById(CurrentPlanId, suppressStatusMessage: true);
 
-            StatusMessage = Strings.Format("EmissionStatusLineCanceled", line.Sequence);
+            StatusMessage = LocalizationRegistry.Format("Emission.Status.LineCanceled", line.Sequence);
         }
         catch (Exception ex)
         {
@@ -359,8 +364,13 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
             }
 
             PlanSelectionMessage = plans.Count == 0
-                ? Strings.Get("EmissionPlansEmpty")
-                : Strings.Get("EmissionPlansSelectHint");
+                ? LocalizationRegistry.Get("Emission.Message.Empty")
+                : LocalizationRegistry.Get("Emission.Message.SelectHint");
+
+            if (_accessScope.IsInitialized && !_accessScope.HasAssignments && string.IsNullOrWhiteSpace(_accessScope.InitializationError))
+            {
+                PlanSelectionMessage = LocalizationRegistry.Format("Access.Message.NoAssignments", GetLoginDisplay(_accessScope));
+            }
 
             SelectedPlan = AvailablePlans.FirstOrDefault(plan => plan.Id == previouslySelectedId);
         }
@@ -371,7 +381,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
             SelectedPlan = null;
             PlanSelectionMessage = ConnectionErrorMessageFormatter.Format(
                 ex,
-                Strings.Format("EmissionPlansLoadError", ex.Message));
+                LocalizationRegistry.Format("Emission.Status.LoadFailure", ex.Message));
         }
     }
 

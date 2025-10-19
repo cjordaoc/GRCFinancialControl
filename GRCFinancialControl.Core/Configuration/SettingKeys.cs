@@ -8,4 +8,5 @@ public static class SettingKeys
     public const string Password = "Password";
     public const string PowerBiEmbedUrl = "PowerBiEmbedUrl";
     public const string DefaultFiscalYearId = "DefaultFiscalYearId";
+    public const string Language = "Language";
 }

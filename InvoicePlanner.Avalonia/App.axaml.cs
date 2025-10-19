@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using App.Presentation.Localization;
 using App.Presentation.Services;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -47,6 +49,11 @@ public partial class App : Application
 
     public override async void OnFrameworkInitializationCompleted()
     {
+        ApplyLanguageFromSettings();
+        LocalizationRegistry.Configure(new ResourceManagerLocalizationProvider(
+            "InvoicePlanner.Avalonia.Resources.Strings",
+            typeof(App).Assembly));
+
         _host = Host.CreateDefaultBuilder()
             .ConfigureAppConfiguration((context, config) =>
             {
@@ -96,6 +103,8 @@ public partial class App : Application
                 services.AddSingleton<IPersonDirectory, NullPersonDirectory>();
                 services.AddSingleton<IDatabaseSchemaInitializer, DatabaseSchemaInitializer>();
 
+                services.AddSingleton<InvoiceAccessScope>();
+                services.AddSingleton<IInvoiceAccessScope>(provider => provider.GetRequiredService<InvoiceAccessScope>());
                 services.AddTransient<IInvoicePlanRepository, InvoicePlanRepository>();
                 services.AddSingleton<IInvoicePlanValidator, InvoicePlanValidator>();
                 services.AddSingleton<InvoiceSummaryExporter>();
@@ -159,6 +168,12 @@ public partial class App : Application
                 var settingsDbContext = provider.GetRequiredService<SettingsDbContext>();
                 await settingsDbContext.Database.EnsureCreatedAsync();
                 await settingsDbContext.Database.MigrateAsync();
+
+                if (_hasConnectionSettings)
+                {
+                    var accessScope = provider.GetRequiredService<InvoiceAccessScope>();
+                    accessScope.EnsureInitialized();
+                }
             }
 
             desktop.MainWindow = mainWindow;
@@ -166,6 +181,30 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private static void ApplyLanguageFromSettings()
+    {
+        try
+        {
+            var options = new DbContextOptionsBuilder<SettingsDbContext>()
+                .UseSqlite(SettingsDatabaseOptions.BuildConnectionString())
+                .Options;
+
+            using var context = new SettingsDbContext(options);
+            context.Database.EnsureCreated();
+
+            var language = context.Settings
+                .AsNoTracking()
+                .FirstOrDefault(setting => setting.Key == SettingKeys.Language)
+                ?.Value;
+
+            LocalizationCultureManager.ApplyCulture(language);
+        }
+        catch
+        {
+            LocalizationCultureManager.ApplyCulture(null);
+        }
     }
 
     private static bool TryBuildConnectionString(IReadOnlyDictionary<string, string> settings, out string connectionString)

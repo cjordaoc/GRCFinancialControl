@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels.Dialogs"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="300"
              x:Class="GRCFinancialControl.Avalonia.Views.Dialogs.ManagerAssignmentEditorView"
              x:DataType="vm:ManagerAssignmentEditorViewModel">
@@ -10,7 +11,7 @@
         <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="Bold"/>
 
         <StackPanel Spacing="4">
-            <TextBlock Text="Engagement"/>
+            <TextBlock Text="{loc:Loc Key=Admin.ManagerAssignments.Label.Engagement}"/>
             <ComboBox ItemsSource="{Binding Engagements}"
                       SelectedItem="{Binding SelectedEngagement}"
                       Width="280"
@@ -18,7 +19,7 @@
         </StackPanel>
 
         <StackPanel Spacing="4">
-            <TextBlock Text="Manager"/>
+            <TextBlock Text="{loc:Loc Key=Admin.ManagerAssignments.Label.Manager}"/>
             <ComboBox ItemsSource="{Binding Managers}"
                       SelectedItem="{Binding SelectedManager}"
                       Width="280"
@@ -33,18 +34,18 @@
 
         <StackPanel Orientation="Horizontal" Spacing="12">
             <StackPanel Width="160" Spacing="4">
-                <TextBlock Text="Begin"/>
+                <TextBlock Text="{loc:Loc Key=Admin.ManagerAssignments.Label.Begin}"/>
                 <DatePicker SelectedDate="{Binding BeginDateOffset}" IsEnabled="{Binding AllowEditing}"/>
             </StackPanel>
             <StackPanel Width="160" Spacing="4">
-                <TextBlock Text="End"/>
+                <TextBlock Text="{loc:Loc Key=Admin.ManagerAssignments.Label.End}"/>
                 <DatePicker SelectedDate="{Binding EndDateOffset}" IsEnabled="{Binding AllowEditing}"/>
             </StackPanel>
         </StackPanel>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-            <Button Content="Save" Command="{Binding SaveCommand}" IsEnabled="{Binding AllowEditing}"/>
-            <Button Content="Cancel" Command="{Binding CloseCommand}"/>
+            <Button Content="{loc:Loc Key=Common.Button.Save}" Command="{Binding SaveCommand}" IsEnabled="{Binding AllowEditing}"/>
+            <Button Content="{loc:Loc Key=Common.Button.Cancel}" Command="{Binding CloseCommand}"/>
         </StackPanel>
     </StackPanel>
 </UserControl>

@@ -11,27 +11,12 @@
         WindowState="Maximized"
         Title="{Binding Title}">
     <Grid ColumnDefinitions="240,*" Margin="16">
-        <Grid.Styles>
-            <Style Selector="ToggleButton.NavButton">
-                <Setter Property="HorizontalContentAlignment" Value="Left"/>
-                <Setter Property="Padding" Value="12,8"/>
-                <Setter Property="Background" Value="Transparent"/>
-                <Setter Property="BorderBrush" Value="Transparent"/>
-            </Style>
-            <Style Selector="ToggleButton.NavButton:pointerover">
-                <Setter Property="Background" Value="{DynamicResource ThemeControlHighBrush}"/>
-            </Style>
-            <Style Selector="ToggleButton.NavButton:checked">
-                <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush}"/>
-                <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}"/>
-            </Style>
-        </Grid.Styles>
         <Border Grid.Column="0"
                 Padding="16"
                 CornerRadius="8"
-                Background="{DynamicResource ThemeControlMidBrush}">
+                Background="{StaticResource BrushSurfaceVariant}">
             <StackPanel Spacing="12">
-                <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding Title}" Classes="TitleLarge"/>
                 <ItemsControl ItemsSource="{Binding MenuItems}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:NavigationItemViewModel">

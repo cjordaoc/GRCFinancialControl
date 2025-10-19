@@ -4,11 +4,12 @@
         xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
         x:Class="GRCFinancialControl.Avalonia.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="GRC Financial Control"
+        Title="{loc:Loc Key=Shell.Title.Application}"
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen">
 
@@ -19,7 +20,7 @@
     <Grid ColumnDefinitions="220,*">
         <Border Background="{DynamicResource SystemAccentColor}" Margin="0" Padding="0,20">
             <StackPanel>
-                <TextBlock Text="GRC Control"
+                <TextBlock Text="{loc:Loc Key=Shell.Brand.Primary}"
                            FontSize="{StaticResource FontSizeXL}"
                            FontWeight="Bold"
                            Foreground="{StaticResource BrushOnSurface}"

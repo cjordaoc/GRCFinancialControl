@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -16,15 +17,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     public partial class AllocationEditorViewModel : ViewModelBase
     {
         private const decimal VarianceTolerance = 0.01m;
-        private const string HoursTargetLabel = "Hours to Allocate:";
-        private const string ValueTargetLabel = "Value to Allocate:";
-        private const string HoursCurrentAllocationLabel = "Current Hours Allocation:";
-        private const string ValueCurrentAllocationLabel = "Current Value Allocation:";
-        private const string HoursAmountHeader = "Planned Hours";
-        private const string ValueAmountHeader = "Planned Value";
-        private const string HoursValidationMessage = "Allocated hours must match the target hours before saving.";
-        private const string ValueValidationMessage = "Allocated value must match the target value before saving.";
-        private const string HoursVarianceSuffix = " h";
 
         private readonly IEngagementService _engagementService;
         private readonly AllocationKind _kind;
@@ -112,15 +104,25 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             IsReadOnlyMode = isReadOnlyMode;
         }
 
-        public string TargetLabel => _kind == AllocationKind.Hours ? HoursTargetLabel : ValueTargetLabel;
+        public string TargetLabel => LocalizationRegistry.Get(
+            _kind == AllocationKind.Hours
+                ? "Allocations.Label.TargetHours"
+                : "Allocations.Label.TargetValue");
 
-        public string CurrentAllocationLabel => _kind == AllocationKind.Hours ? HoursCurrentAllocationLabel : ValueCurrentAllocationLabel;
+        public string CurrentAllocationLabel => LocalizationRegistry.Get(
+            _kind == AllocationKind.Hours
+                ? "Allocations.Label.CurrentHours"
+                : "Allocations.Label.CurrentValue");
 
-        public string AmountColumnHeader => _kind == AllocationKind.Hours ? HoursAmountHeader : ValueAmountHeader;
+        public string AmountColumnHeader => LocalizationRegistry.Get(
+            _kind == AllocationKind.Hours
+                ? "Allocations.Header.PlannedHours"
+                : "Allocations.Header.PlannedValue");
 
-        public string ValidationErrorMessage => _kind == AllocationKind.Hours
-            ? HoursValidationMessage
-            : ValueValidationMessage;
+        public string ValidationErrorMessage => LocalizationRegistry.Get(
+            _kind == AllocationKind.Hours
+                ? "Allocations.Validation.HoursMatchTarget"
+                : "Allocations.Validation.ValueMatchTarget");
 
         public bool AllowEditing => !IsReadOnlyMode;
 
@@ -197,7 +199,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             AllocationVarianceDisplay = value == 0
                 ? string.Empty
                 : string.Format(CultureInfo.InvariantCulture, "{0:+0.##;-0.##;0}{1}", value, suffix);
-            AllocationVarianceTooltip = string.Format(CultureInfo.InvariantCulture, "Variance {0:+0.##;-0.##;0}{1}", value, suffix);
+            AllocationVarianceTooltip = LocalizationRegistry.Format("Allocations.Tooltip.Variance", value, suffix);
         }
 
         private void UpdateVariance()
@@ -240,12 +242,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             if (_kind == AllocationKind.Hours)
             {
-                return HoursVarianceSuffix;
+                return LocalizationRegistry.Get("Common.Unit.HoursSuffix");
             }
 
             return string.IsNullOrWhiteSpace(Engagement.Currency)
                 ? string.Empty
-                : $" {Engagement.Currency}";
+                : string.Format(CultureInfo.InvariantCulture, " {0}", Engagement.Currency);
         }
 
         private string FormatAmount(decimal value)

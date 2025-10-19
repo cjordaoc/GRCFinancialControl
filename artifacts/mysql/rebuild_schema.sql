@@ -71,9 +71,10 @@ CREATE TABLE `Papds`
 (
     `Id`    INT          NOT NULL AUTO_INCREMENT,
     `Name`  VARCHAR(200) NOT NULL,
-    `Email` VARCHAR(254) NOT NULL,
     `Level` VARCHAR(100) NOT NULL,
-    CONSTRAINT `PK_Papds` PRIMARY KEY (`Id`)
+    `WindowsLogin` VARCHAR(200) NULL,
+    CONSTRAINT `PK_Papds` PRIMARY KEY (`Id`),
+    CONSTRAINT `UQ_Papds_WindowsLogin` UNIQUE (`WindowsLogin`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 CREATE TABLE `Managers`
@@ -82,8 +83,10 @@ CREATE TABLE `Managers`
     `Name`     VARCHAR(200)  NOT NULL,
     `Email`    VARCHAR(254)  NOT NULL,
     `Position` VARCHAR(50)   NOT NULL,
+    `WindowsLogin` VARCHAR(200) NULL,
     CONSTRAINT `PK_Managers` PRIMARY KEY (`Id`),
-    CONSTRAINT `UQ_Managers_Email` UNIQUE (`Email`)
+    CONSTRAINT `UQ_Managers_Email` UNIQUE (`Email`),
+    CONSTRAINT `UQ_Managers_WindowsLogin` UNIQUE (`WindowsLogin`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 
@@ -225,15 +228,6 @@ CREATE TABLE `Exceptions`
     CONSTRAINT `PK_Exceptions` PRIMARY KEY (`Id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
-CREATE TABLE `Settings`
-(
-    `Id`    INT           NOT NULL AUTO_INCREMENT,
-    `Key`   VARCHAR(128)  NOT NULL,
-    `Value` TEXT          NOT NULL,
-    CONSTRAINT `PK_Settings` PRIMARY KEY (`Id`),
-    CONSTRAINT `UX_Settings_Key` UNIQUE (`Key`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-
 CREATE TABLE `EngagementFiscalYearAllocations`
 (
     `Id`            INT             NOT NULL AUTO_INCREMENT,
@@ -270,7 +264,7 @@ CREATE TABLE `EngagementFiscalYearRevenueAllocations`
 CREATE TABLE IF NOT EXISTS `InvoicePlan` (
   `Id`                      INT NOT NULL AUTO_INCREMENT,
   `EngagementId`            VARCHAR(64) NOT NULL,
-  `Type`                    ENUM('ByDate','ByDelivery') NOT NULL,
+  `Type`                    VARCHAR(16) NOT NULL,
   `NumInvoices`             INT NOT NULL,
   `PaymentTermDays`         INT NOT NULL,
   `CustomerFocalPointName`  VARCHAR(120) NOT NULL,
@@ -307,7 +301,7 @@ CREATE TABLE IF NOT EXISTS `InvoiceItem` (
   `CustomerTicket`      VARCHAR(64) NULL,
   `AdditionalInfo`      TEXT NULL,
   `DeliveryDescription` VARCHAR(255) NULL,
-  `Status`              ENUM('Planned','Requested','Emitted','Closed','Canceled','Reissued') NOT NULL DEFAULT 'Planned',
+  `Status`              VARCHAR(16) NOT NULL DEFAULT 'Planned',
   `RitmNumber`          VARCHAR(64) NULL,
   `CoeResponsible`      VARCHAR(120) NULL,
   `RequestDate`         DATE NULL,
@@ -320,9 +314,11 @@ CREATE TABLE IF NOT EXISTS `InvoiceItem` (
   `UpdatedAt`           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`Id`),
   CONSTRAINT `FK_InvoiceItem_Plan` FOREIGN KEY (`PlanId`) REFERENCES `InvoicePlan`(`Id`) ON DELETE CASCADE,
+  CONSTRAINT `FK_InvoiceItem_Replacement` FOREIGN KEY (`ReplacementItemId`) REFERENCES `InvoiceItem`(`Id`) ON DELETE SET NULL,
   UNIQUE KEY `UQ_InvoiceItem_PlanSeq` (`PlanId`,`SeqNo`),
   KEY `IX_InvoiceItem_EmissionDate` (`EmissionDate`),
-  KEY `IX_InvoiceItem_Status` (`Status`)
+  KEY `IX_InvoiceItem_Status` (`Status`),
+  KEY `IX_InvoiceItem_Replacement` (`ReplacementItemId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `MailOutbox` (
@@ -338,8 +334,10 @@ CREATE TABLE IF NOT EXISTS `MailOutbox` (
   `CreatedAt`        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `SentAt`           TIMESTAMP NULL,
   PRIMARY KEY (`Id`),
+  CONSTRAINT `FK_MailOutbox_InvoiceItem` FOREIGN KEY (`InvoiceItemId`) REFERENCES `InvoiceItem`(`Id`) ON DELETE CASCADE,
   KEY `IX_MailOutbox_Notification` (`NotificationDate`),
-  KEY `IX_MailOutbox_Pending` (`NotificationDate`,`SentAt`,`SendToken`)
+  KEY `IX_MailOutbox_Pending` (`NotificationDate`,`SentAt`,`SendToken`),
+  KEY `IX_MailOutbox_InvoiceItem` (`InvoiceItemId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `MailOutboxLog` (
@@ -493,19 +491,19 @@ INSERT INTO `FiscalYears` (`Name`, `StartDate`, `EndDate`, `AreaSalesTarget`, `A
     ('FY26', '2025-07-01 00:00:00', '2026-06-30 23:59:59', 0, 0),
     ('FY27', '2026-07-01 00:00:00', '2027-06-30 23:59:59', 0, 0);
     
-INSERT INTO `Papds` (`Name`,`Level`, `Email`) VALUES
-    ('Danilo Passos','AssociatePartner', 'danilo.passos@br.ey.com'),
-    ('Fernando São Pedro','Director', 'fernando.sao-pedro@br.ey.com'),
-    ('Alexandre Jucá de Paiva','AssociatePartner', 'alexandre.paiva@br.ey.com');
+INSERT INTO `Papds` (`Name`,`Level`,`WindowsLogin`) VALUES
+    ('Danilo Passos','AssociatePartner',NULL),
+    ('Fernando São Pedro','Director',NULL),
+    ('Alexandre Jucá de Paiva','AssociatePartner',NULL);
 
-INSERT INTO `Managers` (`Name`,`Email`,`Position`) VALUES
-    ('Caio Jordão Calisto','caio.calisto@br.ey.com','SeniorManager'),
-    ('Gabriel Cortezia','gabriel.cortezia@br.ey.com','SeniorManager'),
-    ('Rafael Gimenis','rafael.gimenis@br.ey.com','SeniorManager'),
-    ('Salomão Bruno','salomao.bruno@br.ey.com','SeniorManager'),
-    ('Mariana Galegale','mariana.galegale@br.ey.com','Manager'),
-    ('Thomas Lima','thomas.lima@br.ey.com','Manager'),
-    ('Vinicius Almeida','vinicius.almeida@br.ey.com','SeniorManager');
+INSERT INTO `Managers` (`Name`,`Email`,`Position`,`WindowsLogin`) VALUES
+    ('Caio Jordão Calisto','caio.calisto@br.ey.com','SeniorManager',NULL),
+    ('Gabriel Cortezia','gabriel.cortezia@br.ey.com','SeniorManager',NULL),
+    ('Rafael Gimenis','rafael.gimenis@br.ey.com','SeniorManager',NULL),
+    ('Salomão Bruno','salomao.bruno@br.ey.com','SeniorManager',NULL),
+    ('Mariana Galegale','mariana.galegale@br.ey.com','Manager',NULL),
+    ('Thomas Lima','thomas.lima@br.ey.com','Manager',NULL),
+    ('Vinicius Almeida','vinicius.almeida@br.ey.com','SeniorManager',NULL);
 
 
 SET FOREIGN_KEY_CHECKS = 1;

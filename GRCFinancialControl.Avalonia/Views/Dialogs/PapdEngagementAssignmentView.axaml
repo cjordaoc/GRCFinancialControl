@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels.Dialogs"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              mc:Ignorable="d"
              d:DesignWidth="600"
              d:DesignHeight="450"
@@ -10,7 +11,7 @@
              x:DataType="vm:PapdEngagementAssignmentViewModel">
     <Border Padding="20" Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}">
         <StackPanel Spacing="12">
-            <TextBlock Text="PAPD Assignments" FontSize="20" FontWeight="Bold"/>
+            <TextBlock Text="{loc:Loc Key=Admin.PapdAssignments.Title.Editor}" FontSize="20" FontWeight="Bold"/>
             <TextBlock Text="{Binding Papd.Name}" FontSize="16" FontWeight="SemiBold"/>
 
             <DataGrid ItemsSource="{Binding Assignments}"
@@ -19,29 +20,29 @@
                       IsReadOnly="True"
                       Height="200">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Engagement" Binding="{Binding EngagementId}" Width="*"/>
-                    <DataGridTextColumn Header="Description" Binding="{Binding EngagementDescription}" Width="2*"/>
-                    <DataGridTextColumn Header="Effective Date" Binding="{Binding EffectiveDate, StringFormat='yyyy-MM-dd'}" Width="*"/>
+                    <DataGridTextColumn Header="{loc:Loc Key=Admin.PapdAssignments.Header.Engagement}" Binding="{Binding EngagementId}" Width="*"/>
+                    <DataGridTextColumn Header="{loc:Loc Key=Admin.PapdAssignments.Header.Description}" Binding="{Binding EngagementDescription}" Width="2*"/>
+                    <DataGridTextColumn Header="{loc:Loc Key=Admin.PapdAssignments.Header.EffectiveDate}" Binding="{Binding EffectiveDate, StringFormat='yyyy-MM-dd'}" Width="*"/>
                 </DataGrid.Columns>
             </DataGrid>
 
             <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                 <StackPanel Width="240">
-                    <TextBlock Text="Engagement"/>
+                    <TextBlock Text="{loc:Loc Key=Admin.PapdAssignments.Label.Engagement}"/>
                     <ComboBox ItemsSource="{Binding Engagements}" SelectedItem="{Binding SelectedEngagement}" Width="240" IsEnabled="{Binding AllowEditing}"/>
                 </StackPanel>
                 <StackPanel Width="180">
-                    <TextBlock Text="Effective Date"/>
+                    <TextBlock Text="{loc:Loc Key=Admin.PapdAssignments.Label.EffectiveDate}"/>
                     <DatePicker SelectedDate="{Binding EffectiveDateOffset}" IsEnabled="{Binding AllowEditing}"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom">
-                    <Button Content="Assign" Command="{Binding AssignCommand}" Classes="accent" IsEnabled="{Binding AllowEditing}"/>
-                    <Button Content="Remove" Command="{Binding RemoveAssignmentCommand}" IsEnabled="{Binding AllowEditing}"/>
+                    <Button Content="{loc:Loc Key=Admin.PapdAssignments.Button.Assign}" Command="{Binding AssignCommand}" Classes="accent" IsEnabled="{Binding AllowEditing}"/>
+                    <Button Content="{loc:Loc Key=Admin.PapdAssignments.Button.Remove}" Command="{Binding RemoveAssignmentCommand}" IsEnabled="{Binding AllowEditing}"/>
                 </StackPanel>
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-                <Button Content="Close" Command="{Binding CloseCommand}"/>
+                <Button Content="{loc:Loc Key=Common.Button.Close}" Command="{Binding CloseCommand}"/>
             </StackPanel>
         </StackPanel>
     </Border>

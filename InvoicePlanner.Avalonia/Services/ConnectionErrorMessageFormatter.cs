@@ -1,5 +1,5 @@
 using System;
-using InvoicePlanner.Avalonia.Resources;
+using App.Presentation.Localization;
 
 namespace InvoicePlanner.Avalonia.Services;
 
@@ -12,7 +12,7 @@ public static class ConnectionErrorMessageFormatter
         if (exception is InvalidOperationException invalidOperation &&
             invalidOperation.Message.Contains(MissingProviderFragment, StringComparison.OrdinalIgnoreCase))
         {
-            return Strings.Get("CommonConnectionMissing");
+            return LocalizationRegistry.Get("Connection.Message.MissingSettings");
         }
 
         if (exception.InnerException is not null)

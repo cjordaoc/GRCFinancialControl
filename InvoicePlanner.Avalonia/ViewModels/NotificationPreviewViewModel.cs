@@ -1,9 +1,9 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using InvoicePlanner.Avalonia.Resources;
 using Invoices.Data.Repositories;
 using Microsoft.Extensions.Logging;
 
@@ -13,14 +13,19 @@ public partial class NotificationPreviewViewModel : ViewModelBase
 {
     private readonly IInvoicePlanRepository _repository;
     private readonly ILogger<NotificationPreviewViewModel> _logger;
+    private readonly IInvoiceAccessScope _accessScope;
     private bool _isInitialised;
 
     public NotificationPreviewViewModel(
         IInvoicePlanRepository repository,
-        ILogger<NotificationPreviewViewModel> logger)
+        ILogger<NotificationPreviewViewModel> logger,
+        IInvoiceAccessScope accessScope)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _accessScope = accessScope ?? throw new ArgumentNullException(nameof(accessScope));
+
+        _accessScope.EnsureInitialized();
 
         Items = new ObservableCollection<NotificationPreviewItemViewModel>();
         Items.CollectionChanged += OnItemsCollectionChanged;
@@ -85,6 +90,14 @@ public partial class NotificationPreviewViewModel : ViewModelBase
 
         ResetMessages();
 
+        if (_accessScope.IsInitialized && !_accessScope.HasAssignments && string.IsNullOrWhiteSpace(_accessScope.InitializationError))
+        {
+            Items.Clear();
+            StatusMessage = LocalizationRegistry.Format("Access.Message.NoAssignments", GetLoginDisplay(_accessScope));
+            OnPropertyChanged(nameof(IsEmpty));
+            return;
+        }
+
         try
         {
             IsBusy = true;
@@ -97,13 +110,13 @@ public partial class NotificationPreviewViewModel : ViewModelBase
             }
 
             StatusMessage = previews.Count == 0
-                ? Strings.Format("NotificationPreviewStatusEmpty", SelectedDate)
-                : Strings.Format("NotificationPreviewStatusLoaded", previews.Count, SelectedDate);
+                ? LocalizationRegistry.Format("Notifications.Status.Empty", SelectedDate)
+                : LocalizationRegistry.Format("Notifications.Status.Loaded", previews.Count, SelectedDate);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load notification preview for {Date}", SelectedDate);
-            ValidationMessage = Strings.Format("NotificationPreviewValidationLoadFailed", ex.Message);
+            ValidationMessage = LocalizationRegistry.Format("Notifications.Status.LoadFailure", ex.Message);
         }
         finally
         {

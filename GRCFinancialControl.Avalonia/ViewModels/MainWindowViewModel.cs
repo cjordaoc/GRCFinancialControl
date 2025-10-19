@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
@@ -64,16 +65,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             NavigationItems = new ObservableCollection<NavigationItem>
             {
-                new("Import", Import),
-                new("Closing Periods", ClosingPeriods),
-                new("Engagements", Engagements),
-                new("Customers", Customers),
-                new("Fiscal Years", FiscalYears),
-                new("GRC Team", GrcTeam),
-                new("Allocations", Allocations),
-                new("Reports", Reports),
-                new("Tasks", Tasks),
-                new("Settings", Settings)
+                new(LocalizationRegistry.Get("Navigation.Import"), Import),
+                new(LocalizationRegistry.Get("Navigation.ClosingPeriods"), ClosingPeriods),
+                new(LocalizationRegistry.Get("Navigation.Engagements"), Engagements),
+                new(LocalizationRegistry.Get("Navigation.Customers"), Customers),
+                new(LocalizationRegistry.Get("Navigation.FiscalYears"), FiscalYears),
+                new(LocalizationRegistry.Get("Navigation.GrcTeam"), GrcTeam),
+                new(LocalizationRegistry.Get("Navigation.Allocations"), Allocations),
+                new(LocalizationRegistry.Get("Navigation.Reports"), Reports),
+                new(LocalizationRegistry.Get("Navigation.Tasks"), Tasks),
+                new(LocalizationRegistry.Get("Navigation.Settings"), Settings)
             };
 
             SelectedNavigationItem = NavigationItems.FirstOrDefault();
