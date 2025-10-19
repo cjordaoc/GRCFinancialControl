@@ -34,8 +34,7 @@ public class DialogService : IDialogService
 
         view.DataContext = viewModel;
 
-        var result = await _overlayHost.ShowModalAsync(view, title, canClose);
-        return result ?? false;
+        return await _overlayHost.ShowModalAsync(view, title, canClose) ?? false;
     }
 
     public Task<bool> ShowConfirmationAsync(string title, string message)
