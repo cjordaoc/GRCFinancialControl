@@ -130,7 +130,7 @@ CREATE TABLE `EngagementPapds`
     CONSTRAINT `PK_EngagementPapds` PRIMARY KEY (`Id`),
     CONSTRAINT `FK_EngagementPapds_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
     CONSTRAINT `FK_EngagementPapds_Papds` FOREIGN KEY (`PapdId`) REFERENCES `Papds` (`Id`) ON DELETE CASCADE,
-    CONSTRAINT `UX_EngagementPapds_Assignment` UNIQUE (`EngagementId`, `PapdId`, `EffectiveDate` )
+    CONSTRAINT `UX_EngagementPapds_Assignment` UNIQUE (`EngagementId`, `PapdId`, `EffectiveDate`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 CREATE TABLE `EngagementManagerAssignments`
@@ -261,7 +261,7 @@ CREATE TABLE `EngagementFiscalYearRevenueAllocations`
    (unchanged behavior; TIMESTAMP where auto-defaults are desired)
    =========================================================== */
 
-CREATE TABLE IF NOT EXISTS `InvoicePlan` (
+CREATE TABLE `InvoicePlan` (
   `Id`                      INT NOT NULL AUTO_INCREMENT,
   `EngagementId`            VARCHAR(64) NOT NULL,
   `Type`                    VARCHAR(16) NOT NULL,
@@ -277,7 +277,7 @@ CREATE TABLE IF NOT EXISTS `InvoicePlan` (
   KEY `IX_InvoicePlan_Engagement` (`EngagementId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `InvoicePlanEmail` (
+CREATE TABLE `InvoicePlanEmail` (
   `Id`        INT NOT NULL AUTO_INCREMENT,
   `PlanId`    INT NOT NULL,
   `Email`     VARCHAR(200) NOT NULL,
@@ -287,7 +287,7 @@ CREATE TABLE IF NOT EXISTS `InvoicePlanEmail` (
   CONSTRAINT `FK_InvoicePlanEmail_Plan` FOREIGN KEY (`PlanId`) REFERENCES `InvoicePlan`(`Id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `InvoiceItem` (
+CREATE TABLE `InvoiceItem` (
   `Id`                  INT NOT NULL AUTO_INCREMENT,
   `PlanId`              INT NOT NULL,
   `SeqNo`               INT NOT NULL,
@@ -321,7 +321,7 @@ CREATE TABLE IF NOT EXISTS `InvoiceItem` (
   KEY `IX_InvoiceItem_Replacement` (`ReplacementItemId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `MailOutbox` (
+CREATE TABLE `MailOutbox` (
   `Id`               INT NOT NULL AUTO_INCREMENT,
   `NotificationDate` DATE NOT NULL,
   `InvoiceItemId`    INT NOT NULL,
@@ -340,7 +340,7 @@ CREATE TABLE IF NOT EXISTS `MailOutbox` (
   KEY `IX_MailOutbox_InvoiceItem` (`InvoiceItemId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `MailOutboxLog` (
+CREATE TABLE `MailOutboxLog` (
   `Id`           INT NOT NULL AUTO_INCREMENT,
   `OutboxId`     INT NOT NULL,
   `AttemptAt`    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

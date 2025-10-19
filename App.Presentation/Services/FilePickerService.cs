@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
@@ -111,7 +110,16 @@ public class FilePickerService : IFilePickerService
     {
         if (allowedPatterns is { Length: > 0 })
         {
-            return allowedPatterns.Select(p => p.StartsWith("*", StringComparison.Ordinal) ? p : "*" + p.TrimStart('.')).ToArray();
+            var normalized = new string[allowedPatterns.Length];
+            for (var i = 0; i < allowedPatterns.Length; i++)
+            {
+                var pattern = allowedPatterns[i];
+                normalized[i] = pattern.StartsWith("*", StringComparison.Ordinal)
+                    ? pattern
+                    : "*" + pattern.TrimStart('.');
+            }
+
+            return normalized;
         }
 
         if (string.IsNullOrWhiteSpace(extension))
