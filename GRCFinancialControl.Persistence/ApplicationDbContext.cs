@@ -392,6 +392,16 @@ namespace GRCFinancialControl.Persistence
                 .HasDefaultValue(0m);
 
             modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
+                .Property(e => e.LastUpdateDate)
+                .HasColumnType("date");
+
+            modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
+                .Property(e => e.UpdatedAt)
+                .HasColumnType("datetime(6)")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP(6)")
+                .ValueGeneratedOnAddOrUpdate();
+
+            modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
                 .HasIndex(e => e.FiscalYearId);
 
             modelBuilder.Entity<FiscalYear>()

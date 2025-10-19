@@ -1,11 +1,11 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using ClosedXML.Excel;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence;
+using GRCFinancialControl.Persistence.Tests;
 using GRCFinancialControl.Persistence.Services.Importers;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -139,28 +139,4 @@ public sealed class FullManagementDataImporterTests : IAsyncLifetime
         workbook.SaveAs(workbookPath);
     }
 
-    private sealed class TestDbContextFactory : IDbContextFactory<ApplicationDbContext>, IAsyncDisposable
-    {
-        private readonly DbContextOptions<ApplicationDbContext> _options;
-
-        public TestDbContextFactory(DbContextOptions<ApplicationDbContext> options)
-        {
-            _options = options;
-        }
-
-        public ApplicationDbContext CreateDbContext()
-        {
-            return new ApplicationDbContext(_options);
-        }
-
-        public Task<ApplicationDbContext> CreateDbContextAsync(CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(CreateDbContext());
-        }
-
-        public ValueTask DisposeAsync()
-        {
-            return ValueTask.CompletedTask;
-        }
-    }
 }

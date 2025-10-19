@@ -79,24 +79,21 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             TargetAmount = GetTargetAmount(engagement);
 
             Allocations = new ObservableCollection<AllocationEntry>(
-                fiscalYears.Select(fy => new AllocationEntry
-                {
-                    FiscalYear = fy,
-                    PlannedAmount = GetExistingAllocationAmount(engagement, fy.Id),
-                    IsLocked = fy.IsLocked
-                })
+                fiscalYears.Select(fy => CreateAllocationEntry(engagement, fy))
             );
 
-            CurrentAllocation = Allocations.Sum(a => a.PlannedAmount);
+            CurrentAllocation = Allocations.Sum(a => a.TotalAmount);
             UpdateVariance();
 
             foreach (var allocation in Allocations)
             {
                 allocation.PropertyChanged += (s, e) =>
                 {
-                    if (e.PropertyName == nameof(AllocationEntry.PlannedAmount))
+                    if (e.PropertyName is nameof(AllocationEntry.PlannedAmount)
+                        or nameof(AllocationEntry.ToDateAmount)
+                        or nameof(AllocationEntry.ToGoAmount))
                     {
-                        CurrentAllocation = Allocations.Sum(a => a.PlannedAmount);
+                        CurrentAllocation = Allocations.Sum(a => a.TotalAmount);
                     }
                 };
             }
@@ -114,10 +111,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 ? "Allocations.Label.CurrentHours"
                 : "Allocations.Label.CurrentValue");
 
-        public string AmountColumnHeader => LocalizationRegistry.Get(
-            _kind == AllocationKind.Hours
-                ? "Allocations.Header.PlannedHours"
-                : "Allocations.Header.PlannedValue");
+        public string AmountColumnHeader => LocalizationRegistry.Get("Allocations.Header.PlannedHours");
+
+        public string ToDateColumnHeader => LocalizationRegistry.Get("Allocations.Header.ToDateValue");
+
+        public string ToGoColumnHeader => LocalizationRegistry.Get("Allocations.Header.ToGoValue");
 
         public string ValidationErrorMessage => LocalizationRegistry.Get(
             _kind == AllocationKind.Hours
@@ -125,6 +123,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 : "Allocations.Validation.ValueMatchTarget");
 
         public bool AllowEditing => !IsReadOnlyMode;
+
+        public bool IsRevenueMode => _kind == AllocationKind.Revenue;
+
+        public bool IsHoursMode => _kind == AllocationKind.Hours;
 
         [RelayCommand(CanExecute = nameof(CanSave))]
         private async Task SaveAsync()
@@ -158,8 +160,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     {
                         EngagementId = Engagement.Id,
                         FiscalYearId = allocation.FiscalYear.Id,
-                        ToGoValue = decimal.Round(allocation.PlannedAmount, 2),
-                        ToDateValue = 0m
+                        ToGoValue = decimal.Round(allocation.ToGoAmount, 2),
+                        ToDateValue = decimal.Round(allocation.ToDateAmount, 2)
                     });
                 }
             }
@@ -227,15 +229,29 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             return _kind == AllocationKind.Hours ? engagement.HoursToAllocate : engagement.ValueToAllocate;
         }
 
-        private decimal GetExistingAllocationAmount(Engagement engagement, int fiscalYearId)
+        private AllocationEntry CreateAllocationEntry(Engagement engagement, FiscalYear fiscalYear)
         {
             if (_kind == AllocationKind.Hours)
             {
-                return engagement.Allocations.FirstOrDefault(a => a.FiscalYearId == fiscalYearId)?.PlannedHours ?? 0m;
+                return new AllocationEntry
+                {
+                    FiscalYear = fiscalYear,
+                    PlannedAmount = engagement.Allocations.FirstOrDefault(a => a.FiscalYearId == fiscalYear.Id)?.PlannedHours ?? 0m,
+                    IsLocked = fiscalYear.IsLocked,
+                    IsRevenue = false
+                };
             }
 
-            var allocation = engagement.RevenueAllocations.FirstOrDefault(a => a.FiscalYearId == fiscalYearId);
-            return allocation is null ? 0m : allocation.ToGoValue + allocation.ToDateValue;
+            var allocation = engagement.RevenueAllocations.FirstOrDefault(a => a.FiscalYearId == fiscalYear.Id);
+
+            return new AllocationEntry
+            {
+                FiscalYear = fiscalYear,
+                IsLocked = fiscalYear.IsLocked,
+                IsRevenue = true,
+                ToDateAmount = allocation?.ToDateValue ?? 0m,
+                ToGoAmount = allocation?.ToGoValue ?? 0m
+            };
         }
 
         private string GetVarianceSuffix()
@@ -274,7 +290,31 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private decimal _plannedAmount;
 
         [ObservableProperty]
+        private decimal _toDateAmount;
+
+        [ObservableProperty]
+        private decimal _toGoAmount;
+
+        [ObservableProperty]
         private bool _isLocked;
+
+        [ObservableProperty]
+        private bool _isRevenue;
+
+        partial void OnPlannedAmountChanged(decimal value)
+        {
+            OnPropertyChanged(nameof(TotalAmount));
+        }
+
+        partial void OnToDateAmountChanged(decimal value)
+        {
+            OnPropertyChanged(nameof(TotalAmount));
+        }
+
+        partial void OnToGoAmountChanged(decimal value)
+        {
+            OnPropertyChanged(nameof(TotalAmount));
+        }
 
         partial void OnIsLockedChanged(bool value)
         {
@@ -282,5 +322,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         }
 
         public bool IsEditable => !IsLocked;
+
+        public decimal TotalAmount => IsRevenue ? ToDateAmount + ToGoAmount : PlannedAmount;
     }
 }

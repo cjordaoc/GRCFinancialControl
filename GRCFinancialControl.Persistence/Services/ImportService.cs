@@ -33,10 +33,11 @@ namespace GRCFinancialControl.Persistence.Services
 
         private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
         private readonly ILogger<ImportService> _logger;
-        private readonly IFullManagementDataImporter _fullManagementDataImporter;
         private const string FinancialEvolutionInitialPeriodId = "INITIAL";
         private const int FcsHeaderSearchLimit = 20;
         private const int FcsDataStartRowIndex = 11; // Default row 12 in Excel (1-based)
+        private const int FullManagementHeaderRowIndex = 10;
+        private const int FullManagementDataStartRowIndex = 11;
         private static readonly string[] FcsEngagementIdHeaders =
         {
             "engagement id",
@@ -55,19 +56,18 @@ namespace GRCFinancialControl.Persistence.Services
         private static readonly Regex MultiWhitespaceRegex = new Regex("\\s+", RegexOptions.Compiled);
         private static readonly Regex DigitsRegex = new Regex("\\d+", RegexOptions.Compiled);
         private static readonly Regex FiscalYearCodeRegex = new Regex(@"FY\\d{2,4}", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex EngagementIdRegex = new Regex(@"\\bE-\\d+\\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex LastUpdateDateRegex = new Regex(@"Last Update\\s*:\\s*(\\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{4})", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly CultureInfo PtBrCulture = CultureInfo.GetCultureInfo("pt-BR");
 
         public ImportService(IDbContextFactory<ApplicationDbContext> contextFactory,
-            ILogger<ImportService> logger,
-            IFullManagementDataImporter fullManagementDataImporter)
+            ILogger<ImportService> logger)
         {
             ArgumentNullException.ThrowIfNull(contextFactory);
             ArgumentNullException.ThrowIfNull(logger);
-            ArgumentNullException.ThrowIfNull(fullManagementDataImporter);
 
             _contextFactory = contextFactory;
             _logger = logger;
-            _fullManagementDataImporter = fullManagementDataImporter;
         }
 
         public async Task<string> ImportBudgetAsync(string filePath)
@@ -895,15 +895,376 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task<string> ImportFullManagementDataAsync(string filePath)
         {
-            var result = await _fullManagementDataImporter.ImportAsync(filePath);
-
-            foreach (var error in result.Errors)
+            if (string.IsNullOrWhiteSpace(filePath))
             {
-                _logger.LogWarning("Full Management Data import issue: {Message}", error);
+                throw new ArgumentException("File path must be provided.", nameof(filePath));
             }
 
-            return result.Summary;
+            if (!File.Exists(filePath))
+            {
+                throw new FileNotFoundException("Full Management Data workbook could not be found.", filePath);
+            }
+
+            var dataSet = LoadWorkbookDataSet(filePath);
+            if (dataSet.Tables.Count == 0)
+            {
+                throw new InvalidDataException("Expected sheet not found (Engagement Detail/GRC).");
+            }
+
+            var worksheet = ResolveWorksheet(dataSet, "Engagement Detail") ??
+                            ResolveWorksheet(dataSet, "GRC");
+            if (worksheet == null)
+            {
+                throw new InvalidDataException("Expected sheet not found (Engagement Detail/GRC).");
+            }
+
+            if (worksheet.Rows.Count <= FullManagementHeaderRowIndex)
+            {
+                throw new InvalidDataException("The Full Management Data worksheet is missing the required header row.");
+            }
+
+            var headerText = GetCellString(worksheet, 3, 0);
+            var header = ParseFullManagementHeader(headerText);
+
+            var engagementColumnIndex = ColumnNameToIndex("A");
+            var currentToGoColumnIndex = ColumnNameToIndex("IN");
+            var nextToGoColumnIndex = ColumnNameToIndex("IO");
+            var openingColumnIndex = ResolveOpeningColumnIndex(worksheet.Columns.Count);
+
+            EnsureColumnExists(worksheet, engagementColumnIndex, "Engagement ID (column A)");
+            EnsureColumnExists(worksheet, currentToGoColumnIndex, "FYTG Backlog (column IN)");
+            EnsureColumnExists(worksheet, nextToGoColumnIndex, "Future FY Backlog (column IO)");
+            EnsureColumnExists(worksheet, openingColumnIndex, "Original Budget (column JN)");
+
+            var parsedRows = new List<FullManagementRevenueRow>();
+            var skippedMissingEngagement = 0;
+            var skippedInvalidNumbers = 0;
+
+            for (var rowIndex = FullManagementDataStartRowIndex; rowIndex < worksheet.Rows.Count; rowIndex++)
+            {
+                var row = worksheet.Rows[rowIndex];
+                var engagementRaw = NormalizeWhitespace(Convert.ToString(row[engagementColumnIndex], CultureInfo.InvariantCulture));
+
+                if (string.IsNullOrEmpty(engagementRaw))
+                {
+                    if (IsAllocationRowEmpty(row, openingColumnIndex, currentToGoColumnIndex, nextToGoColumnIndex))
+                    {
+                        continue;
+                    }
+
+                    skippedMissingEngagement++;
+                    continue;
+                }
+
+                var engagementCode = ExtractEngagementCode(engagementRaw);
+                if (engagementCode is null)
+                {
+                    if (IsAllocationRowEmpty(row, openingColumnIndex, currentToGoColumnIndex, nextToGoColumnIndex))
+                    {
+                        continue;
+                    }
+
+                    skippedInvalidNumbers++;
+                    continue;
+                }
+
+                var openingValue = ParseMoneyOrDefault(row[openingColumnIndex], ref skippedInvalidNumbers);
+                var currentToGoValue = ParseMoneyOrDefault(row[currentToGoColumnIndex], ref skippedInvalidNumbers);
+                var nextToGoValue = ParseMoneyOrDefault(row[nextToGoColumnIndex], ref skippedInvalidNumbers);
+
+                var currentToDateValue = RoundMoney(openingValue - currentToGoValue - nextToGoValue);
+
+                parsedRows.Add(new FullManagementRevenueRow(
+                    engagementCode,
+                    RoundMoney(currentToGoValue),
+                    RoundMoney(nextToGoValue),
+                    currentToDateValue));
+            }
+
+            await using var context = await _contextFactory.CreateDbContextAsync();
+
+            var engagements = await LoadEngagementsAsync(context, parsedRows.Select(r => r.EngagementId));
+            var currentFiscalYear = await FindFiscalYearByCodeAsync(context, header.CurrentFiscalYear)
+                ?? throw new InvalidDataException($"Fiscal year '{header.CurrentFiscalYear}' referenced by the workbook could not be found in the database.");
+            var nextFiscalYear = await FindFiscalYearByCodeAsync(context, header.NextFiscalYear)
+                ?? throw new InvalidDataException($"Fiscal year '{header.NextFiscalYear}' referenced by the workbook could not be found in the database.");
+
+            var allocationLookup = await LoadExistingRevenueAllocationsAsync(
+                context,
+                engagements.Values.Select(e => e.Id),
+                currentFiscalYear.Id,
+                nextFiscalYear.Id);
+
+            var upserts = 0;
+            var skippedLockedFiscalYears = 0;
+            var isCurrentLocked = IsFiscalYearLocked(currentFiscalYear);
+            var isNextLocked = IsFiscalYearLocked(nextFiscalYear);
+
+            foreach (var row in parsedRows)
+            {
+                if (!engagements.TryGetValue(row.EngagementId, out var engagement))
+                {
+                    skippedMissingEngagement++;
+                    continue;
+                }
+
+                if (isCurrentLocked)
+                {
+                    skippedLockedFiscalYears++;
+                }
+                else
+                {
+                    await UpsertEngagementFYAllocationAsync(
+                        context,
+                        allocationLookup,
+                        engagement.Id,
+                        currentFiscalYear.Id,
+                        row.CurrentFiscalYearToDate,
+                        row.CurrentFiscalYearToGo,
+                        header.LastUpdateDate);
+                    upserts++;
+                }
+
+                if (isNextLocked)
+                {
+                    skippedLockedFiscalYears++;
+                    continue;
+                }
+
+                await UpsertEngagementFYAllocationAsync(
+                    context,
+                    allocationLookup,
+                    engagement.Id,
+                    nextFiscalYear.Id,
+                    0m,
+                    row.NextFiscalYearToGo,
+                    header.LastUpdateDate);
+                upserts++;
+            }
+
+            await context.SaveChangesAsync();
+
+            var summary = string.Join('\n', new[]
+            {
+                $"FYc={header.CurrentFiscalYear}, FYn={header.NextFiscalYear}, LastUpdateDate={header.LastUpdateDate:yyyy-MM-dd}",
+                $"Upserts={upserts}",
+                $"SkippedMissingEngagement={skippedMissingEngagement}",
+                $"SkippedLockedFY={skippedLockedFiscalYears}",
+                $"SkippedInvalidNumbers={skippedInvalidNumbers}"
+            });
+
+            return summary;
         }
+
+        private static FullManagementHeader ParseFullManagementHeader(string headerCell)
+        {
+            var normalized = NormalizeWhitespace(headerCell);
+            if (string.IsNullOrEmpty(normalized))
+            {
+                throw new InvalidDataException("Cell A4 must contain the fiscal year metadata for the Full Management Data workbook.");
+            }
+
+            var match = FiscalYearCodeRegex.Match(normalized);
+            if (!match.Success)
+            {
+                throw new InvalidDataException($"Cell A4 must specify the current fiscal year (e.g., FY26). Detected value: '{normalized}'.");
+            }
+
+            var currentFiscalYear = match.Value.ToUpperInvariant();
+            var dateMatch = LastUpdateDateRegex.Match(normalized);
+            if (!dateMatch.Success)
+            {
+                throw new InvalidDataException("Cell A4 must specify the last update date (e.g., 'Last Update : 29 Sep 2025').");
+            }
+
+            if (!DateTime.TryParseExact(dateMatch.Groups[1].Value, "dd MMM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
+            {
+                throw new InvalidDataException($"Cell A4 contains an unrecognized Last Update date: '{dateMatch.Groups[1].Value}'.");
+            }
+
+            var nextFiscalYear = IncrementFiscalYearName(currentFiscalYear);
+            var lastUpdateDate = DateTime.SpecifyKind(parsedDate.Date, DateTimeKind.Unspecified);
+
+            return new FullManagementHeader(currentFiscalYear, nextFiscalYear, lastUpdateDate);
+        }
+
+        private static int ResolveOpeningColumnIndex(int columnCount)
+        {
+            var primaryIndex = ColumnNameToIndex("JN");
+            if (primaryIndex < columnCount)
+            {
+                return primaryIndex;
+            }
+
+            var fallbackIndex = ColumnNameToIndex("JF");
+            if (fallbackIndex < columnCount)
+            {
+                return fallbackIndex;
+            }
+
+            throw new InvalidDataException("The Full Management Data worksheet is missing the Original Budget column (JN).");
+        }
+
+        private static string? ExtractEngagementCode(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return null;
+            }
+
+            var match = EngagementIdRegex.Match(value);
+            if (match.Success)
+            {
+                return match.Value.ToUpperInvariant();
+            }
+
+            var trimmed = value.Trim();
+            return trimmed.StartsWith("E-", StringComparison.OrdinalIgnoreCase)
+                ? trimmed.ToUpperInvariant()
+                : null;
+        }
+
+        private static decimal ParseMoneyOrDefault(object? value, ref int skippedInvalidNumbers)
+        {
+            if (value == null || value == DBNull.Value)
+            {
+                return 0m;
+            }
+
+            try
+            {
+                var parsed = ParseDecimal(value, 2);
+                return parsed ?? 0m;
+            }
+            catch (InvalidDataException)
+            {
+                skippedInvalidNumbers++;
+            }
+            catch (Exception)
+            {
+                skippedInvalidNumbers++;
+            }
+
+            return 0m;
+        }
+
+        private static bool IsAllocationRowEmpty(DataRow row, params int[] columnIndexes)
+        {
+            foreach (var columnIndex in columnIndexes)
+            {
+                if (columnIndex < 0 || columnIndex >= row.Table.Columns.Count)
+                {
+                    continue;
+                }
+
+                var value = row[columnIndex];
+                if (value == null || value == DBNull.Value)
+                {
+                    continue;
+                }
+
+                var text = NormalizeWhitespace(Convert.ToString(value, CultureInfo.InvariantCulture));
+                if (!string.IsNullOrEmpty(text))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static async Task<Dictionary<string, Engagement>> LoadEngagementsAsync(
+            ApplicationDbContext context,
+            IEnumerable<string> engagementCodes)
+        {
+            var codes = engagementCodes
+                .Where(code => !string.IsNullOrWhiteSpace(code))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (codes.Count == 0)
+            {
+                return new Dictionary<string, Engagement>(StringComparer.OrdinalIgnoreCase);
+            }
+
+            var engagements = await context.Engagements
+                .Where(e => codes.Contains(e.EngagementId))
+                .ToListAsync();
+
+            return engagements.ToDictionary(e => e.EngagementId, StringComparer.OrdinalIgnoreCase);
+        }
+
+        private static Task<FiscalYear?> FindFiscalYearByCodeAsync(ApplicationDbContext context, string fiscalYearCode)
+        {
+            return context.FiscalYears.FirstOrDefaultAsync(fy => fy.Name == fiscalYearCode);
+        }
+
+        private static bool IsFiscalYearLocked(FiscalYear fiscalYear) => fiscalYear?.IsLocked ?? false;
+
+        private static async Task<Dictionary<(int EngagementId, int FiscalYearId), EngagementFiscalYearRevenueAllocation>> LoadExistingRevenueAllocationsAsync(
+            ApplicationDbContext context,
+            IEnumerable<int> engagementIds,
+            int currentFiscalYearId,
+            int nextFiscalYearId)
+        {
+            var engagementIdList = engagementIds
+                .Distinct()
+                .ToList();
+
+            if (engagementIdList.Count == 0)
+            {
+                return new Dictionary<(int, int), EngagementFiscalYearRevenueAllocation>();
+            }
+
+            var fiscalYearIds = new HashSet<int> { currentFiscalYearId, nextFiscalYearId };
+
+            var allocations = await context.EngagementFiscalYearRevenueAllocations
+                .Where(a => engagementIdList.Contains(a.EngagementId) && fiscalYearIds.Contains(a.FiscalYearId))
+                .ToListAsync();
+
+            return allocations.ToDictionary(a => (a.EngagementId, a.FiscalYearId));
+        }
+
+        private static async Task UpsertEngagementFYAllocationAsync(
+            ApplicationDbContext context,
+            IDictionary<(int EngagementId, int FiscalYearId), EngagementFiscalYearRevenueAllocation> allocationLookup,
+            int engagementId,
+            int fiscalYearId,
+            decimal toDateValue,
+            decimal toGoValue,
+            DateTime lastUpdateDate)
+        {
+            var key = (engagementId, fiscalYearId);
+            if (allocationLookup.TryGetValue(key, out var allocation))
+            {
+                allocation.ToDateValue = toDateValue;
+                allocation.ToGoValue = toGoValue;
+                allocation.LastUpdateDate = lastUpdateDate;
+                allocation.UpdatedAt = DateTime.UtcNow;
+                return;
+            }
+
+            var newAllocation = new EngagementFiscalYearRevenueAllocation
+            {
+                EngagementId = engagementId,
+                FiscalYearId = fiscalYearId,
+                ToDateValue = toDateValue,
+                ToGoValue = toGoValue,
+                LastUpdateDate = lastUpdateDate,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            await context.EngagementFiscalYearRevenueAllocations.AddAsync(newAllocation);
+            allocationLookup[key] = newAllocation;
+        }
+
+        private sealed record FullManagementHeader(string CurrentFiscalYear, string NextFiscalYear, DateTime LastUpdateDate);
+
+        private sealed record FullManagementRevenueRow(
+            string EngagementId,
+            decimal CurrentFiscalYearToGo,
+            decimal NextFiscalYearToGo,
+            decimal CurrentFiscalYearToDate);
 
         private static (string FiscalYearName, DateTime? LastUpdateDate) ParseFcsMetadata(DataTable worksheet)
         {
@@ -1355,6 +1716,29 @@ namespace GRCFinancialControl.Persistence.Services
 
             parsed = default;
             return false;
+        }
+
+        private static int ColumnNameToIndex(string columnName)
+        {
+            if (string.IsNullOrWhiteSpace(columnName))
+            {
+                throw new ArgumentException("Column name must be provided.", nameof(columnName));
+            }
+
+            var normalized = columnName.Trim().ToUpperInvariant();
+            var index = 0;
+
+            foreach (var ch in normalized)
+            {
+                if (ch is < 'A' or > 'Z')
+                {
+                    throw new ArgumentException($"Invalid column name '{columnName}'.", nameof(columnName));
+                }
+
+                index = (index * 26) + (ch - 'A' + 1);
+            }
+
+            return index - 1;
         }
 
         private static string ColumnIndexToName(int columnIndex)

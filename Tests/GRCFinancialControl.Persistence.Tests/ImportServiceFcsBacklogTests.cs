@@ -2,7 +2,6 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using ClosedXML.Excel;
 using ExcelDataReader;
@@ -10,8 +9,6 @@ using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence;
 using GRCFinancialControl.Persistence.Services;
-using GRCFinancialControl.Persistence.Services.Importers;
-using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -39,7 +36,7 @@ public sealed class ImportServiceFcsBacklogTests : IAsyncLifetime
         context.Database.EnsureCreated();
 
         _factory = new TestDbContextFactory(_options);
-        _importService = new ImportService(_factory, NullLogger<ImportService>.Instance, new StubFullManagementDataImporter());
+        _importService = new ImportService(_factory, NullLogger<ImportService>.Instance);
     }
 
     public async Task InitializeAsync()
@@ -225,36 +222,4 @@ public sealed class ImportServiceFcsBacklogTests : IAsyncLifetime
         return Convert.ToString(dataSet.Tables[0].Rows[3][0], CultureInfo.InvariantCulture) ?? string.Empty;
     }
 
-    private sealed class StubFullManagementDataImporter : IFullManagementDataImporter
-    {
-        public Task<FullManagementDataImportResult> ImportAsync(string filePath)
-        {
-            return Task.FromResult(new FullManagementDataImportResult("", 0, 0, 0, 0, Array.Empty<string>(), Array.Empty<string>(), Array.Empty<string>(), Array.Empty<string>()));
-        }
-    }
-
-    private sealed class TestDbContextFactory : IDbContextFactory<ApplicationDbContext>, IAsyncDisposable
-    {
-        private readonly DbContextOptions<ApplicationDbContext> _options;
-
-        public TestDbContextFactory(DbContextOptions<ApplicationDbContext> options)
-        {
-            _options = options;
-        }
-
-        public ApplicationDbContext CreateDbContext()
-        {
-            return new ApplicationDbContext(_options);
-        }
-
-        public Task<ApplicationDbContext> CreateDbContextAsync(CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(CreateDbContext());
-        }
-
-        public ValueTask DisposeAsync()
-        {
-            return ValueTask.CompletedTask;
-        }
-    }
 }
