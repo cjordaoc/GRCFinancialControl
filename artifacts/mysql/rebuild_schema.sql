@@ -157,7 +157,7 @@ CREATE TABLE `EngagementRankBudgets`
     `EngagementId`  INT            NOT NULL,
     `RankName`      VARCHAR(100)   NOT NULL,
     `Hours`         DECIMAL(18, 2) NOT NULL DEFAULT 0,
-    `CreatedAtUtc`  DATETIME(6)    NULL,
+    `CreatedAtUtc`  DATETIME(6)    NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     `UpdatedAtUtc`  DATETIME(6)    NULL,
     CONSTRAINT `PK_EngagementRankBudgets` PRIMARY KEY (`Id`),
     CONSTRAINT `FK_EngagementRankBudgets_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
