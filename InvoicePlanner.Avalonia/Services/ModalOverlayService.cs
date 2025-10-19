@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using App.Presentation.Controls;
+using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Messaging;
 using InvoicePlanner.Avalonia.Messages;
 

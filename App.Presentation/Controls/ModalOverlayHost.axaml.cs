@@ -105,9 +105,12 @@ public partial class ModalOverlayHost : UserControl, IModalOverlayHost
         _completionSource?.TrySetResult(null);
         _completionSource = new TaskCompletionSource<bool?>();
 
-        Title = title;
-        CanClose = canClose;
-        OverlayContent = content;
+        Dispatcher.UIThread.Post(() =>
+        {
+            Title = title;
+            CanClose = canClose;
+            OverlayContent = content;
+        });
 
         return _completionSource.Task;
     }

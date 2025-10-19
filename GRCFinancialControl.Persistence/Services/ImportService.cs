@@ -839,7 +839,8 @@ namespace GRCFinancialControl.Persistence.Services
                             EngagementId = engagement.Id,
                             FiscalYearId = currentFiscalYear.Id,
                             ToGoValue = toGoCurrent,
-                            ToDateValue = toDateCurrent
+                            ToDateValue = toDateCurrent,
+                            UpdatedAt = DateTime.UtcNow
                         };
                         engagement.RevenueAllocations.Add(allocation);
                         context.EngagementFiscalYearRevenueAllocations.Add(allocation);
@@ -880,7 +881,8 @@ namespace GRCFinancialControl.Persistence.Services
                         EngagementId = engagement.Id,
                         FiscalYearId = nextFiscalYear.Id,
                         ToGoValue = toGoNext,
-                        ToDateValue = 0m
+                        ToDateValue = 0m,
+                        UpdatedAt = DateTime.UtcNow
                     };
                     engagement.RevenueAllocations.Add(nextAllocation);
                     context.EngagementFiscalYearRevenueAllocations.Add(nextAllocation);
