@@ -5,8 +5,6 @@
     <SolidColorBrush x:Key="ModalDialogBackgroundBrush" Color="#FF1E1E1E" />
     <CornerRadius x:Key="ModalDialogCornerRadius">12</CornerRadius>
     <Thickness x:Key="ModalDialogPadding">24</Thickness>
-    <BoxShadows x:Key="ModalDialogShadow">
-      0 4 24 0 #66000000
-    </BoxShadows>
+    <BoxShadows x:Key="ModalDialogShadow">0 4 24 0 #66000000</BoxShadows>
   </Styles.Resources>
 </Styles>
