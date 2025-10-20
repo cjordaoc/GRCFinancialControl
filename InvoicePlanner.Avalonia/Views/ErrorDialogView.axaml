@@ -7,29 +7,36 @@
              x:Class="InvoicePlanner.Avalonia.Views.ErrorDialogView"
              x:DataType="vm:ErrorDialogViewModel"
              mc:Ignorable="d">
-    <Border Padding="20" Classes="Card">
-        <StackPanel Spacing="16">
-            <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Classes="TitleMedium" />
-            <StackPanel Spacing="8">
-                <TextBlock Text="{Binding DetailsLabel}" FontWeight="SemiBold" />
-                <TextBox Text="{Binding Details}"
-                         AcceptsReturn="True"
-                         IsReadOnly="True"
-                         Height="180"
-                         TextWrapping="Wrap"
-                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                         ScrollViewer.VerticalScrollBarVisibility="Auto" />
+    <Border Padding="{StaticResource SpaceThickness24}" Classes="Card">
+        <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
+            <StackPanel Grid.Row="0" Spacing="{StaticResource Space16}">
+                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Classes="TitleMedium" />
+                <StackPanel Spacing="{StaticResource Space12}">
+                    <TextBlock Text="{Binding DetailsLabel}" FontWeight="SemiBold" />
+                    <TextBox Text="{Binding Details}"
+                             AcceptsReturn="True"
+                             IsReadOnly="True"
+                             Height="180"
+                             TextWrapping="Wrap"
+                             ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto" />
+                </StackPanel>
             </StackPanel>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="{StaticResource Space12}">
+            <StackPanel Grid.Row="1"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Spacing="{StaticResource Space12}">
                 <Button Content="{loc:Loc Key=Common.Button.Save}"
                         Command="{Binding SaveCommand}"
+                        IsDefault="True"
                         MinWidth="120" />
                 <Button Content="{loc:Loc Key=Common.Button.Cancel}"
                         Command="{Binding CloseCommand}"
+                        IsCancel="True"
                         MinWidth="120" />
                 <Button Content="{loc:Loc Key=Common.Button.CopyDetails}"
                         Command="{Binding CopyDetailsCommand}" />
             </StackPanel>
-        </StackPanel>
+        </Grid>
     </Border>
 </UserControl>

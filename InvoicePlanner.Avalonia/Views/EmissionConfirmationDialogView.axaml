@@ -7,13 +7,13 @@
              x:Class="InvoicePlanner.Avalonia.Views.EmissionConfirmationDialogView"
              x:DataType="vm:EmissionConfirmationDialogViewModel"
              mc:Ignorable="d">
-    <Grid RowDefinitions="*,Auto">
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
         <ScrollViewer Grid.Row="0"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Auto"
                       DataContext="{Binding Emission}">
-            <StackPanel Spacing="16">
-            <StackPanel Orientation="Horizontal" Spacing="16">
+            <StackPanel Spacing="{StaticResource Space16}">
+            <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space16}">
                 <TextBlock Text="{Binding EngagementId, StringFormat={loc:Loc Key=Emission.Status.EngagementFormat}}" />
                 <TextBlock Text="{Binding RequestedCount, StringFormat={loc:Loc Key=Emission.Status.RequestedFormat}}" />
                 <TextBlock Text="{Binding ClosedCount, StringFormat={loc:Loc Key=Emission.Status.ClosedFormat}}" />
@@ -100,7 +100,7 @@
                     <DataGridTemplateColumn Header="{loc:Loc Key=Emission.TableHeader.Actions}" Width="260">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space12}">
                                     <Button Content="{loc:Loc Key=InvoicePlan.Button.CloseInvoice}"
                                             Command="{Binding CloseCommand}" />
                                     <Button Content="{loc:Loc Key=Emission.Button.CancelAndReissue}"
@@ -111,7 +111,7 @@
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
-            <StackPanel Spacing="4">
+            <StackPanel Spacing="{StaticResource Space12}">
                 <TextBlock Text="{Binding ValidationMessage}"
                            Classes="StatusError"
                            IsVisible="{Binding HasValidationMessage}" />
@@ -121,18 +121,19 @@
             </StackPanel>
             </StackPanel>
         </ScrollViewer>
-        <Border Grid.Row="1" Margin="0,16,0,0">
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Right"
-                        Spacing="{StaticResource Space12}">
-                <Button Content="{loc:Loc Key=Common.Button.Save}"
-                        Command="{Binding SaveCommand}"
-                        IsEnabled="{Binding CanSave}"
-                        MinWidth="120" />
-                <Button Content="{loc:Loc Key=Common.Button.Cancel}"
-                        Command="{Binding CloseCommand}"
-                        MinWidth="120" />
-            </StackPanel>
-        </Border>
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="{StaticResource Space12}">
+            <Button Content="{loc:Loc Key=Common.Button.Save}"
+                    Command="{Binding SaveCommand}"
+                    IsEnabled="{Binding CanSave}"
+                    IsDefault="{Binding CanSave}"
+                    MinWidth="120" />
+            <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+                    Command="{Binding CloseCommand}"
+                    IsCancel="True"
+                    MinWidth="120" />
+        </StackPanel>
     </Grid>
 </UserControl>

@@ -4,26 +4,27 @@
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              x:Class="GRCFinancialControl.Avalonia.Views.Dialogs.ConfirmationDialogView"
              x:DataType="vm:ConfirmationDialogViewModel">
-  <Grid RowDefinitions="*,Auto" RowSpacing="16">
-    <Border Padding="{StaticResource DialogContentPadding}"
+  <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
+    <Border Padding="{StaticResource SpaceThickness24}"
             Background="{StaticResource BrushSurfaceMuted}"
             CornerRadius="{StaticResource CornerRadiusMD}">
-      <StackPanel Spacing="{StaticResource Space12}">
+      <StackPanel Spacing="{StaticResource Space16}">
         <TextBlock Text="{Binding Title}" FontSize="{StaticResource FontSizeLG}" FontWeight="Bold"/>
         <TextBlock Text="{Binding Message}" TextWrapping="Wrap"/>
       </StackPanel>
     </Border>
-    <Border Grid.Row="1">
-      <StackPanel Orientation="Horizontal"
-                  HorizontalAlignment="Right"
-                  Spacing="{StaticResource Space12}">
-        <Button Content="{loc:Loc Key=Common.Button.Save}"
-                Command="{Binding SaveCommand}"
-                MinWidth="120" />
-        <Button Content="{loc:Loc Key=Common.Button.Cancel}"
-                Command="{Binding CloseCommand}"
-                MinWidth="120" />
-      </StackPanel>
-    </Border>
+    <StackPanel Grid.Row="1"
+                Orientation="Horizontal"
+                HorizontalAlignment="Right"
+                Spacing="{StaticResource Space12}">
+      <Button Content="{loc:Loc Key=Common.Button.Save}"
+              Command="{Binding SaveCommand}"
+              IsDefault="True"
+              MinWidth="120" />
+      <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+              Command="{Binding CloseCommand}"
+              IsCancel="True"
+              MinWidth="120" />
+    </StackPanel>
   </Grid>
 </UserControl>

@@ -7,17 +7,17 @@
              x:Class="InvoicePlanner.Avalonia.Views.PlanEditorDialogView"
              x:DataType="vm:PlanEditorDialogViewModel"
              mc:Ignorable="d">
-    <Grid RowDefinitions="*,Auto">
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
         <ScrollViewer Grid.Row="0"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Auto"
                       DataContext="{Binding Editor}">
-            <StackPanel Spacing="16">
+            <StackPanel Spacing="{StaticResource Space16}">
             <TextBlock Classes="TitleLarge" Text="{loc:Loc Key=InvoicePlan.Title.Primary}" />
             <TextBlock Text="{loc:Loc Key=InvoicePlan.Description.Primary}" />
             <Grid Margin="0,12,0,0"
-                  ColumnSpacing="24"
-                  RowSpacing="12"
+                  ColumnSpacing="{StaticResource Space24}"
+                  RowSpacing="{StaticResource Space12}"
                   ColumnDefinitions="Auto,*,Auto,Auto">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -35,7 +35,7 @@
                            VerticalAlignment="Center" />
                 <Grid Grid.Row="0"
                       Grid.Column="1"
-                      ColumnSpacing="12"
+                      ColumnSpacing="{StaticResource Space12}"
                       ColumnDefinitions="180,*"
                       VerticalAlignment="Center">
                     <TextBox Grid.Column="0"
@@ -157,7 +157,7 @@
                          Watermark="{loc:Loc Key=InvoicePlan.Placeholder.Recipients}" />
             </Grid>
 
-            <StackPanel Spacing="4">
+            <StackPanel Spacing="{StaticResource Space12}">
                 <TextBlock Text="{Binding ValidationMessage}"
                            Classes="StatusError"
                            IsVisible="{Binding HasValidationMessage}" />
@@ -166,7 +166,7 @@
                            IsVisible="{Binding HasStatusMessage}" />
             </StackPanel>
 
-            <StackPanel Spacing="12">
+            <StackPanel Spacing="{StaticResource Space12}">
                 <TextBlock Classes="TitleMedium" Text="{loc:Loc Key=InvoicePlan.Section.InvoiceLines.Title}" />
                 <DataGrid ItemsSource="{Binding Items}"
                           AutoGenerateColumns="False"
@@ -253,7 +253,7 @@
                     </DataGrid.Columns>
                 </DataGrid>
                 <Grid Margin="0,8,0,0">
-                    <StackPanel Orientation="Horizontal" Spacing="16">
+                    <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space16}">
                         <TextBlock Text="{loc:Loc Key=InvoicePlan.Section.Totals.Label}" Classes="Caption" />
                         <TextBlock Text="{loc:Loc Key=InvoicePlan.Section.Totals.Percent}" />
                         <TextBlock Text="{Binding TotalPercentage, StringFormat={}{0:F4}%}" />
@@ -264,18 +264,19 @@
             </StackPanel>
             </StackPanel>
         </ScrollViewer>
-        <Border Grid.Row="1" Margin="0,16,0,0">
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Right"
-                        Spacing="{StaticResource Space12}">
-                <Button Content="{loc:Loc Key=Common.Button.Save}"
-                        Command="{Binding SaveCommand}"
-                        IsEnabled="{Binding CanSave}"
-                        MinWidth="120" />
-                <Button Content="{loc:Loc Key=Common.Button.Cancel}"
-                        Command="{Binding CloseCommand}"
-                        MinWidth="120" />
-            </StackPanel>
-        </Border>
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="{StaticResource Space12}">
+            <Button Content="{loc:Loc Key=Common.Button.Save}"
+                    Command="{Binding SaveCommand}"
+                    IsEnabled="{Binding CanSave}"
+                    IsDefault="{Binding CanSave}"
+                    MinWidth="120" />
+            <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+                    Command="{Binding CloseCommand}"
+                    IsCancel="True"
+                    MinWidth="120" />
+        </StackPanel>
     </Grid>
 </UserControl>

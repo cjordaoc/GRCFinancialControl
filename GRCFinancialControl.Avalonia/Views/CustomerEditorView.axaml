@@ -7,35 +7,46 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="150"
              x:Class="GRCFinancialControl.Avalonia.Views.CustomerEditorView"
              x:DataType="vm:CustomerEditorViewModel">
-    <Grid RowDefinitions="*,Auto" RowSpacing="16">
-        <Panel>
-            <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
-                    CornerRadius="8"/>
-
-            <StackPanel Spacing="10" Margin="20">
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="{StaticResource Space16}">
                 <TextBlock Text="Customer Details" FontSize="18" FontWeight="Bold"/>
-
-                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" Margin="0,10,0,0">
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name}" Margin="10,0,0,0" IsEnabled="{Binding AllowEditing}"/>
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Customer Code:" VerticalAlignment="Center" Margin="0,10,0,0"/>
-                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding CustomerCode}" Margin="10,10,0,0" IsEnabled="{Binding AllowEditing}"/>
+                <Grid ColumnDefinitions="Auto,*"
+                      RowDefinitions="Auto,Auto"
+                      RowSpacing="{StaticResource Space12}"
+                      ColumnSpacing="{StaticResource Space16}">
+                    <TextBlock Grid.Row="0"
+                               Grid.Column="0"
+                               Text="Name:"
+                               VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="0"
+                             Grid.Column="1"
+                             Text="{Binding Name}"
+                             IsEnabled="{Binding AllowEditing}"/>
+                    <TextBlock Grid.Row="1"
+                               Grid.Column="0"
+                               Text="Customer Code:"
+                               VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="1"
+                             Grid.Column="1"
+                             Text="{Binding CustomerCode}"
+                             IsEnabled="{Binding AllowEditing}"/>
                 </Grid>
-
             </StackPanel>
-        </Panel>
-        <Border Grid.Row="1" Margin="20,0,20,20">
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Right"
-                        Spacing="{StaticResource Space12}">
-                <Button Content="{loc:Loc Key=Common.Button.Save}"
-                        Command="{Binding SaveCommand}"
-                        IsEnabled="{Binding AllowEditing}"
-                        MinWidth="120" />
-                <Button Content="{loc:Loc Key=Common.Button.Cancel}"
-                        Command="{Binding CloseCommand}"
-                        MinWidth="120" />
-            </StackPanel>
-        </Border>
+        </ScrollViewer>
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="{StaticResource Space12}">
+            <Button Content="{loc:Loc Key=Common.Button.Save}"
+                    Command="{Binding SaveCommand}"
+                    IsEnabled="{Binding AllowEditing}"
+                    IsDefault="{Binding AllowEditing}"
+                    MinWidth="120" />
+            <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+                    Command="{Binding CloseCommand}"
+                    IsCancel="True"
+                    MinWidth="120" />
+        </StackPanel>
     </Grid>
 </UserControl>
