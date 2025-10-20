@@ -694,6 +694,7 @@ public partial class PlanEditorViewModel : ViewModelBase
     private void ShowPlanDialog()
     {
         _dialogViewModel ??= new PlanEditorDialogViewModel(this);
+        _dialogViewModel.CanSave = true;
         _ = _dialogService.ShowDialogAsync(_dialogViewModel, LocalizationRegistry.Get("InvoicePlan.Title.Primary"));
     }
 

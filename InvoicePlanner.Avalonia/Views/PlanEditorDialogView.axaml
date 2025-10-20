@@ -7,9 +7,12 @@
              x:Class="InvoicePlanner.Avalonia.Views.PlanEditorDialogView"
              x:DataType="vm:PlanEditorDialogViewModel"
              mc:Ignorable="d">
-    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
-                  DataContext="{Binding Editor}">
-        <StackPanel Spacing="16">
+    <Grid RowDefinitions="*,Auto">
+        <ScrollViewer Grid.Row="0"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Auto"
+                      DataContext="{Binding Editor}">
+            <StackPanel Spacing="16">
             <TextBlock Classes="TitleLarge" Text="{loc:Loc Key=InvoicePlan.Title.Primary}" />
             <TextBlock Text="{loc:Loc Key=InvoicePlan.Description.Primary}" />
             <Grid Margin="0,12,0,0"
@@ -259,6 +262,20 @@
                     </StackPanel>
                 </Grid>
             </StackPanel>
-        </StackPanel>
-    </ScrollViewer>
+            </StackPanel>
+        </ScrollViewer>
+        <Border Grid.Row="1" Margin="0,16,0,0">
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Spacing="12">
+                <Button Content="{loc:Loc Key=Common.Button.Save}"
+                        Command="{Binding Editor.SavePlanCommand}"
+                        IsEnabled="{Binding CanSave}"
+                        MinWidth="120" />
+                <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+                        Command="{Binding Editor.ClosePlanFormCommand}"
+                        MinWidth="120" />
+            </StackPanel>
+        </Border>
+    </Grid>
 </UserControl>

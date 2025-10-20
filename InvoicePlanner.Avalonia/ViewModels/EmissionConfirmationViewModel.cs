@@ -22,6 +22,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
     private readonly ILogger<EmissionConfirmationViewModel> _logger;
     private readonly IInvoiceAccessScope _accessScope;
     private readonly RelayCommand _loadPlanCommand;
+    private readonly RelayCommand _savePlanDetailsCommand;
     private readonly IDialogService _dialogService;
     private EmissionConfirmationDialogViewModel? _dialogViewModel;
 
@@ -44,6 +45,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         AvailablePlans.CollectionChanged += OnAvailablePlansChanged;
 
         _loadPlanCommand = new RelayCommand(LoadSelectedPlan, () => SelectedPlan is not null);
+        _savePlanDetailsCommand = new RelayCommand(SavePlanDetails, () => HasLines);
         ClosePlanDetailsCommand = new RelayCommand(() => Messenger.Send(new CloseDialogMessage(false)));
 
         Messenger.Register<ConnectionSettingsImportedMessage>(this, (_, _) => LoadAvailablePlans());
@@ -94,6 +96,8 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
 
     public IRelayCommand ClosePlanDetailsCommand { get; }
 
+    public IRelayCommand SavePlanDetailsCommand => _savePlanDetailsCommand;
+
     partial void OnValidationMessageChanged(string? value) => OnPropertyChanged(nameof(HasValidationMessage));
 
     partial void OnStatusMessageChanged(string? value) => OnPropertyChanged(nameof(HasStatusMessage));
@@ -123,6 +127,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
 
         OnPropertyChanged(nameof(HasLines));
         RefreshSummaries();
+        UpdateDialogSaveState();
     }
 
     private void OnAvailablePlansChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -135,6 +140,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         if (SelectedPlan is null)
         {
             ValidationMessage = LocalizationRegistry.Get("Emission.Validation.PlanSelection");
+            UpdateDialogSaveState();
             return;
         }
 
@@ -155,6 +161,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
                 EngagementId = string.Empty;
                 CurrentPlanId = 0;
                 ValidationMessage = LocalizationRegistry.Format("Emission.Validation.PlanNotFound", planId);
+                UpdateDialogSaveState();
                 return;
             }
 
@@ -203,13 +210,19 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
 
             if (Lines.Count > 0)
             {
+                UpdateDialogSaveState();
                 ShowPlanDetailsDialog();
+            }
+            else
+            {
+                UpdateDialogSaveState();
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load invoice plan {PlanId} for emission confirmation.", planId);
             ValidationMessage = LocalizationRegistry.Format("Emission.Status.LoadFailureDetail", ex.Message);
+            UpdateDialogSaveState();
         }
     }
 
@@ -347,6 +360,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         Lines.Clear();
         RefreshSummaries();
         OnPropertyChanged(nameof(HasLines));
+        UpdateDialogSaveState();
     }
 
     private void LoadAvailablePlans()
@@ -398,6 +412,22 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
     private void ShowPlanDetailsDialog()
     {
         _dialogViewModel ??= new EmissionConfirmationDialogViewModel(this);
+        _dialogViewModel.CanSave = HasLines;
         _ = _dialogService.ShowDialogAsync(_dialogViewModel, LocalizationRegistry.Get("Emission.Title.Primary"));
+    }
+
+    private void SavePlanDetails()
+    {
+        Messenger.Send(new CloseDialogMessage(true));
+    }
+
+    private void UpdateDialogSaveState()
+    {
+        _savePlanDetailsCommand.NotifyCanExecuteChanged();
+
+        if (_dialogViewModel is not null)
+        {
+            _dialogViewModel.CanSave = HasLines;
+        }
     }
 }

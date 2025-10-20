@@ -1,8 +1,9 @@
 using System;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
-public sealed class PlanEditorDialogViewModel : ViewModelBase
+public sealed partial class PlanEditorDialogViewModel : ViewModelBase
 {
     public PlanEditorDialogViewModel(PlanEditorViewModel editor)
     {
@@ -10,4 +11,7 @@ public sealed class PlanEditorDialogViewModel : ViewModelBase
     }
 
     public PlanEditorViewModel Editor { get; }
+
+    [ObservableProperty]
+    private bool canSave;
 }

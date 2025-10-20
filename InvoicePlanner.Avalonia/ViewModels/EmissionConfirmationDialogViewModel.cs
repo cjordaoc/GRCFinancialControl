@@ -1,8 +1,9 @@
 using System;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
-public sealed class EmissionConfirmationDialogViewModel : ViewModelBase
+public sealed partial class EmissionConfirmationDialogViewModel : ViewModelBase
 {
     public EmissionConfirmationDialogViewModel(EmissionConfirmationViewModel emission)
     {
@@ -10,4 +11,7 @@ public sealed class EmissionConfirmationDialogViewModel : ViewModelBase
     }
 
     public EmissionConfirmationViewModel Emission { get; }
+
+    [ObservableProperty]
+    private bool canSave;
 }
