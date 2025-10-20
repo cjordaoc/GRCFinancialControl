@@ -7,29 +7,60 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
              x:Class="GRCFinancialControl.Avalonia.Views.PapdEditorView"
              x:DataType="vm:PapdEditorViewModel">
-    <Grid RowDefinitions="*,Auto" Margin="10" RowSpacing="16">
-        <StackPanel Spacing="10">
-            <TextBlock Text="{loc:Loc Key=Admin.Papds.Title.Editor}" FontSize="18" FontWeight="Bold"/>
-            <TextBox Text="{Binding Name}" Watermark="{loc:Loc Key=Admin.Papds.Placeholder.Name}" Width="280" IsEnabled="{Binding AllowEditing}"/>
-            <ComboBox ItemsSource="{Binding LevelOptions}"
-                      SelectedItem="{Binding Level}"
-                      PlaceholderText="{loc:Loc Key=Admin.Papds.Placeholder.Level}"
-                      Width="280"
-                      IsEnabled="{Binding AllowEditing}"/>
-            <TextBox Text="{Binding WindowsLogin}" Watermark="{loc:Loc Key=Admin.Papds.Placeholder.WindowsLogin}" Width="280" IsEnabled="{Binding AllowEditing}"/>
-        </StackPanel>
-        <Border Grid.Row="1">
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Right"
-                        Spacing="{StaticResource Space12}">
-                <Button Content="{loc:Loc Key=Common.Button.Save}"
-                        Command="{Binding SaveCommand}"
-                        IsEnabled="{Binding AllowEditing}"
-                        MinWidth="120" />
-                <Button Content="{loc:Loc Key=Common.Button.Cancel}"
-                        Command="{Binding CloseCommand}"
-                        MinWidth="120" />
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="{StaticResource Space16}">
+                <TextBlock Text="{loc:Loc Key=Admin.Papds.Title.Editor}" FontSize="18" FontWeight="Bold"/>
+                <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="{StaticResource Space12}" ColumnSpacing="{StaticResource Space16}">
+                    <TextBlock Grid.Row="0"
+                               Grid.Column="0"
+                               Text="{loc:Loc Key=Admin.Papds.Placeholder.Name}"
+                               VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="0"
+                             Grid.Column="1"
+                             Text="{Binding Name}"
+                             Watermark="{loc:Loc Key=Admin.Papds.Placeholder.Name}"
+                             Width="280"
+                             IsEnabled="{Binding AllowEditing}"/>
+
+                    <TextBlock Grid.Row="1"
+                               Grid.Column="0"
+                               Text="{loc:Loc Key=Admin.Papds.Placeholder.Level}"
+                               VerticalAlignment="Center"/>
+                    <ComboBox Grid.Row="1"
+                              Grid.Column="1"
+                              ItemsSource="{Binding LevelOptions}"
+                              SelectedItem="{Binding Level}"
+                              PlaceholderText="{loc:Loc Key=Admin.Papds.Placeholder.Level}"
+                              Width="280"
+                              IsEnabled="{Binding AllowEditing}"/>
+
+                    <TextBlock Grid.Row="2"
+                               Grid.Column="0"
+                               Text="{loc:Loc Key=Admin.Papds.Placeholder.WindowsLogin}"
+                               VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="2"
+                             Grid.Column="1"
+                             Text="{Binding WindowsLogin}"
+                             Watermark="{loc:Loc Key=Admin.Papds.Placeholder.WindowsLogin}"
+                             Width="280"
+                             IsEnabled="{Binding AllowEditing}"/>
+                </Grid>
             </StackPanel>
-        </Border>
+        </ScrollViewer>
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="{StaticResource Space12}">
+            <Button Content="{loc:Loc Key=Common.Button.Save}"
+                    Command="{Binding SaveCommand}"
+                    IsEnabled="{Binding AllowEditing}"
+                    IsDefault="{Binding AllowEditing}"
+                    MinWidth="120" />
+            <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+                    Command="{Binding CloseCommand}"
+                    IsCancel="True"
+                    MinWidth="120" />
+        </StackPanel>
     </Grid>
 </UserControl>

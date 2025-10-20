@@ -9,9 +9,9 @@ The following views were identified from `docs/modal-overlay-plan.md` as requiri
 - **ClosingPeriodEditorView**  
   - View: `GRCFinancialControl.Avalonia/Views/ClosingPeriodEditorView.axaml` (+ `.axaml.cs`)  
   - Modal trigger: `ClosingPeriodsViewModel` opens it through `IDialogService.ShowDialogAsync` for add/edit/view.
-- **ConfirmationDialogView**  
-  - View: `GRCFinancialControl.Avalonia/Views/Dialogs/ConfirmationDialogView.axaml` (+ `.axaml.cs`)  
-  - Modal trigger: `IDialogService.ShowConfirmationAsync` wraps this view inside `DialogWindow`.
+- **ConfirmationDialogView**
+  - View: `GRCFinancialControl.Avalonia/Views/Dialogs/ConfirmationDialogView.axaml` (+ `.axaml.cs`)
+  - Modal trigger: `IDialogService.ShowConfirmationAsync` wraps this view inside the shared modal window overlay.
 - **EngagementEditorView**  
   - View: `GRCFinancialControl.Avalonia/Views/EngagementEditorView.axaml` (+ `.axaml.cs`)  
   - Modal trigger: `EngagementsViewModel` calls `IDialogService.ShowDialogAsync` for add/edit/view scenarios.
@@ -48,4 +48,4 @@ The following views were identified from `docs/modal-overlay-plan.md` as requiri
   - Modal surface defined in `InvoicePlanner.Avalonia/Views/EmissionConfirmationDialogView.axaml` (+ `.axaml.cs`).  
   - Modal trigger: `EmissionConfirmationViewModel` calls `_dialogService.ShowDialogAsync` via `_dialogViewModel`.
 
-All of the above rely on the shared modal plumbing introduced via `DialogService.ShowDialogAsync`, which currently uses `DialogWindow`/overlay logic. These are the targets for the redesign in subsequent stages.
+All of the above rely on the shared modal plumbing introduced via `DialogService.ShowDialogAsync`, which now builds a themed modal window overlay at runtime. These are the targets for the redesign in subsequent stages.

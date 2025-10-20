@@ -11,28 +11,75 @@
     <UserControl.Resources>
         <converters:NumericConverter x:Key="NumericConverter"/>
     </UserControl.Resources>
-    <Grid RowDefinitions="*,Auto" Margin="10" RowSpacing="16">
-        <StackPanel Spacing="10">
-            <TextBlock Text="{loc:Loc Key=Admin.FiscalYears.Title.Editor}" FontSize="18" FontWeight="Bold"/>
-            <TextBox Text="{Binding Name}" Watermark="{loc:Loc Key=Admin.FiscalYears.Placeholder.Name}" IsEnabled="{Binding AllowEditing}"/>
-            <DatePicker SelectedDate="{Binding StartDateOffset}" IsEnabled="{Binding AllowEditing}"/>
-            <DatePicker SelectedDate="{Binding EndDateOffset}" IsEnabled="{Binding AllowEditing}"/>
-            <TextBlock Text="{Binding StatusMessage}" Foreground="Red"/>
-            <TextBox Text="{Binding AreaSalesTarget, Converter={StaticResource NumericConverter}}" Watermark="{loc:Loc Key=Admin.FiscalYears.Placeholder.AreaSalesTarget}" IsEnabled="{Binding AllowEditing}"/>
-            <TextBox Text="{Binding AreaRevenueTarget, Converter={StaticResource NumericConverter}}" Watermark="{loc:Loc Key=Admin.FiscalYears.Placeholder.AreaRevenueTarget}" IsEnabled="{Binding AllowEditing}"/>
-        </StackPanel>
-        <Border Grid.Row="1">
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Right"
-                        Spacing="{StaticResource Space12}">
-                <Button Content="{loc:Loc Key=Common.Button.Save}"
-                        Command="{Binding SaveCommand}"
-                        IsEnabled="{Binding AllowEditing}"
-                        MinWidth="120" />
-                <Button Content="{loc:Loc Key=Common.Button.Cancel}"
-                        Command="{Binding CloseCommand}"
-                        MinWidth="120" />
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="{StaticResource Space16}">
+                <TextBlock Text="{loc:Loc Key=Admin.FiscalYears.Title.Editor}" FontSize="18" FontWeight="Bold"/>
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="{StaticResource Space12}" ColumnSpacing="{StaticResource Space16}">
+                    <TextBlock Grid.Row="0"
+                               Grid.Column="0"
+                               Text="{loc:Loc Key=Admin.FiscalYears.Placeholder.Name}"
+                               VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="0"
+                             Grid.Column="1"
+                             Text="{Binding Name}"
+                             Watermark="{loc:Loc Key=Admin.FiscalYears.Placeholder.Name}"
+                             IsEnabled="{Binding AllowEditing}"/>
+
+                    <TextBlock Grid.Row="1"
+                               Grid.Column="0"
+                               Text="{loc:Loc Key=Admin.ClosingPeriods.Header.Start}"
+                               VerticalAlignment="Center"/>
+                    <DatePicker Grid.Row="1"
+                                Grid.Column="1"
+                                SelectedDate="{Binding StartDateOffset}"
+                                IsEnabled="{Binding AllowEditing}"/>
+
+                    <TextBlock Grid.Row="2"
+                               Grid.Column="0"
+                               Text="{loc:Loc Key=Admin.ClosingPeriods.Header.End}"
+                               VerticalAlignment="Center"/>
+                    <DatePicker Grid.Row="2"
+                                Grid.Column="1"
+                                SelectedDate="{Binding EndDateOffset}"
+                                IsEnabled="{Binding AllowEditing}"/>
+
+                    <TextBlock Grid.Row="3"
+                               Grid.Column="0"
+                               Text="{loc:Loc Key=Admin.FiscalYears.Placeholder.AreaSalesTarget}"
+                               VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="3"
+                             Grid.Column="1"
+                             Text="{Binding AreaSalesTarget, Converter={StaticResource NumericConverter}}"
+                             Watermark="{loc:Loc Key=Admin.FiscalYears.Placeholder.AreaSalesTarget}"
+                             IsEnabled="{Binding AllowEditing}"/>
+
+                    <TextBlock Grid.Row="4"
+                               Grid.Column="0"
+                               Text="{loc:Loc Key=Admin.FiscalYears.Placeholder.AreaRevenueTarget}"
+                               VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="4"
+                             Grid.Column="1"
+                             Text="{Binding AreaRevenueTarget, Converter={StaticResource NumericConverter}}"
+                             Watermark="{loc:Loc Key=Admin.FiscalYears.Placeholder.AreaRevenueTarget}"
+                             IsEnabled="{Binding AllowEditing}"/>
+                </Grid>
+                <TextBlock Text="{Binding StatusMessage}" Foreground="Red"/>
             </StackPanel>
-        </Border>
+        </ScrollViewer>
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="{StaticResource Space12}">
+            <Button Content="{loc:Loc Key=Common.Button.Save}"
+                    Command="{Binding SaveCommand}"
+                    IsEnabled="{Binding AllowEditing}"
+                    IsDefault="{Binding AllowEditing}"
+                    MinWidth="120" />
+            <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+                    Command="{Binding CloseCommand}"
+                    IsCancel="True"
+                    MinWidth="120" />
+        </StackPanel>
     </Grid>
 </UserControl>

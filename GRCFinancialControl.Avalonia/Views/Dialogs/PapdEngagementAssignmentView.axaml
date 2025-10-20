@@ -9,9 +9,11 @@
              d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.Dialogs.PapdEngagementAssignmentView"
              x:DataType="vm:PapdEngagementAssignmentViewModel">
-    <Grid RowDefinitions="*,Auto" RowSpacing="16">
-        <Border Padding="20" Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}" Grid.Row="0">
-            <StackPanel Spacing="12">
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
+        <Border Padding="{StaticResource SpaceThickness24}"
+                Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+                Grid.Row="0">
+            <StackPanel Spacing="{StaticResource Space16}">
             <TextBlock Text="{loc:Loc Key=Admin.PapdAssignments.Title.Editor}" FontSize="20" FontWeight="Bold"/>
             <TextBlock Text="{Binding Papd.Name}" FontSize="16" FontWeight="SemiBold"/>
 
@@ -27,7 +29,7 @@
                 </DataGrid.Columns>
             </DataGrid>
 
-            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space16}" VerticalAlignment="Center">
                 <StackPanel Width="240">
                     <TextBlock Text="{loc:Loc Key=Admin.PapdAssignments.Label.Engagement}"/>
                     <ComboBox ItemsSource="{Binding Engagements}" SelectedItem="{Binding SelectedEngagement}" Width="240" IsEnabled="{Binding AllowEditing}"/>
@@ -37,7 +39,7 @@
                     <DatePicker SelectedDate="{Binding EffectiveDateOffset}" IsEnabled="{Binding AllowEditing}"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal"
-                            Spacing="8"
+                            Spacing="{StaticResource Space12}"
                             VerticalAlignment="Bottom"
                             IsVisible="{Binding AllowEditing}">
                     <Button Content="{loc:Loc Key=Admin.PapdAssignments.Button.Assign}"
@@ -52,18 +54,19 @@
 
             </StackPanel>
         </Border>
-        <Border Grid.Row="1" Margin="20,0,20,20">
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Right"
-                        Spacing="{StaticResource Space12}">
-                <Button Content="{loc:Loc Key=Common.Button.Save}"
-                        Command="{Binding SaveCommand}"
-                        IsEnabled="{Binding AllowEditing}"
-                        MinWidth="120" />
-                <Button Content="{loc:Loc Key=Common.Button.Cancel}"
-                        Command="{Binding CloseCommand}"
-                        MinWidth="120" />
-            </StackPanel>
-        </Border>
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="{StaticResource Space12}">
+            <Button Content="{loc:Loc Key=Common.Button.Save}"
+                    Command="{Binding SaveCommand}"
+                    IsEnabled="{Binding AllowEditing}"
+                    IsDefault="{Binding AllowEditing}"
+                    MinWidth="120" />
+            <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+                    Command="{Binding CloseCommand}"
+                    IsCancel="True"
+                    MinWidth="120" />
+        </StackPanel>
     </Grid>
 </UserControl>

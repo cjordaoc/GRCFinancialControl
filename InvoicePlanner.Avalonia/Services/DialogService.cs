@@ -1,10 +1,14 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.Messaging;
 using InvoicePlanner.Avalonia.Messages;
 using InvoicePlanner.Avalonia.Services.Interfaces;
@@ -47,8 +51,8 @@ namespace InvoicePlanner.Avalonia.Services
             }
 
             var owner = desktop.MainWindow;
-            var overlayBrush = GetResource("ModalOverlayBrush", new SolidColorBrush(Color.FromArgb(0xAA, 0x00, 0x00, 0x00)));
-            var surfaceBrush = GetResource("ModalDialogBackgroundBrush", new SolidColorBrush(Color.FromArgb(0xFF, 0x1E, 0x1E, 0x1E)));
+            var overlayBrush = GetResource("ModalOverlayBrush", new SolidColorBrush(Color.FromArgb(0x8C, 0x00, 0x00, 0x00)));
+            var surfaceBrush = GetResource("ModalDialogBackgroundBrush", GetResource("BrushSurfaceVariant", new SolidColorBrush(Color.FromArgb(0xFF, 0x2E, 0x2E, 0x2E))));
             var borderBrush = GetResource("BrushBorder", new SolidColorBrush(Color.FromArgb(0xFF, 0x4C, 0x4C, 0x4C)));
             var contentPadding = GetResource("ModalDialogPadding", new Thickness(24));
             var cornerRadius = GetResource("ModalDialogCornerRadius", new CornerRadius(12));
@@ -70,15 +74,19 @@ namespace InvoicePlanner.Avalonia.Services
                 Padding = contentPadding,
                 Margin = containerMargin,
                 BoxShadow = boxShadow,
+                MinWidth = 360,
+                MinHeight = 320,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
                 Child = view
             };
 
+            KeyboardNavigation.SetTabNavigation(container, KeyboardNavigationMode.Cycle);
+
             void UpdateSizing(Size size)
             {
-                container.MaxWidth = size.Width > 0 ? size.Width * 0.85 : double.PositiveInfinity;
-                container.MaxHeight = size.Height > 0 ? size.Height * 0.85 : double.PositiveInfinity;
+                container.MaxWidth = size.Width > 0 ? size.Width * 0.55 : double.PositiveInfinity;
+                container.MaxHeight = size.Height > 0 ? size.Height * 0.55 : double.PositiveInfinity;
             }
 
             UpdateSizing(owner.ClientSize);
@@ -105,14 +113,92 @@ namespace InvoicePlanner.Avalonia.Services
             UpdateSizing(owner.ClientSize);
             var sizeSubscription = owner.GetObservable(Window.ClientSizeProperty).Subscribe(UpdateSizing);
 
+            bool IsEligibleForFocus(Control control) =>
+                control.Focusable && control.IsEffectivelyEnabled && control.IsEffectivelyVisible && control is not ScrollViewer;
+
+            System.Collections.Generic.List<Control> GetFocusableControls()
+            {
+                return container
+                    .GetVisualDescendants()
+                    .OfType<Control>()
+                    .Prepend(container)
+                    .Where(IsEligibleForFocus)
+                    .Distinct()
+                    .ToList();
+            }
+
+            void FocusFirstElement()
+            {
+                var focusable = GetFocusableControls().FirstOrDefault();
+
+                if (focusable is null)
+                {
+                    focusable = container.GetVisualDescendants()
+                        .OfType<Button>()
+                        .FirstOrDefault(button => button.IsCancel);
+                }
+
+                focusable?.Focus();
+            }
+
+            void HandleKeyDown(object? sender, KeyEventArgs e)
+            {
+                if (e.Key != Key.Tab)
+                {
+                    return;
+                }
+
+                var focusables = GetFocusableControls();
+
+                if (focusables.Count == 0)
+                {
+                    return;
+                }
+
+                var current = TopLevel.GetTopLevel(_currentDialog)?.FocusManager?.GetFocusedElement() as Control;
+                var currentIndex = current is not null ? focusables.IndexOf(current) : -1;
+
+                if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+                {
+                    if (currentIndex <= 0)
+                    {
+                        focusables[^1].Focus();
+                        e.Handled = true;
+                    }
+
+                    return;
+                }
+
+                if (currentIndex == -1 || currentIndex >= focusables.Count - 1)
+                {
+                    focusables[0].Focus();
+                    e.Handled = true;
+                }
+            }
+
+            _currentDialog.Opened += (_, _) =>
+            {
+                Dispatcher.UIThread.Post(FocusFirstElement, DispatcherPriority.Background);
+                _currentDialog.KeyDown += HandleKeyDown;
+            };
+
+            var previousFocus = owner.FocusManager?.GetFocusedElement();
+
             try
             {
+                owner.IsEnabled = false;
                 var result = await _currentDialog.ShowDialog<bool?>(owner);
                 return result ?? false;
             }
             finally
             {
+                owner.IsEnabled = true;
                 sizeSubscription?.Dispose();
+                if (_currentDialog is not null)
+                {
+                    _currentDialog.KeyDown -= HandleKeyDown;
+                }
+                Dispatcher.UIThread.Post(() => previousFocus?.Focus(), DispatcherPriority.Background);
                 _currentDialog = null;
             }
         }

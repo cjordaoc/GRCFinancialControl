@@ -17,75 +17,86 @@
                                       TrueBrush="{StaticResource BrushWarning}"
                                       FalseBrush="{StaticResource BrushSuccessDark}"/>
     </UserControl.Resources>
-    <Grid RowDefinitions="*,Auto" Margin="{StaticResource SpaceThickness10}" RowSpacing="16">
-        <StackPanel Spacing="{StaticResource Space10}">
-        <TextBlock Text="{Binding Engagement.Description}" FontSize="{StaticResource FontSizeXL}" FontWeight="Bold"/>
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="{StaticResource Space16}">
+                <TextBlock Text="{Binding Engagement.Description}" FontSize="{StaticResource FontSizeXL}" FontWeight="Bold"/>
 
-        <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space8}" VerticalAlignment="Center">
-            <TextBlock Text="{Binding TargetLabel}" FontWeight="SemiBold"/>
-            <TextBlock Text="{Binding TargetAmountDisplay}"/>
-            <Ellipse Width="14" Height="14" StrokeThickness="1" ToolTip.Tip="{Binding AllocationVarianceTooltip}"
-                     Fill="{Binding HasAllocationVariance, Converter={StaticResource AllocationFillBrush}}"
-                     Stroke="{Binding HasAllocationVariance, Converter={StaticResource AllocationStrokeBrush}}"/>
-            <TextBlock Text="{Binding AllocationVarianceDisplay}" Foreground="{StaticResource BrushWarning}" IsVisible="{Binding HasAllocationVariance}"/>
-        </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space12}" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding TargetLabel}" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding TargetAmountDisplay}"/>
+                    <Ellipse Width="14" Height="14" StrokeThickness="1" ToolTip.Tip="{Binding AllocationVarianceTooltip}"
+                             Fill="{Binding HasAllocationVariance, Converter={StaticResource AllocationFillBrush}}"
+                             Stroke="{Binding HasAllocationVariance, Converter={StaticResource AllocationStrokeBrush}}"/>
+                    <TextBlock Text="{Binding AllocationVarianceDisplay}"
+                               Foreground="{StaticResource BrushWarning}"
+                               IsVisible="{Binding HasAllocationVariance}"/>
+                </StackPanel>
 
-        <TextBlock>
-            <Run Text="{Binding CurrentAllocationLabel}"/>
-            <Run Text="{Binding CurrentAllocationDisplay}"/>
-        </TextBlock>
+                <TextBlock>
+                    <Run Text="{Binding CurrentAllocationLabel}"/>
+                    <Run Text="{Binding CurrentAllocationDisplay}"/>
+                </TextBlock>
 
-        <TextBlock Text="{Binding ValidationMessage}" Foreground="{StaticResource BrushWarning}" FontWeight="SemiBold" IsVisible="{Binding HasAllocationVariance}"/>
+                <TextBlock Text="{Binding ValidationMessage}"
+                           Foreground="{StaticResource BrushWarning}"
+                           FontWeight="SemiBold"
+                           IsVisible="{Binding HasAllocationVariance}"/>
 
-        <DataGrid ItemsSource="{Binding Allocations}" AutoGenerateColumns="False" CanUserSortColumns="False" IsEnabled="{Binding AllowEditing}">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Fiscal Year" Binding="{Binding FiscalYear.Name}" IsReadOnly="True"/>
-                <DataGridTemplateColumn Header="{Binding #AllocationEditorRoot.DataContext.AmountColumnHeader}"
-                                        IsVisible="{Binding #AllocationEditorRoot.DataContext.IsHoursMode}">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBox Text="{Binding PlannedAmount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}"
-                                     HorizontalContentAlignment="Right"
-                                     IsEnabled="{Binding IsEditable}"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="{Binding #AllocationEditorRoot.DataContext.ToDateColumnHeader}"
-                                        IsVisible="{Binding #AllocationEditorRoot.DataContext.IsRevenueMode}">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBox Text="{Binding ToDateAmount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}"
-                                     HorizontalContentAlignment="Right"
-                                     IsEnabled="{Binding IsEditable}"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="{Binding #AllocationEditorRoot.DataContext.ToGoColumnHeader}"
-                                        IsVisible="{Binding #AllocationEditorRoot.DataContext.IsRevenueMode}">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBox Text="{Binding ToGoAmount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}"
-                                     HorizontalContentAlignment="Right"
-                                     IsEnabled="{Binding IsEditable}"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
-        <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource BrushWarning}" Margin="0,5,0,0"/>
-        </StackPanel>
-        <Border Grid.Row="1">
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Right"
-                        Spacing="{StaticResource Space12}">
-                <Button Content="{loc:Loc Key=Common.Button.Save}"
-                        Command="{Binding SaveCommand}"
-                        IsEnabled="{Binding AllowEditing}"
-                        MinWidth="120" />
-                <Button Content="{loc:Loc Key=Common.Button.Cancel}"
-                        Command="{Binding CloseCommand}"
-                        MinWidth="120" />
+                <DataGrid ItemsSource="{Binding Allocations}"
+                          AutoGenerateColumns="False"
+                          CanUserSortColumns="False"
+                          IsEnabled="{Binding AllowEditing}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Fiscal Year" Binding="{Binding FiscalYear.Name}" IsReadOnly="True"/>
+                        <DataGridTemplateColumn Header="{Binding #AllocationEditorRoot.DataContext.AmountColumnHeader}"
+                                                IsVisible="{Binding #AllocationEditorRoot.DataContext.IsHoursMode}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding PlannedAmount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}"
+                                             HorizontalContentAlignment="Right"
+                                             IsEnabled="{Binding IsEditable}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="{Binding #AllocationEditorRoot.DataContext.ToDateColumnHeader}"
+                                                IsVisible="{Binding #AllocationEditorRoot.DataContext.IsRevenueMode}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding ToDateAmount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}"
+                                             HorizontalContentAlignment="Right"
+                                             IsEnabled="{Binding IsEditable}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="{Binding #AllocationEditorRoot.DataContext.ToGoColumnHeader}"
+                                                IsVisible="{Binding #AllocationEditorRoot.DataContext.IsRevenueMode}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding ToGoAmount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}"
+                                             HorizontalContentAlignment="Right"
+                                             IsEnabled="{Binding IsEditable}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource BrushWarning}"/>
             </StackPanel>
-        </Border>
+        </ScrollViewer>
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="{StaticResource Space12}">
+            <Button Content="{loc:Loc Key=Common.Button.Save}"
+                    Command="{Binding SaveCommand}"
+                    IsEnabled="{Binding AllowEditing}"
+                    IsDefault="{Binding AllowEditing}"
+                    MinWidth="120" />
+            <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+                    Command="{Binding CloseCommand}"
+                    IsCancel="True"
+                    MinWidth="120" />
+        </StackPanel>
     </Grid>
 </UserControl>

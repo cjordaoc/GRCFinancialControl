@@ -45,7 +45,7 @@ The tables below track every workflow that currently opens content outside of th
 2. **Stage 3** – Point all dialog flows listed above to the new host (structural cleanup, remove window shells if any remain).
 3. **Stage 4** – Audit “View/Display” commands to guarantee read-only overlay usage.
 4. **Stage 5** – Apply UX polish (header, close/save buttons, focus cycle validation, scaling checks).
-5. **Stage 6** – Remove dead window code and document overlay usage for developers.
+5. **Stage 6** – Remove dead window code and document overlay usage for developers (see `docs/modal-overlay-usage.md`).
 
 ## Developer note · Opening content in the modal overlay
 Follow these steps whenever a feature needs to present secondary content across either shell:
