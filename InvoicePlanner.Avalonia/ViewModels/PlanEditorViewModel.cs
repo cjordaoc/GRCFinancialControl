@@ -54,6 +54,10 @@ public partial class PlanEditorViewModel : ViewModelBase
         SavePlanCommand = new RelayCommand(SavePlan);
         CreatePlanCommand = new RelayCommand(CreatePlan, CanCreatePlan);
         ClosePlanFormCommand = new RelayCommand(() => Messenger.Send(new CloseDialogMessage(false)));
+        RefreshCommand = new RelayCommand(() =>
+        {
+            LoadEngagements();
+        });
 
         // Seed with default values so the editor presents a useful layout.
         PlanType = InvoicePlanType.ByDate;
@@ -173,6 +177,8 @@ public partial class PlanEditorViewModel : ViewModelBase
     }
 
     public IRelayCommand ClosePlanFormCommand { get; }
+
+    public IRelayCommand RefreshCommand { get; }
 
     public bool HasRecipientEmails => !string.IsNullOrWhiteSpace(RecipientEmails);
 

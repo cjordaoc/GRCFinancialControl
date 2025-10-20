@@ -25,7 +25,8 @@
                                       HorizontalScrollBarVisibility="Auto"
                                       IsVisible="{Binding HasAvailablePlans}"
                                       MaxHeight="220"
-                                      Margin="0,4,0,0">
+                                      Margin="0,4,0,0"
+                                      IsReadOnly="True">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Column.PlanId}" Binding="{Binding Id}" Width="80"/>
                                     <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Column.Engagement}" Binding="{Binding EngagementId}" Width="160"/>
@@ -36,9 +37,14 @@
                                     <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Column.Canceled}" Binding="{Binding CanceledItemCount}" Width="120"/>
                                 </DataGrid.Columns>
                             </DataGrid>
-                            <Button Content="{loc:Loc Key=Emission.Button.InsertBzData}"
-                                    Command="{Binding LoadPlanCommand}"
-                                    MinWidth="200"/>
+                            <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space12}">
+                                <Button Content="{loc:Loc Key=Common.Button.Refresh}"
+                                        Command="{Binding RefreshCommand}"
+                                        MinWidth="140"/>
+                                <Button Content="{loc:Loc Key=Emission.Button.InsertBzData}"
+                                        Command="{Binding LoadPlanCommand}"
+                                        MinWidth="200"/>
+                            </StackPanel>
                         </StackPanel>
                         <StackPanel Spacing="4">
                             <TextBlock Text="{Binding ValidationMessage}"

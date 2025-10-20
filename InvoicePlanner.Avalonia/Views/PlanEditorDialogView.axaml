@@ -4,21 +4,33 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:InvoicePlanner.Avalonia.ViewModels"
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
+             xmlns:conv="clr-namespace:App.Presentation.Converters;assembly=App.Presentation"
              x:Class="InvoicePlanner.Avalonia.Views.PlanEditorDialogView"
+             x:Name="PlanEditorRoot"
              x:DataType="vm:PlanEditorDialogViewModel"
              mc:Ignorable="d">
+    <UserControl.Resources>
+        <conv:PercentageOfSizeConverter x:Key="PercentageOfSizeConverter" />
+    </UserControl.Resources>
     <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
         <ScrollViewer Grid.Row="0"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Auto"
+                      HorizontalContentAlignment="Center"
+                      Padding="{StaticResource Space24}"
                       DataContext="{Binding Editor}">
-            <StackPanel Spacing="{StaticResource Space16}">
-            <TextBlock Classes="TitleLarge" Text="{loc:Loc Key=InvoicePlan.Title.Primary}" />
-            <TextBlock Text="{loc:Loc Key=InvoicePlan.Description.Primary}" />
-            <Grid Margin="0,12,0,0"
-                  ColumnSpacing="{StaticResource Space24}"
-                  RowSpacing="{StaticResource Space12}"
-                  ColumnDefinitions="Auto,*,Auto,Auto">
+            <StackPanel Spacing="{StaticResource Space24}"
+                        HorizontalAlignment="Center"
+                        MaxWidth="{Binding ElementName=PlanEditorRoot,
+                                            Path=Bounds.Width,
+                                            Converter={StaticResource PercentageOfSizeConverter},
+                                            ConverterParameter=0.8}">
+                <TextBlock Classes="TitleLarge" Text="{loc:Loc Key=InvoicePlan.Title.Primary}" />
+                <TextBlock Text="{loc:Loc Key=InvoicePlan.Description.Primary}" />
+                <Grid Margin="0,12,0,0"
+                      ColumnSpacing="{StaticResource Space24}"
+                      RowSpacing="{StaticResource Space12}"
+                      ColumnDefinitions="Auto,*,Auto,Auto">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />

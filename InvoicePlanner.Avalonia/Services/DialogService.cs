@@ -83,10 +83,24 @@ namespace InvoicePlanner.Avalonia.Services
 
             KeyboardNavigation.SetTabNavigation(container, KeyboardNavigationMode.Cycle);
 
+            void UpdateDialogGeometry()
+            {
+                if (_currentDialog is null)
+                {
+                    return;
+                }
+
+                var bounds = owner.Bounds;
+                _currentDialog.Width = bounds.Width;
+                _currentDialog.Height = bounds.Height;
+                _currentDialog.Position = owner.Position;
+            }
+
             void UpdateSizing(Size size)
             {
                 container.MaxWidth = size.Width > 0 ? size.Width * 0.55 : double.PositiveInfinity;
                 container.MaxHeight = size.Height > 0 ? size.Height * 0.55 : double.PositiveInfinity;
+                UpdateDialogGeometry();
             }
 
             UpdateSizing(owner.ClientSize);
@@ -94,6 +108,8 @@ namespace InvoicePlanner.Avalonia.Services
             var overlay = new Grid
             {
                 Background = overlayBrush,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch,
                 Children = { container }
             };
 
@@ -107,11 +123,16 @@ namespace InvoicePlanner.Avalonia.Services
                 SystemDecorations = SystemDecorations.None,
                 Background = Brushes.Transparent,
                 TransparencyLevelHint = new[] { WindowTransparencyLevel.Transparent },
-                Padding = new Thickness(0)
+                Padding = new Thickness(0),
+                SizeToContent = SizeToContent.Manual
             };
+
+            UpdateDialogGeometry();
 
             UpdateSizing(owner.ClientSize);
             var sizeSubscription = owner.GetObservable(Window.ClientSizeProperty).Subscribe(UpdateSizing);
+            void OwnerPositionChanged(object? _, PixelPointEventArgs __) => UpdateDialogGeometry();
+            owner.PositionChanged += OwnerPositionChanged;
 
             bool IsEligibleForFocus(Control control) =>
                 control.Focusable && control.IsEffectivelyEnabled && control.IsEffectivelyVisible && control is not ScrollViewer;
@@ -194,6 +215,7 @@ namespace InvoicePlanner.Avalonia.Services
             {
                 owner.IsEnabled = true;
                 sizeSubscription?.Dispose();
+                owner.PositionChanged -= OwnerPositionChanged;
                 if (_currentDialog is not null)
                 {
                     _currentDialog.KeyDown -= HandleKeyDown;

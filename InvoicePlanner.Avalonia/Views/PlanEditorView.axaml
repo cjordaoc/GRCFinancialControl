@@ -21,17 +21,22 @@
                                   HeadersVisibility="Column"
                                   GridLinesVisibility="All"
                                   HorizontalScrollBarVisibility="Auto"
-                                  MaxHeight="240">
+                                  MaxHeight="240"
+                                  IsReadOnly="True">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Header.Engagement}" Binding="{Binding EngagementId}" Width="160"/>
                                 <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Header.Plan}" Binding="{Binding Name}" Width="280"/>
                                 <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Header.Customer}" Binding="{Binding CustomerName}" Width="220"/>
                             </DataGrid.Columns>
                         </DataGrid>
-                        <Button Content="{loc:Loc Key=InvoicePlan.Selection.Button.Create}"
-                                Command="{Binding CreatePlanCommand}"
-                                HorizontalAlignment="Left"
-                                MinWidth="200" />
+                        <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space12}">
+                            <Button Content="{loc:Loc Key=Common.Button.Refresh}"
+                                    Command="{Binding RefreshCommand}"
+                                    MinWidth="140" />
+                            <Button Content="{loc:Loc Key=InvoicePlan.Selection.Button.Create}"
+                                    Command="{Binding CreatePlanCommand}"
+                                    MinWidth="200" />
+                        </StackPanel>
                     </StackPanel>
                 </Border>
             </StackPanel>

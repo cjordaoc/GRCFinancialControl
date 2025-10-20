@@ -46,6 +46,11 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         _loadPlanCommand = new RelayCommand(LoadSelectedPlan, () => SelectedPlan is not null);
         _savePlanDetailsCommand = new RelayCommand(SavePlanDetails, () => HasLines);
         ClosePlanDetailsCommand = new RelayCommand(() => Messenger.Send(new CloseDialogMessage(false)));
+        RefreshCommand = new RelayCommand(() =>
+        {
+            ResetMessages();
+            LoadAvailablePlans();
+        });
 
         Messenger.Register<ConnectionSettingsImportedMessage>(this, (_, _) => LoadAvailablePlans());
 
@@ -93,6 +98,8 @@ public partial class RequestConfirmationViewModel : ViewModelBase
     public IRelayCommand ClosePlanDetailsCommand { get; }
 
     public IRelayCommand SavePlanDetailsCommand => _savePlanDetailsCommand;
+
+    public IRelayCommand RefreshCommand { get; }
 
     partial void OnValidationMessageChanged(string? value) => OnPropertyChanged(nameof(HasValidationMessage));
 
