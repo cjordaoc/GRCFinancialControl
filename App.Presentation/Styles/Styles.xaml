@@ -81,6 +81,7 @@
   </Styles.Resources>
 
   <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
+  <StyleInclude Source="avares://App.Presentation/Styles/ModalOverlay.xaml" />
 
   <Style Selector="Border.Card">
     <Setter Property="Background" Value="{StaticResource BrushSurfaceVariant}" />

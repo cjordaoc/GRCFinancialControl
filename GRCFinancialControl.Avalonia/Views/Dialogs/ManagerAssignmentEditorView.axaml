@@ -7,41 +7,55 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="300"
              x:Class="GRCFinancialControl.Avalonia.Views.Dialogs.ManagerAssignmentEditorView"
              x:DataType="vm:ManagerAssignmentEditorViewModel">
-    <StackPanel Margin="20" Spacing="12">
-        <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="Bold"/>
+    <Grid RowDefinitions="*,Auto" Margin="20" RowSpacing="16">
+        <StackPanel Spacing="12">
+            <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="Bold"/>
 
-        <StackPanel Spacing="4">
-            <TextBlock Text="{loc:Loc Key=Admin.ManagerAssignments.Label.Engagement}"/>
-            <ComboBox ItemsSource="{Binding Engagements}"
-                      SelectedItem="{Binding SelectedEngagement}"
-                      Width="280"
-                      IsEnabled="{Binding AllowEditing}"/>
-        </StackPanel>
-
-        <StackPanel Spacing="4">
-            <TextBlock Text="{loc:Loc Key=Admin.ManagerAssignments.Label.Manager}"/>
-            <ComboBox ItemsSource="{Binding Managers}"
-                      SelectedItem="{Binding SelectedManager}"
-                      Width="280"
-                      IsEnabled="{Binding AllowEditing}">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding Name}"/>
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
-        </StackPanel>
-
-        <StackPanel Orientation="Horizontal" Spacing="12">
-            <StackPanel Width="160" Spacing="4">
-                <TextBlock Text="{loc:Loc Key=Admin.ManagerAssignments.Label.Begin}"/>
-                <DatePicker SelectedDate="{Binding BeginDateOffset}" IsEnabled="{Binding AllowEditing}"/>
+            <StackPanel Spacing="4">
+                <TextBlock Text="{loc:Loc Key=Admin.ManagerAssignments.Label.Engagement}"/>
+                <ComboBox ItemsSource="{Binding Engagements}"
+                          SelectedItem="{Binding SelectedEngagement}"
+                          Width="280"
+                          IsEnabled="{Binding AllowEditing}"/>
             </StackPanel>
-            <StackPanel Width="160" Spacing="4">
-                <TextBlock Text="{loc:Loc Key=Admin.ManagerAssignments.Label.End}"/>
-                <DatePicker SelectedDate="{Binding EndDateOffset}" IsEnabled="{Binding AllowEditing}"/>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="{loc:Loc Key=Admin.ManagerAssignments.Label.Manager}"/>
+                <ComboBox ItemsSource="{Binding Managers}"
+                          SelectedItem="{Binding SelectedManager}"
+                          Width="280"
+                          IsEnabled="{Binding AllowEditing}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <StackPanel Width="160" Spacing="4">
+                    <TextBlock Text="{loc:Loc Key=Admin.ManagerAssignments.Label.Begin}"/>
+                    <DatePicker SelectedDate="{Binding BeginDateOffset}" IsEnabled="{Binding AllowEditing}"/>
+                </StackPanel>
+                <StackPanel Width="160" Spacing="4">
+                    <TextBlock Text="{loc:Loc Key=Admin.ManagerAssignments.Label.End}"/>
+                    <DatePicker SelectedDate="{Binding EndDateOffset}" IsEnabled="{Binding AllowEditing}"/>
+                </StackPanel>
             </StackPanel>
         </StackPanel>
-
-    </StackPanel>
+        <Border Grid.Row="1">
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Spacing="{StaticResource Space12}">
+                <Button Content="{loc:Loc Key=Common.Button.Save}"
+                        Command="{Binding SaveCommand}"
+                        IsEnabled="{Binding AllowEditing}"
+                        MinWidth="120" />
+                <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+                        Command="{Binding CloseCommand}"
+                        MinWidth="120" />
+            </StackPanel>
+        </Border>
+    </Grid>
 </UserControl>

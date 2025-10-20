@@ -9,8 +9,9 @@
              d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.Dialogs.PapdEngagementAssignmentView"
              x:DataType="vm:PapdEngagementAssignmentViewModel">
-    <Border Padding="20" Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}">
-        <StackPanel Spacing="12">
+    <Grid RowDefinitions="*,Auto" RowSpacing="16">
+        <Border Padding="20" Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}" Grid.Row="0">
+            <StackPanel Spacing="12">
             <TextBlock Text="{loc:Loc Key=Admin.PapdAssignments.Title.Editor}" FontSize="20" FontWeight="Bold"/>
             <TextBlock Text="{Binding Papd.Name}" FontSize="16" FontWeight="SemiBold"/>
 
@@ -49,6 +50,20 @@
                 </StackPanel>
             </StackPanel>
 
-        </StackPanel>
-    </Border>
+            </StackPanel>
+        </Border>
+        <Border Grid.Row="1" Margin="20,0,20,20">
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Spacing="{StaticResource Space12}">
+                <Button Content="{loc:Loc Key=Common.Button.Save}"
+                        Command="{Binding SaveCommand}"
+                        IsEnabled="{Binding AllowEditing}"
+                        MinWidth="120" />
+                <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+                        Command="{Binding CloseCommand}"
+                        MinWidth="120" />
+            </StackPanel>
+        </Border>
+    </Grid>
 </UserControl>

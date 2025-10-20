@@ -17,6 +17,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
 
         public IRelayCommand ConfirmCommand { get; }
         public IRelayCommand CancelCommand { get; }
+        public IRelayCommand SaveCommand => ConfirmCommand;
+        public IRelayCommand CloseCommand => CancelCommand;
 
         public ConfirmationDialogViewModel(string title, string message, IMessenger messenger)
             : base(messenger)

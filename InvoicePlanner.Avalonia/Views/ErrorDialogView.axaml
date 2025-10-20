@@ -20,8 +20,15 @@
                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
                          ScrollViewer.VerticalScrollBarVisibility="Auto" />
             </StackPanel>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-                <Button Content="{loc:Loc Key=Common.Button.CopyDetails}" Command="{Binding CopyDetailsCommand}" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="{StaticResource Space12}">
+                <Button Content="{loc:Loc Key=Common.Button.Save}"
+                        Command="{Binding SaveCommand}"
+                        MinWidth="120" />
+                <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+                        Command="{Binding CloseCommand}"
+                        MinWidth="120" />
+                <Button Content="{loc:Loc Key=Common.Button.CopyDetails}"
+                        Command="{Binding CopyDetailsCommand}" />
             </StackPanel>
         </StackPanel>
     </Border>
