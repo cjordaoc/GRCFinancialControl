@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using App.Presentation.Messages;
 using App.Presentation.Services;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -178,6 +179,7 @@ public partial class App : Application
 
             _messenger = Services.GetRequiredService<IMessenger>();
             _messenger.Register<ConnectionSettingsImportedMessage>(this, (_, _) => RequestRestart());
+            _messenger.Register<ApplicationRestartRequestedMessage>(this, (_, _) => RequestRestart());
 
             using (var scope = Services.CreateScope())
             {
@@ -304,6 +306,7 @@ public partial class App : Application
         if (_messenger is not null)
         {
             _messenger.Unregister<ConnectionSettingsImportedMessage>(this);
+            _messenger.Unregister<ApplicationRestartRequestedMessage>(this);
             _messenger = null;
         }
 
@@ -369,7 +372,7 @@ public partial class App : Application
             catch (Exception ex)
             {
                 var logger = Services.GetRequiredService<ILogger<App>>();
-                logger.LogError(ex, "Failed to restart the application after importing connection settings.");
+                logger.LogError(ex, "Failed to restart the application.");
                 _restartRequested = false;
                 return;
             }
