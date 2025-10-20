@@ -111,6 +111,12 @@
   <data name="Common.Button.AddEmail" xml:space="preserve">
     <value>Add email</value>
   </data>
+  <data name="Common.Button.Save" xml:space="preserve">
+    <value>Guardar</value>
+  </data>
+  <data name="Common.Button.Cancel" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
   <data name="Common.Button.Remove" xml:space="preserve">
     <value>Remove</value>
   </data>

@@ -21,6 +21,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
     private readonly ILogger<RequestConfirmationViewModel> _logger;
     private readonly IInvoiceAccessScope _accessScope;
     private readonly RelayCommand _loadPlanCommand;
+    private readonly RelayCommand _savePlanDetailsCommand;
     private readonly IDialogService _dialogService;
     private RequestConfirmationDialogViewModel? _dialogViewModel;
 
@@ -43,6 +44,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         AvailablePlans.CollectionChanged += OnAvailablePlansChanged;
 
         _loadPlanCommand = new RelayCommand(LoadSelectedPlan, () => SelectedPlan is not null);
+        _savePlanDetailsCommand = new RelayCommand(SavePlanDetails, () => HasLines);
         ClosePlanDetailsCommand = new RelayCommand(() => Messenger.Send(new CloseDialogMessage(false)));
 
         Messenger.Register<ConnectionSettingsImportedMessage>(this, (_, _) => LoadAvailablePlans());
@@ -90,6 +92,8 @@ public partial class RequestConfirmationViewModel : ViewModelBase
 
     public IRelayCommand ClosePlanDetailsCommand { get; }
 
+    public IRelayCommand SavePlanDetailsCommand => _savePlanDetailsCommand;
+
     partial void OnValidationMessageChanged(string? value) => OnPropertyChanged(nameof(HasValidationMessage));
 
     partial void OnStatusMessageChanged(string? value) => OnPropertyChanged(nameof(HasStatusMessage));
@@ -119,6 +123,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
 
         OnPropertyChanged(nameof(HasLines));
         RefreshSummaries();
+        UpdateDialogSaveState();
     }
 
     private void OnAvailablePlansChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -133,6 +138,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         if (SelectedPlan is null)
         {
             ValidationMessage = LocalizationRegistry.Get("Request.Validation.PlanSelection");
+            UpdateDialogSaveState();
             return;
         }
 
@@ -145,6 +151,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
                 EngagementId = string.Empty;
                 CurrentPlanId = 0;
                 ValidationMessage = LocalizationRegistry.Format("Request.Validation.PlanNotFound", SelectedPlan.Id);
+                UpdateDialogSaveState();
                 return;
             }
 
@@ -181,13 +188,19 @@ public partial class RequestConfirmationViewModel : ViewModelBase
             StatusMessage = LocalizationRegistry.Format("Request.Status.PlanLoaded", plan.Id, Lines.Count);
             if (Lines.Count > 0)
             {
+                UpdateDialogSaveState();
                 ShowPlanDetailsDialog();
+            }
+            else
+            {
+                UpdateDialogSaveState();
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load invoice plan {PlanId}.", SelectedPlan.Id);
             ValidationMessage = LocalizationRegistry.Format("Request.Status.LoadFailureDetail", ex.Message);
+            UpdateDialogSaveState();
         }
     }
 
@@ -300,6 +313,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         Lines.Clear();
         RefreshSummaries();
         OnPropertyChanged(nameof(HasLines));
+        UpdateDialogSaveState();
     }
 
     private void LoadAvailablePlans()
@@ -340,6 +354,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
     private void ShowPlanDetailsDialog()
     {
         _dialogViewModel ??= new RequestConfirmationDialogViewModel(this);
+        _dialogViewModel.CanSave = HasLines;
         _ = _dialogService.ShowDialogAsync(_dialogViewModel, LocalizationRegistry.Get("Request.Title.Primary"));
     }
 
@@ -354,5 +369,20 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         var canceled = Lines.Count(line => line.Status == InvoiceItemStatus.Canceled);
 
         SelectedPlan.UpdateCounts(PlannedCount, RequestedCount, closed, canceled);
+    }
+
+    private void SavePlanDetails()
+    {
+        Messenger.Send(new CloseDialogMessage(true));
+    }
+
+    private void UpdateDialogSaveState()
+    {
+        _savePlanDetailsCommand.NotifyCanExecuteChanged();
+
+        if (_dialogViewModel is not null)
+        {
+            _dialogViewModel.CanSave = HasLines;
+        }
     }
 }

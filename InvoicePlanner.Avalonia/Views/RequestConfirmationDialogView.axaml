@@ -7,9 +7,12 @@
              x:Class="InvoicePlanner.Avalonia.Views.RequestConfirmationDialogView"
              x:DataType="vm:RequestConfirmationDialogViewModel"
              mc:Ignorable="d">
-    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
-                  DataContext="{Binding Request}">
-        <StackPanel Spacing="16">
+    <Grid RowDefinitions="*,Auto">
+        <ScrollViewer Grid.Row="0"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Auto"
+                      DataContext="{Binding Request}">
+            <StackPanel Spacing="16">
             <StackPanel Orientation="Horizontal" Spacing="16">
                 <TextBlock Text="{Binding EngagementId, StringFormat={loc:Loc Key=Request.Status.EngagementFormat}}" />
                 <TextBlock Text="{Binding PlannedCount, StringFormat={loc:Loc Key=Request.Status.PlannedFormat}}" />
@@ -93,6 +96,20 @@
                            Classes="StatusSuccess"
                            IsVisible="{Binding HasStatusMessage}" />
             </StackPanel>
-        </StackPanel>
-    </ScrollViewer>
+            </StackPanel>
+        </ScrollViewer>
+        <Border Grid.Row="1" Margin="0,16,0,0">
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Spacing="12">
+                <Button Content="{loc:Loc Key=Common.Button.Save}"
+                        Command="{Binding Request.SavePlanDetailsCommand}"
+                        IsEnabled="{Binding CanSave}"
+                        MinWidth="120" />
+                <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+                        Command="{Binding Request.ClosePlanDetailsCommand}"
+                        MinWidth="120" />
+            </StackPanel>
+        </Border>
+    </Grid>
 </UserControl>

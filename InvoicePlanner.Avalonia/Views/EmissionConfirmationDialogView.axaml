@@ -7,9 +7,12 @@
              x:Class="InvoicePlanner.Avalonia.Views.EmissionConfirmationDialogView"
              x:DataType="vm:EmissionConfirmationDialogViewModel"
              mc:Ignorable="d">
-    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
-                  DataContext="{Binding Emission}">
-        <StackPanel Spacing="16">
+    <Grid RowDefinitions="*,Auto">
+        <ScrollViewer Grid.Row="0"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Auto"
+                      DataContext="{Binding Emission}">
+            <StackPanel Spacing="16">
             <StackPanel Orientation="Horizontal" Spacing="16">
                 <TextBlock Text="{Binding EngagementId, StringFormat={loc:Loc Key=Emission.Status.EngagementFormat}}" />
                 <TextBlock Text="{Binding RequestedCount, StringFormat={loc:Loc Key=Emission.Status.RequestedFormat}}" />
@@ -116,6 +119,20 @@
                            Classes="StatusSuccess"
                            IsVisible="{Binding HasStatusMessage}" />
             </StackPanel>
-        </StackPanel>
-    </ScrollViewer>
+            </StackPanel>
+        </ScrollViewer>
+        <Border Grid.Row="1" Margin="0,16,0,0">
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Spacing="12">
+                <Button Content="{loc:Loc Key=Common.Button.Save}"
+                        Command="{Binding Emission.SavePlanDetailsCommand}"
+                        IsEnabled="{Binding CanSave}"
+                        MinWidth="120" />
+                <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+                        Command="{Binding Emission.ClosePlanDetailsCommand}"
+                        MinWidth="120" />
+            </StackPanel>
+        </Border>
+    </Grid>
 </UserControl>
