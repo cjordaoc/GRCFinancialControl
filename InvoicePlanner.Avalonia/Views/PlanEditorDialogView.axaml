@@ -267,13 +267,13 @@
         <Border Grid.Row="1" Margin="0,16,0,0">
             <StackPanel Orientation="Horizontal"
                         HorizontalAlignment="Right"
-                        Spacing="12">
+                        Spacing="{StaticResource Space12}">
                 <Button Content="{loc:Loc Key=Common.Button.Save}"
-                        Command="{Binding Editor.SavePlanCommand}"
+                        Command="{Binding SaveCommand}"
                         IsEnabled="{Binding CanSave}"
                         MinWidth="120" />
                 <Button Content="{loc:Loc Key=Common.Button.Cancel}"
-                        Command="{Binding Editor.ClosePlanFormCommand}"
+                        Command="{Binding CloseCommand}"
                         MinWidth="120" />
             </StackPanel>
         </Border>

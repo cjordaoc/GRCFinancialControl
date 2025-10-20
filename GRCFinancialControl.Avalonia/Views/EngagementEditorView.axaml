@@ -3,11 +3,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="550"
              x:Class="GRCFinancialControl.Avalonia.Views.EngagementEditorView"
              x:Name="EngagementEditorRoot"
              x:DataType="vm:EngagementEditorViewModel">
-    <Panel>
+    <Grid RowDefinitions="*,Auto" RowSpacing="16" Margin="0,0,0,0">
+        <Panel>
         <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
                 CornerRadius="8"/>
 
@@ -152,5 +154,19 @@
 
             </StackPanel>
         </ScrollViewer>
-    </Panel>
+        </Panel>
+        <Border Grid.Row="1" Margin="20,0,20,20">
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Spacing="{StaticResource Space12}">
+                <Button Content="{loc:Loc Key=Common.Button.Save}"
+                        Command="{Binding SaveCommand}"
+                        IsEnabled="{Binding AllowEditing}"
+                        MinWidth="120" />
+                <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+                        Command="{Binding CloseCommand}"
+                        MinWidth="120" />
+            </StackPanel>
+        </Border>
+    </Grid>
 </UserControl>

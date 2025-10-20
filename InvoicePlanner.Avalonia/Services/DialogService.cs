@@ -37,6 +37,8 @@ namespace InvoicePlanner.Avalonia.Services
                 throw new InvalidOperationException($"Could not locate a view for the view model '{viewModel.GetType().FullName}'.");
             }
 
+            view.HorizontalAlignment = HorizontalAlignment.Stretch;
+            view.VerticalAlignment = VerticalAlignment.Stretch;
             view.DataContext = viewModel;
 
             if (desktop.MainWindow is null)
@@ -45,14 +47,19 @@ namespace InvoicePlanner.Avalonia.Services
             }
 
             var owner = desktop.MainWindow;
-            var overlayBrush = GetResource("BrushOverlayStrong", new SolidColorBrush(Color.FromArgb(0xCC, 0x00, 0x00, 0x00)));
-            var surfaceBrush = GetResource("BrushSurfaceVariant", new SolidColorBrush(Color.FromArgb(0xFF, 0x3A, 0x3A, 0x3A)));
+            var overlayBrush = GetResource("ModalOverlayBrush", new SolidColorBrush(Color.FromArgb(0xAA, 0x00, 0x00, 0x00)));
+            var surfaceBrush = GetResource("ModalDialogBackgroundBrush", new SolidColorBrush(Color.FromArgb(0xFF, 0x1E, 0x1E, 0x1E)));
             var borderBrush = GetResource("BrushBorder", new SolidColorBrush(Color.FromArgb(0xFF, 0x4C, 0x4C, 0x4C)));
-            var contentPadding = GetResource("DialogContentPadding", new Thickness(16));
-            var cornerRadius = GetResource("CornerRadiusLG", new CornerRadius(12));
-
-            view.HorizontalAlignment = HorizontalAlignment.Stretch;
-            view.VerticalAlignment = VerticalAlignment.Stretch;
+            var contentPadding = GetResource("ModalDialogPadding", new Thickness(24));
+            var cornerRadius = GetResource("ModalDialogCornerRadius", new CornerRadius(12));
+            var boxShadowResource = GetResource<object>("ModalDialogShadow", "0 4 24 0 #66000000");
+            var boxShadow = boxShadowResource switch
+            {
+                string shadowString => BoxShadows.Parse(shadowString),
+                BoxShadows shadows => shadows,
+                _ => BoxShadows.Parse("0 4 24 0 #66000000")
+            };
+            var containerMargin = GetResource("SpaceThickness24", new Thickness(24));
 
             var container = new Border
             {
@@ -61,6 +68,8 @@ namespace InvoicePlanner.Avalonia.Services
                 BorderThickness = new Thickness(1),
                 CornerRadius = cornerRadius,
                 Padding = contentPadding,
+                Margin = containerMargin,
+                BoxShadow = boxShadow,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
                 Child = view
@@ -68,8 +77,8 @@ namespace InvoicePlanner.Avalonia.Services
 
             void UpdateSizing(Size size)
             {
-                container.MaxWidth = Math.Max(640, size.Width * 0.9);
-                container.MaxHeight = Math.Max(480, size.Height * 0.9);
+                container.MaxWidth = size.Width > 0 ? size.Width * 0.85 : double.PositiveInfinity;
+                container.MaxHeight = size.Height > 0 ? size.Height * 0.85 : double.PositiveInfinity;
             }
 
             UpdateSizing(owner.ClientSize);

@@ -7,15 +7,30 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="250"
              x:Class="GRCFinancialControl.Avalonia.Views.ManagerEditorView"
              x:DataType="vm:ManagerEditorViewModel">
-    <StackPanel Spacing="10" Margin="10">
-        <TextBlock Text="{loc:Loc Key=Admin.Managers.Title.Editor}" FontSize="18" FontWeight="Bold"/>
-        <TextBox Text="{Binding Name}" Watermark="{loc:Loc Key=Admin.Managers.Placeholder.Name}" Width="280" IsEnabled="{Binding AllowEditing}"/>
-        <TextBox Text="{Binding Email}" Watermark="{loc:Loc Key=Admin.Managers.Placeholder.Email}" Width="280" IsEnabled="{Binding AllowEditing}"/>
-        <TextBox Text="{Binding WindowsLogin}" Watermark="{loc:Loc Key=Admin.Managers.Placeholder.WindowsLogin}" Width="280" IsEnabled="{Binding AllowEditing}"/>
-        <ComboBox ItemsSource="{Binding PositionOptions}"
-                  SelectedItem="{Binding Position}"
-                  PlaceholderText="{loc:Loc Key=Admin.Managers.Placeholder.Position}"
-                  Width="280"
-                  IsEnabled="{Binding AllowEditing}"/>
-    </StackPanel>
+    <Grid RowDefinitions="*,Auto" Margin="10" RowSpacing="16">
+        <StackPanel Spacing="10">
+            <TextBlock Text="{loc:Loc Key=Admin.Managers.Title.Editor}" FontSize="18" FontWeight="Bold"/>
+            <TextBox Text="{Binding Name}" Watermark="{loc:Loc Key=Admin.Managers.Placeholder.Name}" Width="280" IsEnabled="{Binding AllowEditing}"/>
+            <TextBox Text="{Binding Email}" Watermark="{loc:Loc Key=Admin.Managers.Placeholder.Email}" Width="280" IsEnabled="{Binding AllowEditing}"/>
+            <TextBox Text="{Binding WindowsLogin}" Watermark="{loc:Loc Key=Admin.Managers.Placeholder.WindowsLogin}" Width="280" IsEnabled="{Binding AllowEditing}"/>
+            <ComboBox ItemsSource="{Binding PositionOptions}"
+                      SelectedItem="{Binding Position}"
+                      PlaceholderText="{loc:Loc Key=Admin.Managers.Placeholder.Position}"
+                      Width="280"
+                      IsEnabled="{Binding AllowEditing}"/>
+        </StackPanel>
+        <Border Grid.Row="1">
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Spacing="{StaticResource Space12}">
+                <Button Content="{loc:Loc Key=Common.Button.Save}"
+                        Command="{Binding SaveCommand}"
+                        IsEnabled="{Binding AllowEditing}"
+                        MinWidth="120" />
+                <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+                        Command="{Binding CloseCommand}"
+                        MinWidth="120" />
+            </StackPanel>
+        </Border>
+    </Grid>
 </UserControl>

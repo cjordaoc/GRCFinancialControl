@@ -1,5 +1,6 @@
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
@@ -11,6 +12,9 @@ public sealed partial class PlanEditorDialogViewModel : ViewModelBase
     }
 
     public PlanEditorViewModel Editor { get; }
+
+    public IRelayCommand SaveCommand => Editor.SavePlanCommand;
+    public IRelayCommand CloseCommand => Editor.ClosePlanFormCommand;
 
     [ObservableProperty]
     private bool canSave;
