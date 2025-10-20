@@ -7,30 +7,44 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="250"
              x:Class="GRCFinancialControl.Avalonia.Views.ClosingPeriodEditorView"
              x:DataType="vm:ClosingPeriodEditorViewModel">
-    <StackPanel Spacing="10" Margin="10">
-        <TextBlock Text="{loc:Loc Key=Admin.ClosingPeriods.Title.Editor}" FontSize="18" FontWeight="Bold"/>
-        <TextBox Text="{Binding Name}" Watermark="{loc:Loc Key=Admin.ClosingPeriods.Placeholder.Name}" IsEnabled="{Binding AllowEditing}"/>
-        <StackPanel>
-            <TextBlock Text="{loc:Loc Key=Admin.ClosingPeriods.Label.FiscalYear}"/>
-            <ComboBox ItemsSource="{Binding FiscalYears}"
-                      SelectedItem="{Binding SelectedFiscalYear}"
-                      IsEnabled="{Binding AllowEditing}"
-                      IsHitTestVisible="{Binding HasFiscalYears}">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <TextBlock Text="{Binding Name}"/>
-                            <TextBlock Text="{loc:Loc Key=Admin.ClosingPeriods.Label.Locked}"
-                                       Foreground="{StaticResource BrushWarning}"
-                                       IsVisible="{Binding IsLocked}"/>
-                        </StackPanel>
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
+    <Grid RowDefinitions="*,Auto" Margin="10" RowSpacing="16">
+        <StackPanel Spacing="10">
+            <TextBlock Text="{loc:Loc Key=Admin.ClosingPeriods.Title.Editor}" FontSize="18" FontWeight="Bold"/>
+            <TextBox Text="{Binding Name}" Watermark="{loc:Loc Key=Admin.ClosingPeriods.Placeholder.Name}" IsEnabled="{Binding AllowEditing}"/>
+            <StackPanel>
+                <TextBlock Text="{loc:Loc Key=Admin.ClosingPeriods.Label.FiscalYear}"/>
+                <ComboBox ItemsSource="{Binding FiscalYears}"
+                          SelectedItem="{Binding SelectedFiscalYear}"
+                          IsEnabled="{Binding AllowEditing}"
+                          IsHitTestVisible="{Binding HasFiscalYears}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="{Binding Name}"/>
+                                <TextBlock Text="{loc:Loc Key=Admin.ClosingPeriods.Label.Locked}"
+                                           Foreground="{StaticResource BrushWarning}"
+                                           IsVisible="{Binding IsLocked}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <DatePicker SelectedDate="{Binding PeriodStartOffset}" IsEnabled="{Binding AllowEditing}"/>
+            <DatePicker SelectedDate="{Binding PeriodEndOffset}" IsEnabled="{Binding AllowEditing}"/>
+            <TextBlock Text="{Binding StatusMessage}" Foreground="Red"/>
         </StackPanel>
-        <DatePicker SelectedDate="{Binding PeriodStartOffset}" IsEnabled="{Binding AllowEditing}"/>
-        <DatePicker SelectedDate="{Binding PeriodEndOffset}" IsEnabled="{Binding AllowEditing}"/>
-        <TextBlock Text="{Binding StatusMessage}" Foreground="Red"/>
-    </StackPanel>
+        <Border Grid.Row="1">
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Spacing="{StaticResource Space12}">
+                <Button Content="{loc:Loc Key=Common.Button.Save}"
+                        Command="{Binding SaveCommand}"
+                        IsEnabled="{Binding AllowEditing}"
+                        MinWidth="120" />
+                <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+                        Command="{Binding CloseCommand}"
+                        MinWidth="120" />
+            </StackPanel>
+        </Border>
+    </Grid>
 </UserControl>
-

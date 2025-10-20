@@ -2,10 +2,29 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d"
+        d:DesignWidth="800"
+        d:DesignHeight="450"
         x:Class="GRCFinancialControl.Avalonia.Views.Dialogs.DialogWindow"
         WindowStartupLocation="CenterOwner"
-        SizeToContent="WidthAndHeight"
+        SizeToContent="Manual"
+        ShowInTaskbar="False"
+        SystemDecorations="None"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent"
         CanResize="False">
-    <ContentControl x:Name="ContentHost"/>
+    <Grid Background="{StaticResource ModalOverlayBrush}">
+        <Border x:Name="DialogContainer"
+                Margin="{StaticResource SpaceThickness24}"
+                Padding="{StaticResource ModalDialogPadding}"
+                Background="{StaticResource ModalDialogBackgroundBrush}"
+                CornerRadius="{StaticResource ModalDialogCornerRadius}"
+                BoxShadow="{StaticResource ModalDialogShadow}"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+            <ContentControl x:Name="ContentHost"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch" />
+        </Border>
+    </Grid>
 </Window>

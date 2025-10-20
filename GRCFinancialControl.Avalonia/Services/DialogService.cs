@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Layout;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Avalonia.ViewModels;
@@ -32,6 +33,8 @@ namespace GRCFinancialControl.Avalonia.Services
                 throw new InvalidOperationException($"Could not locate a view for the view model '{viewModel.GetType().FullName}'.");
             }
 
+            view.HorizontalAlignment = HorizontalAlignment.Stretch;
+            view.VerticalAlignment = VerticalAlignment.Stretch;
             view.DataContext = viewModel;
 
             var dialog = new DialogWindow

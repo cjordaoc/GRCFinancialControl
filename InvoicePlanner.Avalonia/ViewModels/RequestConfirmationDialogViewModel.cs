@@ -1,5 +1,6 @@
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
@@ -11,6 +12,9 @@ public sealed partial class RequestConfirmationDialogViewModel : ViewModelBase
     }
 
     public RequestConfirmationViewModel Request { get; }
+
+    public IRelayCommand SaveCommand => Request.SavePlanDetailsCommand;
+    public IRelayCommand CloseCommand => Request.ClosePlanDetailsCommand;
 
     [ObservableProperty]
     private bool canSave;

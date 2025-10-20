@@ -4,6 +4,8 @@ using Avalonia.Input.Platform;
 using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using InvoicePlanner.Avalonia.Messages;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
@@ -27,12 +29,15 @@ public partial class ErrorDialogViewModel : ViewModelBase
 
     public IAsyncRelayCommand CopyDetailsCommand { get; }
 
+    public IRelayCommand SaveCommand { get; }
+
     public IRelayCommand CloseCommand { get; }
 
     public ErrorDialogViewModel()
     {
         CopyDetailsCommand = new AsyncRelayCommand(CopyDetailsAsync);
-        CloseCommand = new RelayCommand(() => CloseRequested?.Invoke(this, EventArgs.Empty));
+        SaveCommand = new RelayCommand(OnSave);
+        CloseCommand = new RelayCommand(OnCancel);
     }
 
     public void Initialise(string? messageText, string? detailsText)
@@ -53,5 +58,17 @@ public partial class ErrorDialogViewModel : ViewModelBase
         }
 
         await Clipboard.SetTextAsync(Details ?? string.Empty);
+    }
+
+    private void OnSave()
+    {
+        CloseRequested?.Invoke(this, EventArgs.Empty);
+        Messenger.Send(new CloseDialogMessage(true));
+    }
+
+    private void OnCancel()
+    {
+        CloseRequested?.Invoke(this, EventArgs.Empty);
+        Messenger.Send(new CloseDialogMessage(false));
     }
 }

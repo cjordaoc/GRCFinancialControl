@@ -144,6 +144,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
         }
 
         [RelayCommand]
+        private void Save()
+        {
+            if (IsReadOnlyMode)
+            {
+                Messenger.Send(new CloseDialogMessage(false));
+                return;
+            }
+
+            Messenger.Send(new CloseDialogMessage(true));
+        }
+
+        [RelayCommand]
         private void Close()
         {
             Messenger.Send(new CloseDialogMessage(false));
