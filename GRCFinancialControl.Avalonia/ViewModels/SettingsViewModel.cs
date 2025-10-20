@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using App.Presentation.Messages;
 using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -278,6 +279,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 StatusMessage = LocalizationRegistry.Format("Settings.Status.ImportSuccess", Path.GetFileName(filePath));
                 SelectedImportPackageFileName = Path.GetFileName(filePath);
                 Messenger.Send(new RefreshDataMessage());
+                Messenger.Send(ApplicationRestartRequestedMessage.Instance);
             }
             catch (InvalidOperationException ex)
             {
@@ -312,6 +314,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 settings[SettingKeys.Language] = language.CultureName;
                 await _settingsService.SaveAllAsync(settings);
                 StatusMessage = LocalizationRegistry.Get("Localization.Language.PreferenceSaved");
+                Messenger.Send(ApplicationRestartRequestedMessage.Instance);
             }
             catch (Exception ex)
             {

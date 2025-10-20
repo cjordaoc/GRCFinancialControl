@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using App.Presentation.Messages;
 using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -125,6 +126,7 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
             await _schemaInitializer.EnsureSchemaAsync();
 
             StatusMessage = LocalizationRegistry.Get("Connection.Status.ImportSuccess");
+            Messenger.Send(ApplicationRestartRequestedMessage.Instance);
             Messenger.Send(ConnectionSettingsImportedMessage.Instance);
         }
         catch (InvalidOperationException ex)
@@ -158,6 +160,7 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
             settings[SettingKeys.Language] = language.CultureName;
             await _settingsService.SaveAllAsync(new Dictionary<string, string>(settings));
             StatusMessage = LocalizationRegistry.Get("Localization.Language.PreferenceSaved");
+            Messenger.Send(ApplicationRestartRequestedMessage.Instance);
         }
         catch (Exception ex)
         {

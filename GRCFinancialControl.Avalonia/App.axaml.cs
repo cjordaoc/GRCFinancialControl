@@ -1,8 +1,10 @@
 using App.Presentation.Localization;
+using App.Presentation.Messages;
 using App.Presentation.Services;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using AvaloniaWebView;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Services;
@@ -23,6 +25,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Diagnostics;
+using System.Linq;
 
 namespace GRCFinancialControl.Avalonia
 {
@@ -30,6 +34,8 @@ namespace GRCFinancialControl.Avalonia
     {
         public static new App? Current => (App?)Application.Current;
         public IServiceProvider Services { get; private set; } = null!;
+        private IMessenger? _messenger;
+        private bool _restartRequested;
 
         public override void RegisterServices()
         {
@@ -149,6 +155,9 @@ namespace GRCFinancialControl.Avalonia
 
                 Services = services.BuildServiceProvider();
 
+                _messenger = Services.GetRequiredService<IMessenger>();
+                _messenger.Register<ApplicationRestartRequestedMessage>(this, (_, _) => RequestRestart());
+
                 mainWindow.DataContext = Services.GetRequiredService<MainWindowViewModel>();
                 using (var scope = Services.CreateScope())
                 {
@@ -165,10 +174,74 @@ namespace GRCFinancialControl.Avalonia
                 }
 
                 desktop.MainWindow = mainWindow;
+                desktop.Exit += (_, _) =>
+                {
+                    _messenger?.Unregister<ApplicationRestartRequestedMessage>(this);
+                    _messenger = null;
+                };
                 mainWindow.Show();
             }
 
             base.OnFrameworkInitializationCompleted();
+        }
+
+        private void RequestRestart()
+        {
+            if (_restartRequested)
+            {
+                return;
+            }
+
+            _restartRequested = true;
+            Dispatcher.UIThread.Post(RestartApplication);
+        }
+
+        private void RestartApplication()
+        {
+            if (ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                return;
+            }
+
+            var executablePath = Environment.ProcessPath;
+            if (string.IsNullOrWhiteSpace(executablePath))
+            {
+                executablePath = Process.GetCurrentProcess().MainModule?.FileName;
+            }
+
+            if (!string.IsNullOrWhiteSpace(executablePath))
+            {
+                try
+                {
+                    var args = desktop.Args ?? Array.Empty<string>();
+                    var startInfo = new ProcessStartInfo
+                    {
+                        FileName = executablePath,
+                        UseShellExecute = true,
+                    };
+
+                    if (args.Length > 0)
+                    {
+                        startInfo.Arguments = string.Join(' ', args.Select(QuoteArgument));
+                    }
+
+                    Process.Start(startInfo);
+                }
+                catch (Exception ex)
+                {
+                    var logger = Services.GetRequiredService<ILogger<App>>();
+                    logger.LogError(ex, "Failed to restart the application.");
+                    _restartRequested = false;
+                    return;
+                }
+            }
+
+            desktop.Shutdown();
+        }
+
+        private static string QuoteArgument(string argument)
+        {
+            return argument.Contains(' ') ? $"\"{argument}\"" : argument;
         }
     }
 }
