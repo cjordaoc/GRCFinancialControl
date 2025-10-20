@@ -89,6 +89,55 @@ CREATE TABLE `Managers`
     CONSTRAINT `UQ_Managers_WindowsLogin` UNIQUE (`WindowsLogin`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
+CREATE TABLE `RankMapping`
+(
+    `Id`              INT             NOT NULL AUTO_INCREMENT,
+    `RawRank`         VARCHAR(100)    NOT NULL,
+    `NormalizedRank`  VARCHAR(100)    NOT NULL,
+    `IsActive`        TINYINT(1)      NOT NULL DEFAULT 1,
+    `LastSeenAt`      DATETIME(6)     NULL,
+    CONSTRAINT `PK_RankMapping` PRIMARY KEY (`Id`),
+    CONSTRAINT `UX_RankMapping_RawRank` UNIQUE (`RawRank`),
+    INDEX `IX_RankMapping_NormalizedRank` (`NormalizedRank`),
+    INDEX `IX_RankMapping_IsActive` (`IsActive`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+
+CREATE TABLE `Employees`
+(
+    `Gpn`           VARCHAR(20)    NOT NULL,
+    `EmployeeName`  VARCHAR(200)   NOT NULL,
+    `IsEyEmployee`  TINYINT(1)     NOT NULL DEFAULT 1,
+    `IsContractor`  TINYINT(1)     NOT NULL DEFAULT 0,
+    `Office`        VARCHAR(100)   NULL,
+    `CostCenter`    VARCHAR(50)    NULL,
+    `StartDate`     DATE           NULL,
+    `EndDate`       DATE           NULL,
+    CONSTRAINT `PK_Employees` PRIMARY KEY (`Gpn`),
+    INDEX `IX_Employees_Office` (`Office`),
+    INDEX `IX_Employees_CostCenter` (`CostCenter`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+
+CREATE TABLE `WeekCalendar`
+(
+    `WeekStartMon`       DATE              NOT NULL,
+    `WeekEndFri`         DATE              NOT NULL,
+    `RetainAnchorStart`  DATE              NULL,
+    `FiscalYear`         INT               NOT NULL,
+    `ClosingPeriodId`    INT               NULL,
+    `WorkingDaysCount`   TINYINT UNSIGNED  NOT NULL,
+    `IsHolidayWeek`      TINYINT(1)        NOT NULL DEFAULT 0,
+    `WeekSeqInFY`        INT               NOT NULL,
+    `WeekSeqInCP`        INT               NULL,
+    CONSTRAINT `PK_WeekCalendar` PRIMARY KEY (`WeekStartMon`),
+    CONSTRAINT `FK_WeekCalendar_ClosingPeriods` FOREIGN KEY (`ClosingPeriodId`) REFERENCES `ClosingPeriods` (`Id`) ON DELETE SET NULL,
+    CONSTRAINT `UX_WeekCalendar_FiscalYear_WeekSeq` UNIQUE (`FiscalYear`, `WeekSeqInFY`),
+    INDEX `IX_WeekCalendar_ClosingPeriodId` (`ClosingPeriodId`),
+    INDEX `IX_WeekCalendar_WeekSeqInCP` (`WeekSeqInCP`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+
 
 /* ============================
    Engagements & assignments

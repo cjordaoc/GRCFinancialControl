@@ -18,9 +18,12 @@ namespace GRCFinancialControl.Persistence.Services
         {
             "DELETE FROM `ActualsEntries`;",
             "DELETE FROM `PlannedAllocations`;",
+            "DELETE FROM `WeekCalendar`;",
             "DELETE FROM `EngagementFiscalYearAllocations`;",
             "DELETE FROM `EngagementFiscalYearRevenueAllocations`;",
             "DELETE FROM `EngagementRankBudgets`;",
+            "DELETE FROM `RankMapping`;",
+            "DELETE FROM `Employees`;",
             "DELETE FROM `FinancialEvolution`;",
             "DELETE FROM `EngagementManagerAssignments`;",
             "DELETE FROM `EngagementPapds`;",
