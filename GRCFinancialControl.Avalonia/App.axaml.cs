@@ -19,6 +19,8 @@ using GRCFinancialControl.Persistence.Services;
 using GRCFinancialControl.Persistence.Services.Importers;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using GRCFinancialControl.Persistence.Services.People;
+using ImportResources = GRCFinancialControl.Resources.Features.Import.Import;
+using SharedResources = GRCFinancialControl.Resources.Shared.Resources;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using Microsoft.EntityFrameworkCore;
@@ -50,9 +52,12 @@ namespace GRCFinancialControl.Avalonia
 
         public override async void OnFrameworkInitializationCompleted()
         {
-            LocalizationRegistry.Configure(new ResourceManagerLocalizationProvider(
-                "GRCFinancialControl.Avalonia.Resources.Strings",
-                typeof(App).Assembly));
+            LocalizationRegistry.Configure(new CompositeLocalizationProvider(
+                new ResourceManagerLocalizationProvider(ImportResources.ResourceManager),
+                new ResourceManagerLocalizationProvider(
+                    "GRCFinancialControl.Avalonia.Resources.Strings",
+                    typeof(App).Assembly),
+                new ResourceManagerLocalizationProvider(SharedResources.ResourceManager)));
 
             LiveCharts.Configure(config =>
                 config
