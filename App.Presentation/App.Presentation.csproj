@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AvaloniaResource Include="Styles\\**" />
+    <AvaloniaResource Include="Styles\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,5 +29,9 @@
     <Compile Update="ViewModels\**\*.cs">
       <SubType>Code</SubType>
     </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Resources\GRCFinancialControl.Resources.csproj" />
   </ItemGroup>
 </Project>

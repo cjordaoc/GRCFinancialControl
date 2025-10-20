@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
@@ -20,13 +21,28 @@ public sealed class ResourceManagerLocalizationProvider : ILocalizationProvider
     private readonly ResourceManager _resourceManager;
 
     public ResourceManagerLocalizationProvider(string baseName, Assembly assembly)
+        : this(CreateResourceManager(baseName, assembly))
+    {
+    }
+
+    public ResourceManagerLocalizationProvider(ResourceManager resourceManager)
+    {
+        _resourceManager = resourceManager ?? throw new ArgumentNullException(nameof(resourceManager));
+    }
+
+    private static ResourceManager CreateResourceManager(string baseName, Assembly assembly)
     {
         if (string.IsNullOrWhiteSpace(baseName))
         {
             throw new ArgumentException("Base name is required.", nameof(baseName));
         }
 
-        _resourceManager = new ResourceManager(baseName, assembly ?? throw new ArgumentNullException(nameof(assembly)));
+        if (assembly is null)
+        {
+            throw new ArgumentNullException(nameof(assembly));
+        }
+
+        return new ResourceManager(baseName, assembly);
     }
 
     public string Get(string key)
@@ -37,6 +53,55 @@ public sealed class ResourceManagerLocalizationProvider : ILocalizationProvider
         }
 
         return _resourceManager.GetString(key, CultureInfo.CurrentUICulture) ?? key;
+    }
+
+    public string Format(string key, params object[] arguments)
+    {
+        var format = Get(key);
+        return string.Format(CultureInfo.CurrentUICulture, format, arguments);
+    }
+}
+
+public sealed class CompositeLocalizationProvider : ILocalizationProvider
+{
+    private readonly IReadOnlyList<ILocalizationProvider> _providers;
+
+    public CompositeLocalizationProvider(params ILocalizationProvider[] providers)
+    {
+        if (providers is null)
+        {
+            throw new ArgumentNullException(nameof(providers));
+        }
+
+        var activeProviders = new List<ILocalizationProvider>();
+        foreach (var provider in providers)
+        {
+            if (provider is not null)
+            {
+                activeProviders.Add(provider);
+            }
+        }
+
+        _providers = activeProviders;
+    }
+
+    public string Get(string key)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            return string.Empty;
+        }
+
+        foreach (var provider in _providers)
+        {
+            var value = provider.Get(key);
+            if (!string.Equals(value, key, StringComparison.Ordinal))
+            {
+                return value;
+            }
+        }
+
+        return key;
     }
 
     public string Format(string key, params object[] arguments)

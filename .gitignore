@@ -11,6 +11,9 @@
 !/tools/DvSchemaSync/
 /tools/DvSchemaSync/bin/
 /tools/DvSchemaSync/obj/
+!/tools/resx-audit/
+/tools/resx-audit/bin/
+/tools/resx-audit/obj/
 
 # User-specific files
 *.rsuser

@@ -31,6 +31,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
+using ImportResources = GRCFinancialControl.Resources.Features.Import.Import;
+using SharedResources = GRCFinancialControl.Resources.Shared.Resources;
 
 namespace InvoicePlanner.Avalonia;
 
@@ -53,9 +55,12 @@ public partial class App : Application
     public override async void OnFrameworkInitializationCompleted()
     {
         ApplyLanguageFromSettings();
-        LocalizationRegistry.Configure(new ResourceManagerLocalizationProvider(
-            "InvoicePlanner.Avalonia.Resources.Strings",
-            typeof(App).Assembly));
+        LocalizationRegistry.Configure(new CompositeLocalizationProvider(
+            new ResourceManagerLocalizationProvider(ImportResources.ResourceManager),
+            new ResourceManagerLocalizationProvider(
+                "InvoicePlanner.Avalonia.Resources.Strings",
+                typeof(App).Assembly),
+            new ResourceManagerLocalizationProvider(SharedResources.ResourceManager)));
 
         _host = Host.CreateDefaultBuilder()
             .ConfigureAppConfiguration((context, config) =>

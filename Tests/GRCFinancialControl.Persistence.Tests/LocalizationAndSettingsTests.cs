@@ -11,6 +11,8 @@ using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Core.Configuration;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
+using ImportResources = GRCFinancialControl.Resources.Features.Import.Import;
+using SharedResources = GRCFinancialControl.Resources.Shared.Resources;
 using PlannerConnectionSettingsViewModel = InvoicePlanner.Avalonia.ViewModels.ConnectionSettingsViewModel;
 using GrcSettingsViewModel = GRCFinancialControl.Avalonia.ViewModels.SettingsViewModel;
 using GrcViewModelBase = GRCFinancialControl.Avalonia.ViewModels.ViewModelBase;
@@ -263,9 +265,12 @@ public sealed class LocalizationTestFixture : IDisposable
 {
     public LocalizationTestFixture()
     {
-        LocalizationRegistry.Configure(new ResourceManagerLocalizationProvider(
-            "InvoicePlanner.Avalonia.Resources.Strings",
-            typeof(InvoicePlanner.Avalonia.App).Assembly));
+        LocalizationRegistry.Configure(new CompositeLocalizationProvider(
+            new ResourceManagerLocalizationProvider(ImportResources.ResourceManager),
+            new ResourceManagerLocalizationProvider(
+                "InvoicePlanner.Avalonia.Resources.Strings",
+                typeof(InvoicePlanner.Avalonia.App).Assembly),
+            new ResourceManagerLocalizationProvider(SharedResources.ResourceManager)));
         LocalizationCultureManager.ApplyCulture("en-US");
     }
 

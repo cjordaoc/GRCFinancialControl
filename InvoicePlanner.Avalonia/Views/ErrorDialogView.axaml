@@ -26,11 +26,11 @@
                         Orientation="Horizontal"
                         HorizontalAlignment="Right"
                         Spacing="{StaticResource Space12}">
-                <Button Content="{loc:Loc Key=Common.Button.Save}"
+                <Button Content="{loc:Loc Key=Shared.Common.Button.Save}"
                         Command="{Binding SaveCommand}"
                         IsDefault="True"
                         MinWidth="120" />
-                <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+                <Button Content="{loc:Loc Key=Shared.Common.Button.Cancel}"
                         Command="{Binding CloseCommand}"
                         IsCancel="True"
                         MinWidth="120" />

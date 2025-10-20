@@ -64,5 +64,6 @@
     <ProjectReference Include="..\GRCFinancialControl.Persistence\GRCFinancialControl.Persistence.csproj" />
     <ProjectReference Include="..\GRCFinancialControl.Core\GRCFinancialControl.Core.csproj" />
     <ProjectReference Include="..\App.Presentation\App.Presentation.csproj" />
+    <ProjectReference Include="..\Resources\GRCFinancialControl.Resources.csproj" />
   </ItemGroup>
 </Project>
