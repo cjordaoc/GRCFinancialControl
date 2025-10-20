@@ -19,6 +19,7 @@
                 Padding="{StaticResource ModalDialogPadding}"
                 Background="{StaticResource ModalDialogBackgroundBrush}"
                 CornerRadius="{StaticResource ModalDialogCornerRadius}"
+                BoxShadow="{StaticResource ModalDialogShadow}"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center">
             <ContentControl x:Name="ContentHost"

@@ -20,30 +20,6 @@ namespace GRCFinancialControl.Avalonia.Views.Dialogs
         {
             AvaloniaXamlLoader.Load(this);
             _dialogContainer = this.FindControl<Border>("DialogContainer");
-            ApplyThemeResources();
-        }
-
-        private void ApplyThemeResources()
-        {
-            if (_dialogContainer is null)
-            {
-                return;
-            }
-
-            var defaultShadow = BoxShadows.Parse("0 4 24 0 #66000000");
-
-            if (!this.TryFindResource("ModalDialogShadow", out var shadowResource))
-            {
-                _dialogContainer.BoxShadow = defaultShadow;
-                return;
-            }
-
-            _dialogContainer.BoxShadow = shadowResource switch
-            {
-                BoxShadows boxShadows => boxShadows,
-                string shadowString => BoxShadows.Parse(shadowString),
-                _ => defaultShadow
-            };
         }
 
         protected override void OnOpened(EventArgs e)
