@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
-             xmlns:conv="using:GRCFinancialControl.Avalonia.Converters"
+             xmlns:conv="clr-namespace:App.Presentation.Converters;assembly=App.Presentation"
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="550"
              x:Class="GRCFinancialControl.Avalonia.Views.EngagementEditorView"
