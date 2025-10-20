@@ -55,6 +55,7 @@ namespace GRCFinancialControl.Persistence.Services
         };
         private static readonly Regex MultiWhitespaceRegex = new Regex("\\s+", RegexOptions.Compiled);
         private static readonly Regex DigitsRegex = new Regex("\\d+", RegexOptions.Compiled);
+        private static readonly Regex TrailingDigitsRegex = new Regex(@"\d+$", RegexOptions.Compiled);
         private static readonly Regex FiscalYearCodeRegex = new Regex(@"FY\\d{2,4}", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex EngagementIdRegex = new Regex(@"\\bE-\\d+\\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex LastUpdateDateRegex = new Regex(@"Last Update\\s*:\\s*(\\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{4})", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -105,8 +106,10 @@ namespace GRCFinancialControl.Persistence.Services
 
             var engagementDescription = ExtractDescription(descriptionRaw);
 
-            var (rankBudgetsFromFile, issues) = ParseResourcing(resourcing);
-            var totalBudgetHours = rankBudgetsFromFile.Sum(r => r.hours);
+            var resourcingParseResult = ParseResourcing(resourcing);
+            var rankBudgetsFromFile = resourcingParseResult.RankBudgets;
+            var totalBudgetHours = rankBudgetsFromFile.Sum(r => r.Hours);
+            var generatedAtUtc = ExtractGeneratedTimestampUtc(planInfo);
 
             await using var strategyContext = await _contextFactory.CreateDbContextAsync();
             var strategy = strategyContext.Database.CreateExecutionStrategy();
@@ -158,6 +161,7 @@ namespace GRCFinancialControl.Persistence.Services
                         await context.Engagements.AddAsync(engagement);
                         engagementCreated = true;
                     }
+
                     else
                     {
                         if (engagement.Source == EngagementSource.S4Project)
@@ -195,6 +199,10 @@ namespace GRCFinancialControl.Persistence.Services
                         engagement.InitialHoursBudget = totalBudgetHours;
                     }
 
+                    await UpsertRankMappingsAsync(context, resourcingParseResult.RankMappings, generatedAtUtc);
+                    await UpsertEmployeesAsync(context, resourcingParseResult.Employees);
+                    await UpsertWeekCalendarAsync(context, resourcingParseResult.WeekStartDates);
+
                     engagement.Customer = customer;
                     if (customer.Id > 0)
                     {
@@ -212,13 +220,13 @@ namespace GRCFinancialControl.Persistence.Services
                     }
 
                     var now = DateTime.UtcNow;
-                    foreach (var (rankName, hours) in rankBudgetsFromFile)
+                    foreach (var rankBudget in rankBudgetsFromFile)
                     {
                         var budget = new EngagementRankBudget
                         {
                             Engagement = engagement,
-                            RankName = rankName,
-                            Hours = hours,
+                            RankName = rankBudget.RawRank,
+                            Hours = rankBudget.Hours,
                             CreatedAtUtc = now
                         };
 
@@ -241,9 +249,9 @@ namespace GRCFinancialControl.Persistence.Services
                         $"Initial hours budget total: {totalBudgetHours:F2}"
                     };
 
-                    if (issues.Count > 0)
+                    if (resourcingParseResult.Issues.Count > 0)
                     {
-                        notes.Add($"Notes: {string.Join("; ", issues)}");
+                        notes.Add($"Notes: {string.Join("; ", resourcingParseResult.Issues)}");
                     }
 
                     return ImportSummaryFormatter.Build(
@@ -261,45 +269,649 @@ namespace GRCFinancialControl.Persistence.Services
             });
         }
 
-        private static (List<(string rank, decimal hours)> rows, List<string> issues) ParseResourcing(DataTable resourcing)
+        private static ResourcingParseResult ParseResourcing(DataTable resourcing)
         {
-            var rows = new List<(string rank, decimal hours)>();
+            ArgumentNullException.ThrowIfNull(resourcing);
+
+            var headerRowIndex = FindResourcingHeaderRow(resourcing);
+            if (headerRowIndex < 0)
+            {
+                throw new InvalidDataException("The RESOURCING worksheet does not contain a header row with Level and Employee columns.");
+            }
+
+            var headerMap = BuildHeaderMap(resourcing, headerRowIndex);
+            var hoursColumnIndex = FindFirstHeaderColumnIndex(resourcing, headerRowIndex, "H");
+            if (hoursColumnIndex < 0)
+            {
+                throw new InvalidDataException("Unable to locate the first weekly hours column in the RESOURCING worksheet.");
+            }
+
+            var weekRowIndex = headerRowIndex > 0 ? headerRowIndex - 1 : headerRowIndex;
+            var weekStartDates = ExtractWeekStartDates(resourcing, weekRowIndex, hoursColumnIndex);
+
+            var rankBudgets = new List<RankBudgetRow>();
+            var rankMappings = new Dictionary<string, RankMappingCandidate>(StringComparer.OrdinalIgnoreCase);
+            var employees = new List<ResourcingEmployee>();
             var issues = new List<string>();
 
-            var rowIndex = 3; // Row 4 in the worksheet
+            var levelColumnIndex = GetRequiredColumnIndex(headerMap, "level");
+            var employeeColumnIndex = GetRequiredColumnIndex(headerMap, "employee");
+            var guiColumnIndex = GetOptionalColumnIndex(headerMap, "gui number");
+            var mrsColumnIndex = GetOptionalColumnIndex(headerMap, "mrs");
+            var gdsColumnIndex = GetOptionalColumnIndex(headerMap, "gds");
+            var costCenterColumnIndex = GetOptionalColumnIndex(headerMap, "cost center");
+            var officeColumnIndex = GetOptionalColumnIndex(headerMap, "office");
+
+            var dataRowIndex = headerRowIndex + 1;
             var consecutiveBlankRows = 0;
 
-            while (rowIndex < resourcing.Rows.Count && consecutiveBlankRows < 10)
+            while (dataRowIndex < resourcing.Rows.Count && consecutiveBlankRows < 10)
             {
-                var rank = NormalizeWhitespace(GetCellString(resourcing, rowIndex, 0)); // Column A
-                var (hours, hasHoursValue) = ParseHours(GetCellValue(resourcing, rowIndex, 8)); // Column I
+                var rawRank = NormalizeWhitespace(GetCellString(resourcing, dataRowIndex, levelColumnIndex));
+                var (hours, hasHoursValue) = ParseHours(GetCellValue(resourcing, dataRowIndex, hoursColumnIndex));
 
-                var isRowEmpty = string.IsNullOrEmpty(rank) && !hasHoursValue;
-
+                var isRowEmpty = string.IsNullOrEmpty(rawRank) && !hasHoursValue;
                 if (isRowEmpty)
                 {
                     consecutiveBlankRows++;
-                    rowIndex++;
+                    dataRowIndex++;
                     continue;
                 }
 
                 consecutiveBlankRows = 0;
 
-                if (string.IsNullOrEmpty(rank))
+                if (string.IsNullOrEmpty(rawRank))
                 {
                     if (hours > 0)
                     {
-                        issues.Add($"Row {rowIndex + 1}: Hours present but rank name missing; skipped.");
+                        issues.Add($"Row {dataRowIndex + 1}: Hours present but rank name missing; skipped.");
                     }
-                    rowIndex++;
+
+                    dataRowIndex++;
                     continue;
                 }
 
-                rows.Add((rank, hours));
-                rowIndex++;
+                rankBudgets.Add(new RankBudgetRow(rawRank, hours));
+
+                if (!rankMappings.ContainsKey(rawRank))
+                {
+                    rankMappings[rawRank] = new RankMappingCandidate(rawRank, NormalizeRankName(rawRank));
+                }
+
+                var employeeName = NormalizeWhitespace(GetCellString(resourcing, dataRowIndex, employeeColumnIndex));
+                if (!string.IsNullOrEmpty(employeeName))
+                {
+                    var guiValue = guiColumnIndex >= 0 ? NormalizeIdentifier(GetCellValue(resourcing, dataRowIndex, guiColumnIndex)) : string.Empty;
+                    var mrsValue = mrsColumnIndex >= 0 ? NormalizeIdentifier(GetCellValue(resourcing, dataRowIndex, mrsColumnIndex)) : string.Empty;
+                    var identifier = DetermineEmployeeIdentifier(guiValue, mrsValue, employeeName);
+
+                    if (!string.IsNullOrEmpty(identifier))
+                    {
+                        var isContractor = identifier.StartsWith("MRS-", StringComparison.OrdinalIgnoreCase);
+                        var costCenter = costCenterColumnIndex >= 0
+                            ? NormalizeOptionalString(GetCellString(resourcing, dataRowIndex, costCenterColumnIndex))
+                            : null;
+                        var office = officeColumnIndex >= 0
+                            ? NormalizeOptionalString(GetCellString(resourcing, dataRowIndex, officeColumnIndex))
+                            : null;
+
+                        var isEyEmployee = !isContractor;
+                        if (gdsColumnIndex >= 0)
+                        {
+                            var gdsValue = NormalizeWhitespace(GetCellString(resourcing, dataRowIndex, gdsColumnIndex));
+                            if (string.Equals(gdsValue, "vendor", StringComparison.OrdinalIgnoreCase))
+                            {
+                                isContractor = true;
+                                isEyEmployee = false;
+                            }
+                        }
+
+                        employees.Add(new ResourcingEmployee(
+                            identifier,
+                            employeeName,
+                            isContractor,
+                            isEyEmployee,
+                            costCenter,
+                            office));
+                    }
+                }
+
+                dataRowIndex++;
             }
 
-            return (rows, issues);
+            return new ResourcingParseResult(rankBudgets, rankMappings.Values.ToList(), employees, weekStartDates, issues);
+        }
+
+        private static int FindResourcingHeaderRow(DataTable table)
+        {
+            for (var rowIndex = 0; rowIndex < table.Rows.Count; rowIndex++)
+            {
+                var row = table.Rows[rowIndex];
+                var hasLevel = false;
+                var hasEmployee = false;
+
+                for (var columnIndex = 0; columnIndex < table.Columns.Count; columnIndex++)
+                {
+                    var text = NormalizeWhitespace(Convert.ToString(row[columnIndex], CultureInfo.InvariantCulture));
+                    if (string.IsNullOrEmpty(text))
+                    {
+                        continue;
+                    }
+
+                    if (string.Equals(text, "level", StringComparison.OrdinalIgnoreCase))
+                    {
+                        hasLevel = true;
+                    }
+                    else if (string.Equals(text, "employee", StringComparison.OrdinalIgnoreCase))
+                    {
+                        hasEmployee = true;
+                    }
+
+                    if (hasLevel && hasEmployee)
+                    {
+                        return rowIndex;
+                    }
+                }
+            }
+
+            return -1;
+        }
+
+        private static Dictionary<string, int> BuildHeaderMap(DataTable table, int headerRowIndex)
+        {
+            var map = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var headerRow = table.Rows[headerRowIndex];
+
+            for (var columnIndex = 0; columnIndex < table.Columns.Count; columnIndex++)
+            {
+                var header = NormalizeWhitespace(Convert.ToString(headerRow[columnIndex], CultureInfo.InvariantCulture));
+                if (string.IsNullOrEmpty(header))
+                {
+                    continue;
+                }
+
+                if (!map.ContainsKey(header))
+                {
+                    map[header] = columnIndex;
+                }
+            }
+
+            return map;
+        }
+
+        private static int GetRequiredColumnIndex(IReadOnlyDictionary<string, int> headerMap, string keyword)
+        {
+            foreach (var kvp in headerMap)
+            {
+                if (kvp.Key.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+                {
+                    return kvp.Value;
+                }
+            }
+
+            throw new InvalidDataException($"The RESOURCING worksheet is missing the required column '{keyword}'.");
+        }
+
+        private static int GetOptionalColumnIndex(IReadOnlyDictionary<string, int> headerMap, string keyword)
+        {
+            foreach (var kvp in headerMap)
+            {
+                if (kvp.Key.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+                {
+                    return kvp.Value;
+                }
+            }
+
+            return -1;
+        }
+
+        private static int FindFirstHeaderColumnIndex(DataTable table, int headerRowIndex, string headerValue)
+        {
+            var headerRow = table.Rows[headerRowIndex];
+
+            for (var columnIndex = 0; columnIndex < table.Columns.Count; columnIndex++)
+            {
+                var value = NormalizeWhitespace(Convert.ToString(headerRow[columnIndex], CultureInfo.InvariantCulture));
+                if (string.Equals(value, headerValue, StringComparison.OrdinalIgnoreCase))
+                {
+                    return columnIndex;
+                }
+            }
+
+            return -1;
+        }
+
+        private static List<DateTime> ExtractWeekStartDates(DataTable table, int rowIndex, int startColumnIndex)
+        {
+            var weekStarts = new SortedSet<DateTime>();
+
+            if (rowIndex < 0 || rowIndex >= table.Rows.Count)
+            {
+                return weekStarts.ToList();
+            }
+
+            for (var columnIndex = startColumnIndex; columnIndex < table.Columns.Count; columnIndex++)
+            {
+                var cell = GetCellValue(table, rowIndex, columnIndex);
+                if (TryParseDate(cell, out var date))
+                {
+                    weekStarts.Add(NormalizeWeekStart(date));
+                }
+            }
+
+            return weekStarts.ToList();
+        }
+
+        private static bool TryParseDate(object? value, out DateTime date)
+        {
+            switch (value)
+            {
+                case DateTime dt:
+                    date = dt.Date;
+                    return true;
+                case double oaDate:
+                    date = DateTime.FromOADate(oaDate).Date;
+                    return true;
+                case float oaFloat:
+                    date = DateTime.FromOADate(oaFloat).Date;
+                    return true;
+                case int intValue:
+                    date = DateTime.FromOADate(intValue).Date;
+                    return true;
+                case long longValue:
+                    date = DateTime.FromOADate(longValue).Date;
+                    return true;
+                case string text when DateTime.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal | DateTimeStyles.AllowWhiteSpaces, out var parsed):
+                    date = parsed.Date;
+                    return true;
+                default:
+                    date = default;
+                    return false;
+            }
+        }
+
+        private static string NormalizeRankName(string rawRank)
+        {
+            var normalized = NormalizeWhitespace(rawRank);
+            if (string.IsNullOrEmpty(normalized))
+            {
+                return string.Empty;
+            }
+
+            var parts = normalized.Split('-', 2, StringSplitOptions.TrimEntries);
+            var candidate = parts.Length == 2 ? parts[1] : parts[0];
+            candidate = TrailingDigitsRegex.Replace(candidate, string.Empty).Trim();
+
+            return candidate;
+        }
+
+        private static string NormalizeIdentifier(object? value)
+        {
+            if (value == null || value == DBNull.Value)
+            {
+                return string.Empty;
+            }
+
+            if (value is double dbl)
+            {
+                return Math.Round(dbl).ToString(CultureInfo.InvariantCulture);
+            }
+
+            if (value is float flt)
+            {
+                return Math.Round(flt).ToString(CultureInfo.InvariantCulture);
+            }
+
+            var text = NormalizeWhitespace(Convert.ToString(value, CultureInfo.InvariantCulture));
+            if (string.IsNullOrEmpty(text))
+            {
+                return string.Empty;
+            }
+
+            text = text.Replace("#", string.Empty, StringComparison.Ordinal);
+
+            if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var numeric))
+            {
+                return Math.Round(numeric).ToString(CultureInfo.InvariantCulture);
+            }
+
+            return text;
+        }
+
+        private static string? NormalizeOptionalString(string value)
+        {
+            var normalized = NormalizeWhitespace(value);
+            if (string.IsNullOrEmpty(normalized) || normalized == "#")
+            {
+                return null;
+            }
+
+            return normalized;
+        }
+
+        private static string DetermineEmployeeIdentifier(string guiValue, string mrsValue, string employeeName)
+        {
+            if (!string.IsNullOrEmpty(guiValue))
+            {
+                return TrimIdentifier(guiValue);
+            }
+
+            if (!string.IsNullOrEmpty(mrsValue))
+            {
+                return TrimIdentifier($"MRS-{mrsValue}");
+            }
+
+            if (!string.IsNullOrEmpty(employeeName))
+            {
+                var filtered = new string(employeeName.Where(char.IsLetterOrDigit).ToArray());
+                if (!string.IsNullOrEmpty(filtered))
+                {
+                    return TrimIdentifier($"EMP-{filtered.ToUpperInvariant()}");
+                }
+            }
+
+            return string.Empty;
+        }
+
+        private static string TrimIdentifier(string value)
+        {
+            const int maxLength = 20;
+            if (value.Length <= maxLength)
+            {
+                return value;
+            }
+
+            return value.Substring(0, maxLength);
+        }
+
+        private static DateTime NormalizeWeekStart(DateTime date)
+        {
+            var start = date.Date;
+            var offset = ((int)start.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
+            return start.AddDays(-offset);
+        }
+
+        private static DateTime? ExtractGeneratedTimestampUtc(DataTable planInfo)
+        {
+            if (planInfo == null)
+            {
+                return null;
+            }
+
+            var value = NormalizeWhitespace(GetCellString(planInfo, 1, 1));
+            if (string.IsNullOrEmpty(value))
+            {
+                value = NormalizeWhitespace(GetCellString(planInfo, 0, 1));
+            }
+
+            if (string.IsNullOrEmpty(value))
+            {
+                return null;
+            }
+
+            value = value.Replace("Generated on:", string.Empty, StringComparison.OrdinalIgnoreCase)
+                .Replace("Generated On:", string.Empty, StringComparison.OrdinalIgnoreCase)
+                .Trim();
+
+            if (TryParseDateTimeOffset(value, out var utcTimestamp))
+            {
+                return utcTimestamp;
+            }
+
+            return null;
+        }
+
+        private static bool TryParseDateTimeOffset(string value, out DateTime utcTimestamp)
+        {
+            var styles = DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal;
+            if (DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, styles, out var dto) ||
+                DateTimeOffset.TryParse(value, CultureInfo.GetCultureInfo("en-GB"), styles, out dto) ||
+                DateTimeOffset.TryParse(value, CultureInfo.GetCultureInfo("en-US"), styles, out dto))
+            {
+                utcTimestamp = dto.ToUniversalTime().UtcDateTime;
+                return true;
+            }
+
+            var sanitized = Regex.Replace(value, @"\b[A-Z]{2,}$", string.Empty).Trim();
+            if (DateTimeOffset.TryParse(sanitized, CultureInfo.InvariantCulture, styles, out dto))
+            {
+                utcTimestamp = dto.ToUniversalTime().UtcDateTime;
+                return true;
+            }
+
+            utcTimestamp = default;
+            return false;
+        }
+
+        private sealed record RankBudgetRow(string RawRank, decimal Hours);
+
+        private sealed record RankMappingCandidate(string RawRank, string NormalizedRank);
+
+        private sealed record ResourcingEmployee(
+            string Identifier,
+            string Name,
+            bool IsContractor,
+            bool IsEyEmployee,
+            string? CostCenter,
+            string? Office);
+
+        private sealed record ResourcingParseResult(
+            List<RankBudgetRow> RankBudgets,
+            List<RankMappingCandidate> RankMappings,
+            List<ResourcingEmployee> Employees,
+            List<DateTime> WeekStartDates,
+            List<string> Issues);
+
+        private static async Task UpsertRankMappingsAsync(
+            ApplicationDbContext context,
+            IReadOnlyCollection<RankMappingCandidate> candidates,
+            DateTime? lastSeenAtUtc)
+        {
+            if (candidates.Count == 0)
+            {
+                return;
+            }
+
+            var timestamp = lastSeenAtUtc ?? DateTime.UtcNow;
+            var rawRanks = candidates.Select(c => c.RawRank).ToList();
+            var existingMappings = await context.RankMappings
+                .Where(r => rawRanks.Contains(r.RawRank))
+                .ToDictionaryAsync(r => r.RawRank, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var candidate in candidates)
+            {
+                if (existingMappings.TryGetValue(candidate.RawRank, out var mapping))
+                {
+                    mapping.NormalizedRank = candidate.NormalizedRank;
+                    mapping.IsActive = true;
+                    mapping.LastSeenAt = timestamp;
+                }
+                else
+                {
+                    context.RankMappings.Add(new RankMapping
+                    {
+                        RawRank = candidate.RawRank,
+                        NormalizedRank = candidate.NormalizedRank,
+                        IsActive = true,
+                        LastSeenAt = timestamp
+                    });
+                }
+            }
+        }
+
+        private static async Task UpsertEmployeesAsync(
+            ApplicationDbContext context,
+            IReadOnlyCollection<ResourcingEmployee> employees)
+        {
+            if (employees.Count == 0)
+            {
+                return;
+            }
+
+            var distinctEmployees = employees
+                .GroupBy(e => e.Identifier, StringComparer.OrdinalIgnoreCase)
+                .Select(g => g.First())
+                .ToList();
+
+            var identifiers = distinctEmployees.Select(e => e.Identifier).ToList();
+            var existingEmployees = await context.Employees
+                .Where(e => identifiers.Contains(e.Gpn))
+                .ToDictionaryAsync(e => e.Gpn, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var employee in distinctEmployees)
+            {
+                if (existingEmployees.TryGetValue(employee.Identifier, out var entity))
+                {
+                    entity.EmployeeName = employee.Name;
+                    entity.IsEyEmployee = employee.IsEyEmployee;
+                    entity.IsContractor = employee.IsContractor;
+                    entity.CostCenter = employee.CostCenter;
+                    entity.Office = employee.Office;
+                }
+                else
+                {
+                    context.Employees.Add(new Employee
+                    {
+                        Gpn = employee.Identifier,
+                        EmployeeName = employee.Name,
+                        IsEyEmployee = employee.IsEyEmployee,
+                        IsContractor = employee.IsContractor,
+                        CostCenter = employee.CostCenter,
+                        Office = employee.Office
+                    });
+                }
+            }
+        }
+
+        private static async Task UpsertWeekCalendarAsync(
+            ApplicationDbContext context,
+            IReadOnlyCollection<DateTime> weekStartDates)
+        {
+            if (weekStartDates.Count == 0)
+            {
+                return;
+            }
+
+            var orderedWeekStarts = weekStartDates
+                .Select(d => d.Date)
+                .Distinct()
+                .OrderBy(d => d)
+                .ToList();
+
+            var weekCandidates = orderedWeekStarts
+                .Select(start => new WeekCalendarCandidate(start, start.AddDays(4)))
+                .ToList();
+
+            var closingPeriods = await context.ClosingPeriods
+                .Include(cp => cp.FiscalYear)
+                .ToListAsync();
+
+            foreach (var candidate in weekCandidates)
+            {
+                var closingPeriod = closingPeriods
+                    .FirstOrDefault(cp => candidate.WeekStart >= cp.PeriodStart.Date && candidate.WeekStart <= cp.PeriodEnd.Date);
+
+                candidate.ClosingPeriodId = closingPeriod?.Id;
+                candidate.FiscalYear = closingPeriod?.FiscalYear?.StartDate.Year ?? candidate.WeekStart.Year;
+            }
+
+            var fiscalYears = weekCandidates.Select(w => w.FiscalYear).Distinct().ToList();
+            var closingPeriodIds = weekCandidates
+                .Where(w => w.ClosingPeriodId.HasValue)
+                .Select(w => w.ClosingPeriodId!.Value)
+                .Distinct()
+                .ToList();
+
+            var existingWeeks = await context.WeekCalendar
+                .Where(w => orderedWeekStarts.Contains(w.WeekStartMon))
+                .ToDictionaryAsync(w => w.WeekStartMon);
+
+            var maxSequenceByFiscalYear = await context.WeekCalendar
+                .Where(w => fiscalYears.Contains(w.FiscalYear))
+                .GroupBy(w => w.FiscalYear)
+                .ToDictionaryAsync(g => g.Key, g => g.Max(w => w.WeekSeqInFY));
+
+            Dictionary<int, int> maxSequenceByClosingPeriod;
+            if (closingPeriodIds.Count > 0)
+            {
+                maxSequenceByClosingPeriod = await context.WeekCalendar
+                    .Where(w => w.ClosingPeriodId.HasValue && closingPeriodIds.Contains(w.ClosingPeriodId.Value) && w.WeekSeqInCP.HasValue)
+                    .GroupBy(w => w.ClosingPeriodId!.Value)
+                    .ToDictionaryAsync(g => g.Key, g => g.Max(w => w.WeekSeqInCP!.Value));
+            }
+            else
+            {
+                maxSequenceByClosingPeriod = new Dictionary<int, int>();
+            }
+
+            foreach (var candidate in weekCandidates)
+            {
+                if (existingWeeks.TryGetValue(candidate.WeekStart, out var entity))
+                {
+                    entity.WeekEndFri = candidate.WeekEnd;
+                    entity.RetainAnchorStart ??= candidate.WeekStart;
+                    entity.FiscalYear = candidate.FiscalYear;
+                    entity.ClosingPeriodId = candidate.ClosingPeriodId;
+                    entity.WorkingDaysCount = candidate.WorkingDaysCount;
+                    entity.IsHolidayWeek = candidate.IsHolidayWeek;
+
+                    if (entity.WeekSeqInFY <= 0)
+                    {
+                        entity.WeekSeqInFY = GetNextSequence(maxSequenceByFiscalYear, candidate.FiscalYear);
+                    }
+
+                    if (candidate.ClosingPeriodId.HasValue && (!entity.WeekSeqInCP.HasValue || entity.WeekSeqInCP <= 0))
+                    {
+                        entity.WeekSeqInCP = GetNextSequence(maxSequenceByClosingPeriod, candidate.ClosingPeriodId.Value);
+                    }
+                }
+                else
+                {
+                    var weekSeqInFy = GetNextSequence(maxSequenceByFiscalYear, candidate.FiscalYear);
+                    int? weekSeqInCp = null;
+
+                    if (candidate.ClosingPeriodId.HasValue)
+                    {
+                        weekSeqInCp = GetNextSequence(maxSequenceByClosingPeriod, candidate.ClosingPeriodId.Value);
+                    }
+
+                    context.WeekCalendar.Add(new WeekCalendarEntry
+                    {
+                        WeekStartMon = candidate.WeekStart,
+                        WeekEndFri = candidate.WeekEnd,
+                        RetainAnchorStart = candidate.WeekStart,
+                        FiscalYear = candidate.FiscalYear,
+                        ClosingPeriodId = candidate.ClosingPeriodId,
+                        WorkingDaysCount = candidate.WorkingDaysCount,
+                        IsHolidayWeek = candidate.IsHolidayWeek,
+                        WeekSeqInFY = weekSeqInFy,
+                        WeekSeqInCP = weekSeqInCp
+                    });
+                }
+            }
+        }
+
+        private sealed record WeekCalendarCandidate(DateTime WeekStart, DateTime WeekEnd)
+        {
+            public int FiscalYear { get; set; }
+
+            public int? ClosingPeriodId { get; set; }
+
+            public byte WorkingDaysCount { get; init; } = 5;
+
+            public bool IsHolidayWeek { get; init; }
+        }
+
+        private static int GetNextSequence(IDictionary<int, int> sequenceMap, int key)
+        {
+            if (!sequenceMap.TryGetValue(key, out var current) || current < 0)
+            {
+                current = 0;
+            }
+
+            current++;
+            sequenceMap[key] = current;
+            return current;
         }
 
         private static (decimal value, bool hasValue) ParseHours(object? cellValue)

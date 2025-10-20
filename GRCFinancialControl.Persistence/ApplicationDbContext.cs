@@ -19,7 +19,9 @@ namespace GRCFinancialControl.Persistence
         public DbSet<ExceptionEntry> Exceptions { get; set; }
         public DbSet<ClosingPeriod> ClosingPeriods { get; set; }
         public DbSet<Customer> Customers { get; set; }
+        public DbSet<Employee> Employees { get; set; }
         public DbSet<EngagementRankBudget> EngagementRankBudgets { get; set; }
+        public DbSet<RankMapping> RankMappings { get; set; }
         public DbSet<FinancialEvolution> FinancialEvolutions { get; set; }
         public DbSet<EngagementFiscalYearAllocation> EngagementFiscalYearAllocations { get; set; }
         public DbSet<EngagementFiscalYearRevenueAllocation> EngagementFiscalYearRevenueAllocations { get; set; }
@@ -30,6 +32,7 @@ namespace GRCFinancialControl.Persistence
         public DbSet<MailOutbox> MailOutboxEntries { get; set; }
         public DbSet<MailOutboxLog> MailOutboxLogs { get; set; }
         public DbSet<InvoiceNotificationPreview> InvoiceNotificationPreviews { get; set; }
+        public DbSet<WeekCalendarEntry> WeekCalendar { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -59,6 +62,32 @@ namespace GRCFinancialControl.Persistence
                 .HasIndex(c => c.CustomerCode)
                 .IsUnique();
 
+            modelBuilder.Entity<RankMapping>()
+                .Property(r => r.RawRank)
+                .HasMaxLength(100);
+
+            modelBuilder.Entity<RankMapping>()
+                .Property(r => r.NormalizedRank)
+                .HasMaxLength(100);
+
+            modelBuilder.Entity<RankMapping>()
+                .Property(r => r.LastSeenAt)
+                .HasMySqlColumnType("datetime(6)", isMySql);
+
+            modelBuilder.Entity<RankMapping>()
+                .Property(r => r.IsActive)
+                .HasDefaultValue(true);
+
+            modelBuilder.Entity<RankMapping>()
+                .HasIndex(r => r.RawRank)
+                .IsUnique();
+
+            modelBuilder.Entity<RankMapping>()
+                .HasIndex(r => r.NormalizedRank);
+
+            modelBuilder.Entity<RankMapping>()
+                .HasIndex(r => r.IsActive);
+
             modelBuilder.Entity<Engagement>()
                 .HasAlternateKey(e => e.EngagementId);
 
@@ -82,6 +111,48 @@ namespace GRCFinancialControl.Persistence
                 .WithMany(fy => fy.ClosingPeriods)
                 .HasForeignKey(cp => cp.FiscalYearId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<WeekCalendarEntry>()
+                .ToTable("WeekCalendar");
+
+            modelBuilder.Entity<WeekCalendarEntry>()
+                .HasKey(w => w.WeekStartMon);
+
+            modelBuilder.Entity<WeekCalendarEntry>()
+                .Property(w => w.WeekStartMon)
+                .HasMySqlColumnType("date", isMySql);
+
+            modelBuilder.Entity<WeekCalendarEntry>()
+                .Property(w => w.WeekEndFri)
+                .HasMySqlColumnType("date", isMySql);
+
+            modelBuilder.Entity<WeekCalendarEntry>()
+                .Property(w => w.RetainAnchorStart)
+                .HasMySqlColumnType("date", isMySql);
+
+            modelBuilder.Entity<WeekCalendarEntry>()
+                .Property(w => w.WorkingDaysCount)
+                .HasMySqlColumnType("tinyint unsigned", isMySql);
+
+            modelBuilder.Entity<WeekCalendarEntry>()
+                .Property(w => w.IsHolidayWeek)
+                .HasDefaultValue(false);
+
+            modelBuilder.Entity<WeekCalendarEntry>()
+                .HasIndex(w => new { w.FiscalYear, w.WeekSeqInFY })
+                .IsUnique();
+
+            modelBuilder.Entity<WeekCalendarEntry>()
+                .HasIndex(w => w.ClosingPeriodId);
+
+            modelBuilder.Entity<WeekCalendarEntry>()
+                .HasIndex(w => w.WeekSeqInCP);
+
+            modelBuilder.Entity<WeekCalendarEntry>()
+                .HasOne(w => w.ClosingPeriod)
+                .WithMany(cp => cp.WeekCalendarEntries)
+                .HasForeignKey(w => w.ClosingPeriodId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Engagement>()
                 .HasMany(e => e.EngagementPapds)
@@ -228,6 +299,47 @@ namespace GRCFinancialControl.Persistence
                 .WithOne(a => a.Manager)
                 .HasForeignKey(a => a.ManagerId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Employee>()
+                .HasKey(e => e.Gpn);
+
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.Gpn)
+                .HasMaxLength(20);
+
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.EmployeeName)
+                .HasMaxLength(200);
+
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.Office)
+                .HasMaxLength(100);
+
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.CostCenter)
+                .HasMaxLength(50);
+
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.StartDate)
+                .HasMySqlColumnType("date", isMySql);
+
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.EndDate)
+                .HasMySqlColumnType("date", isMySql);
+
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.IsEyEmployee)
+                .HasDefaultValue(true);
+
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.IsContractor)
+                .HasDefaultValue(false);
+
+            modelBuilder.Entity<Employee>()
+                .HasIndex(e => e.Office);
+
+            modelBuilder.Entity<Employee>()
+                .HasIndex(e => e.CostCenter);
 
             modelBuilder.Entity<EngagementManagerAssignment>()
                 .HasKey(a => a.Id);
