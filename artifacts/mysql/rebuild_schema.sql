@@ -182,33 +182,20 @@ CREATE TABLE `EngagementManagerAssignments`
 
 CREATE TABLE `EngagementRankBudgets`
 (
-    `Id`            BIGINT         NOT NULL AUTO_INCREMENT,
-    `EngagementId`  INT            NOT NULL,
-    `RankName`      VARCHAR(100)   NOT NULL,
-    `Hours`         DECIMAL(18, 2) NOT NULL DEFAULT 0,
-    `ForecastHours` DECIMAL(18, 2) NOT NULL DEFAULT 0,
-    `CreatedAtUtc`  DATETIME(6)    NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    `UpdatedAtUtc`  DATETIME(6)    NULL,
+    `Id`             BIGINT         NOT NULL AUTO_INCREMENT,
+    `EngagementId`   INT            NOT NULL,
+    `FiscalYearId`   INT            NOT NULL,
+    `RankName`       VARCHAR(100)   NOT NULL,
+    `BudgetHours`    DECIMAL(18, 2) NOT NULL DEFAULT 0,
+    `ConsumedHours`  DECIMAL(18, 2) NOT NULL DEFAULT 0,
+    `RemainingHours` DECIMAL(18, 2) GENERATED ALWAYS AS (`BudgetHours` - `ConsumedHours`) STORED,
+    `CreatedAtUtc`   DATETIME(6)    NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    `UpdatedAtUtc`   DATETIME(6)    NULL,
     CONSTRAINT `PK_EngagementRankBudgets` PRIMARY KEY (`Id`),
     CONSTRAINT `FK_EngagementRankBudgets_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
-    CONSTRAINT `UX_EngagementRankBudgets_EngagementRank` UNIQUE (`EngagementId`, `RankName`),
+    CONSTRAINT `FK_EngagementRankBudgets_FiscalYears` FOREIGN KEY (`FiscalYearId`) REFERENCES `FiscalYears` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `UQ_EngagementRankBudgets` UNIQUE (`EngagementId`, `FiscalYearId`, `RankName`),
     INDEX `IX_EngagementRankBudgets_EngagementId` (`EngagementId`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-
-CREATE TABLE `StaffAllocationForecasts`
-(
-    `Id`            BIGINT         NOT NULL AUTO_INCREMENT,
-    `EngagementId`  INT            NOT NULL,
-    `FiscalYearId`  INT            NOT NULL,
-    `RankName`      VARCHAR(100)   NOT NULL,
-    `ForecastHours` DECIMAL(18, 2) NOT NULL DEFAULT 0,
-    `CreatedAtUtc`  DATETIME(6)    NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    `UpdatedAtUtc`  DATETIME(6)    NULL,
-    CONSTRAINT `PK_StaffAllocationForecasts` PRIMARY KEY (`Id`),
-    CONSTRAINT `FK_StaffAllocationForecasts_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
-    CONSTRAINT `FK_StaffAllocationForecasts_FiscalYears` FOREIGN KEY (`FiscalYearId`) REFERENCES `FiscalYears` (`Id`) ON DELETE CASCADE,
-    CONSTRAINT `UX_StaffAllocationForecasts_Key` UNIQUE (`EngagementId`, `FiscalYearId`, `RankName`),
-    INDEX `IX_StaffAllocationForecasts_FiscalYearId` (`FiscalYearId`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- Applied Suggestion #2: Use INT FK for EngagementId to keep consistency/performance
@@ -272,18 +259,6 @@ CREATE TABLE `Exceptions`
     `RowData`    TEXT          NOT NULL,
     `Reason`     VARCHAR(500)  NOT NULL,
     CONSTRAINT `PK_Exceptions` PRIMARY KEY (`Id`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-
-CREATE TABLE `EngagementFiscalYearAllocations`
-(
-    `Id`            INT             NOT NULL AUTO_INCREMENT,
-    `EngagementId`  INT             NOT NULL,
-    `FiscalYearId`  INT             NOT NULL,
-    `PlannedHours`  DECIMAL(18, 2)  NOT NULL,
-    CONSTRAINT `PK_EngagementFiscalYearAllocations` PRIMARY KEY (`Id`),
-    CONSTRAINT `FK_EngagementFiscalYearAllocations_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
-    CONSTRAINT `FK_EngagementFiscalYearAllocations_FiscalYears` FOREIGN KEY (`FiscalYearId`) REFERENCES `FiscalYears` (`Id`) ON DELETE CASCADE,
-    CONSTRAINT `UX_EngagementFiscalYearAllocations_Allocation` UNIQUE (`EngagementId`, `FiscalYearId`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- Applied Suggestion #3: rename PlannedValue -> ToGoValue and add ToDateValue
@@ -521,6 +496,9 @@ CREATE TRIGGER trg_EngagementRankBudgets_bu
 BEFORE UPDATE ON EngagementRankBudgets
 FOR EACH ROW
 BEGIN
+  IF NEW.BudgetHours <> OLD.BudgetHours THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'BudgetHours is immutable once created';
+  END IF;
   SET NEW.UpdatedAtUtc = CURRENT_TIMESTAMP(6);
 END//
 DELIMITER ;

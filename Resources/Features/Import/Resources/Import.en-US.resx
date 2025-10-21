@@ -21,6 +21,9 @@
   <data name="Import.Button.Actuals" xml:space="preserve">
     <value>Import margin data</value>
   </data>
+  <data name="Import.Button.AllocationPlanning" xml:space="preserve">
+    <value>Import GRC allocation planning</value>
+  </data>
   <data name="Import.Button.FullManagement" xml:space="preserve">
     <value>Import full management data</value>
   </data>
@@ -42,6 +45,9 @@
   </data>
   <data name="Import.FileType.Actuals" xml:space="preserve">
     <value>ETC-P</value>
+  </data>
+  <data name="Import.FileType.AllocationPlanning" xml:space="preserve">
+    <value>GRC allocation planning</value>
   </data>
   <data name="Import.FileType.FullManagement" xml:space="preserve">
     <value>Full management data</value>

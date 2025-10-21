@@ -109,7 +109,7 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<IFiscalYearService, FiscalYearService>();
             services.AddTransient<IFullManagementDataImporter, FullManagementDataImporter>();
             services.AddTransient<IFiscalCalendarConsistencyService, FiscalCalendarConsistencyService>();
-            services.AddTransient<IStaffAllocationForecastService, StaffAllocationForecastService>();
+            services.AddTransient<IHoursAllocationService, HoursAllocationService>();
             services.AddTransient<IImportService, ImportService>();
             services.AddTransient<IClosingPeriodService, ClosingPeriodService>();
             services.AddTransient<IPlannedAllocationService, PlannedAllocationService>();
@@ -135,7 +135,6 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<ImportViewModel>();
             services.AddTransient<HoursAllocationsViewModel>();
             services.AddTransient<RevenueAllocationsViewModel>();
-            services.AddTransient<ForecastAllocationsViewModel>();
             services.AddTransient<AllocationsViewModel>();
             services.AddTransient(sp => new ReportsViewModel(
                 sp.GetRequiredService<IPowerBiEmbeddingService>(),

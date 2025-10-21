@@ -69,10 +69,6 @@ namespace GRCFinancialControl.Persistence.Services
                 .Where(fe => engagementIds.Contains(fe.EngagementId))
                 .ExecuteDeleteAsync();
 
-            await context.EngagementFiscalYearAllocations
-                .Where(a => engagementIds.Contains(a.EngagementId))
-                .ExecuteDeleteAsync();
-
             await context.EngagementFiscalYearRevenueAllocations
                 .Where(a => engagementIds.Contains(a.EngagementId))
                 .ExecuteDeleteAsync();

@@ -21,6 +21,10 @@
                                 Command="{Binding SetImportTypeCommand}"
                                 CommandParameter="Budget"
                                 Classes="accent"/>
+                        <Button Content="{loc:Loc Key=Import.Button.AllocationPlanning}"
+                                Command="{Binding SetImportTypeCommand}"
+                                CommandParameter="AllocationPlanning"
+                                Classes="accent"/>
                         <Button Content="{loc:Loc Key=Import.Button.Actuals}"
                                 Command="{Binding SetImportTypeCommand}"
                                 CommandParameter="Actuals"

@@ -38,15 +38,10 @@ namespace GRCFinancialControl.Core.Models
         public ICollection<EngagementManagerAssignment> ManagerAssignments { get; } = new List<EngagementManagerAssignment>();
         public ICollection<EngagementRankBudget> RankBudgets { get; } = new List<EngagementRankBudget>();
         public ICollection<FinancialEvolution> FinancialEvolutions { get; } = new List<FinancialEvolution>();
-        public ICollection<EngagementFiscalYearAllocation> Allocations { get; } = new List<EngagementFiscalYearAllocation>();
         public ICollection<EngagementFiscalYearRevenueAllocation> RevenueAllocations { get; } = new List<EngagementFiscalYearRevenueAllocation>();
-        public ICollection<StaffAllocationForecast> Forecasts { get; } = new List<StaffAllocationForecast>();
 
         [NotMapped]
         public bool IsManualOnly => Source == EngagementSource.S4Project;
-
-        [NotMapped]
-        public decimal CurrentHoursAllocation => Allocations.Sum(a => a.PlannedHours);
 
         [NotMapped]
         public string CustomerName => Customer?.Name ?? string.Empty;
@@ -67,25 +62,6 @@ namespace GRCFinancialControl.Core.Models
                 return age < 0 ? 0 : age;
             }
         }
-
-        [NotMapped]
-        public decimal HoursToAllocate
-        {
-            get
-            {
-                return EstimatedToCompleteHours > 0m
-                    ? EstimatedToCompleteHours
-                    : InitialHoursBudget > 0m
-                        ? InitialHoursBudget
-                        : 0m;
-            }
-        }
-
-        [NotMapped]
-        public decimal AllocationVariance => CurrentHoursAllocation - HoursToAllocate;
-
-        [NotMapped]
-        public bool RequiresAllocationReview => Math.Abs(AllocationVariance) > 0.01m;
 
         [NotMapped]
         public decimal CurrentRevenueAllocation => RevenueAllocations.Sum(a => a.ToGoValue + a.ToDateValue);

@@ -3,72 +3,179 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
-             xmlns:models="using:GRCFinancialControl.Core.Models"
              xmlns:conv="using:GRCFinancialControl.Avalonia.Converters"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
              x:Class="GRCFinancialControl.Avalonia.Views.HoursAllocationsView"
-             x:Name="HoursAllocationsViewRoot"
              x:DataType="vm:HoursAllocationsViewModel">
     <UserControl.Resources>
-        <conv:BooleanToBrushConverter x:Key="AllocationFillBrush"
-                                      TrueBrush="{StaticResource BrushWarningHighlight}"
-                                      FalseBrush="{StaticResource BrushSuccess}"/>
-        <conv:BooleanToBrushConverter x:Key="AllocationStrokeBrush"
-                                      TrueBrush="{StaticResource BrushWarning}"
-                                      FalseBrush="{StaticResource BrushSuccessDark}"/>
+        <SolidColorBrush x:Key="CellEditableBrush" Color="#E6F4EA"/>
+        <SolidColorBrush x:Key="CellLockedBrush" Color="#FDEAEA"/>
+        <SolidColorBrush x:Key="CellBorderBrush" Color="#CED4DA"/>
+        <conv:BooleanToBrushConverter x:Key="EditableCellBackgroundConverter"
+                                       TrueBrush="{StaticResource CellEditableBrush}"
+                                       FalseBrush="{StaticResource CellLockedBrush}"/>
     </UserControl.Resources>
-    <Grid RowDefinitions="Auto,Auto,*">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" Margin="0">
         <TextBlock Grid.Row="0"
                    Text="{Binding Header}"
-                   FontSize="{StaticResource FontSizeXL}"
+                   FontSize="24"
                    FontWeight="Bold"
-                   Margin="{StaticResource SpaceThickness10}"/>
+                   Margin="0,0,0,12"/>
+
         <StackPanel Grid.Row="1"
                     Orientation="Horizontal"
-                    Margin="{StaticResource SpaceThickness10}"
-                    Spacing="{StaticResource Space8}">
-            <Button Content="Atualizar"
-                    Command="{Binding RefreshAssignmentsCommand}" />
-            <Button Content="Gerar Template Retain"
-                    Command="{Binding GenerateTemplateRetainCommand}" />
-            <Button Content="Exportar Pendências"
-                    Command="{Binding ExportPendingCommand}" />
+                    Spacing="16"
+                    Margin="0,0,0,12">
+            <ComboBox Width="280"
+                      ItemsSource="{Binding Engagements}"
+                      SelectedItem="{Binding SelectedEngagement}"/>
+            <Button Content="Refresh"
+                    Command="{Binding RefreshCommand}"/>
+            <Button Content="Save"
+                    Command="{Binding SaveCommand}"
+                    IsEnabled="{Binding HasChanges}"/>
+            <TextBox Width="200"
+                     Watermark="New rank"
+                     Text="{Binding NewRankName, UpdateSourceTrigger=PropertyChanged}"/>
+            <Button Content="Add Rank"
+                    Command="{Binding AddRankCommand}"/>
+            <Button Content="Delete Rank"
+                    Command="{Binding DeleteRankCommand}"
+                    IsEnabled="{Binding SelectedRow.CanDelete, FallbackValue=False}"/>
         </StackPanel>
-        <DataGrid Grid.Row="2" ItemsSource="{Binding Engagements}" AutoGenerateColumns="False" IsReadOnly="True" CanUserSortColumns="True">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Engagement ID" Binding="{Binding EngagementId}" Width="*"/>
-                <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="2*"/>
-                <DataGridTextColumn Header="Hours to Allocate" Binding="{Binding HoursToAllocate, StringFormat='{}{0:N2}'}" Width="*"/>
-                <DataGridTextColumn Header="Current Hours Allocation" Binding="{Binding CurrentHoursAllocation, StringFormat='{}{0:N2}'}" Width="*"/>
-                <DataGridTemplateColumn Header="Review" Width="Auto">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate x:DataType="models:Engagement">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="{StaticResource Space4}">
-                                <Ellipse Width="12" Height="12" StrokeThickness="1" ToolTip.Tip="{Binding AllocationVariance, StringFormat='Variance {0:+0.##;-0.##;0} h'}"
-                                         Fill="{Binding RequiresAllocationReview, Converter={StaticResource AllocationFillBrush}}"
-                                         Stroke="{Binding RequiresAllocationReview, Converter={StaticResource AllocationStrokeBrush}}"/>
-                                <TextBlock Text="{Binding AllocationVariance, StringFormat='{}{0:+0.##;-0.##;0} h'}"
-                                           Foreground="{StaticResource BrushWarning}"
-                                           IsVisible="{Binding RequiresAllocationReview}"/>
-                            </StackPanel>
+
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    Spacing="24"
+                    Margin="0,0,0,12">
+            <TextBlock Text="{Binding TotalBudgetHours, StringFormat='Budget: {0:N2} h'}"/>
+            <TextBlock Text="{Binding ActualHours, StringFormat='Actuals: {0:N2} h'}"/>
+            <TextBlock Text="{Binding ToBeConsumedHours, StringFormat='To be consumed: {0:N2} h'}"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="3"
+                   Text="{Binding StatusMessage}"
+                   Foreground="{StaticResource BrushWarning}"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,12"/>
+
+        <ScrollViewer Grid.Row="4"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <DockPanel Margin="0,0,0,8">
+                    <Border Width="220"
+                            Padding="8"
+                            Background="{StaticResource CellBorderBrush}"
+                            CornerRadius="6"
+                            Margin="4">
+                        <TextBlock Text="Rank"
+                                   FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"/>
+                    </Border>
+                    <ItemsControl ItemsSource="{Binding FiscalYears}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Width="220"
+                                        Padding="8"
+                                        Background="{StaticResource CellBorderBrush}"
+                                        CornerRadius="6"
+                                        Margin="4">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                        <Border Background="{StaticResource BrushSurface}"
+                                                CornerRadius="4"
+                                                Padding="4,2"
+                                                HorizontalAlignment="Left"
+                                                IsVisible="{Binding IsLocked}">
+                                            <TextBlock Text="Locked"
+                                                       FontSize="12"
+                                                       Foreground="{StaticResource BrushWarning}"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </DockPanel>
+
+                <ListBox ItemsSource="{Binding Rows}"
+                         SelectedItem="{Binding SelectedRow}"
+                         BorderThickness="0"
+                         Background="Transparent">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <DockPanel Margin="0,2">
+                                <Border Width="220"
+                                        Padding="8"
+                                        Margin="4"
+                                        Background="{StaticResource CellEditableBrush}"
+                                        CornerRadius="6">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="{Binding RankName}" FontWeight="SemiBold"/>
+                                        <TextBlock Text="Cannot delete – non-zero values"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource BrushWarning}"
+                                                   IsVisible="{Binding CanDelete, Converter={StaticResource InverseBooleanConverter}}"/>
+                                        <TextBlock Text="All values are zero"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource BrushSuccess}"
+                                                   IsVisible="{Binding CanDelete}"/>
+                                    </StackPanel>
+                                </Border>
+                                <ItemsControl ItemsSource="{Binding Cells}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{Binding IsEditable, Converter={StaticResource EditableCellBackgroundConverter}}"
+                                                    BorderBrush="{StaticResource CellBorderBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="6"
+                                                    Padding="8"
+                                                    Margin="4">
+                                                <StackPanel Spacing="4">
+                                                    <TextBlock FontSize="12">
+                                                        <Run Text="Budget "/>
+                                                        <Run Text="{Binding BudgetHours, StringFormat='{}{0:N2}'}"/>
+                                                        <Run Text=" h"/>
+                                                    </TextBlock>
+                                                    <TextBox Text="{Binding ConsumedHours, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                             HorizontalContentAlignment="Right"
+                                                             IsEnabled="{Binding IsEditable}"/>
+                                                    <TextBlock FontSize="12">
+                                                        <Run Text="Remaining "/>
+                                                        <Run Text="{Binding RemainingHours, StringFormat='{}{0:N2}'}"/>
+                                                        <Run Text=" h"/>
+                                                    </TextBlock>
+                                                    <Border Background="{StaticResource BrushSurface}"
+                                                            CornerRadius="4"
+                                                            Padding="4,2"
+                                                            HorizontalAlignment="Left"
+                                                            IsVisible="{Binding IsLocked}">
+                                                        <TextBlock Text="Locked"
+                                                                   Foreground="{StaticResource BrushWarning}"
+                                                                   FontSize="11"/>
+                                                    </Border>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </DockPanel>
                         </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Actions">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate x:DataType="models:Engagement">
-                            <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space6}">
-                                <Button Content="View"
-                                        Command="{Binding DataContext.ViewAllocationCommand, ElementName=HoursAllocationsViewRoot}"
-                                        CommandParameter="{Binding}"/>
-                                <Button Content="Edit"
-                                        Command="{Binding DataContext.EditAllocationCommand, ElementName=HoursAllocationsViewRoot}"
-                                        CommandParameter="{Binding}"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </UserControl>
