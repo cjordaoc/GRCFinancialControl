@@ -19,5 +19,6 @@ namespace GRCFinancialControl.Core.Models
         public string? LockedBy { get; set; }
 
         public ICollection<ClosingPeriod> ClosingPeriods { get; set; } = [];
+        public ICollection<StaffAllocationForecast> Forecasts { get; set; } = [];
     }
 }

@@ -26,7 +26,10 @@ public sealed class StaffAllocationWorksheetParser
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public StaffAllocationParseResult Parse(DataTable worksheet, IReadOnlyDictionary<string, Employee> employees)
+    public StaffAllocationParseResult Parse(
+        DataTable worksheet,
+        IReadOnlyDictionary<string, Employee> employees,
+        DateTime uploadTimestamp)
     {
         if (worksheet == null)
         {
@@ -40,6 +43,7 @@ public sealed class StaffAllocationWorksheetParser
 
         var employeeLookup = BuildEmployeeLookup(employees);
         var schema = _schemaAnalyzer.Analyze(worksheet);
+        var minimumWeekStart = StaffAllocationCellHelper.NormalizeWeekStart(uploadTimestamp);
 
         var records = new List<StaffAllocationTemporaryRecord>();
         var unknownAffiliations = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -69,6 +73,13 @@ public sealed class StaffAllocationWorksheetParser
 
             foreach (var weekColumn in schema.WeekColumns)
             {
+                var normalizedWeekStart = StaffAllocationCellHelper.NormalizeWeekStart(weekColumn.WeekStartMon);
+
+                if (normalizedWeekStart < minimumWeekStart)
+                {
+                    continue;
+                }
+
                 var cellValue = row[weekColumn.ColumnIndex];
                 foreach (var engagementCode in ExtractEngagementCodes(cellValue))
                 {
@@ -77,12 +88,12 @@ public sealed class StaffAllocationWorksheetParser
 
                     if (employeeLookup.TryGetValue(gpn, out var employee))
                     {
-                        if (IsEmployeeInactiveForWeek(employee, weekColumn.WeekStartMon))
+                        if (IsEmployeeInactiveForWeek(employee, normalizedWeekStart))
                         {
                             skippedInactive.Add(new StaffAllocationSkippedEntry(
                                 gpn,
                                 employee.EmployeeName,
-                                weekColumn.WeekStartMon));
+                                normalizedWeekStart));
 
                             _logger.LogInformation(
                                 "Skipping staff allocation for inactive employee {Gpn} ({EmployeeName}) on week {WeekStart}.",
@@ -111,7 +122,7 @@ public sealed class StaffAllocationWorksheetParser
                         resolvedEmployeeName,
                         rank,
                         engagementCode,
-                        weekColumn.WeekStartMon,
+                        normalizedWeekStart,
                         DefaultWeekHours,
                         office,
                         subdomain,
@@ -247,7 +258,9 @@ public sealed record StaffAllocationTemporaryRecord(
     decimal Hours,
     string Office,
     string Subdomain,
-    bool IsUnknownAffiliation);
+    bool IsUnknownAffiliation,
+    int? FiscalYearId = null,
+    int? ClosingPeriodId = null);
 
 public sealed class StaffAllocationParseResult
 {

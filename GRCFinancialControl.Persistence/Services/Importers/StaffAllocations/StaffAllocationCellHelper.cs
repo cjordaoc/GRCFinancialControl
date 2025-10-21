@@ -31,4 +31,11 @@ internal static class StaffAllocationCellHelper
             _ => value.ToString() ?? string.Empty
         };
     }
+
+    public static DateTime NormalizeWeekStart(DateTime date)
+    {
+        var truncated = date.Date;
+        var offset = ((int)truncated.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
+        return truncated.AddDays(-offset);
+    }
 }

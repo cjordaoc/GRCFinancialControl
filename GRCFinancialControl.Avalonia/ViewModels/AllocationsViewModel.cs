@@ -10,16 +10,20 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public RevenueAllocationsViewModel Revenue { get; }
 
+        public ForecastAllocationsViewModel Forecast { get; }
+
         [ObservableProperty]
         private ViewModelBase? _selectedAllocation;
 
         public AllocationsViewModel(HoursAllocationsViewModel hoursAllocations,
                                     RevenueAllocationsViewModel revenueAllocations,
+                                    ForecastAllocationsViewModel forecastAllocations,
                                     IMessenger messenger)
             : base(messenger)
         {
             Hours = hoursAllocations;
             Revenue = revenueAllocations;
+            Forecast = forecastAllocations;
             SelectedAllocation = Hours;
         }
 
@@ -27,6 +31,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             await Hours.LoadDataAsync();
             await Revenue.LoadDataAsync();
+            await Forecast.LoadDataAsync();
 
             SelectedAllocation ??= Hours;
         }

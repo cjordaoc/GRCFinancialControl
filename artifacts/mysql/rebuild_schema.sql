@@ -119,26 +119,6 @@ CREATE TABLE `Employees`
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 
-CREATE TABLE `WeekCalendar`
-(
-    `WeekStartMon`       DATE              NOT NULL,
-    `WeekEndFri`         DATE              NOT NULL,
-    `RetainAnchorStart`  DATE              NULL,
-    `FiscalYear`         INT               NOT NULL,
-    `ClosingPeriodId`    INT               NULL,
-    `WorkingDaysCount`   TINYINT UNSIGNED  NOT NULL,
-    `IsHolidayWeek`      TINYINT(1)        NOT NULL DEFAULT 0,
-    `WeekSeqInFY`        INT               NOT NULL,
-    `WeekSeqInCP`        INT               NULL,
-    CONSTRAINT `PK_WeekCalendar` PRIMARY KEY (`WeekStartMon`),
-    CONSTRAINT `FK_WeekCalendar_ClosingPeriods` FOREIGN KEY (`ClosingPeriodId`) REFERENCES `ClosingPeriods` (`Id`) ON DELETE SET NULL,
-    CONSTRAINT `UX_WeekCalendar_FiscalYear_WeekSeq` UNIQUE (`FiscalYear`, `WeekSeqInFY`),
-    INDEX `IX_WeekCalendar_ClosingPeriodId` (`ClosingPeriodId`),
-    INDEX `IX_WeekCalendar_WeekSeqInCP` (`WeekSeqInCP`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-
-
-
 /* ============================
    Engagements & assignments
    ============================ */
@@ -206,12 +186,29 @@ CREATE TABLE `EngagementRankBudgets`
     `EngagementId`  INT            NOT NULL,
     `RankName`      VARCHAR(100)   NOT NULL,
     `Hours`         DECIMAL(18, 2) NOT NULL DEFAULT 0,
+    `ForecastHours` DECIMAL(18, 2) NOT NULL DEFAULT 0,
     `CreatedAtUtc`  DATETIME(6)    NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     `UpdatedAtUtc`  DATETIME(6)    NULL,
     CONSTRAINT `PK_EngagementRankBudgets` PRIMARY KEY (`Id`),
     CONSTRAINT `FK_EngagementRankBudgets_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
     CONSTRAINT `UX_EngagementRankBudgets_EngagementRank` UNIQUE (`EngagementId`, `RankName`),
     INDEX `IX_EngagementRankBudgets_EngagementId` (`EngagementId`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE `StaffAllocationForecasts`
+(
+    `Id`            BIGINT         NOT NULL AUTO_INCREMENT,
+    `EngagementId`  INT            NOT NULL,
+    `FiscalYearId`  INT            NOT NULL,
+    `RankName`      VARCHAR(100)   NOT NULL,
+    `ForecastHours` DECIMAL(18, 2) NOT NULL DEFAULT 0,
+    `CreatedAtUtc`  DATETIME(6)    NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    `UpdatedAtUtc`  DATETIME(6)    NULL,
+    CONSTRAINT `PK_StaffAllocationForecasts` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_StaffAllocationForecasts_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_StaffAllocationForecasts_FiscalYears` FOREIGN KEY (`FiscalYearId`) REFERENCES `FiscalYears` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `UX_StaffAllocationForecasts_Key` UNIQUE (`EngagementId`, `FiscalYearId`, `RankName`),
+    INDEX `IX_StaffAllocationForecasts_FiscalYearId` (`FiscalYearId`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- Applied Suggestion #2: Use INT FK for EngagementId to keep consistency/performance

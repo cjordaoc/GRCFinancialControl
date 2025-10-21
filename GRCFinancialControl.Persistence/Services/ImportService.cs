@@ -35,6 +35,8 @@ namespace GRCFinancialControl.Persistence.Services
         private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
         private readonly ILogger<ImportService> _logger;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly IFiscalCalendarConsistencyService _fiscalCalendarConsistencyService;
+        private readonly IStaffAllocationForecastService _staffAllocationForecastService;
         private const string FinancialEvolutionInitialPeriodId = "INITIAL";
         private const int FcsHeaderSearchLimit = 20;
         private const int FcsDataStartRowIndex = 11; // Default row 12 in Excel (1-based)
@@ -65,15 +67,21 @@ namespace GRCFinancialControl.Persistence.Services
 
         public ImportService(IDbContextFactory<ApplicationDbContext> contextFactory,
             ILogger<ImportService> logger,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            IFiscalCalendarConsistencyService fiscalCalendarConsistencyService,
+            IStaffAllocationForecastService staffAllocationForecastService)
         {
             ArgumentNullException.ThrowIfNull(contextFactory);
             ArgumentNullException.ThrowIfNull(logger);
             ArgumentNullException.ThrowIfNull(loggerFactory);
+            ArgumentNullException.ThrowIfNull(fiscalCalendarConsistencyService);
+            ArgumentNullException.ThrowIfNull(staffAllocationForecastService);
 
             _contextFactory = contextFactory;
             _logger = logger;
             _loggerFactory = loggerFactory;
+            _fiscalCalendarConsistencyService = fiscalCalendarConsistencyService;
+            _staffAllocationForecastService = staffAllocationForecastService;
         }
 
         public async Task<string> ImportBudgetAsync(string filePath)
@@ -87,6 +95,8 @@ namespace GRCFinancialControl.Persistence.Services
             {
                 throw new FileNotFoundException("Budget workbook could not be found.", filePath);
             }
+
+            await _fiscalCalendarConsistencyService.EnsureConsistencyAsync().ConfigureAwait(false);
 
             var dataSet = LoadWorkbookDataSet(filePath);
 
@@ -206,7 +216,6 @@ namespace GRCFinancialControl.Persistence.Services
 
                     await UpsertRankMappingsAsync(context, resourcingParseResult.RankMappings, generatedAtUtc);
                     await UpsertEmployeesAsync(context, resourcingParseResult.Employees);
-                    await UpsertWeekCalendarAsync(context, resourcingParseResult.WeekStartDates);
 
                     engagement.Customer = customer;
                     if (customer.Id > 0)
@@ -788,137 +797,6 @@ namespace GRCFinancialControl.Persistence.Services
             }
         }
 
-        private static async Task UpsertWeekCalendarAsync(
-            ApplicationDbContext context,
-            IReadOnlyCollection<DateTime> weekStartDates)
-        {
-            if (weekStartDates.Count == 0)
-            {
-                return;
-            }
-
-            var orderedWeekStarts = weekStartDates
-                .Select(d => d.Date)
-                .Distinct()
-                .OrderBy(d => d)
-                .ToList();
-
-            var weekCandidates = orderedWeekStarts
-                .Select(start => new WeekCalendarCandidate(start, start.AddDays(4)))
-                .ToList();
-
-            var closingPeriods = await context.ClosingPeriods
-                .Include(cp => cp.FiscalYear)
-                .ToListAsync();
-
-            foreach (var candidate in weekCandidates)
-            {
-                var closingPeriod = closingPeriods
-                    .FirstOrDefault(cp => candidate.WeekStart >= cp.PeriodStart.Date && candidate.WeekStart <= cp.PeriodEnd.Date);
-
-                candidate.ClosingPeriodId = closingPeriod?.Id;
-                candidate.FiscalYear = closingPeriod?.FiscalYear?.StartDate.Year ?? candidate.WeekStart.Year;
-            }
-
-            var fiscalYears = weekCandidates.Select(w => w.FiscalYear).Distinct().ToList();
-            var closingPeriodIds = weekCandidates
-                .Where(w => w.ClosingPeriodId.HasValue)
-                .Select(w => w.ClosingPeriodId!.Value)
-                .Distinct()
-                .ToList();
-
-            var existingWeeks = await context.WeekCalendar
-                .Where(w => orderedWeekStarts.Contains(w.WeekStartMon))
-                .ToDictionaryAsync(w => w.WeekStartMon);
-
-            var maxSequenceByFiscalYear = await context.WeekCalendar
-                .Where(w => fiscalYears.Contains(w.FiscalYear))
-                .GroupBy(w => w.FiscalYear)
-                .ToDictionaryAsync(g => g.Key, g => g.Max(w => w.WeekSeqInFY));
-
-            Dictionary<int, int> maxSequenceByClosingPeriod;
-            if (closingPeriodIds.Count > 0)
-            {
-                maxSequenceByClosingPeriod = await context.WeekCalendar
-                    .Where(w => w.ClosingPeriodId.HasValue && closingPeriodIds.Contains(w.ClosingPeriodId.Value) && w.WeekSeqInCP.HasValue)
-                    .GroupBy(w => w.ClosingPeriodId!.Value)
-                    .ToDictionaryAsync(g => g.Key, g => g.Max(w => w.WeekSeqInCP!.Value));
-            }
-            else
-            {
-                maxSequenceByClosingPeriod = new Dictionary<int, int>();
-            }
-
-            foreach (var candidate in weekCandidates)
-            {
-                if (existingWeeks.TryGetValue(candidate.WeekStart, out var entity))
-                {
-                    entity.WeekEndFri = candidate.WeekEnd;
-                    entity.RetainAnchorStart ??= candidate.WeekStart;
-                    entity.FiscalYear = candidate.FiscalYear;
-                    entity.ClosingPeriodId = candidate.ClosingPeriodId;
-                    entity.WorkingDaysCount = candidate.WorkingDaysCount;
-                    entity.IsHolidayWeek = candidate.IsHolidayWeek;
-
-                    if (entity.WeekSeqInFY <= 0)
-                    {
-                        entity.WeekSeqInFY = GetNextSequence(maxSequenceByFiscalYear, candidate.FiscalYear);
-                    }
-
-                    if (candidate.ClosingPeriodId.HasValue && (!entity.WeekSeqInCP.HasValue || entity.WeekSeqInCP <= 0))
-                    {
-                        entity.WeekSeqInCP = GetNextSequence(maxSequenceByClosingPeriod, candidate.ClosingPeriodId.Value);
-                    }
-                }
-                else
-                {
-                    var weekSeqInFy = GetNextSequence(maxSequenceByFiscalYear, candidate.FiscalYear);
-                    int? weekSeqInCp = null;
-
-                    if (candidate.ClosingPeriodId.HasValue)
-                    {
-                        weekSeqInCp = GetNextSequence(maxSequenceByClosingPeriod, candidate.ClosingPeriodId.Value);
-                    }
-
-                    context.WeekCalendar.Add(new WeekCalendarEntry
-                    {
-                        WeekStartMon = candidate.WeekStart,
-                        WeekEndFri = candidate.WeekEnd,
-                        RetainAnchorStart = candidate.WeekStart,
-                        FiscalYear = candidate.FiscalYear,
-                        ClosingPeriodId = candidate.ClosingPeriodId,
-                        WorkingDaysCount = candidate.WorkingDaysCount,
-                        IsHolidayWeek = candidate.IsHolidayWeek,
-                        WeekSeqInFY = weekSeqInFy,
-                        WeekSeqInCP = weekSeqInCp
-                    });
-                }
-            }
-        }
-
-        private sealed record WeekCalendarCandidate(DateTime WeekStart, DateTime WeekEnd)
-        {
-            public int FiscalYear { get; set; }
-
-            public int? ClosingPeriodId { get; set; }
-
-            public byte WorkingDaysCount { get; init; } = 5;
-
-            public bool IsHolidayWeek { get; init; }
-        }
-
-        private static int GetNextSequence(IDictionary<int, int> sequenceMap, int key)
-        {
-            if (!sequenceMap.TryGetValue(key, out var current) || current < 0)
-            {
-                current = 0;
-            }
-
-            current++;
-            sequenceMap[key] = current;
-            return current;
-        }
-
         private static (decimal value, bool hasValue) ParseHours(object? cellValue)
         {
             if (cellValue == null || cellValue == DBNull.Value)
@@ -990,14 +868,86 @@ namespace GRCFinancialControl.Persistence.Services
                             throw new InvalidDataException("Worksheet 'Alocações_Staff' is missing from the staff allocation workbook.");
 
             await using var context = await _contextFactory.CreateDbContextAsync();
-            var employees = await context.Employees.ToListAsync();
+            var employees = await context.Employees.AsNoTracking().ToListAsync();
             var employeeLookup = employees.ToDictionary(e => e.Gpn, StringComparer.OrdinalIgnoreCase);
+            var fiscalYears = await context.FiscalYears.AsNoTracking().ToListAsync();
+            var closingPeriods = await context.ClosingPeriods.AsNoTracking().ToListAsync();
+
+            var uploadTimestampUtc = File.GetLastWriteTimeUtc(filePath);
+            if (uploadTimestampUtc == DateTime.MinValue)
+            {
+                uploadTimestampUtc = DateTime.UtcNow;
+            }
 
             var parserLogger = _loggerFactory.CreateLogger<StaffAllocationWorksheetParser>();
             var parser = new StaffAllocationWorksheetParser(new StaffAllocationSchemaAnalyzer(), parserLogger);
             var processor = new StaffAllocationProcessor(parser);
 
-            return processor.Process(worksheet, employeeLookup);
+            var processingResult = processor.Process(worksheet, employeeLookup, uploadTimestampUtc, fiscalYears, closingPeriods);
+
+            var summary = processingResult.Summary;
+            _logger.LogInformation(
+                "Staff allocation summary — rows processed: {Rows}, distinct engagements: {Engagements}, distinct ranks: {Ranks}.",
+                summary.ProcessedRowCount,
+                summary.DistinctEngagementCount,
+                summary.DistinctRankCount);
+
+            StaffAllocationForecastUpdateResult? forecastUpdate = null;
+            if (processingResult.MappedRecords.Count > 0)
+            {
+                forecastUpdate = await _staffAllocationForecastService
+                    .UpdateForecastAsync(processingResult.MappedRecords)
+                    .ConfigureAwait(false);
+
+                _logger.LogInformation(
+                    "Forecast update — processed {Records} records, updated {Engagements} engagements, missing engagements: {MissingEngagementsCount}, missing budgets: {MissingBudgetsCount}, unknown ranks: {UnknownRanksCount}.",
+                    forecastUpdate.ProcessedRecords,
+                    forecastUpdate.UpdatedEngagements,
+                    forecastUpdate.MissingEngagements.Count,
+                    forecastUpdate.MissingBudgets.Count,
+                    forecastUpdate.UnknownRanks.Count);
+
+                if (forecastUpdate.MissingEngagements.Count > 0)
+                {
+                    _logger.LogWarning("Missing engagements during forecast update: {MissingEngagements}.", string.Join(", ", forecastUpdate.MissingEngagements));
+                }
+
+                if (forecastUpdate.MissingBudgets.Count > 0)
+                {
+                    _logger.LogWarning("Missing rank budgets during forecast update: {MissingBudgets}.", string.Join(", ", forecastUpdate.MissingBudgets));
+                }
+
+                if (forecastUpdate.UnknownRanks.Count > 0)
+                {
+                    _logger.LogWarning("Unknown ranks encountered during forecast update: {UnknownRanks}.", string.Join(", ", forecastUpdate.UnknownRanks));
+                }
+
+                var inconsistentRows = forecastUpdate.Rows
+                    .Where(row => !string.Equals(row.Status, "OK", StringComparison.OrdinalIgnoreCase))
+                    .Select(row => $"{row.EngagementCode}/{row.FiscalYearName}/{row.Rank}:{row.Status}")
+                    .ToList();
+
+                if (inconsistentRows.Count > 0)
+                {
+                    var sample = string.Join("; ", inconsistentRows.Take(5));
+                    _logger.LogWarning(
+                        "Forecast inconsistencies detected: {Total} (risks: {RiskCount}, overruns: {OverrunCount}). Sample: {Sample}",
+                        inconsistentRows.Count,
+                        forecastUpdate.RiskCount,
+                        forecastUpdate.OverrunCount,
+                        sample);
+                }
+                else
+                {
+                    _logger.LogInformation("No forecast inconsistencies detected in the current import.");
+                }
+            }
+
+            return new StaffAllocationProcessingResult(
+                processingResult.ParseResult,
+                processingResult.Summary,
+                processingResult.MappedRecords,
+                forecastUpdate);
         }
 
         private static string ExtractDescription(string rawDescription)

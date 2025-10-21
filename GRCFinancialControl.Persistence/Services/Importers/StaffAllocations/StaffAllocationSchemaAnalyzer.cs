@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Data;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace GRCFinancialControl.Persistence.Services.Importers.StaffAllocations;
@@ -23,9 +24,50 @@ public sealed class StaffAllocationSchemaAnalyzer
             ["RECURSOS"] = StaffAllocationFixedColumn.ResourceName,
             ["RECURSO"] = StaffAllocationFixedColumn.ResourceName,
             ["ESCRITORIO"] = StaffAllocationFixedColumn.Office,
+            ["OFFICE"] = StaffAllocationFixedColumn.Office,
             ["SUBDOMINIO"] = StaffAllocationFixedColumn.Subdomain,
             ["SUB DOMINIO"] = StaffAllocationFixedColumn.Subdomain
         };
+
+    private static readonly IReadOnlyList<StaffAllocationFixedColumnMatcher> FixedColumnMatchers =
+        new[]
+        {
+            new StaffAllocationFixedColumnMatcher(
+                StaffAllocationFixedColumn.Gpn,
+                normalized => ContainsToken(normalized, "GPN")),
+            new StaffAllocationFixedColumnMatcher(
+                StaffAllocationFixedColumn.UtilizationFytd,
+                normalized => ContainsToken(normalized, "UTILIZACAO") &&
+                              (ContainsToken(normalized, "FYTD") || ContainsToken(normalized, "FY"))),
+            new StaffAllocationFixedColumnMatcher(
+                StaffAllocationFixedColumn.Rank,
+                normalized => ContainsToken(normalized, "RANK") || ContainsToken(normalized, "SENIORIDADE")),
+            new StaffAllocationFixedColumnMatcher(
+                StaffAllocationFixedColumn.ResourceName,
+                normalized => ContainsToken(normalized, "RECURSO") ||
+                              ContainsToken(normalized, "RECURSOS")),
+            new StaffAllocationFixedColumnMatcher(
+                StaffAllocationFixedColumn.Office,
+                normalized => ContainsToken(normalized, "ESCRITORIO") || ContainsToken(normalized, "OFFICE")),
+            new StaffAllocationFixedColumnMatcher(
+                StaffAllocationFixedColumn.Subdomain,
+                normalized => ContainsToken(normalized, "SUBDOMINIO") ||
+                              ContainsToken(normalized, "SUBDOM") ||
+                              ContainsToken(normalized, "SUBD") ||
+                              ContainsToken(normalized, "SUB AREA"))
+        };
+
+    private static readonly HashSet<string> IgnoredHeaders = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "OBSERVACAO",
+        "OBSERVACOES",
+        "OBS",
+        "STATUS",
+        "JUSTIFICATIVA",
+        "PENDENCIA",
+        "PENDENCIAS",
+        "RESPONSAVEL"
+    };
 
     private const int RequiredFixedColumnsCount = 6;
 
@@ -89,14 +131,21 @@ public sealed class StaffAllocationSchemaAnalyzer
                 continue;
             }
 
-            if (FixedColumnLookup.TryGetValue(normalizedHeader, out var fixedColumn))
+            if (IgnoredHeaders.Contains(normalizedHeader))
             {
-                if (!fixedColumns.ContainsKey(fixedColumn))
-                {
-                    fixedColumns[fixedColumn] = new StaffAllocationColumnDefinition(
-                        columnIndex,
-                        StaffAllocationCellHelper.GetDisplayText(cellValue));
-                }
+                continue;
+            }
+
+            if (!TryResolveFixedColumn(normalizedHeader, out var fixedColumn))
+            {
+                continue;
+            }
+
+            if (!fixedColumns.ContainsKey(fixedColumn))
+            {
+                fixedColumns[fixedColumn] = new StaffAllocationColumnDefinition(
+                    columnIndex,
+                    StaffAllocationCellHelper.GetDisplayText(cellValue));
             }
         }
 
@@ -114,6 +163,11 @@ public sealed class StaffAllocationSchemaAnalyzer
         {
             throw new InvalidDataException(
                 $"The staff allocation worksheet has week columns that are not Mondays: {string.Join(", ", invalidWeekHeaders)}.");
+        }
+
+        if (weekColumns.Count == 0)
+        {
+            return null;
         }
 
         weekColumns.Sort((left, right) => left.ColumnIndex.CompareTo(right.ColumnIndex));
@@ -160,7 +214,33 @@ public sealed class StaffAllocationSchemaAnalyzer
                 }
             case string text:
                 {
-                    if (TryParseDateString(text, out weekDate))
+                    if (string.IsNullOrWhiteSpace(text))
+                    {
+                        break;
+                    }
+
+                    var trimmed = text.Trim();
+
+                    if (double.TryParse(trimmed, NumberStyles.Float, CultureInfo.InvariantCulture, out var oaTextDate))
+                    {
+                        try
+                        {
+                            weekDate = DateTime.FromOADate(oaTextDate).Date;
+                            displayText = weekDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                            return true;
+                        }
+                        catch (ArgumentException)
+                        {
+                            // ignored
+                        }
+                    }
+
+                    if (!ContainsDateTextHint(trimmed))
+                    {
+                        break;
+                    }
+
+                    if (TryParseDateString(trimmed, out weekDate))
                     {
                         displayText = weekDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
                         return true;
@@ -173,7 +253,33 @@ public sealed class StaffAllocationSchemaAnalyzer
                     if (value is IFormattable formattable)
                     {
                         var formatted = formattable.ToString(null, CultureInfo.InvariantCulture);
-                        if (TryParseDateString(formatted, out weekDate))
+                        if (string.IsNullOrWhiteSpace(formatted))
+                        {
+                            break;
+                        }
+
+                        var trimmedFormatted = formatted.Trim();
+
+                        if (double.TryParse(trimmedFormatted, NumberStyles.Float, CultureInfo.InvariantCulture, out var oaFormatted))
+                        {
+                            try
+                            {
+                                weekDate = DateTime.FromOADate(oaFormatted).Date;
+                                displayText = weekDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                                return true;
+                            }
+                            catch (ArgumentException)
+                            {
+                                // ignored
+                            }
+                        }
+
+                        if (!ContainsDateTextHint(trimmedFormatted))
+                        {
+                            break;
+                        }
+
+                        if (TryParseDateString(trimmedFormatted, out weekDate))
                         {
                             displayText = weekDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
                             return true;
@@ -211,19 +317,6 @@ public sealed class StaffAllocationSchemaAnalyzer
             return true;
         }
 
-        if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var oaDate))
-        {
-            try
-            {
-                weekDate = DateTime.FromOADate(oaDate).Date;
-                return true;
-            }
-            catch (ArgumentException)
-            {
-                // ignored
-            }
-        }
-
         weekDate = default;
         return false;
     }
@@ -242,18 +335,17 @@ public sealed class StaffAllocationSchemaAnalyzer
         var previousWasSpace = false;
         foreach (var ch in text)
         {
-            if (char.IsWhiteSpace(ch))
-            {
-                if (!previousWasSpace)
-                {
-                    builder.Append(' ');
-                    previousWasSpace = true;
-                }
-            }
-            else
+            if (char.IsLetterOrDigit(ch))
             {
                 builder.Append(ch);
                 previousWasSpace = false;
+                continue;
+            }
+
+            if (!previousWasSpace)
+            {
+                builder.Append(' ');
+                previousWasSpace = true;
             }
         }
 
@@ -276,4 +368,75 @@ public sealed class StaffAllocationSchemaAnalyzer
         return builder.ToString().Normalize(NormalizationForm.FormC);
     }
 
+    private static bool TryResolveFixedColumn(string normalizedHeader, out StaffAllocationFixedColumn column)
+    {
+        if (FixedColumnLookup.TryGetValue(normalizedHeader, out column))
+        {
+            return true;
+        }
+
+        foreach (var matcher in FixedColumnMatchers)
+        {
+            if (matcher.IsMatch(normalizedHeader))
+            {
+                column = matcher.Column;
+                return true;
+            }
+        }
+
+        column = default;
+        return false;
+    }
+
+    private static bool ContainsToken(string normalizedHeader, string token)
+    {
+        if (string.IsNullOrEmpty(normalizedHeader) || string.IsNullOrEmpty(token))
+        {
+            return false;
+        }
+
+        if (normalizedHeader.Contains(token, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var compactHeader = normalizedHeader.Replace(" ", string.Empty, StringComparison.Ordinal);
+        var compactToken = token.Replace(" ", string.Empty, StringComparison.Ordinal);
+        if (compactHeader.Contains(compactToken, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return normalizedHeader
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Any(part => string.Equals(part, token, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool ContainsDateTextHint(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return false;
+        }
+
+        foreach (var ch in text)
+        {
+            if (!char.IsDigit(ch))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private sealed record StaffAllocationFixedColumnMatcher(
+        StaffAllocationFixedColumn Column,
+        Func<string, bool> Predicate)
+    {
+        public bool IsMatch(string normalizedHeader)
+        {
+            return Predicate(normalizedHeader);
+        }
+    }
 }

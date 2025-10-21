@@ -39,6 +39,7 @@ namespace GRCFinancialControl.Core.Models
         public ICollection<FinancialEvolution> FinancialEvolutions { get; set; } = [];
         public ICollection<EngagementFiscalYearAllocation> Allocations { get; set; } = [];
         public ICollection<EngagementFiscalYearRevenueAllocation> RevenueAllocations { get; set; } = [];
+        public ICollection<StaffAllocationForecast> Forecasts { get; set; } = [];
 
         [NotMapped]
         public bool IsManualOnly => Source == EngagementSource.S4Project;
