@@ -60,6 +60,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private string _selectedImportPackageFileName = string.Empty;
 
+        [ObservableProperty]
+        private bool _isImporting;
+
         public bool HasSelectedImportPackage => !string.IsNullOrWhiteSpace(SelectedImportPackageFileName);
 
         public IReadOnlyList<LanguageOption> Languages { get; }
@@ -85,7 +88,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             TestConnectionCommand = new AsyncRelayCommand(TestConnectionAsync);
             ClearAllDataCommand = new AsyncRelayCommand(ClearAllDataAsync);
             ExportConnectionPackageCommand = new AsyncRelayCommand(ExportConnectionPackageAsync);
-            ImportConnectionPackageCommand = new AsyncRelayCommand(ImportConnectionPackageAsync);
+            BrowseImportPackageCommand = new AsyncRelayCommand(BrowseImportPackageAsync);
+            ImportConnectionPackageCommand = new AsyncRelayCommand(
+                ImportConnectionPackageAsync,
+                () => !string.IsNullOrWhiteSpace(SelectedImportPackagePath)
+                      && !string.IsNullOrWhiteSpace(ImportPassphrase)
+                      && !IsImporting);
 
             Languages = LocalizationLanguageOptions.Create();
         }
@@ -95,6 +103,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public IAsyncRelayCommand TestConnectionCommand { get; }
         public IAsyncRelayCommand ClearAllDataCommand { get; }
         public IAsyncRelayCommand ExportConnectionPackageCommand { get; }
+        public IAsyncRelayCommand BrowseImportPackageCommand { get; }
         public IAsyncRelayCommand ImportConnectionPackageCommand { get; }
 
         public override async Task LoadDataAsync()
@@ -228,16 +237,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
-        private async Task ImportConnectionPackageAsync()
+        private async Task BrowseImportPackageAsync()
         {
             StatusMessage = null;
-            SelectedImportPackageFileName = string.Empty;
-
-            if (string.IsNullOrWhiteSpace(ImportPassphrase))
-            {
-                StatusMessage = LocalizationRegistry.Get("Settings.Validation.ImportPassphraseRequired");
-                return;
-            }
 
             var filePath = await _filePickerService.OpenFileAsync(
                 title: LocalizationRegistry.Get("Settings.Dialog.Import.Title"),
@@ -246,14 +248,33 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             if (string.IsNullOrWhiteSpace(filePath))
             {
-                StatusMessage = LocalizationRegistry.Get("Settings.Status.ImportCancelled");
+                return;
+            }
+
+            SelectedImportPackagePath = filePath;
+        }
+
+        private async Task ImportConnectionPackageAsync()
+        {
+            StatusMessage = null;
+
+            if (string.IsNullOrWhiteSpace(ImportPassphrase))
+            {
+                StatusMessage = LocalizationRegistry.Get("Settings.Validation.ImportPassphraseRequired");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(SelectedImportPackagePath))
+            {
+                StatusMessage = LocalizationRegistry.Get("Settings.Validation.ImportPackageRequired");
                 return;
             }
 
             try
             {
+                IsImporting = true;
                 StatusMessage = LocalizationRegistry.Get("Settings.Status.ImportInProgress");
-                var importedSettings = await _connectionPackageService.ImportAsync(filePath, ImportPassphrase);
+                var importedSettings = await _connectionPackageService.ImportAsync(SelectedImportPackagePath, ImportPassphrase);
                 var existingSettings = await _settingsService.GetAllAsync();
 
                 foreach (var kvp in importedSettings)
@@ -262,6 +283,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 }
 
                 await _settingsService.SaveAllAsync(existingSettings);
+                await _schemaInitializer.EnsureSchemaAsync();
 
                 Server = importedSettings.TryGetValue(SettingKeys.Server, out var server)
                     ? server
@@ -276,8 +298,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     ? password
                     : Password;
 
-                StatusMessage = LocalizationRegistry.Format("Settings.Status.ImportSuccess", Path.GetFileName(filePath));
-                SelectedImportPackageFileName = Path.GetFileName(filePath);
+                StatusMessage = LocalizationRegistry.Format(
+                    "Settings.Status.ImportSuccess",
+                    Path.GetFileName(SelectedImportPackagePath));
                 Messenger.Send(new RefreshDataMessage());
                 Messenger.Send(ApplicationRestartRequestedMessage.Instance);
             }
@@ -291,6 +314,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
             finally
             {
+                IsImporting = false;
                 ImportPassphrase = string.Empty;
             }
         }
@@ -325,6 +349,24 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         partial void OnStatusMessageChanged(string? value)
         {
             OnPropertyChanged(nameof(HasStatusMessage));
+        }
+
+        partial void OnSelectedImportPackagePathChanged(string? value)
+        {
+            SelectedImportPackageFileName = string.IsNullOrWhiteSpace(value)
+                ? string.Empty
+                : Path.GetFileName(value);
+            ImportConnectionPackageCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnImportPassphraseChanged(string value)
+        {
+            ImportConnectionPackageCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnIsImportingChanged(bool value)
+        {
+            ImportConnectionPackageCommand.NotifyCanExecuteChanged();
         }
 
         partial void OnSelectedImportPackageFileNameChanged(string value)

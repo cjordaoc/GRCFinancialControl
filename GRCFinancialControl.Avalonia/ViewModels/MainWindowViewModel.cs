@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
@@ -78,6 +79,17 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             SelectedNavigationItem = NavigationItems.FirstOrDefault();
         }
 
+        [RelayCommand]
+        private void SelectNavigationItem(NavigationItem navigationItem)
+        {
+            if (navigationItem is null)
+            {
+                return;
+            }
+
+            SelectedNavigationItem = navigationItem;
+        }
+
         async partial void OnSelectedNavigationItemChanged(NavigationItem? value)
         {
             if (value?.ViewModel == null && value?.Children?.Count > 0)
@@ -89,6 +101,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             ActiveView = value?.ViewModel;
             if (ActiveView is null)
             {
+                UpdateSelectionFlags(value);
                 return;
             }
 
@@ -100,6 +113,27 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 var sectionName = value?.Title ?? ActiveView.GetType().Name;
                 _loggingService.LogError($"Failed to load '{sectionName}': {ex.Message}");
+            }
+            finally
+            {
+                UpdateSelectionFlags(value);
+            }
+        }
+
+        private void UpdateSelectionFlags(NavigationItem? selectedItem)
+        {
+            foreach (var item in NavigationItems)
+            {
+                UpdateSelectionFor(item, selectedItem);
+            }
+        }
+
+        private static void UpdateSelectionFor(NavigationItem item, NavigationItem? selectedItem)
+        {
+            item.IsSelected = ReferenceEquals(item, selectedItem);
+            foreach (var child in item.Children)
+            {
+                UpdateSelectionFor(child, selectedItem);
             }
         }
     }
@@ -125,5 +159,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public ObservableCollection<NavigationItem> Children { get; }
 
         public bool HasChildren => Children.Count > 0;
+
+        private bool _isSelected;
+
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set => SetProperty(ref _isSelected, value);
+        }
     }
 }

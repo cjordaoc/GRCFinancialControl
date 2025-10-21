@@ -9,5 +9,6 @@ namespace GRCFinancialControl.Persistence.Services.Interfaces
     {
         Task<StaffAllocationForecastUpdateResult> UpdateForecastAsync(IReadOnlyList<StaffAllocationTemporaryRecord> records);
         Task<IReadOnlyList<ForecastAllocationRow>> GetCurrentForecastAsync();
+        Task SaveEngagementForecastAsync(int engagementId, IReadOnlyList<EngagementForecastUpdateEntry> entries);
     }
 }

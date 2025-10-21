@@ -332,6 +332,108 @@ namespace GRCFinancialControl.Persistence.Services
                 actualHoursByEngagement);
         }
 
+        public async Task SaveEngagementForecastAsync(int engagementId, IReadOnlyList<EngagementForecastUpdateEntry> entries)
+        {
+            ArgumentNullException.ThrowIfNull(entries);
+
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            var engagement = await context.Engagements
+                .Include(e => e.RankBudgets)
+                .FirstOrDefaultAsync(e => e.Id == engagementId)
+                .ConfigureAwait(false);
+
+            if (engagement is null)
+            {
+                throw new InvalidOperationException($"Engagement {engagementId} not found.");
+            }
+
+            var now = DateTime.UtcNow;
+
+            var aggregatedEntries = new Dictionary<FiscalYearRankKey, decimal>(FiscalYearRankKeyComparer.Instance);
+            foreach (var entry in entries)
+            {
+                var normalizedRank = NormalizeRank(entry.Rank);
+                var key = new FiscalYearRankKey(entry.FiscalYearId, normalizedRank);
+
+                if (aggregatedEntries.TryGetValue(key, out var current))
+                {
+                    aggregatedEntries[key] = current + entry.ForecastHours;
+                }
+                else
+                {
+                    aggregatedEntries[key] = entry.ForecastHours;
+                }
+            }
+
+            var existingForecasts = await context.StaffAllocationForecasts
+                .Where(f => f.EngagementId == engagementId)
+                .ToListAsync()
+                .ConfigureAwait(false);
+
+            if (existingForecasts.Count > 0)
+            {
+                context.StaffAllocationForecasts.RemoveRange(existingForecasts);
+            }
+
+            if (aggregatedEntries.Count > 0)
+            {
+                var canonicalRanks = engagement.RankBudgets
+                    .GroupBy(b => b.RankName, StringComparer.OrdinalIgnoreCase)
+                    .ToDictionary(group => group.Key, group => group.First().RankName, StringComparer.OrdinalIgnoreCase);
+
+                foreach (var entry in aggregatedEntries
+                    .OrderBy(e => e.Key.FiscalYearId)
+                    .ThenBy(e => e.Key.Rank, StringComparer.OrdinalIgnoreCase))
+                {
+                    var (key, total) = entry;
+                    var canonicalRank = canonicalRanks.TryGetValue(key.Rank, out var mappedRank)
+                        ? mappedRank
+                        : key.Rank;
+
+                    context.StaffAllocationForecasts.Add(new StaffAllocationForecast
+                    {
+                        EngagementId = engagementId,
+                        FiscalYearId = key.FiscalYearId,
+                        RankName = canonicalRank,
+                        ForecastHours = decimal.Round(total, 2),
+                        CreatedAtUtc = now,
+                        UpdatedAtUtc = now
+                    });
+                }
+            }
+
+            var totalsByRank = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
+            foreach (var (key, total) in aggregatedEntries)
+            {
+                var roundedTotal = decimal.Round(total, 2);
+                if (totalsByRank.TryGetValue(key.Rank, out var current))
+                {
+                    totalsByRank[key.Rank] = current + roundedTotal;
+                }
+                else
+                {
+                    totalsByRank[key.Rank] = roundedTotal;
+                }
+            }
+
+            foreach (var budget in engagement.RankBudgets)
+            {
+                if (totalsByRank.TryGetValue(budget.RankName, out var total))
+                {
+                    budget.ForecastHours = total;
+                    budget.UpdatedAtUtc = now;
+                }
+                else
+                {
+                    budget.ForecastHours = 0m;
+                    budget.UpdatedAtUtc = now;
+                }
+            }
+
+            await context.SaveChangesAsync().ConfigureAwait(false);
+        }
+
         private static IReadOnlyDictionary<int, decimal> AggregateActualsByEngagement(
             IReadOnlyDictionary<(int EngagementId, int FiscalYearId), decimal> actualsByFiscalYear)
         {
@@ -617,6 +719,24 @@ namespace GRCFinancialControl.Persistence.Services
             public int GetHashCode(EngagementRankKey obj)
             {
                 return HashCode.Combine(obj.EngagementId, obj.Rank?.ToUpperInvariant() ?? string.Empty);
+            }
+        }
+
+        private readonly record struct FiscalYearRankKey(int FiscalYearId, string Rank);
+
+        private sealed class FiscalYearRankKeyComparer : IEqualityComparer<FiscalYearRankKey>
+        {
+            public static FiscalYearRankKeyComparer Instance { get; } = new();
+
+            public bool Equals(FiscalYearRankKey x, FiscalYearRankKey y)
+            {
+                return x.FiscalYearId == y.FiscalYearId
+                    && string.Equals(x.Rank, y.Rank, StringComparison.OrdinalIgnoreCase);
+            }
+
+            public int GetHashCode(FiscalYearRankKey obj)
+            {
+                return HashCode.Combine(obj.FiscalYearId, obj.Rank?.ToUpperInvariant() ?? string.Empty);
             }
         }
     }

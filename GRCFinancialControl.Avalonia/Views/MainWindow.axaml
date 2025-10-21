@@ -5,8 +5,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+        mc:Ignorable="d" d:DesignWidth="960" d:DesignHeight="640"
         x:Class="GRCFinancialControl.Avalonia.Views.MainWindow"
+        x:Name="MainWindowRoot"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="{loc:Loc Key=Shell.Title.Application}"
@@ -17,29 +18,50 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Grid ColumnDefinitions="220,*">
-        <Border Background="{DynamicResource SystemAccentColor}" Margin="0" Padding="0,20">
-            <StackPanel>
+    <Grid ColumnDefinitions="240,*" Margin="16">
+        <Border Grid.Column="0"
+                Padding="16"
+                Background="{StaticResource BrushSurfaceVariant}"
+                CornerRadius="{StaticResource CornerRadiusMD}">
+            <StackPanel Spacing="12">
                 <TextBlock Text="{loc:Loc Key=Shell.Brand.Primary}"
                            FontSize="{StaticResource FontSizeXL}"
                            FontWeight="Bold"
-                           Foreground="{StaticResource BrushOnSurface}"
-                           Margin="20,0,20,20"/>
-                <TreeView ItemsSource="{Binding NavigationItems}"
-                          SelectedItem="{Binding SelectedNavigationItem}"
-                          Background="Transparent"
-                          BorderThickness="0"
-                          Foreground="{StaticResource BrushOnSurface}">
-                    <TreeView.ItemTemplate>
-                        <TreeDataTemplate ItemsSource="{Binding Children}">
-                            <TextBlock Text="{Binding Title}" Margin="20,6" FontSize="16"/>
-                        </TreeDataTemplate>
-                    </TreeView.ItemTemplate>
-                </TreeView>
+                           Foreground="{StaticResource BrushOnSurface}"/>
+                <ItemsControl ItemsSource="{Binding NavigationItems}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:NavigationItem">
+                            <StackPanel Spacing="4">
+                                <ToggleButton Content="{Binding Title}"
+                                              Command="{Binding DataContext.SelectNavigationItemCommand, ElementName=MainWindowRoot}"
+                                              CommandParameter="{Binding}"
+                                              IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                              Classes="NavButton"/>
+                                <ItemsControl ItemsSource="{Binding Children}"
+                                              Margin="16,0,0,0"
+                                              IsVisible="{Binding HasChildren}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:NavigationItem">
+                                            <ToggleButton Content="{Binding Title}"
+                                                          Command="{Binding DataContext.SelectNavigationItemCommand, ElementName=MainWindowRoot}"
+                                                          CommandParameter="{Binding}"
+                                                          IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                          Classes="NavButton"
+                                                          Margin="0,4,0,0"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </StackPanel>
         </Border>
 
-        <Border Grid.Column="1" Padding="{StaticResource SpaceThickness20}">
+        <Border Grid.Column="1"
+                Classes="Card"
+                Padding="0"
+                Margin="16,0,0,0">
             <ContentControl Content="{Binding ActiveView}"
                             IsVisible="{Binding ActiveView, Converter={x:Static converters:ObjectConverters.IsNotNull}}"/>
         </Border>
