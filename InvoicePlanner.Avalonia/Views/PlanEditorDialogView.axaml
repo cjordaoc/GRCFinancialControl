@@ -16,15 +16,13 @@
         <ScrollViewer Grid.Row="0"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Auto"
-                      HorizontalContentAlignment="Center"
+                      HorizontalContentAlignment="Stretch"
                       Padding="{StaticResource SpaceThickness24}"
                       DataContext="{Binding Editor}">
             <StackPanel Spacing="{StaticResource Space24}"
-                        HorizontalAlignment="Center"
+                        HorizontalAlignment="Stretch"
                         MaxWidth="{Binding ElementName=PlanEditorRoot,
-                                            Path=Bounds.Width,
-                                            Converter={StaticResource PercentageOfSizeConverter},
-                                            ConverterParameter=0.8}">
+                                            Path=Bounds.Width}">
                 <TextBlock Classes="TitleLarge" Text="{loc:Loc Key=InvoicePlan.Title.Primary}" />
                 <TextBlock Text="{loc:Loc Key=InvoicePlan.Description.Primary}" />
                 <Grid Margin="0,12,0,0"
