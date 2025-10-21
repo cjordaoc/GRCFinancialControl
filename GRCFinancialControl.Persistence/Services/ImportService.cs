@@ -37,7 +37,6 @@ namespace GRCFinancialControl.Persistence.Services
         private readonly ILogger<ImportService> _logger;
         private readonly ILoggerFactory _loggerFactory;
         private readonly IFiscalCalendarConsistencyService _fiscalCalendarConsistencyService;
-        private readonly IStaffAllocationForecastService _staffAllocationForecastService;
         private const string FinancialEvolutionInitialPeriodId = "INITIAL";
         private const int FcsHeaderSearchLimit = 20;
         private const int FcsDataStartRowIndex = 11; // Default row 12 in Excel (1-based)
@@ -68,20 +67,17 @@ namespace GRCFinancialControl.Persistence.Services
         public ImportService(IDbContextFactory<ApplicationDbContext> contextFactory,
             ILogger<ImportService> logger,
             ILoggerFactory loggerFactory,
-            IFiscalCalendarConsistencyService fiscalCalendarConsistencyService,
-            IStaffAllocationForecastService staffAllocationForecastService)
+            IFiscalCalendarConsistencyService fiscalCalendarConsistencyService)
         {
             ArgumentNullException.ThrowIfNull(contextFactory);
             ArgumentNullException.ThrowIfNull(logger);
             ArgumentNullException.ThrowIfNull(loggerFactory);
             ArgumentNullException.ThrowIfNull(fiscalCalendarConsistencyService);
-            ArgumentNullException.ThrowIfNull(staffAllocationForecastService);
 
             _contextFactory = contextFactory;
             _logger = logger;
             _loggerFactory = loggerFactory;
             _fiscalCalendarConsistencyService = fiscalCalendarConsistencyService;
-            _staffAllocationForecastService = staffAllocationForecastService;
         }
 
         public async Task<string> ImportBudgetAsync(string filePath)
@@ -122,8 +118,8 @@ namespace GRCFinancialControl.Persistence.Services
             var engagementDescription = ExtractDescription(descriptionRaw);
 
             var resourcingParseResult = ParseResourcing(resourcing);
-            var rankBudgetsFromFile = resourcingParseResult.RankBudgets;
-            var totalBudgetHours = rankBudgetsFromFile.Sum(r => r.Hours);
+            var aggregatedBudgets = AggregateRankBudgets(resourcingParseResult.RankBudgets);
+            var totalBudgetHours = aggregatedBudgets.Sum(r => r.Hours);
             var generatedAtUtc = ExtractGeneratedTimestampUtc(planInfo);
 
             await using var strategyContext = await _contextFactory
@@ -232,22 +228,12 @@ namespace GRCFinancialControl.Persistence.Services
                         engagement.CustomerId = customer.Id;
                     }
 
-                    var engagementRankBudgets = engagement.RankBudgets;
-                    engagementRankBudgets.Clear();
+                    var fiscalYears = await context.FiscalYears
+                        .OrderBy(fy => fy.StartDate)
+                        .ToListAsync()
+                        .ConfigureAwait(false);
 
-                    var now = DateTime.UtcNow;
-                    foreach (var rankBudget in rankBudgetsFromFile)
-                    {
-                        var budget = new EngagementRankBudget
-                        {
-                            Engagement = engagement,
-                            RankName = rankBudget.RawRank,
-                            Hours = rankBudget.Hours,
-                            CreatedAtUtc = now
-                        };
-
-                        engagementRankBudgets.Add(budget);
-                    }
+                    var insertedBudgets = ApplyBudgetSnapshot(engagement, fiscalYears, aggregatedBudgets, DateTime.UtcNow);
 
                     await context.SaveChangesAsync().ConfigureAwait(false);
                     await transaction.CommitAsync().ConfigureAwait(false);
@@ -261,7 +247,8 @@ namespace GRCFinancialControl.Persistence.Services
                     {
                         $"Customers inserted: {customersInserted}, updated: {customersUpdated}",
                         $"Engagements inserted: {engagementsInserted}, updated: {engagementsUpdated}",
-                        $"Rank budgets processed: {rankBudgetsFromFile.Count}",
+                        $"Rank budgets processed: {aggregatedBudgets.Count}",
+                        $"Budget entries inserted: {insertedBudgets}",
                         $"Initial hours budget total: {totalBudgetHours:F2}"
                     };
 
@@ -693,6 +680,8 @@ namespace GRCFinancialControl.Persistence.Services
 
         private sealed record RankBudgetRow(string RawRank, decimal Hours);
 
+        private sealed record RankBudgetAggregate(string RankName, decimal Hours);
+
         private sealed record RankMappingCandidate(string RawRank, string NormalizedRank);
 
         private sealed record ResourcingEmployee(
@@ -853,6 +842,137 @@ namespace GRCFinancialControl.Persistence.Services
             }
         }
 
+        private static List<RankBudgetAggregate> AggregateRankBudgets(IReadOnlyCollection<RankBudgetRow> rows)
+        {
+            if (rows.Count == 0)
+            {
+                return new List<RankBudgetAggregate>(0);
+            }
+
+            var aggregates = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
+            foreach (var row in rows)
+            {
+                if (string.IsNullOrWhiteSpace(row.RawRank))
+                {
+                    continue;
+                }
+
+                if (aggregates.TryGetValue(row.RawRank, out var existing))
+                {
+                    aggregates[row.RawRank] = existing + row.Hours;
+                }
+                else
+                {
+                    aggregates[row.RawRank] = row.Hours;
+                }
+            }
+
+            var result = new List<RankBudgetAggregate>(aggregates.Count);
+            foreach (var pair in aggregates)
+            {
+                result.Add(new RankBudgetAggregate(pair.Key, pair.Value));
+            }
+
+            return result;
+        }
+
+        private static int ApplyBudgetSnapshot(
+            Engagement engagement,
+            IReadOnlyCollection<FiscalYear> fiscalYears,
+            IReadOnlyCollection<RankBudgetAggregate> rankBudgets,
+            DateTime timestamp)
+        {
+            if (rankBudgets.Count == 0)
+            {
+                return 0;
+            }
+
+            if (fiscalYears.Count == 0)
+            {
+                throw new InvalidOperationException("No fiscal years have been configured. Add a fiscal year before importing allocation planning data.");
+            }
+
+            var currentFiscalYear = ResolveCurrentFiscalYear(fiscalYears);
+            var openFiscalYears = fiscalYears.Where(fy => !fy.IsLocked).ToList();
+            if (openFiscalYears.Count == 0)
+            {
+                openFiscalYears.Add(currentFiscalYear);
+            }
+
+            var inserted = 0;
+            foreach (var budget in rankBudgets)
+            {
+                inserted += EnsureBudgetExists(engagement, currentFiscalYear.Id, budget.RankName, budget.Hours, timestamp);
+
+                foreach (var fiscalYear in openFiscalYears)
+                {
+                    if (fiscalYear.Id == currentFiscalYear.Id)
+                    {
+                        continue;
+                    }
+
+                    inserted += EnsureBudgetExists(engagement, fiscalYear.Id, budget.RankName, 0m, timestamp);
+                }
+            }
+
+            return inserted;
+        }
+
+        private static FiscalYear ResolveCurrentFiscalYear(IReadOnlyCollection<FiscalYear> fiscalYears)
+        {
+            var today = DateTime.UtcNow.Date;
+            var current = fiscalYears.FirstOrDefault(fy => fy.StartDate.Date <= today && fy.EndDate.Date >= today);
+            if (current is not null)
+            {
+                return current;
+            }
+
+            var firstOpen = fiscalYears.FirstOrDefault(fy => !fy.IsLocked);
+            if (firstOpen is not null)
+            {
+                return firstOpen;
+            }
+
+            return fiscalYears.OrderBy(fy => fy.StartDate).Last();
+        }
+
+        private static int EnsureBudgetExists(
+            Engagement engagement,
+            int fiscalYearId,
+            string rankName,
+            decimal budgetHours,
+            DateTime timestamp)
+        {
+            if (string.IsNullOrWhiteSpace(rankName))
+            {
+                return 0;
+            }
+
+            var existing = engagement.RankBudgets.FirstOrDefault(b =>
+                b.FiscalYearId == fiscalYearId &&
+                string.Equals(b.RankName, rankName, StringComparison.OrdinalIgnoreCase));
+
+            if (existing is not null)
+            {
+                return 0;
+            }
+
+            var roundedBudget = Math.Round(budgetHours, 2, MidpointRounding.AwayFromZero);
+
+            engagement.RankBudgets.Add(new EngagementRankBudget
+            {
+                Engagement = engagement,
+                EngagementId = engagement.Id,
+                FiscalYearId = fiscalYearId,
+                RankName = rankName,
+                BudgetHours = roundedBudget,
+                ConsumedHours = 0m,
+                CreatedAtUtc = timestamp
+            });
+
+            return 1;
+        }
+
         public async Task<StaffAllocationProcessingResult> AnalyzeStaffAllocationsAsync(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
@@ -898,62 +1018,7 @@ namespace GRCFinancialControl.Persistence.Services
                 summary.DistinctEngagementCount,
                 summary.DistinctRankCount);
 
-            StaffAllocationForecastUpdateResult? forecastUpdate = null;
-            if (processingResult.MappedRecords.Count > 0)
-            {
-                forecastUpdate = await _staffAllocationForecastService
-                    .UpdateForecastAsync(processingResult.MappedRecords)
-                    .ConfigureAwait(false);
-
-                _logger.LogInformation(
-                    "Forecast update — processed {Records} records, updated {Engagements} engagements, missing engagements: {MissingEngagementsCount}, missing budgets: {MissingBudgetsCount}, unknown ranks: {UnknownRanksCount}.",
-                    forecastUpdate.ProcessedRecords,
-                    forecastUpdate.UpdatedEngagements,
-                    forecastUpdate.MissingEngagements.Count,
-                    forecastUpdate.MissingBudgets.Count,
-                    forecastUpdate.UnknownRanks.Count);
-
-                if (forecastUpdate.MissingEngagements.Count > 0)
-                {
-                    _logger.LogWarning("Missing engagements during forecast update: {MissingEngagements}.", string.Join(", ", forecastUpdate.MissingEngagements));
-                }
-
-                if (forecastUpdate.MissingBudgets.Count > 0)
-                {
-                    _logger.LogWarning("Missing rank budgets during forecast update: {MissingBudgets}.", string.Join(", ", forecastUpdate.MissingBudgets));
-                }
-
-                if (forecastUpdate.UnknownRanks.Count > 0)
-                {
-                    _logger.LogWarning("Unknown ranks encountered during forecast update: {UnknownRanks}.", string.Join(", ", forecastUpdate.UnknownRanks));
-                }
-
-                var inconsistentRows = forecastUpdate.Rows
-                    .Where(row => !string.Equals(row.Status, "OK", StringComparison.OrdinalIgnoreCase))
-                    .Select(row => $"{row.EngagementCode}/{row.FiscalYearName}/{row.Rank}:{row.Status}")
-                    .ToList();
-
-                if (inconsistentRows.Count > 0)
-                {
-                    var sample = string.Join("; ", inconsistentRows.Take(5));
-                    _logger.LogWarning(
-                        "Forecast inconsistencies detected: {Total} (risks: {RiskCount}, overruns: {OverrunCount}). Sample: {Sample}",
-                        inconsistentRows.Count,
-                        forecastUpdate.RiskCount,
-                        forecastUpdate.OverrunCount,
-                        sample);
-                }
-                else
-                {
-                    _logger.LogInformation("No forecast inconsistencies detected in the current import.");
-                }
-            }
-
-            return new StaffAllocationProcessingResult(
-                processingResult.ParseResult,
-                processingResult.Summary,
-                processingResult.MappedRecords,
-                forecastUpdate);
+            return processingResult;
         }
 
         private static string ExtractDescription(string rawDescription)
@@ -2104,6 +2169,186 @@ namespace GRCFinancialControl.Persistence.Services
             decimal NextFiscalYearToGo,
             decimal CurrentFiscalYearToDate);
 
+        public async Task<string> ImportAllocationPlanningAsync(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                throw new ArgumentException("File path must be provided.", nameof(filePath));
+            }
+
+            if (!File.Exists(filePath))
+            {
+                throw new FileNotFoundException("Allocation planning workbook could not be found.", filePath);
+            }
+
+            await _fiscalCalendarConsistencyService.EnsureConsistencyAsync().ConfigureAwait(false);
+
+            using var workbook = LoadWorkbook(filePath);
+
+            var planInfo = workbook.GetWorksheet("PLAN INFO") ??
+                           throw new InvalidDataException("Worksheet 'PLAN INFO' is missing from the budget workbook.");
+            var resourcing = workbook.GetWorksheet("RESOURCING") ??
+                             throw new InvalidDataException("Worksheet 'RESOURCING' is missing from the budget workbook.");
+
+            var customerName = NormalizeWhitespace(GetCellString(planInfo, 3, 1));
+            var engagementKey = NormalizeWhitespace(GetCellString(planInfo, 4, 1));
+            var descriptionRaw = NormalizeWhitespace(GetCellString(planInfo, 0, 0));
+
+            if (string.IsNullOrWhiteSpace(engagementKey))
+            {
+                throw new InvalidDataException("PLAN INFO!B5 (Project ID) must contain an engagement identifier.");
+            }
+
+            var engagementDescription = ExtractDescription(descriptionRaw);
+            var generatedAtUtc = ExtractGeneratedTimestampUtc(planInfo);
+
+            var resourcingParseResult = ParseResourcing(resourcing);
+            var aggregatedBudgets = AggregateRankBudgets(resourcingParseResult.RankBudgets);
+            var totalBudgetHours = aggregatedBudgets.Sum(r => r.Hours);
+
+            await using var context = await _contextFactory
+                .CreateDbContextAsync()
+                .ConfigureAwait(false);
+            await using var transaction = await context.Database
+                .BeginTransactionAsync()
+                .ConfigureAwait(false);
+
+            try
+            {
+                Customer? customer = null;
+                var customerCreated = false;
+                if (!string.IsNullOrWhiteSpace(customerName))
+                {
+                    var normalizedCustomerName = customerName.Trim();
+                    var normalizedLookup = normalizedCustomerName.ToLowerInvariant();
+                    customer = await context.Customers
+                        .FirstOrDefaultAsync(c => c.Name.ToLower() == normalizedLookup)
+                        .ConfigureAwait(false);
+
+                    if (customer is null)
+                    {
+                        customer = new Customer { Name = normalizedCustomerName };
+                        await context.Customers.AddAsync(customer).ConfigureAwait(false);
+                        customerCreated = true;
+                    }
+                    else
+                    {
+                        customer.Name = normalizedCustomerName;
+                    }
+                }
+
+                var engagement = await context.Engagements
+                    .Include(e => e.RankBudgets)
+                    .FirstOrDefaultAsync(e => e.EngagementId == engagementKey)
+                    .ConfigureAwait(false);
+
+                var engagementCreated = false;
+                if (engagement is null)
+                {
+                    engagement = new Engagement
+                    {
+                        EngagementId = engagementKey,
+                        Description = engagementDescription,
+                        InitialHoursBudget = totalBudgetHours,
+                        EstimatedToCompleteHours = 0m
+                    };
+
+                    await context.Engagements.AddAsync(engagement).ConfigureAwait(false);
+                    engagementCreated = true;
+                }
+                else
+                {
+                    if (engagement.Source == EngagementSource.S4Project)
+                    {
+                        var manualOnlyMessage =
+                            $"Engagement '{engagement.EngagementId}' is sourced from S/4Project and must be managed manually. Allocation planning import skipped.";
+
+                        _logger.LogInformation(
+                            "Skipping allocation planning import for engagement {EngagementId} from file {FilePath} because it is manual-only (source: {Source}).",
+                            engagement.EngagementId,
+                            filePath,
+                            engagement.Source);
+
+                        await transaction.RollbackAsync().ConfigureAwait(false);
+
+                        var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>
+                        {
+                            ["ManualOnly"] = new[] { engagement.EngagementId }
+                        };
+
+                        var skipNotes = new List<string> { manualOnlyMessage };
+
+                        return ImportSummaryFormatter.Build(
+                            "Allocation planning import",
+                            inserted: 0,
+                            updated: 0,
+                            skipReasons,
+                            skipNotes);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(engagementDescription))
+                    {
+                        engagement.Description = engagementDescription;
+                    }
+
+                    engagement.InitialHoursBudget = totalBudgetHours;
+                }
+
+                if (customer is not null)
+                {
+                    engagement.Customer = customer;
+                    if (customer.Id > 0)
+                    {
+                        engagement.CustomerId = customer.Id;
+                    }
+                }
+
+                await UpsertRankMappingsAsync(context, resourcingParseResult.RankMappings, generatedAtUtc)
+                    .ConfigureAwait(false);
+
+                var fiscalYears = await context.FiscalYears
+                    .OrderBy(fy => fy.StartDate)
+                    .ToListAsync()
+                    .ConfigureAwait(false);
+
+                var insertedBudgets = ApplyBudgetSnapshot(engagement, fiscalYears, aggregatedBudgets, DateTime.UtcNow);
+
+                await context.SaveChangesAsync().ConfigureAwait(false);
+                await transaction.CommitAsync().ConfigureAwait(false);
+
+                var customersInserted = customerCreated ? 1 : 0;
+                var customersUpdated = (!customerCreated && customer is not null) ? 1 : 0;
+                var engagementsInserted = engagementCreated ? 1 : 0;
+                var engagementsUpdated = engagementCreated ? 0 : 1;
+
+                var notes = new List<string>
+                {
+                    $"Customers inserted: {customersInserted}, updated: {customersUpdated}",
+                    $"Engagements inserted: {engagementsInserted}, updated: {engagementsUpdated}",
+                    $"Ranks processed: {aggregatedBudgets.Count}",
+                    $"Budget entries inserted: {insertedBudgets}",
+                    $"Total budget hours: {totalBudgetHours:F2}"
+                };
+
+                if (resourcingParseResult.Issues.Count > 0)
+                {
+                    notes.Add($"Notes: {string.Join("; ", resourcingParseResult.Issues)}");
+                }
+
+                return ImportSummaryFormatter.Build(
+                    "Allocation planning import",
+                    customersInserted + engagementsInserted,
+                    customersUpdated + engagementsUpdated,
+                    null,
+                    notes);
+            }
+            catch
+            {
+                await transaction.RollbackAsync().ConfigureAwait(false);
+                throw;
+            }
+        }
+
         private static (string FiscalYearName, DateTime? LastUpdateDate) ParseFcsMetadata(IWorksheet worksheet)
         {
             var rawValue = GetCellString(worksheet, 3, 0);
@@ -2376,6 +2621,9 @@ namespace GRCFinancialControl.Persistence.Services
 
             await context.SaveChangesAsync().ConfigureAwait(false);
 
+            var consumedUpdates = await SynchronizeConsumedHoursInternalAsync(context, closingPeriod)
+                .ConfigureAwait(false);
+
             var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>();
 
             if (manualOnlyDetails.Count > 0)
@@ -2394,6 +2642,11 @@ namespace GRCFinancialControl.Persistence.Services
                 $"Engagements created: {engagementsCreated}",
                 $"Engagements updated: {engagementsUpdated}"
             };
+
+            if (consumedUpdates > 0)
+            {
+                notes.Add($"Consumed hour updates applied: {consumedUpdates}");
+            }
 
             if (rowsProcessed == 0)
             {
@@ -2417,6 +2670,226 @@ namespace GRCFinancialControl.Persistence.Services
                 skipReasons,
                 notes,
                 rowsProcessed);
+        }
+
+        internal async Task<int> RefreshConsumedHoursAsync(int closingPeriodId)
+        {
+            await using var context = await _contextFactory
+                .CreateDbContextAsync()
+                .ConfigureAwait(false);
+
+            var closingPeriod = await context.ClosingPeriods
+                .Include(cp => cp.FiscalYear)
+                .FirstOrDefaultAsync(cp => cp.Id == closingPeriodId)
+                .ConfigureAwait(false);
+
+            if (closingPeriod is null)
+            {
+                return 0;
+            }
+
+            return await SynchronizeConsumedHoursInternalAsync(context, closingPeriod)
+                .ConfigureAwait(false);
+        }
+
+        private async Task<int> SynchronizeConsumedHoursInternalAsync(ApplicationDbContext context, ClosingPeriod closingPeriod)
+        {
+            var cutoff = closingPeriod.PeriodEnd.Date;
+
+            var actuals = await context.ActualsEntries
+                .Join(context.ClosingPeriods,
+                    entry => entry.ClosingPeriodId,
+                    period => period.Id,
+                    (entry, period) => new
+                    {
+                        entry.EngagementId,
+                        entry.Hours,
+                        period.PeriodEnd,
+                        period.FiscalYearId
+                    })
+                .Join(context.FiscalYears,
+                    temp => temp.FiscalYearId,
+                    fiscalYear => fiscalYear.Id,
+                    (temp, fiscalYear) => new
+                    {
+                        temp.EngagementId,
+                        temp.Hours,
+                        temp.PeriodEnd,
+                        FiscalYearId = fiscalYear.Id,
+                        fiscalYear.IsLocked
+                    })
+                .Where(record => record.PeriodEnd.Date <= cutoff && !record.IsLocked)
+                .ToListAsync()
+                .ConfigureAwait(false);
+
+            if (actuals.Count == 0)
+            {
+                return 0;
+            }
+
+            var totals = actuals
+                .GroupBy(record => new { record.EngagementId, record.FiscalYearId })
+                .Select(group => new
+                {
+                    group.Key.EngagementId,
+                    group.Key.FiscalYearId,
+                    Hours = group.Sum(item => item.Hours)
+                })
+                .ToList();
+
+            if (totals.Count == 0)
+            {
+                return 0;
+            }
+
+            var engagementIds = totals
+                .Select(item => item.EngagementId)
+                .Distinct()
+                .ToList();
+
+            var budgets = await context.EngagementRankBudgets
+                .Include(b => b.FiscalYear)
+                .Where(b => engagementIds.Contains(b.EngagementId))
+                .ToListAsync()
+                .ConfigureAwait(false);
+
+            if (budgets.Count == 0)
+            {
+                return 0;
+            }
+
+            var budgetsByKey = budgets
+                .GroupBy(b => (b.EngagementId, b.FiscalYearId))
+                .ToDictionary(group => group.Key, group => group.ToList());
+
+            var totalUpdates = 0;
+
+            foreach (var total in totals)
+            {
+                if (!budgetsByKey.TryGetValue((total.EngagementId, total.FiscalYearId), out var fiscalYearBudgets) ||
+                    fiscalYearBudgets.Count == 0)
+                {
+                    continue;
+                }
+
+                var fiscalYear = fiscalYearBudgets[0].FiscalYear;
+                if (fiscalYear?.IsLocked ?? false)
+                {
+                    continue;
+                }
+
+                if (ApplyConsumedHours(total.Hours, fiscalYearBudgets))
+                {
+                    totalUpdates += fiscalYearBudgets.Count;
+                }
+            }
+
+            if (totalUpdates == 0)
+            {
+                return 0;
+            }
+
+            await context.SaveChangesAsync().ConfigureAwait(false);
+            return totalUpdates;
+        }
+
+        private static bool ApplyConsumedHours(decimal totalHours, List<EngagementRankBudget> budgets)
+        {
+            if (budgets.Count == 0)
+            {
+                return false;
+            }
+
+            totalHours = Math.Round(Math.Max(totalHours, 0m), 2, MidpointRounding.AwayFromZero);
+
+            var currentTotal = budgets.Sum(b => b.ConsumedHours);
+            if (Math.Abs(currentTotal - totalHours) <= 0.005m)
+            {
+                return false;
+            }
+
+            var allocations = new decimal[budgets.Count];
+
+            if (totalHours == 0m)
+            {
+                Array.Fill(allocations, 0m);
+            }
+            else
+            {
+                var totalBudget = budgets.Sum(b => b.BudgetHours);
+
+                if (totalBudget > 0m)
+                {
+                    var assigned = 0m;
+                    for (var index = 0; index < budgets.Count; index++)
+                    {
+                        var budget = budgets[index];
+                        var proportion = budget.BudgetHours / totalBudget;
+                        var value = index == budgets.Count - 1
+                            ? totalHours - assigned
+                            : totalHours * proportion;
+
+                        value = Math.Round(value, 2, MidpointRounding.AwayFromZero);
+                        assigned += value;
+                        allocations[index] = value;
+                    }
+
+                    var delta = Math.Round(totalHours - allocations.Sum(), 2, MidpointRounding.AwayFromZero);
+                    if (delta != 0m)
+                    {
+                        allocations[^1] = Math.Round(allocations[^1] + delta, 2, MidpointRounding.AwayFromZero);
+                    }
+                }
+                else
+                {
+                    var existingTotal = budgets.Sum(b => Math.Max(b.ConsumedHours, 0m));
+                    if (existingTotal > 0m)
+                    {
+                        var assigned = 0m;
+                        for (var index = 0; index < budgets.Count; index++)
+                        {
+                            var budget = budgets[index];
+                            var baseline = Math.Max(budget.ConsumedHours, 0m) / existingTotal;
+                            var value = index == budgets.Count - 1
+                                ? totalHours - assigned
+                                : totalHours * baseline;
+
+                            value = Math.Round(value, 2, MidpointRounding.AwayFromZero);
+                            assigned += value;
+                            allocations[index] = value;
+                        }
+
+                        var delta = Math.Round(totalHours - allocations.Sum(), 2, MidpointRounding.AwayFromZero);
+                        if (delta != 0m)
+                        {
+                            allocations[^1] = Math.Round(allocations[^1] + delta, 2, MidpointRounding.AwayFromZero);
+                        }
+                    }
+                    else
+                    {
+                        var evenShare = Math.Round(totalHours / budgets.Count, 2, MidpointRounding.AwayFromZero);
+                        for (var index = 0; index < budgets.Count - 1; index++)
+                        {
+                            allocations[index] = evenShare;
+                        }
+
+                        allocations[^1] = Math.Round(totalHours - allocations.Take(budgets.Count - 1).Sum(), 2, MidpointRounding.AwayFromZero);
+                    }
+                }
+            }
+
+            var updated = false;
+            for (var index = 0; index < budgets.Count; index++)
+            {
+                var normalized = Math.Round(allocations[index], 2, MidpointRounding.AwayFromZero);
+                if (Math.Abs(normalized - budgets[index].ConsumedHours) > 0.005m)
+                {
+                    budgets[index].ConsumedHours = normalized;
+                    updated = true;
+                }
+            }
+
+            return updated;
         }
 
         private static IWorksheet? ResolveEtcpWorksheet(WorkbookData workbook)

@@ -4,6 +4,7 @@ using GRCFinancialControl.Core.Models;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace GRCFinancialControl.Persistence
 {
@@ -23,7 +24,6 @@ namespace GRCFinancialControl.Persistence
         public DbSet<EngagementRankBudget> EngagementRankBudgets { get; set; }
         public DbSet<RankMapping> RankMappings { get; set; }
         public DbSet<FinancialEvolution> FinancialEvolutions { get; set; }
-        public DbSet<EngagementFiscalYearAllocation> EngagementFiscalYearAllocations { get; set; }
         public DbSet<EngagementFiscalYearRevenueAllocation> EngagementFiscalYearRevenueAllocations { get; set; }
         public DbSet<FiscalYear> FiscalYears { get; set; }
         public DbSet<InvoicePlan> InvoicePlans { get; set; }
@@ -32,7 +32,6 @@ namespace GRCFinancialControl.Persistence
         public DbSet<MailOutbox> MailOutboxEntries { get; set; }
         public DbSet<MailOutboxLog> MailOutboxLogs { get; set; }
         public DbSet<InvoiceNotificationPreview> InvoiceNotificationPreviews { get; set; }
-        public DbSet<StaffAllocationForecast> StaffAllocationForecasts { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
@@ -379,73 +378,43 @@ namespace GRCFinancialControl.Persistence
                 .HasMaxLength(100);
 
             modelBuilder.Entity<EngagementRankBudget>()
-                .Property(rb => rb.Hours)
+                .Property(rb => rb.BudgetHours)
                 .HasPrecision(18, 2)
                 .HasDefaultValue(0m);
 
             modelBuilder.Entity<EngagementRankBudget>()
-                .Property(rb => rb.ForecastHours)
+                .Property(rb => rb.ConsumedHours)
                 .HasPrecision(18, 2)
                 .HasDefaultValue(0m);
+
+            var remainingHoursProperty = modelBuilder.Entity<EngagementRankBudget>()
+                .Property(rb => rb.RemainingHours)
+                .HasPrecision(18, 2)
+                .ValueGeneratedOnAddOrUpdate();
+
+            if (isMySql)
+            {
+                remainingHoursProperty.HasComputedColumnSql("(`BudgetHours` - `ConsumedHours`)", stored: true);
+            }
+            else
+            {
+                remainingHoursProperty.HasComputedColumnSql("([BudgetHours] - [ConsumedHours])", stored: true);
+            }
+
+            remainingHoursProperty.Metadata.SetAfterSaveBehavior(Microsoft.EntityFrameworkCore.Metadata.PropertySaveBehavior.Ignore);
 
             modelBuilder.Entity<EngagementRankBudget>()
                 .Property(rb => rb.CreatedAtUtc)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             modelBuilder.Entity<EngagementRankBudget>()
-                .HasIndex(rb => new { rb.EngagementId, rb.RankName })
+                .HasIndex(rb => new { rb.EngagementId, rb.FiscalYearId, rb.RankName })
                 .IsUnique();
 
-            modelBuilder.Entity<StaffAllocationForecast>()
-                .Property(f => f.RankName)
-                .HasMaxLength(100);
-
-            modelBuilder.Entity<StaffAllocationForecast>()
-                .Property(f => f.ForecastHours)
-                .HasPrecision(18, 2)
-                .HasDefaultValue(0m);
-
-            var forecastCreatedProperty = modelBuilder.Entity<StaffAllocationForecast>()
-                .Property(f => f.CreatedAtUtc);
-
-            if (isMySql)
-            {
-                forecastCreatedProperty
-                    .HasMySqlColumnType("datetime(6)", isMySql)
-                    .HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
-
-                modelBuilder.Entity<StaffAllocationForecast>()
-                    .Property(f => f.UpdatedAtUtc)
-                    .HasMySqlColumnType("datetime(6)", isMySql);
-            }
-            else
-            {
-                forecastCreatedProperty
-                    .HasColumnType("datetime")
-                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                modelBuilder.Entity<StaffAllocationForecast>()
-                    .Property(f => f.UpdatedAtUtc)
-                    .HasColumnType("datetime");
-            }
-
-            modelBuilder.Entity<StaffAllocationForecast>()
-                .HasIndex(f => new { f.EngagementId, f.FiscalYearId, f.RankName })
-                .IsUnique();
-
-            modelBuilder.Entity<StaffAllocationForecast>()
-                .HasIndex(f => f.FiscalYearId);
-
-            modelBuilder.Entity<StaffAllocationForecast>()
-                .HasOne(f => f.Engagement)
-                .WithMany(e => e.Forecasts)
-                .HasForeignKey(f => f.EngagementId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<StaffAllocationForecast>()
-                .HasOne(f => f.FiscalYear)
-                .WithMany(fy => fy.Forecasts)
-                .HasForeignKey(f => f.FiscalYearId)
+            modelBuilder.Entity<EngagementRankBudget>()
+                .HasOne(rb => rb.FiscalYear)
+                .WithMany(fy => fy.RankBudgets)
+                .HasForeignKey(rb => rb.FiscalYearId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<FinancialEvolution>()
@@ -480,23 +449,6 @@ namespace GRCFinancialControl.Persistence
             modelBuilder.Entity<FinancialEvolution>()
                 .HasIndex(fe => new { fe.EngagementId, fe.ClosingPeriodId })
                 .IsUnique();
-
-            modelBuilder.Entity<EngagementFiscalYearAllocation>()
-                .HasKey(e => e.Id);
-
-            modelBuilder.Entity<EngagementFiscalYearAllocation>()
-                .HasOne(e => e.Engagement)
-                .WithMany(e => e.Allocations)
-                .HasForeignKey(e => e.EngagementId);
-
-            modelBuilder.Entity<EngagementFiscalYearAllocation>()
-                .HasOne(e => e.FiscalYear)
-                .WithMany()
-                .HasForeignKey(e => e.FiscalYearId);
-
-            modelBuilder.Entity<EngagementFiscalYearAllocation>()
-                .Property(e => e.PlannedHours)
-                .HasPrecision(18, 2);
 
             modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
                 .HasKey(e => e.Id);

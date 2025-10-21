@@ -49,18 +49,7 @@
                           IsEnabled="{Binding AllowEditing}">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Fiscal Year" Binding="{Binding FiscalYear.Name}" IsReadOnly="True"/>
-                        <DataGridTemplateColumn Header="{Binding #AllocationEditorRoot.DataContext.AmountColumnHeader}"
-                                                IsVisible="{Binding #AllocationEditorRoot.DataContext.IsHoursMode}">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBox Text="{Binding PlannedAmount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}"
-                                             HorizontalContentAlignment="Right"
-                                             IsEnabled="{Binding IsEditable}"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                        <DataGridTemplateColumn Header="{Binding #AllocationEditorRoot.DataContext.ToDateColumnHeader}"
-                                                IsVisible="{Binding #AllocationEditorRoot.DataContext.IsRevenueMode}">
+                        <DataGridTemplateColumn Header="{Binding #AllocationEditorRoot.DataContext.ToDateColumnHeader}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBox Text="{Binding ToDateAmount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}"
@@ -69,8 +58,7 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        <DataGridTemplateColumn Header="{Binding #AllocationEditorRoot.DataContext.ToGoColumnHeader}"
-                                                IsVisible="{Binding #AllocationEditorRoot.DataContext.IsRevenueMode}">
+                        <DataGridTemplateColumn Header="{Binding #AllocationEditorRoot.DataContext.ToGoColumnHeader}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBox Text="{Binding ToGoAmount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}"

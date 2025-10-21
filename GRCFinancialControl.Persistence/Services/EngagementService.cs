@@ -52,8 +52,8 @@ namespace GRCFinancialControl.Persistence.Services
                     .ThenInclude(ep => ep.Papd)
                 .Include(e => e.ManagerAssignments)
                     .ThenInclude(ma => ma.Manager)
-                .Include(e => e.Allocations)
-                    .ThenInclude(a => a.FiscalYear)
+                .Include(e => e.RankBudgets)
+                    .ThenInclude(rb => rb.FiscalYear)
                 .Include(e => e.RevenueAllocations)
                     .ThenInclude(a => a.FiscalYear)
                 .Include(e => e.FinancialEvolutions)
@@ -92,8 +92,8 @@ namespace GRCFinancialControl.Persistence.Services
                     .ThenInclude(ep => ep.Papd)
                 .Include(e => e.ManagerAssignments)
                     .ThenInclude(ma => ma.Manager)
-                .Include(e => e.Allocations)
-                    .ThenInclude(a => a.FiscalYear)
+                .Include(e => e.RankBudgets)
+                    .ThenInclude(rb => rb.FiscalYear)
                 .Include(e => e.RevenueAllocations)
                     .ThenInclude(a => a.FiscalYear)
                 .Include(e => e.FinancialEvolutions)
@@ -246,8 +246,6 @@ namespace GRCFinancialControl.Persistence.Services
             await using var context = await _contextFactory.CreateDbContextAsync();
             var existingEngagement = await context.Engagements
                 .Include(e => e.EngagementPapds)
-                .Include(e => e.Allocations)
-                    .ThenInclude(a => a.FiscalYear)
                 .Include(e => e.RevenueAllocations)
                     .ThenInclude(a => a.FiscalYear)
                 .Include(e => e.FinancialEvolutions)
@@ -269,31 +267,9 @@ namespace GRCFinancialControl.Persistence.Services
                 ? $"Id={fiscalYear.Id}"
                 : fiscalYear.Name;
 
-            var lockedHourAllocations = existingEngagement.Allocations
-                .Where(a => a.FiscalYear?.IsLocked ?? false)
-                .ToDictionary(a => a.FiscalYearId, a => a.FiscalYear!);
-
             var lockedRevenueAllocations = existingEngagement.RevenueAllocations
                 .Where(a => a.FiscalYear?.IsLocked ?? false)
                 .ToDictionary(a => a.FiscalYearId, a => a.FiscalYear!);
-
-            var incomingHourAllocations = engagement.Allocations.ToDictionary(a => a.FiscalYearId, a => a);
-            foreach (var (fiscalYearId, fiscalYear) in lockedHourAllocations)
-            {
-                if (!incomingHourAllocations.TryGetValue(fiscalYearId, out var incomingAllocation))
-                {
-                    throw new InvalidOperationException($"Cannot remove planned hours allocation for locked fiscal year '{FormatFiscalYearName(fiscalYear)}'. Unlock it before making changes.");
-                }
-
-                var existingAllocation = existingEngagement.Allocations.First(a => a.FiscalYearId == fiscalYearId);
-
-                if (Math.Round(existingAllocation.PlannedHours, 2, MidpointRounding.AwayFromZero) !=
-                    Math.Round(incomingAllocation.PlannedHours, 2, MidpointRounding.AwayFromZero))
-                {
-                    throw new InvalidOperationException($"Cannot change planned hours allocation for locked fiscal year '{FormatFiscalYearName(fiscalYear)}'. Unlock it before making changes.");
-                }
-            }
-
             var incomingRevenueAllocations = engagement.RevenueAllocations.ToDictionary(a => a.FiscalYearId, a => a);
             foreach (var (fiscalYearId, fiscalYear) in lockedRevenueAllocations)
             {
@@ -312,13 +288,6 @@ namespace GRCFinancialControl.Persistence.Services
                     throw new InvalidOperationException($"Cannot change revenue allocation for locked fiscal year '{FormatFiscalYearName(fiscalYear)}'. Unlock it before making changes.");
                 }
             }
-
-            var unlockedHourFiscalYearIds = engagement.Allocations
-                .Select(a => a.FiscalYearId)
-                .Where(id => !lockedHourAllocations.ContainsKey(id))
-                .ToList();
-
-            await FiscalYearLockGuard.EnsureFiscalYearsUnlockedAsync(context, unlockedHourFiscalYearIds, "update planned hours allocations");
 
             var unlockedRevenueFiscalYearIds = engagement.RevenueAllocations
                 .Select(a => a.FiscalYearId)
@@ -376,27 +345,6 @@ namespace GRCFinancialControl.Persistence.Services
                 });
             }
 
-            var removableHourAllocations = existingEngagement.Allocations
-                .Where(a => !lockedHourAllocations.ContainsKey(a.FiscalYearId))
-                .ToList();
-
-            context.EngagementFiscalYearAllocations.RemoveRange(removableHourAllocations);
-
-            foreach (var allocation in removableHourAllocations)
-            {
-                existingEngagement.Allocations.Remove(allocation);
-            }
-
-            foreach (var allocation in engagement.Allocations.Where(a => !lockedHourAllocations.ContainsKey(a.FiscalYearId)))
-            {
-                existingEngagement.Allocations.Add(new EngagementFiscalYearAllocation
-                {
-                    FiscalYearId = allocation.FiscalYearId,
-                    PlannedHours = allocation.PlannedHours,
-                    EngagementId = existingEngagement.Id
-                });
-            }
-
             var removableRevenueAllocations = existingEngagement.RevenueAllocations
                 .Where(a => !lockedRevenueAllocations.ContainsKey(a.FiscalYearId))
                 .ToList();
@@ -449,9 +397,8 @@ namespace GRCFinancialControl.Persistence.Services
             var engagement = await context.Engagements
                 .Include(e => e.EngagementPapds)
                 .Include(e => e.RankBudgets)
+                    .ThenInclude(rb => rb.FiscalYear)
                 .Include(e => e.FinancialEvolutions)
-                .Include(e => e.Allocations)
-                    .ThenInclude(a => a.FiscalYear)
                 .Include(e => e.RevenueAllocations)
                     .ThenInclude(a => a.FiscalYear)
                 .FirstOrDefaultAsync(e => e.Id == engagementId);
@@ -470,9 +417,9 @@ namespace GRCFinancialControl.Persistence.Services
 
             var lockedFiscalYears = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (var allocation in engagement.Allocations.Where(a => a.FiscalYear?.IsLocked ?? false))
+            foreach (var budget in engagement.RankBudgets.Where(b => b.FiscalYear?.IsLocked ?? false))
             {
-                lockedFiscalYears.Add(FormatFiscalYearName(allocation.FiscalYear!, allocation.FiscalYearId));
+                lockedFiscalYears.Add(FormatFiscalYearName(budget.FiscalYear!, budget.FiscalYearId));
             }
 
             foreach (var allocation in engagement.RevenueAllocations.Where(a => a.FiscalYear?.IsLocked ?? false))
@@ -516,7 +463,6 @@ namespace GRCFinancialControl.Persistence.Services
             context.EngagementPapds.RemoveRange(engagement.EngagementPapds);
             context.EngagementRankBudgets.RemoveRange(engagement.RankBudgets);
             context.FinancialEvolutions.RemoveRange(engagement.FinancialEvolutions);
-            context.EngagementFiscalYearAllocations.RemoveRange(engagement.Allocations);
             context.EngagementFiscalYearRevenueAllocations.RemoveRange(engagement.RevenueAllocations);
 
             await context.SaveChangesAsync();
