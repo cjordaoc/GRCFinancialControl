@@ -11,6 +11,7 @@ using ExcelDataReader;
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Importers;
+using GRCFinancialControl.Persistence.Services.Importers.StaffAllocations;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -33,6 +34,7 @@ namespace GRCFinancialControl.Persistence.Services
 
         private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
         private readonly ILogger<ImportService> _logger;
+        private readonly ILoggerFactory _loggerFactory;
         private const string FinancialEvolutionInitialPeriodId = "INITIAL";
         private const int FcsHeaderSearchLimit = 20;
         private const int FcsDataStartRowIndex = 11; // Default row 12 in Excel (1-based)
@@ -62,13 +64,16 @@ namespace GRCFinancialControl.Persistence.Services
         private static readonly CultureInfo PtBrCulture = CultureInfo.GetCultureInfo("pt-BR");
 
         public ImportService(IDbContextFactory<ApplicationDbContext> contextFactory,
-            ILogger<ImportService> logger)
+            ILogger<ImportService> logger,
+            ILoggerFactory loggerFactory)
         {
             ArgumentNullException.ThrowIfNull(contextFactory);
             ArgumentNullException.ThrowIfNull(logger);
+            ArgumentNullException.ThrowIfNull(loggerFactory);
 
             _contextFactory = contextFactory;
             _logger = logger;
+            _loggerFactory = loggerFactory;
         }
 
         public async Task<string> ImportBudgetAsync(string filePath)
@@ -964,6 +969,35 @@ namespace GRCFinancialControl.Persistence.Services
                         throw new InvalidDataException($"Unable to parse hours value '{cellValue}'.", ex);
                     }
             }
+        }
+
+        public async Task<StaffAllocationProcessingResult> AnalyzeStaffAllocationsAsync(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                throw new ArgumentException("File path must be provided.", nameof(filePath));
+            }
+
+            if (!File.Exists(filePath))
+            {
+                throw new FileNotFoundException("Staff allocation workbook could not be found.", filePath);
+            }
+
+            var dataSet = LoadWorkbookDataSet(filePath);
+
+            var worksheet = ResolveWorksheet(dataSet, "Alocações_Staff") ??
+                            ResolveWorksheet(dataSet, "Alocacoes_Staff") ??
+                            throw new InvalidDataException("Worksheet 'Alocações_Staff' is missing from the staff allocation workbook.");
+
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            var employees = await context.Employees.ToListAsync();
+            var employeeLookup = employees.ToDictionary(e => e.Gpn, StringComparer.OrdinalIgnoreCase);
+
+            var parserLogger = _loggerFactory.CreateLogger<StaffAllocationWorksheetParser>();
+            var parser = new StaffAllocationWorksheetParser(new StaffAllocationSchemaAnalyzer(), parserLogger);
+            var processor = new StaffAllocationProcessor(parser);
+
+            return processor.Process(worksheet, employeeLookup);
         }
 
         private static string ExtractDescription(string rawDescription)
