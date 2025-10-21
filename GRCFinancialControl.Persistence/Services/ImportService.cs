@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -63,6 +64,9 @@ namespace GRCFinancialControl.Persistence.Services
         private static readonly Regex EngagementIdRegex = new Regex(@"\\bE-\\d+\\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex LastUpdateDateRegex = new Regex(@"Last Update\\s*:\\s*(\\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{4})", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly CultureInfo PtBrCulture = CultureInfo.GetCultureInfo("pt-BR");
+        private const string MissingRankWarningKey = "MissingRankMapping";
+        private const string MissingEngagementWarningKey = "MissingEngagement";
+        private const string MissingBudgetWarningKey = "MissingBudget";
 
         public ImportService(IDbContextFactory<ApplicationDbContext> contextFactory,
             ILogger<ImportService> logger,
@@ -973,6 +977,36 @@ namespace GRCFinancialControl.Persistence.Services
             return 1;
         }
 
+        private async Task<StaffAllocationProcessingResult> ProcessStaffAllocationsAsync(
+            ApplicationDbContext context,
+            IWorksheet worksheet,
+            DateTime uploadTimestampUtc)
+        {
+            ArgumentNullException.ThrowIfNull(context);
+            ArgumentNullException.ThrowIfNull(worksheet);
+
+            var employees = await context.Employees
+                .AsNoTracking()
+                .ToListAsync()
+                .ConfigureAwait(false);
+            var employeeLookup = employees.ToDictionary(e => e.Gpn, StringComparer.OrdinalIgnoreCase);
+
+            var fiscalYears = await context.FiscalYears
+                .AsNoTracking()
+                .ToListAsync()
+                .ConfigureAwait(false);
+            var closingPeriods = await context.ClosingPeriods
+                .AsNoTracking()
+                .ToListAsync()
+                .ConfigureAwait(false);
+
+            var parserLogger = _loggerFactory.CreateLogger<StaffAllocationWorksheetParser>();
+            var parser = new StaffAllocationWorksheetParser(new StaffAllocationSchemaAnalyzer(), parserLogger);
+            var processor = new StaffAllocationProcessor(parser);
+
+            return processor.Process(worksheet, employeeLookup, uploadTimestampUtc, fiscalYears, closingPeriods);
+        }
+
         public async Task<StaffAllocationProcessingResult> AnalyzeStaffAllocationsAsync(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
@@ -991,25 +1025,18 @@ namespace GRCFinancialControl.Persistence.Services
                             workbook.GetWorksheet("Alocacoes_Staff") ??
                             throw new InvalidDataException("Worksheet 'Alocações_Staff' is missing from the staff allocation workbook.");
 
-            await using var context = await _contextFactory
-                .CreateDbContextAsync()
-                .ConfigureAwait(false);
-            var employees = await context.Employees.AsNoTracking().ToListAsync().ConfigureAwait(false);
-            var employeeLookup = employees.ToDictionary(e => e.Gpn, StringComparer.OrdinalIgnoreCase);
-            var fiscalYears = await context.FiscalYears.AsNoTracking().ToListAsync().ConfigureAwait(false);
-            var closingPeriods = await context.ClosingPeriods.AsNoTracking().ToListAsync().ConfigureAwait(false);
-
             var uploadTimestampUtc = File.GetLastWriteTimeUtc(filePath);
             if (uploadTimestampUtc == DateTime.MinValue)
             {
                 uploadTimestampUtc = DateTime.UtcNow;
             }
 
-            var parserLogger = _loggerFactory.CreateLogger<StaffAllocationWorksheetParser>();
-            var parser = new StaffAllocationWorksheetParser(new StaffAllocationSchemaAnalyzer(), parserLogger);
-            var processor = new StaffAllocationProcessor(parser);
+            await using var context = await _contextFactory
+                .CreateDbContextAsync()
+                .ConfigureAwait(false);
 
-            var processingResult = processor.Process(worksheet, employeeLookup, uploadTimestampUtc, fiscalYears, closingPeriods);
+            var processingResult = await ProcessStaffAllocationsAsync(context, worksheet, uploadTimestampUtc)
+                .ConfigureAwait(false);
 
             var summary = processingResult.Summary;
             _logger.LogInformation(
@@ -1019,6 +1046,361 @@ namespace GRCFinancialControl.Persistence.Services
                 summary.DistinctRankCount);
 
             return processingResult;
+        }
+
+        public async Task<string> UpdateStaffAllocationsAsync(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                throw new ArgumentException("File path must be provided.", nameof(filePath));
+            }
+
+            if (!File.Exists(filePath))
+            {
+                throw new FileNotFoundException("Staff allocation workbook could not be found.", filePath);
+            }
+
+            await _fiscalCalendarConsistencyService.EnsureConsistencyAsync().ConfigureAwait(false);
+
+            await using var context = await _contextFactory
+                .CreateDbContextAsync()
+                .ConfigureAwait(false);
+
+            var nowUtc = DateTime.UtcNow;
+            var activeClosingPeriod = await context.ClosingPeriods
+                .Include(cp => cp.FiscalYear)
+                .FirstOrDefaultAsync(cp => nowUtc >= cp.PeriodStart && nowUtc <= cp.PeriodEnd)
+                .ConfigureAwait(false);
+
+            if (activeClosingPeriod is null)
+            {
+                throw new InvalidOperationException("No active closing period is currently open. Adjust the fiscal calendar before updating allocations.");
+            }
+
+            if (activeClosingPeriod.FiscalYear is null)
+            {
+                await context.Entry(activeClosingPeriod)
+                    .Reference(cp => cp.FiscalYear)
+                    .LoadAsync()
+                    .ConfigureAwait(false);
+            }
+
+            if (activeClosingPeriod.FiscalYear?.IsLocked ?? false)
+            {
+                var fiscalYearName = string.IsNullOrWhiteSpace(activeClosingPeriod.FiscalYear.Name)
+                    ? $"Id={activeClosingPeriod.FiscalYearId}"
+                    : activeClosingPeriod.FiscalYear.Name;
+
+                var lockedEntry = new ExceptionEntry
+                {
+                    Timestamp = DateTime.UtcNow,
+                    SourceFile = Path.GetFileName(filePath),
+                    RowData = $"FiscalYearId={activeClosingPeriod.FiscalYearId}",
+                    Reason = $"Fiscal year '{fiscalYearName}' is locked. Allocation update skipped."
+                };
+
+                await context.Exceptions.AddAsync(lockedEntry).ConfigureAwait(false);
+                await context.SaveChangesAsync().ConfigureAwait(false);
+
+                throw new InvalidOperationException($"Fiscal year '{fiscalYearName}' is locked. Unlock it before updating allocations.");
+            }
+
+            using var workbook = LoadWorkbook(filePath);
+
+            var worksheet = workbook.GetWorksheet("Alocações_Staff") ??
+                            workbook.GetWorksheet("Alocacoes_Staff") ??
+                            throw new InvalidDataException("Worksheet 'Alocações_Staff' is missing from the staff allocation workbook.");
+
+            var uploadTimestampUtc = File.GetLastWriteTimeUtc(filePath);
+            if (uploadTimestampUtc == DateTime.MinValue)
+            {
+                uploadTimestampUtc = DateTime.UtcNow;
+            }
+
+            var processingResult = await ProcessStaffAllocationsAsync(context, worksheet, uploadTimestampUtc)
+                .ConfigureAwait(false);
+
+            var relevantRecords = processingResult.MappedRecords
+                .Where(record => record.ClosingPeriodId == activeClosingPeriod.Id &&
+                                 record.FiscalYearId == activeClosingPeriod.FiscalYearId)
+                .ToList();
+
+            var sourceFileName = Path.GetFileName(filePath);
+
+            var rankMappings = await context.RankMappings
+                .AsNoTracking()
+                .Where(mapping => mapping.IsActive)
+                .ToListAsync()
+                .ConfigureAwait(false);
+
+            var rankLookup = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var mapping in rankMappings)
+            {
+                var rawRank = NormalizeWhitespace(mapping.RawRank);
+                var normalizedRank = NormalizeWhitespace(mapping.NormalizedRank);
+                if (string.IsNullOrEmpty(rawRank) || string.IsNullOrEmpty(normalizedRank))
+                {
+                    continue;
+                }
+
+                rankLookup[rawRank] = normalizedRank;
+            }
+
+            var budgets = await context.EngagementRankBudgets
+                .Include(b => b.Engagement)
+                .Where(b => b.FiscalYearId == activeClosingPeriod.FiscalYearId)
+                .ToListAsync()
+                .ConfigureAwait(false);
+
+            var budgetLookup = new Dictionary<string, Dictionary<string, EngagementRankBudget>>(StringComparer.OrdinalIgnoreCase);
+            var engagementDisplay = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var allBudgets = new List<EngagementRankBudget>(budgets.Count);
+
+            foreach (var budget in budgets)
+            {
+                if (budget.Engagement is null)
+                {
+                    continue;
+                }
+
+                var engagementKey = NormalizeEngagementCode(budget.Engagement.EngagementId);
+                if (string.IsNullOrEmpty(engagementKey))
+                {
+                    continue;
+                }
+
+                engagementDisplay[engagementKey] = budget.Engagement.EngagementId;
+
+                if (!budgetLookup.TryGetValue(engagementKey, out var ranks))
+                {
+                    ranks = new Dictionary<string, EngagementRankBudget>(StringComparer.OrdinalIgnoreCase);
+                    budgetLookup[engagementKey] = ranks;
+                }
+
+                allBudgets.Add(budget);
+
+                var rankKey = NormalizeRankKey(budget.RankName);
+                if (string.IsNullOrEmpty(rankKey))
+                {
+                    continue;
+                }
+
+                ranks[rankKey] = budget;
+            }
+
+            if (relevantRecords.Count == 0)
+            {
+                var resetTimestampUtc = DateTime.UtcNow;
+
+                foreach (var budget in allBudgets)
+                {
+                    budget.ConsumedHours = 0m;
+                    budget.UpdatedAtUtc = resetTimestampUtc;
+                }
+
+                if (allBudgets.Count > 0)
+                {
+                    await context.SaveChangesAsync().ConfigureAwait(false);
+                }
+
+                var emptyPeriodNotes = new List<string>
+                {
+                    $"Active closing period: {activeClosingPeriod.Name}",
+                    "No valid staff allocations found for the active closing period."
+                };
+
+                if (allBudgets.Count > 0)
+                {
+                    emptyPeriodNotes.Add($"Budgets cleared: {allBudgets.Count}");
+                }
+
+                var emptySummary = ImportSummaryFormatter.Build(
+                    "Staff allocation update",
+                    inserted: 0,
+                    updated: 0,
+                    skipReasons: null,
+                    notes: emptyPeriodNotes,
+                    processed: processingResult.ParseResult.ProcessedRowCount);
+
+                _logger.LogInformation(emptySummary);
+                return emptySummary;
+            }
+
+            var warningSamples = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+            var warningRows = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+            var exceptionEntries = new List<ExceptionEntry>();
+            var distinctEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var distinctRanks = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var totals = new Dictionary<EngagementRankBudget, decimal>();
+            decimal totalHours = 0m;
+
+            foreach (var record in relevantRecords)
+            {
+                var rawRank = NormalizeWhitespace(record.Rank);
+                if (string.IsNullOrEmpty(rawRank))
+                {
+                    RegisterWarning(
+                        warningSamples,
+                        warningRows,
+                        exceptionEntries,
+                        sourceFileName,
+                        "Rank information is missing from the staff allocation entry.",
+                        MissingRankWarningKey,
+                        "Rank=<empty>",
+                        record);
+                    continue;
+                }
+
+                if (!rankLookup.TryGetValue(rawRank, out var normalizedRank) || string.IsNullOrEmpty(normalizedRank))
+                {
+                    RegisterWarning(
+                        warningSamples,
+                        warningRows,
+                        exceptionEntries,
+                        sourceFileName,
+                        $"Rank '{rawRank}' is not mapped to a normalized rank.",
+                        MissingRankWarningKey,
+                        $"Rank={rawRank}",
+                        record);
+                    continue;
+                }
+
+                var engagementKey = NormalizeEngagementCode(record.EngagementCode);
+                if (string.IsNullOrEmpty(engagementKey))
+                {
+                    RegisterWarning(
+                        warningSamples,
+                        warningRows,
+                        exceptionEntries,
+                        sourceFileName,
+                        "Engagement code is missing from the allocation entry.",
+                        MissingEngagementWarningKey,
+                        "Engagement=<empty>",
+                        record);
+                    continue;
+                }
+
+                if (!budgetLookup.TryGetValue(engagementKey, out var rankBudgets))
+                {
+                    RegisterWarning(
+                        warningSamples,
+                        warningRows,
+                        exceptionEntries,
+                        sourceFileName,
+                        $"Engagement '{record.EngagementCode}' was not found in the system.",
+                        MissingEngagementWarningKey,
+                        record.EngagementCode,
+                        record);
+                    continue;
+                }
+
+                var rankKey = NormalizeRankKey(normalizedRank);
+                if (!rankBudgets.TryGetValue(rankKey, out var budget))
+                {
+                    RegisterWarning(
+                        warningSamples,
+                        warningRows,
+                        exceptionEntries,
+                        sourceFileName,
+                        $"No allocation budget was found for engagement '{record.EngagementCode}' and rank '{normalizedRank}'.",
+                        MissingBudgetWarningKey,
+                        $"{record.EngagementCode} / {normalizedRank}",
+                        record);
+                    continue;
+                }
+
+                totalHours += record.Hours;
+
+                if (engagementDisplay.TryGetValue(engagementKey, out var engagementCode))
+                {
+                    distinctEngagements.Add(engagementCode);
+                }
+                else
+                {
+                    distinctEngagements.Add(record.EngagementCode);
+                }
+
+                distinctRanks.Add(normalizedRank);
+
+                if (totals.TryGetValue(budget, out var currentHours))
+                {
+                    totals[budget] = currentHours + record.Hours;
+                }
+                else
+                {
+                    totals[budget] = record.Hours;
+                }
+            }
+
+            var updatedBudgets = new HashSet<EngagementRankBudget>();
+            var timestampUtc = DateTime.UtcNow;
+
+            foreach (var (budget, hours) in totals)
+            {
+                budget.ConsumedHours = Math.Round(hours, 2, MidpointRounding.AwayFromZero);
+                budget.UpdatedAtUtc = timestampUtc;
+                updatedBudgets.Add(budget);
+            }
+
+            foreach (var budget in allBudgets)
+            {
+                if (updatedBudgets.Contains(budget))
+                {
+                    continue;
+                }
+
+                budget.ConsumedHours = 0m;
+                budget.UpdatedAtUtc = timestampUtc;
+            }
+
+            if (exceptionEntries.Count > 0)
+            {
+                await context.Exceptions.AddRangeAsync(exceptionEntries).ConfigureAwait(false);
+            }
+
+            if (allBudgets.Count > 0 || exceptionEntries.Count > 0)
+            {
+                await context.SaveChangesAsync().ConfigureAwait(false);
+            }
+
+            var notes = new List<string>
+            {
+                $"Active closing period: {activeClosingPeriod.Name}",
+                $"Engagements updated: {distinctEngagements.Count}",
+                $"Ranks updated: {distinctRanks.Count}",
+                $"Total hours applied: {totalHours:F2}"
+            };
+
+            if (exceptionEntries.Count > 0)
+            {
+                notes.Add($"Warnings logged: {exceptionEntries.Count}");
+            }
+
+            var clearedBudgetCount = Math.Max(0, allBudgets.Count - updatedBudgets.Count);
+            if (clearedBudgetCount > 0)
+            {
+                notes.Add($"Budgets cleared: {clearedBudgetCount}");
+            }
+
+            Dictionary<string, IReadOnlyCollection<string>>? skipReasons = null;
+            if (warningSamples.Count > 0)
+            {
+                skipReasons = warningSamples.ToDictionary(
+                    pair => MapWarningKeyToDescription(pair.Key),
+                    pair => (IReadOnlyCollection<string>)pair.Value.AsReadOnly());
+            }
+
+            var summary = ImportSummaryFormatter.Build(
+                "Staff allocation update",
+                inserted: 0,
+                updated: updatedBudgets.Count,
+                skipReasons: skipReasons,
+                notes: notes,
+                processed: relevantRecords.Count);
+
+            _logger.LogInformation(summary);
+
+            return summary;
         }
 
         private static string ExtractDescription(string rawDescription)
@@ -2432,6 +2814,76 @@ namespace GRCFinancialControl.Persistence.Services
                 : nextYearText.ToString(CultureInfo.InvariantCulture);
 
             return (prefix + formattedNumber + suffix).ToUpperInvariant();
+        }
+
+        private static string MapWarningKeyToDescription(string key) => key switch
+        {
+            MissingRankWarningKey => "Missing rank mapping",
+            MissingEngagementWarningKey => "Unknown engagement",
+            MissingBudgetWarningKey => "Missing allocation",
+            _ => key
+        };
+
+        private static void RegisterWarning(
+            Dictionary<string, List<string>> samples,
+            Dictionary<string, HashSet<string>> loggedRows,
+            List<ExceptionEntry> exceptionEntries,
+            string sourceFile,
+            string message,
+            string key,
+            string sampleValue,
+            StaffAllocationTemporaryRecord record)
+        {
+            var rowData = BuildStaffAllocationRowData(record);
+
+            if (!loggedRows.TryGetValue(key, out var rows))
+            {
+                rows = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                loggedRows[key] = rows;
+            }
+
+            if (rows.Add(rowData))
+            {
+                exceptionEntries.Add(new ExceptionEntry
+                {
+                    Timestamp = DateTime.UtcNow,
+                    SourceFile = sourceFile,
+                    RowData = rowData,
+                    Reason = message
+                });
+            }
+
+            if (!samples.TryGetValue(key, out var list))
+            {
+                list = new List<string>();
+                samples[key] = list;
+            }
+
+            if (!list.Any(sample => string.Equals(sample, sampleValue, StringComparison.OrdinalIgnoreCase)))
+            {
+                list.Add(sampleValue);
+            }
+        }
+
+        private static string NormalizeEngagementCode(string? value)
+        {
+            var normalized = NormalizeWhitespace(value);
+            return string.IsNullOrEmpty(normalized) ? string.Empty : normalized.ToUpperInvariant();
+        }
+
+        private static string NormalizeRankKey(string? value)
+        {
+            var normalized = NormalizeWhitespace(value);
+            return string.IsNullOrEmpty(normalized) ? string.Empty : normalized.ToUpperInvariant();
+        }
+
+        private static string BuildStaffAllocationRowData(StaffAllocationTemporaryRecord record)
+        {
+            return $"GPN={NormalizeWhitespace(record.Gpn)};" +
+                   $"Employee={NormalizeWhitespace(record.EmployeeName)};" +
+                   $"Rank={NormalizeWhitespace(record.Rank)};" +
+                   $"Engagement={NormalizeWhitespace(record.EngagementCode)};" +
+                   $"Week={record.WeekStartMon:yyyy-MM-dd}";
         }
 
         private static decimal RoundMoney(decimal value) => Math.Round(value, 2, MidpointRounding.AwayFromZero);
