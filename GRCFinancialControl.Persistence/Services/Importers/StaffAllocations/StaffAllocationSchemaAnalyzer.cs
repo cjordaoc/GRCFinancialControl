@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Data;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Text;
+using GRCFinancialControl.Persistence.Services;
+using static GRCFinancialControl.Persistence.Services.Importers.WorksheetValueHelper;
 
 namespace GRCFinancialControl.Persistence.Services.Importers.StaffAllocations;
 
@@ -71,22 +71,21 @@ public sealed class StaffAllocationSchemaAnalyzer
 
     private const int RequiredFixedColumnsCount = 6;
 
-    public StaffAllocationSchemaAnalysis Analyze(DataTable worksheet)
+    public StaffAllocationSchemaAnalysis Analyze(ImportService.IWorksheet worksheet)
     {
         if (worksheet == null)
         {
             throw new ArgumentNullException(nameof(worksheet));
         }
 
-        if (worksheet.Rows.Count == 0)
+        if (worksheet.RowCount == 0)
         {
             throw new InvalidDataException("The staff allocation worksheet does not contain any rows.");
         }
 
-        for (var rowIndex = 0; rowIndex < worksheet.Rows.Count; rowIndex++)
+        for (var rowIndex = 0; rowIndex < worksheet.RowCount; rowIndex++)
         {
-            var row = worksheet.Rows[rowIndex];
-            var analysis = TryAnalyzeHeaderRow(row, rowIndex);
+            var analysis = TryAnalyzeHeaderRow(worksheet, rowIndex);
             if (analysis != null)
             {
                 return analysis;
@@ -96,17 +95,17 @@ public sealed class StaffAllocationSchemaAnalyzer
         throw new InvalidDataException("Unable to locate the header row in the staff allocation worksheet.");
     }
 
-    private StaffAllocationSchemaAnalysis? TryAnalyzeHeaderRow(DataRow row, int rowIndex)
+    private StaffAllocationSchemaAnalysis? TryAnalyzeHeaderRow(ImportService.IWorksheet worksheet, int rowIndex)
     {
         var fixedColumns = new Dictionary<StaffAllocationFixedColumn, StaffAllocationColumnDefinition>();
         var weekColumns = new List<StaffAllocationWeekColumn>();
         var invalidWeekHeaders = new List<string>();
         var hasAnyValue = false;
 
-        for (var columnIndex = 0; columnIndex < row.Table.Columns.Count; columnIndex++)
+        for (var columnIndex = 0; columnIndex < worksheet.ColumnCount; columnIndex++)
         {
-            var cellValue = row[columnIndex];
-            if (StaffAllocationCellHelper.IsBlank(cellValue))
+            var cellValue = worksheet.GetValue(rowIndex, columnIndex);
+            if (IsBlank(cellValue))
             {
                 continue;
             }
@@ -145,7 +144,7 @@ public sealed class StaffAllocationSchemaAnalyzer
             {
                 fixedColumns[fixedColumn] = new StaffAllocationColumnDefinition(
                     columnIndex,
-                    StaffAllocationCellHelper.GetDisplayText(cellValue));
+                    GetDisplayText(cellValue));
             }
         }
 
@@ -178,7 +177,7 @@ public sealed class StaffAllocationSchemaAnalyzer
             new ReadOnlyCollection<StaffAllocationWeekColumn>(weekColumns));
     }
 
-    private static bool TryGetWeekDate(object value, out DateTime weekDate, out string displayText)
+    private static bool TryGetWeekDate(object? value, out DateTime weekDate, out string displayText)
     {
         switch (value)
         {
@@ -291,7 +290,7 @@ public sealed class StaffAllocationSchemaAnalyzer
         }
 
         weekDate = default;
-        displayText = StaffAllocationCellHelper.GetDisplayText(value);
+        displayText = GetDisplayText(value);
         return false;
     }
 
@@ -321,9 +320,9 @@ public sealed class StaffAllocationSchemaAnalyzer
         return false;
     }
 
-    private static string NormalizeHeader(object value)
+    private static string NormalizeHeader(object? value)
     {
-        var text = StaffAllocationCellHelper.GetDisplayText(value);
+        var text = GetDisplayText(value);
         if (string.IsNullOrWhiteSpace(text))
         {
             return string.Empty;

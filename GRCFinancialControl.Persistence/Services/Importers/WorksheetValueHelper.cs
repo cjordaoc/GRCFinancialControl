@@ -1,10 +1,13 @@
 using System;
 using System.Globalization;
+using System.Text.RegularExpressions;
 
-namespace GRCFinancialControl.Persistence.Services.Importers.StaffAllocations;
+namespace GRCFinancialControl.Persistence.Services.Importers;
 
-internal static class StaffAllocationCellHelper
+internal static class WorksheetValueHelper
 {
+    private static readonly Regex MultiWhitespaceRegex = new("\\s+", RegexOptions.Compiled);
+
     public static bool IsBlank(object? value)
     {
         if (value == null || value == DBNull.Value)
@@ -37,5 +40,15 @@ internal static class StaffAllocationCellHelper
         var truncated = date.Date;
         var offset = ((int)truncated.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
         return truncated.AddDays(-offset);
+    }
+
+    public static string NormalizeWhitespace(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        return MultiWhitespaceRegex.Replace(value.Trim(), " ");
     }
 }

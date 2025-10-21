@@ -8,6 +8,7 @@ using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Infrastructure;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using static GRCFinancialControl.Persistence.Services.ClosingPeriodIdHelper;
 
 namespace GRCFinancialControl.Persistence.Services
 {
@@ -184,7 +185,7 @@ namespace GRCFinancialControl.Persistence.Services
                 engagement.ValueEtcp = latestSnapshot.ValueData ?? 0m;
                 engagement.ExpensesEtcp = latestSnapshot.ExpenseData ?? 0m;
                 engagement.MarginPctEtcp = latestSnapshot.MarginData;
-                var normalizedClosingPeriodId = NormalizeClosingPeriodId(latestSnapshot.ClosingPeriodId);
+                var normalizedClosingPeriodId = Normalize(latestSnapshot.ClosingPeriodId);
 
                 if (!string.IsNullOrEmpty(normalizedClosingPeriodId) &&
                     closingPeriods.TryGetValue(normalizedClosingPeriodId, out var closingPeriod))
@@ -213,7 +214,7 @@ namespace GRCFinancialControl.Persistence.Services
             FinancialEvolution evolution,
             IReadOnlyDictionary<string, ClosingPeriod> closingPeriods)
         {
-            var closingPeriodId = NormalizeClosingPeriodId(evolution.ClosingPeriodId);
+            var closingPeriodId = Normalize(evolution.ClosingPeriodId);
 
             if (!string.IsNullOrEmpty(closingPeriodId) && closingPeriods.TryGetValue(closingPeriodId, out var closingPeriod))
             {
@@ -231,37 +232,6 @@ namespace GRCFinancialControl.Persistence.Services
             }
 
             return (0, DateTime.MinValue, int.MinValue, closingPeriodId ?? string.Empty);
-        }
-
-        private static string? NormalizeClosingPeriodId(string? closingPeriodId)
-        {
-            if (string.IsNullOrWhiteSpace(closingPeriodId))
-            {
-                return null;
-            }
-
-            return closingPeriodId.Trim();
-        }
-
-        private static bool TryParsePeriodDate(string closingPeriodId, out DateTime parsedDate)
-        {
-            return DateTime.TryParse(
-                closingPeriodId,
-                CultureInfo.InvariantCulture,
-                DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
-                out parsedDate);
-        }
-
-        private static bool TryExtractDigits(string closingPeriodId, out int numericValue)
-        {
-            var digits = closingPeriodId.Where(char.IsDigit).ToArray();
-            if (digits.Length == 0)
-            {
-                numericValue = 0;
-                return false;
-            }
-
-            return int.TryParse(new string(digits), NumberStyles.Integer, CultureInfo.InvariantCulture, out numericValue);
         }
 
         public async Task AddAsync(Engagement engagement)

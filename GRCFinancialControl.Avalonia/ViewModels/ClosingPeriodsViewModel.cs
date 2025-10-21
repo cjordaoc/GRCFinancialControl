@@ -204,9 +204,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         partial void OnFiscalYearsChanging(ObservableCollection<FiscalYear> value)
         {
-            if (value != null)
+            if (_fiscalYears != null)
             {
-                value.CollectionChanged -= OnFiscalYearsCollectionChanged;
+                _fiscalYears.CollectionChanged -= OnFiscalYearsCollectionChanged;
             }
         }
 
@@ -223,9 +223,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         partial void OnClosingPeriodsChanging(ObservableCollection<ClosingPeriod> value)
         {
-            if (value != null)
+            if (_closingPeriods != null)
             {
-                value.CollectionChanged -= OnClosingPeriodsCollectionChanged;
+                _closingPeriods.CollectionChanged -= OnClosingPeriodsCollectionChanged;
             }
         }
 

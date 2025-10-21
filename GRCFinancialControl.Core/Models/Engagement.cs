@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using GRCFinancialControl.Core.Enums;
@@ -33,13 +34,13 @@ namespace GRCFinancialControl.Core.Models
         public int? CustomerId { get; set; }
         public Customer? Customer { get; set; }
 
-        public ICollection<EngagementPapd> EngagementPapds { get; set; } = [];
-        public ICollection<EngagementManagerAssignment> ManagerAssignments { get; set; } = [];
-        public ICollection<EngagementRankBudget> RankBudgets { get; set; } = [];
-        public ICollection<FinancialEvolution> FinancialEvolutions { get; set; } = [];
-        public ICollection<EngagementFiscalYearAllocation> Allocations { get; set; } = [];
-        public ICollection<EngagementFiscalYearRevenueAllocation> RevenueAllocations { get; set; } = [];
-        public ICollection<StaffAllocationForecast> Forecasts { get; set; } = [];
+        public ICollection<EngagementPapd> EngagementPapds { get; } = new List<EngagementPapd>();
+        public ICollection<EngagementManagerAssignment> ManagerAssignments { get; } = new List<EngagementManagerAssignment>();
+        public ICollection<EngagementRankBudget> RankBudgets { get; } = new List<EngagementRankBudget>();
+        public ICollection<FinancialEvolution> FinancialEvolutions { get; } = new List<FinancialEvolution>();
+        public ICollection<EngagementFiscalYearAllocation> Allocations { get; } = new List<EngagementFiscalYearAllocation>();
+        public ICollection<EngagementFiscalYearRevenueAllocation> RevenueAllocations { get; } = new List<EngagementFiscalYearRevenueAllocation>();
+        public ICollection<StaffAllocationForecast> Forecasts { get; } = new List<StaffAllocationForecast>();
 
         [NotMapped]
         public bool IsManualOnly => Source == EngagementSource.S4Project;

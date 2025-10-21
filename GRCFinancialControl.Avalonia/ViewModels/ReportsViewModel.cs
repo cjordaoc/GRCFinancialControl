@@ -20,13 +20,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private string? _statusMessage;
 
+        [ObservableProperty]
+        private bool _isRefreshing;
+
         public ReportsViewModel(IPowerBiEmbeddingService embeddingService, ILoggingService loggingService, IMessenger messenger)
             : base(messenger)
         {
             _embeddingService = embeddingService;
             _loggingService = loggingService;
 
-            RefreshCommand = new AsyncRelayCommand(LoadDataAsync);
+            RefreshCommand = new AsyncRelayCommand(LoadDataAsync, CanRefresh);
             OpenInBrowserCommand = new RelayCommand(OpenInBrowser, CanOpenInBrowser);
         }
 
@@ -40,6 +43,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public override async Task LoadDataAsync()
         {
+            if (IsRefreshing)
+            {
+                return;
+            }
+
+            IsRefreshing = true;
+
             try
             {
                 var configuration = await _embeddingService.GetConfigurationAsync();
@@ -55,6 +65,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
             finally
             {
+                IsRefreshing = false;
+                RefreshCommand.NotifyCanExecuteChanged();
                 OpenInBrowserCommand.NotifyCanExecuteChanged();
             }
         }
@@ -81,12 +93,20 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
-        private bool CanOpenInBrowser() => DashboardUri is not null;
+        private bool CanOpenInBrowser() => !IsRefreshing && DashboardUri is not null;
+
+        private bool CanRefresh() => !IsRefreshing;
 
         partial void OnDashboardUriChanged(Uri? value)
         {
             OnPropertyChanged(nameof(HasDashboard));
             OnPropertyChanged(nameof(DashboardUrl));
+            OpenInBrowserCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnIsRefreshingChanged(bool value)
+        {
+            RefreshCommand.NotifyCanExecuteChanged();
             OpenInBrowserCommand.NotifyCanExecuteChanged();
         }
     }

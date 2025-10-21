@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Resources;
 using Avalonia.Data;
@@ -9,6 +10,7 @@ using Avalonia.Markup.Xaml;
 
 namespace App.Presentation.Localization;
 
+[SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "Localized resource lookup follows Get(key) convention.")]
 public interface ILocalizationProvider
 {
     string Get(string key);
@@ -37,10 +39,7 @@ public sealed class ResourceManagerLocalizationProvider : ILocalizationProvider
             throw new ArgumentException("Base name is required.", nameof(baseName));
         }
 
-        if (assembly is null)
-        {
-            throw new ArgumentNullException(nameof(assembly));
-        }
+        ArgumentNullException.ThrowIfNull(assembly);
 
         return new ResourceManager(baseName, assembly);
     }
@@ -58,7 +57,7 @@ public sealed class ResourceManagerLocalizationProvider : ILocalizationProvider
     public string Format(string key, params object[] arguments)
     {
         var format = Get(key);
-        return string.Format(CultureInfo.CurrentUICulture, format, arguments);
+        return string.Format(CultureInfo.CurrentCulture, format, arguments);
     }
 }
 
@@ -68,10 +67,7 @@ public sealed class CompositeLocalizationProvider : ILocalizationProvider
 
     public CompositeLocalizationProvider(params ILocalizationProvider[] providers)
     {
-        if (providers is null)
-        {
-            throw new ArgumentNullException(nameof(providers));
-        }
+        ArgumentNullException.ThrowIfNull(providers);
 
         var activeProviders = new List<ILocalizationProvider>();
         foreach (var provider in providers)
@@ -107,7 +103,7 @@ public sealed class CompositeLocalizationProvider : ILocalizationProvider
     public string Format(string key, params object[] arguments)
     {
         var format = Get(key);
-        return string.Format(CultureInfo.CurrentUICulture, format, arguments);
+        return string.Format(CultureInfo.CurrentCulture, format, arguments);
     }
 }
 

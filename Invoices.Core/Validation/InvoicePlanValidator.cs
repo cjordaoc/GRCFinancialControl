@@ -10,10 +10,7 @@ public class InvoicePlanValidator : IInvoicePlanValidator
 {
     public IReadOnlyList<string> Validate(InvoicePlan plan, decimal planningBaseValue)
     {
-        if (plan is null)
-        {
-            throw new ArgumentNullException(nameof(plan));
-        }
+        ArgumentNullException.ThrowIfNull(plan);
 
         var errors = new List<string>();
 

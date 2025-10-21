@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using GRCFinancialControl.Core.Models;
 using Microsoft.Extensions.Logging;
+using GRCFinancialControl.Persistence.Services;
+using static GRCFinancialControl.Persistence.Services.Importers.WorksheetValueHelper;
 
 namespace GRCFinancialControl.Persistence.Services.Importers.StaffAllocations;
 
@@ -27,7 +28,7 @@ public sealed class StaffAllocationWorksheetParser
     }
 
     public StaffAllocationParseResult Parse(
-        DataTable worksheet,
+        ImportService.IWorksheet worksheet,
         IReadOnlyDictionary<string, Employee> employees,
         DateTime uploadTimestamp)
     {
@@ -43,22 +44,24 @@ public sealed class StaffAllocationWorksheetParser
 
         var employeeLookup = BuildEmployeeLookup(employees);
         var schema = _schemaAnalyzer.Analyze(worksheet);
-        var minimumWeekStart = StaffAllocationCellHelper.NormalizeWeekStart(uploadTimestamp);
+        var minimumWeekStart = NormalizeWeekStart(uploadTimestamp);
 
-        var records = new List<StaffAllocationTemporaryRecord>();
+        var estimatedRowCount = Math.Max(0, worksheet.RowCount - (schema.HeaderRowIndex + 1));
+        var estimatedAllocationCount = Math.Max(1, schema.WeekColumns.Count) * Math.Max(1, estimatedRowCount);
+        var records = new List<StaffAllocationTemporaryRecord>(estimatedAllocationCount);
         var unknownAffiliations = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var skippedInactive = new List<StaffAllocationSkippedEntry>();
+        unknownAffiliations.EnsureCapacity(Math.Max(4, estimatedRowCount));
+        var skippedInactive = new List<StaffAllocationSkippedEntry>(estimatedRowCount);
         var processedRows = 0;
 
-        for (var rowIndex = schema.HeaderRowIndex + 1; rowIndex < worksheet.Rows.Count; rowIndex++)
+        for (var rowIndex = schema.HeaderRowIndex + 1; rowIndex < worksheet.RowCount; rowIndex++)
         {
-            var row = worksheet.Rows[rowIndex];
-            if (IsDataRowEmpty(row, schema))
+            if (IsRowEmpty(worksheet, rowIndex, schema))
             {
                 continue;
             }
 
-            var gpn = GetTrimmedValue(row, schema.FixedColumns[StaffAllocationFixedColumn.Gpn].ColumnIndex);
+            var gpn = GetTrimmedValue(worksheet, rowIndex, schema.FixedColumns[StaffAllocationFixedColumn.Gpn].ColumnIndex);
             if (string.IsNullOrEmpty(gpn))
             {
                 continue;
@@ -66,21 +69,21 @@ public sealed class StaffAllocationWorksheetParser
 
             processedRows++;
 
-            var employeeName = GetTrimmedValue(row, schema.FixedColumns[StaffAllocationFixedColumn.ResourceName].ColumnIndex);
-            var rank = GetTrimmedValue(row, schema.FixedColumns[StaffAllocationFixedColumn.Rank].ColumnIndex);
-            var office = GetTrimmedValue(row, schema.FixedColumns[StaffAllocationFixedColumn.Office].ColumnIndex);
-            var subdomain = GetTrimmedValue(row, schema.FixedColumns[StaffAllocationFixedColumn.Subdomain].ColumnIndex);
+            var employeeName = GetTrimmedValue(worksheet, rowIndex, schema.FixedColumns[StaffAllocationFixedColumn.ResourceName].ColumnIndex);
+            var rank = GetTrimmedValue(worksheet, rowIndex, schema.FixedColumns[StaffAllocationFixedColumn.Rank].ColumnIndex);
+            var office = GetTrimmedValue(worksheet, rowIndex, schema.FixedColumns[StaffAllocationFixedColumn.Office].ColumnIndex);
+            var subdomain = GetTrimmedValue(worksheet, rowIndex, schema.FixedColumns[StaffAllocationFixedColumn.Subdomain].ColumnIndex);
 
             foreach (var weekColumn in schema.WeekColumns)
             {
-                var normalizedWeekStart = StaffAllocationCellHelper.NormalizeWeekStart(weekColumn.WeekStartMon);
+                var normalizedWeekStart = NormalizeWeekStart(weekColumn.WeekStartMon);
 
                 if (normalizedWeekStart < minimumWeekStart)
                 {
                     continue;
                 }
 
-                var cellValue = row[weekColumn.ColumnIndex];
+                var cellValue = worksheet.GetValue(rowIndex, weekColumn.ColumnIndex);
                 foreach (var engagementCode in ExtractEngagementCodes(cellValue))
                 {
                     var resolvedEmployeeName = employeeName;
@@ -141,6 +144,7 @@ public sealed class StaffAllocationWorksheetParser
     private static Dictionary<string, Employee> BuildEmployeeLookup(IReadOnlyDictionary<string, Employee> employees)
     {
         var lookup = new Dictionary<string, Employee>(StringComparer.OrdinalIgnoreCase);
+        lookup.EnsureCapacity(employees.Count);
         foreach (var (key, value) in employees)
         {
             if (string.IsNullOrWhiteSpace(key))
@@ -154,30 +158,35 @@ public sealed class StaffAllocationWorksheetParser
         return lookup;
     }
 
-    private static bool IsDataRowEmpty(DataRow row, StaffAllocationSchemaAnalysis schema)
+    private static bool IsRowEmpty(ImportService.IWorksheet worksheet, int rowIndex, StaffAllocationSchemaAnalysis schema)
     {
-        var hasFixedValues = schema.FixedColumns.Values
-            .Select(column => row[column.ColumnIndex])
-            .All(StaffAllocationCellHelper.IsBlank);
-
-        if (!hasFixedValues)
+        foreach (var column in schema.FixedColumns.Values)
         {
-            return false;
+            if (!IsBlank(worksheet.GetValue(rowIndex, column.ColumnIndex)))
+            {
+                return false;
+            }
         }
 
-        return schema.WeekColumns
-            .Select(column => row[column.ColumnIndex])
-            .All(StaffAllocationCellHelper.IsBlank);
+        foreach (var column in schema.WeekColumns)
+        {
+            if (!IsBlank(worksheet.GetValue(rowIndex, column.ColumnIndex)))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
-    private static string GetTrimmedValue(DataRow row, int columnIndex)
+    private static string GetTrimmedValue(ImportService.IWorksheet worksheet, int rowIndex, int columnIndex)
     {
-        return StaffAllocationCellHelper.GetDisplayText(row[columnIndex]).Trim();
+        return GetDisplayText(worksheet.GetValue(rowIndex, columnIndex)).Trim();
     }
 
     private static IEnumerable<string> ExtractEngagementCodes(object? cellValue)
     {
-        var rawText = StaffAllocationCellHelper.GetDisplayText(cellValue);
+        var rawText = GetDisplayText(cellValue);
         if (string.IsNullOrWhiteSpace(rawText))
         {
             yield break;

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GRCFinancialControl.Core.Models
@@ -16,7 +17,7 @@ namespace GRCFinancialControl.Core.Models
         /// </summary>
         public string CustomerCode { get; set; } = string.Empty;
 
-        public ICollection<Engagement> Engagements { get; set; } = [];
+        public ICollection<Engagement> Engagements { get; } = new List<Engagement>();
 
         [NotMapped]
         public string DisplayName

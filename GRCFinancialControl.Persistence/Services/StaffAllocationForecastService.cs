@@ -84,9 +84,12 @@ namespace GRCFinancialControl.Persistence.Services
                 .ToDictionary(e => e.Id);
 
             var missingEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var mappedAggregates = new List<ForecastAggregateResolved>();
+            missingEngagements.EnsureCapacity(engagementCodes.Count);
+            var mappedAggregates = new List<ForecastAggregateResolved>(normalizedRecords.Count);
             var engagementIds = new HashSet<int>();
+            engagementIds.EnsureCapacity(normalizedRecords.Count);
             var unknownRanks = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            unknownRanks.EnsureCapacity(normalizedRecords.Count);
 
             foreach (var aggregate in normalizedRecords)
             {
@@ -132,25 +135,37 @@ namespace GRCFinancialControl.Persistence.Services
                 .ToDictionaryAsync(fy => fy.Id)
                 .ConfigureAwait(false);
 
-            var aggregatesByKey = mappedAggregates
-                .GroupBy(
-                    a => new ForecastAggregateKey(a.EngagementId, a.FiscalYearId, a.Rank),
-                    ForecastAggregateKeyComparer.Instance)
-                .Select(g =>
+            var aggregateLookup = new Dictionary<ForecastAggregateKey, ForecastAggregateResolved>(ForecastAggregateKeyComparer.Instance);
+            aggregateLookup.EnsureCapacity(normalizedRecords.Count);
+            foreach (var aggregate in mappedAggregates)
+            {
+                var key = new ForecastAggregateKey(aggregate.EngagementId, aggregate.FiscalYearId, aggregate.Rank);
+                if (aggregateLookup.TryGetValue(key, out var existing))
                 {
-                    var first = g.First();
-                    return first with { Hours = g.Sum(x => x.Hours) };
-                })
-                .ToList();
+                    aggregateLookup[key] = existing with { Hours = existing.Hours + aggregate.Hours };
+                }
+                else
+                {
+                    aggregateLookup[key] = aggregate;
+                }
+            }
 
-            var totalsByEngagementRank = aggregatesByKey
-                .GroupBy(
-                    a => new EngagementRankKey(a.EngagementId, a.Rank),
-                    EngagementRankKeyComparer.Instance)
-                .ToDictionary(
-                    g => new EngagementRankKey(g.Key.EngagementId, g.Key.Rank),
-                    g => g.Sum(x => x.Hours),
-                    EngagementRankKeyComparer.Instance);
+            var aggregatesByKey = new List<ForecastAggregateResolved>(aggregateLookup.Count);
+            var totalsByEngagementRank = new Dictionary<EngagementRankKey, decimal>(EngagementRankKeyComparer.Instance);
+            totalsByEngagementRank.EnsureCapacity(aggregateLookup.Count);
+            foreach (var aggregate in aggregateLookup.Values)
+            {
+                aggregatesByKey.Add(aggregate);
+                var rankKey = new EngagementRankKey(aggregate.EngagementId, aggregate.Rank);
+                if (totalsByEngagementRank.TryGetValue(rankKey, out var current))
+                {
+                    totalsByEngagementRank[rankKey] = current + aggregate.Hours;
+                }
+                else
+                {
+                    totalsByEngagementRank[rankKey] = aggregate.Hours;
+                }
+            }
 
             var rankBudgets = await context.EngagementRankBudgets
                 .Where(rb => engagementIds.Contains(rb.EngagementId))
@@ -161,8 +176,10 @@ namespace GRCFinancialControl.Persistence.Services
                 .ToDictionary(rb => new EngagementRankKey(rb.EngagementId, rb.RankName), rb => rb, EngagementRankKeyComparer.Instance);
 
             var missingBudgets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            missingBudgets.EnsureCapacity(Math.Max(1, engagementIds.Count));
             var now = DateTime.UtcNow;
             var processedBudgetKeys = new HashSet<EngagementRankKey>(EngagementRankKeyComparer.Instance);
+            processedBudgetKeys.EnsureCapacity(rankBudgets.Count);
 
             foreach (var (key, total) in totalsByEngagementRank)
             {
@@ -293,19 +310,18 @@ namespace GRCFinancialControl.Persistence.Services
             var actualHoursByFiscalYear = await LoadActualHoursAsync(context, engagementIds, fiscalYears).ConfigureAwait(false);
             var actualHoursByEngagement = AggregateActualsByEngagement(actualHoursByFiscalYear);
 
-            var aggregates = storedForecasts
-                .Select(f =>
-                {
-                    engagementById.TryGetValue(f.EngagementId, out var engagement);
-                    return new ForecastAggregateResolved(
-                        f.EngagementId,
-                        engagement?.EngagementId ?? string.Empty,
-                        engagement?.Description ?? string.Empty,
-                        f.FiscalYearId,
-                        NormalizeRank(f.RankName),
-                        f.ForecastHours);
-                })
-                .ToList();
+            var aggregates = new List<ForecastAggregateResolved>(storedForecasts.Count);
+            foreach (var forecast in storedForecasts)
+            {
+                engagementById.TryGetValue(forecast.EngagementId, out var engagement);
+                aggregates.Add(new ForecastAggregateResolved(
+                    forecast.EngagementId,
+                    engagement?.EngagementId ?? string.Empty,
+                    engagement?.Description ?? string.Empty,
+                    forecast.FiscalYearId,
+                    NormalizeRank(forecast.RankName),
+                    forecast.ForecastHours));
+            }
 
             return BuildForecastRows(
                 aggregates,
@@ -319,7 +335,7 @@ namespace GRCFinancialControl.Persistence.Services
         private static IReadOnlyDictionary<int, decimal> AggregateActualsByEngagement(
             IReadOnlyDictionary<(int EngagementId, int FiscalYearId), decimal> actualsByFiscalYear)
         {
-            var totals = new Dictionary<int, decimal>();
+            var totals = new Dictionary<int, decimal>(actualsByFiscalYear.Count);
             foreach (var (key, value) in actualsByFiscalYear)
             {
                 if (totals.TryGetValue(key.EngagementId, out var current))
@@ -352,31 +368,78 @@ namespace GRCFinancialControl.Persistence.Services
                 .ToListAsync()
                 .ConfigureAwait(false);
 
-            var actuals = new Dictionary<(int, int), decimal>();
+            var ranges = BuildFiscalYearRanges(fiscalYears);
+            if (ranges.Count == 0)
+            {
+                return new Dictionary<(int, int), decimal>();
+            }
+
+            var actuals = new Dictionary<(int, int), decimal>(actualEntries.Count);
 
             foreach (var entry in actualEntries)
             {
-                foreach (var fiscalYear in fiscalYears.Values)
+                var fiscalYearId = FindFiscalYearId(entry.Date, ranges);
+                if (fiscalYearId is null)
                 {
-                    if (entry.Date >= fiscalYear.StartDate && entry.Date <= fiscalYear.EndDate)
-                    {
-                        var key = (entry.EngagementId, fiscalYear.Id);
-                        if (actuals.TryGetValue(key, out var current))
-                        {
-                            actuals[key] = current + entry.Hours;
-                        }
-                        else
-                        {
-                            actuals[key] = entry.Hours;
-                        }
+                    continue;
+                }
 
-                        break;
-                    }
+                var key = (entry.EngagementId, fiscalYearId.Value);
+                if (actuals.TryGetValue(key, out var current))
+                {
+                    actuals[key] = current + entry.Hours;
+                }
+                else
+                {
+                    actuals[key] = entry.Hours;
                 }
             }
 
             return actuals;
         }
+
+        private static List<FiscalYearRange> BuildFiscalYearRanges(IReadOnlyDictionary<int, FiscalYear> fiscalYears)
+        {
+            var ranges = new List<FiscalYearRange>(fiscalYears.Count);
+            foreach (var kvp in fiscalYears)
+            {
+                var fiscalYear = kvp.Value;
+                ranges.Add(new FiscalYearRange(kvp.Key, fiscalYear.StartDate.Date, fiscalYear.EndDate.Date));
+            }
+
+            ranges.Sort((left, right) => left.Start.CompareTo(right.Start));
+            return ranges;
+        }
+
+        private static int? FindFiscalYearId(DateTime date, IReadOnlyList<FiscalYearRange> ranges)
+        {
+            var target = date.Date;
+            var low = 0;
+            var high = ranges.Count - 1;
+
+            while (low <= high)
+            {
+                var mid = (low + high) / 2;
+                var range = ranges[mid];
+
+                if (target < range.Start)
+                {
+                    high = mid - 1;
+                }
+                else if (target > range.End)
+                {
+                    low = mid + 1;
+                }
+                else
+                {
+                    return range.Id;
+                }
+            }
+
+            return null;
+        }
+
+        private readonly record struct FiscalYearRange(int Id, DateTime Start, DateTime End);
 
         private IReadOnlyList<ForecastAllocationRow> BuildForecastRows(
             IReadOnlyList<ForecastAggregateResolved> aggregates,

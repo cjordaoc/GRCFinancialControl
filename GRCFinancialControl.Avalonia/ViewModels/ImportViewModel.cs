@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using App.Presentation.Localization;
 using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -23,6 +24,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly IImportService _importService;
         private readonly IClosingPeriodService _closingPeriodService;
         private readonly ILoggingService _loggingService;
+        private readonly Action<string> _logHandler;
+
+        [ObservableProperty]
+        private bool _isImporting;
 
         [ObservableProperty]
         private string? _statusMessage;
@@ -48,13 +53,26 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             ? null
             : LocalizationRegistry.Format("Import.Section.Selected.TitleFormat", FileTypeDisplayName);
 
+        public bool CanModifyClosingPeriod => HasUnlockedClosingPeriods && !IsImporting;
+
         public ImportViewModel(IFilePickerService filePickerService, IImportService importService, IClosingPeriodService closingPeriodService, ILoggingService loggingService)
         {
             _filePickerService = filePickerService;
             _importService = importService;
             _closingPeriodService = closingPeriodService;
             _loggingService = loggingService;
-            _loggingService.OnLogMessage += (message) => StatusMessage = message;
+            _logHandler = message =>
+            {
+                if (Dispatcher.UIThread.CheckAccess())
+                {
+                    StatusMessage = message;
+                }
+                else
+                {
+                    Dispatcher.UIThread.Post(() => StatusMessage = message);
+                }
+            };
+            _loggingService.OnLogMessage += _logHandler;
 
             SetImportTypeCommand = new RelayCommand<string>(SetImportType);
             ImportCommand = new AsyncRelayCommand(ImportAsync, CanImport);
@@ -65,6 +83,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private void SetImportType(string? fileType)
         {
+            if (IsImporting)
+            {
+                return;
+            }
+
             FileType = fileType;
             if (RequiresClosingPeriodSelection && !HasUnlockedClosingPeriods)
             {
@@ -79,6 +102,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private async Task ImportAsync()
         {
+            if (IsImporting)
+            {
+                return;
+            }
+
             if (string.IsNullOrEmpty(FileType)) return;
 
             if (FileType == ActualsType && SelectedClosingPeriod == null)
@@ -94,18 +122,21 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _loggingService.LogInfo(LocalizationRegistry.Format("Import.Status.InProgress", displayName));
             try
             {
+                IsImporting = true;
+
                 string result;
                 if (FileType == BudgetType)
                 {
-                    result = await _importService.ImportBudgetAsync(filePath);
+                    result = await Task.Run(() => _importService.ImportBudgetAsync(filePath));
                 }
                 else if (FileType == ActualsType)
                 {
-                    result = await _importService.ImportActualsAsync(filePath, SelectedClosingPeriod!.Id);
+                    var closingPeriodId = SelectedClosingPeriod!.Id;
+                    result = await Task.Run(() => _importService.ImportActualsAsync(filePath, closingPeriodId));
                 }
                 else if (FileType == FullManagementType)
                 {
-                    result = await _importService.ImportFullManagementDataAsync(filePath);
+                    result = await Task.Run(() => _importService.ImportFullManagementDataAsync(filePath));
                 }
                 else
                 {
@@ -117,10 +148,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 _loggingService.LogError(LocalizationRegistry.Format("Import.Status.Error", ex.Message));
             }
+            finally
+            {
+                IsImporting = false;
+            }
         }
 
         private bool CanImport()
         {
+            if (IsImporting)
+            {
+                return false;
+            }
+
             if (string.IsNullOrEmpty(FileType))
             {
                 return false;
@@ -173,9 +213,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         partial void OnClosingPeriodsChanging(ObservableCollection<ClosingPeriod> value)
         {
-            if (value != null)
+            if (_closingPeriods != null)
             {
-                value.CollectionChanged -= OnClosingPeriodsCollectionChanged;
+                _closingPeriods.CollectionChanged -= OnClosingPeriodsCollectionChanged;
             }
         }
 
@@ -188,6 +228,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             ImportCommand.NotifyCanExecuteChanged();
             OnPropertyChanged(nameof(HasUnlockedClosingPeriods));
             OnPropertyChanged(nameof(IsClosingPeriodSelectionUnavailable));
+            OnPropertyChanged(nameof(CanModifyClosingPeriod));
         }
 
         private void OnClosingPeriodsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -195,11 +236,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             ImportCommand.NotifyCanExecuteChanged();
             OnPropertyChanged(nameof(HasUnlockedClosingPeriods));
             OnPropertyChanged(nameof(IsClosingPeriodSelectionUnavailable));
+            OnPropertyChanged(nameof(CanModifyClosingPeriod));
         }
 
         partial void OnSelectedClosingPeriodChanged(ClosingPeriod? value)
         {
             ImportCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnIsImportingChanged(bool value)
+        {
+            ImportCommand.NotifyCanExecuteChanged();
+            OnPropertyChanged(nameof(CanModifyClosingPeriod));
         }
 
         partial void OnFileTypeChanged(string? value)
