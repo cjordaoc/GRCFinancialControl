@@ -404,6 +404,10 @@ namespace GRCFinancialControl.Persistence
             remainingHoursProperty.Metadata.SetAfterSaveBehavior(Microsoft.EntityFrameworkCore.Metadata.PropertySaveBehavior.Ignore);
 
             modelBuilder.Entity<EngagementRankBudget>()
+                .Property(rb => rb.RemainingHours)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<EngagementRankBudget>()
                 .Property(rb => rb.CreatedAtUtc)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
 

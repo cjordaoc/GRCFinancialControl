@@ -18,7 +18,7 @@
                       HorizontalScrollBarVisibility="Disabled"
                       HorizontalAlignment="Stretch"
                       HorizontalContentAlignment="Center"
-                      Padding="{StaticResource Space24}">
+                      Padding="{StaticResource SpaceThickness24}">
             <StackPanel Spacing="{StaticResource Space24}"
                         HorizontalAlignment="Center"
                         MaxWidth="{Binding ElementName=EngagementEditorRoot,
