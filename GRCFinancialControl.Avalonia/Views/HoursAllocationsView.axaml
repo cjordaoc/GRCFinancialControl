@@ -17,12 +17,24 @@
                                       TrueBrush="{StaticResource BrushWarning}"
                                       FalseBrush="{StaticResource BrushSuccessDark}"/>
     </UserControl.Resources>
-    <Grid RowDefinitions="Auto,*">
-        <TextBlock Text="{Binding Header}"
+    <Grid RowDefinitions="Auto,Auto,*">
+        <TextBlock Grid.Row="0"
+                   Text="{Binding Header}"
                    FontSize="{StaticResource FontSizeXL}"
                    FontWeight="Bold"
                    Margin="{StaticResource SpaceThickness10}"/>
-        <DataGrid Grid.Row="1" ItemsSource="{Binding Engagements}" AutoGenerateColumns="False" IsReadOnly="True" CanUserSortColumns="True">
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    Margin="{StaticResource SpaceThickness10}"
+                    Spacing="{StaticResource Space8}">
+            <Button Content="Atualizar"
+                    Command="{Binding RefreshAssignmentsCommand}" />
+            <Button Content="Gerar Template Retain"
+                    Command="{Binding GenerateTemplateRetainCommand}" />
+            <Button Content="Exportar Pendências"
+                    Command="{Binding ExportPendingCommand}" />
+        </StackPanel>
+        <DataGrid Grid.Row="2" ItemsSource="{Binding Engagements}" AutoGenerateColumns="False" IsReadOnly="True" CanUserSortColumns="True">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Engagement ID" Binding="{Binding EngagementId}" Width="*"/>
                 <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="2*"/>

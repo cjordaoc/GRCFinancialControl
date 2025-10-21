@@ -3,85 +3,179 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
-             xmlns:models="using:GRCFinancialControl.Core.Models"
+             xmlns:core="using:GRCFinancialControl.Core.Models"
              xmlns:conv="using:GRCFinancialControl.Avalonia.Converters"
+             xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
              mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="600"
              x:Class="GRCFinancialControl.Avalonia.Views.ForecastAllocationsView"
+             x:Name="ForecastAllocationsRoot"
              x:DataType="vm:ForecastAllocationsViewModel">
     <UserControl.Resources>
         <conv:ForecastStatusToBrushConverter x:Key="ForecastStatusBrush" />
     </UserControl.Resources>
-    <Grid RowDefinitions="Auto,Auto,Auto,*"
-          Margin="{StaticResource SpaceThickness10}">
-        <TextBlock Text="Alocação (Forecast)"
-                   Classes="TitleLarge"
-                   Margin="0,0,0,8" />
-        <StackPanel Grid.Row="1"
-                    Orientation="Horizontal"
-                    Spacing="{StaticResource Space8}">
-            <Button Content="Atualizar"
-                    Command="{Binding RefreshCommand}" />
-            <Button Content="Gerar Template Retain"
-                    Command="{Binding GenerateTemplateRetainCommand}" />
-            <Button Content="Gerar JSON Power Automate"
-                    Command="{Binding GeneratePowerAutomateJsonCommand}" />
-            <Button Content="Exportar Pendências"
-                    Command="{Binding ExportPendingCommand}" />
-        </StackPanel>
-        <StackPanel Grid.Row="2"
-                    Orientation="Horizontal"
-                    VerticalAlignment="Center"
-                    Spacing="{StaticResource Space8}"
-                    Margin="0,8,0,8">
-            <TextBlock Text="{Binding Rows.Count, StringFormat='Total de linhas: {0}'}" />
-            <ProgressBar Width="160"
-                         IsIndeterminate="True"
-                         IsVisible="{Binding IsBusy}" />
-        </StackPanel>
-        <DataGrid Grid.Row="3"
-                  ItemsSource="{Binding Rows}"
-                  AutoGenerateColumns="False"
-                  CanUserSortColumns="True"
-                  IsReadOnly="True">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Engagement"
-                                     Binding="{Binding EngagementCode}"
-                                     Width="1.2*" />
-                <DataGridTextColumn Header="Descrição"
-                                     Binding="{Binding EngagementName}"
-                                     Width="2*" />
-                <DataGridTextColumn Header="Fiscal Year"
-                                     Binding="{Binding FiscalYearName}"
-                                     Width="1*" />
-                <DataGridTextColumn Header="Rank"
-                                     Binding="{Binding Rank}"
-                                     Width="0.8*" />
-                <DataGridTextColumn Header="Budget (h)"
-                                     Binding="{Binding BudgetHours, StringFormat='{}{0:N2}'}"
-                                     Width="1*" />
-                <DataGridTextColumn Header="Actuals (h)"
-                                     Binding="{Binding ActualsHours, StringFormat='{}{0:N2}'}"
-                                     Width="1*" />
-                <DataGridTextColumn Header="Forecast (h)"
-                                     Binding="{Binding ForecastHours, StringFormat='{}{0:N2}'}"
-                                     Width="1*" />
-                <DataGridTextColumn Header="Disponível (h)"
-                                     Binding="{Binding AvailableHours, StringFormat='{}{0:N2}'}"
-                                     Width="1*" />
-                <DataGridTextColumn Header="Disponível p/ Real (h)"
-                                     Binding="{Binding AvailableToActuals, StringFormat='{}{0:N2}'}"
-                                     Width="1*" />
-                <DataGridTemplateColumn Header="Risco / Estouro"
-                                       Width="0.8*">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate x:DataType="models:ForecastAllocationRow">
-                            <TextBlock Text="{Binding Status}"
-                                       HorizontalAlignment="Center"
-                                       Foreground="{Binding Status, Converter={StaticResource ForecastStatusBrush}}" />
+    <Grid ColumnDefinitions="280,*"
+          ColumnSpacing="{StaticResource Space16}"
+          Margin="{StaticResource SpaceThickness16}">
+        <Border Grid.Column="0"
+                Classes="Card"
+                Padding="{StaticResource SpaceThickness16}">
+            <StackPanel Spacing="{StaticResource Space12}">
+                <TextBlock Text="Alocação (Forecast)"
+                           Classes="TitleLarge" />
+                <StackPanel Orientation="Horizontal"
+                            Spacing="{StaticResource Space8}"
+                            VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Engagements.Count, StringFormat='Total de engagements: {0}'}" />
+                    <ProgressBar Width="140"
+                                 IsIndeterminate="True"
+                                 IsVisible="{Binding IsBusy}" />
+                </StackPanel>
+                <Separator />
+                <TextBlock Text="Engagement selecionado"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="Selecione um engagement para visualizar detalhes"
+                           FontStyle="Italic"
+                           Opacity="0.7"
+                           IsVisible="{Binding SelectedEngagement, Converter={x:Static converters:ObjectConverters.IsNull}}" />
+                <ContentControl Content="{Binding SelectedEngagement}"
+                                IsVisible="{Binding SelectedEngagement, Converter={x:Static converters:ObjectConverters.IsNotNull}}">
+                    <ContentControl.ContentTemplate>
+                        <DataTemplate x:DataType="core:EngagementForecastSummary">
+                            <StackPanel Spacing="{StaticResource Space12}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding EngagementCode}"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding EngagementName}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                                <Grid RowDefinitions="Auto,Auto,Auto,Auto"
+                                      RowSpacing="{StaticResource Space8}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Row="0"
+                                               Grid.Column="0"
+                                               Text="Budget inicial" />
+                                    <TextBlock Grid.Row="0"
+                                               Grid.Column="1"
+                                               Text="{Binding InitialHoursBudget, StringFormat='{}{0:N2} h'}" />
+                                    <TextBlock Grid.Row="1"
+                                               Grid.Column="0"
+                                               Text="Horas reais" />
+                                    <TextBlock Grid.Row="1"
+                                               Grid.Column="1"
+                                               Text="{Binding ActualHours, StringFormat='{}{0:N2} h'}" />
+                                    <TextBlock Grid.Row="2"
+                                               Grid.Column="0"
+                                               Text="Horas forecast" />
+                                    <TextBlock Grid.Row="2"
+                                               Grid.Column="1"
+                                               Text="{Binding ForecastHours, StringFormat='{}{0:N2} h'}" />
+                                    <TextBlock Grid.Row="3"
+                                               Grid.Column="0"
+                                               Text="Horas restantes" />
+                                    <TextBlock Grid.Row="3"
+                                               Grid.Column="1"
+                                               Text="{Binding RemainingHours, StringFormat='{}{0:N2} h'}" />
+                                </Grid>
+                                <Grid RowDefinitions="Auto,Auto"
+                                      RowSpacing="{StaticResource Space8}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Row="0"
+                                               Grid.Column="0"
+                                               Text="Anos fiscais" />
+                                    <TextBlock Grid.Row="0"
+                                               Grid.Column="1"
+                                               Text="{Binding FiscalYearCount}" />
+                                    <TextBlock Grid.Row="1"
+                                               Grid.Column="0"
+                                               Text="Ranks cadastrados" />
+                                    <TextBlock Grid.Row="1"
+                                               Grid.Column="1"
+                                               Text="{Binding RankCount}" />
+                                </Grid>
+                                <Grid RowDefinitions="Auto,Auto"
+                                      RowSpacing="{StaticResource Space8}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Row="0"
+                                               Grid.Column="0"
+                                               Text="Sinalizações de risco" />
+                                    <TextBlock Grid.Row="0"
+                                               Grid.Column="1"
+                                               Text="{Binding RiskCount}" />
+                                    <TextBlock Grid.Row="1"
+                                               Grid.Column="0"
+                                               Text="Sinalizações de estouro" />
+                                    <TextBlock Grid.Row="1"
+                                               Grid.Column="1"
+                                               Text="{Binding OverrunCount}" />
+                                </Grid>
+                                <Button Content="Editar engagement"
+                                        Command="{Binding DataContext.EditEngagementCommand, ElementName=ForecastAllocationsRoot}"
+                                        CommandParameter="{Binding}"
+                                        MinWidth="180" />
+                            </StackPanel>
                         </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
+                    </ContentControl.ContentTemplate>
+                </ContentControl>
+            </StackPanel>
+        </Border>
+        <Border Grid.Column="1"
+                Classes="Card"
+                Padding="{StaticResource SpaceThickness16}">
+            <DataGrid x:Name="ForecastGrid"
+                      ItemsSource="{Binding Engagements}"
+                      SelectedItem="{Binding SelectedEngagement, Mode=TwoWay}"
+                      AutoGenerateColumns="False"
+                      CanUserSortColumns="True"
+                      IsReadOnly="True">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Engagement"
+                                         Binding="{Binding EngagementCode}"
+                                         Width="1.2*" />
+                    <DataGridTextColumn Header="Descrição"
+                                         Binding="{Binding EngagementName}"
+                                         Width="2*" />
+                    <DataGridTextColumn Header="Budget Inicial"
+                                         Binding="{Binding InitialHoursBudget, StringFormat='{}{0:N2}'}"
+                                         Width="1*" />
+                    <DataGridTextColumn Header="Horas Reais"
+                                         Binding="{Binding ActualHours, StringFormat='{}{0:N2}'}"
+                                         Width="1*" />
+                    <DataGridTextColumn Header="Horas Forecast"
+                                         Binding="{Binding ForecastHours, StringFormat='{}{0:N2}'}"
+                                         Width="1*" />
+                    <DataGridTextColumn Header="Horas Restantes"
+                                         Binding="{Binding RemainingHours, StringFormat='{}{0:N2}'}"
+                                         Width="1*" />
+                    <DataGridTemplateColumn Header="Status" Width="0.8*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="core:EngagementForecastSummary">
+                                <TextBlock Text="{Binding Status}"
+                                           HorizontalAlignment="Center"
+                                           Foreground="{Binding Status, Converter={StaticResource ForecastStatusBrush}}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Ações" Width="Auto">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="core:EngagementForecastSummary">
+                                <Button Content="Editar"
+                                        Command="{Binding DataContext.EditEngagementCommand, ElementName=ForecastAllocationsRoot}"
+                                        CommandParameter="{Binding}"
+                                        MinWidth="100" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
     </Grid>
 </UserControl>

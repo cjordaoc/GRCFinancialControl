@@ -156,6 +156,21 @@
   <data name="Settings.Validation.ImportPassphraseRequired" xml:space="preserve">
     <value>Enter the package passphrase before importing.</value>
   </data>
+  <data name="Settings.Validation.ImportPackageRequired" xml:space="preserve">
+    <value>Select a connection package file before importing.</value>
+  </data>
+  <data name="Settings.Label.ImportPackage" xml:space="preserve">
+    <value>Package file</value>
+  </data>
+  <data name="Settings.Placeholder.ImportPackage" xml:space="preserve">
+    <value>No package selected</value>
+  </data>
+  <data name="Settings.Button.SelectPackage" xml:space="preserve">
+    <value>Select package</value>
+  </data>
+  <data name="Settings.Label.SelectedImportPackagePrefix" xml:space="preserve">
+    <value>Selected: </value>
+  </data>
   <data name="Settings.Dialog.Import.Title" xml:space="preserve">
     <value>Import connection package</value>
   </data>

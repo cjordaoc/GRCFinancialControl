@@ -61,17 +61,55 @@
                     </StackPanel>
                     <Separator/>
                     <TextBlock Text="{loc:Loc Key=Settings.Section.Package.ImportDescription}" TextWrapping="Wrap"/>
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="{loc:Loc Key=Settings.Label.ImportPassphrase}"/>
-                        <TextBox Text="{Binding ImportPassphrase}" PasswordChar="*"/>
-                        <Button Content="{loc:Loc Key=Settings.Button.ImportPackage}"
-                                Command="{Binding ImportConnectionPackageCommand}"
-                                MinWidth="180"
-                                HorizontalAlignment="Left"/>
-                        <TextBlock Text="{Binding SelectedImportPackageFileName}"
-                                   Opacity="0.7"
+                    <StackPanel Spacing="12">
+                        <Grid ColumnDefinitions="Auto,16,*"
+                              RowDefinitions="Auto,Auto"
+                              RowSpacing="{StaticResource Space8}">
+                            <TextBlock Grid.Row="0"
+                                       Grid.Column="0"
+                                       Text="{loc:Loc Key=Settings.Label.ImportPassphrase}"
+                                       VerticalAlignment="Center"/>
+                            <TextBox Grid.Row="0"
+                                     Grid.Column="2"
+                                     Text="{Binding ImportPassphrase}"
+                                     PasswordChar="*"
+                                     MinWidth="240"/>
+                            <TextBlock Grid.Row="1"
+                                       Grid.Column="0"
+                                       Text="{loc:Loc Key=Settings.Label.ImportPackage}"
+                                       VerticalAlignment="Center"/>
+                            <StackPanel Grid.Row="1"
+                                        Grid.Column="2"
+                                        Orientation="Horizontal"
+                                        Spacing="8">
+                                <TextBox Width="320"
+                                         Text="{Binding SelectedImportPackagePath}"
+                                         Watermark="{loc:Loc Key=Settings.Placeholder.ImportPackage}"
+                                         IsReadOnly="True"/>
+                                <Button Content="{loc:Loc Key=Settings.Button.SelectPackage}"
+                                        Command="{Binding BrowseImportPackageCommand}"
+                                        MinWidth="140"
+                                        IsEnabled="{Binding IsImporting, Converter={StaticResource InverseBooleanConverter}}"/>
+                            </StackPanel>
+                        </Grid>
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="{StaticResource Space12}">
+                            <Button Content="{loc:Loc Key=Settings.Button.ImportPackage}"
+                                    Command="{Binding ImportConnectionPackageCommand}"
+                                    MinWidth="180"
+                                    IsEnabled="{Binding IsImporting, Converter={StaticResource InverseBooleanConverter}}"/>
+                            <ProgressBar Width="120"
+                                         IsIndeterminate="True"
+                                         IsVisible="{Binding IsImporting}"/>
+                        </StackPanel>
+                        <TextBlock Opacity="0.7"
                                    FontStyle="Italic"
-                                   IsVisible="{Binding HasSelectedImportPackage}"/>
+                                   IsVisible="{Binding HasSelectedImportPackage}">
+                            <TextBlock.Inlines>
+                                <Run Text="{loc:Loc Key=Settings.Label.SelectedImportPackagePrefix}" />
+                                <Run Text="{Binding SelectedImportPackageFileName}" />
+                            </TextBlock.Inlines>
+                        </TextBlock>
                     </StackPanel>
                 </StackPanel>
             </Border>

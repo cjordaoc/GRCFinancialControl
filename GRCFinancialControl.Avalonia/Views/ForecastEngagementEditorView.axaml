@@ -1,0 +1,88 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
+             x:Class="GRCFinancialControl.Avalonia.Views.ForecastEngagementEditorView"
+             x:DataType="vm:ForecastEngagementEditorViewModel"
+             mc:Ignorable="d"
+             d:DesignWidth="960"
+             d:DesignHeight="640">
+    <Grid ColumnDefinitions="280,*"
+          ColumnSpacing="{StaticResource Space16}">
+        <Border Grid.Column="0"
+                Classes="Card"
+                Padding="{StaticResource SpaceThickness16}">
+            <StackPanel Spacing="{StaticResource Space16}">
+                <TextBlock Text="{Binding Title}"
+                           Classes="TitleLarge" />
+                <StackPanel Spacing="{StaticResource Space12}">
+                    <TextBlock Text="Resumo de horas"
+                               FontWeight="SemiBold" />
+                    <Grid RowDefinitions="Auto,Auto,Auto,Auto"
+                          RowSpacing="{StaticResource Space8}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="Budget inicial" />
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="1"
+                                   Text="{Binding InitialHoursBudget, StringFormat='{}{0:N2} h'}" />
+                        <TextBlock Grid.Row="1"
+                                   Grid.Column="0"
+                                   Text="Horas reais" />
+                        <TextBlock Grid.Row="1"
+                                   Grid.Column="1"
+                                   Text="{Binding ActualHoursBudget, StringFormat='{}{0:N2} h'}" />
+                        <TextBlock Grid.Row="2"
+                                   Grid.Column="0"
+                                   Text="Horas previstas" />
+                        <TextBlock Grid.Row="2"
+                                   Grid.Column="1"
+                                   Text="{Binding TotalForecastHours, StringFormat='{}{0:N2} h'}" />
+                        <TextBlock Grid.Row="3"
+                                   Grid.Column="0"
+                                   Text="Horas restantes" />
+                        <TextBlock Grid.Row="3"
+                                   Grid.Column="1"
+                                   Text="{Binding RemainingHours, StringFormat='{}{0:N2} h'}" />
+                    </Grid>
+                </StackPanel>
+                <StackPanel Spacing="{StaticResource Space12}">
+                    <TextBlock Text="Ações"
+                               FontWeight="SemiBold" />
+                    <Button Content="➕ Adicionar linha"
+                            Command="{Binding AddRowCommand}"
+                            MinWidth="180" />
+                    <Button Content="Salvar alterações"
+                            Command="{Binding SaveCommand}"
+                            MinWidth="180" />
+                    <Button Content="Fechar"
+                            Command="{Binding CloseCommand}"
+                            IsEnabled="{Binding IsSaving, Converter={StaticResource InverseBooleanConverter}}"
+                            MinWidth="160" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+        <Border Grid.Column="1"
+                Classes="Card"
+                Padding="{StaticResource SpaceThickness16}">
+            <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space16}">
+                <DataGrid x:Name="ForecastGrid"
+                          ItemsSource="{Binding Rows}"
+                          AutoGenerateColumns="False"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="All" />
+                <TextBlock Grid.Row="1"
+                           Text="{Binding StatusMessage}"
+                           TextWrapping="Wrap"
+                           Foreground="{StaticResource BrushOnSurface}"
+                           IsVisible="{Binding StatusMessage, Converter={x:Static converters:ObjectConverters.IsNotNull}}"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

@@ -626,12 +626,21 @@ public partial class PlanEditorViewModel : ViewModelBase
         try
         {
             var engagements = _repository.ListEngagementsForPlanning();
+            var previousSelection = SelectedEngagement?.EngagementId;
 
             Engagements.Clear();
             foreach (var engagement in engagements)
             {
                 Engagements.Add(new EngagementOptionViewModel(engagement));
             }
+
+            var selected = engagements.Count == 0
+                ? null
+                : Engagements.FirstOrDefault(option =>
+                    string.Equals(option.EngagementId, previousSelection, StringComparison.OrdinalIgnoreCase))
+                    ?? Engagements.FirstOrDefault();
+
+            SelectedEngagement = selected;
 
             EngagementSelectionMessage = engagements.Count == 0
                 ? LocalizationRegistry.Get("InvoicePlan.Selection.Message.Empty")
