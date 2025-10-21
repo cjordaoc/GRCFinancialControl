@@ -126,7 +126,7 @@
                             IsVisible="{Binding RequiresFirstEmissionDate}"
                             IsEnabled="{Binding RequiresFirstEmissionDate}"
                             HorizontalAlignment="Left"
-                            Width="180" />
+                            Width="240" />
 
                 <TextBlock Grid.Row="3"
                            Grid.Column="0"
@@ -183,6 +183,7 @@
                           HeadersVisibility="Column"
                           GridLinesVisibility="All"
                           HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto"
                           MaxHeight="360">
                     <DataGrid.Columns>
                         <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Sequence}" Width="60">

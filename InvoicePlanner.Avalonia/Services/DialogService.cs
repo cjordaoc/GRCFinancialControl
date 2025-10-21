@@ -91,16 +91,34 @@ namespace InvoicePlanner.Avalonia.Services
                 }
 
                 var bounds = owner.Bounds;
-                _currentDialog.Width = bounds.Width;
-                _currentDialog.Height = bounds.Height;
-                _currentDialog.Position = owner.Position;
+
+                if (owner.WindowState == WindowState.Maximized)
+                {
+                    if (_currentDialog.WindowState != WindowState.Maximized)
+                    {
+                        _currentDialog.WindowState = WindowState.Maximized;
+                    }
+
+                    _currentDialog.Position = owner.Position;
+                }
+                else
+                {
+                    if (_currentDialog.WindowState != WindowState.Normal)
+                    {
+                        _currentDialog.WindowState = WindowState.Normal;
+                    }
+
+                    _currentDialog.Width = bounds.Width;
+                    _currentDialog.Height = bounds.Height;
+                    _currentDialog.Position = owner.Position;
+                }
             }
 
             void UpdateSizing(Size size)
             {
                 if (size.Width > 0)
                 {
-                    var targetWidth = size.Width * 0.8;
+                    var targetWidth = size.Width * 0.85;
                     container.Width = targetWidth;
                     container.MaxWidth = targetWidth;
                 }
@@ -112,7 +130,7 @@ namespace InvoicePlanner.Avalonia.Services
 
                 if (size.Height > 0)
                 {
-                    var targetHeight = size.Height * 0.8;
+                    var targetHeight = size.Height * 0.85;
                     container.Height = targetHeight;
                     container.MaxHeight = targetHeight;
                 }
@@ -139,7 +157,7 @@ namespace InvoicePlanner.Avalonia.Services
             {
                 Title = title,
                 Content = overlay,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                WindowStartupLocation = WindowStartupLocation.Manual,
                 ShowInTaskbar = false,
                 CanResize = false,
                 SystemDecorations = SystemDecorations.None,
