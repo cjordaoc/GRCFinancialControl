@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -17,6 +18,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         private readonly IEngagementService _engagementService;
         private readonly IHoursAllocationService _hoursAllocationService;
+        private readonly IImportService _importService;
+        private readonly IFilePickerService _filePickerService;
         private readonly ILoggingService _loggingService;
 
         private int? _lastSelectedEngagementId;
@@ -61,12 +64,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public HoursAllocationsViewModel(
             IEngagementService engagementService,
             IHoursAllocationService hoursAllocationService,
+            IImportService importService,
+            IFilePickerService filePickerService,
             ILoggingService loggingService,
             IMessenger messenger)
             : base(messenger)
         {
             _engagementService = engagementService ?? throw new ArgumentNullException(nameof(engagementService));
             _hoursAllocationService = hoursAllocationService ?? throw new ArgumentNullException(nameof(hoursAllocationService));
+            _importService = importService ?? throw new ArgumentNullException(nameof(importService));
+            _filePickerService = filePickerService ?? throw new ArgumentNullException(nameof(filePickerService));
             _loggingService = loggingService ?? throw new ArgumentNullException(nameof(loggingService));
         }
 
@@ -147,6 +154,60 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             finally
             {
                 IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task UpdateAllocationsAsync()
+        {
+            if (IsBusy)
+            {
+                return;
+            }
+
+            var filePath = await _filePickerService.OpenFileAsync(
+                title: "Select staff allocation workbook",
+                defaultExtension: ".xlsx",
+                allowedPatterns: new[] { "*.xlsx" });
+
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                return;
+            }
+
+            var selectedId = SelectedEngagement?.Id;
+            var updateCompleted = false;
+
+            try
+            {
+                IsBusy = true;
+                StatusMessage = null;
+
+                var summary = await Task.Run(() => _importService.UpdateStaffAllocationsAsync(filePath)).ConfigureAwait(false);
+
+                if (selectedId.HasValue)
+                {
+                    await LoadSnapshotAsync(selectedId.Value).ConfigureAwait(false);
+                }
+
+                _loggingService.LogInfo(summary);
+                StatusMessage = summary;
+                Messenger.Send(new RefreshDataMessage());
+                updateCompleted = true;
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogError(ex.Message);
+                StatusMessage = ex.Message;
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+
+            if (!selectedId.HasValue && updateCompleted)
+            {
+                await LoadDataAsync().ConfigureAwait(false);
             }
         }
 

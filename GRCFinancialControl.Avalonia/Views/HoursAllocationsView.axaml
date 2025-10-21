@@ -35,6 +35,9 @@
             <Button Content="Save"
                     Command="{Binding SaveCommand}"
                     IsEnabled="{Binding HasChanges}"/>
+            <Button Content="Update Allocations"
+                    Command="{Binding UpdateAllocationsCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}"/>
             <TextBox Width="200"
                      Watermark="New rank"
                      Text="{Binding NewRankName, UpdateSourceTrigger=PropertyChanged}"/>

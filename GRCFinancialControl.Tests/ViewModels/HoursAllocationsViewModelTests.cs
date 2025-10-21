@@ -1,12 +1,14 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Avalonia.ViewModels;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
+using GRCFinancialControl.Persistence.Services.Importers.StaffAllocations;
+using Moq;
 using Xunit;
 
 namespace GRCFinancialControl.Tests.ViewModels;
@@ -16,18 +18,42 @@ public sealed class HoursAllocationsViewModelTests
     [Fact]
     public async Task LoadDataAsync_PopulatesRowsAndTotals()
     {
-        var engagementService = new FakeEngagementService();
-        var hoursService = new FakeHoursAllocationService();
-        var loggingService = new FakeLoggingService();
-        var messenger = new StrongReferenceMessenger();
+        var snapshot = CreateSnapshot();
+        var engagements = CreateEngagements();
 
-        hoursService.Snapshot = CreateSnapshot();
+        var engagementMock = new Mock<IEngagementService>();
+        engagementMock.Setup(service => service.GetAllAsync()).ReturnsAsync(engagements);
 
-        var viewModel = new HoursAllocationsViewModel(
-            engagementService,
-            hoursService,
-            loggingService,
-            messenger);
+        var currentSnapshot = snapshot;
+        var hoursMock = new Mock<IHoursAllocationService>();
+        hoursMock.Setup(service => service.GetAllocationAsync(It.IsAny<int>()))
+            .ReturnsAsync(() => currentSnapshot);
+        hoursMock.Setup(service => service.SaveAsync(It.IsAny<int>(), It.IsAny<IEnumerable<HoursAllocationCellUpdate>>()))
+            .ReturnsAsync((int _, IEnumerable<HoursAllocationCellUpdate> _) => currentSnapshot);
+        hoursMock.Setup(service => service.AddRankAsync(It.IsAny<int>(), It.IsAny<string>()))
+            .ReturnsAsync(() => currentSnapshot);
+        hoursMock.Setup(service => service.DeleteRankAsync(It.IsAny<int>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+
+        var importMock = new Mock<IImportService>();
+        importMock.Setup(service => service.UpdateStaffAllocationsAsync(It.IsAny<string>()))
+            .ReturnsAsync("Staff allocation update summary.");
+
+        var filePickerMock = new Mock<IFilePickerService>();
+        filePickerMock.Setup(service => service.OpenFileAsync(
+                It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string[]?>()))
+            .ReturnsAsync((string?)null);
+
+        var loggingMock = new Mock<ILoggingService>();
+
+        var viewModel = CreateViewModel(
+            engagementMock.Object,
+            hoursMock.Object,
+            importMock.Object,
+            filePickerMock.Object,
+            loggingMock.Object);
 
         await viewModel.LoadDataAsync();
 
@@ -51,19 +77,50 @@ public sealed class HoursAllocationsViewModelTests
     [Fact]
     public async Task SaveCommand_PersistsChangesAndResetsDirtyState()
     {
-        var engagementService = new FakeEngagementService();
-        var hoursService = new FakeHoursAllocationService();
-        var loggingService = new FakeLoggingService();
-        var messenger = new StrongReferenceMessenger();
+        var snapshot = CreateSnapshot();
+        var saveSnapshot = CreateSnapshot(25m);
+        var engagements = CreateEngagements();
 
-        hoursService.Snapshot = CreateSnapshot();
-        hoursService.SaveSnapshot = CreateSnapshot(25m);
+        var engagementMock = new Mock<IEngagementService>();
+        engagementMock.Setup(service => service.GetAllAsync()).ReturnsAsync(engagements);
 
-        var viewModel = new HoursAllocationsViewModel(
-            engagementService,
-            hoursService,
-            loggingService,
-            messenger);
+        var currentSnapshot = snapshot;
+        var lastUpdates = new List<HoursAllocationCellUpdate>();
+        var hoursMock = new Mock<IHoursAllocationService>();
+        hoursMock.Setup(service => service.GetAllocationAsync(It.IsAny<int>()))
+            .ReturnsAsync(() => currentSnapshot);
+        hoursMock.Setup(service => service.SaveAsync(It.IsAny<int>(), It.IsAny<IEnumerable<HoursAllocationCellUpdate>>()))
+            .ReturnsAsync((int _, IEnumerable<HoursAllocationCellUpdate> updates) =>
+            {
+                lastUpdates.Clear();
+                lastUpdates.AddRange(updates);
+                currentSnapshot = saveSnapshot;
+                return currentSnapshot;
+            });
+        hoursMock.Setup(service => service.AddRankAsync(It.IsAny<int>(), It.IsAny<string>()))
+            .ReturnsAsync(() => currentSnapshot);
+        hoursMock.Setup(service => service.DeleteRankAsync(It.IsAny<int>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+
+        var importMock = new Mock<IImportService>();
+        importMock.Setup(service => service.UpdateStaffAllocationsAsync(It.IsAny<string>()))
+            .ReturnsAsync("Staff allocation update summary.");
+
+        var filePickerMock = new Mock<IFilePickerService>();
+        filePickerMock.Setup(service => service.OpenFileAsync(
+                It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string[]?>()))
+            .ReturnsAsync((string?)null);
+
+        var loggingMock = new Mock<ILoggingService>();
+
+        var viewModel = CreateViewModel(
+            engagementMock.Object,
+            hoursMock.Object,
+            importMock.Object,
+            filePickerMock.Object,
+            loggingMock.Object);
 
         await viewModel.LoadDataAsync();
 
@@ -76,25 +133,49 @@ public sealed class HoursAllocationsViewModelTests
 
         Assert.False(viewModel.HasChanges);
         Assert.Equal(25m, viewModel.Rows[0].Cells[0].ConsumedHours);
-        Assert.Contains(hoursService.LastUpdates, update => update.BudgetId == 1 && update.ConsumedHours == 25m);
+        Assert.Contains(lastUpdates, update => update.BudgetId == 1 && update.ConsumedHours == 25m);
         Assert.Equal("Changes saved successfully.", viewModel.StatusMessage);
     }
 
     [Fact]
     public async Task EditingConsumedHoursRoundsAndUpdatesRemaining()
     {
-        var engagementService = new FakeEngagementService();
-        var hoursService = new FakeHoursAllocationService();
-        var loggingService = new FakeLoggingService();
-        var messenger = new StrongReferenceMessenger();
+        var snapshot = CreateSnapshot();
+        var engagements = CreateEngagements();
 
-        hoursService.Snapshot = CreateSnapshot();
+        var engagementMock = new Mock<IEngagementService>();
+        engagementMock.Setup(service => service.GetAllAsync()).ReturnsAsync(engagements);
 
-        var viewModel = new HoursAllocationsViewModel(
-            engagementService,
-            hoursService,
-            loggingService,
-            messenger);
+        var currentSnapshot = snapshot;
+        var hoursMock = new Mock<IHoursAllocationService>();
+        hoursMock.Setup(service => service.GetAllocationAsync(It.IsAny<int>()))
+            .ReturnsAsync(() => currentSnapshot);
+        hoursMock.Setup(service => service.SaveAsync(It.IsAny<int>(), It.IsAny<IEnumerable<HoursAllocationCellUpdate>>()))
+            .ReturnsAsync((int _, IEnumerable<HoursAllocationCellUpdate> _) => currentSnapshot);
+        hoursMock.Setup(service => service.AddRankAsync(It.IsAny<int>(), It.IsAny<string>()))
+            .ReturnsAsync(() => currentSnapshot);
+        hoursMock.Setup(service => service.DeleteRankAsync(It.IsAny<int>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+
+        var importMock = new Mock<IImportService>();
+        importMock.Setup(service => service.UpdateStaffAllocationsAsync(It.IsAny<string>()))
+            .ReturnsAsync("Staff allocation update summary.");
+
+        var filePickerMock = new Mock<IFilePickerService>();
+        filePickerMock.Setup(service => service.OpenFileAsync(
+                It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string[]?>()))
+            .ReturnsAsync((string?)null);
+
+        var loggingMock = new Mock<ILoggingService>();
+
+        var viewModel = CreateViewModel(
+            engagementMock.Object,
+            hoursMock.Object,
+            importMock.Object,
+            filePickerMock.Object,
+            loggingMock.Object);
 
         await viewModel.LoadDataAsync();
 
@@ -109,30 +190,138 @@ public sealed class HoursAllocationsViewModelTests
     [Fact]
     public async Task AddRankCommand_AddsRankAndClearsInput()
     {
-        var engagementService = new FakeEngagementService();
-        var hoursService = new FakeHoursAllocationService();
-        var loggingService = new FakeLoggingService();
-        var messenger = new StrongReferenceMessenger();
+        var snapshot = CreateSnapshot();
+        var addRankSnapshot = CreateSnapshot(additionalRank: true);
+        var engagements = CreateEngagements();
 
-        hoursService.Snapshot = CreateSnapshot();
-        hoursService.AddRankSnapshot = CreateSnapshot(additionalRank: true);
+        var engagementMock = new Mock<IEngagementService>();
+        engagementMock.Setup(service => service.GetAllAsync()).ReturnsAsync(engagements);
 
-        var viewModel = new HoursAllocationsViewModel(
-            engagementService,
-            hoursService,
-            loggingService,
-            messenger)
-        {
-            NewRankName = "Senior"
-        };
+        var currentSnapshot = snapshot;
+        var hoursMock = new Mock<IHoursAllocationService>();
+        hoursMock.Setup(service => service.GetAllocationAsync(It.IsAny<int>()))
+            .ReturnsAsync(() => currentSnapshot);
+        hoursMock.Setup(service => service.SaveAsync(It.IsAny<int>(), It.IsAny<IEnumerable<HoursAllocationCellUpdate>>()))
+            .ReturnsAsync((int _, IEnumerable<HoursAllocationCellUpdate> _) => currentSnapshot);
+        hoursMock.Setup(service => service.AddRankAsync(It.IsAny<int>(), It.IsAny<string>()))
+            .ReturnsAsync((int _, string _) =>
+            {
+                currentSnapshot = addRankSnapshot;
+                return currentSnapshot;
+            });
+        hoursMock.Setup(service => service.DeleteRankAsync(It.IsAny<int>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+
+        var importMock = new Mock<IImportService>();
+        importMock.Setup(service => service.UpdateStaffAllocationsAsync(It.IsAny<string>()))
+            .ReturnsAsync("Staff allocation update summary.");
+
+        var filePickerMock = new Mock<IFilePickerService>();
+        filePickerMock.Setup(service => service.OpenFileAsync(
+                It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string[]?>()))
+            .ReturnsAsync((string?)null);
+
+        var loggingMock = new Mock<ILoggingService>();
+
+        var viewModel = CreateViewModel(
+            engagementMock.Object,
+            hoursMock.Object,
+            importMock.Object,
+            filePickerMock.Object,
+            loggingMock.Object);
+        viewModel.NewRankName = "Senior";
 
         await viewModel.LoadDataAsync();
         await viewModel.AddRankCommand.ExecuteAsync(null);
 
         Assert.Equal(string.Empty, viewModel.NewRankName);
         Assert.Equal(2, viewModel.Rows.Count);
-        Assert.Contains(viewModel.Rows, r => r.RankName == "Senior");
+        Assert.Contains(viewModel.Rows, row => row.RankName == "Senior");
         Assert.Equal("Rank 'Senior' created for open fiscal years.", viewModel.StatusMessage);
+    }
+
+    [Fact]
+    public async Task UpdateAllocationsCommand_UsesImportServiceAndUpdatesStatus()
+    {
+        var snapshot = CreateSnapshot();
+        var engagements = CreateEngagements();
+
+        var engagementMock = new Mock<IEngagementService>();
+        engagementMock.Setup(service => service.GetAllAsync()).ReturnsAsync(engagements);
+
+        var currentSnapshot = snapshot;
+        var hoursMock = new Mock<IHoursAllocationService>();
+        hoursMock.Setup(service => service.GetAllocationAsync(It.IsAny<int>()))
+            .ReturnsAsync(() => currentSnapshot);
+        hoursMock.Setup(service => service.SaveAsync(It.IsAny<int>(), It.IsAny<IEnumerable<HoursAllocationCellUpdate>>()))
+            .ReturnsAsync((int _, IEnumerable<HoursAllocationCellUpdate> _) => currentSnapshot);
+        hoursMock.Setup(service => service.AddRankAsync(It.IsAny<int>(), It.IsAny<string>()))
+            .ReturnsAsync(() => currentSnapshot);
+        hoursMock.Setup(service => service.DeleteRankAsync(It.IsAny<int>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+
+        var importMock = new Mock<IImportService>();
+        string? receivedPath = null;
+        const string summary = "Staff allocation update summary: Updated 1.";
+        importMock.Setup(service => service.UpdateStaffAllocationsAsync(It.IsAny<string>()))
+            .ReturnsAsync((string path) =>
+            {
+                receivedPath = path;
+                return summary;
+            });
+
+        var filePickerMock = new Mock<IFilePickerService>();
+        filePickerMock.Setup(service => service.OpenFileAsync(
+                It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string[]?>()))
+            .ReturnsAsync("alloc.xlsx");
+
+        var loggingMock = new Mock<ILoggingService>();
+
+        var viewModel = CreateViewModel(
+            engagementMock.Object,
+            hoursMock.Object,
+            importMock.Object,
+            filePickerMock.Object,
+            loggingMock.Object);
+
+        await viewModel.LoadDataAsync();
+        await viewModel.UpdateAllocationsCommand.ExecuteAsync(null);
+
+        Assert.Equal("alloc.xlsx", receivedPath);
+        Assert.Equal(summary, viewModel.StatusMessage);
+    }
+
+    private static HoursAllocationsViewModel CreateViewModel(
+        IEngagementService engagementService,
+        IHoursAllocationService hoursAllocationService,
+        IImportService importService,
+        IFilePickerService filePickerService,
+        ILoggingService loggingService)
+    {
+        return new HoursAllocationsViewModel(
+            engagementService,
+            hoursAllocationService,
+            importService,
+            filePickerService,
+            loggingService,
+            new StrongReferenceMessenger());
+    }
+
+    private static List<Engagement> CreateEngagements()
+    {
+        return new List<Engagement>
+        {
+            new()
+            {
+                Id = 1,
+                EngagementId = "E-100",
+                Description = "Test Engagement"
+            }
+        };
     }
 
     private static HoursAllocationSnapshot CreateSnapshot(decimal consumed = 20m, bool additionalRank = false)
@@ -169,80 +358,5 @@ public sealed class HoursAllocationsViewModelTests
             30m,
             fiscalYears,
             rows);
-    }
-
-    private sealed class FakeEngagementService : IEngagementService
-    {
-        public Task<List<Engagement>> GetAllAsync()
-        {
-            var engagements = new List<Engagement>
-            {
-                new()
-                {
-                    Id = 1,
-                    EngagementId = "E-100",
-                    Description = "Test Engagement"
-                }
-            };
-
-            return Task.FromResult(engagements);
-        }
-
-        public Task<Engagement?> GetByIdAsync(int id) => Task.FromResult<Engagement?>(null);
-        public Task<Papd?> GetPapdForDateAsync(int engagementId, System.DateTime date) => Task.FromResult<Papd?>(null);
-        public Task AddAsync(Engagement engagement) => Task.CompletedTask;
-        public Task UpdateAsync(Engagement engagement) => Task.CompletedTask;
-        public Task DeleteAsync(int id) => Task.CompletedTask;
-        public Task DeleteDataAsync(int engagementId) => Task.CompletedTask;
-    }
-
-    private sealed class FakeHoursAllocationService : IHoursAllocationService
-    {
-        public HoursAllocationSnapshot Snapshot { get; set; } = null!;
-        public HoursAllocationSnapshot? SaveSnapshot { get; set; }
-        public HoursAllocationSnapshot? AddRankSnapshot { get; set; }
-        public List<HoursAllocationCellUpdate> LastUpdates { get; } = new();
-
-        public Task<HoursAllocationSnapshot> GetAllocationAsync(int engagementId)
-            => Task.FromResult(Snapshot);
-
-        public Task<HoursAllocationSnapshot> SaveAsync(int engagementId, IEnumerable<HoursAllocationCellUpdate> updates)
-        {
-            LastUpdates.Clear();
-            LastUpdates.AddRange(updates);
-
-            if (SaveSnapshot is not null)
-            {
-                Snapshot = SaveSnapshot;
-            }
-
-            return Task.FromResult(Snapshot);
-        }
-
-        public Task<HoursAllocationSnapshot> AddRankAsync(int engagementId, string rankName)
-        {
-            if (AddRankSnapshot is not null)
-            {
-                Snapshot = AddRankSnapshot;
-            }
-
-            return Task.FromResult(Snapshot);
-        }
-
-        public Task DeleteRankAsync(int engagementId, string rankName) => Task.CompletedTask;
-    }
-
-    private sealed class FakeLoggingService : ILoggingService
-    {
-        public event Action<string>? OnLogMessage;
-
-        public void LogInfo(string message, string memberName = "", string sourceFilePath = "", int sourceLineNumber = 0)
-            => OnLogMessage?.Invoke(message);
-
-        public void LogWarning(string message, string memberName = "", string sourceFilePath = "", int sourceLineNumber = 0)
-            => OnLogMessage?.Invoke(message);
-
-        public void LogError(string message, string memberName = "", string sourceFilePath = "", int sourceLineNumber = 0)
-            => OnLogMessage?.Invoke(message);
     }
 }
