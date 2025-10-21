@@ -98,8 +98,30 @@ namespace InvoicePlanner.Avalonia.Services
 
             void UpdateSizing(Size size)
             {
-                container.MaxWidth = size.Width > 0 ? size.Width * 0.55 : double.PositiveInfinity;
-                container.MaxHeight = size.Height > 0 ? size.Height * 0.55 : double.PositiveInfinity;
+                if (size.Width > 0)
+                {
+                    var targetWidth = size.Width * 0.8;
+                    container.Width = targetWidth;
+                    container.MaxWidth = targetWidth;
+                }
+                else
+                {
+                    container.Width = double.NaN;
+                    container.MaxWidth = double.PositiveInfinity;
+                }
+
+                if (size.Height > 0)
+                {
+                    var targetHeight = size.Height * 0.8;
+                    container.Height = targetHeight;
+                    container.MaxHeight = targetHeight;
+                }
+                else
+                {
+                    container.Height = double.NaN;
+                    container.MaxHeight = double.PositiveInfinity;
+                }
+
                 UpdateDialogGeometry();
             }
 
