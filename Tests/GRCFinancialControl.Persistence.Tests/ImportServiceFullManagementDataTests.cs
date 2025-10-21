@@ -36,7 +36,7 @@ public sealed class ImportServiceFullManagementDataTests : IAsyncLifetime
         context.Database.EnsureCreated();
 
         _factory = new TestDbContextFactory(_options);
-        _importService = new ImportService(_factory, NullLogger<ImportService>.Instance);
+        _importService = new ImportService(_factory, NullLogger<ImportService>.Instance, NullLoggerFactory.Instance);
     }
 
     public async Task InitializeAsync()
