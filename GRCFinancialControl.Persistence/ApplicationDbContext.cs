@@ -32,8 +32,7 @@ namespace GRCFinancialControl.Persistence
         public DbSet<MailOutbox> MailOutboxEntries { get; set; }
         public DbSet<MailOutboxLog> MailOutboxLogs { get; set; }
         public DbSet<InvoiceNotificationPreview> InvoiceNotificationPreviews { get; set; }
-        public DbSet<WeekCalendarEntry> WeekCalendar { get; set; }
-
+        public DbSet<StaffAllocationForecast> StaffAllocationForecasts { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
@@ -111,48 +110,6 @@ namespace GRCFinancialControl.Persistence
                 .WithMany(fy => fy.ClosingPeriods)
                 .HasForeignKey(cp => cp.FiscalYearId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<WeekCalendarEntry>()
-                .ToTable("WeekCalendar");
-
-            modelBuilder.Entity<WeekCalendarEntry>()
-                .HasKey(w => w.WeekStartMon);
-
-            modelBuilder.Entity<WeekCalendarEntry>()
-                .Property(w => w.WeekStartMon)
-                .HasMySqlColumnType("date", isMySql);
-
-            modelBuilder.Entity<WeekCalendarEntry>()
-                .Property(w => w.WeekEndFri)
-                .HasMySqlColumnType("date", isMySql);
-
-            modelBuilder.Entity<WeekCalendarEntry>()
-                .Property(w => w.RetainAnchorStart)
-                .HasMySqlColumnType("date", isMySql);
-
-            modelBuilder.Entity<WeekCalendarEntry>()
-                .Property(w => w.WorkingDaysCount)
-                .HasMySqlColumnType("tinyint unsigned", isMySql);
-
-            modelBuilder.Entity<WeekCalendarEntry>()
-                .Property(w => w.IsHolidayWeek)
-                .HasDefaultValue(false);
-
-            modelBuilder.Entity<WeekCalendarEntry>()
-                .HasIndex(w => new { w.FiscalYear, w.WeekSeqInFY })
-                .IsUnique();
-
-            modelBuilder.Entity<WeekCalendarEntry>()
-                .HasIndex(w => w.ClosingPeriodId);
-
-            modelBuilder.Entity<WeekCalendarEntry>()
-                .HasIndex(w => w.WeekSeqInCP);
-
-            modelBuilder.Entity<WeekCalendarEntry>()
-                .HasOne(w => w.ClosingPeriod)
-                .WithMany(cp => cp.WeekCalendarEntries)
-                .HasForeignKey(w => w.ClosingPeriodId)
-                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Engagement>()
                 .HasMany(e => e.EngagementPapds)
@@ -427,12 +384,69 @@ namespace GRCFinancialControl.Persistence
                 .HasDefaultValue(0m);
 
             modelBuilder.Entity<EngagementRankBudget>()
+                .Property(rb => rb.ForecastHours)
+                .HasPrecision(18, 2)
+                .HasDefaultValue(0m);
+
+            modelBuilder.Entity<EngagementRankBudget>()
                 .Property(rb => rb.CreatedAtUtc)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             modelBuilder.Entity<EngagementRankBudget>()
                 .HasIndex(rb => new { rb.EngagementId, rb.RankName })
                 .IsUnique();
+
+            modelBuilder.Entity<StaffAllocationForecast>()
+                .Property(f => f.RankName)
+                .HasMaxLength(100);
+
+            modelBuilder.Entity<StaffAllocationForecast>()
+                .Property(f => f.ForecastHours)
+                .HasPrecision(18, 2)
+                .HasDefaultValue(0m);
+
+            var forecastCreatedProperty = modelBuilder.Entity<StaffAllocationForecast>()
+                .Property(f => f.CreatedAtUtc);
+
+            if (isMySql)
+            {
+                forecastCreatedProperty
+                    .HasMySqlColumnType("datetime(6)", isMySql)
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
+
+                modelBuilder.Entity<StaffAllocationForecast>()
+                    .Property(f => f.UpdatedAtUtc)
+                    .HasMySqlColumnType("datetime(6)", isMySql);
+            }
+            else
+            {
+                forecastCreatedProperty
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                modelBuilder.Entity<StaffAllocationForecast>()
+                    .Property(f => f.UpdatedAtUtc)
+                    .HasColumnType("datetime");
+            }
+
+            modelBuilder.Entity<StaffAllocationForecast>()
+                .HasIndex(f => new { f.EngagementId, f.FiscalYearId, f.RankName })
+                .IsUnique();
+
+            modelBuilder.Entity<StaffAllocationForecast>()
+                .HasIndex(f => f.FiscalYearId);
+
+            modelBuilder.Entity<StaffAllocationForecast>()
+                .HasOne(f => f.Engagement)
+                .WithMany(e => e.Forecasts)
+                .HasForeignKey(f => f.EngagementId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<StaffAllocationForecast>()
+                .HasOne(f => f.FiscalYear)
+                .WithMany(fy => fy.Forecasts)
+                .HasForeignKey(f => f.FiscalYearId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<FinancialEvolution>()
                 .ToTable("FinancialEvolution");

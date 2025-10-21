@@ -13,5 +13,8 @@
         <TabItem Header="Revenue">
             <ContentControl Content="{Binding Revenue}"/>
         </TabItem>
+        <TabItem Header="Alocação (Forecast)">
+            <ContentControl Content="{Binding Forecast}"/>
+        </TabItem>
     </TabControl>
 </UserControl>
