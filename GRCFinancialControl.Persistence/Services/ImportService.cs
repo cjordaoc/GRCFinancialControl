@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -15,6 +14,7 @@ using GRCFinancialControl.Persistence.Services.Importers.StaffAllocations;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using static GRCFinancialControl.Persistence.Services.Importers.WorksheetValueHelper;
 
 namespace GRCFinancialControl.Persistence.Services
 {
@@ -24,7 +24,8 @@ namespace GRCFinancialControl.Persistence.Services
         {
             Access = FileAccess.Read,
             Mode = FileMode.Open,
-            Share = FileShare.ReadWrite
+            Share = FileShare.ReadWrite,
+            Options = FileOptions.Asynchronous | FileOptions.SequentialScan
         };
 
         static ImportService()
@@ -57,7 +58,6 @@ namespace GRCFinancialControl.Persistence.Services
             "future fy backlog",
             "future fiscal year backlog"
         };
-        private static readonly Regex MultiWhitespaceRegex = new Regex("\\s+", RegexOptions.Compiled);
         private static readonly Regex DigitsRegex = new Regex("\\d+", RegexOptions.Compiled);
         private static readonly Regex TrailingDigitsRegex = new Regex(@"\d+$", RegexOptions.Compiled);
         private static readonly Regex FiscalYearCodeRegex = new Regex(@"FY\\d{2,4}", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -98,11 +98,11 @@ namespace GRCFinancialControl.Persistence.Services
 
             await _fiscalCalendarConsistencyService.EnsureConsistencyAsync().ConfigureAwait(false);
 
-            var dataSet = LoadWorkbookDataSet(filePath);
+            using var workbook = LoadWorkbook(filePath);
 
-            var planInfo = ResolveWorksheet(dataSet, "PLAN INFO") ??
+            var planInfo = workbook.GetWorksheet("PLAN INFO") ??
                            throw new InvalidDataException("Worksheet 'PLAN INFO' is missing from the budget workbook.");
-            var resourcing = ResolveWorksheet(dataSet, "RESOURCING") ??
+            var resourcing = workbook.GetWorksheet("RESOURCING") ??
                              throw new InvalidDataException("Worksheet 'RESOURCING' is missing from the budget workbook.");
 
             var customerName = NormalizeWhitespace(GetCellString(planInfo, 3, 1));
@@ -126,20 +126,27 @@ namespace GRCFinancialControl.Persistence.Services
             var totalBudgetHours = rankBudgetsFromFile.Sum(r => r.Hours);
             var generatedAtUtc = ExtractGeneratedTimestampUtc(planInfo);
 
-            await using var strategyContext = await _contextFactory.CreateDbContextAsync();
+            await using var strategyContext = await _contextFactory
+                .CreateDbContextAsync()
+                .ConfigureAwait(false);
             var strategy = strategyContext.Database.CreateExecutionStrategy();
 
             return await strategy.ExecuteAsync(async () =>
             {
-                await using var context = await _contextFactory.CreateDbContextAsync();
-                await using var transaction = await context.Database.BeginTransactionAsync();
+                await using var context = await _contextFactory
+                    .CreateDbContextAsync()
+                    .ConfigureAwait(false);
+                await using var transaction = await context.Database
+                    .BeginTransactionAsync()
+                    .ConfigureAwait(false);
 
                 try
                 {
                     var normalizedCustomerName = customerName;
                     var normalizedCustomerLookup = normalizedCustomerName.ToLowerInvariant();
                     var existingCustomer = await context.Customers
-                        .FirstOrDefaultAsync(c => c.Name.ToLower() == normalizedCustomerLookup);
+                        .FirstOrDefaultAsync(c => c.Name.ToLower() == normalizedCustomerLookup)
+                        .ConfigureAwait(false);
 
                     bool customerCreated = false;
                     Customer customer;
@@ -149,7 +156,7 @@ namespace GRCFinancialControl.Persistence.Services
                         {
                             Name = normalizedCustomerName
                         };
-                        await context.Customers.AddAsync(customer);
+                        await context.Customers.AddAsync(customer).ConfigureAwait(false);
                         customerCreated = true;
                     }
                     else
@@ -160,7 +167,8 @@ namespace GRCFinancialControl.Persistence.Services
 
                     var engagement = await context.Engagements
                         .Include(e => e.RankBudgets)
-                        .FirstOrDefaultAsync(e => e.EngagementId == engagementKey);
+                        .FirstOrDefaultAsync(e => e.EngagementId == engagementKey)
+                        .ConfigureAwait(false);
 
                     bool engagementCreated = false;
                     if (engagement == null)
@@ -173,7 +181,7 @@ namespace GRCFinancialControl.Persistence.Services
                             EstimatedToCompleteHours = 0m
                         };
 
-                        await context.Engagements.AddAsync(engagement);
+                        await context.Engagements.AddAsync(engagement).ConfigureAwait(false);
                         engagementCreated = true;
                     }
 
@@ -191,13 +199,13 @@ namespace GRCFinancialControl.Persistence.Services
                                 filePath,
                                 engagement.Source);
 
-                            await transaction.RollbackAsync();
+                            await transaction.RollbackAsync().ConfigureAwait(false);
                             var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>
                             {
                                 ["ManualOnly"] = new[] { engagement.EngagementId }
                             };
 
-                            var skipNotes = new List<string>
+                            var skipNotes = new List<string>(1)
                             {
                                 manualOnlyMessage
                             };
@@ -214,8 +222,9 @@ namespace GRCFinancialControl.Persistence.Services
                         engagement.InitialHoursBudget = totalBudgetHours;
                     }
 
-                    await UpsertRankMappingsAsync(context, resourcingParseResult.RankMappings, generatedAtUtc);
-                    await UpsertEmployeesAsync(context, resourcingParseResult.Employees);
+                    await UpsertRankMappingsAsync(context, resourcingParseResult.RankMappings, generatedAtUtc)
+                        .ConfigureAwait(false);
+                    await UpsertEmployeesAsync(context, resourcingParseResult.Employees).ConfigureAwait(false);
 
                     engagement.Customer = customer;
                     if (customer.Id > 0)
@@ -223,15 +232,8 @@ namespace GRCFinancialControl.Persistence.Services
                         engagement.CustomerId = customer.Id;
                     }
 
-                    if (engagement.RankBudgets == null)
-                    {
-                        engagement.RankBudgets = new List<EngagementRankBudget>();
-                    }
-                    else
-                    {
-                        // Full replace behavior
-                        engagement.RankBudgets.Clear();
-                    }
+                    var engagementRankBudgets = engagement.RankBudgets;
+                    engagementRankBudgets.Clear();
 
                     var now = DateTime.UtcNow;
                     foreach (var rankBudget in rankBudgetsFromFile)
@@ -244,18 +246,18 @@ namespace GRCFinancialControl.Persistence.Services
                             CreatedAtUtc = now
                         };
 
-                        engagement.RankBudgets.Add(budget);
+                        engagementRankBudgets.Add(budget);
                     }
 
-                    await context.SaveChangesAsync();
-                    await transaction.CommitAsync();
+                    await context.SaveChangesAsync().ConfigureAwait(false);
+                    await transaction.CommitAsync().ConfigureAwait(false);
 
                     var customersInserted = customerCreated ? 1 : 0;
                     var customersUpdated = customerCreated ? 0 : 1;
                     var engagementsInserted = engagementCreated ? 1 : 0;
                     var engagementsUpdated = engagementCreated ? 0 : 1;
 
-                    var notes = new List<string>
+                    var notes = new List<string>(4)
                     {
                         $"Customers inserted: {customersInserted}, updated: {customersUpdated}",
                         $"Engagements inserted: {engagementsInserted}, updated: {engagementsUpdated}",
@@ -277,13 +279,13 @@ namespace GRCFinancialControl.Persistence.Services
                 }
                 catch
                 {
-                    await transaction.RollbackAsync();
+                    await transaction.RollbackAsync().ConfigureAwait(false);
                     throw;
                 }
-            });
+            }).ConfigureAwait(false);
         }
 
-        private static ResourcingParseResult ParseResourcing(DataTable resourcing)
+        private static ResourcingParseResult ParseResourcing(IWorksheet resourcing)
         {
             ArgumentNullException.ThrowIfNull(resourcing);
 
@@ -303,10 +305,11 @@ namespace GRCFinancialControl.Persistence.Services
             var weekRowIndex = headerRowIndex > 0 ? headerRowIndex - 1 : headerRowIndex;
             var weekStartDates = ExtractWeekStartDates(resourcing, weekRowIndex, hoursColumnIndex);
 
-            var rankBudgets = new List<RankBudgetRow>();
-            var rankMappings = new Dictionary<string, RankMappingCandidate>(StringComparer.OrdinalIgnoreCase);
-            var employees = new List<ResourcingEmployee>();
-            var issues = new List<string>();
+            var estimatedRowCapacity = Math.Max(0, resourcing.RowCount - (headerRowIndex + 1));
+            var rankBudgets = new List<RankBudgetRow>(estimatedRowCapacity);
+            var rankMappings = new Dictionary<string, RankMappingCandidate>(estimatedRowCapacity, StringComparer.OrdinalIgnoreCase);
+            var employees = new List<ResourcingEmployee>(estimatedRowCapacity);
+            var issues = new List<string>(Math.Max(4, estimatedRowCapacity / 4));
 
             var levelColumnIndex = GetRequiredColumnIndex(headerMap, "level");
             var employeeColumnIndex = GetRequiredColumnIndex(headerMap, "employee");
@@ -319,7 +322,7 @@ namespace GRCFinancialControl.Persistence.Services
             var dataRowIndex = headerRowIndex + 1;
             var consecutiveBlankRows = 0;
 
-            while (dataRowIndex < resourcing.Rows.Count && consecutiveBlankRows < 10)
+            while (dataRowIndex < resourcing.RowCount && consecutiveBlankRows < 10)
             {
                 var rawRank = NormalizeWhitespace(GetCellString(resourcing, dataRowIndex, levelColumnIndex));
                 var (hours, hasHoursValue) = ParseHours(GetCellValue(resourcing, dataRowIndex, hoursColumnIndex));
@@ -396,17 +399,16 @@ namespace GRCFinancialControl.Persistence.Services
             return new ResourcingParseResult(rankBudgets, rankMappings.Values.ToList(), employees, weekStartDates, issues);
         }
 
-        private static int FindResourcingHeaderRow(DataTable table)
+        private static int FindResourcingHeaderRow(IWorksheet table)
         {
-            for (var rowIndex = 0; rowIndex < table.Rows.Count; rowIndex++)
+            for (var rowIndex = 0; rowIndex < table.RowCount; rowIndex++)
             {
-                var row = table.Rows[rowIndex];
                 var hasLevel = false;
                 var hasEmployee = false;
 
-                for (var columnIndex = 0; columnIndex < table.Columns.Count; columnIndex++)
+                for (var columnIndex = 0; columnIndex < table.ColumnCount; columnIndex++)
                 {
-                    var text = NormalizeWhitespace(Convert.ToString(row[columnIndex], CultureInfo.InvariantCulture));
+                    var text = NormalizeWhitespace(Convert.ToString(table.GetValue(rowIndex, columnIndex), CultureInfo.InvariantCulture));
                     if (string.IsNullOrEmpty(text))
                     {
                         continue;
@@ -431,14 +433,13 @@ namespace GRCFinancialControl.Persistence.Services
             return -1;
         }
 
-        private static Dictionary<string, int> BuildHeaderMap(DataTable table, int headerRowIndex)
+        private static Dictionary<string, int> BuildHeaderMap(IWorksheet table, int headerRowIndex)
         {
             var map = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-            var headerRow = table.Rows[headerRowIndex];
 
-            for (var columnIndex = 0; columnIndex < table.Columns.Count; columnIndex++)
+            for (var columnIndex = 0; columnIndex < table.ColumnCount; columnIndex++)
             {
-                var header = NormalizeWhitespace(Convert.ToString(headerRow[columnIndex], CultureInfo.InvariantCulture));
+                var header = NormalizeWhitespace(Convert.ToString(table.GetValue(headerRowIndex, columnIndex), CultureInfo.InvariantCulture));
                 if (string.IsNullOrEmpty(header))
                 {
                     continue;
@@ -479,13 +480,11 @@ namespace GRCFinancialControl.Persistence.Services
             return -1;
         }
 
-        private static int FindFirstHeaderColumnIndex(DataTable table, int headerRowIndex, string headerValue)
+        private static int FindFirstHeaderColumnIndex(IWorksheet table, int headerRowIndex, string headerValue)
         {
-            var headerRow = table.Rows[headerRowIndex];
-
-            for (var columnIndex = 0; columnIndex < table.Columns.Count; columnIndex++)
+            for (var columnIndex = 0; columnIndex < table.ColumnCount; columnIndex++)
             {
-                var value = NormalizeWhitespace(Convert.ToString(headerRow[columnIndex], CultureInfo.InvariantCulture));
+                var value = NormalizeWhitespace(Convert.ToString(table.GetValue(headerRowIndex, columnIndex), CultureInfo.InvariantCulture));
                 if (string.Equals(value, headerValue, StringComparison.OrdinalIgnoreCase))
                 {
                     return columnIndex;
@@ -495,16 +494,16 @@ namespace GRCFinancialControl.Persistence.Services
             return -1;
         }
 
-        private static List<DateTime> ExtractWeekStartDates(DataTable table, int rowIndex, int startColumnIndex)
+        private static List<DateTime> ExtractWeekStartDates(IWorksheet table, int rowIndex, int startColumnIndex)
         {
             var weekStarts = new SortedSet<DateTime>();
 
-            if (rowIndex < 0 || rowIndex >= table.Rows.Count)
+            if (rowIndex < 0 || rowIndex >= table.RowCount)
             {
-                return weekStarts.ToList();
+                return new List<DateTime>(0);
             }
 
-            for (var columnIndex = startColumnIndex; columnIndex < table.Columns.Count; columnIndex++)
+            for (var columnIndex = startColumnIndex; columnIndex < table.ColumnCount; columnIndex++)
             {
                 var cell = GetCellValue(table, rowIndex, columnIndex);
                 if (TryParseDate(cell, out var date))
@@ -513,7 +512,14 @@ namespace GRCFinancialControl.Persistence.Services
                 }
             }
 
-            return weekStarts.ToList();
+            if (weekStarts.Count == 0)
+            {
+                return new List<DateTime>(0);
+            }
+
+            var result = new List<DateTime>(weekStarts.Count);
+            result.AddRange(weekStarts);
+            return result;
         }
 
         private static bool TryParseDate(object? value, out DateTime date)
@@ -638,20 +644,8 @@ namespace GRCFinancialControl.Persistence.Services
             return value.Substring(0, maxLength);
         }
 
-        private static DateTime NormalizeWeekStart(DateTime date)
+        private static DateTime? ExtractGeneratedTimestampUtc(IWorksheet planInfo)
         {
-            var start = date.Date;
-            var offset = ((int)start.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
-            return start.AddDays(-offset);
-        }
-
-        private static DateTime? ExtractGeneratedTimestampUtc(DataTable planInfo)
-        {
-            if (planInfo == null)
-            {
-                return null;
-            }
-
             var value = NormalizeWhitespace(GetCellString(planInfo, 1, 1));
             if (string.IsNullOrEmpty(value))
             {
@@ -727,10 +721,15 @@ namespace GRCFinancialControl.Persistence.Services
             }
 
             var timestamp = lastSeenAtUtc ?? DateTime.UtcNow;
-            var rawRanks = candidates.Select(c => c.RawRank).ToList();
+            var rawRanks = new List<string>(candidates.Count);
+            foreach (var candidate in candidates)
+            {
+                rawRanks.Add(candidate.RawRank);
+            }
             var existingMappings = await context.RankMappings
                 .Where(r => rawRanks.Contains(r.RawRank))
-                .ToDictionaryAsync(r => r.RawRank, StringComparer.OrdinalIgnoreCase);
+                .ToDictionaryAsync(r => r.RawRank, StringComparer.OrdinalIgnoreCase)
+                .ConfigureAwait(false);
 
             foreach (var candidate in candidates)
             {
@@ -767,10 +766,15 @@ namespace GRCFinancialControl.Persistence.Services
                 .Select(g => g.First())
                 .ToList();
 
-            var identifiers = distinctEmployees.Select(e => e.Identifier).ToList();
+            var identifiers = new List<string>(distinctEmployees.Count);
+            foreach (var employee in distinctEmployees)
+            {
+                identifiers.Add(employee.Identifier);
+            }
             var existingEmployees = await context.Employees
                 .Where(e => identifiers.Contains(e.Gpn))
-                .ToDictionaryAsync(e => e.Gpn, StringComparer.OrdinalIgnoreCase);
+                .ToDictionaryAsync(e => e.Gpn, StringComparer.OrdinalIgnoreCase)
+                .ConfigureAwait(false);
 
             foreach (var employee in distinctEmployees)
             {
@@ -861,17 +865,19 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new FileNotFoundException("Staff allocation workbook could not be found.", filePath);
             }
 
-            var dataSet = LoadWorkbookDataSet(filePath);
+            using var workbook = LoadWorkbook(filePath);
 
-            var worksheet = ResolveWorksheet(dataSet, "Alocações_Staff") ??
-                            ResolveWorksheet(dataSet, "Alocacoes_Staff") ??
+            var worksheet = workbook.GetWorksheet("Alocações_Staff") ??
+                            workbook.GetWorksheet("Alocacoes_Staff") ??
                             throw new InvalidDataException("Worksheet 'Alocações_Staff' is missing from the staff allocation workbook.");
 
-            await using var context = await _contextFactory.CreateDbContextAsync();
-            var employees = await context.Employees.AsNoTracking().ToListAsync();
+            await using var context = await _contextFactory
+                .CreateDbContextAsync()
+                .ConfigureAwait(false);
+            var employees = await context.Employees.AsNoTracking().ToListAsync().ConfigureAwait(false);
             var employeeLookup = employees.ToDictionary(e => e.Gpn, StringComparer.OrdinalIgnoreCase);
-            var fiscalYears = await context.FiscalYears.AsNoTracking().ToListAsync();
-            var closingPeriods = await context.ClosingPeriods.AsNoTracking().ToListAsync();
+            var fiscalYears = await context.FiscalYears.AsNoTracking().ToListAsync().ConfigureAwait(false);
+            var closingPeriods = await context.ClosingPeriods.AsNoTracking().ToListAsync().ConfigureAwait(false);
 
             var uploadTimestampUtc = File.GetLastWriteTimeUtc(filePath);
             if (uploadTimestampUtc == DateTime.MinValue)
@@ -968,21 +974,6 @@ namespace GRCFinancialControl.Persistence.Services
             return NormalizeWhitespace(rawDescription);
         }
 
-        private static DataTable? ResolveWorksheet(DataSet dataSet, string worksheetName)
-        {
-            var target = NormalizeSheetName(worksheetName);
-
-            foreach (DataTable table in dataSet.Tables)
-            {
-                if (NormalizeSheetName(table.TableName ?? string.Empty) == target)
-                {
-                    return table;
-                }
-            }
-
-            return null;
-        }
-
         private static string NormalizeSheetName(string name)
         {
             var normalized = NormalizeWhitespace(name).ToLowerInvariant();
@@ -998,70 +989,193 @@ namespace GRCFinancialControl.Persistence.Services
             return builder.ToString();
         }
 
-        private static string NormalizeWhitespace(string? value)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                return string.Empty;
-            }
-
-            return MultiWhitespaceRegex.Replace(value.Trim(), " ");
-        }
-
-        private static object? GetCellValue(DataTable table, int rowIndex, int columnIndex)
+        private static object? GetCellValue(IWorksheet table, int rowIndex, int columnIndex)
         {
             if (rowIndex < 0 || columnIndex < 0)
             {
                 return null;
             }
 
-            if (table.Rows.Count <= rowIndex)
+            if (table.RowCount <= rowIndex)
             {
                 return null;
             }
 
-            if (table.Columns.Count <= columnIndex)
+            if (table.ColumnCount <= columnIndex)
             {
                 return null;
             }
 
-            return table.Rows[rowIndex][columnIndex];
+            return table.GetValue(rowIndex, columnIndex);
         }
 
-        private static string GetCellString(DataTable table, int rowIndex, int columnIndex)
+        private static string GetCellString(IWorksheet table, int rowIndex, int columnIndex)
         {
             var value = GetCellValue(table, rowIndex, columnIndex);
             return Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
         }
 
-        private static DataSet LoadWorkbookDataSet(string filePath)
+        private static WorkbookData LoadWorkbook(string filePath)
         {
-            using var stream = new FileStream(filePath, SharedReadOptions);
-            using var reader = ExcelReaderFactory.CreateReader(stream);
-            return reader.AsDataSet(new ExcelDataSetConfiguration
-            {
-                ConfigureDataTable = _ => new ExcelDataTableConfiguration
-                {
-                    UseHeaderRow = false
-                }
-            });
+            return WorkbookData.Load(filePath);
         }
 
-        private static (Dictionary<int, string> Map, int HeaderRowIndex) BuildFcsHeaderMap(DataTable worksheet)
+        private sealed class WorkbookData : IDisposable
+        {
+            private readonly IReadOnlyList<WorksheetData> _worksheets;
+            private readonly Dictionary<string, WorksheetData> _worksheetLookup;
+
+            private WorkbookData(IReadOnlyList<WorksheetData> worksheets, Dictionary<string, WorksheetData> worksheetLookup)
+            {
+                _worksheets = worksheets;
+                _worksheetLookup = worksheetLookup;
+            }
+
+            public IReadOnlyList<IWorksheet> Worksheets => _worksheets;
+
+            public IWorksheet? FirstWorksheet => _worksheets.Count > 0 ? _worksheets[0] : null;
+
+            public IWorksheet? GetWorksheet(string worksheetName)
+            {
+                if (string.IsNullOrWhiteSpace(worksheetName))
+                {
+                    return null;
+                }
+
+                var key = NormalizeSheetName(worksheetName);
+                return _worksheetLookup.TryGetValue(key, out var table) ? table : null;
+            }
+
+            public void Dispose()
+            {
+                // No unmanaged resources to release. Implemented for call-site symmetry.
+            }
+
+            public static WorkbookData Load(string filePath)
+            {
+                using var stream = new FileStream(filePath, SharedReadOptions);
+                using var reader = ExcelReaderFactory.CreateReader(stream);
+
+                var worksheets = new List<WorksheetData>();
+                var lookup = new Dictionary<string, WorksheetData>(StringComparer.Ordinal);
+
+                do
+                {
+                    var worksheet = WorksheetData.Create(reader, reader.Name ?? string.Empty);
+                    worksheets.Add(worksheet);
+
+                    var normalizedName = NormalizeSheetName(worksheet.Name);
+                    if (!lookup.ContainsKey(normalizedName))
+                    {
+                        lookup[normalizedName] = worksheet;
+                    }
+                }
+                while (reader.NextResult());
+
+                return new WorkbookData(worksheets, lookup);
+            }
+        }
+
+        public interface IWorksheet
+        {
+            int RowCount { get; }
+            int ColumnCount { get; }
+            object? GetValue(int rowIndex, int columnIndex);
+        }
+
+        private sealed class WorksheetData : IWorksheet
+        {
+            private readonly object?[][] _cells;
+
+            private WorksheetData(string name, object?[][] cells, int columnCount)
+            {
+                Name = name;
+                _cells = cells;
+                ColumnCount = columnCount;
+            }
+
+            public string Name { get; }
+            public int RowCount => _cells.Length;
+            public int ColumnCount { get; }
+
+            public object? GetValue(int rowIndex, int columnIndex)
+            {
+                if ((uint)rowIndex >= (uint)_cells.Length)
+                {
+                    return null;
+                }
+
+                var row = _cells[rowIndex];
+                if ((uint)columnIndex >= (uint)row.Length)
+                {
+                    return null;
+                }
+
+                return row[columnIndex];
+            }
+
+            public static WorksheetData Create(IExcelDataReader reader, string name)
+            {
+                var rows = new List<object?[]>(128);
+                var maxColumns = 0;
+
+                while (reader.Read())
+                {
+                    var fieldCount = reader.FieldCount;
+                    if (fieldCount > maxColumns)
+                    {
+                        maxColumns = fieldCount;
+                        EnsureRowCapacity(rows, maxColumns);
+                    }
+
+                    var values = new object?[maxColumns];
+                    for (var columnIndex = 0; columnIndex < fieldCount; columnIndex++)
+                    {
+                        values[columnIndex] = reader.GetValue(columnIndex);
+                    }
+
+                    rows.Add(values);
+                }
+
+                return new WorksheetData(name, rows.ToArray(), maxColumns);
+            }
+
+            private static void EnsureRowCapacity(List<object?[]> rows, int targetLength)
+            {
+                if (targetLength == 0 || rows.Count == 0)
+                {
+                    return;
+                }
+
+                for (var i = 0; i < rows.Count; i++)
+                {
+                    var row = rows[i];
+                    if (row.Length == targetLength)
+                    {
+                        continue;
+                    }
+
+                    var expanded = new object?[targetLength];
+                    Array.Copy(row, expanded, row.Length);
+                    rows[i] = expanded;
+                }
+            }
+        }
+
+        private static (Dictionary<int, string> Map, int HeaderRowIndex) BuildFcsHeaderMap(IWorksheet worksheet)
         {
             Dictionary<int, string>? fallbackMap = null;
             var fallbackIndex = -1;
-            var searchLimit = Math.Min(worksheet.Rows.Count, FcsHeaderSearchLimit);
+            var searchLimit = Math.Min(worksheet.RowCount, FcsHeaderSearchLimit);
 
             for (var rowIndex = 0; rowIndex < searchLimit; rowIndex++)
             {
-                var row = worksheet.Rows[rowIndex];
                 var currentMap = new Dictionary<int, string>();
                 var hasContent = false;
 
-                for (var columnIndex = 0; columnIndex < worksheet.Columns.Count; columnIndex++)
+                for (var columnIndex = 0; columnIndex < worksheet.ColumnCount; columnIndex++)
                 {
-                    var headerText = NormalizeWhitespace(Convert.ToString(row[columnIndex], CultureInfo.InvariantCulture));
+                    var headerText = NormalizeWhitespace(Convert.ToString(worksheet.GetValue(rowIndex, columnIndex), CultureInfo.InvariantCulture));
                     if (!string.IsNullOrEmpty(headerText))
                     {
                         hasContent = true;
@@ -1266,14 +1380,13 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new FileNotFoundException("FCS backlog workbook could not be found.", filePath);
             }
 
-            var dataSet = LoadWorkbookDataSet(filePath);
+            using var workbook = LoadWorkbook(filePath);
 
-            if (dataSet.Tables.Count == 0)
+            var worksheet = workbook.FirstWorksheet;
+            if (worksheet == null)
             {
                 throw new InvalidDataException("The FCS backlog workbook does not contain any worksheets.");
             }
-
-            var worksheet = dataSet.Tables[0];
 
             var (currentFiscalYearName, lastUpdateDate) = ParseFcsMetadata(worksheet);
             var nextFiscalYearName = IncrementFiscalYearName(currentFiscalYearName);
@@ -1296,27 +1409,26 @@ namespace GRCFinancialControl.Persistence.Services
             var dataStartRowIndex = Math.Max(headerRowIndex + 1, FcsDataStartRowIndex);
 
             var parsedRows = new List<FcsBacklogRow>();
-            for (var rowIndex = dataStartRowIndex; rowIndex < worksheet.Rows.Count; rowIndex++)
+            for (var rowIndex = dataStartRowIndex; rowIndex < worksheet.RowCount; rowIndex++)
             {
-                var row = worksheet.Rows[rowIndex];
-                if (IsRowEmpty(row))
+                if (IsRowEmpty(worksheet, rowIndex))
                 {
                     continue;
                 }
 
-                var engagementIdRaw = Convert.ToString(row[engagementIdIndex], CultureInfo.InvariantCulture);
+                var engagementIdRaw = Convert.ToString(worksheet.GetValue(rowIndex, engagementIdIndex), CultureInfo.InvariantCulture);
                 var engagementId = NormalizeWhitespace(engagementIdRaw);
                 if (string.IsNullOrEmpty(engagementId))
                 {
                     continue;
                 }
 
-                var currentBacklog = ParseDecimal(row[currentFiscalYearBacklogIndex], 2) ?? 0m;
+                var currentBacklog = ParseDecimal(worksheet.GetValue(rowIndex, currentFiscalYearBacklogIndex), 2) ?? 0m;
 
                 decimal futureBacklog = 0m;
                 foreach (var index in futureFiscalYearIndexes)
                 {
-                    futureBacklog += ParseDecimal(row[index], 2) ?? 0m;
+                    futureBacklog += ParseDecimal(worksheet.GetValue(rowIndex, index), 2) ?? 0m;
                 }
 
                 var excelRowNumber = rowIndex + 1; // Excel is 1-based
@@ -1350,11 +1462,14 @@ namespace GRCFinancialControl.Persistence.Services
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory
+                .CreateDbContextAsync()
+                .ConfigureAwait(false);
 
             var fiscalYears = await context.FiscalYears
                 .Where(fy => fy.Name == currentFiscalYearName || fy.Name == nextFiscalYearName)
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
 
             var fiscalYearLookup = fiscalYears.ToDictionary(fy => fy.Name, StringComparer.OrdinalIgnoreCase);
 
@@ -1375,7 +1490,8 @@ namespace GRCFinancialControl.Persistence.Services
             var engagements = await context.Engagements
                 .Include(e => e.RevenueAllocations)
                 .Where(e => distinctEngagementIds.Contains(e.EngagementId))
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
 
             var engagementLookup = engagements.ToDictionary(e => e.EngagementId, StringComparer.OrdinalIgnoreCase);
 
@@ -1496,7 +1612,7 @@ namespace GRCFinancialControl.Persistence.Services
 
             if (createdAllocations + updatedAllocations > 0)
             {
-                await context.SaveChangesAsync();
+                await context.SaveChangesAsync().ConfigureAwait(false);
             }
 
             var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>();
@@ -1516,7 +1632,7 @@ namespace GRCFinancialControl.Persistence.Services
                 skipReasons["MissingEngagement"] = missingEngagementDetails;
             }
 
-            var notes = new List<string>
+            var notes = new List<string>(4)
             {
                 $"Engagements affected: {touchedEngagements.Count}"
             };
@@ -1552,20 +1668,16 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new FileNotFoundException("Full Management Data workbook could not be found.", filePath);
             }
 
-            var dataSet = LoadWorkbookDataSet(filePath);
-            if (dataSet.Tables.Count == 0)
-            {
-                throw new InvalidDataException("Expected sheet not found (Engagement Detail/GRC).");
-            }
+            using var workbook = LoadWorkbook(filePath);
 
-            var worksheet = ResolveWorksheet(dataSet, "Engagement Detail") ??
-                            ResolveWorksheet(dataSet, "GRC");
+            var worksheet = workbook.GetWorksheet("Engagement Detail") ??
+                            workbook.GetWorksheet("GRC");
             if (worksheet == null)
             {
                 throw new InvalidDataException("Expected sheet not found (Engagement Detail/GRC).");
             }
 
-            if (worksheet.Rows.Count <= FullManagementHeaderRowIndex)
+            if (worksheet.RowCount <= FullManagementHeaderRowIndex)
             {
                 throw new InvalidDataException("The Full Management Data worksheet is missing the required header row.");
             }
@@ -1576,7 +1688,7 @@ namespace GRCFinancialControl.Persistence.Services
             var engagementColumnIndex = ColumnNameToIndex("A");
             var currentToGoColumnIndex = ColumnNameToIndex("IN");
             var nextToGoColumnIndex = ColumnNameToIndex("IO");
-            var openingColumnIndex = ResolveOpeningColumnIndex(worksheet.Columns.Count);
+            var openingColumnIndex = ResolveOpeningColumnIndex(worksheet.ColumnCount);
 
             EnsureColumnExists(worksheet, engagementColumnIndex, "Engagement ID (column A)");
             EnsureColumnExists(worksheet, currentToGoColumnIndex, "FYTG Backlog (column IN)");
@@ -1587,14 +1699,13 @@ namespace GRCFinancialControl.Persistence.Services
             var skippedMissingEngagement = 0;
             var skippedInvalidNumbers = 0;
 
-            for (var rowIndex = FullManagementDataStartRowIndex; rowIndex < worksheet.Rows.Count; rowIndex++)
+            for (var rowIndex = FullManagementDataStartRowIndex; rowIndex < worksheet.RowCount; rowIndex++)
             {
-                var row = worksheet.Rows[rowIndex];
-                var engagementRaw = NormalizeWhitespace(Convert.ToString(row[engagementColumnIndex], CultureInfo.InvariantCulture));
+                var engagementRaw = NormalizeWhitespace(GetCellString(worksheet, rowIndex, engagementColumnIndex));
 
                 if (string.IsNullOrEmpty(engagementRaw))
                 {
-                    if (IsAllocationRowEmpty(row, openingColumnIndex, currentToGoColumnIndex, nextToGoColumnIndex))
+                    if (IsAllocationRowEmpty(worksheet, rowIndex, openingColumnIndex, currentToGoColumnIndex, nextToGoColumnIndex))
                     {
                         continue;
                     }
@@ -1606,7 +1717,7 @@ namespace GRCFinancialControl.Persistence.Services
                 var engagementCode = ExtractEngagementCode(engagementRaw);
                 if (engagementCode is null)
                 {
-                    if (IsAllocationRowEmpty(row, openingColumnIndex, currentToGoColumnIndex, nextToGoColumnIndex))
+                    if (IsAllocationRowEmpty(worksheet, rowIndex, openingColumnIndex, currentToGoColumnIndex, nextToGoColumnIndex))
                     {
                         continue;
                     }
@@ -1615,9 +1726,9 @@ namespace GRCFinancialControl.Persistence.Services
                     continue;
                 }
 
-                var openingValue = ParseMoneyOrDefault(row[openingColumnIndex], ref skippedInvalidNumbers);
-                var currentToGoValue = ParseMoneyOrDefault(row[currentToGoColumnIndex], ref skippedInvalidNumbers);
-                var nextToGoValue = ParseMoneyOrDefault(row[nextToGoColumnIndex], ref skippedInvalidNumbers);
+                var openingValue = ParseMoneyOrDefault(worksheet.GetValue(rowIndex, openingColumnIndex), ref skippedInvalidNumbers);
+                var currentToGoValue = ParseMoneyOrDefault(worksheet.GetValue(rowIndex, currentToGoColumnIndex), ref skippedInvalidNumbers);
+                var nextToGoValue = ParseMoneyOrDefault(worksheet.GetValue(rowIndex, nextToGoColumnIndex), ref skippedInvalidNumbers);
 
                 var currentToDateValue = RoundMoney(openingValue - currentToGoValue - nextToGoValue);
 
@@ -1628,19 +1739,23 @@ namespace GRCFinancialControl.Persistence.Services
                     currentToDateValue));
             }
 
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory
+                .CreateDbContextAsync()
+                .ConfigureAwait(false);
 
-            var engagements = await LoadEngagementsAsync(context, parsedRows.Select(r => r.EngagementId));
+            var engagements = await LoadEngagementsAsync(context, parsedRows.Select(r => r.EngagementId)).ConfigureAwait(false);
             var currentFiscalYear = await FindFiscalYearByCodeAsync(context, header.CurrentFiscalYear)
+                .ConfigureAwait(false)
                 ?? throw new InvalidDataException($"Fiscal year '{header.CurrentFiscalYear}' referenced by the workbook could not be found in the database.");
             var nextFiscalYear = await FindFiscalYearByCodeAsync(context, header.NextFiscalYear)
+                .ConfigureAwait(false)
                 ?? throw new InvalidDataException($"Fiscal year '{header.NextFiscalYear}' referenced by the workbook could not be found in the database.");
 
             var allocationLookup = await LoadExistingRevenueAllocationsAsync(
                 context,
                 engagements.Values.Select(e => e.Id),
                 currentFiscalYear.Id,
-                nextFiscalYear.Id);
+                nextFiscalYear.Id).ConfigureAwait(false);
 
             var upserts = 0;
             var skippedLockedFiscalYears = 0;
@@ -1668,7 +1783,7 @@ namespace GRCFinancialControl.Persistence.Services
                         currentFiscalYear.Id,
                         row.CurrentFiscalYearToDate,
                         row.CurrentFiscalYearToGo,
-                        header.LastUpdateDate);
+                        header.LastUpdateDate).ConfigureAwait(false);
                     upserts++;
                 }
 
@@ -1685,11 +1800,11 @@ namespace GRCFinancialControl.Persistence.Services
                     nextFiscalYear.Id,
                     0m,
                     row.NextFiscalYearToGo,
-                    header.LastUpdateDate);
+                    header.LastUpdateDate).ConfigureAwait(false);
                 upserts++;
             }
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync().ConfigureAwait(false);
 
             var summary = string.Join('\n', new[]
             {
@@ -1867,16 +1982,16 @@ namespace GRCFinancialControl.Persistence.Services
             return 0m;
         }
 
-        private static bool IsAllocationRowEmpty(DataRow row, params int[] columnIndexes)
+        private static bool IsAllocationRowEmpty(IWorksheet worksheet, int rowIndex, params int[] columnIndexes)
         {
             foreach (var columnIndex in columnIndexes)
             {
-                if (columnIndex < 0 || columnIndex >= row.Table.Columns.Count)
+                if (columnIndex < 0 || columnIndex >= worksheet.ColumnCount)
                 {
                     continue;
                 }
 
-                var value = row[columnIndex];
+                var value = worksheet.GetValue(rowIndex, columnIndex);
                 if (value == null || value == DBNull.Value)
                 {
                     continue;
@@ -1908,14 +2023,17 @@ namespace GRCFinancialControl.Persistence.Services
 
             var engagements = await context.Engagements
                 .Where(e => codes.Contains(e.EngagementId))
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
 
             return engagements.ToDictionary(e => e.EngagementId, StringComparer.OrdinalIgnoreCase);
         }
 
-        private static Task<FiscalYear?> FindFiscalYearByCodeAsync(ApplicationDbContext context, string fiscalYearCode)
+        private static async Task<FiscalYear?> FindFiscalYearByCodeAsync(ApplicationDbContext context, string fiscalYearCode)
         {
-            return context.FiscalYears.FirstOrDefaultAsync(fy => fy.Name == fiscalYearCode);
+            return await context.FiscalYears
+                .FirstOrDefaultAsync(fy => fy.Name == fiscalYearCode)
+                .ConfigureAwait(false);
         }
 
         private static bool IsFiscalYearLocked(FiscalYear fiscalYear) => fiscalYear?.IsLocked ?? false;
@@ -1939,7 +2057,8 @@ namespace GRCFinancialControl.Persistence.Services
 
             var allocations = await context.EngagementFiscalYearRevenueAllocations
                 .Where(a => engagementIdList.Contains(a.EngagementId) && fiscalYearIds.Contains(a.FiscalYearId))
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
 
             return allocations.ToDictionary(a => (a.EngagementId, a.FiscalYearId));
         }
@@ -1973,7 +2092,7 @@ namespace GRCFinancialControl.Persistence.Services
                 UpdatedAt = DateTime.UtcNow
             };
 
-            await context.EngagementFiscalYearRevenueAllocations.AddAsync(newAllocation);
+            await context.EngagementFiscalYearRevenueAllocations.AddAsync(newAllocation).ConfigureAwait(false);
             allocationLookup[key] = newAllocation;
         }
 
@@ -1985,7 +2104,7 @@ namespace GRCFinancialControl.Persistence.Services
             decimal NextFiscalYearToGo,
             decimal CurrentFiscalYearToDate);
 
-        private static (string FiscalYearName, DateTime? LastUpdateDate) ParseFcsMetadata(DataTable worksheet)
+        private static (string FiscalYearName, DateTime? LastUpdateDate) ParseFcsMetadata(IWorksheet worksheet)
         {
             var rawValue = GetCellString(worksheet, 3, 0);
             string normalized;
@@ -1993,7 +2112,7 @@ namespace GRCFinancialControl.Persistence.Services
 
             if (!TryExtractFiscalYearCode(rawValue, out normalized, out fiscalYearName))
             {
-                for (var rowIndex = 0; rowIndex < Math.Min(worksheet.Rows.Count, FcsHeaderSearchLimit); rowIndex++)
+                for (var rowIndex = 0; rowIndex < Math.Min(worksheet.RowCount, FcsHeaderSearchLimit); rowIndex++)
                 {
                     var candidate = GetCellString(worksheet, rowIndex, 0);
                     if (!TryExtractFiscalYearCode(candidate, out normalized, out fiscalYearName))
@@ -2086,11 +2205,14 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new FileNotFoundException("ETC-P workbook could not be found.", filePath);
             }
 
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory
+                .CreateDbContextAsync()
+                .ConfigureAwait(false);
 
             var closingPeriod = await context.ClosingPeriods
                 .Include(cp => cp.FiscalYear)
-                .FirstOrDefaultAsync(cp => cp.Id == closingPeriodId);
+                .FirstOrDefaultAsync(cp => cp.Id == closingPeriodId)
+                .ConfigureAwait(false);
             if (closingPeriod == null)
             {
                 return "Selected closing period could not be found. Please refresh and try again.";
@@ -2116,16 +2238,16 @@ namespace GRCFinancialControl.Persistence.Services
             var rowsProcessed = 0;
             var manualOnlyDetails = new List<string>();
 
-            var dataSet = LoadWorkbookDataSet(filePath);
+            using var workbook = LoadWorkbook(filePath);
 
-            var etcpTable = ResolveEtcpWorksheet(dataSet);
+            var etcpTable = ResolveEtcpWorksheet(workbook);
             if (etcpTable == null)
             {
                 return "The ETC-P workbook does not contain the expected worksheet.";
             }
 
             const int headerRowIndex = 4; // Row 5 in Excel (1-based)
-            if (etcpTable.Rows.Count <= headerRowIndex)
+            if (etcpTable.RowCount <= headerRowIndex)
             {
                 return $"The ETC-P worksheet does not contain any data rows for closing period '{closingPeriod.Name}'.";
             }
@@ -2146,19 +2268,18 @@ namespace GRCFinancialControl.Persistence.Services
             var etcpAsOfDate = ExtractEtcAsOfDate(etcpTable);
 
             var parsedRows = new List<EtcpImportRow>();
-            for (var rowIndex = headerRowIndex + 1; rowIndex < etcpTable.Rows.Count; rowIndex++)
+            for (var rowIndex = headerRowIndex + 1; rowIndex < etcpTable.RowCount; rowIndex++)
             {
-                var row = etcpTable.Rows[rowIndex];
                 var rowNumber = rowIndex + 1; // Excel is 1-based
 
                 try
                 {
-                    if (IsRowEmpty(row))
+                    if (IsRowEmpty(etcpTable, rowIndex))
                     {
                         continue;
                     }
 
-                    var parsedRow = ParseEtcpRow(row, rowNumber);
+                    var parsedRow = ParseEtcpRow(etcpTable, rowIndex);
                     if (parsedRow == null)
                     {
                         continue;
@@ -2174,11 +2295,11 @@ namespace GRCFinancialControl.Persistence.Services
             }
 
             var pendingCustomerCodes = parsedRows.Count > 0
-                ? await PrefetchCustomersAsync(context, customerCache, parsedRows.Select(r => r.CustomerCode))
+                ? await PrefetchCustomersAsync(context, customerCache, parsedRows.Select(r => r.CustomerCode)).ConfigureAwait(false)
                 : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             var pendingEngagementIds = parsedRows.Count > 0
-                ? await PrefetchEngagementsAsync(context, engagementCache, parsedRows.Select(r => r.EngagementId))
+                ? await PrefetchEngagementsAsync(context, engagementCache, parsedRows.Select(r => r.EngagementId)).ConfigureAwait(false)
                 : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var parsedRow in parsedRows)
@@ -2191,7 +2312,7 @@ namespace GRCFinancialControl.Persistence.Services
                         context,
                         customerCache,
                         parsedRow,
-                        pendingCustomerCodes);
+                        pendingCustomerCodes).ConfigureAwait(false);
                     if (customerCreated)
                     {
                         customersCreated++;
@@ -2201,7 +2322,7 @@ namespace GRCFinancialControl.Persistence.Services
                         context,
                         engagementCache,
                         parsedRow,
-                        pendingEngagementIds);
+                        pendingEngagementIds).ConfigureAwait(false);
                     if (engagementCreated)
                     {
                         engagementsCreated++;
@@ -2253,7 +2374,7 @@ namespace GRCFinancialControl.Persistence.Services
                 }
             }
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync().ConfigureAwait(false);
 
             var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>();
 
@@ -2298,18 +2419,17 @@ namespace GRCFinancialControl.Persistence.Services
                 rowsProcessed);
         }
 
-        private static DataTable? ResolveEtcpWorksheet(DataSet dataSet)
+        private static IWorksheet? ResolveEtcpWorksheet(WorkbookData workbook)
         {
-            foreach (DataTable table in dataSet.Tables)
+            foreach (var table in workbook.Worksheets)
             {
-                if (table.Rows.Count <= 4 || table.Columns.Count <= 3)
+                if (table.RowCount <= 4 || table.ColumnCount <= 3)
                 {
                     continue;
                 }
 
-                var headerRow = table.Rows[4];
-                var clientHeader = NormalizeWhitespace(Convert.ToString(headerRow[2], CultureInfo.InvariantCulture));
-                var engagementHeader = NormalizeWhitespace(Convert.ToString(headerRow[3], CultureInfo.InvariantCulture));
+                var clientHeader = NormalizeWhitespace(Convert.ToString(table.GetValue(4, 2), CultureInfo.InvariantCulture));
+                var engagementHeader = NormalizeWhitespace(Convert.ToString(table.GetValue(4, 3), CultureInfo.InvariantCulture));
 
                 if (clientHeader.Contains("client", StringComparison.OrdinalIgnoreCase) &&
                     engagementHeader.Contains("engagement", StringComparison.OrdinalIgnoreCase))
@@ -2318,12 +2438,12 @@ namespace GRCFinancialControl.Persistence.Services
                 }
             }
 
-            return dataSet.Tables.Count > 0 ? dataSet.Tables[0] : null;
+            return workbook.FirstWorksheet;
         }
 
-        private static void EnsureColumnExists(DataTable table, int columnIndex, string friendlyName)
+        private static void EnsureColumnExists(IWorksheet table, int columnIndex, string friendlyName)
         {
-            if (columnIndex < table.Columns.Count)
+            if (columnIndex < table.ColumnCount)
             {
                 return;
             }
@@ -2332,7 +2452,7 @@ namespace GRCFinancialControl.Persistence.Services
             throw new InvalidDataException($"The ETC-P worksheet is missing expected column '{friendlyName}' at position {columnName}.");
         }
 
-        private DateTime? ExtractEtcAsOfDate(DataTable etcpTable)
+        private DateTime? ExtractEtcAsOfDate(IWorksheet etcpTable)
         {
             const int rowIndex = 2;
             const int columnIndex = 0;
@@ -2471,10 +2591,11 @@ namespace GRCFinancialControl.Persistence.Services
             return columnName.ToString();
         }
 
-        private static bool IsRowEmpty(DataRow row)
+        private static bool IsRowEmpty(IWorksheet worksheet, int rowIndex)
         {
-            foreach (var item in row.ItemArray)
+            for (var columnIndex = 0; columnIndex < worksheet.ColumnCount; columnIndex++)
             {
+                var item = worksheet.GetValue(rowIndex, columnIndex);
                 if (item == null || item == DBNull.Value)
                 {
                     continue;
@@ -2490,10 +2611,10 @@ namespace GRCFinancialControl.Persistence.Services
             return true;
         }
 
-        private EtcpImportRow? ParseEtcpRow(DataRow row, int rowNumber)
+        private EtcpImportRow? ParseEtcpRow(IWorksheet worksheet, int rowIndex)
         {
-            var customerCell = NormalizeWhitespace(Convert.ToString(row[2], CultureInfo.InvariantCulture));
-            var engagementCell = NormalizeWhitespace(Convert.ToString(row[3], CultureInfo.InvariantCulture));
+            var customerCell = NormalizeWhitespace(GetCellString(worksheet, rowIndex, 2));
+            var engagementCell = NormalizeWhitespace(GetCellString(worksheet, rowIndex, 3));
 
             if (string.IsNullOrWhiteSpace(customerCell) && string.IsNullOrWhiteSpace(engagementCell))
             {
@@ -2513,21 +2634,21 @@ namespace GRCFinancialControl.Persistence.Services
             var (customerName, customerCode) = ParseEtcpCustomerCell(customerCell);
             var (engagementDescription, engagementId, currency) = ParseEngagementCell(engagementCell);
 
-            var statusText = NormalizeWhitespace(Convert.ToString(row[4], CultureInfo.InvariantCulture));
+            var statusText = NormalizeWhitespace(GetCellString(worksheet, rowIndex, 4));
 
-            var budgetHours = ParsePtBrNumber(row[8]);
-            var estimatedToCompleteHours = ParsePtBrNumber(row[9]);
-            var budgetValue = ParsePtBrMoney(row[11]);
-            var etcpValue = ParsePtBrMoney(row[12]);
-            var marginBudget = ParsePtBrPercent(row[14]);
-            var marginEtcp = ParsePtBrPercent(row[15]);
-            var budgetExpenses = ParsePtBrMoney(row[17]);
-            var etcpExpenses = ParsePtBrMoney(row[18]);
-            var ageDays = ParseInt(row[20]);
+            var budgetHours = ParsePtBrNumber(worksheet.GetValue(rowIndex, 8));
+            var estimatedToCompleteHours = ParsePtBrNumber(worksheet.GetValue(rowIndex, 9));
+            var budgetValue = ParsePtBrMoney(worksheet.GetValue(rowIndex, 11));
+            var etcpValue = ParsePtBrMoney(worksheet.GetValue(rowIndex, 12));
+            var marginBudget = ParsePtBrPercent(worksheet.GetValue(rowIndex, 14));
+            var marginEtcp = ParsePtBrPercent(worksheet.GetValue(rowIndex, 15));
+            var budgetExpenses = ParsePtBrMoney(worksheet.GetValue(rowIndex, 17));
+            var etcpExpenses = ParsePtBrMoney(worksheet.GetValue(rowIndex, 18));
+            var ageDays = ParseInt(worksheet.GetValue(rowIndex, 20));
 
             return new EtcpImportRow
             {
-                RowNumber = rowNumber,
+                RowNumber = rowIndex + 1,
                 CustomerName = customerName,
                 CustomerCode = customerCode,
                 EngagementDescription = engagementDescription,
@@ -2808,7 +2929,8 @@ namespace GRCFinancialControl.Persistence.Services
             var lookup = pending.ToList();
             var existingCustomers = await context.Customers
                 .Where(c => lookup.Contains(c.CustomerCode))
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
 
             foreach (var customer in existingCustomers)
             {
@@ -2851,7 +2973,8 @@ namespace GRCFinancialControl.Persistence.Services
                 .Include(e => e.FinancialEvolutions)
                 .Include(e => e.LastClosingPeriod)
                 .Where(e => lookup.Contains(e.EngagementId))
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
 
             foreach (var engagement in existingEngagements)
             {
@@ -2881,14 +3004,15 @@ namespace GRCFinancialControl.Persistence.Services
                     Name = row.CustomerName
                 };
 
-                await context.Customers.AddAsync(newCustomer);
+                await context.Customers.AddAsync(newCustomer).ConfigureAwait(false);
                 cache[row.CustomerCode] = newCustomer;
                 pendingCustomerCodes.Remove(row.CustomerCode);
                 return (newCustomer, true);
             }
 
             var customer = await context.Customers
-                .FirstOrDefaultAsync(c => c.CustomerCode == row.CustomerCode);
+                .FirstOrDefaultAsync(c => c.CustomerCode == row.CustomerCode)
+                .ConfigureAwait(false);
 
             var created = false;
             if (customer == null)
@@ -2899,7 +3023,7 @@ namespace GRCFinancialControl.Persistence.Services
                     Name = row.CustomerName
                 };
 
-                await context.Customers.AddAsync(customer);
+                await context.Customers.AddAsync(customer).ConfigureAwait(false);
                 created = true;
             }
 
@@ -2934,7 +3058,7 @@ namespace GRCFinancialControl.Persistence.Services
                     EngagementId = row.EngagementId
                 };
 
-                await context.Engagements.AddAsync(newEngagement);
+                await context.Engagements.AddAsync(newEngagement).ConfigureAwait(false);
                 cache[row.EngagementId] = newEngagement;
                 pendingEngagementIds.Remove(row.EngagementId);
                 return (newEngagement, true);
@@ -2943,7 +3067,8 @@ namespace GRCFinancialControl.Persistence.Services
             var engagement = await context.Engagements
                 .Include(e => e.FinancialEvolutions)
                 .Include(e => e.LastClosingPeriod)
-                .FirstOrDefaultAsync(e => e.EngagementId == row.EngagementId);
+                .FirstOrDefaultAsync(e => e.EngagementId == row.EngagementId)
+                .ConfigureAwait(false);
 
             var created = false;
             if (engagement == null)
@@ -2953,7 +3078,7 @@ namespace GRCFinancialControl.Persistence.Services
                     EngagementId = row.EngagementId
                 };
 
-                await context.Engagements.AddAsync(engagement);
+                await context.Engagements.AddAsync(engagement).ConfigureAwait(false);
                 created = true;
             }
 

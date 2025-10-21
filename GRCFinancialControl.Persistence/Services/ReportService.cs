@@ -8,6 +8,7 @@ using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Core.Models.Reporting;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using static GRCFinancialControl.Persistence.Services.ClosingPeriodIdHelper;
 
 namespace GRCFinancialControl.Persistence.Services
 {
@@ -75,6 +76,20 @@ namespace GRCFinancialControl.Persistence.Services
                         .PeriodEnd,
                     StringComparer.OrdinalIgnoreCase);
 
+            var sortKeyCache = new Dictionary<string, (int Priority, DateTime SortDate, int NumericValue, string NormalizedId)>(StringComparer.OrdinalIgnoreCase);
+
+            (int Priority, DateTime SortDate, int NumericValue, string NormalizedId) GetSortKey(string? closingPeriodId)
+            {
+                var normalized = Normalize(closingPeriodId) ?? string.Empty;
+                if (!sortKeyCache.TryGetValue(normalized, out var key))
+                {
+                    key = BuildFinancialEvolutionSortKey(closingPeriodId, closingPeriods);
+                    sortKeyCache[normalized] = key;
+                }
+
+                return key;
+            }
+
             var evolutions = relevantEngagementIds.Count == 0
                 ? new List<FinancialEvolution>()
                 : await context.FinancialEvolutions
@@ -112,7 +127,7 @@ namespace GRCFinancialControl.Persistence.Services
                                 snapshot.ClosingPeriodId,
                                 FinancialEvolutionInitialPeriodId,
                                 StringComparison.OrdinalIgnoreCase))
-                            .OrderByDescending(snapshot => BuildFinancialEvolutionSortKey(snapshot.ClosingPeriodId, closingPeriods))
+                            .OrderByDescending(snapshot => GetSortKey(snapshot.ClosingPeriodId))
                             .ThenByDescending(snapshot => snapshot.Id)
                             .FirstOrDefault();
 
@@ -144,7 +159,7 @@ namespace GRCFinancialControl.Persistence.Services
                                 continue;
                             }
 
-                            var periodId = NormalizeClosingPeriodId(snapshot.ClosingPeriodId);
+                            var periodId = Normalize(snapshot.ClosingPeriodId);
                             if (string.IsNullOrEmpty(periodId))
                             {
                                 continue;
@@ -158,7 +173,7 @@ namespace GRCFinancialControl.Persistence.Services
                 }
 
                 var orderedHours = hoursByPeriod
-                    .OrderBy(kvp => BuildFinancialEvolutionSortKey(kvp.Key, closingPeriods))
+                    .OrderBy(kvp => GetSortKey(kvp.Key))
                     .Select(kvp => new HoursWorked
                     {
                         ClosingPeriodName = kvp.Key,
@@ -166,12 +181,18 @@ namespace GRCFinancialControl.Persistence.Services
                     })
                     .ToList();
 
-                result.Add(new PapdContributionData
+                var contribution = new PapdContributionData
                 {
                     PapdName = papd.Name,
-                    RevenueContribution = revenueContribution,
-                    HoursWorked = orderedHours
-                });
+                    RevenueContribution = revenueContribution
+                };
+
+                foreach (var hoursWorked in orderedHours)
+                {
+                    contribution.HoursWorked.Add(hoursWorked);
+                }
+
+                result.Add(contribution);
             }
 
             return result;
@@ -267,7 +288,7 @@ namespace GRCFinancialControl.Persistence.Services
             string? closingPeriodId,
             IReadOnlyDictionary<string, DateTime> closingPeriods)
         {
-            var normalizedId = NormalizeClosingPeriodId(closingPeriodId);
+            var normalizedId = Normalize(closingPeriodId);
 
             if (!string.IsNullOrEmpty(normalizedId) && closingPeriods.TryGetValue(normalizedId, out var periodEnd))
             {
@@ -287,23 +308,5 @@ namespace GRCFinancialControl.Persistence.Services
             return (0, DateTime.MinValue, int.MinValue, normalizedId ?? string.Empty);
         }
 
-        private static string? NormalizeClosingPeriodId(string? closingPeriodId)
-            => string.IsNullOrWhiteSpace(closingPeriodId) ? null : closingPeriodId.Trim();
-
-        private static bool TryParsePeriodDate(string closingPeriodId, out DateTime parsedDate)
-        {
-            return DateTime.TryParse(
-                closingPeriodId,
-                CultureInfo.InvariantCulture,
-                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
-                out parsedDate);
-        }
-
-        private static bool TryExtractDigits(string closingPeriodId, out int numericValue)
-        {
-            numericValue = 0;
-            var digits = new string(closingPeriodId.Where(char.IsDigit).ToArray());
-            return digits.Length > 0 && int.TryParse(digits, NumberStyles.Integer, CultureInfo.InvariantCulture, out numericValue);
-        }
     }
 }

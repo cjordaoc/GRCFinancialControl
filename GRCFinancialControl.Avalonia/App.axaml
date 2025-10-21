@@ -2,12 +2,17 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="GRCFinancialControl.Avalonia.App"
              xmlns:local="using:GRCFinancialControl.Avalonia"
+             xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
              RequestedThemeVariant="Dark">
              <!-- The app defaults to the dark variant for consistency with analytics dashboards. -->
 
     <Application.DataTemplates>
         <local:ViewLocator/>
     </Application.DataTemplates>
+
+    <Application.Resources>
+        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+    </Application.Resources>
 
     <Application.Styles>
         <FluentTheme/>

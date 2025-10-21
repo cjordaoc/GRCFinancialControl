@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Data;
 using System.IO;
 using System.Linq;
 using GRCFinancialControl.Core.Models;
+using GRCFinancialControl.Persistence.Services;
+using static GRCFinancialControl.Persistence.Services.Importers.WorksheetValueHelper;
 
 namespace GRCFinancialControl.Persistence.Services.Importers.StaffAllocations;
 
@@ -18,7 +19,7 @@ public sealed class StaffAllocationProcessor
     }
 
     public StaffAllocationProcessingResult Process(
-        DataTable worksheet,
+        ImportService.IWorksheet worksheet,
         IReadOnlyDictionary<string, Employee> employees,
         DateTime uploadTimestamp,
         IReadOnlyList<FiscalYear> fiscalYears,
@@ -71,7 +72,7 @@ public sealed class StaffAllocationProcessor
 
         foreach (var record in records)
         {
-            var normalizedWeekStart = StaffAllocationCellHelper.NormalizeWeekStart(record.WeekStartMon);
+            var normalizedWeekStart = NormalizeWeekStart(record.WeekStartMon);
             var fiscalYear = orderedFiscalYears
                 .FirstOrDefault(fy => normalizedWeekStart >= fy.StartDate.Date && normalizedWeekStart <= fy.EndDate.Date);
 

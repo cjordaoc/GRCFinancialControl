@@ -13,6 +13,7 @@ using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using static GRCFinancialControl.Persistence.Services.Importers.WorksheetValueHelper;
 
 namespace GRCFinancialControl.Persistence.Services.Importers
 {
@@ -20,7 +21,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers
     {
         private const string FinancialEvolutionInitialPeriodId = "INITIAL";
         private static readonly CultureInfo PtBrCulture = CultureInfo.GetCultureInfo("pt-BR");
-        private static readonly Regex MultiWhitespaceRegex = new("\\s+", RegexOptions.Compiled);
 
         private static readonly string[] EngagementIdHeaders =
         {
@@ -678,16 +678,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             }
 
             return true;
-        }
-
-        private static string NormalizeWhitespace(string? value)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                return string.Empty;
-            }
-
-            return MultiWhitespaceRegex.Replace(value.Trim(), " ");
         }
 
         private static string? TryGetCellString(DataTable worksheet, int rowIndex, int columnIndex)

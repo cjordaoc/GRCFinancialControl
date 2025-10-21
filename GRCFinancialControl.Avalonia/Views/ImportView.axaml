@@ -11,7 +11,10 @@
     <StackPanel Spacing="10" Margin="20">
         <TextBlock Text="{loc:Loc Key=Import.Title.Primary}" FontSize="24" FontWeight="Bold"/>
 
-        <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,10,0,0">
+        <StackPanel Orientation="Horizontal"
+                    Spacing="10"
+                    Margin="0,10,0,0"
+                    IsEnabled="{Binding IsImporting, Converter={StaticResource InverseBooleanConverter}}">
             <Button Content="{loc:Loc Key=Import.Button.Budget}" Command="{Binding SetImportTypeCommand}" CommandParameter="Budget" Classes="accent"/>
             <Button Content="{loc:Loc Key=Import.Button.Actuals}" Command="{Binding SetImportTypeCommand}" CommandParameter="Actuals" Classes="accent"/>
             <Button Content="{loc:Loc Key=Import.Button.FullManagement}" Command="{Binding SetImportTypeCommand}" CommandParameter="FullManagement" Classes="accent"/>
@@ -31,7 +34,7 @@
                         <ComboBox Width="260"
                                   ItemsSource="{Binding ClosingPeriods}"
                                   SelectedItem="{Binding SelectedClosingPeriod}"
-                                  IsEnabled="{Binding HasUnlockedClosingPeriods}">
+                                  IsEnabled="{Binding CanModifyClosingPeriod}">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" Spacing="6">
@@ -56,7 +59,13 @@
                                    IsVisible="{Binding IsClosingPeriodSelectionUnavailable}"/>
                     </StackPanel>
 
-                    <Button Content="{loc:Loc Key=Import.Button.SelectFile}" Command="{Binding ImportCommand}" Classes="accent"/>
+                    <Button Content="{loc:Loc Key=Import.Button.SelectFile}"
+                            Command="{Binding ImportCommand}"
+                            Classes="accent"
+                            IsEnabled="{Binding IsImporting, Converter={StaticResource InverseBooleanConverter}}"/>
+                    <ProgressBar IsIndeterminate="True"
+                                 Height="6"
+                                 IsVisible="{Binding IsImporting}"/>
                     <TextBox Text="{Binding StatusMessage}" Margin="0,10,0,0" TextWrapping="Wrap" IsReadOnly="True" />
                 </StackPanel>
             </Border>

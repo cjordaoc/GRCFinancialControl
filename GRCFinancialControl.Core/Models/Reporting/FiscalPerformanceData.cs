@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace GRCFinancialControl.Core.Models.Reporting
 {
     public class FiscalPerformanceData
@@ -9,7 +11,7 @@ namespace GRCFinancialControl.Core.Models.Reporting
         public decimal TotalRevenue { get; set; }
         public decimal TotalEstimatedToCompleteHours { get; set; }
         public decimal TotalActualHours { get; set; }
-        public List<PapdContribution> PapdContributions { get; set; } = [];
+        public ICollection<PapdContribution> PapdContributions { get; } = new List<PapdContribution>();
     }
 
     public class PapdContribution

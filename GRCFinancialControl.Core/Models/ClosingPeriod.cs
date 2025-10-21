@@ -15,9 +15,9 @@ namespace GRCFinancialControl.Core.Models
         public DateTime PeriodStart { get; set; }
         public DateTime PeriodEnd { get; set; }
 
-        public ICollection<ActualsEntry> ActualsEntries { get; set; } = [];
-        public ICollection<PlannedAllocation> PlannedAllocations { get; set; } = [];
-        public ICollection<Engagement> Engagements { get; set; } = [];
+        public ICollection<ActualsEntry> ActualsEntries { get; } = new List<ActualsEntry>();
+        public ICollection<PlannedAllocation> PlannedAllocations { get; } = new List<PlannedAllocation>();
+        public ICollection<Engagement> Engagements { get; } = new List<Engagement>();
         public bool IsLocked => FiscalYear?.IsLocked ?? false;
     }
 }

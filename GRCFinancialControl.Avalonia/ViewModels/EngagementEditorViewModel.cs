@@ -420,22 +420,31 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 })
                 .ToList();
 
-            Engagement.EngagementPapds = papdAssignments;
+            var engagementPapds = Engagement.EngagementPapds;
+            engagementPapds.Clear();
+            foreach (var assignment in papdAssignments)
+            {
+                engagementPapds.Add(assignment);
+            }
 
-            Engagement.FinancialEvolutions = FinancialEvolutionEntries
-                .Where(e => !string.IsNullOrWhiteSpace(e.ClosingPeriodId))
-                .Select(e => new FinancialEvolution
-                {
-                    Id = e.Id,
-                    ClosingPeriodId = e.ClosingPeriodId.Trim(),
-                    EngagementId = Engagement.Id,
-                    Engagement = Engagement,
-                    HoursData = e.Hours,
-                    ValueData = e.Value,
-                    MarginData = e.Margin,
-                    ExpenseData = e.Expenses
-                })
-                .ToList();
+            var evolutions = Engagement.FinancialEvolutions;
+            evolutions.Clear();
+            foreach (var evolution in FinancialEvolutionEntries
+                         .Where(e => !string.IsNullOrWhiteSpace(e.ClosingPeriodId))
+                         .Select(e => new FinancialEvolution
+                         {
+                             Id = e.Id,
+                             ClosingPeriodId = e.ClosingPeriodId.Trim(),
+                             EngagementId = Engagement.Id,
+                             Engagement = Engagement,
+                             HoursData = e.Hours,
+                             ValueData = e.Value,
+                             MarginData = e.Margin,
+                             ExpenseData = e.Expenses
+                         }))
+            {
+                evolutions.Add(evolution);
+            }
 
             if (Engagement.Id == 0)
             {

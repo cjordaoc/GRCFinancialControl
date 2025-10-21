@@ -21,6 +21,6 @@ public static class ValidationStrings
     public static string Format(string key, params object[] arguments)
     {
         var format = Get(key);
-        return string.Format(CultureInfo.CurrentUICulture, format, arguments);
+        return string.Format(CultureInfo.CurrentCulture, format, arguments);
     }
 }

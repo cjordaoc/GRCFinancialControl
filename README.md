@@ -10,3 +10,10 @@ The solution delivers the invoice management workflows used by controllers to pl
 
 ## Build
 Restore dependencies with `dotnet restore` and build with `dotnet build -c Release`.
+
+## Code Intent Catalog
+An auto-generated catalog of every class and method is available in [`CodeIntentCatalog.json`](./CodeIntentCatalog.json). Regenerate it with:
+
+```bash
+dotnet run --project Tools/CodeIntentCatalog/CodeIntentCatalog.csproj -- --output CodeIntentCatalog.json
+```

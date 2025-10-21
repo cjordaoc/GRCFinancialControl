@@ -31,7 +31,7 @@ public class FilePickerService : IFilePickerService
                     Patterns = patterns
                 }
             }
-        });
+        }).ConfigureAwait(false);
 
         if (files.Count == 0)
         {
@@ -45,7 +45,7 @@ public class FilePickerService : IFilePickerService
             return localPath;
         }
 
-        await using var stream = await file.OpenReadAsync();
+        await using var stream = await file.OpenReadAsync().ConfigureAwait(false);
         var fileExtension = Path.GetExtension(file.Name);
         if (string.IsNullOrWhiteSpace(fileExtension))
         {
@@ -54,7 +54,7 @@ public class FilePickerService : IFilePickerService
 
         var tempPath = Path.Combine(Path.GetTempPath(), $"grcfc_{Guid.NewGuid():N}{fileExtension}");
         await using var destination = File.Create(tempPath);
-        await stream.CopyToAsync(destination);
+        await stream.CopyToAsync(destination).ConfigureAwait(false);
 
         return tempPath;
     }
@@ -79,7 +79,7 @@ public class FilePickerService : IFilePickerService
                     Patterns = patterns
                 }
             }
-        });
+        }).ConfigureAwait(false);
 
         var path = file?.TryGetLocalPath();
         if (string.IsNullOrWhiteSpace(path))
@@ -113,8 +113,8 @@ public class FilePickerService : IFilePickerService
             var normalized = new string[allowedPatterns.Length];
             for (var i = 0; i < allowedPatterns.Length; i++)
             {
-                var pattern = allowedPatterns[i];
-                normalized[i] = pattern.StartsWith("*", StringComparison.Ordinal)
+                var pattern = allowedPatterns[i] ?? string.Empty;
+                normalized[i] = pattern.Length > 0 && pattern[0] == '*'
                     ? pattern
                     : "*" + pattern.TrimStart('.');
             }
