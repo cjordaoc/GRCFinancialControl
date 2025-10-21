@@ -81,6 +81,32 @@ public sealed class HoursAllocationsViewModelTests
     }
 
     [Fact]
+    public async Task EditingConsumedHoursRoundsAndUpdatesRemaining()
+    {
+        var engagementService = new FakeEngagementService();
+        var hoursService = new FakeHoursAllocationService();
+        var loggingService = new FakeLoggingService();
+        var messenger = new StrongReferenceMessenger();
+
+        hoursService.Snapshot = CreateSnapshot();
+
+        var viewModel = new HoursAllocationsViewModel(
+            engagementService,
+            hoursService,
+            loggingService,
+            messenger);
+
+        await viewModel.LoadDataAsync();
+
+        var cell = viewModel.Rows[0].Cells[0];
+        cell.ConsumedHours = 25.678m;
+
+        Assert.Equal(25.68m, cell.ConsumedHours);
+        Assert.Equal(14.32m, cell.RemainingHours);
+        Assert.True(viewModel.HasChanges);
+    }
+
+    [Fact]
     public async Task AddRankCommand_AddsRankAndClearsInput()
     {
         var engagementService = new FakeEngagementService();

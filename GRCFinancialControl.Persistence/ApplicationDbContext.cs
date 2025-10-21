@@ -4,6 +4,7 @@ using GRCFinancialControl.Core.Models;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace GRCFinancialControl.Persistence
 {
@@ -385,6 +386,22 @@ namespace GRCFinancialControl.Persistence
                 .Property(rb => rb.ConsumedHours)
                 .HasPrecision(18, 2)
                 .HasDefaultValue(0m);
+
+            var remainingHoursProperty = modelBuilder.Entity<EngagementRankBudget>()
+                .Property(rb => rb.RemainingHours)
+                .HasPrecision(18, 2)
+                .ValueGeneratedOnAddOrUpdate();
+
+            if (isMySql)
+            {
+                remainingHoursProperty.HasComputedColumnSql("(`BudgetHours` - `ConsumedHours`)", stored: true);
+            }
+            else
+            {
+                remainingHoursProperty.HasComputedColumnSql("([BudgetHours] - [ConsumedHours])", stored: true);
+            }
+
+            remainingHoursProperty.Metadata.SetAfterSaveBehavior(Microsoft.EntityFrameworkCore.Metadata.PropertySaveBehavior.Ignore);
 
             modelBuilder.Entity<EngagementRankBudget>()
                 .Property(rb => rb.RemainingHours)

@@ -967,7 +967,6 @@ namespace GRCFinancialControl.Persistence.Services
                 RankName = rankName,
                 BudgetHours = roundedBudget,
                 ConsumedHours = 0m,
-                RemainingHours = roundedBudget,
                 CreatedAtUtc = timestamp
             });
 
@@ -2622,6 +2621,9 @@ namespace GRCFinancialControl.Persistence.Services
 
             await context.SaveChangesAsync().ConfigureAwait(false);
 
+            var consumedUpdates = await SynchronizeConsumedHoursInternalAsync(context, closingPeriod)
+                .ConfigureAwait(false);
+
             var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>();
 
             if (manualOnlyDetails.Count > 0)
@@ -2640,6 +2642,11 @@ namespace GRCFinancialControl.Persistence.Services
                 $"Engagements created: {engagementsCreated}",
                 $"Engagements updated: {engagementsUpdated}"
             };
+
+            if (consumedUpdates > 0)
+            {
+                notes.Add($"Consumed hour updates applied: {consumedUpdates}");
+            }
 
             if (rowsProcessed == 0)
             {
@@ -2663,6 +2670,226 @@ namespace GRCFinancialControl.Persistence.Services
                 skipReasons,
                 notes,
                 rowsProcessed);
+        }
+
+        internal async Task<int> RefreshConsumedHoursAsync(int closingPeriodId)
+        {
+            await using var context = await _contextFactory
+                .CreateDbContextAsync()
+                .ConfigureAwait(false);
+
+            var closingPeriod = await context.ClosingPeriods
+                .Include(cp => cp.FiscalYear)
+                .FirstOrDefaultAsync(cp => cp.Id == closingPeriodId)
+                .ConfigureAwait(false);
+
+            if (closingPeriod is null)
+            {
+                return 0;
+            }
+
+            return await SynchronizeConsumedHoursInternalAsync(context, closingPeriod)
+                .ConfigureAwait(false);
+        }
+
+        private async Task<int> SynchronizeConsumedHoursInternalAsync(ApplicationDbContext context, ClosingPeriod closingPeriod)
+        {
+            var cutoff = closingPeriod.PeriodEnd.Date;
+
+            var actuals = await context.ActualsEntries
+                .Join(context.ClosingPeriods,
+                    entry => entry.ClosingPeriodId,
+                    period => period.Id,
+                    (entry, period) => new
+                    {
+                        entry.EngagementId,
+                        entry.Hours,
+                        period.PeriodEnd,
+                        period.FiscalYearId
+                    })
+                .Join(context.FiscalYears,
+                    temp => temp.FiscalYearId,
+                    fiscalYear => fiscalYear.Id,
+                    (temp, fiscalYear) => new
+                    {
+                        temp.EngagementId,
+                        temp.Hours,
+                        temp.PeriodEnd,
+                        FiscalYearId = fiscalYear.Id,
+                        fiscalYear.IsLocked
+                    })
+                .Where(record => record.PeriodEnd.Date <= cutoff && !record.IsLocked)
+                .ToListAsync()
+                .ConfigureAwait(false);
+
+            if (actuals.Count == 0)
+            {
+                return 0;
+            }
+
+            var totals = actuals
+                .GroupBy(record => new { record.EngagementId, record.FiscalYearId })
+                .Select(group => new
+                {
+                    group.Key.EngagementId,
+                    group.Key.FiscalYearId,
+                    Hours = group.Sum(item => item.Hours)
+                })
+                .ToList();
+
+            if (totals.Count == 0)
+            {
+                return 0;
+            }
+
+            var engagementIds = totals
+                .Select(item => item.EngagementId)
+                .Distinct()
+                .ToList();
+
+            var budgets = await context.EngagementRankBudgets
+                .Include(b => b.FiscalYear)
+                .Where(b => engagementIds.Contains(b.EngagementId))
+                .ToListAsync()
+                .ConfigureAwait(false);
+
+            if (budgets.Count == 0)
+            {
+                return 0;
+            }
+
+            var budgetsByKey = budgets
+                .GroupBy(b => (b.EngagementId, b.FiscalYearId))
+                .ToDictionary(group => group.Key, group => group.ToList());
+
+            var totalUpdates = 0;
+
+            foreach (var total in totals)
+            {
+                if (!budgetsByKey.TryGetValue((total.EngagementId, total.FiscalYearId), out var fiscalYearBudgets) ||
+                    fiscalYearBudgets.Count == 0)
+                {
+                    continue;
+                }
+
+                var fiscalYear = fiscalYearBudgets[0].FiscalYear;
+                if (fiscalYear?.IsLocked ?? false)
+                {
+                    continue;
+                }
+
+                if (ApplyConsumedHours(total.Hours, fiscalYearBudgets))
+                {
+                    totalUpdates += fiscalYearBudgets.Count;
+                }
+            }
+
+            if (totalUpdates == 0)
+            {
+                return 0;
+            }
+
+            await context.SaveChangesAsync().ConfigureAwait(false);
+            return totalUpdates;
+        }
+
+        private static bool ApplyConsumedHours(decimal totalHours, List<EngagementRankBudget> budgets)
+        {
+            if (budgets.Count == 0)
+            {
+                return false;
+            }
+
+            totalHours = Math.Round(Math.Max(totalHours, 0m), 2, MidpointRounding.AwayFromZero);
+
+            var currentTotal = budgets.Sum(b => b.ConsumedHours);
+            if (Math.Abs(currentTotal - totalHours) <= 0.005m)
+            {
+                return false;
+            }
+
+            var allocations = new decimal[budgets.Count];
+
+            if (totalHours == 0m)
+            {
+                Array.Fill(allocations, 0m);
+            }
+            else
+            {
+                var totalBudget = budgets.Sum(b => b.BudgetHours);
+
+                if (totalBudget > 0m)
+                {
+                    var assigned = 0m;
+                    for (var index = 0; index < budgets.Count; index++)
+                    {
+                        var budget = budgets[index];
+                        var proportion = budget.BudgetHours / totalBudget;
+                        var value = index == budgets.Count - 1
+                            ? totalHours - assigned
+                            : totalHours * proportion;
+
+                        value = Math.Round(value, 2, MidpointRounding.AwayFromZero);
+                        assigned += value;
+                        allocations[index] = value;
+                    }
+
+                    var delta = Math.Round(totalHours - allocations.Sum(), 2, MidpointRounding.AwayFromZero);
+                    if (delta != 0m)
+                    {
+                        allocations[^1] = Math.Round(allocations[^1] + delta, 2, MidpointRounding.AwayFromZero);
+                    }
+                }
+                else
+                {
+                    var existingTotal = budgets.Sum(b => Math.Max(b.ConsumedHours, 0m));
+                    if (existingTotal > 0m)
+                    {
+                        var assigned = 0m;
+                        for (var index = 0; index < budgets.Count; index++)
+                        {
+                            var budget = budgets[index];
+                            var baseline = Math.Max(budget.ConsumedHours, 0m) / existingTotal;
+                            var value = index == budgets.Count - 1
+                                ? totalHours - assigned
+                                : totalHours * baseline;
+
+                            value = Math.Round(value, 2, MidpointRounding.AwayFromZero);
+                            assigned += value;
+                            allocations[index] = value;
+                        }
+
+                        var delta = Math.Round(totalHours - allocations.Sum(), 2, MidpointRounding.AwayFromZero);
+                        if (delta != 0m)
+                        {
+                            allocations[^1] = Math.Round(allocations[^1] + delta, 2, MidpointRounding.AwayFromZero);
+                        }
+                    }
+                    else
+                    {
+                        var evenShare = Math.Round(totalHours / budgets.Count, 2, MidpointRounding.AwayFromZero);
+                        for (var index = 0; index < budgets.Count - 1; index++)
+                        {
+                            allocations[index] = evenShare;
+                        }
+
+                        allocations[^1] = Math.Round(totalHours - allocations.Take(budgets.Count - 1).Sum(), 2, MidpointRounding.AwayFromZero);
+                    }
+                }
+            }
+
+            var updated = false;
+            for (var index = 0; index < budgets.Count; index++)
+            {
+                var normalized = Math.Round(allocations[index], 2, MidpointRounding.AwayFromZero);
+                if (Math.Abs(normalized - budgets[index].ConsumedHours) > 0.005m)
+                {
+                    budgets[index].ConsumedHours = normalized;
+                    updated = true;
+                }
+            }
+
+            return updated;
         }
 
         private static IWorksheet? ResolveEtcpWorksheet(WorkbookData workbook)

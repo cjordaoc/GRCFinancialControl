@@ -459,7 +459,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             partial void OnConsumedHoursChanged(decimal value)
             {
-                RemainingHours = BudgetHours - value;
+                var normalized = Math.Round(value, 2, MidpointRounding.AwayFromZero);
+                if (normalized != value)
+                {
+                    ConsumedHours = normalized;
+                    return;
+                }
+
+                RemainingHours = Math.Round(BudgetHours - value, 2, MidpointRounding.AwayFromZero);
                 OnPropertyChanged(nameof(HasChanges));
                 OnPropertyChanged(nameof(IsZero));
                 _notifyChange();
@@ -467,6 +474,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             partial void OnBudgetHoursChanged(decimal value)
             {
+                RemainingHours = Math.Round(value - ConsumedHours, 2, MidpointRounding.AwayFromZero);
                 OnPropertyChanged(nameof(IsZero));
             }
         }
