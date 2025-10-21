@@ -17,7 +17,7 @@
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Auto"
                       HorizontalContentAlignment="Center"
-                      Padding="{StaticResource Space24}"
+                      Padding="{StaticResource SpaceThickness24}"
                       DataContext="{Binding Editor}">
             <StackPanel Spacing="{StaticResource Space24}"
                         HorizontalAlignment="Center"
