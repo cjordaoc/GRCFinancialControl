@@ -28,6 +28,8 @@ public static class Import
 
     public static string Import_Button_Actuals => ResourceManager.GetString("Import.Button.Actuals", resourceCulture) ?? "Import.Button.Actuals";
 
+    public static string Import_Button_AllocationPlanning => ResourceManager.GetString("Import.Button.AllocationPlanning", resourceCulture) ?? "Import.Button.AllocationPlanning";
+
     public static string Import_Button_FullManagement => ResourceManager.GetString("Import.Button.FullManagement", resourceCulture) ?? "Import.Button.FullManagement";
 
     public static string Import_Section_Selected_TitleFormat => ResourceManager.GetString("Import.Section.Selected.TitleFormat", resourceCulture) ?? "Import.Section.Selected.TitleFormat";
@@ -41,6 +43,8 @@ public static class Import
     public static string Import_FileType_Budget => ResourceManager.GetString("Import.FileType.Budget", resourceCulture) ?? "Import.FileType.Budget";
 
     public static string Import_FileType_Actuals => ResourceManager.GetString("Import.FileType.Actuals", resourceCulture) ?? "Import.FileType.Actuals";
+
+    public static string Import_FileType_AllocationPlanning => ResourceManager.GetString("Import.FileType.AllocationPlanning", resourceCulture) ?? "Import.FileType.AllocationPlanning";
 
     public static string Import_FileType_FullManagement => ResourceManager.GetString("Import.FileType.FullManagement", resourceCulture) ?? "Import.FileType.FullManagement";
 

@@ -19,6 +19,6 @@ namespace GRCFinancialControl.Core.Models
         public string? LockedBy { get; set; }
 
         public ICollection<ClosingPeriod> ClosingPeriods { get; } = new List<ClosingPeriod>();
-        public ICollection<StaffAllocationForecast> Forecasts { get; } = new List<StaffAllocationForecast>();
+        public ICollection<EngagementRankBudget> RankBudgets { get; } = new List<EngagementRankBudget>();
     }
 }

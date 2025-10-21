@@ -9,6 +9,7 @@ namespace GRCFinancialControl.Persistence.Services.Interfaces
         Task<string> ImportActualsAsync(string filePath, int closingPeriodId);
         Task<string> ImportFcsRevenueBacklogAsync(string filePath);
         Task<string> ImportFullManagementDataAsync(string filePath);
+        Task<string> ImportAllocationPlanningAsync(string filePath);
         Task<StaffAllocationProcessingResult> AnalyzeStaffAllocationsAsync(string filePath);
     }
 }

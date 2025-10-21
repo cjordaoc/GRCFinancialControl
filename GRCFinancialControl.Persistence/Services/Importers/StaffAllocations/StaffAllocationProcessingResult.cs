@@ -137,13 +137,11 @@ public sealed class StaffAllocationProcessingResult
     public StaffAllocationProcessingResult(
         StaffAllocationParseResult parseResult,
         StaffAllocationProcessingSummary summary,
-        IReadOnlyList<StaffAllocationTemporaryRecord> mappedRecords,
-        StaffAllocationForecastUpdateResult? forecastSummary = null)
+        IReadOnlyList<StaffAllocationTemporaryRecord> mappedRecords)
     {
         ParseResult = parseResult ?? throw new ArgumentNullException(nameof(parseResult));
         Summary = summary ?? throw new ArgumentNullException(nameof(summary));
         MappedRecords = mappedRecords ?? throw new ArgumentNullException(nameof(mappedRecords));
-        ForecastSummary = forecastSummary;
     }
 
     public StaffAllocationParseResult ParseResult { get; }
@@ -151,8 +149,6 @@ public sealed class StaffAllocationProcessingResult
     public StaffAllocationProcessingSummary Summary { get; }
 
     public IReadOnlyList<StaffAllocationTemporaryRecord> MappedRecords { get; }
-
-    public StaffAllocationForecastUpdateResult? ForecastSummary { get; }
 }
 
 public sealed class StaffAllocationProcessingSummary

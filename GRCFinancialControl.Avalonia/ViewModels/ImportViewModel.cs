@@ -19,6 +19,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private const string BudgetType = "Budget";
         private const string ActualsType = "Actuals";
         private const string FullManagementType = "FullManagement";
+        private const string AllocationPlanningType = "AllocationPlanning";
 
         private readonly IFilePickerService _filePickerService;
         private readonly IImportService _importService;
@@ -46,6 +47,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             BudgetType => LocalizationRegistry.Get("Import.FileType.Budget"),
             ActualsType => LocalizationRegistry.Get("Import.FileType.Actuals"),
             FullManagementType => LocalizationRegistry.Get("Import.FileType.FullManagement"),
+            AllocationPlanningType => LocalizationRegistry.Get("Import.FileType.AllocationPlanning"),
             _ => FileType
         };
 
@@ -137,6 +139,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 else if (FileType == FullManagementType)
                 {
                     result = await Task.Run(() => _importService.ImportFullManagementDataAsync(filePath));
+                }
+                else if (FileType == AllocationPlanningType)
+                {
+                    result = await Task.Run(() => _importService.ImportAllocationPlanningAsync(filePath));
                 }
                 else
                 {

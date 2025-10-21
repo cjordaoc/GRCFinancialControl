@@ -82,8 +82,8 @@ namespace GRCFinancialControl.Persistence.Services
                 return;
             }
 
-            await context.EngagementFiscalYearAllocations
-                .Where(a => a.FiscalYearId == fiscalYearId)
+            await context.EngagementRankBudgets
+                .Where(b => b.FiscalYearId == fiscalYearId)
                 .ExecuteDeleteAsync();
 
             await context.ActualsEntries

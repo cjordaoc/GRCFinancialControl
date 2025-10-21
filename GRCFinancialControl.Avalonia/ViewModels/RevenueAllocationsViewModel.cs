@@ -14,8 +14,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
         }
 
-        protected override AllocationKind Kind => AllocationKind.Revenue;
-
         public override string Header => "Revenue Allocation";
     }
 }
