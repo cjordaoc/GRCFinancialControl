@@ -44,8 +44,6 @@ public sealed class StaffAllocationWorksheetParser
 
         var employeeLookup = BuildEmployeeLookup(employees);
         var schema = _schemaAnalyzer.Analyze(worksheet);
-        var minimumWeekStart = NormalizeWeekStart(uploadTimestamp);
-
         var estimatedRowCount = Math.Max(0, worksheet.RowCount - (schema.HeaderRowIndex + 1));
         var estimatedAllocationCount = Math.Max(1, schema.WeekColumns.Count) * Math.Max(1, estimatedRowCount);
         var records = new List<StaffAllocationTemporaryRecord>(estimatedAllocationCount);
@@ -77,11 +75,6 @@ public sealed class StaffAllocationWorksheetParser
             foreach (var weekColumn in schema.WeekColumns)
             {
                 var normalizedWeekStart = NormalizeWeekStart(weekColumn.WeekStartMon);
-
-                if (normalizedWeekStart < minimumWeekStart)
-                {
-                    continue;
-                }
 
                 var cellValue = worksheet.GetValue(rowIndex, weekColumn.ColumnIndex);
                 foreach (var engagementCode in ExtractEngagementCodes(cellValue))

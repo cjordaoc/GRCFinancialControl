@@ -11,7 +11,7 @@
     <UserControl.Resources>
         <converters:TrafficLightStatusToBrushConverter x:Key="TrafficLightStatusToBrushConverter" />
     </UserControl.Resources>
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*"
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*"
           Margin="{StaticResource SpaceThickness0}">
         <TextBlock Grid.Row="0"
                    Text="{Binding Header}"
@@ -28,12 +28,21 @@
                       SelectedItem="{Binding SelectedEngagement}"/>
             <Button Content="Refresh"
                     Command="{Binding RefreshCommand}"/>
-            <Button Content="Update Allocations"
-                    Command="{Binding UpdateAllocationsCommand}"
-                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}"/>
         </StackPanel>
 
         <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    Spacing="{StaticResource Space12}"
+                    Margin="{StaticResource SpaceThickness10}">
+            <ComboBox Width="280"
+                      ItemsSource="{Binding AvailableRanks}"
+                      SelectedItem="{Binding RankToAdd}"
+                      DisplayMemberBinding="{Binding DisplayName}"/>
+            <Button Content="Add Resource"
+                    Command="{Binding AddResourceCommand}"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="3"
                     Orientation="Horizontal"
                     Spacing="{StaticResource Space24}"
                     Margin="{StaticResource SpaceThickness10}">
@@ -42,14 +51,14 @@
             <TextBlock Text="{Binding ToBeConsumedHours, StringFormat='Remaining Hours: {0:N2} h'}"/>
         </StackPanel>
 
-        <TextBlock Grid.Row="3"
+        <TextBlock Grid.Row="4"
                    Text="{Binding StatusMessage}"
                    Foreground="{StaticResource BrushWarning}"
                    FontWeight="SemiBold"
                    Margin="{StaticResource SpaceThickness10}"/>
 
         <DataGrid x:Name="HoursAllocationsGrid"
-                  Grid.Row="4"
+                  Grid.Row="5"
                   ItemsSource="{Binding Rows}"
                   SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
                   AutoGenerateColumns="False"
