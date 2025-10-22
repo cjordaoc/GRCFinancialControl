@@ -5,6 +5,7 @@ using App.Presentation.Services;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Avalonia.ViewModels;
+using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using GRCFinancialControl.Persistence.Services.Importers.StaffAllocations;
@@ -28,8 +29,11 @@ public sealed class HoursAllocationsViewModelTests
         var hoursMock = new Mock<IHoursAllocationService>();
         hoursMock.Setup(service => service.GetAllocationAsync(It.IsAny<int>()))
             .ReturnsAsync(() => currentSnapshot);
-        hoursMock.Setup(service => service.SaveAsync(It.IsAny<int>(), It.IsAny<IEnumerable<HoursAllocationCellUpdate>>()))
-            .ReturnsAsync((int _, IEnumerable<HoursAllocationCellUpdate> _) => currentSnapshot);
+        hoursMock.Setup(service => service.SaveAsync(
+                It.IsAny<int>(),
+                It.IsAny<IEnumerable<HoursAllocationCellUpdate>>(),
+                It.IsAny<IEnumerable<HoursAllocationRowAdjustment>>()))
+            .ReturnsAsync((int _, IEnumerable<HoursAllocationCellUpdate> _, IEnumerable<HoursAllocationRowAdjustment> __) => currentSnapshot);
         hoursMock.Setup(service => service.AddRankAsync(It.IsAny<int>(), It.IsAny<string>()))
             .ReturnsAsync(() => currentSnapshot);
         hoursMock.Setup(service => service.DeleteRankAsync(It.IsAny<int>(), It.IsAny<string>()))
@@ -47,13 +51,15 @@ public sealed class HoursAllocationsViewModelTests
             .ReturnsAsync((string?)null);
 
         var loggingMock = new Mock<ILoggingService>();
+        var dialogMock = new Mock<IDialogService>();
 
         var viewModel = CreateViewModel(
             engagementMock.Object,
             hoursMock.Object,
             importMock.Object,
             filePickerMock.Object,
-            loggingMock.Object);
+            loggingMock.Object,
+            dialogMock.Object);
 
         await viewModel.LoadDataAsync();
 
@@ -89,8 +95,11 @@ public sealed class HoursAllocationsViewModelTests
         var hoursMock = new Mock<IHoursAllocationService>();
         hoursMock.Setup(service => service.GetAllocationAsync(It.IsAny<int>()))
             .ReturnsAsync(() => currentSnapshot);
-        hoursMock.Setup(service => service.SaveAsync(It.IsAny<int>(), It.IsAny<IEnumerable<HoursAllocationCellUpdate>>()))
-            .ReturnsAsync((int _, IEnumerable<HoursAllocationCellUpdate> updates) =>
+        hoursMock.Setup(service => service.SaveAsync(
+                It.IsAny<int>(),
+                It.IsAny<IEnumerable<HoursAllocationCellUpdate>>(),
+                It.IsAny<IEnumerable<HoursAllocationRowAdjustment>>()))
+            .ReturnsAsync((int _, IEnumerable<HoursAllocationCellUpdate> updates, IEnumerable<HoursAllocationRowAdjustment> __) =>
             {
                 lastUpdates.Clear();
                 lastUpdates.AddRange(updates);
@@ -114,13 +123,15 @@ public sealed class HoursAllocationsViewModelTests
             .ReturnsAsync((string?)null);
 
         var loggingMock = new Mock<ILoggingService>();
+        var dialogMock = new Mock<IDialogService>();
 
         var viewModel = CreateViewModel(
             engagementMock.Object,
             hoursMock.Object,
             importMock.Object,
             filePickerMock.Object,
-            loggingMock.Object);
+            loggingMock.Object,
+            dialogMock.Object);
 
         await viewModel.LoadDataAsync();
 
@@ -150,8 +161,11 @@ public sealed class HoursAllocationsViewModelTests
         var hoursMock = new Mock<IHoursAllocationService>();
         hoursMock.Setup(service => service.GetAllocationAsync(It.IsAny<int>()))
             .ReturnsAsync(() => currentSnapshot);
-        hoursMock.Setup(service => service.SaveAsync(It.IsAny<int>(), It.IsAny<IEnumerable<HoursAllocationCellUpdate>>()))
-            .ReturnsAsync((int _, IEnumerable<HoursAllocationCellUpdate> _) => currentSnapshot);
+        hoursMock.Setup(service => service.SaveAsync(
+                It.IsAny<int>(),
+                It.IsAny<IEnumerable<HoursAllocationCellUpdate>>(),
+                It.IsAny<IEnumerable<HoursAllocationRowAdjustment>>()))
+            .ReturnsAsync((int _, IEnumerable<HoursAllocationCellUpdate> _, IEnumerable<HoursAllocationRowAdjustment> __) => currentSnapshot);
         hoursMock.Setup(service => service.AddRankAsync(It.IsAny<int>(), It.IsAny<string>()))
             .ReturnsAsync(() => currentSnapshot);
         hoursMock.Setup(service => service.DeleteRankAsync(It.IsAny<int>(), It.IsAny<string>()))
@@ -169,13 +183,15 @@ public sealed class HoursAllocationsViewModelTests
             .ReturnsAsync((string?)null);
 
         var loggingMock = new Mock<ILoggingService>();
+        var dialogMock = new Mock<IDialogService>();
 
         var viewModel = CreateViewModel(
             engagementMock.Object,
             hoursMock.Object,
             importMock.Object,
             filePickerMock.Object,
-            loggingMock.Object);
+            loggingMock.Object,
+            dialogMock.Object);
 
         await viewModel.LoadDataAsync();
 
@@ -201,8 +217,11 @@ public sealed class HoursAllocationsViewModelTests
         var hoursMock = new Mock<IHoursAllocationService>();
         hoursMock.Setup(service => service.GetAllocationAsync(It.IsAny<int>()))
             .ReturnsAsync(() => currentSnapshot);
-        hoursMock.Setup(service => service.SaveAsync(It.IsAny<int>(), It.IsAny<IEnumerable<HoursAllocationCellUpdate>>()))
-            .ReturnsAsync((int _, IEnumerable<HoursAllocationCellUpdate> _) => currentSnapshot);
+        hoursMock.Setup(service => service.SaveAsync(
+                It.IsAny<int>(),
+                It.IsAny<IEnumerable<HoursAllocationCellUpdate>>(),
+                It.IsAny<IEnumerable<HoursAllocationRowAdjustment>>()))
+            .ReturnsAsync((int _, IEnumerable<HoursAllocationCellUpdate> _, IEnumerable<HoursAllocationRowAdjustment> __) => currentSnapshot);
         hoursMock.Setup(service => service.AddRankAsync(It.IsAny<int>(), It.IsAny<string>()))
             .ReturnsAsync((int _, string _) =>
             {
@@ -224,13 +243,15 @@ public sealed class HoursAllocationsViewModelTests
             .ReturnsAsync((string?)null);
 
         var loggingMock = new Mock<ILoggingService>();
+        var dialogMock = new Mock<IDialogService>();
 
         var viewModel = CreateViewModel(
             engagementMock.Object,
             hoursMock.Object,
             importMock.Object,
             filePickerMock.Object,
-            loggingMock.Object);
+            loggingMock.Object,
+            dialogMock.Object);
         viewModel.NewRankName = "Senior";
 
         await viewModel.LoadDataAsync();
@@ -255,8 +276,11 @@ public sealed class HoursAllocationsViewModelTests
         var hoursMock = new Mock<IHoursAllocationService>();
         hoursMock.Setup(service => service.GetAllocationAsync(It.IsAny<int>()))
             .ReturnsAsync(() => currentSnapshot);
-        hoursMock.Setup(service => service.SaveAsync(It.IsAny<int>(), It.IsAny<IEnumerable<HoursAllocationCellUpdate>>()))
-            .ReturnsAsync((int _, IEnumerable<HoursAllocationCellUpdate> _) => currentSnapshot);
+        hoursMock.Setup(service => service.SaveAsync(
+                It.IsAny<int>(),
+                It.IsAny<IEnumerable<HoursAllocationCellUpdate>>(),
+                It.IsAny<IEnumerable<HoursAllocationRowAdjustment>>()))
+            .ReturnsAsync((int _, IEnumerable<HoursAllocationCellUpdate> _, IEnumerable<HoursAllocationRowAdjustment> __) => currentSnapshot);
         hoursMock.Setup(service => service.AddRankAsync(It.IsAny<int>(), It.IsAny<string>()))
             .ReturnsAsync(() => currentSnapshot);
         hoursMock.Setup(service => service.DeleteRankAsync(It.IsAny<int>(), It.IsAny<string>()))
@@ -280,13 +304,15 @@ public sealed class HoursAllocationsViewModelTests
             .ReturnsAsync("alloc.xlsx");
 
         var loggingMock = new Mock<ILoggingService>();
+        var dialogMock = new Mock<IDialogService>();
 
         var viewModel = CreateViewModel(
             engagementMock.Object,
             hoursMock.Object,
             importMock.Object,
             filePickerMock.Object,
-            loggingMock.Object);
+            loggingMock.Object,
+            dialogMock.Object);
 
         await viewModel.LoadDataAsync();
         await viewModel.UpdateAllocationsCommand.ExecuteAsync(null);
@@ -300,7 +326,8 @@ public sealed class HoursAllocationsViewModelTests
         IHoursAllocationService hoursAllocationService,
         IImportService importService,
         IFilePickerService filePickerService,
-        ILoggingService loggingService)
+        ILoggingService loggingService,
+        IDialogService dialogService)
     {
         return new HoursAllocationsViewModel(
             engagementService,
@@ -308,6 +335,7 @@ public sealed class HoursAllocationsViewModelTests
             importService,
             filePickerService,
             loggingService,
+            dialogService,
             new StrongReferenceMessenger());
     }
 
@@ -334,7 +362,7 @@ public sealed class HoursAllocationsViewModelTests
 
         var rows = new List<HoursAllocationRowSnapshot>
         {
-            new("Manager", new List<HoursAllocationCellSnapshot>
+            new("Manager", 0m, 0m, TrafficLightStatus.Green, new List<HoursAllocationCellSnapshot>
             {
                 new(1, 1, 40m, consumed, 40m - consumed, false),
                 new(2, 2, 30m, 15m, 15m, true)
@@ -343,7 +371,7 @@ public sealed class HoursAllocationsViewModelTests
 
         if (additionalRank)
         {
-            rows.Add(new HoursAllocationRowSnapshot("Senior", new List<HoursAllocationCellSnapshot>
+            rows.Add(new HoursAllocationRowSnapshot("Senior", 0m, 0m, TrafficLightStatus.Green, new List<HoursAllocationCellSnapshot>
             {
                 new(null, 1, 0m, 0m, 0m, false)
             }));
@@ -357,6 +385,7 @@ public sealed class HoursAllocationsViewModelTests
             50m,
             30m,
             fiscalYears,
+            new List<RankOption> { new("Manager", "Manager"), new("Senior", "Senior") },
             rows);
     }
 }

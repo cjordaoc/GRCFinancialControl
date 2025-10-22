@@ -9,5 +9,6 @@ namespace GRCFinancialControl.Core.Models
         public string NormalizedRank { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
         public DateTime? LastSeenAt { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }

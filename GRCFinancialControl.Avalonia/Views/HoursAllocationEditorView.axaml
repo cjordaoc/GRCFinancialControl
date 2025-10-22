@@ -1,0 +1,134 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+             x:Class="GRCFinancialControl.Avalonia.Views.HoursAllocationEditorView"
+             x:Name="HoursAllocationEditorRoot"
+             x:DataType="vm:HoursAllocationEditorViewModel">
+    <UserControl.Resources>
+        <converters:TrafficLightStatusToBrushConverter x:Key="TrafficLightStatusToBrushConverter" />
+    </UserControl.Resources>
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" ColumnDefinitions="*"
+          Margin="{StaticResource SpaceThickness10}">
+        <TextBlock Grid.Row="0"
+                   Text="{Binding Header}"
+                   FontSize="{StaticResource FontSizeXL}"
+                   FontWeight="Bold"/>
+
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    Spacing="{StaticResource Space24}">
+            <TextBlock Text="{Binding TotalBudgetHours, StringFormat='Budget Hours: {0:N2} h'}"/>
+            <TextBlock Text="{Binding ActualHours, StringFormat='Actual Hours: {0:N2} h'}"/>
+            <TextBlock Text="{Binding RemainingHours, StringFormat='Remaining Hours: {0:N2} h'}"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    Spacing="{StaticResource Space12}">
+            <ComboBox Width="220"
+                      ItemsSource="{Binding RankOptions}"
+                      SelectedItem="{Binding RankToAdd}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding DisplayName}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button Content="Add Resource"
+                    Command="{Binding AddResourceCommand}"/>
+            <TextBlock Text="{Binding StatusMessage}"
+                       Foreground="{StaticResource BrushWarning}"/>
+        </StackPanel>
+
+        <DataGrid Grid.Row="3"
+                  ItemsSource="{Binding Rows}"
+                  SelectedItem="{Binding SelectedRow}"
+                  AutoGenerateColumns="False"
+                  CanUserSortColumns="False"
+                  Margin="{StaticResource SpaceThickness10}">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="" Width="Auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding TrafficLightSymbol}"
+                                       FontSize="{StaticResource FontSizeL}"
+                                       HorizontalAlignment="Center"
+                                       Foreground="{Binding Status, Converter={StaticResource TrafficLightStatusToBrushConverter}}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Rank" Width="2*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ComboBox ItemsSource="{Binding DataContext.RankOptions, ElementName=HoursAllocationEditorRoot}"
+                                      SelectedItem="{Binding DisplayRank}"
+                                      IsEnabled="False">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding DisplayName}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Budget Hours"
+                                    Binding="{Binding TotalBudgetHours, StringFormat='{}{0:N2}'}"
+                                    IsReadOnly="True"
+                                    Width="*"/>
+                <DataGridTemplateColumn Header="Fiscal Years" Width="3*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ItemsControl ItemsSource="{Binding Cells}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space12}"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Spacing="{StaticResource Space6}">
+                                            <TextBlock Text="{Binding FiscalYearName}" FontWeight="SemiBold"/>
+                                            <TextBox Text="{Binding ConsumedHours, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                     IsEnabled="{Binding IsEditable}"
+                                                     HorizontalContentAlignment="Right"
+                                                     Width="100"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Additional Hours" Tag="StaticAdditional" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding AdditionalHours, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     HorizontalContentAlignment="Right"
+                                     MinWidth="80"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Remaining Hours"
+                                    Binding="{Binding TotalRemainingHours, StringFormat='{}{0:N2}'}"
+                                    IsReadOnly="True"
+                                    Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel Grid.Row="4"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="{StaticResource Space12}">
+            <Button Content="Save"
+                    Command="{Binding SaveCommand}"
+                    IsEnabled="{Binding HasChanges}"/>
+            <Button Content="Cancel"
+                    Command="{Binding CloseCommand}"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

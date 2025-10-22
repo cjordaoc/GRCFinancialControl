@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -46,6 +47,16 @@ namespace GRCFinancialControl.Persistence.Services
 
             var rows = BuildRows(fiscalYears, engagement.RankBudgets);
 
+            var rankOptions = await context.RankMappings
+                .AsNoTracking()
+                .Where(mapping => mapping.IsActive)
+                .OrderBy(mapping => mapping.NormalizedRank ?? mapping.RawRank)
+                .Select(mapping => new RankOption(
+                    mapping.NormalizedRank ?? mapping.RawRank,
+                    mapping.NormalizedRank ?? mapping.RawRank))
+                .ToListAsync()
+                .ConfigureAwait(false);
+
             var consumedInOpenYears = engagement.RankBudgets
                 .Where(budget => !(budget.FiscalYear?.IsLocked ?? false))
                 .Sum(budget => budget.ConsumedHours);
@@ -61,35 +72,44 @@ namespace GRCFinancialControl.Persistence.Services
                 actualHours,
                 toBeConsumed,
                 fiscalYearInfos,
+                rankOptions,
                 rows);
         }
 
-        public async Task<HoursAllocationSnapshot> SaveAsync(int engagementId, IEnumerable<HoursAllocationCellUpdate> updates)
+        public async Task<HoursAllocationSnapshot> SaveAsync(
+            int engagementId,
+            IEnumerable<HoursAllocationCellUpdate> updates,
+            IEnumerable<HoursAllocationRowAdjustment> rowAdjustments)
         {
             if (updates is null)
             {
                 throw new ArgumentNullException(nameof(updates));
             }
 
+            if (rowAdjustments is null)
+            {
+                throw new ArgumentNullException(nameof(rowAdjustments));
+            }
+
             var updateList = updates.ToList();
-            if (updateList.Count == 0)
+            var adjustmentList = rowAdjustments.ToList();
+
+            if (updateList.Count == 0 && adjustmentList.Count == 0)
             {
                 return await GetAllocationAsync(engagementId).ConfigureAwait(false);
             }
 
             await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
-            var updateIds = updateList.Select(update => update.BudgetId).ToList();
-
             var budgets = await context.EngagementRankBudgets
                 .Include(b => b.FiscalYear)
-                .Where(b => b.EngagementId == engagementId && updateIds.Contains(b.Id))
+                .Where(b => b.EngagementId == engagementId)
                 .ToListAsync()
                 .ConfigureAwait(false);
 
-            if (budgets.Count != updateList.Count)
+            if (budgets.Count == 0)
             {
-                throw new InvalidOperationException("One or more allocation entries could not be found for update.");
+                throw new InvalidOperationException($"Engagement {engagementId} has no allocation budgets to update.");
             }
 
             var budgetsById = budgets.ToDictionary(b => b.Id);
@@ -107,6 +127,58 @@ namespace GRCFinancialControl.Persistence.Services
                 }
 
                 budget.ConsumedHours = Math.Round(update.ConsumedHours, 2, MidpointRounding.AwayFromZero);
+            }
+
+            var adjustmentLookup = adjustmentList
+                .GroupBy(adj => NormalizeRank(adj.RankName), StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(group => group.Key, group => Math.Round(group.Last().AdditionalHours, 2, MidpointRounding.AwayFromZero), StringComparer.OrdinalIgnoreCase);
+
+            foreach (var group in budgets
+                .GroupBy(b => NormalizeRank(b.RankName), StringComparer.OrdinalIgnoreCase))
+            {
+                var orderedBudgets = group
+                    .OrderBy(b => b.FiscalYear?.StartDate ?? DateTime.MaxValue)
+                    .ThenBy(b => b.FiscalYearId)
+                    .ToList();
+
+                var summaryBudget = orderedBudgets.First();
+
+                if (adjustmentLookup.TryGetValue(group.Key, out var additionalHours))
+                {
+                    summaryBudget.AdditionalHours = additionalHours;
+                }
+
+                foreach (var budget in orderedBudgets)
+                {
+                    var cellRemaining = Math.Round(budget.BudgetHours - budget.ConsumedHours, 2, MidpointRounding.AwayFromZero);
+                    budget.RemainingHours = cellRemaining;
+
+                    if (!ReferenceEquals(budget, summaryBudget))
+                    {
+                        budget.AdditionalHours = 0m;
+                    }
+                }
+
+                var totalBudget = orderedBudgets.Sum(b => b.BudgetHours);
+                var forecastHours = orderedBudgets.Sum(b => b.ConsumedHours);
+                var remaining = Math.Round(totalBudget + summaryBudget.AdditionalHours - (summaryBudget.IncurredHours + forecastHours), 2, MidpointRounding.AwayFromZero);
+                var status = DetermineStatus(remaining);
+                var statusText = status switch
+                {
+                    TrafficLightStatus.Green => nameof(TrafficLightStatus.Green),
+                    TrafficLightStatus.Yellow => nameof(TrafficLightStatus.Yellow),
+                    TrafficLightStatus.Red => nameof(TrafficLightStatus.Red),
+                    _ => nameof(TrafficLightStatus.Green)
+                };
+
+                summaryBudget.RemainingHours = remaining;
+                summaryBudget.Status = statusText;
+
+                foreach (var budget in orderedBudgets.Where(b => !ReferenceEquals(b, summaryBudget)))
+                {
+                    budget.Status = statusText;
+                    budget.IncurredHours = 0m;
+                }
             }
 
             await context.SaveChangesAsync().ConfigureAwait(false);
@@ -155,7 +227,11 @@ namespace GRCFinancialControl.Persistence.Services
                     FiscalYearId = fiscalYearId,
                     RankName = normalizedRank,
                     BudgetHours = 0m,
-                    ConsumedHours = 0m
+                    ConsumedHours = 0m,
+                    AdditionalHours = 0m,
+                    IncurredHours = 0m,
+                    RemainingHours = 0m,
+                    Status = nameof(TrafficLightStatus.Green)
                 });
             }
 
@@ -214,10 +290,19 @@ namespace GRCFinancialControl.Persistence.Services
 
             foreach (var group in groupedBudgets)
             {
+                var orderedBudgets = group
+                    .OrderBy(b => b.FiscalYear?.StartDate ?? DateTime.MaxValue)
+                    .ThenBy(b => b.FiscalYearId)
+                    .ToList();
+
+                var summaryBudget = orderedBudgets.FirstOrDefault();
+                var additionalHours = summaryBudget?.AdditionalHours ?? 0m;
+                var incurredHours = summaryBudget?.IncurredHours ?? 0m;
+
                 var cells = new List<HoursAllocationCellSnapshot>(fiscalYears.Count);
                 foreach (var fiscalYear in fiscalYears)
                 {
-                    var match = group.FirstOrDefault(b => b.FiscalYearId == fiscalYear.Id);
+                    var match = orderedBudgets.FirstOrDefault(b => b.FiscalYearId == fiscalYear.Id);
                     if (match is null)
                     {
                         cells.Add(new HoursAllocationCellSnapshot(
@@ -242,10 +327,30 @@ namespace GRCFinancialControl.Persistence.Services
                     }
                 }
 
-                rows.Add(new HoursAllocationRowSnapshot(group.Key, cells));
+                var totalBudget = orderedBudgets.Sum(b => b.BudgetHours);
+                var forecastHours = orderedBudgets.Sum(b => b.ConsumedHours);
+                var remaining = Math.Round(totalBudget + additionalHours - (incurredHours + forecastHours), 2, MidpointRounding.AwayFromZero);
+                var status = DetermineStatus(remaining);
+
+                rows.Add(new HoursAllocationRowSnapshot(group.Key, additionalHours, incurredHours, status, cells));
             }
 
             return rows;
+        }
+
+        private static TrafficLightStatus DetermineStatus(decimal remainingHours)
+        {
+            if (remainingHours < 0m)
+            {
+                return TrafficLightStatus.Red;
+            }
+
+            if (remainingHours > 0m)
+            {
+                return TrafficLightStatus.Yellow;
+            }
+
+            return TrafficLightStatus.Green;
         }
 
         private static string NormalizeRank(string value)

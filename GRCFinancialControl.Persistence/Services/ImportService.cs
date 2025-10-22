@@ -971,6 +971,10 @@ namespace GRCFinancialControl.Persistence.Services
                 RankName = rankName,
                 BudgetHours = roundedBudget,
                 ConsumedHours = 0m,
+                AdditionalHours = 0m,
+                IncurredHours = 0m,
+                RemainingHours = roundedBudget,
+                Status = nameof(TrafficLightStatus.Green),
                 CreatedAtUtc = timestamp
             });
 
@@ -1155,6 +1159,7 @@ namespace GRCFinancialControl.Persistence.Services
             var budgetLookup = new Dictionary<string, Dictionary<string, EngagementRankBudget>>(StringComparer.OrdinalIgnoreCase);
             var engagementDisplay = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             var allBudgets = new List<EngagementRankBudget>(budgets.Count);
+            var touchedEngagements = new Dictionary<int, Engagement>();
 
             foreach (var budget in budgets)
             {
@@ -1170,6 +1175,11 @@ namespace GRCFinancialControl.Persistence.Services
                 }
 
                 engagementDisplay[engagementKey] = budget.Engagement.EngagementId;
+
+                if (!touchedEngagements.ContainsKey(budget.Engagement.Id))
+                {
+                    touchedEngagements[budget.Engagement.Id] = budget.Engagement;
+                }
 
                 if (!budgetLookup.TryGetValue(engagementKey, out var ranks))
                 {
@@ -1196,6 +1206,16 @@ namespace GRCFinancialControl.Persistence.Services
                 {
                     budget.ConsumedHours = 0m;
                     budget.UpdatedAtUtc = resetTimestampUtc;
+                }
+
+                if (touchedEngagements.Count > 0)
+                {
+                    await RecalculateAllocationSummariesAsync(
+                            context,
+                            touchedEngagements.Values,
+                            new Dictionary<(int EngagementId, string RankKey), decimal>(),
+                            resetTimestampUtc)
+                        .ConfigureAwait(false);
                 }
 
                 if (allBudgets.Count > 0)
@@ -1232,6 +1252,7 @@ namespace GRCFinancialControl.Persistence.Services
             var distinctEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var distinctRanks = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var totals = new Dictionary<EngagementRankBudget, decimal>();
+            var incurredAdditions = new Dictionary<(int EngagementId, string RankKey), decimal>();
             decimal totalHours = 0m;
 
             foreach (var record in relevantRecords)
@@ -1309,8 +1330,6 @@ namespace GRCFinancialControl.Persistence.Services
                     continue;
                 }
 
-                totalHours += record.Hours;
-
                 if (engagementDisplay.TryGetValue(engagementKey, out var engagementCode))
                 {
                     distinctEngagements.Add(engagementCode);
@@ -1322,13 +1341,27 @@ namespace GRCFinancialControl.Persistence.Services
 
                 distinctRanks.Add(normalizedRank);
 
-                if (totals.TryGetValue(budget, out var currentHours))
+                var additionKey = (budget.EngagementId, rankKey);
+                var roundedHours = Math.Round(record.Hours, 2, MidpointRounding.AwayFromZero);
+
+                totalHours += roundedHours;
+
+                if (incurredAdditions.TryGetValue(additionKey, out var existingIncurred))
                 {
-                    totals[budget] = currentHours + record.Hours;
+                    incurredAdditions[additionKey] = existingIncurred + roundedHours;
                 }
                 else
                 {
-                    totals[budget] = record.Hours;
+                    incurredAdditions[additionKey] = roundedHours;
+                }
+
+                if (totals.TryGetValue(budget, out var currentHours))
+                {
+                    totals[budget] = currentHours + roundedHours;
+                }
+                else
+                {
+                    totals[budget] = roundedHours;
                 }
             }
 
@@ -1353,6 +1386,16 @@ namespace GRCFinancialControl.Persistence.Services
                 budget.UpdatedAtUtc = timestampUtc;
             }
 
+            if (touchedEngagements.Count > 0)
+            {
+                await RecalculateAllocationSummariesAsync(
+                        context,
+                        touchedEngagements.Values,
+                        incurredAdditions,
+                        timestampUtc)
+                    .ConfigureAwait(false);
+            }
+
             if (exceptionEntries.Count > 0)
             {
                 await context.Exceptions.AddRangeAsync(exceptionEntries).ConfigureAwait(false);
@@ -1370,6 +1413,12 @@ namespace GRCFinancialControl.Persistence.Services
                 $"Ranks updated: {distinctRanks.Count}",
                 $"Total hours applied: {totalHours:F2}"
             };
+
+            var totalIncurred = incurredAdditions.Values.Sum();
+            if (totalIncurred > 0m)
+            {
+                notes.Add($"Incurred hours applied: {totalIncurred:F2}");
+            }
 
             if (exceptionEntries.Count > 0)
             {
@@ -1401,6 +1450,119 @@ namespace GRCFinancialControl.Persistence.Services
             _logger.LogInformation(summary);
 
             return summary;
+        }
+
+        private static async Task RecalculateAllocationSummariesAsync(
+            ApplicationDbContext context,
+            IEnumerable<Engagement> engagements,
+            IReadOnlyDictionary<(int EngagementId, string RankKey), decimal> incurredAdditions,
+            DateTime timestampUtc)
+        {
+            ArgumentNullException.ThrowIfNull(context);
+            ArgumentNullException.ThrowIfNull(engagements);
+            ArgumentNullException.ThrowIfNull(incurredAdditions);
+
+            var uniqueEngagements = engagements
+                .Where(e => e is not null)
+                .GroupBy(e => e!.Id)
+                .Select(group => group.First()!)
+                .ToList();
+
+            if (uniqueEngagements.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var engagement in uniqueEngagements)
+            {
+                await context.Entry(engagement)
+                    .Collection(e => e.RankBudgets)
+                    .Query()
+                    .Include(b => b.FiscalYear)
+                    .LoadAsync()
+                    .ConfigureAwait(false);
+
+                var groupedBudgets = engagement.RankBudgets
+                    .GroupBy(b => NormalizeRankKey(b.RankName), StringComparer.OrdinalIgnoreCase);
+
+                foreach (var group in groupedBudgets)
+                {
+                    var orderedBudgets = group
+                        .OrderBy(b => b.FiscalYear?.StartDate ?? DateTime.MaxValue)
+                        .ThenBy(b => b.FiscalYearId)
+                        .ToList();
+
+                    if (orderedBudgets.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    var summaryBudget = orderedBudgets[0];
+                    var rankKey = NormalizeRankKey(summaryBudget.RankName);
+
+                    if (!string.IsNullOrEmpty(rankKey) &&
+                        incurredAdditions.TryGetValue((engagement.Id, rankKey), out var incurredIncrease) &&
+                        incurredIncrease != 0m)
+                    {
+                        summaryBudget.IncurredHours = Math.Round(
+                            summaryBudget.IncurredHours + incurredIncrease,
+                            2,
+                            MidpointRounding.AwayFromZero);
+                    }
+
+                    var totalBudget = orderedBudgets.Sum(b => b.BudgetHours);
+                    var forecastHours = orderedBudgets.Sum(b => b.ConsumedHours);
+                    var remainingSummary = Math.Round(
+                        totalBudget + summaryBudget.AdditionalHours - (summaryBudget.IncurredHours + forecastHours),
+                        2,
+                        MidpointRounding.AwayFromZero);
+
+                    var statusText = DetermineTrafficLightStatus(remainingSummary);
+
+                    summaryBudget.RemainingHours = remainingSummary;
+                    summaryBudget.Status = statusText;
+                    summaryBudget.UpdatedAtUtc = timestampUtc;
+
+                    foreach (var budget in orderedBudgets)
+                    {
+                        var cellRemaining = Math.Round(
+                            budget.BudgetHours - budget.ConsumedHours,
+                            2,
+                            MidpointRounding.AwayFromZero);
+                        budget.RemainingHours = cellRemaining;
+
+                        if (budget.UpdatedAtUtc is null || budget.UpdatedAtUtc < timestampUtc)
+                        {
+                            budget.UpdatedAtUtc = timestampUtc;
+                        }
+
+                        if (ReferenceEquals(budget, summaryBudget))
+                        {
+                            continue;
+                        }
+
+                        budget.Status = statusText;
+                        budget.IncurredHours = 0m;
+                    }
+                }
+            }
+        }
+
+        private static string DetermineTrafficLightStatus(decimal remainingHours)
+        {
+            var status = remainingHours < 0m
+                ? TrafficLightStatus.Red
+                : remainingHours > 0m
+                    ? TrafficLightStatus.Yellow
+                    : TrafficLightStatus.Green;
+
+            return status switch
+            {
+                TrafficLightStatus.Red => nameof(TrafficLightStatus.Red),
+                TrafficLightStatus.Yellow => nameof(TrafficLightStatus.Yellow),
+                TrafficLightStatus.Green => nameof(TrafficLightStatus.Green),
+                _ => nameof(TrafficLightStatus.Green)
+            };
         }
 
         private static string ExtractDescription(string rawDescription)
@@ -2567,168 +2729,263 @@ namespace GRCFinancialControl.Persistence.Services
 
             using var workbook = LoadWorkbook(filePath);
 
-            var planInfo = workbook.GetWorksheet("PLAN INFO") ??
-                           throw new InvalidDataException("Worksheet 'PLAN INFO' is missing from the budget workbook.");
-            var resourcing = workbook.GetWorksheet("RESOURCING") ??
-                             throw new InvalidDataException("Worksheet 'RESOURCING' is missing from the budget workbook.");
+            var worksheet = workbook.GetWorksheet("Alocações_Staff") ??
+                            workbook.GetWorksheet("Alocacoes_Staff") ??
+                            throw new InvalidDataException("Worksheet 'Alocações_Staff' is missing from the allocation planning workbook.");
 
-            var customerName = NormalizeWhitespace(GetCellString(planInfo, 3, 1));
-            var engagementKey = NormalizeWhitespace(GetCellString(planInfo, 4, 1));
-            var descriptionRaw = NormalizeWhitespace(GetCellString(planInfo, 0, 0));
-
-            if (string.IsNullOrWhiteSpace(engagementKey))
+            var uploadTimestampUtc = File.GetLastWriteTimeUtc(filePath);
+            if (uploadTimestampUtc == DateTime.MinValue)
             {
-                throw new InvalidDataException("PLAN INFO!B5 (Project ID) must contain an engagement identifier.");
+                uploadTimestampUtc = DateTime.UtcNow;
             }
-
-            var engagementDescription = ExtractDescription(descriptionRaw);
-            var generatedAtUtc = ExtractGeneratedTimestampUtc(planInfo);
-
-            var resourcingParseResult = ParseResourcing(resourcing);
-            var aggregatedBudgets = AggregateRankBudgets(resourcingParseResult.RankBudgets);
-            var totalBudgetHours = aggregatedBudgets.Sum(r => r.Hours);
 
             await using var context = await _contextFactory
                 .CreateDbContextAsync()
                 .ConfigureAwait(false);
-            await using var transaction = await context.Database
-                .BeginTransactionAsync()
+
+            var processingResult = await ProcessStaffAllocationsAsync(context, worksheet, uploadTimestampUtc)
                 .ConfigureAwait(false);
 
-            try
+            var summary = processingResult.Summary;
+
+            if (processingResult.MappedRecords.Count == 0)
             {
-                Customer? customer = null;
-                var customerCreated = false;
-                if (!string.IsNullOrWhiteSpace(customerName))
+                var emptyNotes = new List<string>
                 {
-                    var normalizedCustomerName = customerName.Trim();
-                    var normalizedLookup = normalizedCustomerName.ToLowerInvariant();
-                    customer = await context.Customers
-                        .FirstOrDefaultAsync(c => c.Name.ToLower() == normalizedLookup)
-                        .ConfigureAwait(false);
-
-                    if (customer is null)
-                    {
-                        customer = new Customer { Name = normalizedCustomerName };
-                        await context.Customers.AddAsync(customer).ConfigureAwait(false);
-                        customerCreated = true;
-                    }
-                    else
-                    {
-                        customer.Name = normalizedCustomerName;
-                    }
-                }
-
-                var engagement = await context.Engagements
-                    .Include(e => e.RankBudgets)
-                    .FirstOrDefaultAsync(e => e.EngagementId == engagementKey)
-                    .ConfigureAwait(false);
-
-                var engagementCreated = false;
-                if (engagement is null)
-                {
-                    engagement = new Engagement
-                    {
-                        EngagementId = engagementKey,
-                        Description = engagementDescription,
-                        InitialHoursBudget = totalBudgetHours,
-                        EstimatedToCompleteHours = 0m
-                    };
-
-                    await context.Engagements.AddAsync(engagement).ConfigureAwait(false);
-                    engagementCreated = true;
-                }
-                else
-                {
-                    if (engagement.Source == EngagementSource.S4Project)
-                    {
-                        var manualOnlyMessage =
-                            $"Engagement '{engagement.EngagementId}' is sourced from S/4Project and must be managed manually. Allocation planning import skipped.";
-
-                        _logger.LogInformation(
-                            "Skipping allocation planning import for engagement {EngagementId} from file {FilePath} because it is manual-only (source: {Source}).",
-                            engagement.EngagementId,
-                            filePath,
-                            engagement.Source);
-
-                        await transaction.RollbackAsync().ConfigureAwait(false);
-
-                        var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>
-                        {
-                            ["ManualOnly"] = new[] { engagement.EngagementId }
-                        };
-
-                        var skipNotes = new List<string> { manualOnlyMessage };
-
-                        return ImportSummaryFormatter.Build(
-                            "Allocation planning import",
-                            inserted: 0,
-                            updated: 0,
-                            skipReasons,
-                            skipNotes);
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(engagementDescription))
-                    {
-                        engagement.Description = engagementDescription;
-                    }
-
-                    engagement.InitialHoursBudget = totalBudgetHours;
-                }
-
-                if (customer is not null)
-                {
-                    engagement.Customer = customer;
-                    if (customer.Id > 0)
-                    {
-                        engagement.CustomerId = customer.Id;
-                    }
-                }
-
-                await UpsertRankMappingsAsync(context, resourcingParseResult.RankMappings, generatedAtUtc)
-                    .ConfigureAwait(false);
-
-                var fiscalYears = await context.FiscalYears
-                    .OrderBy(fy => fy.StartDate)
-                    .ToListAsync()
-                    .ConfigureAwait(false);
-
-                var insertedBudgets = ApplyBudgetSnapshot(engagement, fiscalYears, aggregatedBudgets, DateTime.UtcNow);
-
-                await context.SaveChangesAsync().ConfigureAwait(false);
-                await transaction.CommitAsync().ConfigureAwait(false);
-
-                var customersInserted = customerCreated ? 1 : 0;
-                var customersUpdated = (!customerCreated && customer is not null) ? 1 : 0;
-                var engagementsInserted = engagementCreated ? 1 : 0;
-                var engagementsUpdated = engagementCreated ? 0 : 1;
-
-                var notes = new List<string>
-                {
-                    $"Customers inserted: {customersInserted}, updated: {customersUpdated}",
-                    $"Engagements inserted: {engagementsInserted}, updated: {engagementsUpdated}",
-                    $"Ranks processed: {aggregatedBudgets.Count}",
-                    $"Budget entries inserted: {insertedBudgets}",
-                    $"Total budget hours: {totalBudgetHours:F2}"
+                    "The worksheet did not contain any staff allocation records.",
+                    $"Distinct engagements detected: {summary.DistinctEngagementCount}",
+                    $"Distinct ranks detected: {summary.DistinctRankCount}"
                 };
-
-                if (resourcingParseResult.Issues.Count > 0)
-                {
-                    notes.Add($"Notes: {string.Join("; ", resourcingParseResult.Issues)}");
-                }
 
                 return ImportSummaryFormatter.Build(
                     "Allocation planning import",
-                    customersInserted + engagementsInserted,
-                    customersUpdated + engagementsUpdated,
-                    null,
-                    notes);
+                    inserted: 0,
+                    updated: 0,
+                    skipReasons: null,
+                    notes: emptyNotes,
+                    processed: summary.ProcessedRowCount);
             }
-            catch
+
+            var nowUtc = DateTime.UtcNow;
+            var activeClosingPeriod = await context.ClosingPeriods
+                .Include(cp => cp.FiscalYear)
+                .FirstOrDefaultAsync(cp => nowUtc >= cp.PeriodStart && nowUtc <= cp.PeriodEnd)
+                .ConfigureAwait(false);
+
+            if (activeClosingPeriod is null)
             {
-                await transaction.RollbackAsync().ConfigureAwait(false);
-                throw;
+                throw new InvalidOperationException("No active closing period is currently open. Adjust the fiscal calendar before importing allocation planning data.");
             }
+
+            if (activeClosingPeriod.FiscalYear is null)
+            {
+                await context.Entry(activeClosingPeriod)
+                    .Reference(cp => cp.FiscalYear)
+                    .LoadAsync()
+                    .ConfigureAwait(false);
+            }
+
+            if (activeClosingPeriod.FiscalYear?.IsLocked ?? false)
+            {
+                var fiscalYearName = string.IsNullOrWhiteSpace(activeClosingPeriod.FiscalYear.Name)
+                    ? $"Id={activeClosingPeriod.FiscalYearId}"
+                    : activeClosingPeriod.FiscalYear.Name;
+
+                throw new InvalidOperationException($"Fiscal year '{fiscalYearName}' is locked. Unlock it before importing allocation planning data.");
+            }
+
+            var activeRecords = processingResult.MappedRecords
+                .Where(record => record.ClosingPeriodId == activeClosingPeriod.Id)
+                .ToList();
+
+            if (activeRecords.Count == 0)
+            {
+                var noActiveNotes = new List<string>
+                {
+                    $"Active closing period: {activeClosingPeriod.Name}",
+                    "No allocation entries matched the active closing period."
+                };
+
+                return ImportSummaryFormatter.Build(
+                    "Allocation planning import",
+                    inserted: 0,
+                    updated: 0,
+                    skipReasons: null,
+                    notes: noActiveNotes,
+                    processed: summary.ProcessedRowCount);
+            }
+
+            var engagementCodes = activeRecords
+                .Select(record => NormalizeEngagementCode(record.EngagementCode))
+                .Where(code => !string.IsNullOrEmpty(code))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            List<Engagement> engagements;
+            if (engagementCodes.Count > 0)
+            {
+                engagements = await context.Engagements
+                    .Where(e => e.EngagementId != null && engagementCodes.Contains(e.EngagementId.ToUpper()))
+                    .ToListAsync()
+                    .ConfigureAwait(false);
+            }
+            else
+            {
+                engagements = new List<Engagement>();
+            }
+
+            var engagementLookup = engagements
+                .ToDictionary(e => NormalizeEngagementCode(e.EngagementId), e => e, StringComparer.OrdinalIgnoreCase);
+
+            var allocationTotals = new Dictionary<(int EngagementId, int ClosingPeriodId), decimal>();
+            var unknownEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var record in activeRecords)
+            {
+                var normalizedCode = NormalizeEngagementCode(record.EngagementCode);
+                if (string.IsNullOrEmpty(normalizedCode))
+                {
+                    unknownEngagements.Add("<empty>");
+                    continue;
+                }
+
+                if (!engagementLookup.TryGetValue(normalizedCode, out var engagement))
+                {
+                    var rawEngagement = NormalizeWhitespace(record.EngagementCode);
+                    unknownEngagements.Add(string.IsNullOrEmpty(rawEngagement) ? "<unknown>" : rawEngagement);
+                    continue;
+                }
+
+                if (record.ClosingPeriodId is null)
+                {
+                    var rawEngagement = NormalizeWhitespace(record.EngagementCode);
+                    unknownEngagements.Add(string.IsNullOrEmpty(rawEngagement) ? "<unknown>" : rawEngagement);
+                    continue;
+                }
+
+                var key = (engagement.Id, record.ClosingPeriodId.Value);
+                var hours = record.Hours;
+
+                if (allocationTotals.TryGetValue(key, out var existing))
+                {
+                    allocationTotals[key] = existing + hours;
+                }
+                else
+                {
+                    allocationTotals[key] = hours;
+                }
+            }
+
+            var targetEngagementIds = allocationTotals.Keys
+                .Select(key => key.EngagementId)
+                .Distinct()
+                .ToList();
+
+            List<PlannedAllocation> existingAllocations;
+            if (targetEngagementIds.Count > 0)
+            {
+                existingAllocations = await context.PlannedAllocations
+                    .Where(pa => pa.ClosingPeriodId == activeClosingPeriod.Id && targetEngagementIds.Contains(pa.EngagementId))
+                    .ToListAsync()
+                    .ConfigureAwait(false);
+            }
+            else
+            {
+                existingAllocations = new List<PlannedAllocation>();
+            }
+
+            var existingLookup = existingAllocations
+                .ToDictionary(pa => (pa.EngagementId, pa.ClosingPeriodId));
+
+            var inserted = 0;
+            var updated = 0;
+            var removed = 0;
+
+            foreach (var ((engagementId, closingPeriodId), totalHours) in allocationTotals)
+            {
+                var roundedHours = Math.Round(totalHours, 2, MidpointRounding.AwayFromZero);
+
+                if (existingLookup.TryGetValue((engagementId, closingPeriodId), out var allocation))
+                {
+                    if (Math.Round(allocation.AllocatedHours, 2, MidpointRounding.AwayFromZero) != roundedHours)
+                    {
+                        allocation.AllocatedHours = roundedHours;
+                        updated++;
+                    }
+                }
+                else
+                {
+                    await context.PlannedAllocations.AddAsync(new PlannedAllocation
+                    {
+                        EngagementId = engagementId,
+                        ClosingPeriodId = closingPeriodId,
+                        AllocatedHours = roundedHours
+                    }).ConfigureAwait(false);
+                    inserted++;
+                }
+            }
+
+            var allocationKeys = allocationTotals.Keys.ToHashSet();
+            foreach (var allocation in existingAllocations)
+            {
+                if (!allocationKeys.Contains((allocation.EngagementId, allocation.ClosingPeriodId)))
+                {
+                    context.PlannedAllocations.Remove(allocation);
+                    removed++;
+                }
+            }
+
+            await context.SaveChangesAsync().ConfigureAwait(false);
+
+            var notes = new List<string>
+            {
+                $"Active closing period: {activeClosingPeriod.Name}",
+                $"Records mapped to active closing period: {activeRecords.Count}",
+                $"Distinct engagements in active period: {allocationTotals.Keys.Select(key => key.EngagementId).Distinct().Count()}"
+            };
+
+            if (removed > 0)
+            {
+                notes.Add($"Allocations removed: {removed}");
+            }
+
+            if (processingResult.ParseResult.UnknownAffiliations.Count > 0)
+            {
+                notes.Add($"Unknown employee affiliations: {processingResult.ParseResult.UnknownAffiliations.Count}");
+            }
+
+            if (processingResult.ParseResult.SkippedInactiveEmployees.Count > 0)
+            {
+                notes.Add($"Inactive employees skipped: {processingResult.ParseResult.SkippedInactiveEmployees.Count}");
+            }
+
+            if (summary.DistinctRankCount > 0)
+            {
+                notes.Add($"Distinct ranks detected: {summary.DistinctRankCount}");
+            }
+
+            var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>();
+
+            if (unknownEngagements.Count > 0)
+            {
+                skipReasons["Unknown engagement"] = unknownEngagements.ToList();
+            }
+
+            _logger.LogInformation(
+                "Allocation planning import processed {Rows} rows. Inserted={Inserted}, Updated={Updated}, Removed={Removed}, UnknownEngagements={Unknown}.",
+                summary.ProcessedRowCount,
+                inserted,
+                updated,
+                removed,
+                unknownEngagements.Count);
+
+            return ImportSummaryFormatter.Build(
+                "Allocation planning import",
+                inserted,
+                updated,
+                skipReasons.Count > 0 ? skipReasons : null,
+                notes,
+                processed: summary.ProcessedRowCount);
         }
 
         private static (string FiscalYearName, DateTime? LastUpdateDate) ParseFcsMetadata(IWorksheet worksheet)

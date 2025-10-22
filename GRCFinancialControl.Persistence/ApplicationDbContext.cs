@@ -60,30 +60,50 @@ namespace GRCFinancialControl.Persistence
                 .HasIndex(c => c.CustomerCode)
                 .IsUnique();
 
-            modelBuilder.Entity<RankMapping>()
+            var rankMappingBuilder = modelBuilder.Entity<RankMapping>();
+
+            rankMappingBuilder.ToTable("RankMappings");
+
+            rankMappingBuilder
                 .Property(r => r.RawRank)
-                .HasMaxLength(100);
+                .HasColumnName("RankCode")
+                .HasMaxLength(50);
 
-            modelBuilder.Entity<RankMapping>()
+            rankMappingBuilder
                 .Property(r => r.NormalizedRank)
+                .HasColumnName("RankName")
                 .HasMaxLength(100);
 
-            modelBuilder.Entity<RankMapping>()
+            rankMappingBuilder
                 .Property(r => r.LastSeenAt)
                 .HasMySqlColumnType("datetime(6)", isMySql);
 
-            modelBuilder.Entity<RankMapping>()
+            var rankCreatedAtProperty = rankMappingBuilder
+                .Property(r => r.CreatedAt)
+                .HasMySqlColumnType("datetime(6)", isMySql)
+                .ValueGeneratedOnAdd();
+
+            if (isMySql)
+            {
+                rankCreatedAtProperty.HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
+            }
+            else
+            {
+                rankCreatedAtProperty.HasDefaultValueSql("CURRENT_TIMESTAMP");
+            }
+
+            rankMappingBuilder
                 .Property(r => r.IsActive)
                 .HasDefaultValue(true);
 
-            modelBuilder.Entity<RankMapping>()
+            rankMappingBuilder
                 .HasIndex(r => r.RawRank)
                 .IsUnique();
 
-            modelBuilder.Entity<RankMapping>()
+            rankMappingBuilder
                 .HasIndex(r => r.NormalizedRank);
 
-            modelBuilder.Entity<RankMapping>()
+            rankMappingBuilder
                 .HasIndex(r => r.IsActive);
 
             modelBuilder.Entity<Engagement>()
@@ -387,25 +407,25 @@ namespace GRCFinancialControl.Persistence
                 .HasPrecision(18, 2)
                 .HasDefaultValue(0m);
 
-            var remainingHoursProperty = modelBuilder.Entity<EngagementRankBudget>()
-                .Property(rb => rb.RemainingHours)
+            modelBuilder.Entity<EngagementRankBudget>()
+                .Property(rb => rb.AdditionalHours)
                 .HasPrecision(18, 2)
-                .ValueGeneratedOnAddOrUpdate();
+                .HasDefaultValue(0m);
 
-            if (isMySql)
-            {
-                remainingHoursProperty.HasComputedColumnSql("(`BudgetHours` - `ConsumedHours`)", stored: true);
-            }
-            else
-            {
-                remainingHoursProperty.HasComputedColumnSql("([BudgetHours] - [ConsumedHours])", stored: true);
-            }
-
-            remainingHoursProperty.Metadata.SetAfterSaveBehavior(Microsoft.EntityFrameworkCore.Metadata.PropertySaveBehavior.Ignore);
+            modelBuilder.Entity<EngagementRankBudget>()
+                .Property(rb => rb.IncurredHours)
+                .HasPrecision(18, 2)
+                .HasDefaultValue(0m);
 
             modelBuilder.Entity<EngagementRankBudget>()
                 .Property(rb => rb.RemainingHours)
-                .HasPrecision(18, 2);
+                .HasPrecision(18, 2)
+                .HasDefaultValue(0m);
+
+            modelBuilder.Entity<EngagementRankBudget>()
+                .Property(rb => rb.Status)
+                .HasMaxLength(20)
+                .HasDefaultValue("Green");
 
             modelBuilder.Entity<EngagementRankBudget>()
                 .Property(rb => rb.CreatedAtUtc)

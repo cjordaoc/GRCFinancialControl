@@ -89,17 +89,18 @@ CREATE TABLE `Managers`
     CONSTRAINT `UQ_Managers_WindowsLogin` UNIQUE (`WindowsLogin`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
-CREATE TABLE `RankMapping`
+CREATE TABLE IF NOT EXISTS `RankMappings`
 (
     `Id`              INT             NOT NULL AUTO_INCREMENT,
-    `RawRank`         VARCHAR(100)    NOT NULL,
-    `NormalizedRank`  VARCHAR(100)    NOT NULL,
+    `RankCode`        VARCHAR(50)     NOT NULL,
+    `RankName`        VARCHAR(100)    NULL,
+    `CreatedAt`       DATETIME(6)     NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     `IsActive`        TINYINT(1)      NOT NULL DEFAULT 1,
     `LastSeenAt`      DATETIME(6)     NULL,
-    CONSTRAINT `PK_RankMapping` PRIMARY KEY (`Id`),
-    CONSTRAINT `UX_RankMapping_RawRank` UNIQUE (`RawRank`),
-    INDEX `IX_RankMapping_NormalizedRank` (`NormalizedRank`),
-    INDEX `IX_RankMapping_IsActive` (`IsActive`)
+    CONSTRAINT `PK_RankMappings` PRIMARY KEY (`Id`),
+    CONSTRAINT `UX_RankMappings_RankCode` UNIQUE (`RankCode`),
+    INDEX `IX_RankMappings_RankName` (`RankName`),
+    INDEX `IX_RankMappings_IsActive` (`IsActive`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 
@@ -188,7 +189,10 @@ CREATE TABLE `EngagementRankBudgets`
     `RankName`       VARCHAR(100)   NOT NULL,
     `BudgetHours`    DECIMAL(18, 2) NOT NULL DEFAULT 0,
     `ConsumedHours`  DECIMAL(18, 2) NOT NULL DEFAULT 0,
-    `RemainingHours` DECIMAL(18, 2) GENERATED ALWAYS AS (`BudgetHours` - `ConsumedHours`) STORED,
+    `AdditionalHours` DECIMAL(18, 2) NOT NULL DEFAULT 0,
+    `IncurredHours`  DECIMAL(18, 2) NOT NULL DEFAULT 0,
+    `RemainingHours` DECIMAL(18, 2) NOT NULL DEFAULT 0,
+    `Status`         VARCHAR(20)    NOT NULL DEFAULT 'Green',
     `CreatedAtUtc`   DATETIME(6)    NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     `UpdatedAtUtc`   DATETIME(6)    NULL,
     CONSTRAINT `PK_EngagementRankBudgets` PRIMARY KEY (`Id`),
