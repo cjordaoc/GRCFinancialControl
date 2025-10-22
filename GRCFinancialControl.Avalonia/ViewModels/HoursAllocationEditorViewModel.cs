@@ -40,7 +40,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private HoursAllocationEditorRowViewModel? _selectedRow;
 
         [ObservableProperty]
-        private RankOption? _rankToAdd;
+        private ObservableCollection<HoursAllocationEditorFiscalYearRowViewModel> _fiscalYearRows = new();
 
         [ObservableProperty]
         private decimal _totalBudgetHours;
@@ -82,40 +82,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public string Header => $"{EngagementCode} · {EngagementName}";
 
         public string? InitialRank { get; }
-
-        [RelayCommand]
-        private async Task AddResourceAsync()
-        {
-            if (RankToAdd is null || string.IsNullOrWhiteSpace(RankToAdd.Name))
-            {
-                StatusMessage = "Select a rank before adding.";
-                return;
-            }
-
-            if (IsBusy)
-            {
-                return;
-            }
-
-            try
-            {
-                IsBusy = true;
-                StatusMessage = null;
-                var snapshot = await _hoursAllocationService.AddRankAsync(_engagementId, RankToAdd.Name).ConfigureAwait(false);
-                RankToAdd = null;
-                ApplySnapshot(snapshot);
-                StatusMessage = "Rank added to the allocation.";
-            }
-            catch (Exception ex)
-            {
-                _loggingService.LogError(ex.Message);
-                StatusMessage = ex.Message;
-            }
-            finally
-            {
-                IsBusy = false;
-            }
-        }
 
         [RelayCommand(CanExecute = nameof(CanSave))]
         private async Task SaveAsync()
@@ -178,6 +144,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             RemainingHours = Math.Round(Rows.Sum(row => row.TotalRemainingHours), 2, MidpointRounding.AwayFromZero);
         }
 
+        partial void OnHasChangesChanged(bool value)
+        {
+            SaveCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnIsBusyChanged(bool value)
+        {
+            SaveCommand.NotifyCanExecuteChanged();
+        }
+
         internal RankOption? FindRankOption(string? name)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -204,11 +180,23 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             FiscalYears = new ObservableCollection<FiscalYearAllocationInfo>(snapshot.FiscalYears);
             RankOptions = new ObservableCollection<RankOption>(snapshot.RankOptions);
 
-            var rows = snapshot.Rows
+            var rowViewModels = snapshot.Rows
                 .Select(row => new HoursAllocationEditorRowViewModel(this, row))
                 .ToList();
 
-            Rows = new ObservableCollection<HoursAllocationEditorRowViewModel>(rows);
+            if (!string.IsNullOrWhiteSpace(InitialRank))
+            {
+                var filtered = rowViewModels
+                    .Where(row => string.Equals(row.RankName, InitialRank, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                if (filtered.Count > 0)
+                {
+                    rowViewModels = filtered;
+                }
+            }
+
+            Rows = new ObservableCollection<HoursAllocationEditorRowViewModel>(rowViewModels);
 
             foreach (var row in Rows)
             {
@@ -219,10 +207,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             HasChanges = Rows.Any(row => row.HasChanges);
             StatusMessage = null;
 
-            if (!string.IsNullOrWhiteSpace(InitialRank))
-            {
-                SelectedRow = Rows.FirstOrDefault(row => string.Equals(row.RankName, InitialRank, StringComparison.OrdinalIgnoreCase));
-            }
+            SelectedRow = string.IsNullOrWhiteSpace(InitialRank)
+                ? Rows.FirstOrDefault()
+                : Rows.FirstOrDefault(row => string.Equals(row.RankName, InitialRank, StringComparison.OrdinalIgnoreCase))
+                    ?? Rows.FirstOrDefault();
         }
 
         private void HandleRowChanged(object? sender, PropertyChangedEventArgs e)
@@ -232,6 +220,39 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 NotifyRowChanged();
             }
+        }
+
+        partial void OnSelectedRowChanged(HoursAllocationEditorRowViewModel? value)
+        {
+            UpdateFiscalYearRows();
+        }
+
+        partial void OnFiscalYearRowsChanging(ObservableCollection<HoursAllocationEditorFiscalYearRowViewModel> value)
+        {
+            if (_fiscalYearRows is null)
+            {
+                return;
+            }
+
+            foreach (var row in _fiscalYearRows)
+            {
+                row.Dispose();
+            }
+        }
+
+        private void UpdateFiscalYearRows()
+        {
+            if (SelectedRow is null)
+            {
+                FiscalYearRows = new ObservableCollection<HoursAllocationEditorFiscalYearRowViewModel>();
+                return;
+            }
+
+            var fiscalYearRows = SelectedRow.Cells
+                .Select(cell => new HoursAllocationEditorFiscalYearRowViewModel(SelectedRow, cell))
+                .ToList();
+
+            FiscalYearRows = new ObservableCollection<HoursAllocationEditorFiscalYearRowViewModel>(fiscalYearRows);
         }
 
         public sealed partial class HoursAllocationEditorRowViewModel : ObservableObject
@@ -359,6 +380,75 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                         : TrafficLightStatus.Green;
 
                 Status = status;
+            }
+        }
+
+        public sealed partial class HoursAllocationEditorFiscalYearRowViewModel : ObservableObject, IDisposable
+        {
+            private readonly HoursAllocationEditorRowViewModel _ownerRow;
+            private readonly HoursAllocationEditorCellViewModel _cell;
+
+            public HoursAllocationEditorFiscalYearRowViewModel(
+                HoursAllocationEditorRowViewModel ownerRow,
+                HoursAllocationEditorCellViewModel cell)
+            {
+                _ownerRow = ownerRow ?? throw new ArgumentNullException(nameof(ownerRow));
+                _cell = cell ?? throw new ArgumentNullException(nameof(cell));
+
+                _cell.PropertyChanged += HandleCellPropertyChanged;
+                _ownerRow.PropertyChanged += HandleOwnerRowPropertyChanged;
+            }
+
+            public string FiscalYearName => _cell.FiscalYearName;
+
+            public decimal BudgetHours => _cell.BudgetHours;
+
+            public decimal IncurredHours
+            {
+                get => _cell.ConsumedHours;
+                set => _cell.ConsumedHours = value;
+            }
+
+            public decimal AdditionalHours
+            {
+                get => _ownerRow.AdditionalHours;
+                set => _ownerRow.AdditionalHours = value;
+            }
+
+            public decimal RemainingHours => _cell.RemainingHours;
+
+            public bool IsEditable => _cell.IsEditable;
+
+            private void HandleCellPropertyChanged(object? sender, PropertyChangedEventArgs e)
+            {
+                if (e.PropertyName is nameof(HoursAllocationEditorCellViewModel.ConsumedHours))
+                {
+                    OnPropertyChanged(nameof(IncurredHours));
+                }
+
+                if (e.PropertyName is nameof(HoursAllocationEditorCellViewModel.RemainingHours))
+                {
+                    OnPropertyChanged(nameof(RemainingHours));
+                }
+
+                if (e.PropertyName is nameof(HoursAllocationEditorCellViewModel.BudgetHours))
+                {
+                    OnPropertyChanged(nameof(BudgetHours));
+                }
+            }
+
+            private void HandleOwnerRowPropertyChanged(object? sender, PropertyChangedEventArgs e)
+            {
+                if (e.PropertyName is nameof(HoursAllocationEditorRowViewModel.AdditionalHours))
+                {
+                    OnPropertyChanged(nameof(AdditionalHours));
+                }
+            }
+
+            public void Dispose()
+            {
+                _cell.PropertyChanged -= HandleCellPropertyChanged;
+                _ownerRow.PropertyChanged -= HandleOwnerRowPropertyChanged;
             }
         }
 

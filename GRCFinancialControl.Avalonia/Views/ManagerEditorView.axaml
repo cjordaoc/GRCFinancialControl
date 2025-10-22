@@ -20,8 +20,9 @@
                              Grid.Column="1"
                              Text="{Binding Name}"
                              Watermark="{loc:Loc Key=Admin.Managers.Placeholder.Name}"
-                             Width="280"
-                             IsEnabled="{Binding AllowEditing}"/>
+                             IsEnabled="{Binding AllowEditing}"
+                             HorizontalAlignment="Stretch"
+                             MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
 
                     <TextBlock Grid.Row="1"
                                Grid.Column="0"
@@ -31,8 +32,9 @@
                              Grid.Column="1"
                              Text="{Binding Email}"
                              Watermark="{loc:Loc Key=Admin.Managers.Placeholder.Email}"
-                             Width="280"
-                             IsEnabled="{Binding AllowEditing}"/>
+                             IsEnabled="{Binding AllowEditing}"
+                             HorizontalAlignment="Stretch"
+                             MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
 
                     <TextBlock Grid.Row="2"
                                Grid.Column="0"
@@ -42,8 +44,9 @@
                              Grid.Column="1"
                              Text="{Binding WindowsLogin}"
                              Watermark="{loc:Loc Key=Admin.Managers.Placeholder.WindowsLogin}"
-                             Width="280"
-                             IsEnabled="{Binding AllowEditing}"/>
+                             IsEnabled="{Binding AllowEditing}"
+                             HorizontalAlignment="Stretch"
+                             MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
 
                     <TextBlock Grid.Row="3"
                                Grid.Column="0"
@@ -54,8 +57,9 @@
                               ItemsSource="{Binding PositionOptions}"
                               SelectedItem="{Binding Position}"
                               PlaceholderText="{loc:Loc Key=Admin.Managers.Placeholder.Position}"
-                              Width="280"
-                              IsEnabled="{Binding AllowEditing}"/>
+                              IsEnabled="{Binding AllowEditing}"
+                              HorizontalAlignment="Stretch"
+                              MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
                 </Grid>
             </StackPanel>
         </ScrollViewer>

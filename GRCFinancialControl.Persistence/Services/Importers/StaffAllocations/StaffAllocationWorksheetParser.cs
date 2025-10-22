@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using GRCFinancialControl.Core.Models;
 using Microsoft.Extensions.Logging;
 using GRCFinancialControl.Persistence.Services;
@@ -13,7 +14,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers.StaffAllocations;
 
 public sealed class StaffAllocationWorksheetParser
 {
-    private static readonly char[] EngagementSeparators = ['\n', '\r', ';', ',', '|', ' '];
+    private static readonly Regex EngagementCodeRegex =
+        new(@"E-\s*[A-Za-z0-9_-]+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private const decimal DefaultWeekHours = 40m;
 
     private readonly StaffAllocationSchemaAnalyzer _schemaAnalyzer;
@@ -44,8 +46,6 @@ public sealed class StaffAllocationWorksheetParser
 
         var employeeLookup = BuildEmployeeLookup(employees);
         var schema = _schemaAnalyzer.Analyze(worksheet);
-        var minimumWeekStart = NormalizeWeekStart(uploadTimestamp);
-
         var estimatedRowCount = Math.Max(0, worksheet.RowCount - (schema.HeaderRowIndex + 1));
         var estimatedAllocationCount = Math.Max(1, schema.WeekColumns.Count) * Math.Max(1, estimatedRowCount);
         var records = new List<StaffAllocationTemporaryRecord>(estimatedAllocationCount);
@@ -77,11 +77,6 @@ public sealed class StaffAllocationWorksheetParser
             foreach (var weekColumn in schema.WeekColumns)
             {
                 var normalizedWeekStart = NormalizeWeekStart(weekColumn.WeekStartMon);
-
-                if (normalizedWeekStart < minimumWeekStart)
-                {
-                    continue;
-                }
 
                 var cellValue = worksheet.GetValue(rowIndex, weekColumn.ColumnIndex);
                 foreach (var engagementCode in ExtractEngagementCodes(cellValue))
@@ -192,30 +187,23 @@ public sealed class StaffAllocationWorksheetParser
             yield break;
         }
 
-        var trimmed = rawText.Trim();
-        if (!trimmed.StartsWith("E-", StringComparison.OrdinalIgnoreCase))
+        var uniqueCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (Match match in EngagementCodeRegex.Matches(rawText))
         {
-            yield break;
-        }
-
-        var segments = trimmed.Split(EngagementSeparators, StringSplitOptions.RemoveEmptyEntries);
-        if (segments.Length == 0)
-        {
-            segments = new[] { trimmed };
-        }
-
-        foreach (var segment in segments)
-        {
-            var candidate = segment.Trim();
-            if (!candidate.StartsWith("E-", StringComparison.OrdinalIgnoreCase))
+            if (!match.Success)
             {
                 continue;
             }
 
-            var code = ExtractToken(candidate);
-            if (code.Length > 0)
+            var token = ExtractToken(match.Value);
+            if (token.Length == 0)
             {
-                yield return code;
+                continue;
+            }
+
+            if (uniqueCodes.Add(token))
+            {
+                yield return token;
             }
         }
     }

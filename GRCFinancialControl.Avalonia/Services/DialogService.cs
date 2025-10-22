@@ -114,8 +114,29 @@ namespace GRCFinancialControl.Avalonia.Services
                 var ownerWidth = size.Width > 0 ? size.Width : owner.Bounds.Width;
                 var ownerHeight = size.Height > 0 ? size.Height : owner.Bounds.Height;
 
-                container.MaxWidth = ownerWidth > 0 ? ownerWidth * 0.55 : double.PositiveInfinity;
-                container.MaxHeight = ownerHeight > 0 ? ownerHeight * 0.55 : double.PositiveInfinity;
+                if (ownerWidth > 0)
+                {
+                    var targetWidth = ownerWidth * 0.85;
+                    container.MaxWidth = targetWidth;
+                    container.Width = targetWidth;
+                }
+                else
+                {
+                    container.MaxWidth = double.PositiveInfinity;
+                    container.Width = double.NaN;
+                }
+
+                if (ownerHeight > 0)
+                {
+                    var targetHeight = ownerHeight * 0.85;
+                    container.MaxHeight = targetHeight;
+                    container.Height = targetHeight;
+                }
+                else
+                {
+                    container.MaxHeight = double.PositiveInfinity;
+                    container.Height = double.NaN;
+                }
 
                 if (_currentDialog is { } window)
                 {

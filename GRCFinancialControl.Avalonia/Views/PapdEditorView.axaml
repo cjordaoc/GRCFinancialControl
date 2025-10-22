@@ -20,8 +20,9 @@
                              Grid.Column="1"
                              Text="{Binding Name}"
                              Watermark="{loc:Loc Key=Admin.Papds.Placeholder.Name}"
-                             Width="280"
-                             IsEnabled="{Binding AllowEditing}"/>
+                             IsEnabled="{Binding AllowEditing}"
+                             HorizontalAlignment="Stretch"
+                             MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
 
                     <TextBlock Grid.Row="1"
                                Grid.Column="0"
@@ -32,8 +33,9 @@
                               ItemsSource="{Binding LevelOptions}"
                               SelectedItem="{Binding Level}"
                               PlaceholderText="{loc:Loc Key=Admin.Papds.Placeholder.Level}"
-                              Width="280"
-                              IsEnabled="{Binding AllowEditing}"/>
+                              IsEnabled="{Binding AllowEditing}"
+                              HorizontalAlignment="Stretch"
+                              MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
 
                     <TextBlock Grid.Row="2"
                                Grid.Column="0"
@@ -43,8 +45,9 @@
                              Grid.Column="1"
                              Text="{Binding WindowsLogin}"
                              Watermark="{loc:Loc Key=Admin.Papds.Placeholder.WindowsLogin}"
-                             Width="280"
-                             IsEnabled="{Binding AllowEditing}"/>
+                             IsEnabled="{Binding AllowEditing}"
+                             HorizontalAlignment="Stretch"
+                             MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
                 </Grid>
             </StackPanel>
         </ScrollViewer>

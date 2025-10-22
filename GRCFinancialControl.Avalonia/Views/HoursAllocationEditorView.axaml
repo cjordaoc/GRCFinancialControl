@@ -11,7 +11,7 @@
     <UserControl.Resources>
         <converters:TrafficLightStatusToBrushConverter x:Key="TrafficLightStatusToBrushConverter" />
     </UserControl.Resources>
-    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" ColumnDefinitions="*"
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto" ColumnDefinitions="*"
           Margin="{StaticResource SpaceThickness10}">
         <TextBlock Grid.Row="0"
                    Text="{Binding Header}"
@@ -29,106 +29,68 @@
         <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
                     Spacing="{StaticResource Space12}">
-            <ComboBox Width="220"
-                      ItemsSource="{Binding RankOptions}"
-                      SelectedItem="{Binding RankToAdd}">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding DisplayName}"/>
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
-            <Button Content="Add Resource"
-                    Command="{Binding AddResourceCommand}"/>
-            <TextBlock Text="{Binding StatusMessage}"
-                       Foreground="{StaticResource BrushWarning}"/>
+            <TextBlock Text="Resource:" FontWeight="SemiBold"/>
+            <TextBlock Text="{Binding SelectedRow.RankName}"/>
+            <TextBlock Text="{Binding SelectedRow.TrafficLightSymbol}"
+                       FontSize="{StaticResource FontSizeL}"
+                       Foreground="{Binding SelectedRow.Status, Converter={StaticResource TrafficLightStatusToBrushConverter}}"/>
         </StackPanel>
 
-        <DataGrid Grid.Row="3"
-                  ItemsSource="{Binding Rows}"
-                  SelectedItem="{Binding SelectedRow}"
+        <TextBlock Grid.Row="3"
+                   Text="{Binding StatusMessage}"
+                   Foreground="{StaticResource BrushWarning}"/>
+
+        <DataGrid Grid.Row="4"
+                  ItemsSource="{Binding FiscalYearRows}"
                   AutoGenerateColumns="False"
                   CanUserSortColumns="False"
                   Margin="{StaticResource SpaceThickness10}">
             <DataGrid.Columns>
-                <DataGridTemplateColumn Header="" Width="Auto">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding TrafficLightSymbol}"
-                                       FontSize="{StaticResource FontSizeL}"
-                                       HorizontalAlignment="Center"
-                                       Foreground="{Binding Status, Converter={StaticResource TrafficLightStatusToBrushConverter}}"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Rank" Width="2*">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <ComboBox ItemsSource="{Binding DataContext.RankOptions, ElementName=HoursAllocationEditorRoot}"
-                                      SelectedItem="{Binding DisplayRank}"
-                                      IsEnabled="False">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding DisplayName}"/>
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Fiscal Year"
+                                    Binding="{Binding FiscalYearName}"
+                                    Width="2*"/>
                 <DataGridTextColumn Header="Budget Hours"
-                                    Binding="{Binding TotalBudgetHours, StringFormat='{}{0:N2}'}"
+                                    Binding="{Binding BudgetHours, StringFormat='{}{0:N2}'}"
                                     IsReadOnly="True"
                                     Width="*"/>
-                <DataGridTemplateColumn Header="Fiscal Years" Width="3*">
+                <DataGridTemplateColumn Header="Incurred Hours" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <ItemsControl ItemsSource="{Binding Cells}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space12}"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Spacing="{StaticResource Space6}">
-                                            <TextBlock Text="{Binding FiscalYearName}" FontWeight="SemiBold"/>
-                                            <TextBox Text="{Binding ConsumedHours, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                     IsEnabled="{Binding IsEditable}"
-                                                     HorizontalContentAlignment="Right"
-                                                     Width="100"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                            <TextBox Text="{Binding IncurredHours, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding IsEditable}"
+                                     HorizontalContentAlignment="Right"
+                                     MinWidth="100"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Additional Hours" Tag="StaticAdditional" Width="*">
+                <DataGridTemplateColumn Header="Additional Hours" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding AdditionalHours, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                      HorizontalContentAlignment="Right"
-                                     MinWidth="80"/>
+                                     MinWidth="100"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="Remaining Hours"
-                                    Binding="{Binding TotalRemainingHours, StringFormat='{}{0:N2}'}"
+                                    Binding="{Binding RemainingHours, StringFormat='{}{0:N2}'}"
                                     IsReadOnly="True"
                                     Width="*"/>
             </DataGrid.Columns>
         </DataGrid>
 
-        <StackPanel Grid.Row="4"
+        <StackPanel Grid.Row="5"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     Spacing="{StaticResource Space12}">
             <Button Content="Save"
                     Command="{Binding SaveCommand}"
-                    IsEnabled="{Binding HasChanges}"/>
+                    IsDefault="True"
+                    MinWidth="120"/>
             <Button Content="Cancel"
-                    Command="{Binding CloseCommand}"/>
+                    Command="{Binding CloseCommand}"
+                    IsCancel="True"
+                    MinWidth="120"/>
         </StackPanel>
     </Grid>
 </UserControl>
