@@ -119,6 +119,7 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<IManagerAssignmentService, ManagerAssignmentService>();
             services.AddTransient<IExceptionService, ExceptionService>();
             services.AddTransient<ICustomerService, CustomerService>();
+            services.AddTransient<IRankMappingService, RankMappingService>();
             services.AddSingleton<IDatabaseSchemaInitializer, DatabaseSchemaInitializer>();
 
             services.AddSingleton<ILoggingService, LoggingService>();
@@ -153,6 +154,8 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<ClosingPeriodEditorViewModel>();
             services.AddTransient<CustomersViewModel>();
             services.AddTransient<CustomerEditorViewModel>();
+            services.AddTransient<RankMappingsViewModel>();
+            services.AddTransient<RankMappingEditorViewModel>();
             services.AddTransient<TasksViewModel>();
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)

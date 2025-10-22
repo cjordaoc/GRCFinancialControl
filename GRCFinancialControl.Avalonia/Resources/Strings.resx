@@ -45,6 +45,12 @@
   <data name="Navigation.Tasks" xml:space="preserve">
     <value>Tasks</value>
   </data>
+  <data name="Navigation.MasterData" xml:space="preserve">
+    <value>Master Data</value>
+  </data>
+  <data name="Navigation.MasterData.RankMappings" xml:space="preserve">
+    <value>Rank mappings</value>
+  </data>
   <data name="Navigation.Settings" xml:space="preserve">
     <value>Settings</value>
   </data>
@@ -206,6 +212,48 @@
   </data>
   <data name="Localization.Language.PreferenceSaveFailure" xml:space="preserve">
     <value>Failed to save the language preference: {0}</value>
+  </data>
+  <data name="MasterData.RankMappings.Title" xml:space="preserve">
+    <value>Rank mappings</value>
+  </data>
+  <data name="MasterData.RankMappings.Columns.RawRank" xml:space="preserve">
+    <value>Rank code</value>
+  </data>
+  <data name="MasterData.RankMappings.Columns.NormalizedRank" xml:space="preserve">
+    <value>Rank name</value>
+  </data>
+  <data name="MasterData.RankMappings.Columns.SpreadsheetRank" xml:space="preserve">
+    <value>Spreadsheet rank</value>
+  </data>
+  <data name="MasterData.RankMappings.Columns.IsActive" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="MasterData.RankMappings.Columns.LastSeenAt" xml:space="preserve">
+    <value>Last seen at</value>
+  </data>
+  <data name="MasterData.RankMappings.Columns.CreatedAt" xml:space="preserve">
+    <value>Created at</value>
+  </data>
+  <data name="MasterData.RankMappings.Editor.Title" xml:space="preserve">
+    <value>Rank mapping details</value>
+  </data>
+  <data name="MasterData.RankMappings.Editor.RawRank" xml:space="preserve">
+    <value>Rank code</value>
+  </data>
+  <data name="MasterData.RankMappings.Editor.NormalizedRank" xml:space="preserve">
+    <value>Rank name</value>
+  </data>
+  <data name="MasterData.RankMappings.Editor.SpreadsheetRank" xml:space="preserve">
+    <value>Spreadsheet rank</value>
+  </data>
+  <data name="MasterData.RankMappings.Editor.IsActive" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="MasterData.RankMappings.Dialog.AddTitle" xml:space="preserve">
+    <value>Add rank mapping</value>
+  </data>
+  <data name="MasterData.RankMappings.Dialog.EditTitle" xml:space="preserve">
+    <value>Edit rank mapping</value>
   </data>
 <data name="Common.Button.Save" xml:space="preserve"><value>Save</value></data><data name="Common.Button.Close" xml:space="preserve"><value>Close</value></data><data name="Common.Button.Add" xml:space="preserve"><value>Add</value></data><data name="Common.Button.Edit" xml:space="preserve"><value>Edit</value></data><data name="Common.Button.View" xml:space="preserve"><value>View</value></data><data name="Common.Button.Delete" xml:space="preserve"><value>Delete</value></data><data name="Common.Button.Cancel" xml:space="preserve"><value>Cancel</value></data><data name="Common.Button.Confirm" xml:space="preserve"><value>Confirm</value></data><data name="Common.Dialog.DeleteData.Title" xml:space="preserve"><value>Delete Data</value></data><data name="Common.Dialog.DeleteData.Message" xml:space="preserve"><value>Are you sure you want to delete all data for {0}? This action cannot be undone.</value></data><data name="Common.Unit.HoursSuffix" xml:space="preserve"><value>h</value></data><data name="Admin.Managers.Title.Editor" xml:space="preserve"><value>Manager Details</value></data><data name="Admin.Managers.Placeholder.Name" xml:space="preserve"><value>Name</value></data><data name="Admin.Managers.Placeholder.Email" xml:space="preserve"><value>Email</value></data><data name="Admin.Managers.Placeholder.WindowsLogin" xml:space="preserve"><value>Windows Login (DOMAIN\user)</value></data><data name="Admin.Managers.Placeholder.Position" xml:space="preserve"><value>Position</value></data><data name="Admin.Papds.Title.Editor" xml:space="preserve"><value>PAPD Details</value></data><data name="Admin.Papds.Placeholder.Name" xml:space="preserve"><value>Name</value></data><data name="Admin.Papds.Placeholder.Level" xml:space="preserve"><value>Level (e.g., Partner, Director)</value></data><data name="Admin.Papds.Placeholder.WindowsLogin" xml:space="preserve"><value>Windows Login (DOMAIN\user)</value></data><data name="Admin.ClosingPeriods.Title.Editor" xml:space="preserve"><value>Closing Period Details</value></data><data name="Admin.ClosingPeriods.Placeholder.Name" xml:space="preserve"><value>Name (e.g., P01-2025)</value></data><data name="Admin.ClosingPeriods.Label.FiscalYear" xml:space="preserve"><value>Fiscal Year</value></data><data name="Admin.ClosingPeriods.Label.Locked" xml:space="preserve"><value>(Locked)</value></data><data name="Admin.ClosingPeriods.Title.List" xml:space="preserve"><value>Closing Periods</value></data><data name="Admin.ClosingPeriods.Header.Id" xml:space="preserve"><value>ID</value></data><data name="Admin.ClosingPeriods.Header.Name" xml:space="preserve"><value>Name</value></data><data name="Admin.ClosingPeriods.Header.Start" xml:space="preserve"><value>Start</value></data><data name="Admin.ClosingPeriods.Header.End" xml:space="preserve"><value>End</value></data><data name="Admin.ClosingPeriods.Header.FiscalYear" xml:space="preserve"><value>Fiscal Year</value></data><data name="Admin.ClosingPeriods.Header.Locked" xml:space="preserve"><value>Locked</value></data><data name="Admin.ClosingPeriods.Button.DeleteData" xml:space="preserve"><value>Delete Data</value></data><data name="Admin.ClosingPeriods.Status.AllLocked" xml:space="preserve"><value>All fiscal years are locked. Unlock a fiscal year to manage closing periods.</value></data><data name="ClosingPeriods.Status.AllLocked" xml:space="preserve"><value>All fiscal years are locked. Unlock a fiscal year before adding closing periods.</value></data><data name="ClosingPeriods.Status.FiscalYearLockedEdit" xml:space="preserve"><value>Fiscal year '{0}' is locked. Unlock it before editing closing periods.</value></data><data name="ClosingPeriods.Status.FiscalYearLockedDelete" xml:space="preserve"><value>Fiscal year '{0}' is locked. Unlock it before deleting closing periods.</value></data><data name="ClosingPeriods.Status.FiscalYearLockedData" xml:space="preserve"><value>Fiscal year '{0}' is locked. Unlock it before deleting data.</value></data><data name="ClosingPeriods.Validation.NoFiscalYears" xml:space="preserve"><value>No available fiscal years. Unlock or create a fiscal year before updating closing periods.</value></data><data name="ClosingPeriods.Validation.FiscalYearRequired" xml:space="preserve"><value>Select a fiscal year before saving.</value></data><data name="ClosingPeriods.Validation.FiscalYearLocked" xml:space="preserve"><value>Fiscal year '{0}' is locked. Unlock it before assigning closing periods.</value></data><data name="ClosingPeriods.Validation.NameRequired" xml:space="preserve"><value>A descriptive name is required.</value></data><data name="ClosingPeriods.Validation.EndDateAfterStart" xml:space="preserve"><value>The end date must be on or after the start date.</value></data><data name="Allocations.Label.TargetHours" xml:space="preserve"><value>Hours to Allocate:</value></data><data name="Allocations.Label.TargetValue" xml:space="preserve"><value>Value to Allocate:</value></data><data name="Allocations.Label.CurrentHours" xml:space="preserve"><value>Current Hours Allocation:</value></data><data name="Allocations.Label.CurrentValue" xml:space="preserve"><value>Current Value Allocation:</value></data><data name="Allocations.Header.PlannedHours" xml:space="preserve"><value>Planned Hours</value></data><data name="Allocations.Header.PlannedValue" xml:space="preserve"><value>Planned Value</value></data><data name="Allocations.Header.ToGoValue" xml:space="preserve"><value>To Go Value</value></data><data name="Allocations.Header.ToDateValue" xml:space="preserve"><value>To Date Value</value></data><data name="Allocations.Validation.HoursMatchTarget" xml:space="preserve"><value>Allocated hours must match the target hours before saving.</value></data><data name="Allocations.Validation.ValueMatchTarget" xml:space="preserve"><value>Allocated value must match the target value before saving.</value></data><data name="Allocations.Tooltip.Variance" xml:space="preserve"><value>Variance {0:+0.##;-0.##;0}{1}</value></data><data name="FiscalYears.Validation.NameRequired" xml:space="preserve"><value>A fiscal year name is required.</value></data><data name="FiscalYears.Validation.EndDateAfterStart" xml:space="preserve"><value>The end date must be on or after the start date.</value></data><data name="FiscalYears.Dialog.Close.Title" xml:space="preserve"><value>Close Fiscal Year</value></data><data name="FiscalYears.Dialog.Close.Message" xml:space="preserve"><value>Closing fiscal year '{0}' will lock it and promote the next fiscal year as the default. Continue?</value></data><data name="FiscalYears.Status.Locked" xml:space="preserve"><value>Fiscal year '{0}' has been locked by {1} at {2:G}.</value></data><data name="FiscalYears.Status.AlreadyLocked" xml:space="preserve"><value>Fiscal year '{0}' was already locked or unavailable.</value></data><data name="FiscalYears.Status.Unlocked" xml:space="preserve"><value>Fiscal year '{0}' has been unlocked by {1} at {2:G}.</value></data><data name="FiscalYears.Status.AlreadyUnlocked" xml:space="preserve"><value>Fiscal year '{0}' was already unlocked or unavailable.</value></data><data name="FiscalYears.Status.ClosedPromoted" xml:space="preserve"><value>Fiscal year '{0}' closed. '{1}' is now the default fiscal year.</value></data><data name="FiscalYears.Status.ClosedNoPromotion" xml:space="preserve"><value>Fiscal year '{0}' closed. There is no future fiscal year to promote.</value></data><data name="Reports.Button.OpenBrowser" xml:space="preserve"><value>Open in Browser</value></data><data name="Reports.Button.Refresh" xml:space="preserve"><value>Refresh</value></data><data name="Reports.Empty.Title" xml:space="preserve"><value>Connect Power BI</value></data><data name="Reports.Empty.Description" xml:space="preserve"><value>Add a Publish to Web URL in Settings to load the dashboard.</value></data><data name="Reports.Label.Status" xml:space="preserve"><value>Status:</value></data><data name="Reports.Status.LoadFailure" xml:space="preserve"><value>Unable to load the Power BI dashboard configuration.</value></data><data name="Reports.Status.OpenExternalFailure" xml:space="preserve"><value>Unable to launch the external browser for the dashboard: {0}</value></data><data name="Reports.Status.DashboardReady" xml:space="preserve"><value>Dashboard ready.</value></data><data name="Reports.Status.InvalidUrl" xml:space="preserve"><value>The configured Publish to Web URL is invalid.</value></data><data name="Reports.Status.UrlRequired" xml:space="preserve"><value>Add a Publish to Web URL in Settings to view the dashboard.</value></data><data name="Tasks.Dialog.SaveTitle" xml:space="preserve"><value>Save tasks file</value></data><data name="Tasks.Status.Cancelled" xml:space="preserve"><value>Generation cancelled.</value></data><data name="Tasks.Status.FileSaved" xml:space="preserve"><value>File saved to {0}.</value></data><data name="Tasks.Status.TimeZoneMissing" xml:space="preserve"><value>Timezone {0} not found.</value></data><data name="Tasks.Status.GenerationFailure" xml:space="preserve"><value>Failed to generate tasks: {0}</value></data><data name="Tasks.Title.Primary" xml:space="preserve"><value>Tasks</value></data><data name="Tasks.Description.Primary" xml:space="preserve"><value>Generate the weekly administrative tasks file for email delivery.</value></data><data name="Tasks.Button.Generate" xml:space="preserve"><value>Generate tasks file</value></data><data name="Exports.Worksheet.Report" xml:space="preserve"><value>Report</value></data><data name="Exports.Status.NoData" xml:space="preserve"><value>No data available</value></data><data name="Exports.Header.Value" xml:space="preserve"><value>Value</value></data><data name="Admin.ManagerAssignments.Label.Engagement" xml:space="preserve">
   <value>Engagement</value>

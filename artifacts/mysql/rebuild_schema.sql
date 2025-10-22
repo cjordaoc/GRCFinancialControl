@@ -94,12 +94,14 @@ CREATE TABLE IF NOT EXISTS `RankMappings`
     `Id`              INT             NOT NULL AUTO_INCREMENT,
     `RankCode`        VARCHAR(50)     NOT NULL,
     `RankName`        VARCHAR(100)    NULL,
+    `SpreadsheetRank` VARCHAR(100)    NULL,
     `CreatedAt`       DATETIME(6)     NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     `IsActive`        TINYINT(1)      NOT NULL DEFAULT 1,
     `LastSeenAt`      DATETIME(6)     NULL,
     CONSTRAINT `PK_RankMappings` PRIMARY KEY (`Id`),
     CONSTRAINT `UX_RankMappings_RankCode` UNIQUE (`RankCode`),
     INDEX `IX_RankMappings_RankName` (`RankName`),
+    INDEX `IX_RankMappings_SpreadsheetRank` (`SpreadsheetRank`),
     INDEX `IX_RankMappings_IsActive` (`IsActive`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
