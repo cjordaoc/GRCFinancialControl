@@ -146,12 +146,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         partial void OnHasChangesChanged(bool value)
         {
-            SaveCommand.NotifyCanExecuteChanged();
+            NotifyCommandCanExecute(SaveCommand);
         }
 
         partial void OnIsBusyChanged(bool value)
         {
-            SaveCommand.NotifyCanExecuteChanged();
+            NotifyCommandCanExecute(SaveCommand);
         }
 
         internal RankOption? FindRankOption(string? name)

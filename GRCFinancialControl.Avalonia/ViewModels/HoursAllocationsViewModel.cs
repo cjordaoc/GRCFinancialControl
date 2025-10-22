@@ -671,21 +671,21 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         partial void OnHasChangesChanged(bool value)
         {
-            SaveCommand.NotifyCanExecuteChanged();
+            NotifyCommandCanExecute(SaveCommand);
         }
 
         partial void OnIsBusyChanged(bool value)
         {
-            SaveCommand.NotifyCanExecuteChanged();
-            RefreshCommand.NotifyCanExecuteChanged();
-            AddRankCommand.NotifyCanExecuteChanged();
-            DeleteRankCommand.NotifyCanExecuteChanged();
-            AddResourceCommand.NotifyCanExecuteChanged();
+            NotifyCommandCanExecute(SaveCommand);
+            NotifyCommandCanExecute(RefreshCommand);
+            NotifyCommandCanExecute(AddRankCommand);
+            NotifyCommandCanExecute(DeleteRankCommand);
+            NotifyCommandCanExecute(AddResourceCommand);
         }
 
         partial void OnRankToAddChanged(RankOption? value)
         {
-            AddResourceCommand.NotifyCanExecuteChanged();
+            NotifyCommandCanExecute(AddResourceCommand);
         }
     }
 }
