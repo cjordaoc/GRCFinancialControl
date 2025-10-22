@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
+using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence;
 using GRCFinancialControl.Persistence.Services;
@@ -57,6 +58,8 @@ public sealed class HoursAllocationServiceTests : IAsyncDisposable
         var row = snapshot.Rows[0];
         Assert.Equal("Manager", row.RankName);
         Assert.Equal(2, row.Cells.Count);
+        Assert.Equal(TrafficLightStatus.Yellow, row.Status);
+        Assert.Equal(0m, row.AdditionalHours);
 
         var openCell = row.Cells.Single(c => c.FiscalYearId == seed.OpenFiscalYearId);
         Assert.Equal(seed.OpenBudgetId, openCell.BudgetId);
@@ -84,7 +87,7 @@ public sealed class HoursAllocationServiceTests : IAsyncDisposable
             new(seed.OpenBudgetId, 25m)
         };
 
-        var snapshot = await service.SaveAsync(seed.EngagementId, updates);
+        var snapshot = await service.SaveAsync(seed.EngagementId, updates, Array.Empty<HoursAllocationRowAdjustment>());
 
         var managerRow = snapshot.Rows.Single(r => r.RankName == "Manager");
         var updatedCell = managerRow.Cells.Single(c => c.BudgetId == seed.OpenBudgetId);
@@ -98,6 +101,7 @@ public sealed class HoursAllocationServiceTests : IAsyncDisposable
         Assert.NotNull(budget);
         Assert.Equal(25m, budget!.ConsumedHours);
         Assert.Equal(45m, budget.BudgetHours - budget.ConsumedHours);
+        Assert.Equal(45m, budget.RemainingHours);
     }
 
     [Fact]
@@ -111,7 +115,7 @@ public sealed class HoursAllocationServiceTests : IAsyncDisposable
             new(seed.LockedBudgetId, 5m)
         };
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.SaveAsync(seed.EngagementId, updates));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.SaveAsync(seed.EngagementId, updates, Array.Empty<HoursAllocationRowAdjustment>()));
     }
 
     [Fact]
@@ -198,7 +202,10 @@ public sealed class HoursAllocationServiceTests : IAsyncDisposable
             RankName = "Manager",
             BudgetHours = 70m,
             ConsumedHours = 10m,
+            AdditionalHours = 0m,
+            IncurredHours = 0m,
             RemainingHours = 60m,
+            Status = nameof(TrafficLightStatus.Green),
             CreatedAtUtc = DateTime.UtcNow
         };
 
@@ -209,7 +216,10 @@ public sealed class HoursAllocationServiceTests : IAsyncDisposable
             RankName = "Manager",
             BudgetHours = 50m,
             ConsumedHours = 30m,
+            AdditionalHours = 0m,
+            IncurredHours = 0m,
             RemainingHours = 20m,
+            Status = nameof(TrafficLightStatus.Green),
             CreatedAtUtc = DateTime.UtcNow
         };
 
@@ -224,7 +234,10 @@ public sealed class HoursAllocationServiceTests : IAsyncDisposable
                 RankName = "Associate",
                 BudgetHours = 0m,
                 ConsumedHours = 0m,
+                AdditionalHours = 0m,
+                IncurredHours = 0m,
                 RemainingHours = 0m,
+                Status = nameof(TrafficLightStatus.Green),
                 CreatedAtUtc = DateTime.UtcNow
             });
         }

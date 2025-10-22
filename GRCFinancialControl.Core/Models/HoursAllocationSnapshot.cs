@@ -10,5 +10,6 @@ namespace GRCFinancialControl.Core.Models
         decimal ActualHours,
         decimal ToBeConsumedHours,
         IReadOnlyList<FiscalYearAllocationInfo> FiscalYears,
+        IReadOnlyList<RankOption> RankOptions,
         IReadOnlyList<HoursAllocationRowSnapshot> Rows);
 }

@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -21,9 +22,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly IImportService _importService;
         private readonly IFilePickerService _filePickerService;
         private readonly ILoggingService _loggingService;
+        private readonly IDialogService _dialogService;
 
         private int? _lastSelectedEngagementId;
         private bool _suppressSelectionChanged;
+        private HoursAllocationSnapshot? _currentSnapshot;
 
         [ObservableProperty]
         private ObservableCollection<EngagementSummaryViewModel> _engagements = new();
@@ -36,6 +39,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         [ObservableProperty]
         private ObservableCollection<HoursAllocationRowViewModel> _rows = new();
+
+        [ObservableProperty]
+        private ObservableCollection<RankOption> _availableRanks = new();
 
         [ObservableProperty]
         private HoursAllocationRowViewModel? _selectedRow;
@@ -67,6 +73,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             IImportService importService,
             IFilePickerService filePickerService,
             ILoggingService loggingService,
+            IDialogService dialogService,
             IMessenger messenger)
             : base(messenger)
         {
@@ -75,6 +82,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _importService = importService ?? throw new ArgumentNullException(nameof(importService));
             _filePickerService = filePickerService ?? throw new ArgumentNullException(nameof(filePickerService));
             _loggingService = loggingService ?? throw new ArgumentNullException(nameof(loggingService));
+            _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
         }
 
         public string Header => "Hours Allocation";
@@ -235,7 +243,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 IsBusy = true;
                 StatusMessage = null;
-                var snapshot = await _hoursAllocationService.SaveAsync(SelectedEngagement.Id, updates).ConfigureAwait(false);
+                var snapshot = await _hoursAllocationService
+                    .SaveAsync(SelectedEngagement.Id, updates, Array.Empty<HoursAllocationRowAdjustment>())
+                    .ConfigureAwait(false);
                 ApplySnapshot(snapshot);
                 StatusMessage = "Changes saved successfully.";
                 Messenger.Send(new RefreshDataMessage());
@@ -324,6 +334,31 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
+        [RelayCommand]
+        private async Task EditRowAsync(HoursAllocationRowViewModel? row)
+        {
+            if (_currentSnapshot is null || SelectedEngagement is null)
+            {
+                return;
+            }
+
+            var editor = new HoursAllocationEditorViewModel(
+                _currentSnapshot,
+                _hoursAllocationService,
+                _loggingService,
+                Messenger,
+                row?.RankName);
+
+            var result = await _dialogService.ShowDialogAsync(editor, "Hours Allocation Editor").ConfigureAwait(false);
+
+            if (!result || SelectedEngagement is null)
+            {
+                return;
+            }
+
+            await LoadSnapshotAsync(SelectedEngagement.Id).ConfigureAwait(false);
+        }
+
         partial void OnSelectedEngagementChanged(EngagementSummaryViewModel? value)
         {
             if (_suppressSelectionChanged)
@@ -375,9 +410,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             _lastSelectedEngagementId = snapshot.EngagementId;
 
+            _currentSnapshot = snapshot;
+
             ActualHours = snapshot.ActualHours;
             TotalBudgetHours = snapshot.TotalBudgetHours;
             FiscalYears = new ObservableCollection<FiscalYearAllocationInfo>(snapshot.FiscalYears);
+            AvailableRanks = new ObservableCollection<RankOption>(snapshot.RankOptions);
 
             var rows = new List<HoursAllocationRowViewModel>(snapshot.Rows.Count);
             foreach (var row in snapshot.Rows)
@@ -439,12 +477,17 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public sealed partial class HoursAllocationRowViewModel : ObservableObject
         {
+            private readonly decimal _additionalHours;
+            private readonly TrafficLightStatus _status;
+
             public HoursAllocationRowViewModel(HoursAllocationsViewModel owner, HoursAllocationRowSnapshot snapshot)
             {
                 ArgumentNullException.ThrowIfNull(owner);
                 ArgumentNullException.ThrowIfNull(snapshot);
 
                 RankName = snapshot.RankName;
+                _additionalHours = snapshot.AdditionalHours;
+                _status = snapshot.Status;
                 var cells = snapshot.Cells
                     .Select(cell => new HoursAllocationCellViewModel(cell, owner.OnCellChanged))
                     .ToList();
@@ -461,6 +504,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                             OnPropertyChanged(nameof(CanDelete));
                             OnPropertyChanged(nameof(HasChanges));
                         }
+
+                        if (args.PropertyName is nameof(HoursAllocationCellViewModel.BudgetHours)
+                            or nameof(HoursAllocationCellViewModel.ConsumedHours)
+                            or nameof(HoursAllocationCellViewModel.RemainingHours))
+                        {
+                            OnPropertyChanged(nameof(TotalBudgetHours));
+                            OnPropertyChanged(nameof(TotalConsumedHours));
+                            OnPropertyChanged(nameof(TotalRemainingHours));
+                        }
                     };
                 }
             }
@@ -472,6 +524,21 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             public bool CanDelete => Cells.All(cell => cell.IsZero);
 
             public bool HasChanges => Cells.Any(cell => cell.HasChanges);
+
+            public decimal TotalBudgetHours => Math.Round(Cells.Sum(cell => cell.BudgetHours), 2, MidpointRounding.AwayFromZero);
+
+            public decimal TotalConsumedHours => Math.Round(Cells.Sum(cell => cell.ConsumedHours), 2, MidpointRounding.AwayFromZero);
+
+            public decimal TotalRemainingHours => Math.Round(Cells.Sum(cell => cell.RemainingHours) + _additionalHours, 2, MidpointRounding.AwayFromZero);
+
+            public TrafficLightStatus Status => _status;
+
+            public string TrafficLightSymbol => Status switch
+            {
+                TrafficLightStatus.Red => "🔴",
+                TrafficLightStatus.Yellow => "🟡",
+                _ => "🟢"
+            };
         }
 
         public sealed partial class HoursAllocationCellViewModel : ObservableObject

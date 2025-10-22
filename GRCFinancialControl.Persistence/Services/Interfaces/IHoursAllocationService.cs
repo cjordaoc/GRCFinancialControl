@@ -7,7 +7,10 @@ namespace GRCFinancialControl.Persistence.Services.Interfaces
     public interface IHoursAllocationService
     {
         Task<HoursAllocationSnapshot> GetAllocationAsync(int engagementId);
-        Task<HoursAllocationSnapshot> SaveAsync(int engagementId, IEnumerable<HoursAllocationCellUpdate> updates);
+        Task<HoursAllocationSnapshot> SaveAsync(
+            int engagementId,
+            IEnumerable<HoursAllocationCellUpdate> updates,
+            IEnumerable<HoursAllocationRowAdjustment> rowAdjustments);
         Task<HoursAllocationSnapshot> AddRankAsync(int engagementId, string rankName);
         Task DeleteRankAsync(int engagementId, string rankName);
     }
