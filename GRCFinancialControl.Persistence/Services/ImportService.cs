@@ -343,7 +343,10 @@ namespace GRCFinancialControl.Persistence.Services
 
                 if (!rankMappings.ContainsKey(rawRank))
                 {
-                    rankMappings[rawRank] = new RankMappingCandidate(rawRank, NormalizeRankName(rawRank));
+                    rankMappings[rawRank] = new RankMappingCandidate(
+                        rawRank,
+                        NormalizeRankName(rawRank),
+                        DeriveSpreadsheetRankName(rawRank));
                 }
 
                 var employeeName = NormalizeWhitespace(GetCellString(resourcing, dataRowIndex, employeeColumnIndex));
@@ -556,6 +559,18 @@ namespace GRCFinancialControl.Persistence.Services
             return candidate;
         }
 
+        private static string DeriveSpreadsheetRankName(string rawRank)
+        {
+            var normalized = NormalizeWhitespace(rawRank);
+            if (string.IsNullOrEmpty(normalized))
+            {
+                return string.Empty;
+            }
+
+            var parts = normalized.Split('-', 2, StringSplitOptions.TrimEntries);
+            return parts.Length == 2 ? parts[1] : normalized;
+        }
+
         private static string NormalizeIdentifier(object? value)
         {
             if (value == null || value == DBNull.Value)
@@ -686,7 +701,7 @@ namespace GRCFinancialControl.Persistence.Services
 
         private sealed record RankBudgetAggregate(string RankName, decimal Hours);
 
-        private sealed record RankMappingCandidate(string RawRank, string NormalizedRank);
+        private sealed record RankMappingCandidate(string RawRank, string NormalizedRank, string SpreadsheetRank);
 
         private sealed record ResourcingEmployee(
             string Identifier,
@@ -729,6 +744,7 @@ namespace GRCFinancialControl.Persistence.Services
                 if (existingMappings.TryGetValue(candidate.RawRank, out var mapping))
                 {
                     mapping.NormalizedRank = candidate.NormalizedRank;
+                    mapping.SpreadsheetRank = candidate.SpreadsheetRank;
                     mapping.IsActive = true;
                     mapping.LastSeenAt = timestamp;
                 }
@@ -738,6 +754,7 @@ namespace GRCFinancialControl.Persistence.Services
                     {
                         RawRank = candidate.RawRank,
                         NormalizedRank = candidate.NormalizedRank,
+                        SpreadsheetRank = candidate.SpreadsheetRank,
                         IsActive = true,
                         LastSeenAt = timestamp
                     });
@@ -1141,13 +1158,30 @@ namespace GRCFinancialControl.Persistence.Services
             foreach (var mapping in rankMappings)
             {
                 var rawRank = NormalizeWhitespace(mapping.RawRank);
-                var normalizedRank = NormalizeWhitespace(mapping.NormalizedRank);
-                if (string.IsNullOrEmpty(rawRank) || string.IsNullOrEmpty(normalizedRank))
+                if (string.IsNullOrEmpty(rawRank))
                 {
                     continue;
                 }
 
-                rankLookup[rawRank] = normalizedRank;
+                var canonicalRank = rawRank;
+                var normalizedRank = NormalizeWhitespace(mapping.NormalizedRank);
+                var spreadsheetRank = NormalizeWhitespace(mapping.SpreadsheetRank);
+                if (string.IsNullOrEmpty(spreadsheetRank))
+                {
+                    spreadsheetRank = DeriveSpreadsheetRankName(rawRank);
+                }
+
+                rankLookup[rawRank] = canonicalRank;
+
+                if (!string.IsNullOrEmpty(normalizedRank))
+                {
+                    rankLookup[normalizedRank] = canonicalRank;
+                }
+
+                if (!string.IsNullOrEmpty(spreadsheetRank))
+                {
+                    rankLookup[spreadsheetRank] = canonicalRank;
+                }
             }
 
             var budgets = await context.EngagementRankBudgets
@@ -1272,14 +1306,14 @@ namespace GRCFinancialControl.Persistence.Services
                     continue;
                 }
 
-                if (!rankLookup.TryGetValue(rawRank, out var normalizedRank) || string.IsNullOrEmpty(normalizedRank))
+                if (!rankLookup.TryGetValue(rawRank, out var canonicalRank) || string.IsNullOrEmpty(canonicalRank))
                 {
                     RegisterWarning(
                         warningSamples,
                         warningRows,
                         exceptionEntries,
                         sourceFileName,
-                        $"Rank '{rawRank}' is not mapped to a normalized rank.",
+                        $"Rank '{rawRank}' is not mapped to a known rank.",
                         MissingRankWarningKey,
                         $"Rank={rawRank}",
                         record);
@@ -1315,7 +1349,7 @@ namespace GRCFinancialControl.Persistence.Services
                     continue;
                 }
 
-                var rankKey = NormalizeRankKey(normalizedRank);
+                var rankKey = NormalizeRankKey(canonicalRank);
                 if (!rankBudgets.TryGetValue(rankKey, out var budget))
                 {
                     RegisterWarning(
@@ -1323,9 +1357,9 @@ namespace GRCFinancialControl.Persistence.Services
                         warningRows,
                         exceptionEntries,
                         sourceFileName,
-                        $"No allocation budget was found for engagement '{record.EngagementCode}' and rank '{normalizedRank}'.",
+                        $"No allocation budget was found for engagement '{record.EngagementCode}' and rank '{canonicalRank}'.",
                         MissingBudgetWarningKey,
-                        $"{record.EngagementCode} / {normalizedRank}",
+                        $"{record.EngagementCode} / {canonicalRank}",
                         record);
                     continue;
                 }
@@ -1339,7 +1373,7 @@ namespace GRCFinancialControl.Persistence.Services
                     distinctEngagements.Add(record.EngagementCode);
                 }
 
-                distinctRanks.Add(normalizedRank);
+                distinctRanks.Add(canonicalRank);
 
                 var additionKey = (budget.EngagementId, rankKey);
                 var roundedHours = Math.Round(record.Hours, 2, MidpointRounding.AwayFromZero);

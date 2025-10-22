@@ -75,6 +75,11 @@ namespace GRCFinancialControl.Persistence
                 .HasMaxLength(100);
 
             rankMappingBuilder
+                .Property(r => r.SpreadsheetRank)
+                .HasColumnName("SpreadsheetRank")
+                .HasMaxLength(100);
+
+            rankMappingBuilder
                 .Property(r => r.LastSeenAt)
                 .HasMySqlColumnType("datetime(6)", isMySql);
 
@@ -105,6 +110,9 @@ namespace GRCFinancialControl.Persistence
 
             rankMappingBuilder
                 .HasIndex(r => r.IsActive);
+
+            rankMappingBuilder
+                .HasIndex(r => r.SpreadsheetRank);
 
             modelBuilder.Entity<Engagement>()
                 .HasAlternateKey(e => e.EngagementId);

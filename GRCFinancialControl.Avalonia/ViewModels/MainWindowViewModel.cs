@@ -22,6 +22,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public AllocationsViewModel Allocations { get; }
         public ReportsViewModel Reports { get; }
         public SettingsViewModel Settings { get; }
+        public RankMappingsViewModel RankMappings { get; }
         public ClosingPeriodsViewModel ClosingPeriods { get; }
         public CustomersViewModel Customers { get; }
         public TasksViewModel Tasks { get; }
@@ -41,6 +42,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                                    AllocationsViewModel allocationsViewModel,
                                    ReportsViewModel reportsViewModel,
                                    SettingsViewModel settingsViewModel,
+                                   RankMappingsViewModel rankMappingsViewModel,
                                    ClosingPeriodsViewModel closingPeriodsViewModel,
                                    CustomersViewModel customersViewModel,
                                    TasksViewModel tasksViewModel,
@@ -58,6 +60,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Allocations = allocationsViewModel;
             Reports = reportsViewModel;
             Settings = settingsViewModel;
+            RankMappings = rankMappingsViewModel;
             ClosingPeriods = closingPeriodsViewModel;
             Customers = customersViewModel;
             Tasks = tasksViewModel;
@@ -73,6 +76,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 new(LocalizationRegistry.Get("Navigation.Allocations"), Allocations),
                 new(LocalizationRegistry.Get("Navigation.Reports"), Reports),
                 new(LocalizationRegistry.Get("Navigation.Tasks"), Tasks),
+                new(LocalizationRegistry.Get(
+                    "Navigation.MasterData"),
+                    null,
+                    new ObservableCollection<NavigationItem>
+                    {
+                        new(LocalizationRegistry.Get("Navigation.MasterData.RankMappings"), RankMappings)
+                    }),
                 new(LocalizationRegistry.Get("Navigation.Settings"), Settings)
             };
 

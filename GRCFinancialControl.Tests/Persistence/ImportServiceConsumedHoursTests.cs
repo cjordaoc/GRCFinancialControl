@@ -156,6 +156,50 @@ public sealed class ImportServiceConsumedHoursTests : IAsyncDisposable
     }
 
     [Fact]
+    public async Task UpdateStaffAllocationsAsync_MapsSpreadsheetRankNames()
+    {
+        await SeedStaffAllocationScenarioAsync(includeRankMapping: false);
+
+        await using (var context = _factory.CreateDbContext())
+        {
+            var budget = await context.EngagementRankBudgets
+                .SingleAsync(b => b.EngagementId == 1 && b.FiscalYearId == 1);
+
+            budget.RankName = "11-SENIOR 3";
+
+            context.RankMappings.Add(new RankMapping
+            {
+                RawRank = "11-SENIOR 3",
+                NormalizedRank = "Senior",
+                SpreadsheetRank = "Senior 3",
+                IsActive = true
+            });
+
+            await context.SaveChangesAsync();
+        }
+
+        var monday = GetReferenceMonday();
+        var filePath = CreateStaffAllocationWorkbook(monday, new StaffAllocationRow("12345", "John Doe", "Senior 3", "E-001"));
+
+        try
+        {
+            var summary = await _service.UpdateStaffAllocationsAsync(filePath);
+
+            Assert.Contains("Updated: 1", summary);
+
+            await using var verifyContext = _factory.CreateDbContext();
+            var budget = await verifyContext.EngagementRankBudgets
+                .SingleAsync(b => b.EngagementId == 1 && b.FiscalYearId == 1 && b.RankName == "11-SENIOR 3");
+
+            Assert.Equal(40m, budget.ConsumedHours);
+        }
+        finally
+        {
+            File.Delete(filePath);
+        }
+    }
+
+    [Fact]
     public async Task UpdateStaffAllocationsAsync_LogsExceptionWhenRankMappingMissing()
     {
         await SeedStaffAllocationScenarioAsync(includeRankMapping: false);
@@ -457,6 +501,7 @@ public sealed class ImportServiceConsumedHoursTests : IAsyncDisposable
             {
                 RawRank = "Manager",
                 NormalizedRank = "Manager",
+                SpreadsheetRank = "Manager",
                 IsActive = true
             });
         }
