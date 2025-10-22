@@ -17,87 +17,155 @@
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled"
                       HorizontalAlignment="Stretch"
-                      HorizontalContentAlignment="Center"
+                      HorizontalContentAlignment="Stretch"
                       Padding="{StaticResource SpaceThickness24}">
             <StackPanel Spacing="{StaticResource Space24}"
-                        HorizontalAlignment="Center"
+                        HorizontalAlignment="Stretch"
                         MaxWidth="{Binding ElementName=EngagementEditorRoot,
                                             Path=Bounds.Width,
                                             Converter={StaticResource PercentageOfSizeConverter},
-                                            ConverterParameter=0.8}">
+                                            ConverterParameter=0.85}">
                 <StackPanel Spacing="{StaticResource Space16}">
                     <TextBlock Text="Engagement Details" FontSize="18" FontWeight="Bold"/>
-                    <Grid ColumnDefinitions="Auto,*,Auto,*"
+                    <Grid ColumnDefinitions="Auto,2*,Auto,2*"
                           RowSpacing="{StaticResource Space12}"
                           ColumnSpacing="{StaticResource Space16}">
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Engagement ID:" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding EngagementId}" IsReadOnly="{Binding IsEngagementIdReadOnly}"/>
+                        <TextBox Grid.Row="0"
+                                 Grid.Column="1"
+                                 Text="{Binding EngagementId}"
+                                 IsReadOnly="{Binding IsEngagementIdReadOnly}"
+                                 HorizontalAlignment="Stretch"
+                                 MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
                         <TextBlock Grid.Row="0" Grid.Column="2" Text="Customer:" VerticalAlignment="Center"/>
                         <ComboBox Grid.Row="0" Grid.Column="3"
                                   ItemsSource="{Binding Customers}"
                                   SelectedItem="{Binding SelectedCustomer}"
                                   DisplayMemberBinding="{Binding DisplayName}"
-                                  IsEnabled="{Binding AllowEditing}"/>
+                                  IsEnabled="{Binding AllowEditing}"
+                                  HorizontalAlignment="Stretch"
+                                  MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
 
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Description:" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding Description}" IsReadOnly="{Binding IsGeneralFieldReadOnly}"/>
+                        <TextBox Grid.Row="1"
+                                 Grid.Column="1"
+                                 Grid.ColumnSpan="3"
+                                 Text="{Binding Description}"
+                                 IsReadOnly="{Binding IsGeneralFieldReadOnly}"
+                                 HorizontalAlignment="Stretch"
+                                 MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
 
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Status:" VerticalAlignment="Center"/>
                         <ComboBox Grid.Row="2" Grid.Column="1"
                                   ItemsSource="{Binding StatusTextOptions}"
                                   SelectedItem="{Binding SelectedStatusText}"
-                                  IsEnabled="{Binding AllowEditing}"/>
+                                  IsEnabled="{Binding AllowEditing}"
+                                  HorizontalAlignment="Stretch"
+                                  MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
                         <TextBlock Grid.Row="2" Grid.Column="2" Text="Currency:" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="2" Grid.Column="3" Text="{Binding Currency}" IsReadOnly="{Binding IsGeneralFieldReadOnly}"/>
+                        <TextBox Grid.Row="2"
+                                 Grid.Column="3"
+                                 Text="{Binding Currency}"
+                                 IsReadOnly="{Binding IsGeneralFieldReadOnly}"
+                                 HorizontalAlignment="Stretch"
+                                 MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
 
                         <TextBlock Grid.Row="3" Grid.Column="0" Text="Source:" VerticalAlignment="Center"/>
                         <ComboBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3"
                                   ItemsSource="{Binding SourceOptions}"
                                   SelectedItem="{Binding SelectedSource}"
                                   DisplayMemberBinding="{Binding DisplayName}"
-                                  IsEnabled="{Binding AllowEditing}"/>
+                                  IsEnabled="{Binding AllowEditing}"
+                                  HorizontalAlignment="Stretch"
+                                  MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
 
                         <TextBlock Grid.Row="4" Grid.Column="0" Text="Opening Value:" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding OpeningValue}" IsReadOnly="{Binding IsFinancialSnapshotReadOnly}"/>
+                        <TextBox Grid.Row="4"
+                                 Grid.Column="1"
+                                 Text="{Binding OpeningValue}"
+                                 IsReadOnly="{Binding IsFinancialSnapshotReadOnly}"
+                                 HorizontalAlignment="Stretch"
+                                 MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
                         <TextBlock Grid.Row="4" Grid.Column="2" Text="Value ETC-P:" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="4" Grid.Column="3" Text="{Binding ValueEtcp}" IsReadOnly="{Binding IsGeneralFieldReadOnly}"/>
+                        <TextBox Grid.Row="4"
+                                 Grid.Column="3"
+                                 Text="{Binding ValueEtcp}"
+                                 IsReadOnly="{Binding IsGeneralFieldReadOnly}"
+                                 HorizontalAlignment="Stretch"
+                                 MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
 
                         <TextBlock Grid.Row="5" Grid.Column="0" Text="Opening Expenses:" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding OpeningExpenses}" IsReadOnly="{Binding IsFinancialSnapshotReadOnly}"/>
+                        <TextBox Grid.Row="5"
+                                 Grid.Column="1"
+                                 Text="{Binding OpeningExpenses}"
+                                 IsReadOnly="{Binding IsFinancialSnapshotReadOnly}"
+                                 HorizontalAlignment="Stretch"
+                                 MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
                         <TextBlock Grid.Row="5" Grid.Column="2" Text="Expenses ETC-P:" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="5" Grid.Column="3" Text="{Binding ExpensesEtcp}" IsReadOnly="{Binding IsGeneralFieldReadOnly}"/>
+                        <TextBox Grid.Row="5"
+                                 Grid.Column="3"
+                                 Text="{Binding ExpensesEtcp}"
+                                 IsReadOnly="{Binding IsGeneralFieldReadOnly}"
+                                 HorizontalAlignment="Stretch"
+                                 MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
 
                         <TextBlock Grid.Row="6" Grid.Column="0" Text="Planned Hours:" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding InitialHoursBudget}" IsReadOnly="{Binding IsFinancialSnapshotReadOnly}"/>
+                        <TextBox Grid.Row="6"
+                                 Grid.Column="1"
+                                 Text="{Binding InitialHoursBudget}"
+                                 IsReadOnly="{Binding IsFinancialSnapshotReadOnly}"
+                                 HorizontalAlignment="Stretch"
+                                 MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
                         <TextBlock Grid.Row="6" Grid.Column="2" Text="Estimated Hours:" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="6" Grid.Column="3" Text="{Binding EstimatedToCompleteHours}" IsReadOnly="{Binding IsGeneralFieldReadOnly}"/>
+                        <TextBox Grid.Row="6"
+                                 Grid.Column="3"
+                                 Text="{Binding EstimatedToCompleteHours}"
+                                 IsReadOnly="{Binding IsGeneralFieldReadOnly}"
+                                 HorizontalAlignment="Stretch"
+                                 MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
 
                         <TextBlock Grid.Row="7" Grid.Column="0" Text="Margin % Budget:" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="7" Grid.Column="1" Text="{Binding MarginPctBudget}" IsReadOnly="{Binding IsFinancialSnapshotReadOnly}"/>
+                        <TextBox Grid.Row="7"
+                                 Grid.Column="1"
+                                 Text="{Binding MarginPctBudget}"
+                                 IsReadOnly="{Binding IsFinancialSnapshotReadOnly}"
+                                 HorizontalAlignment="Stretch"
+                                 MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
                         <TextBlock Grid.Row="7" Grid.Column="2" Text="Margin % ETC-P:" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="7" Grid.Column="3" Text="{Binding MarginPctEtcp}" IsReadOnly="{Binding IsGeneralFieldReadOnly}"/>
+                        <TextBox Grid.Row="7"
+                                 Grid.Column="3"
+                                 Text="{Binding MarginPctEtcp}"
+                                 IsReadOnly="{Binding IsGeneralFieldReadOnly}"
+                                 HorizontalAlignment="Stretch"
+                                 MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
 
                         <TextBlock Grid.Row="8" Grid.Column="0" Text="ETC-P Age (Days):" VerticalAlignment="Center"/>
                         <TextBox Grid.Row="8" Grid.Column="1"
                                  Text="{Binding EtcpAgeDays, Mode=OneWay}"
                                  IsReadOnly="True"
                                  IsHitTestVisible="False"
-                                 IsTabStop="False"/>
+                                 IsTabStop="False"
+                                 HorizontalAlignment="Stretch"
+                                 MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
                         <TextBlock Grid.Row="8" Grid.Column="2" Text="Last Closing Period:" VerticalAlignment="Center"/>
                         <TextBox Grid.Row="8" Grid.Column="3"
                                  Text="{Binding LastClosingPeriodDisplay}"
                                  IsReadOnly="True"
                                  IsHitTestVisible="False"
-                                 IsTabStop="False"/>
+                                 IsTabStop="False"
+                                 HorizontalAlignment="Stretch"
+                                 MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
 
                         <TextBlock Grid.Row="9" Grid.Column="0" Text="Last ETC Date:" VerticalAlignment="Center"/>
                         <DatePicker Grid.Row="9" Grid.Column="1"
                                     SelectedDate="{Binding LastEtcDateOffset}"
-                                    IsEnabled="False"/>
+                                    IsEnabled="False"
+                                    HorizontalAlignment="Stretch"/>
                         <TextBlock Grid.Row="9" Grid.Column="2" Text="Proposed Next ETC Date:" VerticalAlignment="Center"/>
                         <DatePicker Grid.Row="9" Grid.Column="3"
                                     SelectedDate="{Binding ProposedNextEtcDateOffset}"
-                                    IsEnabled="False"/>
+                                    IsEnabled="False"
+                                    HorizontalAlignment="Stretch"/>
                     </Grid>
 
                 </StackPanel>

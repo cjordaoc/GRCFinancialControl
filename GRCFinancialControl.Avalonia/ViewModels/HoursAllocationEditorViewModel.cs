@@ -144,6 +144,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             RemainingHours = Math.Round(Rows.Sum(row => row.TotalRemainingHours), 2, MidpointRounding.AwayFromZero);
         }
 
+        partial void OnHasChangesChanged(bool value)
+        {
+            SaveCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnIsBusyChanged(bool value)
+        {
+            SaveCommand.NotifyCanExecuteChanged();
+        }
+
         internal RankOption? FindRankOption(string? name)
         {
             if (string.IsNullOrWhiteSpace(name))

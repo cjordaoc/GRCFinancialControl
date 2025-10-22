@@ -85,9 +85,12 @@
                     Spacing="{StaticResource Space12}">
             <Button Content="Save"
                     Command="{Binding SaveCommand}"
-                    IsEnabled="{Binding HasChanges}"/>
+                    IsDefault="True"
+                    MinWidth="120"/>
             <Button Content="Cancel"
-                    Command="{Binding CloseCommand}"/>
+                    Command="{Binding CloseCommand}"
+                    IsCancel="True"
+                    MinWidth="120"/>
         </StackPanel>
     </Grid>
 </UserControl>

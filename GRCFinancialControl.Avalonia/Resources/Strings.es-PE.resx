@@ -265,4 +265,86 @@
   <value>{0} - {1}</value>
 </data>
 
+  <data name="Admin.ManagerAssignments.Label.Manager" xml:space="preserve">
+    <value>Gerente</value>
+  </data>
+  <data name="Admin.ManagerAssignments.Label.Begin" xml:space="preserve">
+    <value>Inicio</value>
+  </data>
+  <data name="Admin.ManagerAssignments.Label.End" xml:space="preserve">
+    <value>Fin</value>
+  </data>
+  <data name="Admin.FiscalYears.Placeholder.Name" xml:space="preserve">
+    <value>Nombre</value>
+  </data>
+  <data name="Admin.FiscalYears.Placeholder.AreaSalesTarget" xml:space="preserve">
+    <value>Objetivo de ventas del área</value>
+  </data>
+  <data name="Admin.FiscalYears.Placeholder.AreaRevenueTarget" xml:space="preserve">
+    <value>Objetivo de ingresos del área</value>
+  </data>
+  <data name="Tasks.Button.ExportRetain" xml:space="preserve">
+    <value>Exportar archivo Retain</value>
+  </data>
+  <data name="Tasks.Dialog.ExportRetainTitle" xml:space="preserve">
+    <value>Exportar libro de Retain</value>
+  </data>
+  <data name="Tasks.Worksheet.Retain" xml:space="preserve">
+    <value>Retain</value>
+  </data>
+  <data name="Tasks.Status.RetainCancelled" xml:space="preserve">
+    <value>Exportación de Retain cancelada.</value>
+  </data>
+  <data name="Tasks.Status.RetainSaved" xml:space="preserve">
+    <value>Libro Retain guardado en {0}.</value>
+  </data>
+  <data name="Tasks.Status.RetainFailure" xml:space="preserve">
+    <value>Error al exportar el libro Retain: {0}</value>
+  </data>
+  <data name="Tasks.Retain.Header.SubServiceLine" xml:space="preserve">
+    <value>Sub Service Line</value>
+  </data>
+  <data name="Tasks.Retain.Header.Specialty" xml:space="preserve">
+    <value>Especialidad</value>
+  </data>
+  <data name="Tasks.Retain.Header.EmpComments2" xml:space="preserve">
+    <value>Emp Comments 2</value>
+  </data>
+  <data name="Tasks.Retain.Header.EmpComments3" xml:space="preserve">
+    <value>Emp Comments 3</value>
+  </data>
+  <data name="Tasks.Retain.Header.WorkLocation" xml:space="preserve">
+    <value>Lugar de trabajo</value>
+  </data>
+  <data name="Tasks.Retain.Header.CostCenter" xml:space="preserve">
+    <value>Centro de costos</value>
+  </data>
+  <data name="Tasks.Retain.Header.ResourceGpn" xml:space="preserve">
+    <value>Recurso (GPN)</value>
+  </data>
+  <data name="Tasks.Retain.Header.ResourceName" xml:space="preserve">
+    <value>Nombre del recurso</value>
+  </data>
+  <data name="Tasks.Retain.Header.Grade" xml:space="preserve">
+    <value>Nivel del recurso</value>
+  </data>
+  <data name="Tasks.Retain.Header.Office" xml:space="preserve">
+    <value>Oficina del recurso</value>
+  </data>
+  <data name="Tasks.Retain.Header.Engagement" xml:space="preserve">
+    <value>Compromiso</value>
+  </data>
+  <data name="Tasks.Retain.Header.Customer" xml:space="preserve">
+    <value>Cliente</value>
+  </data>
+  <data name="Tasks.Retain.Header.EngagementNumber" xml:space="preserve">
+    <value>Número de compromiso</value>
+  </data>
+  <data name="Tasks.Retain.Header.EmployeeStatus" xml:space="preserve">
+    <value>Estado del empleado</value>
+  </data>
+  <data name="Tasks.Retain.Header.EngagementType" xml:space="preserve">
+    <value>Tipo de compromiso</value>
+  </data>
+
 </root>
