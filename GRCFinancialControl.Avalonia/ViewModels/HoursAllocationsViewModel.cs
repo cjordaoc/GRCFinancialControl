@@ -23,6 +23,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly IFilePickerService _filePickerService;
         private readonly ILoggingService _loggingService;
         private readonly IDialogService _dialogService;
+        private readonly IClosingPeriodService _closingPeriodService;
 
         private int? _lastSelectedEngagementId;
         private bool _suppressSelectionChanged;
@@ -42,6 +43,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         [ObservableProperty]
         private ObservableCollection<RankOption> _availableRanks = new();
+
+        [ObservableProperty]
+        private ObservableCollection<ClosingPeriod> _closingPeriods = new();
+
+        [ObservableProperty]
+        private ClosingPeriod? _selectedClosingPeriod;
 
         [ObservableProperty]
         private HoursAllocationRowViewModel? _selectedRow;
@@ -77,6 +84,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             IFilePickerService filePickerService,
             ILoggingService loggingService,
             IDialogService dialogService,
+            IClosingPeriodService closingPeriodService,
             IMessenger messenger)
             : base(messenger)
         {
@@ -86,6 +94,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _filePickerService = filePickerService ?? throw new ArgumentNullException(nameof(filePickerService));
             _loggingService = loggingService ?? throw new ArgumentNullException(nameof(loggingService));
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+            _closingPeriodService = closingPeriodService ?? throw new ArgumentNullException(nameof(closingPeriodService));
         }
 
         public string Header => "Hours Allocation";
@@ -101,6 +110,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 IsBusy = true;
                 StatusMessage = null;
+
+                await LoadClosingPeriodsAsync().ConfigureAwait(false);
 
                 var engagements = await _engagementService.GetAllAsync().ConfigureAwait(false);
                 var summaries = engagements
@@ -219,11 +230,36 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                    !string.IsNullOrWhiteSpace(RankToAdd.Name);
         }
 
+        private async Task LoadClosingPeriodsAsync()
+        {
+            var periods = await _closingPeriodService.GetAllAsync().ConfigureAwait(false);
+            var ordered = periods
+                .OrderByDescending(period => period.PeriodStart)
+                .ToList();
+
+            ClosingPeriods = new ObservableCollection<ClosingPeriod>(ordered);
+
+            if (SelectedClosingPeriod is not null)
+            {
+                SelectedClosingPeriod = ordered.FirstOrDefault(p => p.Id == SelectedClosingPeriod.Id) ?? ordered.FirstOrDefault();
+            }
+            else
+            {
+                SelectedClosingPeriod = ordered.FirstOrDefault();
+            }
+        }
+
         [RelayCommand]
         private async Task UpdateAllocationsAsync()
         {
             if (IsBusy)
             {
+                return;
+            }
+
+            if (SelectedClosingPeriod is null)
+            {
+                StatusMessage = "Please select a Closing Period before importing the allocation sheet.";
                 return;
             }
 
@@ -245,7 +281,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 IsBusy = true;
                 StatusMessage = null;
 
-                var summary = await Task.Run(() => _importService.UpdateStaffAllocationsAsync(filePath)).ConfigureAwait(false);
+                var closingPeriodId = SelectedClosingPeriod.Id;
+                var summary = await Task.Run(() => _importService.UpdateStaffAllocationsAsync(filePath, closingPeriodId)).ConfigureAwait(false);
 
                 if (selectedId.HasValue)
                 {

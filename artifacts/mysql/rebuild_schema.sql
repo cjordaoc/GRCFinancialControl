@@ -204,6 +204,19 @@ CREATE TABLE `EngagementRankBudgets`
     INDEX `IX_EngagementRankBudgets_EngagementId` (`EngagementId`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
+CREATE TABLE `EngagementRankBudgetHistory`
+(
+    `Id`               INT             NOT NULL AUTO_INCREMENT,
+    `EngagementCode`   VARCHAR(50)     NOT NULL,
+    `RankCode`         VARCHAR(50)     NOT NULL,
+    `FiscalYearId`     INT             NOT NULL,
+    `ClosingPeriodId`  INT             NOT NULL,
+    `Hours`            DECIMAL(12, 2)  NOT NULL,
+    `UploadedAt`       DATETIME(6)     NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    CONSTRAINT `PK_EngagementRankBudgetHistory` PRIMARY KEY (`Id`),
+    CONSTRAINT `UX_EngagementRankBudgetHistory_Key` UNIQUE (`EngagementCode`, `RankCode`, `FiscalYearId`, `ClosingPeriodId`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
 -- Applied Suggestion #2: Use INT FK for EngagementId to keep consistency/performance
 CREATE TABLE `FinancialEvolution`
 (
