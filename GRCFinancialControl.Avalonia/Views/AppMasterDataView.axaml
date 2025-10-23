@@ -8,7 +8,7 @@
              x:Class="GRCFinancialControl.Avalonia.Views.AppMasterDataView"
              x:DataType="vm:AppMasterDataViewModel">
     <TabControl SelectedItem="{Binding SelectedSection}">
-        <TabItem Header="{loc:Loc Key=Navigation.RankMappings}">
+        <TabItem Header="{loc:Loc Key=Navigation.MasterData.RankMappings}">
             <ContentControl Content="{Binding RankMappingsView}"/>
         </TabItem>
     </TabControl>
