@@ -1175,16 +1175,29 @@ namespace GRCFinancialControl.Persistence.Services
                 return 0;
             }
 
+            var roundedBudget = Math.Round(budgetHours, 2, MidpointRounding.AwayFromZero);
+
             var existing = engagement.RankBudgets.FirstOrDefault(b =>
                 b.FiscalYearId == fiscalYearId &&
                 string.Equals(b.RankName, rankName, StringComparison.OrdinalIgnoreCase));
 
             if (existing is not null)
             {
+                existing.BudgetHours = roundedBudget;
+                var remaining = Math.Round(
+                    roundedBudget + existing.AdditionalHours - (existing.IncurredHours + existing.ConsumedHours),
+                    2,
+                    MidpointRounding.AwayFromZero);
+                existing.RemainingHours = remaining;
+                existing.Status = remaining switch
+                {
+                    < 0m => nameof(TrafficLightStatus.Red),
+                    > 0m => nameof(TrafficLightStatus.Yellow),
+                    _ => nameof(TrafficLightStatus.Green)
+                };
+                existing.UpdatedAtUtc = timestamp;
                 return 0;
             }
-
-            var roundedBudget = Math.Round(budgetHours, 2, MidpointRounding.AwayFromZero);
 
             engagement.RankBudgets.Add(new EngagementRankBudget
             {

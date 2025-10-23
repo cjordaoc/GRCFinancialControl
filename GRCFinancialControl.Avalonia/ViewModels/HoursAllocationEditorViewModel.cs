@@ -113,8 +113,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 IsBusy = true;
                 StatusMessage = null;
                 var snapshot = await _hoursAllocationService
-                    .SaveAsync(_engagementId, updates, rowAdjustments)
-                    .ConfigureAwait(false);
+                    .SaveAsync(_engagementId, updates, rowAdjustments);
                 ApplySnapshot(snapshot);
                 StatusMessage = "Changes saved successfully.";
                 Messenger.Send(new CloseDialogMessage(true));

@@ -11,7 +11,7 @@
     <UserControl.Resources>
         <converters:TrafficLightStatusToBrushConverter x:Key="TrafficLightStatusToBrushConverter" />
     </UserControl.Resources>
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*"
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*"
           Margin="{StaticResource SpaceThickness0}">
         <TextBlock Grid.Row="0"
                    Text="{Binding Header}"
@@ -34,18 +34,6 @@
                     Orientation="Horizontal"
                     Spacing="{StaticResource Space12}"
                     Margin="{StaticResource SpaceThickness10}">
-            <TextBlock Text="Closing Period"
-                       VerticalAlignment="Center"/>
-            <ComboBox Width="280"
-                      ItemsSource="{Binding ClosingPeriods}"
-                      SelectedItem="{Binding SelectedClosingPeriod}"
-                      DisplayMemberBinding="{Binding Name}"/>
-        </StackPanel>
-
-        <StackPanel Grid.Row="3"
-                    Orientation="Horizontal"
-                    Spacing="{StaticResource Space12}"
-                    Margin="{StaticResource SpaceThickness10}">
             <ComboBox Width="280"
                       ItemsSource="{Binding AvailableRanks}"
                       SelectedItem="{Binding RankToAdd}"
@@ -54,7 +42,7 @@
                     Command="{Binding AddResourceCommand}"/>
         </StackPanel>
 
-        <StackPanel Grid.Row="4"
+        <StackPanel Grid.Row="3"
                     Orientation="Horizontal"
                     Spacing="{StaticResource Space24}"
                     Margin="{StaticResource SpaceThickness10}">
@@ -63,14 +51,14 @@
             <TextBlock Text="{Binding ToBeConsumedHours, StringFormat='Remaining Hours: {0:N2} h'}"/>
         </StackPanel>
 
-        <TextBlock Grid.Row="5"
+        <TextBlock Grid.Row="4"
                    Text="{Binding StatusMessage}"
                    Foreground="{StaticResource BrushWarning}"
                    FontWeight="SemiBold"
                    Margin="{StaticResource SpaceThickness10}"/>
 
         <DataGrid x:Name="HoursAllocationsGrid"
-                  Grid.Row="6"
+                  Grid.Row="5"
                   ItemsSource="{Binding Rows}"
                   SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
                   AutoGenerateColumns="False"
