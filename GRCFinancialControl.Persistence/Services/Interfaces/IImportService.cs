@@ -1,6 +1,4 @@
 using System.Threading.Tasks;
-using GRCFinancialControl.Persistence.Services.Importers.StaffAllocations;
-
 namespace GRCFinancialControl.Persistence.Services.Interfaces
 {
     public interface IImportService
@@ -10,7 +8,6 @@ namespace GRCFinancialControl.Persistence.Services.Interfaces
         Task<string> ImportFcsRevenueBacklogAsync(string filePath);
         Task<string> ImportFullManagementDataAsync(string filePath);
         Task<string> ImportAllocationPlanningAsync(string filePath);
-        Task<string> UpdateStaffAllocationsAsync(string filePath);
-        Task<StaffAllocationProcessingResult> AnalyzeStaffAllocationsAsync(string filePath);
+        Task<string> UpdateStaffAllocationsAsync(string filePath, int closingPeriodId);
     }
 }

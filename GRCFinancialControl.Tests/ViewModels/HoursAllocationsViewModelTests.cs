@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -40,7 +41,7 @@ public sealed class HoursAllocationsViewModelTests
             .Returns(Task.CompletedTask);
 
         var importMock = new Mock<IImportService>();
-        importMock.Setup(service => service.UpdateStaffAllocationsAsync(It.IsAny<string>()))
+        importMock.Setup(service => service.UpdateStaffAllocationsAsync(It.IsAny<string>(), It.IsAny<int>()))
             .ReturnsAsync("Staff allocation update summary.");
 
         var filePickerMock = new Mock<IFilePickerService>();
@@ -52,6 +53,8 @@ public sealed class HoursAllocationsViewModelTests
 
         var loggingMock = new Mock<ILoggingService>();
         var dialogMock = new Mock<IDialogService>();
+        var closingPeriodMock = new Mock<IClosingPeriodService>();
+        closingPeriodMock.Setup(service => service.GetAllAsync()).ReturnsAsync(CreateClosingPeriods());
 
         var viewModel = CreateViewModel(
             engagementMock.Object,
@@ -59,7 +62,8 @@ public sealed class HoursAllocationsViewModelTests
             importMock.Object,
             filePickerMock.Object,
             loggingMock.Object,
-            dialogMock.Object);
+            dialogMock.Object,
+            closingPeriodMock.Object);
 
         await viewModel.LoadDataAsync();
 
@@ -112,7 +116,7 @@ public sealed class HoursAllocationsViewModelTests
             .Returns(Task.CompletedTask);
 
         var importMock = new Mock<IImportService>();
-        importMock.Setup(service => service.UpdateStaffAllocationsAsync(It.IsAny<string>()))
+        importMock.Setup(service => service.UpdateStaffAllocationsAsync(It.IsAny<string>(), It.IsAny<int>()))
             .ReturnsAsync("Staff allocation update summary.");
 
         var filePickerMock = new Mock<IFilePickerService>();
@@ -124,6 +128,8 @@ public sealed class HoursAllocationsViewModelTests
 
         var loggingMock = new Mock<ILoggingService>();
         var dialogMock = new Mock<IDialogService>();
+        var closingPeriodMock = new Mock<IClosingPeriodService>();
+        closingPeriodMock.Setup(service => service.GetAllAsync()).ReturnsAsync(CreateClosingPeriods());
 
         var viewModel = CreateViewModel(
             engagementMock.Object,
@@ -131,7 +137,8 @@ public sealed class HoursAllocationsViewModelTests
             importMock.Object,
             filePickerMock.Object,
             loggingMock.Object,
-            dialogMock.Object);
+            dialogMock.Object,
+            closingPeriodMock.Object);
 
         await viewModel.LoadDataAsync();
 
@@ -172,7 +179,7 @@ public sealed class HoursAllocationsViewModelTests
             .Returns(Task.CompletedTask);
 
         var importMock = new Mock<IImportService>();
-        importMock.Setup(service => service.UpdateStaffAllocationsAsync(It.IsAny<string>()))
+        importMock.Setup(service => service.UpdateStaffAllocationsAsync(It.IsAny<string>(), It.IsAny<int>()))
             .ReturnsAsync("Staff allocation update summary.");
 
         var filePickerMock = new Mock<IFilePickerService>();
@@ -184,6 +191,8 @@ public sealed class HoursAllocationsViewModelTests
 
         var loggingMock = new Mock<ILoggingService>();
         var dialogMock = new Mock<IDialogService>();
+        var closingPeriodMock = new Mock<IClosingPeriodService>();
+        closingPeriodMock.Setup(service => service.GetAllAsync()).ReturnsAsync(CreateClosingPeriods());
 
         var viewModel = CreateViewModel(
             engagementMock.Object,
@@ -191,7 +200,8 @@ public sealed class HoursAllocationsViewModelTests
             importMock.Object,
             filePickerMock.Object,
             loggingMock.Object,
-            dialogMock.Object);
+            dialogMock.Object,
+            closingPeriodMock.Object);
 
         await viewModel.LoadDataAsync();
 
@@ -232,7 +242,7 @@ public sealed class HoursAllocationsViewModelTests
             .Returns(Task.CompletedTask);
 
         var importMock = new Mock<IImportService>();
-        importMock.Setup(service => service.UpdateStaffAllocationsAsync(It.IsAny<string>()))
+        importMock.Setup(service => service.UpdateStaffAllocationsAsync(It.IsAny<string>(), It.IsAny<int>()))
             .ReturnsAsync("Staff allocation update summary.");
 
         var filePickerMock = new Mock<IFilePickerService>();
@@ -244,6 +254,8 @@ public sealed class HoursAllocationsViewModelTests
 
         var loggingMock = new Mock<ILoggingService>();
         var dialogMock = new Mock<IDialogService>();
+        var closingPeriodMock = new Mock<IClosingPeriodService>();
+        closingPeriodMock.Setup(service => service.GetAllAsync()).ReturnsAsync(CreateClosingPeriods());
 
         var viewModel = CreateViewModel(
             engagementMock.Object,
@@ -251,7 +263,8 @@ public sealed class HoursAllocationsViewModelTests
             importMock.Object,
             filePickerMock.Object,
             loggingMock.Object,
-            dialogMock.Object);
+            dialogMock.Object,
+            closingPeriodMock.Object);
         viewModel.NewRankName = "Senior";
 
         await viewModel.LoadDataAsync();
@@ -288,11 +301,13 @@ public sealed class HoursAllocationsViewModelTests
 
         var importMock = new Mock<IImportService>();
         string? receivedPath = null;
+        var receivedPeriodId = -1;
         const string summary = "Staff allocation update summary: Updated 1.";
-        importMock.Setup(service => service.UpdateStaffAllocationsAsync(It.IsAny<string>()))
-            .ReturnsAsync((string path) =>
+        importMock.Setup(service => service.UpdateStaffAllocationsAsync(It.IsAny<string>(), It.IsAny<int>()))
+            .ReturnsAsync((string path, int periodId) =>
             {
                 receivedPath = path;
+                receivedPeriodId = periodId;
                 return summary;
             });
 
@@ -305,6 +320,8 @@ public sealed class HoursAllocationsViewModelTests
 
         var loggingMock = new Mock<ILoggingService>();
         var dialogMock = new Mock<IDialogService>();
+        var closingPeriodMock = new Mock<IClosingPeriodService>();
+        closingPeriodMock.Setup(service => service.GetAllAsync()).ReturnsAsync(CreateClosingPeriods());
 
         var viewModel = CreateViewModel(
             engagementMock.Object,
@@ -312,12 +329,14 @@ public sealed class HoursAllocationsViewModelTests
             importMock.Object,
             filePickerMock.Object,
             loggingMock.Object,
-            dialogMock.Object);
+            dialogMock.Object,
+            closingPeriodMock.Object);
 
         await viewModel.LoadDataAsync();
         await viewModel.UpdateAllocationsCommand.ExecuteAsync(null);
 
         Assert.Equal("alloc.xlsx", receivedPath);
+        Assert.Equal(2, receivedPeriodId);
         Assert.Equal(summary, viewModel.StatusMessage);
     }
 
@@ -327,7 +346,8 @@ public sealed class HoursAllocationsViewModelTests
         IImportService importService,
         IFilePickerService filePickerService,
         ILoggingService loggingService,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        IClosingPeriodService closingPeriodService)
     {
         return new HoursAllocationsViewModel(
             engagementService,
@@ -336,6 +356,7 @@ public sealed class HoursAllocationsViewModelTests
             filePickerService,
             loggingService,
             dialogService,
+            closingPeriodService,
             new StrongReferenceMessenger());
     }
 
@@ -348,6 +369,27 @@ public sealed class HoursAllocationsViewModelTests
                 Id = 1,
                 EngagementId = "E-100",
                 Description = "Test Engagement"
+            }
+        };
+    }
+
+    private static List<ClosingPeriod> CreateClosingPeriods()
+    {
+        return new List<ClosingPeriod>
+        {
+            new()
+            {
+                Id = 1,
+                Name = "CP1",
+                PeriodStart = new DateTime(2024, 3, 4),
+                PeriodEnd = new DateTime(2024, 3, 10)
+            },
+            new()
+            {
+                Id = 2,
+                Name = "CP2",
+                PeriodStart = new DateTime(2024, 4, 1),
+                PeriodEnd = new DateTime(2024, 4, 7)
             }
         };
     }

@@ -111,16 +111,20 @@ public sealed class ImportServiceConsumedHoursTests : IAsyncDisposable
 
         try
         {
-            var summary = await _service.UpdateStaffAllocationsAsync(filePath);
+            var summary = await _service.UpdateStaffAllocationsAsync(filePath, closingPeriodId: 1);
 
-            Assert.Contains("Updated: 1", summary);
+            Assert.Contains("Imported CP Active (1)", summary);
+            Assert.Contains("1 engagement-rank combinations", summary);
 
             await using var verifyContext = _factory.CreateDbContext();
             var budget = await verifyContext.EngagementRankBudgets
                 .SingleAsync(b => b.EngagementId == 1 && b.FiscalYearId == 1 && b.RankName == "Manager");
 
-            Assert.Equal(40m, budget.ConsumedHours);
-            Assert.Empty(await verifyContext.Exceptions.ToListAsync());
+            Assert.Equal(40m, budget.IncurredHours);
+            Assert.Equal(60m, budget.RemainingHours);
+
+            var history = await verifyContext.EngagementRankBudgetHistory.SingleAsync();
+            Assert.Equal(40m, history.Hours);
         }
         finally
         {
@@ -134,24 +138,40 @@ public sealed class ImportServiceConsumedHoursTests : IAsyncDisposable
         await SeedStaffAllocationScenarioAsync(includeSecondaryEngagement: true);
 
         var monday = GetReferenceMonday();
-        var filePath = CreateStaffAllocationWorkbook(monday, new StaffAllocationRow("12345", "John Doe", "Manager", "E-001"));
+        var initialFilePath = CreateStaffAllocationWorkbook(
+            monday,
+            new StaffAllocationRow("12345", "John Doe", "Manager", "E-001"),
+            new StaffAllocationRow("54321", "Jane Doe", "Senior", "E-999"));
+
+        var updateFilePath = CreateStaffAllocationWorkbook(
+            monday,
+            new StaffAllocationRow("12345", "John Doe", "Manager", "E-001"));
 
         try
         {
-            var summary = await _service.UpdateStaffAllocationsAsync(filePath);
+            await _service.UpdateStaffAllocationsAsync(initialFilePath, closingPeriodId: 1);
 
-            Assert.Contains("Budgets cleared", summary);
+            var summary = await _service.UpdateStaffAllocationsAsync(updateFilePath, closingPeriodId: 1);
+
+            Assert.Contains("Imported CP Active (1)", summary);
 
             await using var verifyContext = _factory.CreateDbContext();
             var clearedBudget = await verifyContext.EngagementRankBudgets
                 .Include(b => b.Engagement)
                 .SingleAsync(b => b.Engagement != null && b.Engagement.EngagementId == "E-999");
 
-            Assert.Equal(0m, clearedBudget.ConsumedHours);
+            Assert.Equal(0m, clearedBudget.IncurredHours);
+            Assert.Equal(clearedBudget.BudgetHours, clearedBudget.RemainingHours);
+
+            var histories = await verifyContext.EngagementRankBudgetHistory
+                .Where(h => h.EngagementCode == "E-999")
+                .ToListAsync();
+            Assert.Empty(histories);
         }
         finally
         {
-            File.Delete(filePath);
+            File.Delete(initialFilePath);
+            File.Delete(updateFilePath);
         }
     }
 
@@ -183,15 +203,15 @@ public sealed class ImportServiceConsumedHoursTests : IAsyncDisposable
 
         try
         {
-            var summary = await _service.UpdateStaffAllocationsAsync(filePath);
+            var summary = await _service.UpdateStaffAllocationsAsync(filePath, closingPeriodId: 1);
 
-            Assert.Contains("Updated: 1", summary);
+            Assert.Contains("Imported CP Active (1)", summary);
 
             await using var verifyContext = _factory.CreateDbContext();
             var budget = await verifyContext.EngagementRankBudgets
                 .SingleAsync(b => b.EngagementId == 1 && b.FiscalYearId == 1 && b.RankName == "11-SENIOR 3");
 
-            Assert.Equal(40m, budget.ConsumedHours);
+            Assert.Equal(40m, budget.IncurredHours);
         }
         finally
         {
@@ -200,7 +220,7 @@ public sealed class ImportServiceConsumedHoursTests : IAsyncDisposable
     }
 
     [Fact]
-    public async Task UpdateStaffAllocationsAsync_LogsExceptionWhenRankMappingMissing()
+    public async Task UpdateStaffAllocationsAsync_SkipsWhenRankMappingMissing()
     {
         await SeedStaffAllocationScenarioAsync(includeRankMapping: false);
 
@@ -209,18 +229,18 @@ public sealed class ImportServiceConsumedHoursTests : IAsyncDisposable
 
         try
         {
-            var summary = await _service.UpdateStaffAllocationsAsync(filePath);
+            var summary = await _service.UpdateStaffAllocationsAsync(filePath, closingPeriodId: 1);
 
-            Assert.Contains("Skipped: 1", summary);
+            Assert.Contains("0 engagement-rank combinations", summary);
 
             await using var verifyContext = _factory.CreateDbContext();
             var budget = await verifyContext.EngagementRankBudgets
                 .SingleAsync(b => b.EngagementId == 1 && b.FiscalYearId == 1 && b.RankName == "Manager");
 
-            Assert.Equal(0m, budget.ConsumedHours);
+            Assert.Equal(0m, budget.IncurredHours);
 
-            var exception = await verifyContext.Exceptions.SingleAsync();
-            Assert.Contains("Rank 'Unknown'", exception.Reason);
+            var histories = await verifyContext.EngagementRankBudgetHistory.ToListAsync();
+            Assert.Empty(histories);
         }
         finally
         {
@@ -502,6 +522,14 @@ public sealed class ImportServiceConsumedHoursTests : IAsyncDisposable
                 RawRank = "Manager",
                 NormalizedRank = "Manager",
                 SpreadsheetRank = "Manager",
+                IsActive = true
+            });
+
+            context.RankMappings.Add(new RankMapping
+            {
+                RawRank = "Senior",
+                NormalizedRank = "Senior",
+                SpreadsheetRank = "Senior",
                 IsActive = true
             });
         }

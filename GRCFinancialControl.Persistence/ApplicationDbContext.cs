@@ -22,6 +22,7 @@ namespace GRCFinancialControl.Persistence
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Employee> Employees { get; set; }
         public DbSet<EngagementRankBudget> EngagementRankBudgets { get; set; }
+        public DbSet<EngagementRankBudgetHistory> EngagementRankBudgetHistory { get; set; }
         public DbSet<RankMapping> RankMappings { get; set; }
         public DbSet<FinancialEvolution> FinancialEvolutions { get; set; }
         public DbSet<EngagementFiscalYearRevenueAllocation> EngagementFiscalYearRevenueAllocations { get; set; }
@@ -448,6 +449,39 @@ namespace GRCFinancialControl.Persistence
                 .WithMany(fy => fy.RankBudgets)
                 .HasForeignKey(rb => rb.FiscalYearId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            var historyBuilder = modelBuilder.Entity<EngagementRankBudgetHistory>();
+            historyBuilder.ToTable("EngagementRankBudgetHistory");
+
+            historyBuilder
+                .Property(h => h.EngagementCode)
+                .HasMaxLength(50);
+
+            historyBuilder
+                .Property(h => h.RankCode)
+                .HasMaxLength(50);
+
+            historyBuilder
+                .Property(h => h.Hours)
+                .HasPrecision(12, 2);
+
+            var historyUploadedAt = historyBuilder
+                .Property(h => h.UploadedAt)
+                .HasMySqlColumnType("datetime(6)", isMySql)
+                .ValueGeneratedOnAdd();
+
+            if (isMySql)
+            {
+                historyUploadedAt.HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
+            }
+            else
+            {
+                historyUploadedAt.HasDefaultValueSql("CURRENT_TIMESTAMP");
+            }
+
+            historyBuilder
+                .HasIndex(h => new { h.EngagementCode, h.RankCode, h.FiscalYearId, h.ClosingPeriodId })
+                .IsUnique();
 
             modelBuilder.Entity<FinancialEvolution>()
                 .ToTable("FinancialEvolution");
