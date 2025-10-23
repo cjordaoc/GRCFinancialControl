@@ -102,8 +102,7 @@ namespace GRCFinancialControl.Persistence.Services
 
             var planInfo = workbook.GetWorksheet("PLAN INFO") ??
                            throw new InvalidDataException("Worksheet 'PLAN INFO' is missing from the budget workbook.");
-            var resourcing = workbook.GetWorksheet("RESOURCING") ??
-                             throw new InvalidDataException("Worksheet 'RESOURCING' is missing from the budget workbook.");
+            var resourcing = ResolveResourcingWorksheet(workbook);
 
             var customerName = NormalizeWhitespace(GetCellString(planInfo, 3, 1));
             var engagementKey = NormalizeWhitespace(GetCellString(planInfo, 4, 1));
@@ -276,6 +275,33 @@ namespace GRCFinancialControl.Persistence.Services
             }).ConfigureAwait(false);
         }
 
+        private static IWorksheet ResolveResourcingWorksheet(WorkbookData workbook)
+        {
+            ArgumentNullException.ThrowIfNull(workbook);
+
+            var resourcing = workbook.GetWorksheet("RESOURCING");
+            if (resourcing is not null)
+            {
+                return resourcing;
+            }
+
+            foreach (var worksheet in workbook.Worksheets)
+            {
+                if (worksheet is null)
+                {
+                    continue;
+                }
+
+                if (FindResourcingHeaderRow(worksheet) >= 0)
+                {
+                    return worksheet;
+                }
+            }
+
+            throw new InvalidDataException(
+                "Worksheet 'RESOURCING' is missing from the budget workbook and no alternative worksheet with Level and Employee columns could be found.");
+        }
+
         private static ResourcingParseResult ParseResourcing(IWorksheet resourcing)
         {
             ArgumentNullException.ThrowIfNull(resourcing);
@@ -335,6 +361,12 @@ namespace GRCFinancialControl.Persistence.Services
                         issues.Add($"Row {dataRowIndex + 1}: Hours present but rank name missing; skipped.");
                     }
 
+                    dataRowIndex++;
+                    continue;
+                }
+
+                if (IsResourcingSummaryRow(rawRank))
+                {
                     dataRowIndex++;
                     continue;
                 }
@@ -425,6 +457,23 @@ namespace GRCFinancialControl.Persistence.Services
             }
 
             return -1;
+        }
+
+        private static bool IsResourcingSummaryRow(string rankName)
+        {
+            if (string.IsNullOrWhiteSpace(rankName))
+            {
+                return false;
+            }
+
+            var normalized = NormalizeWhitespace(rankName);
+            if (string.IsNullOrEmpty(normalized))
+            {
+                return false;
+            }
+
+            return normalized.Contains("incurred", StringComparison.OrdinalIgnoreCase) &&
+                   normalized.Contains("hour", StringComparison.OrdinalIgnoreCase);
         }
 
         private static Dictionary<string, int> BuildHeaderMap(IWorksheet table, int headerRowIndex)
