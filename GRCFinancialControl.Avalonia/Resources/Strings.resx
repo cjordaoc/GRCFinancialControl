@@ -18,6 +18,9 @@
   <data name="Shell.Brand.Primary" xml:space="preserve">
     <value>GRC Control</value>
   </data>
+  <data name="Navigation.Home" xml:space="preserve">
+    <value>Home</value>
+  </data>
   <data name="Navigation.Import" xml:space="preserve">
     <value>Import</value>
   </data>
@@ -194,6 +197,45 @@
   </data>
   <data name="Settings.Status.ImportFailure" xml:space="preserve">
     <value>Failed to import the connection package: {0}</value>
+  </data>
+  <data name="Home.Title" xml:space="preserve">
+    <value>Welcome</value>
+  </data>
+  <data name="Home.Welcome" xml:space="preserve">
+    <value>Select the fiscal year and closing period to use across the application.</value>
+  </data>
+  <data name="Home.Label.FiscalYear" xml:space="preserve">
+    <value>Fiscal year</value>
+  </data>
+  <data name="Home.Label.ClosingPeriod" xml:space="preserve">
+    <value>Closing period</value>
+  </data>
+  <data name="Home.Button.Confirm" xml:space="preserve">
+    <value>Confirm selection</value>
+  </data>
+  <data name="Home.Placeholder.FiscalYear" xml:space="preserve">
+    <value>Choose a fiscal year</value>
+  </data>
+  <data name="Home.Placeholder.ClosingPeriod" xml:space="preserve">
+    <value>Choose a closing period</value>
+  </data>
+  <data name="Home.Status.Saved" xml:space="preserve">
+    <value>Default fiscal year and closing period saved.</value>
+  </data>
+  <data name="Home.Status.SaveError" xml:space="preserve">
+    <value>Unable to save your selection: {0}</value>
+  </data>
+  <data name="Home.Status.LoadError" xml:space="preserve">
+    <value>Unable to load application parameters: {0}</value>
+  </data>
+  <data name="Home.Status.NoFiscalYears" xml:space="preserve">
+    <value>No fiscal years are available. Create one before continuing.</value>
+  </data>
+  <data name="Home.Status.NoClosingPeriods" xml:space="preserve">
+    <value>No closing periods exist for the selected fiscal year.</value>
+  </data>
+  <data name="Home.Status.SelectFiscalYear" xml:space="preserve">
+    <value>Select a fiscal year to continue.</value>
   </data>
   <data name="Localization.Language.English" xml:space="preserve">
     <value>English</value>

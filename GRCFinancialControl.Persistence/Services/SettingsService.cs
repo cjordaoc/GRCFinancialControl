@@ -153,5 +153,54 @@ namespace GRCFinancialControl.Persistence.Services
             await _context.SaveChangesAsync().ConfigureAwait(false);
         }
 
+        public async Task<int?> GetDefaultClosingPeriodIdAsync()
+        {
+            var setting = await _context.Settings
+                .FirstOrDefaultAsync(s => s.Key == SettingKeys.DefaultClosingPeriodId)
+                .ConfigureAwait(false);
+
+            if (setting == null || string.IsNullOrWhiteSpace(setting.Value))
+            {
+                return null;
+            }
+
+            if (int.TryParse(setting.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var closingPeriodId))
+            {
+                return closingPeriodId;
+            }
+
+            return null;
+        }
+
+        public async Task SetDefaultClosingPeriodIdAsync(int? closingPeriodId)
+        {
+            var existingSetting = await _context.Settings
+                .FirstOrDefaultAsync(s => s.Key == SettingKeys.DefaultClosingPeriodId)
+                .ConfigureAwait(false);
+
+            if (closingPeriodId.HasValue)
+            {
+                var value = closingPeriodId.Value.ToString(CultureInfo.InvariantCulture);
+                if (existingSetting != null)
+                {
+                    existingSetting.Value = value;
+                }
+                else
+                {
+                    await _context.Settings.AddAsync(new Setting
+                    {
+                        Key = SettingKeys.DefaultClosingPeriodId,
+                        Value = value
+                    }).ConfigureAwait(false);
+                }
+            }
+            else if (existingSetting != null)
+            {
+                _context.Settings.Remove(existingSetting);
+            }
+
+            await _context.SaveChangesAsync().ConfigureAwait(false);
+        }
+
     }
 }

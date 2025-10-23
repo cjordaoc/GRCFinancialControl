@@ -15,6 +15,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         private readonly ILoggingService _loggingService;
 
+        public HomeViewModel Home { get; }
         public EngagementsViewModel Engagements { get; }
         public GrcTeamViewModel GrcTeam { get; }
         public ImportViewModel Import { get; }
@@ -33,7 +34,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private ViewModelBase? _activeView;
 
-        public MainWindowViewModel(EngagementsViewModel engagementsViewModel,
+        public MainWindowViewModel(HomeViewModel homeViewModel,
+                                   EngagementsViewModel engagementsViewModel,
+                                   FiscalYearsViewModel fiscalYearsViewModel,
                                    GrcTeamViewModel grcTeamViewModel,
                                    ImportViewModel importViewModel,
                                    AllocationsViewModel allocationsViewModel,
@@ -49,6 +52,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             ArgumentNullException.ThrowIfNull(loggingService);
 
             _loggingService = loggingService;
+            Home = homeViewModel;
             Engagements = engagementsViewModel;
             GrcTeam = grcTeamViewModel;
             Import = importViewModel;
@@ -61,6 +65,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             NavigationItems = new ObservableCollection<NavigationItem>
             {
+                new(LocalizationRegistry.Get("Navigation.Home"), Home),
                 new(LocalizationRegistry.Get("Navigation.Import"), Import),
                 new(LocalizationRegistry.Get("Navigation.Engagements"), Engagements),
                 new(LocalizationRegistry.Get("Navigation.GrcTeam"), GrcTeam),

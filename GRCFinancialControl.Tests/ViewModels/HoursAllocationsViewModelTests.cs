@@ -347,8 +347,19 @@ public sealed class HoursAllocationsViewModelTests
         IFilePickerService filePickerService,
         ILoggingService loggingService,
         IDialogService dialogService,
-        IClosingPeriodService closingPeriodService)
+        IClosingPeriodService closingPeriodService,
+        ISettingsService? settingsService = null)
     {
+        if (settingsService is null)
+        {
+            var settingsMock = new Mock<ISettingsService>();
+            settingsMock.Setup(service => service.GetDefaultClosingPeriodIdAsync())
+                .ReturnsAsync((int?)null);
+            settingsMock.Setup(service => service.SetDefaultClosingPeriodIdAsync(It.IsAny<int?>()))
+                .Returns(Task.CompletedTask);
+            settingsService = settingsMock.Object;
+        }
+
         return new HoursAllocationsViewModel(
             engagementService,
             hoursAllocationService,
@@ -357,6 +368,7 @@ public sealed class HoursAllocationsViewModelTests
             loggingService,
             dialogService,
             closingPeriodService,
+            settingsService,
             new StrongReferenceMessenger());
     }
 
