@@ -65,6 +65,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public bool HasSelectedImportPackage => !string.IsNullOrWhiteSpace(SelectedImportPackageFileName);
 
+        [ObservableProperty]
+        private bool _isDatabasePasswordVisible;
+
+        [ObservableProperty]
+        private bool _isExportPassphraseVisible;
+
+        [ObservableProperty]
+        private bool _isConfirmExportPassphraseVisible;
+
+        [ObservableProperty]
+        private bool _isImportPassphraseVisible;
+
         public IReadOnlyList<LanguageOption> Languages { get; }
 
         [ObservableProperty]
@@ -105,6 +117,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public IAsyncRelayCommand ExportConnectionPackageCommand { get; }
         public IAsyncRelayCommand BrowseImportPackageCommand { get; }
         public IAsyncRelayCommand ImportConnectionPackageCommand { get; }
+
+        public char DatabasePasswordChar => IsDatabasePasswordVisible ? '\0' : '•';
+        public string DatabasePasswordToggleIcon => IsDatabasePasswordVisible ? "🙈" : "👁";
+
+        public char ExportPassphraseChar => IsExportPassphraseVisible ? '\0' : '•';
+        public string ExportPassphraseToggleIcon => IsExportPassphraseVisible ? "🙈" : "👁";
+
+        public char ConfirmExportPassphraseChar => IsConfirmExportPassphraseVisible ? '\0' : '•';
+        public string ConfirmExportPassphraseToggleIcon => IsConfirmExportPassphraseVisible ? "🙈" : "👁";
+
+        public char ImportPassphraseChar => IsImportPassphraseVisible ? '\0' : '•';
+        public string ImportPassphraseToggleIcon => IsImportPassphraseVisible ? "🙈" : "👁";
 
         public override async Task LoadDataAsync()
         {
@@ -372,6 +396,30 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         partial void OnSelectedImportPackageFileNameChanged(string value)
         {
             OnPropertyChanged(nameof(HasSelectedImportPackage));
+        }
+
+        partial void OnIsDatabasePasswordVisibleChanged(bool value)
+        {
+            OnPropertyChanged(nameof(DatabasePasswordChar));
+            OnPropertyChanged(nameof(DatabasePasswordToggleIcon));
+        }
+
+        partial void OnIsExportPassphraseVisibleChanged(bool value)
+        {
+            OnPropertyChanged(nameof(ExportPassphraseChar));
+            OnPropertyChanged(nameof(ExportPassphraseToggleIcon));
+        }
+
+        partial void OnIsConfirmExportPassphraseVisibleChanged(bool value)
+        {
+            OnPropertyChanged(nameof(ConfirmExportPassphraseChar));
+            OnPropertyChanged(nameof(ConfirmExportPassphraseToggleIcon));
+        }
+
+        partial void OnIsImportPassphraseVisibleChanged(bool value)
+        {
+            OnPropertyChanged(nameof(ImportPassphraseChar));
+            OnPropertyChanged(nameof(ImportPassphraseToggleIcon));
         }
     }
 }

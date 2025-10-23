@@ -90,8 +90,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             var assignment = new EngagementManagerAssignment
             {
-                EngagementId = SelectedEngagement.InternalId,
-                BeginDate = DateTime.Today
+                EngagementId = SelectedEngagement.InternalId
             };
 
             var editorViewModel = new ManagerAssignmentEditorViewModel(
@@ -235,11 +234,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     SelectedEngagement.Description,
                     a.ManagerId,
                     a.Manager.Name,
-                    a.Manager.Position,
-                    a.BeginDate,
-                    a.EndDate))
-                .OrderBy(a => a.BeginDate)
-                .ThenBy(a => a.ManagerName, StringComparer.OrdinalIgnoreCase)
+                    a.Manager.Position))
+                .OrderBy(a => a.ManagerName, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
             Assignments = new ObservableCollection<ManagerAssignmentItem>(assignmentItems);
@@ -254,9 +250,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         string EngagementDescription,
         int ManagerId,
         string ManagerName,
-        ManagerPosition ManagerPosition,
-        DateTime BeginDate,
-        DateTime? EndDate)
+        ManagerPosition ManagerPosition)
     {
         public string EngagementDisplay => string.IsNullOrWhiteSpace(EngagementId)
             ? EngagementDescription

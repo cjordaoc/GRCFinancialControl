@@ -26,7 +26,7 @@ namespace GRCFinancialControl.Persistence.Services
                 .Include(a => a.Manager)
                 .Include(a => a.Engagement)
                 .OrderBy(a => a.Engagement.EngagementId)
-                .ThenBy(a => a.BeginDate)
+                .ThenBy(a => a.Manager.Name)
                 .ToListAsync();
         }
 
@@ -39,8 +39,7 @@ namespace GRCFinancialControl.Persistence.Services
                 .Include(a => a.Manager)
                 .Include(a => a.Engagement)
                 .Where(a => a.EngagementId == engagementId)
-                .OrderBy(a => a.BeginDate)
-                .ThenBy(a => a.Manager.Name)
+                .OrderBy(a => a.Manager.Name)
                 .ToListAsync();
         }
 
@@ -92,8 +91,6 @@ namespace GRCFinancialControl.Persistence.Services
 
             existingAssignment.EngagementId = assignment.EngagementId;
             existingAssignment.ManagerId = assignment.ManagerId;
-            existingAssignment.BeginDate = assignment.BeginDate;
-            existingAssignment.EndDate = assignment.EndDate;
 
             await context.SaveChangesAsync();
         }

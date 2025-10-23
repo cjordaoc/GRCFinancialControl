@@ -93,7 +93,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            var assignmentViewModel = new PapdEngagementAssignmentViewModel(SelectedPapd, _engagementService, Messenger);
+            var assignmentViewModel = new PapdEngagementAssignmentViewModel(
+                SelectedPapd,
+                new EngagementPapd { PapdId = SelectedPapd.Id, Papd = SelectedPapd },
+                _engagementService,
+                Messenger);
             await assignmentViewModel.LoadDataAsync();
             await _dialogService.ShowDialogAsync(assignmentViewModel);
         }

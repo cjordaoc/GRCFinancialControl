@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,7 +7,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
-using GRCFinancialControl.Avalonia.Utilities;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -17,12 +15,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
     public partial class PapdEngagementAssignmentViewModel : ViewModelBase
     {
         private readonly IEngagementService _engagementService;
-
-        [ObservableProperty]
-        private ObservableCollection<PapdAssignmentItem> _assignments = new();
-
-        [ObservableProperty]
-        private PapdAssignmentItem? _selectedAssignment;
+        private readonly EngagementPapd _assignment;
 
         [ObservableProperty]
         private ObservableCollection<EngagementOption> _engagements = new();
@@ -31,128 +24,68 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
         private EngagementOption? _selectedEngagement;
 
         [ObservableProperty]
-        private DateTime? _effectiveDate = DateTime.Today;
-
-        [ObservableProperty]
         private bool _isReadOnlyMode;
 
         public Papd Papd { get; }
 
-        public PapdEngagementAssignmentViewModel(Papd papd, IEngagementService engagementService, IMessenger messenger, bool isReadOnlyMode = false)
+        public string Title => _assignment.Id == 0
+            ? LocalizationRegistry.Get("Admin.PapdAssignments.Title.Editor")
+            : LocalizationRegistry.Get("Admin.PapdAssignments.Title.Editor");
+
+        public PapdEngagementAssignmentViewModel(
+            Papd papd,
+            EngagementPapd assignment,
+            IEngagementService engagementService,
+            IMessenger messenger,
+            bool isReadOnlyMode = false)
             : base(messenger)
         {
-            Papd = papd;
-            _engagementService = engagementService;
+            Papd = papd ?? throw new ArgumentNullException(nameof(papd));
+            _assignment = assignment ?? throw new ArgumentNullException(nameof(assignment));
+            _engagementService = engagementService ?? throw new ArgumentNullException(nameof(engagementService));
             IsReadOnlyMode = isReadOnlyMode;
         }
 
-        public DateTimeOffset? EffectiveDateOffset
-        {
-            get => DateTimeOffsetHelper.FromDate(EffectiveDate);
-            set => EffectiveDate = DateTimeOffsetHelper.ToDate(value);
-        }
+        public bool AllowEditing => !IsReadOnlyMode;
 
         public override async Task LoadDataAsync()
         {
             var engagements = await _engagementService.GetAllAsync();
 
-            var engagementOptions = engagements
+            var options = engagements
                 .OrderBy(e => e.Description, StringComparer.OrdinalIgnoreCase)
                 .Select(e => new EngagementOption(e.Id, e.EngagementId, e.Description))
                 .ToList();
 
-            Engagements = new ObservableCollection<EngagementOption>(engagementOptions);
-            if (SelectedEngagement is null)
+            Engagements = new ObservableCollection<EngagementOption>(options);
+
+            if (_assignment.EngagementId != 0)
+            {
+                SelectedEngagement = Engagements.FirstOrDefault(e => e.InternalId == _assignment.EngagementId)
+                    ?? Engagements.FirstOrDefault();
+            }
+            else
             {
                 SelectedEngagement = Engagements.FirstOrDefault();
             }
-
-            var assignmentItems = engagements
-                .SelectMany(e => e.EngagementPapds.Select(a => (Engagement: e, Assignment: a)))
-                .Where(pair => pair.Assignment.PapdId == Papd.Id)
-                .Select(pair => new PapdAssignmentItem(
-                    pair.Assignment.Id,
-                    pair.Engagement.Id,
-                    pair.Engagement.EngagementId,
-                    pair.Engagement.Description,
-                    pair.Assignment.EffectiveDate))
-                .OrderBy(a => a.EffectiveDate)
-                .ThenBy(a => a.EngagementId, StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            Assignments = new ObservableCollection<PapdAssignmentItem>(assignmentItems);
-            SelectedAssignment = Assignments.FirstOrDefault();
         }
 
-        [RelayCommand(CanExecute = nameof(CanAssign))]
-        private async Task AssignAsync()
+        [RelayCommand(CanExecute = nameof(CanSave))]
+        private async Task SaveAsync()
         {
-            if (SelectedEngagement is null || EffectiveDate is null)
+            if (SelectedEngagement is null)
             {
                 return;
             }
 
-            var engagement = await _engagementService.GetByIdAsync(SelectedEngagement.InternalId);
-            if (engagement is null)
+            if (_assignment.Id == 0)
             {
-                return;
+                await AddAssignmentAsync(SelectedEngagement.InternalId);
             }
-
-            var effectiveDate = EffectiveDate.Value.Date;
-            var hasExisting = engagement.EngagementPapds.Any(a => a.PapdId == Papd.Id && a.EffectiveDate == effectiveDate);
-            if (!hasExisting)
+            else
             {
-                engagement.EngagementPapds.Add(new EngagementPapd
-                {
-                    EngagementId = engagement.Id,
-                    PapdId = Papd.Id,
-                    EffectiveDate = effectiveDate
-                });
-
-                await _engagementService.UpdateAsync(engagement);
+                await UpdateAssignmentAsync(SelectedEngagement.InternalId);
             }
-
-            await LoadDataAsync();
-            Messenger.Send(new RefreshDataMessage());
-        }
-
-        [RelayCommand(CanExecute = nameof(CanRemoveAssignment))]
-        private async Task RemoveAssignmentAsync()
-        {
-            if (SelectedAssignment is null)
-            {
-                return;
-            }
-
-            var engagement = await _engagementService.GetByIdAsync(SelectedAssignment.InternalEngagementId);
-            if (engagement is null)
-            {
-                return;
-            }
-
-            var assignment = engagement.EngagementPapds.FirstOrDefault(a => a.Id == SelectedAssignment.AssignmentId);
-            if (assignment is null)
-            {
-                return;
-            }
-
-            engagement.EngagementPapds.Remove(assignment);
-            await _engagementService.UpdateAsync(engagement);
-
-            await LoadDataAsync();
-            Messenger.Send(new RefreshDataMessage());
-        }
-
-        [RelayCommand]
-        private void Save()
-        {
-            if (IsReadOnlyMode)
-            {
-                Messenger.Send(new CloseDialogMessage(false));
-                return;
-            }
-
-            Messenger.Send(new CloseDialogMessage(true));
         }
 
         [RelayCommand]
@@ -161,37 +94,78 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             Messenger.Send(new CloseDialogMessage(false));
         }
 
-        private bool CanAssign() => SelectedEngagement is not null && EffectiveDate is not null && !IsReadOnlyMode;
+        private bool CanSave() => SelectedEngagement is not null && AllowEditing;
 
-        private bool CanRemoveAssignment() => SelectedAssignment is not null && !IsReadOnlyMode;
-
-        partial void OnSelectedAssignmentChanged(PapdAssignmentItem? value)
+        private async Task AddAssignmentAsync(int engagementId)
         {
-            RemoveAssignmentCommand.NotifyCanExecuteChanged();
+            var engagement = await _engagementService.GetByIdAsync(engagementId);
+            if (engagement is null)
+            {
+                return;
+            }
+
+            var exists = engagement.EngagementPapds.Any(a => a.PapdId == Papd.Id);
+            if (exists)
+            {
+                Messenger.Send(new CloseDialogMessage(false));
+                return;
+            }
+
+            engagement.EngagementPapds.Add(new EngagementPapd
+            {
+                EngagementId = engagement.Id,
+                PapdId = Papd.Id
+            });
+
+            await _engagementService.UpdateAsync(engagement);
+            Messenger.Send(new CloseDialogMessage(true));
         }
 
-        partial void OnSelectedEngagementChanged(EngagementOption? value)
+        private async Task UpdateAssignmentAsync(int newEngagementId)
         {
-            AssignCommand.NotifyCanExecuteChanged();
-        }
+            var currentEngagement = await _engagementService.GetByIdAsync(_assignment.EngagementId);
+            if (currentEngagement is null)
+            {
+                return;
+            }
 
-        partial void OnEffectiveDateChanged(DateTime? value)
-        {
-            OnPropertyChanged(nameof(EffectiveDateOffset));
-            AssignCommand.NotifyCanExecuteChanged();
-        }
+            var existingAssignment = currentEngagement.EngagementPapds.FirstOrDefault(a => a.Id == _assignment.Id);
+            if (existingAssignment is null)
+            {
+                return;
+            }
 
-        partial void OnIsReadOnlyModeChanged(bool value)
-        {
-            AssignCommand.NotifyCanExecuteChanged();
-            RemoveAssignmentCommand.NotifyCanExecuteChanged();
-            OnPropertyChanged(nameof(AllowEditing));
-        }
+            if (currentEngagement.Id == newEngagementId)
+            {
+                Messenger.Send(new CloseDialogMessage(true));
+                return;
+            }
 
-        public bool AllowEditing => !IsReadOnlyMode;
+            currentEngagement.EngagementPapds.Remove(existingAssignment);
+            await _engagementService.UpdateAsync(currentEngagement);
+
+            var targetEngagement = await _engagementService.GetByIdAsync(newEngagementId);
+            if (targetEngagement is null)
+            {
+                return;
+            }
+
+            if (targetEngagement.EngagementPapds.Any(a => a.PapdId == Papd.Id))
+            {
+                Messenger.Send(new CloseDialogMessage(true));
+                return;
+            }
+
+            targetEngagement.EngagementPapds.Add(new EngagementPapd
+            {
+                EngagementId = targetEngagement.Id,
+                PapdId = Papd.Id
+            });
+
+            await _engagementService.UpdateAsync(targetEngagement);
+            Messenger.Send(new CloseDialogMessage(true));
+        }
     }
-
-    public record PapdAssignmentItem(int AssignmentId, int InternalEngagementId, string EngagementId, string EngagementDescription, DateTime EffectiveDate);
 
     public record EngagementOption(int InternalId, string EngagementId, string Description)
     {

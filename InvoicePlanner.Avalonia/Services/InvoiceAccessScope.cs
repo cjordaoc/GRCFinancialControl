@@ -144,7 +144,6 @@ public sealed class InvoiceAccessScope : IInvoiceAccessScope
         }
 
         var normalizedLogin = login.Trim();
-        var today = DateTime.Today;
         var engagementIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         var papdIds = context.Papds
@@ -162,7 +161,6 @@ public sealed class InvoiceAccessScope : IInvoiceAccessScope
                                    join engagement in context.Engagements.AsNoTracking()
                                        on assignment.EngagementId equals engagement.Id
                                    where papdIds.Contains(assignment.PapdId)
-                                   where assignment.EffectiveDate <= today
                                    select engagement.EngagementId)
                 .Where(id => !string.IsNullOrWhiteSpace(id))
                 .Distinct()
@@ -189,8 +187,6 @@ public sealed class InvoiceAccessScope : IInvoiceAccessScope
                                       join engagement in context.Engagements.AsNoTracking()
                                           on assignment.EngagementId equals engagement.Id
                                       where managerIds.Contains(assignment.ManagerId)
-                                      where assignment.BeginDate <= today
-                                      where !assignment.EndDate.HasValue || assignment.EndDate.Value >= today
                                       select engagement.EngagementId)
                 .Where(id => !string.IsNullOrWhiteSpace(id))
                 .Distinct()

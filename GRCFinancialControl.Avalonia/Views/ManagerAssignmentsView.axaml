@@ -32,8 +32,6 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="{loc:Loc Key=Admin.ManagerAssignments.Header.Manager}" Binding="{Binding ManagerName}" Width="*"/>
                 <DataGridTextColumn Header="{loc:Loc Key=Admin.ManagerAssignments.Header.Position}" Binding="{Binding ManagerPosition}" Width="150"/>
-                <DataGridTextColumn Header="{loc:Loc Key=Admin.ManagerAssignments.Header.Begin}" Binding="{Binding BeginDate, StringFormat='{}{0:yyyy-MM-dd}'}" Width="160"/>
-                <DataGridTextColumn Header="{loc:Loc Key=Admin.ManagerAssignments.Header.End}" Binding="{Binding EndDate, StringFormat='{}{0:yyyy-MM-dd}'}" Width="160"/>
             </DataGrid.Columns>
         </DataGrid>
     </StackPanel>

@@ -44,9 +44,9 @@ namespace GRCFinancialControl.Persistence
 
             var isMySql = Database.ProviderName?.Contains("MySql", StringComparison.OrdinalIgnoreCase) == true;
 
-            // Configure composite key for EngagementPapd if not using an auto-incrementing Id
-            // modelBuilder.Entity<EngagementPapd>()
-            //     .HasKey(ep => new { ep.EngagementId, ep.PapdId, ep.EffectiveDate });
+            modelBuilder.Entity<EngagementPapd>()
+                .HasIndex(ep => new { ep.EngagementId, ep.PapdId })
+                .IsUnique();
 
             // Configure relationships
             modelBuilder.Entity<Customer>()
@@ -254,10 +254,6 @@ namespace GRCFinancialControl.Persistence
                 .HasIndex(p => p.WindowsLogin)
                 .IsUnique();
 
-            modelBuilder.Entity<EngagementPapd>()
-                .Property(ep => ep.EffectiveDate)
-                .HasMySqlColumnType("datetime(6)", isMySql);
-
             modelBuilder.Entity<Manager>()
                 .Property(m => m.Name)
                 .HasMaxLength(200);
@@ -330,15 +326,8 @@ namespace GRCFinancialControl.Persistence
                 .HasKey(a => a.Id);
 
             modelBuilder.Entity<EngagementManagerAssignment>()
-                .HasIndex(a => new { a.EngagementId, a.ManagerId, a.BeginDate });
-
-            modelBuilder.Entity<EngagementManagerAssignment>()
-                .Property(a => a.BeginDate)
-                .HasMySqlColumnType("datetime(6)", isMySql);
-
-            modelBuilder.Entity<EngagementManagerAssignment>()
-                .Property(a => a.EndDate)
-                .HasMySqlColumnType("datetime(6)", isMySql);
+                .HasIndex(a => new { a.EngagementId, a.ManagerId })
+                .IsUnique();
 
             modelBuilder.Entity<PlannedAllocation>()
                 .HasOne(pa => pa.Engagement)

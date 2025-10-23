@@ -1,7 +1,7 @@
 namespace GRCFinancialControl.Core.Models
 {
     /// <summary>
-    /// Represents the effective-dated assignment of a PAPD to an Engagement.
+    /// Represents the assignment of a PAPD to an Engagement.
     /// </summary>
     public class EngagementPapd
     {
@@ -10,6 +10,5 @@ namespace GRCFinancialControl.Core.Models
         public Engagement Engagement { get; set; } = null!;
         public int PapdId { get; set; }
         public Papd Papd { get; set; } = null!;
-        public DateTime EffectiveDate { get; set; }
     }
 }

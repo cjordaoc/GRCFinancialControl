@@ -158,11 +158,10 @@ CREATE TABLE `EngagementPapds`
     `Id`           INT         NOT NULL AUTO_INCREMENT,
     `EngagementId` INT         NOT NULL,
     `PapdId`       INT         NOT NULL,
-    `EffectiveDate` DATETIME(6) NOT NULL,
     CONSTRAINT `PK_EngagementPapds` PRIMARY KEY (`Id`),
     CONSTRAINT `FK_EngagementPapds_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
     CONSTRAINT `FK_EngagementPapds_Papds` FOREIGN KEY (`PapdId`) REFERENCES `Papds` (`Id`) ON DELETE CASCADE,
-    CONSTRAINT `UX_EngagementPapds_Assignment` UNIQUE (`EngagementId`, `PapdId`, `EffectiveDate`)
+    CONSTRAINT `UX_EngagementPapds_Assignment` UNIQUE (`EngagementId`, `PapdId`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 CREATE TABLE `EngagementManagerAssignments`
@@ -170,12 +169,10 @@ CREATE TABLE `EngagementManagerAssignments`
     `Id`           INT         NOT NULL AUTO_INCREMENT,
     `EngagementId` INT         NOT NULL,
     `ManagerId`    INT         NOT NULL,
-    `BeginDate`    DATETIME(6) NOT NULL,
-    `EndDate`      DATETIME(6) NULL,
     CONSTRAINT `PK_EngagementManagerAssignments` PRIMARY KEY (`Id`),
     CONSTRAINT `FK_EngagementManagerAssignments_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
     CONSTRAINT `FK_EngagementManagerAssignments_Managers` FOREIGN KEY (`ManagerId`) REFERENCES `Managers` (`Id`) ON DELETE CASCADE,
-    INDEX `IX_EngagementManagerAssignments_Engagement_Manager_Begin` (`EngagementId`, `ManagerId`, `BeginDate`)
+    CONSTRAINT `UX_EngagementManagerAssignments_Assignment` UNIQUE (`EngagementId`, `ManagerId`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 
@@ -414,8 +411,6 @@ LEFT JOIN InvoicePlanEmail ipe ON ipe.PlanId = ip.Id
 LEFT JOIN Engagements e ON e.EngagementId = ip.EngagementId
 LEFT JOIN Customers c ON c.Id = e.CustomerId
 LEFT JOIN EngagementManagerAssignments ema ON ema.EngagementId = e.Id
-      AND ema.BeginDate <= CAST(ii.EmissionDate AS DATETIME)
-      AND (ema.EndDate IS NULL OR ema.EndDate >= CAST(ii.EmissionDate AS DATETIME))
 LEFT JOIN Managers m ON m.Id = ema.ManagerId
 WHERE ii.Status IN ('Planned','Requested')
 GROUP BY ii.Id, NotifyDate, ip.Id, ip.EngagementId, ip.NumInvoices, ip.PaymentTermDays, e.Id,

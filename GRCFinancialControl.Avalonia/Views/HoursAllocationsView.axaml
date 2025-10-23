@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
              xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
+             xmlns:models="using:GRCFinancialControl.Core.Models"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
              x:Class="GRCFinancialControl.Avalonia.Views.HoursAllocationsView"
              x:Name="HoursAllocationsViewRoot"
@@ -34,12 +35,21 @@
                     Orientation="Horizontal"
                     Spacing="{StaticResource Space12}"
                     Margin="{StaticResource SpaceThickness10}">
-            <ComboBox Width="280"
-                      ItemsSource="{Binding AvailableRanks}"
-                      SelectedItem="{Binding RankToAdd}"
-                      DisplayMemberBinding="{Binding DisplayName}"/>
-            <Button Content="Add Resource"
-                    Command="{Binding AddResourceCommand}"/>
+            <SplitButton Content="Add Resource"
+                         Command="{Binding AddResourceCommand}"
+                         CommandParameter="{Binding SelectedRankOption}">
+                <SplitButton.Flyout>
+                    <MenuFlyout ItemsSource="{Binding AvailableRanks}">
+                        <MenuFlyout.ItemTemplate>
+                            <DataTemplate x:DataType="models:RankOption">
+                                <MenuItem Header="{Binding DisplayName}"
+                                          Command="{Binding DataContext.AddResourceCommand, ElementName=HoursAllocationsViewRoot}"
+                                          CommandParameter="{Binding}"/>
+                            </DataTemplate>
+                        </MenuFlyout.ItemTemplate>
+                    </MenuFlyout>
+                </SplitButton.Flyout>
+            </SplitButton>
         </StackPanel>
 
         <StackPanel Grid.Row="3"

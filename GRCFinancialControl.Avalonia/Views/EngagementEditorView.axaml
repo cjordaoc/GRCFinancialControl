@@ -31,7 +31,7 @@
 <StackPanel Spacing="{StaticResource Space16}">
     <TextBlock Text="Engagement Details" FontSize="18" FontWeight="Bold"/>
 
-    <!-- Row 1  Short fields (2 per row) -->
+    <!-- Row 1 — Short fields (2 per row) -->
     <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource Space16}">
         <StackPanel Spacing="{StaticResource Space8}" Grid.Column="0">
             <TextBlock Text="Engagement ID:" VerticalAlignment="Center"/>
@@ -52,7 +52,7 @@
         </StackPanel>
     </Grid>
 
-    <!-- Row 2  Long field (1 per row) -->
+    <!-- Row 2 — Long field (1 per row) -->
     <StackPanel Spacing="{StaticResource Space8}">
         <TextBlock Text="Description:" VerticalAlignment="Center"/>
         <TextBox Text="{Binding Description}"
@@ -61,7 +61,7 @@
                  MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
     </StackPanel>
 
-    <!-- Row 3  Short fields -->
+    <!-- Row 3 — Short fields -->
     <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource Space16}">
         <StackPanel Spacing="{StaticResource Space8}" Grid.Column="0">
             <TextBlock Text="Status:" VerticalAlignment="Center"/>
@@ -81,7 +81,7 @@
         </StackPanel>
     </Grid>
 
-    <!-- Row 4  Long field -->
+    <!-- Row 4 — Long field -->
     <StackPanel Spacing="{StaticResource Space8}">
         <TextBlock Text="Source:" VerticalAlignment="Center"/>
         <ComboBox ItemsSource="{Binding SourceOptions}"
@@ -92,7 +92,7 @@
                   MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
     </StackPanel>
 
-    <!-- Row 5  Short fields -->
+    <!-- Row 5 — Short fields -->
     <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource Space16}">
         <StackPanel Spacing="{StaticResource Space8}" Grid.Column="0">
             <TextBlock Text="Opening Value:" VerticalAlignment="Center"/>
@@ -111,7 +111,7 @@
         </StackPanel>
     </Grid>
 
-    <!-- Row 6  Short fields -->
+    <!-- Row 6 — Short fields -->
     <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource Space16}">
         <StackPanel Spacing="{StaticResource Space8}" Grid.Column="0">
             <TextBlock Text="Opening Expenses:" VerticalAlignment="Center"/>
@@ -130,7 +130,7 @@
         </StackPanel>
     </Grid>
 
-    <!-- Row 7  Short fields -->
+    <!-- Row 7 — Short fields -->
     <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource Space16}">
         <StackPanel Spacing="{StaticResource Space8}" Grid.Column="0">
             <TextBlock Text="Planned Hours:" VerticalAlignment="Center"/>
@@ -149,7 +149,7 @@
         </StackPanel>
     </Grid>
 
-    <!-- Row 8  Short fields -->
+    <!-- Row 8 — Short fields -->
     <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource Space16}">
         <StackPanel Spacing="{StaticResource Space8}" Grid.Column="0">
             <TextBlock Text="Margin % Budget:" VerticalAlignment="Center"/>
@@ -168,7 +168,7 @@
         </StackPanel>
     </Grid>
 
-    <!-- Row 9  Short fields -->
+    <!-- Row 9 — Short fields -->
     <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource Space16}">
         <StackPanel Spacing="{StaticResource Space8}" Grid.Column="0">
             <TextBlock Text="ETC-P Age (Days):" VerticalAlignment="Center"/>
@@ -191,9 +191,6 @@
         </StackPanel>
     </Grid>
 
-    <!-- Row 10  Short fields -->
-    <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource Space16}">
-        <StackPanel Spacing="{StaticResource Space8}" Grid.Column="0">
             <TextBlock Text="Last ETC Date:" VerticalAlignment="Center"/>
             <DatePicker SelectedDate="{Binding LastEtcDateOffset}"
                         IsEnabled="False"
