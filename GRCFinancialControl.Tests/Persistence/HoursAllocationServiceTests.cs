@@ -7,6 +7,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 using GRCFinancialControl.Core.Enums;
+using GRCFinancialControl.Core.Extensions;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence;
 using GRCFinancialControl.Persistence.Services;
@@ -203,7 +204,6 @@ public sealed class HoursAllocationServiceTests : IAsyncDisposable
             BudgetHours = 70m,
             ConsumedHours = 10m,
             AdditionalHours = 0m,
-            IncurredHours = 0m,
             RemainingHours = 60m,
             Status = nameof(TrafficLightStatus.Green),
             CreatedAtUtc = DateTime.UtcNow
@@ -217,7 +217,6 @@ public sealed class HoursAllocationServiceTests : IAsyncDisposable
             BudgetHours = 50m,
             ConsumedHours = 30m,
             AdditionalHours = 0m,
-            IncurredHours = 0m,
             RemainingHours = 20m,
             Status = nameof(TrafficLightStatus.Green),
             CreatedAtUtc = DateTime.UtcNow
@@ -235,7 +234,6 @@ public sealed class HoursAllocationServiceTests : IAsyncDisposable
                 BudgetHours = 0m,
                 ConsumedHours = 0m,
                 AdditionalHours = 0m,
-                IncurredHours = 0m,
                 RemainingHours = 0m,
                 Status = nameof(TrafficLightStatus.Green),
                 CreatedAtUtc = DateTime.UtcNow

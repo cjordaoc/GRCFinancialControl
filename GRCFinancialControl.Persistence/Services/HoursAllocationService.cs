@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GRCFinancialControl.Core.Enums;
+using GRCFinancialControl.Core.Extensions;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -126,7 +127,7 @@ namespace GRCFinancialControl.Persistence.Services
                     throw new InvalidOperationException($"Fiscal year '{budget.FiscalYear.Name}' is locked. Unlock it before adjusting consumed hours.");
                 }
 
-                budget.ConsumedHours = Math.Round(update.ConsumedHours, 2, MidpointRounding.AwayFromZero);
+                budget.UpdateConsumedHours(update.ConsumedHours);
             }
 
             var adjustmentLookup = adjustmentList
@@ -145,7 +146,7 @@ namespace GRCFinancialControl.Persistence.Services
 
                 if (adjustmentLookup.TryGetValue(group.Key, out var additionalHours))
                 {
-                    summaryBudget.AdditionalHours = additionalHours;
+                    summaryBudget.UpdateAdditionalHours(additionalHours);
                 }
 
                 foreach (var budget in orderedBudgets)
@@ -155,13 +156,14 @@ namespace GRCFinancialControl.Persistence.Services
 
                     if (!ReferenceEquals(budget, summaryBudget))
                     {
-                        budget.AdditionalHours = 0m;
+                        budget.UpdateAdditionalHours(0m);
                     }
                 }
 
                 var totalBudget = orderedBudgets.Sum(b => b.BudgetHours);
                 var forecastHours = orderedBudgets.Sum(b => b.ConsumedHours);
-                var remaining = Math.Round(totalBudget + summaryBudget.AdditionalHours - (summaryBudget.IncurredHours + forecastHours), 2, MidpointRounding.AwayFromZero);
+                var incurredHours = summaryBudget.CalculateIncurredHours();
+                var remaining = Math.Round(totalBudget + summaryBudget.AdditionalHours - (incurredHours + forecastHours), 2, MidpointRounding.AwayFromZero);
                 var status = DetermineStatus(remaining);
                 var statusText = status switch
                 {
@@ -177,7 +179,7 @@ namespace GRCFinancialControl.Persistence.Services
                 foreach (var budget in orderedBudgets.Where(b => !ReferenceEquals(b, summaryBudget)))
                 {
                     budget.Status = statusText;
-                    budget.IncurredHours = 0m;
+                    budget.ApplyIncurredHours(0m);
                 }
             }
 
@@ -229,7 +231,6 @@ namespace GRCFinancialControl.Persistence.Services
                     BudgetHours = 0m,
                     ConsumedHours = 0m,
                     AdditionalHours = 0m,
-                    IncurredHours = 0m,
                     RemainingHours = 0m,
                     Status = nameof(TrafficLightStatus.Green)
                 });
@@ -297,7 +298,9 @@ namespace GRCFinancialControl.Persistence.Services
 
                 var summaryBudget = orderedBudgets.FirstOrDefault();
                 var additionalHours = summaryBudget?.AdditionalHours ?? 0m;
-                var incurredHours = summaryBudget?.IncurredHours ?? 0m;
+                var incurredHours = summaryBudget is null
+                    ? 0m
+                    : summaryBudget.CalculateIncurredHours();
 
                 var cells = new List<HoursAllocationCellSnapshot>(fiscalYears.Count);
                 foreach (var fiscalYear in fiscalYears)

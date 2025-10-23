@@ -11,7 +11,6 @@ namespace GRCFinancialControl.Core.Models
         public decimal BudgetHours { get; set; }
         public decimal ConsumedHours { get; set; }
         public decimal AdditionalHours { get; set; }
-        public decimal IncurredHours { get; set; }
         public decimal RemainingHours { get; set; }
         public string Status { get; set; } = string.Empty;
         public DateTime CreatedAtUtc { get; set; }
