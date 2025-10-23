@@ -66,4 +66,10 @@
     <ProjectReference Include="..\App.Presentation\App.Presentation.csproj" />
     <ProjectReference Include="..\Resources\GRCFinancialControl.Resources.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Views\AppMasterDataView.axaml.cs">
+      <DependentUpon>AppMasterDataView.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
 </Project>

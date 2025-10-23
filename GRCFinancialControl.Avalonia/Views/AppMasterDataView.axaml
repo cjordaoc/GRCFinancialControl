@@ -5,17 +5,11 @@
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="GRCFinancialControl.Avalonia.Views.ControlMasterDataView"
+             x:Class="GRCFinancialControl.Avalonia.Views.AppMasterDataView"
              x:DataType="vm:AppMasterDataViewModel">
     <TabControl SelectedItem="{Binding SelectedSection}">
-        <TabItem Header="{loc:Loc Key=Navigation.FiscalYears}">
-            <ContentControl Content="{Binding FiscalYears}"/>
-        </TabItem>
-        <TabItem Header="{loc:Loc Key=Navigation.ClosingPeriods}">
-            <ContentControl Content="{Binding ClosingPeriods}"/>
-        </TabItem>
-        <TabItem Header="{loc:Loc Key=Navigation.Customers}">
-            <ContentControl Content="{Binding Customers}"/>
+        <TabItem Header="{loc:Loc Key=Navigation.RankMappings}">
+            <ContentControl Content="{Binding RankMappingsView}"/>
         </TabItem>
     </TabControl>
 </UserControl>

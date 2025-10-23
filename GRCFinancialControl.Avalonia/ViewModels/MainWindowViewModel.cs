@@ -24,7 +24,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public SettingsViewModel Settings { get; }
         public RankMappingsViewModel RankMappings { get; }
         public TasksViewModel Tasks { get; }
-        public ControlMasterDataViewModel ControlMasterData { get; }
+        public AppMasterDataViewModel ControlMasterData { get; }
 
         public ObservableCollection<NavigationItem> NavigationItems { get; }
 
@@ -36,14 +36,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public MainWindowViewModel(HomeViewModel homeViewModel,
                                    EngagementsViewModel engagementsViewModel,
-                                   FiscalYearsViewModel fiscalYearsViewModel,
                                    GrcTeamViewModel grcTeamViewModel,
                                    ImportViewModel importViewModel,
                                    AllocationsViewModel allocationsViewModel,
                                    ReportsViewModel reportsViewModel,
                                    SettingsViewModel settingsViewModel,
                                    RankMappingsViewModel rankMappingsViewModel,
-                                   ControlMasterDataViewModel controlMasterDataViewModel,
+                                   AppMasterDataViewModel controlMasterDataViewModel,
                                    TasksViewModel tasksViewModel,
                                    ILoggingService loggingService,
                                    IMessenger messenger)
