@@ -22,7 +22,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public AllocationsViewModel Allocations { get; }
         public ReportsViewModel Reports { get; }
         public SettingsViewModel Settings { get; }
-        public RankMappingsViewModel RankMappings { get; }
+        public AppMasterDataViewModel AppMasterData { get; }
         public TasksViewModel Tasks { get; }
         public ControlMasterDataViewModel ControlMasterData { get; }
 
@@ -41,7 +41,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                                    AllocationsViewModel allocationsViewModel,
                                    ReportsViewModel reportsViewModel,
                                    SettingsViewModel settingsViewModel,
-                                   RankMappingsViewModel rankMappingsViewModel,
+                                   AppMasterDataViewModel appMasterDataViewModel,
                                    ControlMasterDataViewModel controlMasterDataViewModel,
                                    TasksViewModel tasksViewModel,
                                    ILoggingService loggingService,
@@ -58,7 +58,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Allocations = allocationsViewModel;
             Reports = reportsViewModel;
             Settings = settingsViewModel;
-            RankMappings = rankMappingsViewModel;
+            AppMasterData = appMasterDataViewModel;
             Tasks = tasksViewModel;
             ControlMasterData = controlMasterDataViewModel;
 
@@ -72,13 +72,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 new(LocalizationRegistry.Get("Navigation.Reports"), Reports),
                 new(LocalizationRegistry.Get("Navigation.Tasks"), Tasks),
                 new(LocalizationRegistry.Get("Navigation.ControlMasterData"), ControlMasterData),
-                new(LocalizationRegistry.Get(
-                    "Navigation.MasterData"),
-                    null,
-                    new ObservableCollection<NavigationItem>
-                    {
-                        new(LocalizationRegistry.Get("Navigation.MasterData.RankMappings"), RankMappings)
-                    }),
+                new(LocalizationRegistry.Get("Navigation.MasterData"), AppMasterData),
                 new(LocalizationRegistry.Get("Navigation.Settings"), Settings)
             };
 

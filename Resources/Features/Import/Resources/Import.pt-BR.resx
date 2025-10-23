@@ -37,6 +37,9 @@
   <data name="Import.Status.NoUnlockedClosingPeriods" xml:space="preserve">
     <value>All closing periods are locked. Unlock a fiscal year to import ETC-P data.</value>
   </data>
+  <data name="Import.Status.SelectedClosingPeriod" xml:space="preserve">
+    <value>Using closing period: {0} ({1:yyyy-MM-dd} – {2:yyyy-MM-dd})</value>
+  </data>
   <data name="Import.Button.SelectFile" xml:space="preserve">
     <value>Select file and import</value>
   </data>
