@@ -465,22 +465,15 @@ namespace GRCFinancialControl.Persistence
                 .Property(h => h.Hours)
                 .HasPrecision(12, 2);
 
-            var historyUploadedAt = historyBuilder
+            historyBuilder
                 .Property(h => h.UploadedAt)
-                .HasMySqlColumnType("datetime(6)", isMySql)
+                .HasMySqlColumnType("datetime", isMySql)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .ValueGeneratedOnAdd();
-
-            if (isMySql)
-            {
-                historyUploadedAt.HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
-            }
-            else
-            {
-                historyUploadedAt.HasDefaultValueSql("CURRENT_TIMESTAMP");
-            }
 
             historyBuilder
                 .HasIndex(h => new { h.EngagementCode, h.RankCode, h.FiscalYearId, h.ClosingPeriodId })
+                .HasDatabaseName("IX_History_Key")
                 .IsUnique();
 
             modelBuilder.Entity<FinancialEvolution>()

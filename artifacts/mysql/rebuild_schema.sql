@@ -212,10 +212,12 @@ CREATE TABLE `EngagementRankBudgetHistory`
     `FiscalYearId`     INT             NOT NULL,
     `ClosingPeriodId`  INT             NOT NULL,
     `Hours`            DECIMAL(12, 2)  NOT NULL,
-    `UploadedAt`       DATETIME(6)     NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    CONSTRAINT `PK_EngagementRankBudgetHistory` PRIMARY KEY (`Id`),
-    CONSTRAINT `UX_EngagementRankBudgetHistory_Key` UNIQUE (`EngagementCode`, `RankCode`, `FiscalYearId`, `ClosingPeriodId`)
+    `UploadedAt`       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT `PK_EngagementRankBudgetHistory` PRIMARY KEY (`Id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+CREATE UNIQUE INDEX `IX_History_Key`
+    ON `EngagementRankBudgetHistory` (`EngagementCode`, `RankCode`, `FiscalYearId`, `ClosingPeriodId`);
 
 -- Applied Suggestion #2: Use INT FK for EngagementId to keep consistency/performance
 CREATE TABLE `FinancialEvolution`

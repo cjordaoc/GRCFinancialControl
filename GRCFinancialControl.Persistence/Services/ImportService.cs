@@ -1267,9 +1267,9 @@ namespace GRCFinancialControl.Persistence.Services
 
             var parserLogger = _loggerFactory.CreateLogger<SimplifiedStaffAllocationParser>();
             var parser = new SimplifiedStaffAllocationParser(parserLogger);
-            var allocations = parser.Parse(worksheet, closingPeriod, rankMappings);
+            var groupedAllocations = parser.Parse(worksheet, closingPeriod, rankMappings);
 
-            var allocationLookup = allocations
+            var allocationLookup = groupedAllocations
                 .Where(a => !string.IsNullOrWhiteSpace(a.EngagementCode) && !string.IsNullOrWhiteSpace(a.RankCode))
                 .ToDictionary(
                     a => new AllocationKey(NormalizeAllocationCode(a.EngagementCode), NormalizeAllocationCode(a.RankCode), a.FiscalYearId),
@@ -1289,7 +1289,7 @@ namespace GRCFinancialControl.Persistence.Services
             var processedHistoryKeys = new HashSet<AllocationKey>(AllocationKeyComparer.Instance);
 
             var engagementCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var allocation in allocations)
+            foreach (var allocation in groupedAllocations)
             {
                 engagementCodes.Add(allocation.EngagementCode);
             }
@@ -1351,10 +1351,8 @@ namespace GRCFinancialControl.Persistence.Services
                     isNewBudget = true;
                 }
 
-                var previousHours = historyLookup.TryGetValue(key, out var historyEntry)
-                    ? historyEntry.Hours
-                    : 0m;
-
+                historyLookup.TryGetValue(key, out var historyEntry);
+                var previousHours = historyEntry?.Hours ?? 0m;
                 var diff = allocation.Hours - previousHours;
 
                 if (isNewBudget)
@@ -1369,9 +1367,10 @@ namespace GRCFinancialControl.Persistence.Services
                 budget.RemainingHours = budget.BudgetHours - budget.IncurredHours;
                 budget.UpdatedAtUtc = nowUtc;
 
-                if (historyLookup.TryGetValue(key, out var existingHistory))
+                if (historyEntry is not null)
                 {
-                    existingHistory.Hours = allocation.Hours;
+                    historyEntry.Hours = allocation.Hours;
+                    historyEntry.UploadedAt = nowUtc;
                     processedHistoryKeys.Add(key);
                 }
                 else
@@ -1382,7 +1381,8 @@ namespace GRCFinancialControl.Persistence.Services
                         RankCode = allocation.RankCode,
                         FiscalYearId = allocation.FiscalYearId,
                         ClosingPeriodId = closingPeriod.Id,
-                        Hours = allocation.Hours
+                        Hours = allocation.Hours,
+                        UploadedAt = nowUtc
                     };
 
                     context.EngagementRankBudgetHistory.Add(history);
@@ -1407,19 +1407,33 @@ namespace GRCFinancialControl.Persistence.Services
                     continue;
                 }
 
-                budget.IncurredHours -= historyPair.Value.Hours;
+                var previousHours = historyPair.Value.Hours;
+                if (previousHours == 0m)
+                {
+                    continue;
+                }
+
+                budget.IncurredHours -= previousHours;
                 budget.RemainingHours = budget.BudgetHours - budget.IncurredHours;
                 budget.UpdatedAtUtc = nowUtc;
-                context.EngagementRankBudgetHistory.Remove(historyPair.Value);
+                historyPair.Value.Hours = 0m;
+                historyPair.Value.UploadedAt = nowUtc;
             }
 
             await context.SaveChangesAsync().ConfigureAwait(false);
 
-            var totalHours = allocations.Sum(a => a.Hours);
-            var summary = FormattableString.Invariant(
-                $"Imported CP {closingPeriod.Name} ({closingPeriod.Id}): {allocationLookup.Count} engagement-rank combinations, total {totalHours:N2} hours.");
+            var totalHours = groupedAllocations.Sum(a => a.Hours);
 
-            _logger.LogInformation(summary);
+            _logger.LogInformation(
+                "Imported CP {CPName} ({CPId}): {Count} engagement-rank combinations, total {Hours} hours.",
+                closingPeriod.Name,
+                closingPeriod.Id,
+                groupedAllocations.Count,
+                totalHours);
+
+            var summary = FormattableString.Invariant(
+                $"Imported CP {closingPeriod.Name} ({closingPeriod.Id}): {groupedAllocations.Count} engagement-rank combinations, total {totalHours} hours.");
+
             return summary;
         }
 
