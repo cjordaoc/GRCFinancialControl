@@ -56,7 +56,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private HoursAllocationRowViewModel? _selectedRow;
 
         [ObservableProperty]
-        private RankOption? _rankToAdd;
+        private RankOption? _selectedRankOption;
 
         [ObservableProperty]
         private decimal _totalBudgetHours;
@@ -184,19 +184,23 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         }
 
         [RelayCommand]
-        private async Task AddResourceAsync()
+        private async Task AddResourceAsync(RankOption? rankOption)
         {
-            if (!CanAddResource())
+            if (!CanAddResource(rankOption))
             {
                 return;
             }
 
-            if (SelectedEngagement is null || RankToAdd is null)
+            rankOption ??= SelectedRankOption ?? AvailableRanks.FirstOrDefault();
+            if (SelectedEngagement is null || rankOption is null)
             {
                 return;
             }
 
-            var addedRankName = RankToAdd.Name;
+            SelectedRankOption = rankOption;
+
+            var addedRankCode = rankOption.Code;
+            var addedRankName = rankOption.DisplayName;
 
             try
             {
@@ -204,14 +208,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 StatusMessage = null;
 
                 var snapshot = await _hoursAllocationService
-                    .AddRankAsync(SelectedEngagement.Id, RankToAdd.Name)
+                    .AddRankAsync(SelectedEngagement.Id, rankOption.Code)
                     .ConfigureAwait(false);
 
-                RankToAdd = null;
                 ApplySnapshot(snapshot);
 
                 SelectedRow = Rows.FirstOrDefault(row =>
-                    string.Equals(row.RankName, addedRankName, StringComparison.OrdinalIgnoreCase));
+                    string.Equals(row.RankName, addedRankCode, StringComparison.OrdinalIgnoreCase));
 
                 StatusMessage = $"Rank '{addedRankName}' added to the allocation.";
             }
@@ -226,12 +229,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
-        private bool CanAddResource()
+        private bool CanAddResource(RankOption? option = null)
         {
+            option ??= SelectedRankOption;
             return !IsBusy &&
                    SelectedEngagement is not null &&
-                   RankToAdd is not null &&
-                   !string.IsNullOrWhiteSpace(RankToAdd.Name);
+                   option is not null &&
+                   !string.IsNullOrWhiteSpace(option.Code);
         }
 
         private async Task LoadClosingPeriodsAsync()
@@ -547,7 +551,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             TotalBudgetHours = snapshot.TotalBudgetHours;
             FiscalYears = new ObservableCollection<FiscalYearAllocationInfo>(snapshot.FiscalYears);
             AvailableRanks = new ObservableCollection<RankOption>(snapshot.RankOptions);
-            RankToAdd = null;
+            SelectedRankOption = AvailableRanks.FirstOrDefault();
 
             var rows = new List<HoursAllocationRowViewModel>(snapshot.Rows.Count);
             foreach (var row in snapshot.Rows)
@@ -572,7 +576,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             ToBeConsumedHours = 0m;
             HasChanges = false;
             SelectedRow = null;
-            RankToAdd = null;
+            SelectedRankOption = null;
         }
 
         private void OnCellChanged()
@@ -759,7 +763,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             NotifyCommandCanExecute(AddResourceCommand);
         }
 
-        partial void OnRankToAddChanged(RankOption? value)
+        partial void OnSelectedRankOptionChanged(RankOption? value)
         {
             NotifyCommandCanExecute(AddResourceCommand);
         }

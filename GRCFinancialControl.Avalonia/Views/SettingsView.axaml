@@ -35,7 +35,18 @@
                     <TextBox Text="{Binding Server}" Watermark="{loc:Loc Key=Settings.Label.Server}"/>
                     <TextBox Text="{Binding Database}" Watermark="{loc:Loc Key=Settings.Label.Database}"/>
                     <TextBox Text="{Binding User}" Watermark="{loc:Loc Key=Settings.Label.User}"/>
-                    <TextBox Text="{Binding Password}" Watermark="{loc:Loc Key=Settings.Label.Password}" PasswordChar="*"/>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding Password}"
+                                 Watermark="{loc:Loc Key=Settings.Label.Password}"
+                                 PasswordChar="{Binding DatabasePasswordChar}"/>
+                        <ToggleButton Grid.Column="1"
+                                      Width="36"
+                                      Content="{Binding DatabasePasswordToggleIcon}"
+                                      IsChecked="{Binding IsDatabasePasswordVisible}"
+                                      Margin="8,0,0,0"
+                                      VerticalAlignment="Center"/>
+                    </Grid>
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Button Content="{loc:Loc Key=Settings.Button.Load}" Command="{Binding LoadSettingsCommand}" MinWidth="120"/>
                         <Button Content="{loc:Loc Key=Settings.Button.Save}" Command="{Binding SaveSettingsCommand}" MinWidth="120"/>
@@ -51,9 +62,29 @@
                     <TextBlock Text="{loc:Loc Key=Settings.Section.Package.Description}" TextWrapping="Wrap"/>
                     <StackPanel Spacing="8">
                         <TextBlock Text="{loc:Loc Key=Settings.Label.Passphrase}"/>
-                        <TextBox Text="{Binding ExportPassphrase}" PasswordChar="*"/>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding ExportPassphrase}"
+                                     PasswordChar="{Binding ExportPassphraseChar}"/>
+                            <ToggleButton Grid.Column="1"
+                                          Width="36"
+                                          Content="{Binding ExportPassphraseToggleIcon}"
+                                          IsChecked="{Binding IsExportPassphraseVisible}"
+                                          Margin="8,0,0,0"
+                                          VerticalAlignment="Center"/>
+                        </Grid>
                         <TextBlock Text="{loc:Loc Key=Settings.Label.ConfirmPassphrase}"/>
-                        <TextBox Text="{Binding ConfirmExportPassphrase}" PasswordChar="*"/>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding ConfirmExportPassphrase}"
+                                     PasswordChar="{Binding ConfirmExportPassphraseChar}"/>
+                            <ToggleButton Grid.Column="1"
+                                          Width="36"
+                                          Content="{Binding ConfirmExportPassphraseToggleIcon}"
+                                          IsChecked="{Binding IsConfirmExportPassphraseVisible}"
+                                          Margin="8,0,0,0"
+                                          VerticalAlignment="Center"/>
+                        </Grid>
                         <Button Content="{loc:Loc Key=Settings.Button.ExportPackage}"
                                 Command="{Binding ExportConnectionPackageCommand}"
                                 MinWidth="180"
@@ -69,11 +100,20 @@
                                        Grid.Column="0"
                                        Text="{loc:Loc Key=Settings.Label.ImportPassphrase}"
                                        VerticalAlignment="Center"/>
-                            <TextBox Grid.Row="0"
-                                     Grid.Column="2"
-                                     Text="{Binding ImportPassphrase}"
-                                     PasswordChar="*"
-                                     MinWidth="240"/>
+                            <Grid Grid.Row="0"
+                                  Grid.Column="2"
+                                  ColumnDefinitions="*,Auto"
+                                  MinWidth="240">
+                                <TextBox Grid.Column="0"
+                                         Text="{Binding ImportPassphrase}"
+                                         PasswordChar="{Binding ImportPassphraseChar}"/>
+                                <ToggleButton Grid.Column="1"
+                                              Width="36"
+                                              Content="{Binding ImportPassphraseToggleIcon}"
+                                              IsChecked="{Binding IsImportPassphraseVisible}"
+                                              Margin="8,0,0,0"
+                                              VerticalAlignment="Center"/>
+                            </Grid>
                             <TextBlock Grid.Row="1"
                                        Grid.Column="0"
                                        Text="{loc:Loc Key=Settings.Label.ImportPackage}"

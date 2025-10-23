@@ -10,7 +10,5 @@ namespace GRCFinancialControl.Core.Models
         public Engagement Engagement { get; set; } = null!;
         public int ManagerId { get; set; }
         public Manager Manager { get; set; } = null!;
-        public DateTime BeginDate { get; set; }
-        public DateTime? EndDate { get; set; }
     }
 }

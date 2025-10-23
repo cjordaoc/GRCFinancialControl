@@ -1,4 +1,5 @@
 <UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -7,36 +8,24 @@
              x:Class="GRCFinancialControl.Avalonia.Views.PapdAssignmentsView"
              x:DataType="vm:PapdAssignmentsViewModel">
     <StackPanel Margin="16" Spacing="16">
-        <StackPanel Orientation="Horizontal" Spacing="12">
-            <StackPanel Spacing="6" Width="260">
-                <TextBlock Text="PAPD" FontWeight="Bold"/>
-                <ComboBox ItemsSource="{Binding Papds}"
-                          SelectedItem="{Binding SelectedPapd}"
-                          Width="260">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Name}"/>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-            </StackPanel>
+        <StackPanel Spacing="6">
+            <TextBlock Text="PAPD" FontWeight="Bold"/>
+            <ComboBox ItemsSource="{Binding Papds}"
+                      SelectedItem="{Binding SelectedPapd}"
+                      MinWidth="280">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Name}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
 
-            <StackPanel Spacing="6" Width="300">
-                <TextBlock Text="Engagement" FontWeight="Bold"/>
-                <ComboBox ItemsSource="{Binding Engagements}"
-                          SelectedItem="{Binding SelectedEngagement}"
-                          Width="300"/>
-            </StackPanel>
-
-            <StackPanel Spacing="6" Width="180">
-                <TextBlock Text="Effective Date" FontWeight="Bold"/>
-                <DatePicker SelectedDate="{Binding EffectiveDateOffset}"/>
-            </StackPanel>
-
-            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom">
-                <Button Content="Assign" Command="{Binding AssignCommand}" Classes="accent"/>
-                <Button Content="Remove" Command="{Binding RemoveAssignmentCommand}"/>
-            </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button Content="{loc:Loc Key=Common.Button.Add}" Command="{Binding AddCommand}"/>
+            <Button Content="{loc:Loc Key=Common.Button.Edit}" Command="{Binding EditCommand}"/>
+            <Button Content="{loc:Loc Key=Common.Button.View}" Command="{Binding ViewCommand}"/>
+            <Button Content="{loc:Loc Key=Common.Button.Delete}" Command="{Binding DeleteCommand}"/>
         </StackPanel>
 
         <DataGrid ItemsSource="{Binding Assignments}"
@@ -47,8 +36,7 @@
                   GridLinesVisibility="All"
                   Height="300">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Engagement" Binding="{Binding EngagementDisplay}" Width="2*"/>
-                <DataGridTextColumn Header="Effective Date" Binding="{Binding EffectiveDateDisplay}" Width="*"/>
+                <DataGridTextColumn Header="{loc:Loc Key=Admin.PapdAssignments.Header.Engagement}" Binding="{Binding EngagementDisplay}" Width="2*"/>
             </DataGrid.Columns>
         </DataGrid>
     </StackPanel>

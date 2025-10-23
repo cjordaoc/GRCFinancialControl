@@ -339,15 +339,11 @@
 <data name="Admin.PapdAssignments.Header.Description" xml:space="preserve">
   <value>Descripción</value>
 </data>
-<data name="Admin.PapdAssignments.Header.EffectiveDate" xml:space="preserve">
-  <value>Fecha de vigencia</value>
-</data>
+
 <data name="Admin.PapdAssignments.Label.Engagement" xml:space="preserve">
   <value>Compromiso</value>
 </data>
-<data name="Admin.PapdAssignments.Label.EffectiveDate" xml:space="preserve">
-  <value>Fecha de vigencia</value>
-</data>
+
 <data name="Admin.PapdAssignments.Button.Assign" xml:space="preserve">
   <value>Asignar</value>
 </data>

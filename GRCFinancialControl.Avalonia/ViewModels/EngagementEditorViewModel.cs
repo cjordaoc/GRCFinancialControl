@@ -188,12 +188,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             InitializeSourceSelection(engagement.Source);
             PapdAssignments = new ObservableCollection<EngagementPapd>(
                 engagement.EngagementPapds
-                    .OrderBy(p => p.EffectiveDate)
-                    .ThenBy(p => p.Papd?.Name, StringComparer.OrdinalIgnoreCase));
+                    .OrderBy(p => p.Papd?.Name, StringComparer.OrdinalIgnoreCase));
             ManagerAssignments = new ObservableCollection<EngagementManagerAssignment>(
                 engagement.ManagerAssignments
-                    .OrderBy(a => a.BeginDate)
-                    .ThenBy(a => a.Manager?.Name, StringComparer.OrdinalIgnoreCase));
+                    .OrderBy(a => a.Manager?.Name, StringComparer.OrdinalIgnoreCase));
             InitializeFinancialEvolutionEntries(engagement.FinancialEvolutions);
 
             _ = LoadCustomersAsync();
@@ -413,7 +411,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 {
                     Id = a.Id,
                     PapdId = a.PapdId != 0 ? a.PapdId : a.Papd!.Id,
-                    EffectiveDate = a.EffectiveDate,
                     EngagementId = Engagement.Id,
                     Engagement = Engagement,
                     Papd = a.Papd

@@ -51,10 +51,10 @@ namespace GRCFinancialControl.Persistence.Services
             var rankOptions = await context.RankMappings
                 .AsNoTracking()
                 .Where(mapping => mapping.IsActive)
-                .OrderBy(mapping => mapping.NormalizedRank ?? mapping.RawRank)
+                .OrderBy(mapping => mapping.RawRank)
                 .Select(mapping => new RankOption(
-                    mapping.NormalizedRank ?? mapping.RawRank,
-                    mapping.NormalizedRank ?? mapping.RawRank))
+                    mapping.RawRank,
+                    mapping.RawRank))
                 .ToListAsync()
                 .ConfigureAwait(false);
 

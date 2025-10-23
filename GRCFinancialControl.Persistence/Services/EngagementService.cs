@@ -116,8 +116,8 @@ namespace GRCFinancialControl.Persistence.Services
             var assignment = await context.EngagementPapds
                 .AsNoTracking()
                 .Include(ep => ep.Papd)
-                .Where(ep => ep.EngagementId == engagementId && ep.EffectiveDate <= date)
-                .OrderByDescending(ep => ep.EffectiveDate)
+                .Where(ep => ep.EngagementId == engagementId)
+                .OrderBy(ep => ep.Id)
                 .FirstOrDefaultAsync();
 
             return assignment?.Papd;
@@ -301,7 +301,7 @@ namespace GRCFinancialControl.Persistence.Services
             context.EngagementPapds.RemoveRange(existingEngagement.EngagementPapds);
             existingEngagement.EngagementPapds.Clear();
 
-            foreach (var assignment in engagement.EngagementPapds.OrderBy(a => a.EffectiveDate))
+            foreach (var assignment in engagement.EngagementPapds.OrderBy(a => a.Papd?.Name, StringComparer.OrdinalIgnoreCase))
             {
                 var papdId = assignment.PapdId;
                 if (papdId == 0 && assignment.Papd != null)
@@ -318,7 +318,6 @@ namespace GRCFinancialControl.Persistence.Services
                 {
                     EngagementId = existingEngagement.Id,
                     PapdId = papdId,
-                    EffectiveDate = assignment.EffectiveDate
                 });
             }
 

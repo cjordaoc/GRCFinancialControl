@@ -5,55 +5,25 @@
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels.Dialogs"
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              mc:Ignorable="d"
-             d:DesignWidth="600"
-             d:DesignHeight="450"
+             d:DesignWidth="400"
+             d:DesignHeight="200"
              x:Class="GRCFinancialControl.Avalonia.Views.Dialogs.PapdEngagementAssignmentView"
              x:DataType="vm:PapdEngagementAssignmentViewModel">
     <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
-        <Border Padding="{StaticResource SpaceThickness24}"
-                Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
-                Grid.Row="0">
-            <StackPanel Spacing="{StaticResource Space16}">
-            <TextBlock Text="{loc:Loc Key=Admin.PapdAssignments.Title.Editor}" FontSize="20" FontWeight="Bold"/>
+        <StackPanel Spacing="{StaticResource Space16}" Margin="{StaticResource SpaceThickness24}">
+            <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="Bold"/>
             <TextBlock Text="{Binding Papd.Name}" FontSize="16" FontWeight="SemiBold"/>
 
-            <DataGrid ItemsSource="{Binding Assignments}"
-                      SelectedItem="{Binding SelectedAssignment}"
-                      AutoGenerateColumns="False"
-                      IsReadOnly="True"
-                      Height="200">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="{loc:Loc Key=Admin.PapdAssignments.Header.Engagement}" Binding="{Binding EngagementId}" Width="*"/>
-                    <DataGridTextColumn Header="{loc:Loc Key=Admin.PapdAssignments.Header.Description}" Binding="{Binding EngagementDescription}" Width="2*"/>
-                    <DataGridTextColumn Header="{loc:Loc Key=Admin.PapdAssignments.Header.EffectiveDate}" Binding="{Binding EffectiveDate, StringFormat='yyyy-MM-dd'}" Width="*"/>
-                </DataGrid.Columns>
-            </DataGrid>
-
-            <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space16}" VerticalAlignment="Center">
-                <StackPanel Width="240">
-                    <TextBlock Text="{loc:Loc Key=Admin.PapdAssignments.Label.Engagement}"/>
-                    <ComboBox ItemsSource="{Binding Engagements}" SelectedItem="{Binding SelectedEngagement}" Width="240" IsEnabled="{Binding AllowEditing}"/>
-                </StackPanel>
-                <StackPanel Width="180">
-                    <TextBlock Text="{loc:Loc Key=Admin.PapdAssignments.Label.EffectiveDate}"/>
-                    <DatePicker SelectedDate="{Binding EffectiveDateOffset}" IsEnabled="{Binding AllowEditing}"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal"
-                            Spacing="{StaticResource Space12}"
-                            VerticalAlignment="Bottom"
-                            IsVisible="{Binding AllowEditing}">
-                    <Button Content="{loc:Loc Key=Admin.PapdAssignments.Button.Assign}"
-                            Command="{Binding AssignCommand}"
-                            Classes="accent"
-                            IsEnabled="{Binding AllowEditing}"/>
-                    <Button Content="{loc:Loc Key=Admin.PapdAssignments.Button.Remove}"
-                            Command="{Binding RemoveAssignmentCommand}"
-                            IsEnabled="{Binding AllowEditing}"/>
-                </StackPanel>
+            <StackPanel Spacing="{StaticResource Space12}">
+                <TextBlock Text="{loc:Loc Key=Admin.PapdAssignments.Label.Engagement}"/>
+                <ComboBox ItemsSource="{Binding Engagements}"
+                          SelectedItem="{Binding SelectedEngagement}"
+                          IsEnabled="{Binding AllowEditing}"
+                          HorizontalAlignment="Stretch"
+                          MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
             </StackPanel>
+        </StackPanel>
 
-            </StackPanel>
-        </Border>
         <StackPanel Grid.Row="1"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"

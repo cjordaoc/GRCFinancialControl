@@ -1,4 +1,3 @@
-using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,7 +7,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
-using GRCFinancialControl.Avalonia.Utilities;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -32,12 +30,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
         private Manager? _selectedManager;
 
         [ObservableProperty]
-        private DateTime? _beginDate;
-
-        [ObservableProperty]
-        private DateTime? _endDate;
-
-        [ObservableProperty]
         private bool _isReadOnlyMode;
 
         public string Title => _assignment.Id == 0
@@ -58,24 +50,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             _engagements = engagements;
             _managers = managers;
 
-            _beginDate = assignment.BeginDate == default ? DateTime.Today : assignment.BeginDate;
-            _endDate = assignment.EndDate;
             IsReadOnlyMode = isReadOnlyMode;
         }
 
         public bool AllowEditing => !IsReadOnlyMode;
-
-        public DateTimeOffset? BeginDateOffset
-        {
-            get => DateTimeOffsetHelper.FromDate(BeginDate);
-            set => BeginDate = DateTimeOffsetHelper.ToDate(value);
-        }
-
-        public DateTimeOffset? EndDateOffset
-        {
-            get => DateTimeOffsetHelper.FromDate(EndDate);
-            set => EndDate = DateTimeOffsetHelper.ToDate(value);
-        }
 
         public override Task LoadDataAsync()
         {
@@ -96,22 +74,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
                 return;
             }
 
-            if (BeginDate is null)
-            {
-                return;
-            }
-
-            var beginDate = BeginDate.Value.Date;
-            var endDate = EndDate?.Date;
-            if (endDate.HasValue && endDate.Value < beginDate)
-            {
-                return;
-            }
-
             _assignment.EngagementId = SelectedEngagement.InternalId;
             _assignment.ManagerId = SelectedManager.Id;
-            _assignment.BeginDate = beginDate;
-            _assignment.EndDate = endDate;
 
             if (_assignment.Id == 0)
             {
@@ -131,7 +95,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             Messenger.Send(new CloseDialogMessage(false));
         }
 
-        private bool CanSave() => SelectedEngagement is not null && SelectedManager is not null && BeginDate.HasValue && !IsReadOnlyMode;
+        private bool CanSave() => SelectedEngagement is not null && SelectedManager is not null && !IsReadOnlyMode;
 
         partial void OnSelectedEngagementChanged(EngagementOption? value)
         {
@@ -141,17 +105,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
         partial void OnSelectedManagerChanged(Manager? value)
         {
             SaveCommand.NotifyCanExecuteChanged();
-        }
-
-        partial void OnBeginDateChanged(DateTime? value)
-        {
-            OnPropertyChanged(nameof(BeginDateOffset));
-            SaveCommand.NotifyCanExecuteChanged();
-        }
-
-        partial void OnEndDateChanged(DateTime? value)
-        {
-            OnPropertyChanged(nameof(EndDateOffset));
         }
 
         partial void OnIsReadOnlyModeChanged(bool value)
