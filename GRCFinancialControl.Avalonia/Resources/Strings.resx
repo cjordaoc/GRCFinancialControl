@@ -48,8 +48,11 @@
   <data name="Navigation.Tasks" xml:space="preserve">
     <value>Tasks</value>
   </data>
+  <data name="Navigation.ControlMasterData" xml:space="preserve">
+    <value>Control Master Data</value>
+  </data>
   <data name="Navigation.MasterData" xml:space="preserve">
-    <value>Master Data</value>
+    <value>App Master Data</value>
   </data>
   <data name="Navigation.MasterData.RankMappings" xml:space="preserve">
     <value>Rank mappings</value>
