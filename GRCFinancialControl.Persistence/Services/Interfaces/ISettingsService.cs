@@ -11,5 +11,7 @@ namespace GRCFinancialControl.Persistence.Services.Interfaces
         Task<ConnectionTestResult> TestConnectionAsync(string server, string database, string user, string password);
         Task<int?> GetDefaultFiscalYearIdAsync();
         Task SetDefaultFiscalYearIdAsync(int? fiscalYearId);
+        Task<int?> GetDefaultClosingPeriodIdAsync();
+        Task SetDefaultClosingPeriodIdAsync(int? closingPeriodId);
     }
 }

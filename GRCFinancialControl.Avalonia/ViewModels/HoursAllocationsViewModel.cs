@@ -15,7 +15,7 @@ using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
-    public sealed partial class HoursAllocationsViewModel : ViewModelBase
+    public sealed partial class HoursAllocationsViewModel : ViewModelBase, IRecipient<ApplicationParametersChangedMessage>
     {
         private readonly IEngagementService _engagementService;
         private readonly IHoursAllocationService _hoursAllocationService;
@@ -24,10 +24,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly ILoggingService _loggingService;
         private readonly IDialogService _dialogService;
         private readonly IClosingPeriodService _closingPeriodService;
+        private readonly ISettingsService _settingsService;
 
         private int? _lastSelectedEngagementId;
         private bool _suppressSelectionChanged;
         private HoursAllocationSnapshot? _currentSnapshot;
+        private int? _pendingClosingPeriodId;
 
         [ObservableProperty]
         private ObservableCollection<EngagementSummaryViewModel> _engagements = new();
@@ -85,6 +87,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             ILoggingService loggingService,
             IDialogService dialogService,
             IClosingPeriodService closingPeriodService,
+            ISettingsService settingsService,
             IMessenger messenger)
             : base(messenger)
         {
@@ -95,6 +98,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _loggingService = loggingService ?? throw new ArgumentNullException(nameof(loggingService));
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
             _closingPeriodService = closingPeriodService ?? throw new ArgumentNullException(nameof(closingPeriodService));
+            _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         }
 
         public string Header => "Hours Allocation";
@@ -238,14 +242,49 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 .ToList();
 
             ClosingPeriods = new ObservableCollection<ClosingPeriod>(ordered);
+            var preferredClosingPeriodId = _pendingClosingPeriodId
+                ?? await _settingsService.GetDefaultClosingPeriodIdAsync().ConfigureAwait(false);
+            _pendingClosingPeriodId = null;
 
-            if (SelectedClosingPeriod is not null)
+            if (preferredClosingPeriodId.HasValue)
             {
-                SelectedClosingPeriod = ordered.FirstOrDefault(p => p.Id == SelectedClosingPeriod.Id) ?? ordered.FirstOrDefault();
+                var matched = ordered.FirstOrDefault(p => p.Id == preferredClosingPeriodId.Value);
+                SelectedClosingPeriod = matched ?? ordered.FirstOrDefault();
+            }
+            else if (SelectedClosingPeriod is not null)
+            {
+                SelectedClosingPeriod = ordered.FirstOrDefault(p => p.Id == SelectedClosingPeriod.Id)
+                    ?? ordered.FirstOrDefault();
             }
             else
             {
                 SelectedClosingPeriod = ordered.FirstOrDefault();
+            }
+        }
+
+        public void Receive(ApplicationParametersChangedMessage message)
+        {
+            if (message is null)
+            {
+                return;
+            }
+
+            _pendingClosingPeriodId = message.ClosingPeriodId;
+
+            if (message.ClosingPeriodId is null)
+            {
+                SelectedClosingPeriod = ClosingPeriods.FirstOrDefault();
+                return;
+            }
+
+            var match = ClosingPeriods.FirstOrDefault(period => period.Id == message.ClosingPeriodId.Value);
+            if (match != null)
+            {
+                SelectedClosingPeriod = match;
+            }
+            else
+            {
+                _ = LoadClosingPeriodsAsync();
             }
         }
 

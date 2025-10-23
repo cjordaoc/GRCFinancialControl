@@ -130,6 +130,7 @@ namespace GRCFinancialControl.Avalonia
             services.AddSingleton<IConnectionPackageService, ConnectionPackageService>();
             services.AddSingleton<IPowerBiEmbeddingService, PowerBiEmbeddingService>();
 
+            services.AddTransient<HomeViewModel>();
             services.AddTransient<MainWindowViewModel>();
             services.AddTransient<EngagementsViewModel>();
             services.AddTransient<FiscalYearsViewModel>();

@@ -1,0 +1,100 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
+             mc:Ignorable="d" d:DesignWidth="960" d:DesignHeight="640"
+             x:Class="GRCFinancialControl.Avalonia.Views.HomeView"
+             x:DataType="vm:HomeViewModel">
+    <UserControl.Resources>
+        <converters:BooleanToBrushConverter x:Key="StatusBrushConverter"
+                                             TrueBrush="{StaticResource BrushError}"
+                                             FalseBrush="{StaticResource BrushSuccess}"/>
+    </UserControl.Resources>
+    <ScrollViewer>
+        <StackPanel Margin="24" Spacing="18">
+            <TextBlock Text="{loc:Loc Key=Home.Title}"
+                       Classes="TitleLarge"/>
+            <TextBlock Text="{loc:Loc Key=Home.Welcome}"
+                       TextWrapping="Wrap"/>
+            <StackPanel Spacing="6" Margin="0,12,0,0">
+                <TextBlock Text="{loc:Loc Key=Home.Label.FiscalYear}"
+                           FontWeight="SemiBold"/>
+                <ComboBox ItemsSource="{Binding FiscalYears}"
+                          SelectedItem="{Binding SelectedFiscalYear}"
+                          PlaceholderText="{loc:Loc Key=Home.Placeholder.FiscalYear}"
+                          Width="320"
+                          IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Name}"
+                                           FontWeight="SemiBold"/>
+                                <TextBlock>
+                                    <TextBlock.Inlines>
+                                        <Run Text="{Binding StartDate, StringFormat='{}{0:yyyy-MM-dd}'}"/>
+                                        <Run Text=" – "/>
+                                        <Run Text="{Binding EndDate, StringFormat='{}{0:yyyy-MM-dd}'}"/>
+                                    </TextBlock.Inlines>
+                                </TextBlock>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock Text="{loc:Loc Key=Home.Status.NoFiscalYears}"
+                           Foreground="{StaticResource BrushWarning}"
+                           IsVisible="{Binding HasFiscalYears, Converter={x:Static converters:ObjectConverters.AreEqual}, ConverterParameter=False}"/>
+            </StackPanel>
+            <StackPanel Spacing="6" Margin="0,12,0,0">
+                <TextBlock Text="{loc:Loc Key=Home.Label.ClosingPeriod}"
+                           FontWeight="SemiBold"/>
+                <ComboBox ItemsSource="{Binding ClosingPeriods}"
+                          SelectedItem="{Binding SelectedClosingPeriod}"
+                          PlaceholderText="{loc:Loc Key=Home.Placeholder.ClosingPeriod}"
+                          Width="320"
+                          IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="{Binding Name}"
+                                           FontWeight="SemiBold"/>
+                                <TextBlock>
+                                    <TextBlock.Inlines>
+                                        <Run Text="("/>
+                                        <Run Text="{Binding PeriodStart, StringFormat='{}{0:yyyy-MM-dd}'}"/>
+                                        <Run Text=" - "/>
+                                        <Run Text="{Binding PeriodEnd, StringFormat='{}{0:yyyy-MM-dd}'}"/>
+                                        <Run Text=")"/>
+                                    </TextBlock.Inlines>
+                                </TextBlock>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock Text="{loc:Loc Key=Home.Status.NoClosingPeriods}"
+                           Foreground="{StaticResource BrushWarning}"
+                           IsVisible="{Binding HasClosingPeriods, Converter={x:Static converters:ObjectConverters.AreEqual}, ConverterParameter=False}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,12,0,0">
+                <Button Content="{loc:Loc Key=Home.Button.Confirm}"
+                        Command="{Binding ConfirmSelectionCommand}"
+                        Classes="accent"
+                        IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}"/>
+                <ProgressBar Width="120"
+                             IsIndeterminate="True"
+                             IsVisible="{Binding IsBusy}"/>
+            </StackPanel>
+            <Border Background="{StaticResource BrushSurfaceVariant}"
+                    CornerRadius="{StaticResource CornerRadiusSM}"
+                    Padding="12"
+                    Margin="0,12,0,0"
+                    IsVisible="{Binding HasStatusMessage}">
+                <TextBlock Text="{Binding StatusMessage}"
+                           Foreground="{Binding IsError, Converter={StaticResource StatusBrushConverter}}"
+                           TextWrapping="Wrap"/>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
