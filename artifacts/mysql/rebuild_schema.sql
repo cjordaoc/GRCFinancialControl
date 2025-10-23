@@ -192,7 +192,6 @@ CREATE TABLE `EngagementRankBudgets`
     `BudgetHours`    DECIMAL(18, 2) NOT NULL DEFAULT 0,
     `ConsumedHours`  DECIMAL(18, 2) NOT NULL DEFAULT 0,
     `AdditionalHours` DECIMAL(18, 2) NOT NULL DEFAULT 0,
-    `IncurredHours`  DECIMAL(18, 2) NOT NULL DEFAULT 0,
     `RemainingHours` DECIMAL(18, 2) NOT NULL DEFAULT 0,
     `Status`         VARCHAR(20)    NOT NULL DEFAULT 'Green',
     `CreatedAtUtc`   DATETIME(6)    NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
@@ -240,19 +239,6 @@ CREATE TABLE `FinancialEvolution`
    Allocations (hours & revenue)
    ============================ */
 
-CREATE TABLE `PlannedAllocations`
-(
-    `Id`              INT            NOT NULL AUTO_INCREMENT,
-    `EngagementId`    INT            NOT NULL,
-    `ClosingPeriodId` INT            NOT NULL,
-    `AllocatedHours`  DECIMAL(18, 2) NOT NULL,
-    CONSTRAINT `PK_PlannedAllocations` PRIMARY KEY (`Id`),
-    CONSTRAINT `FK_PlannedAllocations_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
-    CONSTRAINT `FK_PlannedAllocations_ClosingPeriods` FOREIGN KEY (`ClosingPeriodId`) REFERENCES `ClosingPeriods` (`Id`) ON DELETE CASCADE,
-    CONSTRAINT `UX_PlannedAllocations_EngagementPeriod` UNIQUE (`EngagementId`, `ClosingPeriodId`),
-    INDEX `IX_PlannedAllocations_ClosingPeriodId` (`ClosingPeriodId`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-
 CREATE TABLE `ActualsEntries`
 (
     `Id`              INT            NOT NULL AUTO_INCREMENT,
@@ -291,8 +277,8 @@ CREATE TABLE `EngagementFiscalYearRevenueAllocations`
     `ToGoValue`     DECIMAL(18, 2)  NOT NULL,
     `ToDateValue`   DECIMAL(18, 2)  NOT NULL DEFAULT 0,
     `LastUpdateDate` DATE           NULL,
-    `CreatedAt`     DATETIME(6)     NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    `UpdatedAt`     DATETIME(6)     NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    `CreatedAt`     DATETIME(6)     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `UpdatedAt`     DATETIME(6)     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT `PK_EngagementFiscalYearRevenueAllocations` PRIMARY KEY (`Id`),
     CONSTRAINT `FK_EFYRA_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
     CONSTRAINT `FK_EFYRA_FiscalYears` FOREIGN KEY (`FiscalYearId`) REFERENCES `FiscalYears` (`Id`) ON DELETE CASCADE,
@@ -495,7 +481,7 @@ BEFORE INSERT ON Exceptions
 FOR EACH ROW
 BEGIN
   IF NEW.Timestamp IS NULL THEN
-    SET NEW.Timestamp = CURRENT_TIMESTAMP(6);
+    SET NEW.Timestamp = CURRENT_TIMESTAMP;
   END IF;
 END//
 DELIMITER ;
@@ -509,9 +495,9 @@ BEFORE INSERT ON EngagementRankBudgets
 FOR EACH ROW
 BEGIN
   IF NEW.CreatedAtUtc IS NULL THEN
-    SET NEW.CreatedAtUtc = CURRENT_TIMESTAMP(6);
+    SET NEW.CreatedAtUtc = CURRENT_TIMESTAMP;
   END IF;
-  SET NEW.UpdatedAtUtc = CURRENT_TIMESTAMP(6);
+  SET NEW.UpdatedAtUtc = CURRENT_TIMESTAMP;
 END//
 CREATE TRIGGER trg_EngagementRankBudgets_bu
 BEFORE UPDATE ON EngagementRankBudgets
@@ -520,7 +506,7 @@ BEGIN
   IF NEW.BudgetHours <> OLD.BudgetHours THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'BudgetHours is immutable once created';
   END IF;
-  SET NEW.UpdatedAtUtc = CURRENT_TIMESTAMP(6);
+  SET NEW.UpdatedAtUtc = CURRENT_TIMESTAMP;
 END//
 DELIMITER ;
 
