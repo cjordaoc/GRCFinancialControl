@@ -156,6 +156,7 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<CustomersViewModel>();
             services.AddTransient<CustomerEditorViewModel>();
             services.AddTransient<AppMasterDataViewModel>();
+            services.AddTransient<ControlMasterDataViewModel>();
             services.AddTransient<RankMappingsViewModel>();
             services.AddTransient<RankMappingEditorViewModel>();
             services.AddTransient<TasksViewModel>();

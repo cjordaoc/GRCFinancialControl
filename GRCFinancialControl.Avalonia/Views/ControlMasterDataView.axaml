@@ -6,7 +6,7 @@
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.ControlMasterDataView"
-             x:DataType="vm:AppMasterDataViewModel">
+             x:DataType="vm:ControlMasterDataViewModel">
     <TabControl SelectedItem="{Binding SelectedSection}">
         <TabItem Header="{loc:Loc Key=Navigation.FiscalYears}">
             <ContentControl Content="{Binding FiscalYears}"/>
