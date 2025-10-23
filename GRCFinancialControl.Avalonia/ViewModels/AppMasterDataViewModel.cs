@@ -6,35 +6,24 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 {
     public partial class AppMasterDataViewModel : ViewModelBase
     {
-        public FiscalYearsViewModel FiscalYears { get; }
+        public AppMasterDataViewModel(RankMappingsViewModel rankMappingsViewModel,
+                                      IMessenger messenger)
+            : base(messenger)
+        {
+            RankMappingsView = rankMappingsViewModel;
+            SelectedSection = RankMappingsView;
+        }
 
-        public ClosingPeriodsViewModel ClosingPeriods { get; }
-
-        public CustomersViewModel Customers { get; }
+        public RankMappingsViewModel RankMappingsView { get; }
 
         [ObservableProperty]
         private ViewModelBase? _selectedSection;
 
-        public AppMasterDataViewModel(FiscalYearsViewModel fiscalYears,
-                                          ClosingPeriodsViewModel closingPeriods,
-                                          CustomersViewModel customers,
-                                          IMessenger messenger)
-            : base(messenger)
-        {
-            FiscalYears = fiscalYears;
-            ClosingPeriods = closingPeriods;
-            Customers = customers;
-
-            SelectedSection = FiscalYears;
-        }
-
         public override async Task LoadDataAsync()
         {
-            await FiscalYears.LoadDataAsync();
-            await ClosingPeriods.LoadDataAsync();
-            await Customers.LoadDataAsync();
+            await RankMappingsView.LoadDataAsync();
 
-            SelectedSection ??= FiscalYears;
+            SelectedSection ??= RankMappingsView;
         }
     }
 }

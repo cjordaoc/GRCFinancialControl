@@ -4,18 +4,9 @@ using CommunityToolkit.Mvvm.Messaging;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
-    public partial class AppMasterDataViewModel : ViewModelBase
+    public partial class ControlMasterDataViewModel : ViewModelBase
     {
-        public FiscalYearsViewModel FiscalYears { get; }
-
-        public ClosingPeriodsViewModel ClosingPeriods { get; }
-
-        public CustomersViewModel Customers { get; }
-
-        [ObservableProperty]
-        private ViewModelBase? _selectedSection;
-
-        public AppMasterDataViewModel(FiscalYearsViewModel fiscalYears,
+        public ControlMasterDataViewModel(FiscalYearsViewModel fiscalYears,
                                           ClosingPeriodsViewModel closingPeriods,
                                           CustomersViewModel customers,
                                           IMessenger messenger)
@@ -27,6 +18,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             SelectedSection = FiscalYears;
         }
+
+        public FiscalYearsViewModel FiscalYears { get; }
+
+        public ClosingPeriodsViewModel ClosingPeriods { get; }
+
+        public CustomersViewModel Customers { get; }
+
+        [ObservableProperty]
+        private ViewModelBase? _selectedSection;
 
         public override async Task LoadDataAsync()
         {

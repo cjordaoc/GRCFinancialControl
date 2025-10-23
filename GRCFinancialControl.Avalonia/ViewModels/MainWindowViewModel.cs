@@ -24,7 +24,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public SettingsViewModel Settings { get; }
         public RankMappingsViewModel RankMappings { get; }
         public TasksViewModel Tasks { get; }
-        public AppMasterDataViewModel ControlMasterData { get; }
+        public ControlMasterDataViewModel ControlMasterData { get; }
 
         public ObservableCollection<NavigationItem> NavigationItems { get; }
 
@@ -42,7 +42,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                                    ReportsViewModel reportsViewModel,
                                    SettingsViewModel settingsViewModel,
                                    RankMappingsViewModel rankMappingsViewModel,
-                                   AppMasterDataViewModel controlMasterDataViewModel,
+                                   ControlMasterDataViewModel controlMasterDataViewModel,
                                    TasksViewModel tasksViewModel,
                                    ILoggingService loggingService,
                                    IMessenger messenger)
