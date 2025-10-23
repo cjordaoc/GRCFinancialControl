@@ -45,35 +45,12 @@
                             <StackPanel Orientation="Horizontal"
                                         Spacing="12"
                                         VerticalAlignment="Center"
-                                        IsVisible="{Binding FileType, Converter={x:Static converters:ObjectConverters.AreEqual}, ConverterParameter=Actuals}">
+                                        IsVisible="{Binding ShouldShowClosingPeriodSummary}">
                                 <TextBlock Text="{loc:Loc Key=Import.Label.ClosingPeriod}"
                                            VerticalAlignment="Center"/>
-                                <ComboBox Width="260"
-                                          ItemsSource="{Binding ClosingPeriods}"
-                                          SelectedItem="{Binding SelectedClosingPeriod}"
-                                          IsEnabled="{Binding CanModifyClosingPeriod}">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                                <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
-                                                <TextBlock>
-                                                    <TextBlock.Inlines>
-                                                        <Run Text="("/>
-                                                        <Run Text="{Binding PeriodStart, StringFormat='{}{0:yyyy-MM-dd}'}"/>
-                                                        <Run Text=" - "/>
-                                                        <Run Text="{Binding PeriodEnd, StringFormat='{}{0:yyyy-MM-dd}'}"/>
-                                                        <Run Text=")"/>
-                                                    </TextBlock.Inlines>
-                                                </TextBlock>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
-                                <TextBlock Text="{loc:Loc Key=Import.Status.NoUnlockedClosingPeriods}"
-                                           Foreground="{StaticResource BrushError}"
+                                <TextBlock Text="{Binding SelectedClosingPeriodSummary}"
                                            VerticalAlignment="Center"
-                                           Margin="8,0,0,0"
-                                           IsVisible="{Binding IsClosingPeriodSelectionUnavailable}"/>
+                                           FontWeight="SemiBold"/>
                             </StackPanel>
                             <Button Content="{loc:Loc Key=Import.Button.SelectFile}"
                                     Command="{Binding ImportCommand}"

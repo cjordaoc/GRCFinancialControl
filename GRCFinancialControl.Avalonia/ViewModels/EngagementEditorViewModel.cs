@@ -147,6 +147,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public bool IsGeneralFieldReadOnly => IsReadOnlyMode;
 
+        public bool CanEditCustomer => AllowEditing && !IsExistingRecord;
+
+        public bool CanEditStatus => AllowEditing && !IsExistingRecord;
+
+        public bool IsCurrencyReadOnly => IsReadOnlyMode || IsExistingRecord;
+
         public string LastClosingPeriodDisplay => LastClosingPeriod?.Name ?? LastClosingPeriodFallbackName ?? string.Empty;
 
         public EngagementEditorViewModel(
@@ -493,6 +499,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             OnPropertyChanged(nameof(IsEngagementIdReadOnly));
             OnPropertyChanged(nameof(IsFinancialSnapshotReadOnly));
             OnPropertyChanged(nameof(IsGeneralFieldReadOnly));
+            OnPropertyChanged(nameof(CanEditCustomer));
+            OnPropertyChanged(nameof(CanEditStatus));
+            OnPropertyChanged(nameof(IsCurrencyReadOnly));
         }
 
         private void UpdateSchedulingFields()

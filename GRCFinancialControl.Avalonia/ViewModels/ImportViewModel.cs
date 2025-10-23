@@ -59,7 +59,24 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             ? null
             : LocalizationRegistry.Format("Import.Section.Selected.TitleFormat", FileTypeDisplayName);
 
-        public bool CanModifyClosingPeriod => HasUnlockedClosingPeriods && !IsImporting;
+        public bool ShouldShowClosingPeriodSummary => RequiresClosingPeriodSelection && SelectedClosingPeriod is not null;
+
+        public string? SelectedClosingPeriodSummary
+        {
+            get
+            {
+                if (SelectedClosingPeriod is null)
+                {
+                    return null;
+                }
+
+                return LocalizationRegistry.Format(
+                    "Import.Status.SelectedClosingPeriod",
+                    SelectedClosingPeriod.Name,
+                    SelectedClosingPeriod.PeriodStart,
+                    SelectedClosingPeriod.PeriodEnd);
+            }
+        }
 
         public ImportViewModel(IFilePickerService filePickerService,
                                IImportService importService,
@@ -100,14 +117,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
 
             FileType = fileType;
-            if (RequiresClosingPeriodSelection && !HasUnlockedClosingPeriods)
-            {
-                StatusMessage = LocalizationRegistry.Get("Import.Status.LockedClosingPeriods");
-            }
-            else
-            {
-                StatusMessage = null;
-            }
+            UpdateClosingPeriodStatusMessage();
             ImportCommand.NotifyCanExecuteChanged();
         }
 
@@ -213,23 +223,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 SelectedClosingPeriod = ClosingPeriods.FirstOrDefault();
             }
 
-            var lockedMessage = LocalizationRegistry.Get("Import.Status.LockedClosingPeriods");
-
-            if (FileType == ActualsType && ClosingPeriods.Count == 0)
-            {
-                StatusMessage ??= lockedMessage;
-            }
-            else if (FileType == ActualsType && string.Equals(StatusMessage, lockedMessage, StringComparison.Ordinal))
-            {
-                StatusMessage = null;
-            }
+            UpdateClosingPeriodStatusMessage();
         }
 
         public bool HasUnlockedClosingPeriods => ClosingPeriods.Count > 0;
 
         public bool RequiresClosingPeriodSelection => string.Equals(FileType, ActualsType, StringComparison.Ordinal);
-
-        public bool IsClosingPeriodSelectionUnavailable => RequiresClosingPeriodSelection && !HasUnlockedClosingPeriods;
 
         partial void OnClosingPeriodsChanging(ObservableCollection<ClosingPeriod> value)
         {
@@ -247,27 +246,31 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
             ImportCommand.NotifyCanExecuteChanged();
             OnPropertyChanged(nameof(HasUnlockedClosingPeriods));
-            OnPropertyChanged(nameof(IsClosingPeriodSelectionUnavailable));
-            OnPropertyChanged(nameof(CanModifyClosingPeriod));
+            UpdateClosingPeriodStatusMessage();
+            OnPropertyChanged(nameof(ShouldShowClosingPeriodSummary));
+            OnPropertyChanged(nameof(SelectedClosingPeriodSummary));
         }
 
         private void OnClosingPeriodsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             ImportCommand.NotifyCanExecuteChanged();
             OnPropertyChanged(nameof(HasUnlockedClosingPeriods));
-            OnPropertyChanged(nameof(IsClosingPeriodSelectionUnavailable));
-            OnPropertyChanged(nameof(CanModifyClosingPeriod));
+            UpdateClosingPeriodStatusMessage();
+            OnPropertyChanged(nameof(ShouldShowClosingPeriodSummary));
+            OnPropertyChanged(nameof(SelectedClosingPeriodSummary));
         }
 
         partial void OnSelectedClosingPeriodChanged(ClosingPeriod? value)
         {
             ImportCommand.NotifyCanExecuteChanged();
+            UpdateClosingPeriodStatusMessage();
+            OnPropertyChanged(nameof(ShouldShowClosingPeriodSummary));
+            OnPropertyChanged(nameof(SelectedClosingPeriodSummary));
         }
 
         partial void OnIsImportingChanged(bool value)
         {
             ImportCommand.NotifyCanExecuteChanged();
-            OnPropertyChanged(nameof(CanModifyClosingPeriod));
         }
 
         partial void OnFileTypeChanged(string? value)
@@ -275,8 +278,45 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             OnPropertyChanged(nameof(FileTypeDisplayName));
             OnPropertyChanged(nameof(SelectedImportTitle));
             OnPropertyChanged(nameof(RequiresClosingPeriodSelection));
-            OnPropertyChanged(nameof(IsClosingPeriodSelectionUnavailable));
+            OnPropertyChanged(nameof(ShouldShowClosingPeriodSummary));
+            OnPropertyChanged(nameof(SelectedClosingPeriodSummary));
+            UpdateClosingPeriodStatusMessage();
             ImportCommand.NotifyCanExecuteChanged();
+        }
+
+        private void UpdateClosingPeriodStatusMessage()
+        {
+            if (!RequiresClosingPeriodSelection)
+            {
+                var lockedMessage = LocalizationRegistry.Get("Import.Status.LockedClosingPeriods");
+                var requiredMessage = LocalizationRegistry.Get("Import.Validation.ClosingPeriodRequired");
+                if (string.Equals(StatusMessage, lockedMessage, StringComparison.Ordinal) ||
+                    string.Equals(StatusMessage, requiredMessage, StringComparison.Ordinal))
+                {
+                    StatusMessage = null;
+                }
+                return;
+            }
+
+            if (!HasUnlockedClosingPeriods)
+            {
+                StatusMessage = LocalizationRegistry.Get("Import.Status.LockedClosingPeriods");
+                return;
+            }
+
+            if (SelectedClosingPeriod is null)
+            {
+                StatusMessage = LocalizationRegistry.Get("Import.Validation.ClosingPeriodRequired");
+                return;
+            }
+
+            var locked = LocalizationRegistry.Get("Import.Status.LockedClosingPeriods");
+            var required = LocalizationRegistry.Get("Import.Validation.ClosingPeriodRequired");
+            if (string.Equals(StatusMessage, locked, StringComparison.Ordinal) ||
+                string.Equals(StatusMessage, required, StringComparison.Ordinal))
+            {
+                StatusMessage = null;
+            }
         }
 
         public void Receive(ApplicationParametersChangedMessage message)
