@@ -8,13 +8,15 @@ using App.Presentation.Localization;
 using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
-    public partial class ImportViewModel : ViewModelBase
+    public partial class ImportViewModel : ViewModelBase, IRecipient<ApplicationParametersChangedMessage>
     {
         private const string BudgetType = "Budget";
         private const string ActualsType = "Actuals";
@@ -24,8 +26,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly IFilePickerService _filePickerService;
         private readonly IImportService _importService;
         private readonly IClosingPeriodService _closingPeriodService;
+        private readonly ISettingsService _settingsService;
         private readonly ILoggingService _loggingService;
         private readonly Action<string> _logHandler;
+        private int? _pendingClosingPeriodId;
 
         [ObservableProperty]
         private bool _isImporting;
@@ -57,11 +61,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public bool CanModifyClosingPeriod => HasUnlockedClosingPeriods && !IsImporting;
 
-        public ImportViewModel(IFilePickerService filePickerService, IImportService importService, IClosingPeriodService closingPeriodService, ILoggingService loggingService)
+        public ImportViewModel(IFilePickerService filePickerService,
+                               IImportService importService,
+                               IClosingPeriodService closingPeriodService,
+                               ISettingsService settingsService,
+                               ILoggingService loggingService)
         {
             _filePickerService = filePickerService;
             _importService = importService;
             _closingPeriodService = closingPeriodService;
+            _settingsService = settingsService;
             _loggingService = loggingService;
             _logHandler = message =>
             {
@@ -190,11 +199,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             ClosingPeriods = new ObservableCollection<ClosingPeriod>(unlockedPeriods);
 
-            if (SelectedClosingPeriod == null)
+            var preferredClosingPeriodId = _pendingClosingPeriodId
+                ?? await _settingsService.GetDefaultClosingPeriodIdAsync().ConfigureAwait(false);
+            _pendingClosingPeriodId = null;
+
+            if (preferredClosingPeriodId.HasValue)
             {
-                SelectedClosingPeriod = ClosingPeriods.FirstOrDefault();
+                var matched = ClosingPeriods.FirstOrDefault(p => p.Id == preferredClosingPeriodId.Value);
+                SelectedClosingPeriod = matched ?? ClosingPeriods.FirstOrDefault();
             }
-            else if (ClosingPeriods.All(p => p.Id != SelectedClosingPeriod.Id))
+            else if (SelectedClosingPeriod == null || ClosingPeriods.All(p => p.Id != SelectedClosingPeriod.Id))
             {
                 SelectedClosingPeriod = ClosingPeriods.FirstOrDefault();
             }
@@ -263,6 +277,32 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             OnPropertyChanged(nameof(RequiresClosingPeriodSelection));
             OnPropertyChanged(nameof(IsClosingPeriodSelectionUnavailable));
             ImportCommand.NotifyCanExecuteChanged();
+        }
+
+        public void Receive(ApplicationParametersChangedMessage message)
+        {
+            if (message is null)
+            {
+                return;
+            }
+
+            _pendingClosingPeriodId = message.ClosingPeriodId;
+
+            if (message.ClosingPeriodId is null)
+            {
+                SelectedClosingPeriod = ClosingPeriods.FirstOrDefault();
+                return;
+            }
+
+            var match = ClosingPeriods.FirstOrDefault(p => p.Id == message.ClosingPeriodId.Value);
+            if (match != null)
+            {
+                SelectedClosingPeriod = match;
+            }
+            else
+            {
+                _ = LoadDataAsync();
+            }
         }
     }
 }

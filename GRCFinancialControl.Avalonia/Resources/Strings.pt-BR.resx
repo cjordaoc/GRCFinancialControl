@@ -18,6 +18,9 @@
   <data name="Shell.Brand.Primary" xml:space="preserve">
     <value>GRC Control</value>
   </data>
+  <data name="Navigation.Home" xml:space="preserve">
+    <value>Início</value>
+  </data>
   <data name="Navigation.Import" xml:space="preserve">
     <value>Import</value>
   </data>
@@ -191,6 +194,45 @@
   </data>
   <data name="Settings.Status.ImportFailure" xml:space="preserve">
     <value>Failed to import the connection package: {0}</value>
+  </data>
+  <data name="Home.Title" xml:space="preserve">
+    <value>Bem-vindo</value>
+  </data>
+  <data name="Home.Welcome" xml:space="preserve">
+    <value>Selecione o ano fiscal e o período de fechamento que serão usados no aplicativo.</value>
+  </data>
+  <data name="Home.Label.FiscalYear" xml:space="preserve">
+    <value>Ano fiscal</value>
+  </data>
+  <data name="Home.Label.ClosingPeriod" xml:space="preserve">
+    <value>Período de fechamento</value>
+  </data>
+  <data name="Home.Button.Confirm" xml:space="preserve">
+    <value>Confirmar seleção</value>
+  </data>
+  <data name="Home.Placeholder.FiscalYear" xml:space="preserve">
+    <value>Escolha um ano fiscal</value>
+  </data>
+  <data name="Home.Placeholder.ClosingPeriod" xml:space="preserve">
+    <value>Escolha um período de fechamento</value>
+  </data>
+  <data name="Home.Status.Saved" xml:space="preserve">
+    <value>Ano fiscal e período de fechamento padrão salvos.</value>
+  </data>
+  <data name="Home.Status.SaveError" xml:space="preserve">
+    <value>Não foi possível salvar sua seleção: {0}</value>
+  </data>
+  <data name="Home.Status.LoadError" xml:space="preserve">
+    <value>Não foi possível carregar os parâmetros do aplicativo: {0}</value>
+  </data>
+  <data name="Home.Status.NoFiscalYears" xml:space="preserve">
+    <value>Nenhum ano fiscal disponível. Crie um antes de continuar.</value>
+  </data>
+  <data name="Home.Status.NoClosingPeriods" xml:space="preserve">
+    <value>Não há períodos de fechamento para o ano fiscal selecionado.</value>
+  </data>
+  <data name="Home.Status.SelectFiscalYear" xml:space="preserve">
+    <value>Selecione um ano fiscal para continuar.</value>
   </data>
   <data name="Localization.Language.English" xml:space="preserve">
     <value>Inglês</value>
