@@ -46,7 +46,7 @@
             <ComboBox ItemsSource="{Binding Customers}"
                       SelectedItem="{Binding SelectedCustomer}"
                       DisplayMemberBinding="{Binding DisplayName}"
-                      IsEnabled="{Binding AllowEditing}"
+                      IsEnabled="{Binding CanEditCustomer}"
                       HorizontalAlignment="Stretch"
                       MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
         </StackPanel>
@@ -67,7 +67,7 @@
             <TextBlock Text="Status:" VerticalAlignment="Center"/>
             <ComboBox ItemsSource="{Binding StatusTextOptions}"
                       SelectedItem="{Binding SelectedStatusText}"
-                      IsEnabled="{Binding AllowEditing}"
+                      IsEnabled="{Binding CanEditStatus}"
                       HorizontalAlignment="Stretch"
                       MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
         </StackPanel>
@@ -75,7 +75,7 @@
         <StackPanel Spacing="{StaticResource Space8}" Grid.Column="1">
             <TextBlock Text="Currency:" VerticalAlignment="Center"/>
             <TextBox Text="{Binding Currency}"
-                     IsReadOnly="{Binding IsGeneralFieldReadOnly}"
+                     IsReadOnly="{Binding IsCurrencyReadOnly}"
                      HorizontalAlignment="Stretch"
                      MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
         </StackPanel>

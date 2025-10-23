@@ -38,6 +38,8 @@ public static class Import
 
     public static string Import_Status_NoUnlockedClosingPeriods => ResourceManager.GetString("Import.Status.NoUnlockedClosingPeriods", resourceCulture) ?? "Import.Status.NoUnlockedClosingPeriods";
 
+    public static string Import_Status_SelectedClosingPeriod => ResourceManager.GetString("Import.Status.SelectedClosingPeriod", resourceCulture) ?? "Import.Status.SelectedClosingPeriod";
+
     public static string Import_Button_SelectFile => ResourceManager.GetString("Import.Button.SelectFile", resourceCulture) ?? "Import.Button.SelectFile";
 
     public static string Import_FileType_Budget => ResourceManager.GetString("Import.FileType.Budget", resourceCulture) ?? "Import.FileType.Budget";
