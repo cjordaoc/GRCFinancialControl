@@ -285,6 +285,39 @@ public sealed class SimplifiedStaffAllocationParser
         return lookup;
     }
 
+    private MappedRecord? MapRank(IntermediateRecord record, IReadOnlyDictionary<string, string> rankLookup)
+    {
+        var normalizedRank = NormalizeRank(record.Rank);
+        if (string.IsNullOrEmpty(normalizedRank))
+        {
+            _logger.LogWarning(
+                "Skipping allocation for employee {Gpn} on {WeekDate:yyyy-MM-dd} because the rank is empty.",
+                record.Gpn,
+                record.WeekDate);
+            return null;
+        }
+
+        if (!rankLookup.TryGetValue(normalizedRank, out var rankCode))
+        {
+            _logger.LogWarning(
+                "No mapping found for rank '{Rank}'. Skipping allocation for employee {Gpn} on {WeekDate:yyyy-MM-dd}.",
+                record.Rank,
+                record.Gpn,
+                record.WeekDate);
+            return null;
+        }
+
+        return new MappedRecord(
+            record.Gpn,
+            record.EmployeeName,
+            record.Office,
+            record.Subdomain,
+            record.EngagementCode,
+            record.WeekDate,
+            record.AmountOfHours,
+            rankCode);
+    }
+
     private static DateTime? TryParseWeekDate(object? value)
     {
         if (value is null)
