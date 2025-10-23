@@ -111,16 +111,20 @@ public sealed class ImportServiceConsumedHoursTests : IAsyncDisposable
 
         try
         {
-            var summary = await _service.UpdateStaffAllocationsAsync(filePath);
+            var summary = await _service.UpdateStaffAllocationsAsync(filePath, closingPeriodId: 1);
 
-            Assert.Contains("Updated: 1", summary);
+            Assert.Contains("Imported CP Active (1)", summary);
+            Assert.Contains("1 engagement-rank combinations", summary);
 
             await using var verifyContext = _factory.CreateDbContext();
             var budget = await verifyContext.EngagementRankBudgets
                 .SingleAsync(b => b.EngagementId == 1 && b.FiscalYearId == 1 && b.RankName == "Manager");
 
-            Assert.Equal(40m, budget.ConsumedHours);
-            Assert.Empty(await verifyContext.Exceptions.ToListAsync());
+            Assert.Equal(40m, budget.IncurredHours);
+            Assert.Equal(60m, budget.RemainingHours);
+
+            var history = await verifyContext.EngagementRankBudgetHistory.SingleAsync();
+            Assert.Equal(40m, history.Hours);
         }
         finally
         {
@@ -134,24 +138,175 @@ public sealed class ImportServiceConsumedHoursTests : IAsyncDisposable
         await SeedStaffAllocationScenarioAsync(includeSecondaryEngagement: true);
 
         var monday = GetReferenceMonday();
-        var filePath = CreateStaffAllocationWorkbook(monday, new StaffAllocationRow("12345", "John Doe", "Manager", "E-001"));
+        var initialFilePath = CreateStaffAllocationWorkbook(
+            monday,
+            new StaffAllocationRow("12345", "John Doe", "Manager", "E-001"),
+            new StaffAllocationRow("54321", "Jane Doe", "Senior", "E-999"));
+
+        var updateFilePath = CreateStaffAllocationWorkbook(
+            monday,
+            new StaffAllocationRow("12345", "John Doe", "Manager", "E-001"));
 
         try
         {
-            var summary = await _service.UpdateStaffAllocationsAsync(filePath);
+            await _service.UpdateStaffAllocationsAsync(initialFilePath, closingPeriodId: 1);
 
-            Assert.Contains("Budgets cleared", summary);
+            var summary = await _service.UpdateStaffAllocationsAsync(updateFilePath, closingPeriodId: 1);
+
+            Assert.Contains("Imported CP Active (1)", summary);
 
             await using var verifyContext = _factory.CreateDbContext();
             var clearedBudget = await verifyContext.EngagementRankBudgets
                 .Include(b => b.Engagement)
                 .SingleAsync(b => b.Engagement != null && b.Engagement.EngagementId == "E-999");
 
-            Assert.Equal(0m, clearedBudget.ConsumedHours);
+            Assert.Equal(0m, clearedBudget.IncurredHours);
+            Assert.Equal(clearedBudget.BudgetHours, clearedBudget.RemainingHours);
+
+            var histories = await verifyContext.EngagementRankBudgetHistory
+                .Where(h => h.EngagementCode == "E-999")
+                .ToListAsync();
+            Assert.Single(histories);
+            Assert.Equal(0m, histories[0].Hours);
         }
         finally
         {
-            File.Delete(filePath);
+            File.Delete(initialFilePath);
+            File.Delete(updateFilePath);
+        }
+    }
+
+    [Fact]
+    public async Task UpdateStaffAllocationsAsync_ReimportSameClosingPeriodUpdatesLedger()
+    {
+        await SeedStaffAllocationScenarioAsync();
+
+        var monday = GetReferenceMonday();
+        var initialPath = CreateStaffAllocationWorkbook(
+            monday,
+            new StaffAllocationRow("12345", "John Doe", "Manager", "E-001"));
+        var updatedPath = CreateStaffAllocationWorkbook(
+            monday,
+            new StaffAllocationRow("12345", "John Doe", "Manager", "E-001"),
+            new StaffAllocationRow("67890", "Jane Roe", "Manager", "E-001"));
+
+        try
+        {
+            await _service.UpdateStaffAllocationsAsync(initialPath, closingPeriodId: 1);
+            var summary = await _service.UpdateStaffAllocationsAsync(updatedPath, closingPeriodId: 1);
+
+            Assert.Contains("Imported CP Active (1)", summary);
+
+            await using var verifyContext = _factory.CreateDbContext();
+            var budget = await verifyContext.EngagementRankBudgets
+                .SingleAsync(b => b.EngagementId == 1 && b.FiscalYearId == 1 && b.RankName == "Manager");
+
+            Assert.Equal(80m, budget.IncurredHours);
+            Assert.Equal(20m, budget.RemainingHours);
+
+            var history = await verifyContext.EngagementRankBudgetHistory
+                .SingleAsync(h => h.ClosingPeriodId == 1 && h.EngagementCode == "E-001" && h.RankCode == "MANAGER");
+            Assert.Equal(80m, history.Hours);
+        }
+        finally
+        {
+            File.Delete(initialPath);
+            File.Delete(updatedPath);
+        }
+    }
+
+    [Fact]
+    public async Task UpdateStaffAllocationsAsync_ReimportSameClosingPeriodReducesHours()
+    {
+        await SeedStaffAllocationScenarioAsync(includeSecondaryEngagement: false);
+
+        var monday = GetReferenceMonday();
+        var initialPath = CreateStaffAllocationWorkbook(
+            monday,
+            new StaffAllocationRow("12345", "John Doe", "Manager", "E-001"),
+            new StaffAllocationRow("67890", "Jane Roe", "Manager", "E-001"));
+        var reducedPath = CreateStaffAllocationWorkbook(
+            monday,
+            new StaffAllocationRow("12345", "John Doe", "Manager", "E-001"));
+
+        try
+        {
+            await _service.UpdateStaffAllocationsAsync(initialPath, closingPeriodId: 1);
+            var summary = await _service.UpdateStaffAllocationsAsync(reducedPath, closingPeriodId: 1);
+
+            Assert.Contains("Imported CP Active (1)", summary);
+
+            await using var verifyContext = _factory.CreateDbContext();
+            var budget = await verifyContext.EngagementRankBudgets
+                .SingleAsync(b => b.EngagementId == 1 && b.FiscalYearId == 1 && b.RankName == "Manager");
+
+            Assert.Equal(40m, budget.IncurredHours);
+            Assert.Equal(60m, budget.RemainingHours);
+
+            var history = await verifyContext.EngagementRankBudgetHistory
+                .SingleAsync(h => h.ClosingPeriodId == 1 && h.EngagementCode == "E-001" && h.RankCode == "MANAGER");
+
+            Assert.Equal(40m, history.Hours);
+        }
+        finally
+        {
+            File.Delete(initialPath);
+            File.Delete(reducedPath);
+        }
+    }
+
+    [Fact]
+    public async Task UpdateStaffAllocationsAsync_AccumulatesAcrossClosingPeriods()
+    {
+        await SeedStaffAllocationScenarioAsync();
+
+        var monday = GetReferenceMonday();
+        await using (var context = _factory.CreateDbContext())
+        {
+            context.ClosingPeriods.Add(new ClosingPeriod
+            {
+                Id = 2,
+                Name = "Next",
+                FiscalYearId = 1,
+                PeriodStart = monday.AddDays(7),
+                PeriodEnd = monday.AddDays(14).AddMinutes(-1)
+            });
+
+            await context.SaveChangesAsync();
+        }
+
+        var firstPath = CreateStaffAllocationWorkbook(
+            monday,
+            new StaffAllocationRow("12345", "John Doe", "Manager", "E-001"));
+        var secondPath = CreateStaffAllocationWorkbook(
+            monday.AddDays(7),
+            new StaffAllocationRow("12345", "John Doe", "Manager", "E-001"));
+
+        try
+        {
+            await _service.UpdateStaffAllocationsAsync(firstPath, closingPeriodId: 1);
+            await _service.UpdateStaffAllocationsAsync(secondPath, closingPeriodId: 2);
+
+            await using var verifyContext = _factory.CreateDbContext();
+            var budget = await verifyContext.EngagementRankBudgets
+                .SingleAsync(b => b.EngagementId == 1 && b.FiscalYearId == 1 && b.RankName == "Manager");
+
+            Assert.Equal(80m, budget.IncurredHours);
+            Assert.Equal(20m, budget.RemainingHours);
+
+            var histories = await verifyContext.EngagementRankBudgetHistory
+                .Where(h => h.EngagementCode == "E-001" && h.RankCode == "MANAGER")
+                .OrderBy(h => h.ClosingPeriodId)
+                .ToListAsync();
+
+            Assert.Equal(2, histories.Count);
+            Assert.Contains(histories, h => h.ClosingPeriodId == 1 && h.Hours == 40m);
+            Assert.Contains(histories, h => h.ClosingPeriodId == 2 && h.Hours == 40m);
+        }
+        finally
+        {
+            File.Delete(firstPath);
+            File.Delete(secondPath);
         }
     }
 
@@ -183,15 +338,15 @@ public sealed class ImportServiceConsumedHoursTests : IAsyncDisposable
 
         try
         {
-            var summary = await _service.UpdateStaffAllocationsAsync(filePath);
+            var summary = await _service.UpdateStaffAllocationsAsync(filePath, closingPeriodId: 1);
 
-            Assert.Contains("Updated: 1", summary);
+            Assert.Contains("Imported CP Active (1)", summary);
 
             await using var verifyContext = _factory.CreateDbContext();
             var budget = await verifyContext.EngagementRankBudgets
                 .SingleAsync(b => b.EngagementId == 1 && b.FiscalYearId == 1 && b.RankName == "11-SENIOR 3");
 
-            Assert.Equal(40m, budget.ConsumedHours);
+            Assert.Equal(40m, budget.IncurredHours);
         }
         finally
         {
@@ -200,7 +355,7 @@ public sealed class ImportServiceConsumedHoursTests : IAsyncDisposable
     }
 
     [Fact]
-    public async Task UpdateStaffAllocationsAsync_LogsExceptionWhenRankMappingMissing()
+    public async Task UpdateStaffAllocationsAsync_SkipsWhenRankMappingMissing()
     {
         await SeedStaffAllocationScenarioAsync(includeRankMapping: false);
 
@@ -209,18 +364,18 @@ public sealed class ImportServiceConsumedHoursTests : IAsyncDisposable
 
         try
         {
-            var summary = await _service.UpdateStaffAllocationsAsync(filePath);
+            var summary = await _service.UpdateStaffAllocationsAsync(filePath, closingPeriodId: 1);
 
-            Assert.Contains("Skipped: 1", summary);
+            Assert.Contains("0 engagement-rank combinations", summary);
 
             await using var verifyContext = _factory.CreateDbContext();
             var budget = await verifyContext.EngagementRankBudgets
                 .SingleAsync(b => b.EngagementId == 1 && b.FiscalYearId == 1 && b.RankName == "Manager");
 
-            Assert.Equal(0m, budget.ConsumedHours);
+            Assert.Equal(0m, budget.IncurredHours);
 
-            var exception = await verifyContext.Exceptions.SingleAsync();
-            Assert.Contains("Rank 'Unknown'", exception.Reason);
+            var histories = await verifyContext.EngagementRankBudgetHistory.ToListAsync();
+            Assert.Empty(histories);
         }
         finally
         {
@@ -420,6 +575,7 @@ public sealed class ImportServiceConsumedHoursTests : IAsyncDisposable
         await using var context = _factory.CreateDbContext();
 
         context.EngagementRankBudgets.RemoveRange(context.EngagementRankBudgets);
+        context.EngagementRankBudgetHistory.RemoveRange(context.EngagementRankBudgetHistory);
         context.Engagements.RemoveRange(context.Engagements);
         context.RankMappings.RemoveRange(context.RankMappings);
         context.Employees.RemoveRange(context.Employees);
@@ -502,6 +658,14 @@ public sealed class ImportServiceConsumedHoursTests : IAsyncDisposable
                 RawRank = "Manager",
                 NormalizedRank = "Manager",
                 SpreadsheetRank = "Manager",
+                IsActive = true
+            });
+
+            context.RankMappings.Add(new RankMapping
+            {
+                RawRank = "Senior",
+                NormalizedRank = "Senior",
+                SpreadsheetRank = "Senior",
                 IsActive = true
             });
         }
