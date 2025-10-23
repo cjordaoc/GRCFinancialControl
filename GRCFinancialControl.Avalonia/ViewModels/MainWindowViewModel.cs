@@ -16,16 +16,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly ILoggingService _loggingService;
 
         public EngagementsViewModel Engagements { get; }
-        public FiscalYearsViewModel FiscalYears { get; }
         public GrcTeamViewModel GrcTeam { get; }
         public ImportViewModel Import { get; }
         public AllocationsViewModel Allocations { get; }
         public ReportsViewModel Reports { get; }
         public SettingsViewModel Settings { get; }
         public RankMappingsViewModel RankMappings { get; }
-        public ClosingPeriodsViewModel ClosingPeriods { get; }
-        public CustomersViewModel Customers { get; }
         public TasksViewModel Tasks { get; }
+        public ControlMasterDataViewModel ControlMasterData { get; }
 
         public ObservableCollection<NavigationItem> NavigationItems { get; }
 
@@ -36,15 +34,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private ViewModelBase? _activeView;
 
         public MainWindowViewModel(EngagementsViewModel engagementsViewModel,
-                                   FiscalYearsViewModel fiscalYearsViewModel,
                                    GrcTeamViewModel grcTeamViewModel,
                                    ImportViewModel importViewModel,
                                    AllocationsViewModel allocationsViewModel,
                                    ReportsViewModel reportsViewModel,
                                    SettingsViewModel settingsViewModel,
                                    RankMappingsViewModel rankMappingsViewModel,
-                                   ClosingPeriodsViewModel closingPeriodsViewModel,
-                                   CustomersViewModel customersViewModel,
+                                   ControlMasterDataViewModel controlMasterDataViewModel,
                                    TasksViewModel tasksViewModel,
                                    ILoggingService loggingService,
                                    IMessenger messenger)
@@ -54,28 +50,24 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             _loggingService = loggingService;
             Engagements = engagementsViewModel;
-            FiscalYears = fiscalYearsViewModel;
             GrcTeam = grcTeamViewModel;
             Import = importViewModel;
             Allocations = allocationsViewModel;
             Reports = reportsViewModel;
             Settings = settingsViewModel;
             RankMappings = rankMappingsViewModel;
-            ClosingPeriods = closingPeriodsViewModel;
-            Customers = customersViewModel;
             Tasks = tasksViewModel;
+            ControlMasterData = controlMasterDataViewModel;
 
             NavigationItems = new ObservableCollection<NavigationItem>
             {
                 new(LocalizationRegistry.Get("Navigation.Import"), Import),
-                new(LocalizationRegistry.Get("Navigation.ClosingPeriods"), ClosingPeriods),
                 new(LocalizationRegistry.Get("Navigation.Engagements"), Engagements),
-                new(LocalizationRegistry.Get("Navigation.Customers"), Customers),
-                new(LocalizationRegistry.Get("Navigation.FiscalYears"), FiscalYears),
                 new(LocalizationRegistry.Get("Navigation.GrcTeam"), GrcTeam),
                 new(LocalizationRegistry.Get("Navigation.Allocations"), Allocations),
                 new(LocalizationRegistry.Get("Navigation.Reports"), Reports),
                 new(LocalizationRegistry.Get("Navigation.Tasks"), Tasks),
+                new(LocalizationRegistry.Get("Navigation.ControlMasterData"), ControlMasterData),
                 new(LocalizationRegistry.Get(
                     "Navigation.MasterData"),
                     null,
