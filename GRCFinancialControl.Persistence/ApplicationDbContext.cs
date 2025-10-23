@@ -422,11 +422,6 @@ namespace GRCFinancialControl.Persistence
                 .HasDefaultValue(0m);
 
             modelBuilder.Entity<EngagementRankBudget>()
-                .Property(rb => rb.IncurredHours)
-                .HasPrecision(18, 2)
-                .HasDefaultValue(0m);
-
-            modelBuilder.Entity<EngagementRankBudget>()
                 .Property(rb => rb.RemainingHours)
                 .HasPrecision(18, 2)
                 .HasDefaultValue(0m);

@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
+using GRCFinancialControl.Core.Extensions;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence;
 using GRCFinancialControl.Persistence.Services;
@@ -120,7 +121,7 @@ public sealed class ImportServiceConsumedHoursTests : IAsyncDisposable
             var budget = await verifyContext.EngagementRankBudgets
                 .SingleAsync(b => b.EngagementId == 1 && b.FiscalYearId == 1 && b.RankName == "Manager");
 
-            Assert.Equal(40m, budget.IncurredHours);
+            Assert.Equal(40m, budget.CalculateIncurredHours());
             Assert.Equal(60m, budget.RemainingHours);
 
             var history = await verifyContext.EngagementRankBudgetHistory.SingleAsync();
@@ -160,7 +161,7 @@ public sealed class ImportServiceConsumedHoursTests : IAsyncDisposable
                 .Include(b => b.Engagement)
                 .SingleAsync(b => b.Engagement != null && b.Engagement.EngagementId == "E-999");
 
-            Assert.Equal(0m, clearedBudget.IncurredHours);
+            Assert.Equal(0m, clearedBudget.CalculateIncurredHours());
             Assert.Equal(clearedBudget.BudgetHours, clearedBudget.RemainingHours);
 
             var histories = await verifyContext.EngagementRankBudgetHistory
@@ -201,7 +202,7 @@ public sealed class ImportServiceConsumedHoursTests : IAsyncDisposable
             var budget = await verifyContext.EngagementRankBudgets
                 .SingleAsync(b => b.EngagementId == 1 && b.FiscalYearId == 1 && b.RankName == "Manager");
 
-            Assert.Equal(80m, budget.IncurredHours);
+            Assert.Equal(80m, budget.CalculateIncurredHours());
             Assert.Equal(20m, budget.RemainingHours);
 
             var history = await verifyContext.EngagementRankBudgetHistory
@@ -240,7 +241,7 @@ public sealed class ImportServiceConsumedHoursTests : IAsyncDisposable
             var budget = await verifyContext.EngagementRankBudgets
                 .SingleAsync(b => b.EngagementId == 1 && b.FiscalYearId == 1 && b.RankName == "Manager");
 
-            Assert.Equal(40m, budget.IncurredHours);
+            Assert.Equal(40m, budget.CalculateIncurredHours());
             Assert.Equal(60m, budget.RemainingHours);
 
             var history = await verifyContext.EngagementRankBudgetHistory
@@ -291,7 +292,7 @@ public sealed class ImportServiceConsumedHoursTests : IAsyncDisposable
             var budget = await verifyContext.EngagementRankBudgets
                 .SingleAsync(b => b.EngagementId == 1 && b.FiscalYearId == 1 && b.RankName == "Manager");
 
-            Assert.Equal(80m, budget.IncurredHours);
+            Assert.Equal(80m, budget.CalculateIncurredHours());
             Assert.Equal(20m, budget.RemainingHours);
 
             var histories = await verifyContext.EngagementRankBudgetHistory
@@ -346,7 +347,7 @@ public sealed class ImportServiceConsumedHoursTests : IAsyncDisposable
             var budget = await verifyContext.EngagementRankBudgets
                 .SingleAsync(b => b.EngagementId == 1 && b.FiscalYearId == 1 && b.RankName == "11-SENIOR 3");
 
-            Assert.Equal(40m, budget.IncurredHours);
+            Assert.Equal(40m, budget.CalculateIncurredHours());
         }
         finally
         {
@@ -372,7 +373,7 @@ public sealed class ImportServiceConsumedHoursTests : IAsyncDisposable
             var budget = await verifyContext.EngagementRankBudgets
                 .SingleAsync(b => b.EngagementId == 1 && b.FiscalYearId == 1 && b.RankName == "Manager");
 
-            Assert.Equal(0m, budget.IncurredHours);
+            Assert.Equal(0m, budget.CalculateIncurredHours());
 
             var histories = await verifyContext.EngagementRankBudgetHistory.ToListAsync();
             Assert.Empty(histories);

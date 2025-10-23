@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ExcelDataReader;
 using GRCFinancialControl.Core.Enums;
+using GRCFinancialControl.Core.Extensions;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Importers;
 using GRCFinancialControl.Persistence.Services.Importers.StaffAllocations;
@@ -1232,9 +1233,10 @@ namespace GRCFinancialControl.Persistence.Services
 
             if (existing is not null)
             {
+                var incurred = existing.CalculateIncurredHours();
                 existing.BudgetHours = roundedBudget;
                 var remaining = Math.Round(
-                    roundedBudget + existing.AdditionalHours - (existing.IncurredHours + existing.ConsumedHours),
+                    roundedBudget + existing.AdditionalHours - (incurred + existing.ConsumedHours),
                     2,
                     MidpointRounding.AwayFromZero);
                 existing.RemainingHours = remaining;
@@ -1257,7 +1259,6 @@ namespace GRCFinancialControl.Persistence.Services
                 BudgetHours = roundedBudget,
                 ConsumedHours = 0m,
                 AdditionalHours = 0m,
-                IncurredHours = 0m,
                 RemainingHours = roundedBudget,
                 Status = nameof(TrafficLightStatus.Green),
                 CreatedAtUtc = timestamp
@@ -1402,7 +1403,6 @@ namespace GRCFinancialControl.Persistence.Services
                         BudgetHours = allocation.Hours,
                         ConsumedHours = 0m,
                         AdditionalHours = 0m,
-                        IncurredHours = 0m,
                         RemainingHours = 0m,
                         Status = nameof(TrafficLightStatus.Green),
                         CreatedAtUtc = nowUtc
@@ -1419,14 +1419,14 @@ namespace GRCFinancialControl.Persistence.Services
 
                 if (isNewBudget)
                 {
-                    budget.IncurredHours = allocation.Hours;
+                    budget.ApplyIncurredHours(allocation.Hours);
                 }
                 else
                 {
-                    budget.IncurredHours += diff;
+                    var currentIncurred = budget.CalculateIncurredHours();
+                    budget.ApplyIncurredHours(currentIncurred + diff);
                 }
 
-                budget.RemainingHours = budget.BudgetHours - budget.IncurredHours;
                 budget.UpdatedAtUtc = nowUtc;
 
                 if (historyEntry is not null)
@@ -1475,8 +1475,8 @@ namespace GRCFinancialControl.Persistence.Services
                     continue;
                 }
 
-                budget.IncurredHours -= previousHours;
-                budget.RemainingHours = budget.BudgetHours - budget.IncurredHours;
+                var currentIncurred = budget.CalculateIncurredHours();
+                budget.ApplyIncurredHours(currentIncurred - previousHours);
                 budget.UpdatedAtUtc = nowUtc;
                 historyPair.Value.Hours = 0m;
                 historyPair.Value.UploadedAt = nowUtc;
@@ -2679,16 +2679,15 @@ namespace GRCFinancialControl.Persistence.Services
                         FiscalYearId = entry.FiscalYearId,
                         RankName = entry.RankCode,
                         BudgetHours = 0m,
-                        ConsumedHours = entry.RoundedHours,
+                        ConsumedHours = 0m,
                         AdditionalHours = 0m,
-                        IncurredHours = 0m,
                         RemainingHours = 0m,
                         Status = nameof(TrafficLightStatus.Green),
                         CreatedAtUtc = updateTimestamp,
                         UpdatedAtUtc = updateTimestamp
                     };
 
-                    newBudget.RemainingHours = newBudget.BudgetHours + newBudget.AdditionalHours - newBudget.ConsumedHours;
+                    newBudget.UpdateConsumedHours(entry.RoundedHours);
 
                     await context.EngagementRankBudgets.AddAsync(newBudget).ConfigureAwait(false);
                     budgetLookup[(entry.EngagementId, entry.FiscalYearId, entry.RankCode)] = newBudget;
@@ -2698,11 +2697,13 @@ namespace GRCFinancialControl.Persistence.Services
                 else
                 {
                     var newConsumed = budget.ConsumedHours + delta;
-                    var newRemaining = budget.BudgetHours + budget.AdditionalHours - newConsumed;
-                    if (newConsumed != budget.ConsumedHours || newRemaining != budget.RemainingHours)
+                    var previousConsumed = budget.ConsumedHours;
+                    var previousRemaining = budget.RemainingHours;
+                    budget.UpdateConsumedHours(newConsumed);
+
+                    if (Math.Abs(previousConsumed - budget.ConsumedHours) > 0.005m ||
+                        Math.Abs(previousRemaining - budget.RemainingHours) > 0.005m)
                     {
-                        budget.ConsumedHours = newConsumed;
-                        budget.RemainingHours = newRemaining;
                         budget.UpdatedAtUtc = updateTimestamp;
                         updated++;
                     }
@@ -2755,11 +2756,13 @@ namespace GRCFinancialControl.Persistence.Services
                     budgetLookup.TryGetValue((engagement.Id, historyKey.FiscalYearId, historyKey.RankCode), out var budget))
                 {
                     var newConsumed = budget.ConsumedHours - previousHours;
-                    var newRemaining = budget.BudgetHours + budget.AdditionalHours - newConsumed;
-                    if (newConsumed != budget.ConsumedHours || newRemaining != budget.RemainingHours)
+                    var previousConsumed = budget.ConsumedHours;
+                    var previousRemaining = budget.RemainingHours;
+                    budget.UpdateConsumedHours(newConsumed);
+
+                    if (Math.Abs(previousConsumed - budget.ConsumedHours) > 0.005m ||
+                        Math.Abs(previousRemaining - budget.RemainingHours) > 0.005m)
                     {
-                        budget.ConsumedHours = newConsumed;
-                        budget.RemainingHours = newRemaining;
                         budget.UpdatedAtUtc = updateTimestamp;
                         updated++;
                     }
@@ -3363,9 +3366,14 @@ namespace GRCFinancialControl.Persistence.Services
             for (var index = 0; index < budgets.Count; index++)
             {
                 var normalized = Math.Round(allocations[index], 2, MidpointRounding.AwayFromZero);
-                if (Math.Abs(normalized - budgets[index].ConsumedHours) > 0.005m)
+                var budget = budgets[index];
+                var previousConsumed = budget.ConsumedHours;
+                var previousRemaining = budget.RemainingHours;
+                budget.UpdateConsumedHours(normalized);
+
+                if (Math.Abs(previousConsumed - budget.ConsumedHours) > 0.005m ||
+                    Math.Abs(previousRemaining - budget.RemainingHours) > 0.005m)
                 {
-                    budgets[index].ConsumedHours = normalized;
                     updated = true;
                 }
             }
