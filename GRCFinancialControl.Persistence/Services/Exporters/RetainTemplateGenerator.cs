@@ -21,7 +21,7 @@ public sealed class RetainTemplateGenerator : IRetainTemplateGenerator
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public Task<string> GenerateRetainTemplateAsync(string allocationFilePath)
+    public Task<string> GenerateRetainTemplateAsync(string allocationFilePath, string destinationFilePath)
     {
         if (string.IsNullOrWhiteSpace(allocationFilePath))
         {
@@ -31,6 +31,11 @@ public sealed class RetainTemplateGenerator : IRetainTemplateGenerator
         if (!File.Exists(allocationFilePath))
         {
             throw new FileNotFoundException("Allocation planning workbook could not be found.", allocationFilePath);
+        }
+
+        if (string.IsNullOrWhiteSpace(destinationFilePath))
+        {
+            throw new ArgumentException("The output file path must be provided.", nameof(destinationFilePath));
         }
 
         var templateBytes = LoadTemplateBytes();
@@ -64,7 +69,7 @@ public sealed class RetainTemplateGenerator : IRetainTemplateGenerator
                 saturdayHeaders[^1]);
         }
 
-        var outputFilePath = CreateTemplateCopy(allocationFilePath, templateBytes);
+        var outputFilePath = PrepareTemplateCopy(destinationFilePath, templateBytes);
         PopulateTemplate(outputFilePath, planningSnapshot, saturdayHeaders);
 
         _logger.LogInformation("Retain template generated at {OutputFilePath}", outputFilePath);
@@ -94,20 +99,21 @@ public sealed class RetainTemplateGenerator : IRetainTemplateGenerator
         }
     }
 
-    private static string CreateTemplateCopy(string allocationFilePath, byte[] templateBytes)
+    private static string PrepareTemplateCopy(string destinationFilePath, byte[] templateBytes)
     {
-        var outputDirectory = Path.GetDirectoryName(allocationFilePath);
+        var outputDirectory = Path.GetDirectoryName(destinationFilePath);
         if (string.IsNullOrWhiteSpace(outputDirectory))
         {
-            outputDirectory = Directory.GetCurrentDirectory();
+            throw new InvalidOperationException("A valid directory must be provided for the generated template.");
         }
 
-        var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
-        var outputFileName = $"RetainTemplate_{timestamp}.xlsx";
-        var outputFilePath = Path.Combine(outputDirectory, outputFileName);
+        if (!Directory.Exists(outputDirectory))
+        {
+            Directory.CreateDirectory(outputDirectory);
+        }
 
-        File.WriteAllBytes(outputFilePath, templateBytes);
-        return outputFilePath;
+        File.WriteAllBytes(destinationFilePath, templateBytes);
+        return destinationFilePath;
     }
 
     private static void PopulateTemplate(
@@ -119,23 +125,23 @@ public sealed class RetainTemplateGenerator : IRetainTemplateGenerator
         var worksheet = workbook.Worksheet("Data Entry")
                          ?? throw new InvalidDataException("Sheet 'Data Entry' was not found in the Retain template.");
 
-        const int headerRowIndex = 1;
-        const int firstDataRowIndex = 3;
+        const int saturdayHeaderRowIndex = 1;
+        const int firstDataRowIndex = 4;
         const int firstWeekColumnIndex = 5;
 
         var lastColumnToClear = Math.Max(
             worksheet.LastColumnUsed()?.ColumnNumber() ?? firstWeekColumnIndex - 1,
-            firstWeekColumnIndex + saturdayHeaders.Count - 1);
+            firstWeekColumnIndex + Math.Max(saturdayHeaders.Count, 1) - 1);
 
         for (var column = firstWeekColumnIndex; column <= lastColumnToClear; column++)
         {
-            worksheet.Cell(headerRowIndex, column).Clear(XLClearOptions.Contents);
+            worksheet.Cell(saturdayHeaderRowIndex, column).Clear(XLClearOptions.Contents);
         }
 
         for (var index = 0; index < saturdayHeaders.Count; index++)
         {
             var columnIndex = firstWeekColumnIndex + index;
-            var headerCell = worksheet.Cell(headerRowIndex, columnIndex);
+            var headerCell = worksheet.Cell(saturdayHeaderRowIndex, columnIndex);
             headerCell.Value = saturdayHeaders[index];
             headerCell.Style.DateFormat.Format = headerCell.Style.DateFormat.Format switch
             {
@@ -165,8 +171,8 @@ public sealed class RetainTemplateGenerator : IRetainTemplateGenerator
         {
             worksheet.Cell(rowNumber, 1).Value = sequentialNumber;
             worksheet.Cell(rowNumber, 2).Value = row.JobName;
-            worksheet.Cell(rowNumber, 3).Value = row.ResourceName;
-            worksheet.Cell(rowNumber, 4).Value = row.ResourceId;
+            worksheet.Cell(rowNumber, 3).Value = row.ResourceId ?? string.Empty;
+            worksheet.Cell(rowNumber, 4).Value = row.ResourceName ?? string.Empty;
 
             for (var headerIndex = 0; headerIndex < saturdayHeaders.Count; headerIndex++)
             {

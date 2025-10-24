@@ -4,5 +4,5 @@ namespace GRCFinancialControl.Persistence.Services.Interfaces;
 
 public interface IRetainTemplateGenerator
 {
-    Task<string> GenerateRetainTemplateAsync(string allocationFilePath);
+    Task<string> GenerateRetainTemplateAsync(string allocationFilePath, string destinationFilePath);
 }

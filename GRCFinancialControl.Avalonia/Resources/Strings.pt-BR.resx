@@ -379,6 +379,9 @@
   <data name="Tasks.Dialog.GenerateRetainTemplateTitle" xml:space="preserve">
     <value>Selecionar arquivo de planejamento de alocação</value>
   </data>
+  <data name="Tasks.Dialog.SaveRetainTemplateTitle" xml:space="preserve">
+    <value>Escolha onde salvar a planilha gerada</value>
+  </data>
   <data name="Tasks.Status.RetainTemplateCancelled" xml:space="preserve">
     <value>Geração do template Retain cancelada.</value>
   </data>
@@ -387,69 +390,6 @@
   </data>
   <data name="Tasks.Status.RetainTemplateFailure" xml:space="preserve">
     <value>Falha ao gerar o template Retain: {0}</value>
-  </data>
-  <data name="Tasks.Button.ExportRetain" xml:space="preserve">
-    <value>Exportar arquivo Retain</value>
-  </data>
-  <data name="Tasks.Dialog.ExportRetainTitle" xml:space="preserve">
-    <value>Exportar planilha Retain</value>
-  </data>
-  <data name="Tasks.Worksheet.Retain" xml:space="preserve">
-    <value>Retain</value>
-  </data>
-  <data name="Tasks.Status.RetainCancelled" xml:space="preserve">
-    <value>Exportação do Retain cancelada.</value>
-  </data>
-  <data name="Tasks.Status.RetainSaved" xml:space="preserve">
-    <value>Planilha Retain salva em {0}.</value>
-  </data>
-  <data name="Tasks.Status.RetainFailure" xml:space="preserve">
-    <value>Falha ao exportar a planilha Retain: {0}</value>
-  </data>
-  <data name="Tasks.Retain.Header.SubServiceLine" xml:space="preserve">
-    <value>Sub Service Line</value>
-  </data>
-  <data name="Tasks.Retain.Header.Specialty" xml:space="preserve">
-    <value>Especialidade</value>
-  </data>
-  <data name="Tasks.Retain.Header.EmpComments2" xml:space="preserve">
-    <value>Emp Comments 2</value>
-  </data>
-  <data name="Tasks.Retain.Header.EmpComments3" xml:space="preserve">
-    <value>Emp Comments 3</value>
-  </data>
-  <data name="Tasks.Retain.Header.WorkLocation" xml:space="preserve">
-    <value>Local de trabalho</value>
-  </data>
-  <data name="Tasks.Retain.Header.CostCenter" xml:space="preserve">
-    <value>Centro de custo</value>
-  </data>
-  <data name="Tasks.Retain.Header.ResourceGpn" xml:space="preserve">
-    <value>Recurso (GPN)</value>
-  </data>
-  <data name="Tasks.Retain.Header.ResourceName" xml:space="preserve">
-    <value>Nome do recurso</value>
-  </data>
-  <data name="Tasks.Retain.Header.Grade" xml:space="preserve">
-    <value>Cargo do recurso</value>
-  </data>
-  <data name="Tasks.Retain.Header.Office" xml:space="preserve">
-    <value>Escritório do recurso</value>
-  </data>
-  <data name="Tasks.Retain.Header.Engagement" xml:space="preserve">
-    <value>Engajamento</value>
-  </data>
-  <data name="Tasks.Retain.Header.Customer" xml:space="preserve">
-    <value>Cliente</value>
-  </data>
-  <data name="Tasks.Retain.Header.EngagementNumber" xml:space="preserve">
-    <value>Número do engajamento</value>
-  </data>
-  <data name="Tasks.Retain.Header.EmployeeStatus" xml:space="preserve">
-    <value>Status do colaborador</value>
-  </data>
-  <data name="Tasks.Retain.Header.EngagementType" xml:space="preserve">
-    <value>Tipo de engajamento</value>
   </data>
 
 </root>
