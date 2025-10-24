@@ -268,20 +268,25 @@ CREATE TABLE `Exceptions`
 -- Applied Suggestion #3: rename PlannedValue -> ToGoValue and add ToDateValue
 CREATE TABLE `EngagementFiscalYearRevenueAllocations`
 (
-    `Id`            INT             NOT NULL AUTO_INCREMENT,
-    `EngagementId`  INT             NOT NULL,
-    `FiscalYearId`  INT             NOT NULL,
-    `ToGoValue`     DECIMAL(18, 2)  NOT NULL,
-    `ToDateValue`   DECIMAL(18, 2)  NOT NULL DEFAULT 0,
+    `Id`             INT            NOT NULL AUTO_INCREMENT,
+    `EngagementId`   INT            NOT NULL,
+    `FiscalYearId`   INT            NOT NULL,
+    `ToGoValue`      DECIMAL(18, 2) NOT NULL,
+    `ToDateValue`    DECIMAL(18, 2) NOT NULL DEFAULT 0,
     `LastUpdateDate` DATE           NULL,
-    `CreatedAt`     DATETIME(6)     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `UpdatedAt`     DATETIME(6)     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `CreatedAt`               TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `UpdatedAt`               TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT `PK_EngagementFiscalYearRevenueAllocations` PRIMARY KEY (`Id`),
-    CONSTRAINT `FK_EFYRA_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
-    CONSTRAINT `FK_EFYRA_FiscalYears` FOREIGN KEY (`FiscalYearId`) REFERENCES `FiscalYears` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_EFYRA_Engagements` FOREIGN KEY (`EngagementId`)
+        REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_EFYRA_FiscalYears` FOREIGN KEY (`FiscalYearId`)
+        REFERENCES `FiscalYears` (`Id`) ON DELETE CASCADE,
     CONSTRAINT `UQ_EFYRA_Allocation` UNIQUE (`EngagementId`, `FiscalYearId`),
     INDEX `IX_EFYRA_FiscalYearId` (`FiscalYearId`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
 
 
 /* ===========================================================
