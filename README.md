@@ -108,15 +108,16 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 ## 7 · Retain Template Generation
 **Happy Path**
 1. Staffing teams request a Retain template based on the latest allocation planning workbook.
-2. The generator loads the base64-encoded template asset, clones it alongside the allocation file, and prepares Saturday-based weekly headers relative to the reference date.
+2. The generator clones the sanitized template asset (mirroring `DataTemplate/Retain_Template.xlsx`) next to the allocation file and resets the Saturday header row while preserving the workbook instructions.
 3. Allocation entries are flattened by engagement/resource and spread across the weekly columns.
-4. The populated Excel file is saved next to the source workbook and logged for traceability.
+4. Sequential rows start at row 4, filling job code, resource GPN, resource name, and weekly hours in the exact columns expected by the Retain importer.
+5. The populated Excel file is saved next to the source workbook and logged for traceability.
 
 **Validation & Consolidation Rules**
 - The generator validates the input path and ensures both the planning workbook and the embedded template asset exist before proceeding.
 - It verifies the template contains the `Data Entry` sheet; absence results in a blocking error.
-- All existing week columns and data rows are cleared prior to writing new data to avoid residual content.
-- Hours per week are rounded to two decimals and skipped when zero to keep the template lean.
+- Saturday header cells (row 1, columns `E` onward) are cleared before writing to avoid stale dates while the Monday formulas on row 2 remain intact.
+- All data rows from row 4 onward are cleared prior to writing new values, and hours per week are rounded to two decimals (skipping zeros) to keep the template lean.
 
 [See Technical Spec →](readme_specs.md#retain-template-generation)
 
