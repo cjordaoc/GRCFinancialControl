@@ -119,23 +119,23 @@ public sealed class RetainTemplateGenerator : IRetainTemplateGenerator
         var worksheet = workbook.Worksheet("Data Entry")
                          ?? throw new InvalidDataException("Sheet 'Data Entry' was not found in the Retain template.");
 
-        const int headerRowIndex = 1;
-        const int firstDataRowIndex = 3;
+        const int saturdayHeaderRowIndex = 1;
+        const int firstDataRowIndex = 4;
         const int firstWeekColumnIndex = 5;
 
         var lastColumnToClear = Math.Max(
             worksheet.LastColumnUsed()?.ColumnNumber() ?? firstWeekColumnIndex - 1,
-            firstWeekColumnIndex + saturdayHeaders.Count - 1);
+            firstWeekColumnIndex + Math.Max(saturdayHeaders.Count, 1) - 1);
 
         for (var column = firstWeekColumnIndex; column <= lastColumnToClear; column++)
         {
-            worksheet.Cell(headerRowIndex, column).Clear(XLClearOptions.Contents);
+            worksheet.Cell(saturdayHeaderRowIndex, column).Clear(XLClearOptions.Contents);
         }
 
         for (var index = 0; index < saturdayHeaders.Count; index++)
         {
             var columnIndex = firstWeekColumnIndex + index;
-            var headerCell = worksheet.Cell(headerRowIndex, columnIndex);
+            var headerCell = worksheet.Cell(saturdayHeaderRowIndex, columnIndex);
             headerCell.Value = saturdayHeaders[index];
             headerCell.Style.DateFormat.Format = headerCell.Style.DateFormat.Format switch
             {
@@ -165,8 +165,8 @@ public sealed class RetainTemplateGenerator : IRetainTemplateGenerator
         {
             worksheet.Cell(rowNumber, 1).Value = sequentialNumber;
             worksheet.Cell(rowNumber, 2).Value = row.JobName;
-            worksheet.Cell(rowNumber, 3).Value = row.ResourceName;
-            worksheet.Cell(rowNumber, 4).Value = row.ResourceId;
+            worksheet.Cell(rowNumber, 3).Value = row.ResourceId ?? string.Empty;
+            worksheet.Cell(rowNumber, 4).Value = row.ResourceName ?? string.Empty;
 
             for (var headerIndex = 0; headerIndex < saturdayHeaders.Count; headerIndex++)
             {
