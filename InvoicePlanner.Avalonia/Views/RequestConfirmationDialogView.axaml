@@ -63,7 +63,7 @@
                     <DataGridTemplateColumn Header="{loc:Loc Key=Request.TableHeader.RequestDate}" Width="160">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate x:DataType="vm:RequestConfirmationLineViewModel">
-                                <DatePicker SelectedDate="{Binding RequestDate, Mode=TwoWay, Converter={StaticResource DateTimeOffsetConverter}}" />
+                                <CalendarDatePicker SelectedDate="{Binding RequestDate, Mode=TwoWay, Converter={StaticResource DateTimeOffsetConverter}}" />
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>

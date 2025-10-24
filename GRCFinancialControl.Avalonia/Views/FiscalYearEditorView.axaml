@@ -32,21 +32,21 @@
                                Grid.Column="0"
                                Text="{loc:Loc Key=Admin.ClosingPeriods.Header.Start}"
                                VerticalAlignment="Center"/>
-                    <DatePicker Grid.Row="1"
-                                Grid.Column="1"
-                                SelectedDate="{Binding StartDateOffset}"
-                                IsEnabled="{Binding AllowEditing}"
-                                HorizontalAlignment="Stretch"/>
+                    <CalendarDatePicker Grid.Row="1"
+                                        Grid.Column="1"
+                                        SelectedDate="{Binding StartDateOffset}"
+                                        IsEnabled="{Binding AllowEditing}"
+                                        HorizontalAlignment="Stretch"/>
 
                     <TextBlock Grid.Row="2"
                                Grid.Column="0"
                                Text="{loc:Loc Key=Admin.ClosingPeriods.Header.End}"
                                VerticalAlignment="Center"/>
-                    <DatePicker Grid.Row="2"
-                                Grid.Column="1"
-                                SelectedDate="{Binding EndDateOffset}"
-                                IsEnabled="{Binding AllowEditing}"
-                                HorizontalAlignment="Stretch"/>
+                    <CalendarDatePicker Grid.Row="2"
+                                        Grid.Column="1"
+                                        SelectedDate="{Binding EndDateOffset}"
+                                        IsEnabled="{Binding AllowEditing}"
+                                        HorizontalAlignment="Stretch"/>
 
                     <TextBlock Grid.Row="3"
                                Grid.Column="0"

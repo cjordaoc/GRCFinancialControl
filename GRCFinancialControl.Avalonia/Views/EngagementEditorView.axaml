@@ -176,15 +176,15 @@
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource Space16}">
                         <StackPanel Spacing="{StaticResource Space8}" Grid.Column="0">
                             <TextBlock Text="Last ETC Date:" VerticalAlignment="Center"/>
-                            <DatePicker SelectedDate="{Binding LastEtcDateOffset}"
-                                        IsEnabled="False"
-                                        HorizontalAlignment="Stretch"/>
+                            <CalendarDatePicker SelectedDate="{Binding LastEtcDateOffset}"
+                                                IsEnabled="False"
+                                                HorizontalAlignment="Stretch"/>
                         </StackPanel>
                         <StackPanel Spacing="{StaticResource Space8}" Grid.Column="1">
                             <TextBlock Text="Proposed Next ETC Date:" VerticalAlignment="Center"/>
-                            <DatePicker SelectedDate="{Binding ProposedNextEtcDateOffset}"
-                                        IsEnabled="False"
-                                        HorizontalAlignment="Stretch"/>
+                            <CalendarDatePicker SelectedDate="{Binding ProposedNextEtcDateOffset}"
+                                                IsEnabled="False"
+                                                HorizontalAlignment="Stretch"/>
                         </StackPanel>
                     </Grid>
                 </StackPanel>
