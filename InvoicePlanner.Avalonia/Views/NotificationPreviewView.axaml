@@ -15,7 +15,7 @@
                 <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
                     <StackPanel Spacing="4">
                         <TextBlock Text="{loc:Loc Key=Notifications.Label.NotificationDate}" />
-                        <CalendarDatePicker SelectedDate="{Binding SelectedDate, Mode=TwoWay}" />
+                        <CalendarDatePicker SelectedDate="{Binding SelectedDate, Mode=TwoWay, Converter={StaticResource DateTimeOffsetConverter}}" />
                     </StackPanel>
                     <Button Content="{loc:Loc Key=Common.Button.Refresh}" Command="{Binding RefreshCommand}" Margin="8,24,0,0" />
                 </StackPanel>
