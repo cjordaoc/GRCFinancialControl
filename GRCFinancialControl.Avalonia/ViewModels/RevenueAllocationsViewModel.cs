@@ -1,5 +1,5 @@
 using CommunityToolkit.Mvvm.Messaging;
-using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
@@ -8,7 +8,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         public RevenueAllocationsViewModel(IEngagementService engagementService,
                                            IFiscalYearService fiscalYearService,
-                                           IDialogService dialogService,
+                                           DialogService dialogService,
                                            IMessenger messenger)
             : base(engagementService, fiscalYearService, dialogService, messenger)
         {

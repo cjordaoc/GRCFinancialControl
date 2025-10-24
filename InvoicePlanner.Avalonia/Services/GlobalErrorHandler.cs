@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace InvoicePlanner.Avalonia.Services;
 
-public sealed class GlobalErrorHandler : IGlobalErrorHandler, IDisposable
+public sealed class GlobalErrorHandler : IDisposable
 {
     private readonly ILogger<GlobalErrorHandler> _logger;
     private IClassicDesktopStyleApplicationLifetime? _lifetime;

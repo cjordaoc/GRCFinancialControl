@@ -10,7 +10,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
-using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Configuration;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -20,9 +20,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         private readonly ISettingsService _settingsService;
         private readonly IDatabaseSchemaInitializer _schemaInitializer;
-        private readonly IDialogService _dialogService;
+        private readonly DialogService _dialogService;
         private readonly IConnectionPackageService _connectionPackageService;
-        private readonly IFilePickerService _filePickerService;
+        private readonly FilePickerService _filePickerService;
         private bool _initializingLanguage;
 
         [ObservableProperty]
@@ -85,9 +85,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public SettingsViewModel(
             ISettingsService settingsService,
             IDatabaseSchemaInitializer schemaInitializer,
-            IDialogService dialogService,
+            DialogService dialogService,
             IConnectionPackageService connectionPackageService,
-            IFilePickerService filePickerService)
+            FilePickerService filePickerService)
         {
             _settingsService = settingsService;
             _schemaInitializer = schemaInitializer;

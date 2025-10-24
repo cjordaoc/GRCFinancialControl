@@ -9,7 +9,7 @@ using Invoices.Core.Models;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
-public partial class NotificationPreviewItemViewModel : ObservableObject
+public class NotificationPreviewItemViewModel : ObservableObject
 {
     public NotificationPreviewItemViewModel(InvoiceNotificationPreview preview)
     {

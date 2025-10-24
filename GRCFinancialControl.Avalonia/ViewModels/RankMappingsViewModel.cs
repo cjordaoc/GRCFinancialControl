@@ -6,7 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
-using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -15,7 +15,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     public partial class RankMappingsViewModel : ViewModelBase
     {
         private readonly IRankMappingService _rankMappingService;
-        private readonly IDialogService _dialogService;
+        private readonly DialogService _dialogService;
 
         [ObservableProperty]
         private ObservableCollection<RankMapping> _rankMappings = new();
@@ -25,7 +25,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public RankMappingsViewModel(
             IRankMappingService rankMappingService,
-            IDialogService dialogService,
+            DialogService dialogService,
             IMessenger messenger)
             : base(messenger)
         {

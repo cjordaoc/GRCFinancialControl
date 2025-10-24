@@ -11,12 +11,11 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.Messaging;
 using InvoicePlanner.Avalonia.Messages;
-using InvoicePlanner.Avalonia.Services.Interfaces;
 using InvoicePlanner.Avalonia.ViewModels;
 
 namespace InvoicePlanner.Avalonia.Services
 {
-    public class DialogService : IDialogService
+    public class DialogService
     {
         private readonly ViewLocator _viewLocator = new();
         private Window? _currentDialog;

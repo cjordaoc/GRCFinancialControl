@@ -2,14 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
-using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Avalonia.Services.Models;
 using GRCFinancialControl.Core.Configuration;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.Services
 {
-    public class PowerBiEmbeddingService : IPowerBiEmbeddingService
+    public class PowerBiEmbeddingService
     {
         private readonly ISettingsService _settingsService;
 

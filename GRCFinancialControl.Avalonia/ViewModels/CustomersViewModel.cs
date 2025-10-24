@@ -5,7 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
-using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -14,12 +14,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     public partial class CustomersViewModel : ViewModelBase
     {
         private readonly ICustomerService _customerService;
-        private readonly IDialogService _dialogService;
+        private readonly DialogService _dialogService;
 
         [ObservableProperty]
         private Customer? _selectedCustomer;
 
-        public CustomersViewModel(ICustomerService customerService, IDialogService dialogService, IMessenger messenger)
+        public CustomersViewModel(ICustomerService customerService, DialogService dialogService, IMessenger messenger)
             : base(messenger)
         {
             _customerService = customerService;

@@ -4,15 +4,15 @@ using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Avalonia.Services.Models;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
     public partial class ReportsViewModel : ViewModelBase
     {
-        private readonly IPowerBiEmbeddingService _embeddingService;
-        private readonly ILoggingService _loggingService;
+        private readonly PowerBiEmbeddingService _embeddingService;
+        private readonly LoggingService _loggingService;
 
         [ObservableProperty]
         private Uri? _dashboardUri;
@@ -23,7 +23,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private bool _isRefreshing;
 
-        public ReportsViewModel(IPowerBiEmbeddingService embeddingService, ILoggingService loggingService, IMessenger messenger)
+        public ReportsViewModel(PowerBiEmbeddingService embeddingService, LoggingService loggingService, IMessenger messenger)
             : base(messenger)
         {
             _embeddingService = embeddingService;

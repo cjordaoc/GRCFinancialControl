@@ -7,7 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
-using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
@@ -18,7 +18,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         private readonly IPapdService _papdService;
         private readonly IEngagementService _engagementService;
-        private readonly IDialogService _dialogService;
+        private readonly DialogService _dialogService;
         private List<Engagement> _engagementCache = new();
 
         [ObservableProperty]
@@ -36,7 +36,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public PapdAssignmentsViewModel(
             IPapdService papdService,
             IEngagementService engagementService,
-            IDialogService dialogService,
+            DialogService dialogService,
             IMessenger messenger)
             : base(messenger)
         {

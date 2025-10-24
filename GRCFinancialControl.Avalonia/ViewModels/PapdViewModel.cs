@@ -5,7 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
-using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
@@ -15,13 +15,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     public partial class PapdViewModel : ViewModelBase
     {
         private readonly IPapdService _papdService;
-        private readonly IDialogService _dialogService;
+        private readonly DialogService _dialogService;
         private readonly IEngagementService _engagementService;
 
         [ObservableProperty]
         private Papd? _selectedPapd;
 
-        public PapdViewModel(IPapdService papdService, IDialogService dialogService, IEngagementService engagementService, IMessenger messenger)
+        public PapdViewModel(IPapdService papdService, DialogService dialogService, IEngagementService engagementService, IMessenger messenger)
             : base(messenger)
         {
             _papdService = papdService;

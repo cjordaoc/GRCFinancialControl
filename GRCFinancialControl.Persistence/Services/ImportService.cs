@@ -1267,7 +1267,6 @@ namespace GRCFinancialControl.Persistence.Services
             return 1;
         }
 
-        
         public async Task<string> UpdateStaffAllocationsAsync(string filePath, int closingPeriodId)
         {
             if (string.IsNullOrWhiteSpace(filePath))

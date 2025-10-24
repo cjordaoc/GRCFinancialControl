@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -15,7 +15,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         private readonly IEngagementService _engagementService;
         private readonly IFiscalYearService _fiscalYearService;
-        private readonly IDialogService _dialogService;
+        private readonly DialogService _dialogService;
 
         [ObservableProperty]
         private ObservableCollection<Engagement> _engagements = new();
@@ -28,7 +28,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         protected AllocationsViewModelBase(IEngagementService engagementService,
                                            IFiscalYearService fiscalYearService,
-                                           IDialogService dialogService,
+                                           DialogService dialogService,
                                            IMessenger messenger)
             : base(messenger)
         {

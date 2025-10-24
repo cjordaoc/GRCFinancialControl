@@ -11,13 +11,12 @@ using Avalonia.VisualTree;
 using Avalonia.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
-using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Avalonia.ViewModels;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 
 namespace GRCFinancialControl.Avalonia.Services
 {
-    public class DialogService : IDialogService
+    public class DialogService
     {
         private readonly IMessenger _messenger;
         private readonly ViewLocator _viewLocator = new();

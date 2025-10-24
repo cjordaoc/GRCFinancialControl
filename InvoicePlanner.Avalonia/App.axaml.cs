@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Runtime.ExceptionServices;
 using App.Presentation.Localization;
 using App.Presentation.Messages;
 using App.Presentation.Services;
@@ -21,7 +22,6 @@ using GRCFinancialControl.Core.Configuration;
 using Invoices.Core.Validation;
 using Invoices.Data.Repositories;
 using InvoicePlanner.Avalonia.Services;
-using InvoicePlanner.Avalonia.Services.Interfaces;
 using InvoicePlanner.Avalonia.Messages;
 using InvoicePlanner.Avalonia.ViewModels;
 using InvoicePlanner.Avalonia.Views;
@@ -52,7 +52,15 @@ public partial class App : Application
         AvaloniaXamlLoader.Load(this);
     }
 
-    public override async void OnFrameworkInitializationCompleted()
+    public override void OnFrameworkInitializationCompleted()
+    {
+        var initializationTask = InitializeAsync();
+        initializationTask.ContinueWith(
+            task => ObserveFailure(task, "Unhandled exception during application startup"),
+            TaskScheduler.Current);
+    }
+
+    private async Task InitializeAsync()
     {
         ApplyLanguageFromSettings();
         LocalizationRegistry.Configure(new CompositeLocalizationProvider(
@@ -87,7 +95,7 @@ public partial class App : Application
                     settingsDbContext.Database.EnsureCreated();
 
                     var settingsService = scopedProvider.GetRequiredService<ISettingsService>();
-                    var initialSettings = settingsService.GetAllAsync().GetAwaiter().GetResult();
+                    var initialSettings = settingsService.GetAll();
                     string? initialConnection;
                     _hasConnectionSettings = TryBuildConnectionString(initialSettings, out initialConnection);
                 }
@@ -95,7 +103,7 @@ public partial class App : Application
                 services.AddDbContextFactory<ApplicationDbContext>((provider, options) =>
                 {
                     var settingsService = provider.GetRequiredService<ISettingsService>();
-                    var settings = settingsService.GetAllAsync().GetAwaiter().GetResult();
+                    var settings = settingsService.GetAll();
 
                     if (!TryBuildConnectionString(settings, out var connectionString))
                     {
@@ -116,28 +124,28 @@ public partial class App : Application
                 services.AddTransient<IInvoicePlanRepository, InvoicePlanRepository>();
                 services.AddSingleton<IInvoicePlanValidator, InvoicePlanValidator>();
                 services.AddSingleton<InvoiceSummaryExporter>();
-                services.AddSingleton<IGlobalErrorHandler, GlobalErrorHandler>();
+                services.AddSingleton<GlobalErrorHandler>();
                 services.AddTransient<ErrorDialogViewModel>();
                 services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
-                services.AddSingleton<IDialogService>(provider => new DialogService(provider.GetRequiredService<IMessenger>()));
+                services.AddSingleton<DialogService>(provider => new DialogService(provider.GetRequiredService<IMessenger>()));
                 services.AddSingleton(provider => new PlanEditorViewModel(
                     provider.GetRequiredService<IInvoicePlanRepository>(),
                     provider.GetRequiredService<IInvoicePlanValidator>(),
                     provider.GetRequiredService<ILogger<PlanEditorViewModel>>(),
                     provider.GetRequiredService<IInvoiceAccessScope>(),
-                    provider.GetRequiredService<IDialogService>(),
+                    provider.GetRequiredService<DialogService>(),
                     provider.GetRequiredService<IMessenger>()));
                 services.AddSingleton(provider => new RequestConfirmationViewModel(
                     provider.GetRequiredService<IInvoicePlanRepository>(),
                     provider.GetRequiredService<ILogger<RequestConfirmationViewModel>>(),
                     provider.GetRequiredService<IInvoiceAccessScope>(),
-                    provider.GetRequiredService<IDialogService>(),
+                    provider.GetRequiredService<DialogService>(),
                     provider.GetRequiredService<IMessenger>()));
                 services.AddSingleton(provider => new EmissionConfirmationViewModel(
                     provider.GetRequiredService<IInvoicePlanRepository>(),
                     provider.GetRequiredService<ILogger<EmissionConfirmationViewModel>>(),
                     provider.GetRequiredService<IInvoiceAccessScope>(),
-                    provider.GetRequiredService<IDialogService>(),
+                    provider.GetRequiredService<DialogService>(),
                     provider.GetRequiredService<IMessenger>()));
                 services.AddSingleton<InvoiceSummaryViewModel>();
                 services.AddSingleton<NotificationPreviewViewModel>();
@@ -149,7 +157,7 @@ public partial class App : Application
                     provider.GetRequiredService<NotificationPreviewViewModel>(),
                     provider.GetRequiredService<IMessenger>()));
                 services.AddSingleton(provider => new ConnectionSettingsViewModel(
-                    provider.GetRequiredService<IFilePickerService>(),
+                    provider.GetRequiredService<FilePickerService>(),
                     provider.GetRequiredService<IConnectionPackageService>(),
                     provider.GetRequiredService<ISettingsService>(),
                     provider.GetRequiredService<IDatabaseSchemaInitializer>(),
@@ -162,7 +170,7 @@ public partial class App : Application
                     provider.GetRequiredService<ISettingsService>(),
                     provider.GetRequiredService<IMessenger>()));
                 services.AddSingleton<MainWindow>();
-                services.AddSingleton<IFilePickerService>(provider =>
+                services.AddSingleton(provider =>
                 {
                     var mainWindow = provider.GetRequiredService<MainWindow>();
                     return new FilePickerService(mainWindow);
@@ -174,9 +182,9 @@ public partial class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.Exit += async (_, _) => await DisposeHostAsync();
+            desktop.Exit += OnDesktopExit;
 
-            var errorHandler = Services.GetRequiredService<IGlobalErrorHandler>();
+            var errorHandler = Services.GetRequiredService<GlobalErrorHandler>();
             errorHandler.Register(desktop);
 
             var mainWindow = Services.GetRequiredService<MainWindow>();
@@ -315,7 +323,7 @@ public partial class App : Application
             _messenger = null;
         }
 
-        if (provider.GetService(typeof(IGlobalErrorHandler)) is IDisposable disposableHandler)
+        if (provider.GetService(typeof(GlobalErrorHandler)) is IDisposable disposableHandler)
         {
             disposableHandler.Dispose();
         }
@@ -330,6 +338,14 @@ public partial class App : Application
         }
 
         _host = null;
+    }
+
+    private void OnDesktopExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
+    {
+        var disposalTask = DisposeHostAsync();
+        disposalTask.ContinueWith(
+            task => ObserveFailure(task, "Unhandled exception while disposing application host"),
+            TaskScheduler.Current);
     }
 
     private void RequestRestart()
@@ -386,8 +402,20 @@ public partial class App : Application
         desktop.Shutdown();
     }
 
-    private static string QuoteArgument(string argument)
+    private static string QuoteArgument(string argument) =>
+        argument.Contains(' ') ? $"\"{argument}\"" : argument;
+
+    private static void ObserveFailure(Task task, string context)
     {
-        return argument.Contains(' ') ? $"\"{argument}\"" : argument;
+        if (task.Exception is not { } aggregate)
+        {
+            return;
+        }
+
+        var exception = aggregate.GetBaseException();
+        Trace.TraceError("{0}: {1}", context, exception);
+        aggregate.Handle(_ => true);
+        Dispatcher.UIThread.Post(() => ExceptionDispatchInfo.Capture(exception).Throw());
     }
 }
+
