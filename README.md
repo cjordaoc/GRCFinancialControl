@@ -1,19 +1,77 @@
-# GRC Financial Control
+# GRC Financial Control — Functional Specification (vNext)
 
-The solution delivers the invoice management workflows used by controllers to plan, confirm, and notify billing activities while remaining aligned with the centralized financial data model.
+Defines all functional behaviors of the GRC Financial Control solution.
+Each module section includes a **Happy Path** and links to its technical spec.
 
-## Core Features
-- **Invoice flow:** controllers prepare invoice plans, review confirmation requests, track emission status, and send notification previews from a single workspace backed by the shared domain services in `Invoices.Core` and `Invoices.Data`.
-- **Access filtering:** each Avalonia session resolves the signed-in login to an `InvoiceAccessScope`, limiting queries and UI state to the engagements assigned to that user and flagging unassigned logins with localized guidance.
-- **Centralized styles:** UI theming and control styling are sourced from `App.Presentation/Styles/Styles.xaml`, keeping both apps visually consistent while avoiding duplication in individual views.
-- **Language & i18n:** the Settings → Connection page lets users choose English, Portuguese, or Spanish. The selection persists in the local settings store, and the shared `LocalizationRegistry` resolves all interface text from the resource files in `InvoicePlanner.Avalonia/Resources` at startup.
+---
 
-## Build
-Restore dependencies with `dotnet restore` and build with `dotnet build -c Release`.
+## 1 · Budget & Allocation Management
+**Happy Path:**
+1. User imports Budget File.
+2. System validates structure and maps FY/Rank/Hours.
+3. Data populates EngagementRankBudgets and History.
+4. Adjustments apply per FY; closed years lock editing.
 
-## Code Intent Catalog
-An auto-generated catalog of every class and method is available in [`CodeIntentCatalog.json`](./CodeIntentCatalog.json). Regenerate it with:
+**Processing Flow:**
+- Validate Excel headers.
+- Map to Engagement via GUID.
+- Upsert data.
+- Refresh totals (Consumed, Remaining).
 
-```bash
-dotnet run --project Tools/CodeIntentCatalog/CodeIntentCatalog.csproj -- --output CodeIntentCatalog.json
-```
+[See Technical Spec →](readme_specs.md#budget-allocation)
+
+---
+
+## 2 · Fiscal-Year Revenue Allocation
+**Happy Path:**
+1. On import, detect Current/Next FY columns.
+2. Compute ToGo/ToDate for each FY.
+3. Upsert to EngagementFiscalYearRevenueAllocations.
+
+**Flow:**
+- Parse Excel.
+- Map FY values.
+- Persist to DB.
+
+[See Technical Spec →](readme_specs.md#revenue-allocation)
+
+---
+
+## 3 · Invoice Planner & Notifications
+**Happy Path:**
+1. User schedules invoices.
+2. Daily event triggers mail procedure.
+3. Emails sent automatically.
+
+**Flow:**
+- Build plan → sp_FillMailOutboxForDate → MailOutbox → SMTP worker.
+
+[See Technical Spec →](readme_specs.md#invoice-planner)
+
+---
+
+## 4 · Excel Importers
+**Happy Path:**
+- User selects importer type.
+- File validated, transformed, persisted.
+
+[See Technical Spec →](readme_specs.md#excel-importers)
+
+---
+
+## 5 · Reporting Dashboards
+**Happy Path:**
+- User opens dashboard → KPIs render live from MySQL views.
+
+[See Technical Spec →](readme_specs.md#dashboards)
+
+---
+
+## 6 · UI Architecture
+- Avalonia + MVVM.
+- Declarative XAML, no code-behind logic.
+- Centralized modal overlay.
+
+[See Technical Spec →](readme_specs.md#ui-architecture)
+
+---
