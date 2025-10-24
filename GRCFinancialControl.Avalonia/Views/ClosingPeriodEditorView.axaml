@@ -48,19 +48,19 @@
                                Grid.Column="0"
                                Text="{loc:Loc Key=Admin.ClosingPeriods.Header.Start}"
                                VerticalAlignment="Center"/>
-                    <DatePicker Grid.Row="2"
-                                Grid.Column="1"
-                                SelectedDate="{Binding PeriodStartOffset}"
-                                IsEnabled="{Binding AllowEditing}"/>
+                    <CalendarDatePicker Grid.Row="2"
+                                        Grid.Column="1"
+                                        SelectedDate="{Binding PeriodStartOffset}"
+                                        IsEnabled="{Binding AllowEditing}"/>
 
                     <TextBlock Grid.Row="3"
                                Grid.Column="0"
                                Text="{loc:Loc Key=Admin.ClosingPeriods.Header.End}"
                                VerticalAlignment="Center"/>
-                    <DatePicker Grid.Row="3"
-                                Grid.Column="1"
-                                SelectedDate="{Binding PeriodEndOffset}"
-                                IsEnabled="{Binding AllowEditing}"/>
+                    <CalendarDatePicker Grid.Row="3"
+                                        Grid.Column="1"
+                                        SelectedDate="{Binding PeriodEndOffset}"
+                                        IsEnabled="{Binding AllowEditing}"/>
                 </Grid>
                 <TextBlock Text="{Binding StatusMessage}" Foreground="Red"/>
             </StackPanel>
