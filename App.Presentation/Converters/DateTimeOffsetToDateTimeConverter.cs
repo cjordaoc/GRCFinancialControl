@@ -13,12 +13,7 @@ public sealed class DateTimeOffsetToDateTimeConverter : IValueConverter
             return null;
         }
 
-        return value switch
-        {
-            DateTimeOffset dateTimeOffset => dateTimeOffset,
-            DateTime dateTime => new DateTimeOffset(DateTime.SpecifyKind(dateTime.Date, DateTimeKind.Unspecified), TimeSpan.Zero),
-            _ => null
-        };
+        return NormalizeDate(value, culture);
     }
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
@@ -28,10 +23,17 @@ public sealed class DateTimeOffsetToDateTimeConverter : IValueConverter
             return null;
         }
 
+        return NormalizeDate(value, culture);
+    }
+
+    private static DateTime? NormalizeDate(object value, CultureInfo culture)
+    {
         return value switch
         {
-            DateTimeOffset dateTimeOffset => dateTimeOffset.Date,
-            DateTime dateTime => dateTime.Date,
+            DateTimeOffset dateTimeOffset => DateTime.SpecifyKind(dateTimeOffset.Date, DateTimeKind.Unspecified),
+            DateTime dateTime => DateTime.SpecifyKind(dateTime.Date, DateTimeKind.Unspecified),
+            string text when DateTime.TryParse(text, culture, DateTimeStyles.AllowWhiteSpaces, out var parsed)
+                => DateTime.SpecifyKind(parsed.Date, DateTimeKind.Unspecified),
             _ => null
         };
     }
