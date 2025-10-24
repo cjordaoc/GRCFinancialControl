@@ -6,14 +6,14 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
-using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Avalonia;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
     public partial class MainWindowViewModel : ViewModelBase
     {
-        private readonly ILoggingService _loggingService;
+        private readonly LoggingService _loggingService;
 
         public HomeViewModel Home { get; }
         public EngagementsViewModel Engagements { get; }
@@ -44,7 +44,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                                    AppMasterDataViewModel appMasterDataViewModel,
                                    ControlMasterDataViewModel controlMasterDataViewModel,
                                    TasksViewModel tasksViewModel,
-                                   ILoggingService loggingService,
+                                   LoggingService loggingService,
                                    IMessenger messenger)
             : base(messenger)
         {

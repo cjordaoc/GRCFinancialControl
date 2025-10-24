@@ -2,11 +2,10 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using GRCFinancialControl.Avalonia.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.Services
 {
-    public sealed class LoggingService : ILoggingService
+    public sealed class LoggingService
     {
         private const string InfoLevel = "INFO";
         private const string WarningLevel = "WARNING";

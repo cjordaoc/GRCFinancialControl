@@ -8,7 +8,7 @@ using Invoices.Core.Models;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
-public partial class InvoiceSummaryGroupViewModel : ObservableObject
+public class InvoiceSummaryGroupViewModel : ObservableObject
 {
     public InvoiceSummaryGroupViewModel(InvoiceSummaryGroup group)
     {

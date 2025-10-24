@@ -8,21 +8,24 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
-using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
+    /// <summary>
+    /// Coordinates engagement selection and hours allocation editing workflows.
+    /// </summary>
     public sealed partial class HoursAllocationsViewModel : ViewModelBase, IRecipient<ApplicationParametersChangedMessage>
     {
         private readonly IEngagementService _engagementService;
         private readonly IHoursAllocationService _hoursAllocationService;
         private readonly IImportService _importService;
-        private readonly IFilePickerService _filePickerService;
-        private readonly ILoggingService _loggingService;
-        private readonly IDialogService _dialogService;
+        private readonly FilePickerService _filePickerService;
+        private readonly LoggingService _loggingService;
+        private readonly DialogService _dialogService;
         private readonly IClosingPeriodService _closingPeriodService;
         private readonly ISettingsService _settingsService;
 
@@ -31,61 +34,121 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private HoursAllocationSnapshot? _currentSnapshot;
         private int? _pendingClosingPeriodId;
 
+        /// <summary>
+        /// Gets or sets the engagements that can be viewed or edited.
+        /// </summary>
         [ObservableProperty]
         private ObservableCollection<EngagementSummaryViewModel> _engagements = new();
 
+        /// <summary>
+        /// Gets or sets the engagement currently selected by the user.
+        /// </summary>
         [ObservableProperty]
         private EngagementSummaryViewModel? _selectedEngagement;
 
+        /// <summary>
+        /// Gets or sets the fiscal year allocation metadata for the selected engagement.
+        /// </summary>
         [ObservableProperty]
         private ObservableCollection<FiscalYearAllocationInfo> _fiscalYears = new();
 
+        /// <summary>
+        /// Gets or sets the editable rows displayed to the user.
+        /// </summary>
         [ObservableProperty]
         private ObservableCollection<HoursAllocationRowViewModel> _rows = new();
 
+        /// <summary>
+        /// Gets or sets the available rank options that can be assigned to resources.
+        /// </summary>
         [ObservableProperty]
         private ObservableCollection<RankOption> _availableRanks = new();
 
+        /// <summary>
+        /// Gets or sets the closing periods available for selection.
+        /// </summary>
         [ObservableProperty]
         private ObservableCollection<ClosingPeriod> _closingPeriods = new();
 
+        /// <summary>
+        /// Gets or sets the closing period currently selected by the user.
+        /// </summary>
         [ObservableProperty]
         private ClosingPeriod? _selectedClosingPeriod;
 
+        /// <summary>
+        /// Gets or sets the allocation row currently focused in the grid.
+        /// </summary>
         [ObservableProperty]
         private HoursAllocationRowViewModel? _selectedRow;
 
+        /// <summary>
+        /// Gets or sets the rank option currently selected for new resources.
+        /// </summary>
         [ObservableProperty]
         private RankOption? _selectedRankOption;
 
+        /// <summary>
+        /// Gets or sets the total budgeted hours for the selected engagement.
+        /// </summary>
         [ObservableProperty]
         private decimal _totalBudgetHours;
 
+        /// <summary>
+        /// Gets or sets the total actual hours consumed.
+        /// </summary>
         [ObservableProperty]
         private decimal _actualHours;
 
+        /// <summary>
+        /// Gets or sets the total hours still to be consumed.
+        /// </summary>
         [ObservableProperty]
         private decimal _toBeConsumedHours;
 
+        /// <summary>
+        /// Gets or sets a value indicating whether the view model is performing background work.
+        /// </summary>
         [ObservableProperty]
         private bool _isBusy;
 
+        /// <summary>
+        /// Gets or sets a value indicating whether the current snapshot contains unsaved changes.
+        /// </summary>
         [ObservableProperty]
         private bool _hasChanges;
 
+        /// <summary>
+        /// Gets or sets the informational status message presented to the user.
+        /// </summary>
         [ObservableProperty]
         private string? _statusMessage;
 
+        /// <summary>
+        /// Gets or sets the name for a new rank when created through the UI.
+        /// </summary>
         [ObservableProperty]
         private string _newRankName = string.Empty;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HoursAllocationsViewModel"/> class.
+        /// </summary>
+        /// <param name="engagementService">Provides engagement retrieval operations.</param>
+        /// <param name="hoursAllocationService">Persists hours allocation edits.</param>
+        /// <param name="importService">Manages import scenarios triggered by the view.</param>
+        /// <param name="filePickerService">Supplies file picking dialogs.</param>
+        /// <param name="loggingService">Records error and information logs.</param>
+        /// <param name="dialogService">Shows user confirmation dialogs.</param>
+        /// <param name="closingPeriodService">Resolves closing periods for fiscal years.</param>
+        /// <param name="settingsService">Accesses persisted user settings.</param>
+        /// <param name="messenger">Coordinates notifications across view models.</param>
         public HoursAllocationsViewModel(
             IEngagementService engagementService,
             IHoursAllocationService hoursAllocationService,
             IImportService importService,
-            IFilePickerService filePickerService,
-            ILoggingService loggingService,
-            IDialogService dialogService,
+            FilePickerService filePickerService,
+            LoggingService loggingService,
+            DialogService dialogService,
             IClosingPeriodService closingPeriodService,
             ISettingsService settingsService,
             IMessenger messenger)
@@ -101,8 +164,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         }
 
+        /// <summary>
+        /// Gets the header text shown in the hours allocation view.
+        /// </summary>
         public string Header => "Hours Allocation";
 
+        /// <inheritdoc />
         public override async Task LoadDataAsync()
         {
             if (IsBusy)
@@ -158,6 +225,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
+        /// <summary>
+        /// Reloads data for the currently selected engagement.
+        /// </summary>
         [RelayCommand]
         private async Task RefreshAsync()
         {
@@ -183,6 +253,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
+        /// <summary>
+        /// Adds a new resource entry using the provided or selected rank option.
+        /// </summary>
         [RelayCommand]
         private async Task AddResourceAsync(RankOption? rankOption)
         {
@@ -266,6 +339,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
+        /// <summary>
+        /// Handles updates to the application parameters by reconciling the selected closing period.
+        /// </summary>
+        /// <param name="message">The message containing updated parameter values.</param>
         public void Receive(ApplicationParametersChangedMessage message)
         {
             if (message is null)
@@ -292,6 +369,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
+        /// <summary>
+        /// Imports the latest allocation workbook for the selected closing period.
+        /// </summary>
         [RelayCommand]
         private async Task UpdateAllocationsAsync()
         {
@@ -353,6 +433,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
+        /// <summary>
+        /// Persists allocation edits made in the grid.
+        /// </summary>
         [RelayCommand(CanExecute = nameof(CanSave))]
         private async Task SaveAsync()
         {
@@ -397,6 +480,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private bool CanSave() => HasChanges && !IsBusy && SelectedEngagement is not null;
 
+        /// <summary>
+        /// Adds a new rank to the allocation for all open fiscal years.
+        /// </summary>
         [RelayCommand]
         private async Task AddRankAsync()
         {
@@ -433,6 +519,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
+        /// <summary>
+        /// Removes the selected rank when all values are zero.
+        /// </summary>
         [RelayCommand]
         private async Task DeleteRankAsync()
         {
@@ -468,6 +557,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
+        /// <summary>
+        /// Opens the allocation editor dialog for the provided row.
+        /// </summary>
         [RelayCommand]
         private async Task EditRowAsync(HoursAllocationRowViewModel? row)
         {
@@ -586,23 +678,29 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private void RecalculateDirtyState()
         {
-            HasChanges = Rows.SelectMany(row => row.Cells).Any(cell => cell.HasChanges);
-            RecalculateToBeConsumed();
+            var cells = Rows.SelectMany(row => row.Cells).ToList();
+            HasChanges = cells.Any(cell => cell.HasChanges);
+            RecalculateToBeConsumed(cells);
         }
 
-        private void RecalculateToBeConsumed()
+        private void RecalculateToBeConsumed(IReadOnlyList<HoursAllocationCellViewModel> cells)
         {
-            if (FiscalYears.Count == 0)
+            if (FiscalYears.Count == 0 || cells.Count == 0)
             {
                 ToBeConsumedHours = ActualHours;
                 return;
             }
 
             var openFiscalYearIds = new HashSet<int>(FiscalYears.Where(fy => !fy.IsLocked).Select(fy => fy.Id));
-            var consumed = Rows
-                .SelectMany(row => row.Cells)
-                .Where(cell => openFiscalYearIds.Contains(cell.FiscalYearId))
-                .Sum(cell => cell.ConsumedHours);
+            decimal consumed = 0m;
+
+            foreach (var cell in cells)
+            {
+                if (openFiscalYearIds.Contains(cell.FiscalYearId))
+                {
+                    consumed += cell.ConsumedHours;
+                }
+            }
 
             ToBeConsumedHours = ActualHours - consumed;
         }
@@ -612,11 +710,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             return value?.Trim() ?? string.Empty;
         }
 
+        /// <summary>
+        /// Represents a row of hours allocations for a specific rank.
+        /// </summary>
         public sealed partial class HoursAllocationRowViewModel : ObservableObject
         {
             private readonly decimal _additionalHours;
             private readonly TrafficLightStatus _status;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="HoursAllocationRowViewModel"/> class.
+            /// </summary>
+            /// <param name="owner">The owning view model coordinating updates.</param>
+            /// <param name="snapshot">The snapshot describing the persisted values.</param>
             public HoursAllocationRowViewModel(HoursAllocationsViewModel owner, HoursAllocationRowSnapshot snapshot)
             {
                 ArgumentNullException.ThrowIfNull(owner);
@@ -654,22 +760,49 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 }
             }
 
+            /// <summary>
+            /// Gets the rank name for the row.
+            /// </summary>
             public string RankName { get; }
 
+            /// <summary>
+            /// Gets the collection of cells displayed in the row.
+            /// </summary>
             public ObservableCollection<HoursAllocationCellViewModel> Cells { get; }
 
+            /// <summary>
+            /// Gets a value indicating whether the row can be deleted without validation errors.
+            /// </summary>
             public bool CanDelete => Cells.All(cell => cell.IsZero);
 
+            /// <summary>
+            /// Gets a value indicating whether any cell within the row has been modified.
+            /// </summary>
             public bool HasChanges => Cells.Any(cell => cell.HasChanges);
 
+            /// <summary>
+            /// Gets the sum of budgeted hours for the row.
+            /// </summary>
             public decimal TotalBudgetHours => Math.Round(Cells.Sum(cell => cell.BudgetHours), 2, MidpointRounding.AwayFromZero);
 
+            /// <summary>
+            /// Gets the sum of consumed hours for the row.
+            /// </summary>
             public decimal TotalConsumedHours => Math.Round(Cells.Sum(cell => cell.ConsumedHours), 2, MidpointRounding.AwayFromZero);
 
+            /// <summary>
+            /// Gets the remaining hours after accounting for the allocation totals and adjustments.
+            /// </summary>
             public decimal TotalRemainingHours => Math.Round(Cells.Sum(cell => cell.RemainingHours) + _additionalHours, 2, MidpointRounding.AwayFromZero);
 
+            /// <summary>
+            /// Gets the traffic light status representing the row summary.
+            /// </summary>
             public TrafficLightStatus Status => _status;
 
+            /// <summary>
+            /// Gets the emoji displayed to represent the traffic light status.
+            /// </summary>
             public string TrafficLightSymbol => Status switch
             {
                 TrafficLightStatus.Red => "🔴",
@@ -678,11 +811,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             };
         }
 
+        /// <summary>
+        /// Represents a single hours allocation cell within a fiscal year column.
+        /// </summary>
         public sealed partial class HoursAllocationCellViewModel : ObservableObject
         {
             private readonly Action _notifyChange;
             private readonly decimal _originalConsumedHours;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="HoursAllocationCellViewModel"/> class.
+            /// </summary>
+            /// <param name="snapshot">The persisted values backing the cell.</param>
+            /// <param name="notifyChange">Callback invoked when the cell changes.</param>
             public HoursAllocationCellViewModel(HoursAllocationCellSnapshot snapshot, Action notifyChange)
             {
                 ArgumentNullException.ThrowIfNull(snapshot);
@@ -697,27 +838,54 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 _originalConsumedHours = snapshot.ConsumedHours;
             }
 
+            /// <summary>
+            /// Gets the identifier of the budget row associated with the cell.
+            /// </summary>
             public long? BudgetId { get; }
 
+            /// <summary>
+            /// Gets the fiscal year identifier for the cell.
+            /// </summary>
             public int FiscalYearId { get; }
 
+            /// <summary>
+            /// Gets a value indicating whether the cell is locked from editing.
+            /// </summary>
             public bool IsLocked { get; }
 
+            /// <summary>
+            /// Gets or sets the budget hours displayed in the cell.
+            /// </summary>
             [ObservableProperty]
             private decimal _budgetHours;
 
+            /// <summary>
+            /// Gets or sets the consumed hours displayed in the cell.
+            /// </summary>
             [ObservableProperty]
             private decimal _consumedHours;
 
+            /// <summary>
+            /// Gets or sets the remaining hours displayed in the cell.
+            /// </summary>
             [ObservableProperty]
             private decimal _remainingHours;
 
+            /// <summary>
+            /// Gets a value indicating whether the cell can be edited by the user.
+            /// </summary>
             public bool IsEditable => !IsLocked && BudgetId.HasValue;
 
+            /// <summary>
+            /// Gets a value indicating whether the consumed hours differ from the original value.
+            /// </summary>
             public bool HasChanges => BudgetId.HasValue &&
                 Math.Round(ConsumedHours, 2, MidpointRounding.AwayFromZero) !=
                 Math.Round(_originalConsumedHours, 2, MidpointRounding.AwayFromZero);
 
+            /// <summary>
+            /// Gets a value indicating whether both budgeted and consumed hours are zero.
+            /// </summary>
             public bool IsZero =>
                 Math.Round(BudgetHours, 2, MidpointRounding.AwayFromZero) == 0m &&
                 Math.Round(ConsumedHours, 2, MidpointRounding.AwayFromZero) == 0m;
@@ -744,8 +912,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
+        /// <summary>
+        /// Represents a lightweight summary of an engagement for selection lists.
+        /// </summary>
         public sealed record EngagementSummaryViewModel(int Id, string Code, string Name)
         {
+            /// <summary>
+            /// Returns the display text for the engagement summary.
+            /// </summary>
+            /// <returns>The formatted engagement identifier and name.</returns>
             public override string ToString() => string.IsNullOrWhiteSpace(Name) ? Code : $"{Code} - {Name}";
         }
 

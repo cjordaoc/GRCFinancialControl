@@ -10,7 +10,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
-using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -23,11 +23,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private const string FullManagementType = "FullManagement";
         private const string AllocationPlanningType = "AllocationPlanning";
 
-        private readonly IFilePickerService _filePickerService;
+        private readonly FilePickerService _filePickerService;
         private readonly IImportService _importService;
         private readonly IClosingPeriodService _closingPeriodService;
         private readonly ISettingsService _settingsService;
-        private readonly ILoggingService _loggingService;
+        private readonly LoggingService _loggingService;
         private readonly Action<string> _logHandler;
         private int? _pendingClosingPeriodId;
 
@@ -78,11 +78,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
-        public ImportViewModel(IFilePickerService filePickerService,
+        public ImportViewModel(FilePickerService filePickerService,
                                IImportService importService,
                                IClosingPeriodService closingPeriodService,
                                ISettingsService settingsService,
-                               ILoggingService loggingService)
+                               LoggingService loggingService)
         {
             _filePickerService = filePickerService;
             _importService = importService;

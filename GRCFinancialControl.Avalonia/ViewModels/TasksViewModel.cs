@@ -7,20 +7,19 @@ using App.Presentation.Localization;
 using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
     public partial class TasksViewModel : ViewModelBase
     {
-        private readonly IFilePickerService _filePickerService;
+        private readonly FilePickerService _filePickerService;
         private readonly IRetainTemplateGenerator _retainTemplateGenerator;
 
         [ObservableProperty]
         private string? _statusMessage;
 
-        public TasksViewModel(IFilePickerService filePickerService, IRetainTemplateGenerator retainTemplateGenerator)
+        public TasksViewModel(FilePickerService filePickerService, IRetainTemplateGenerator retainTemplateGenerator)
         {
             _filePickerService = filePickerService;
             _retainTemplateGenerator = retainTemplateGenerator;

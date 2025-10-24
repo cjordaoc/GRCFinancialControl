@@ -8,7 +8,6 @@ using Avalonia.Threading;
 using AvaloniaWebView;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Services;
-using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Avalonia.ViewModels;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRCFinancialControl.Avalonia.Views;
@@ -30,6 +29,8 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.ExceptionServices;
+using System.Threading.Tasks;
 
 namespace GRCFinancialControl.Avalonia
 {
@@ -51,7 +52,15 @@ namespace GRCFinancialControl.Avalonia
             AvaloniaXamlLoader.Load(this);
         }
 
-        public override async void OnFrameworkInitializationCompleted()
+        public override void OnFrameworkInitializationCompleted()
+        {
+            var initializationTask = InitializeAsync();
+            initializationTask.ContinueWith(
+                task => ObserveFailure(task, "Unhandled exception during application startup"),
+                TaskScheduler.Current);
+        }
+
+        private async Task InitializeAsync()
         {
             LocalizationRegistry.Configure(new CompositeLocalizationProvider(
                 new ResourceManagerLocalizationProvider(ImportResources.ResourceManager),
@@ -123,14 +132,13 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<IRankMappingService, RankMappingService>();
             services.AddSingleton<IDatabaseSchemaInitializer, DatabaseSchemaInitializer>();
 
-            services.AddSingleton<ILoggingService, LoggingService>();
+            services.AddSingleton<LoggingService>();
             services.AddLogging(builder => builder.AddConsole());
             services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
-            services.AddSingleton<IDialogService, DialogService>();
-            services.AddTransient<IExportService, ExportService>();
+            services.AddSingleton<DialogService>();
             services.AddTransient<IRetainTemplateGenerator, RetainTemplateGenerator>();
             services.AddSingleton<IConnectionPackageService, ConnectionPackageService>();
-            services.AddSingleton<IPowerBiEmbeddingService, PowerBiEmbeddingService>();
+            services.AddSingleton<PowerBiEmbeddingService>();
 
             services.AddTransient<HomeViewModel>();
             services.AddTransient<MainWindowViewModel>();
@@ -141,12 +149,10 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<RevenueAllocationsViewModel>();
             services.AddTransient<AllocationsViewModel>();
             services.AddTransient(sp => new ReportsViewModel(
-                sp.GetRequiredService<IPowerBiEmbeddingService>(),
-                sp.GetRequiredService<ILoggingService>(),
+                sp.GetRequiredService<PowerBiEmbeddingService>(),
+                sp.GetRequiredService<LoggingService>(),
                 sp.GetRequiredService<IMessenger>()
             ));
-            services.AddTransient<PapdContributionViewModel>();
-            services.AddTransient<FinancialEvolutionViewModel>();
             services.AddTransient<PapdViewModel>();
             services.AddTransient<ManagersViewModel>();
             services.AddTransient<ManagerAssignmentsViewModel>();
@@ -166,7 +172,7 @@ namespace GRCFinancialControl.Avalonia
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 var mainWindow = new MainWindow();
-                services.AddSingleton<IFilePickerService>(new FilePickerService(mainWindow));
+                services.AddSingleton(new FilePickerService(mainWindow));
 
                 Services = services.BuildServiceProvider();
 
@@ -254,9 +260,20 @@ namespace GRCFinancialControl.Avalonia
             desktop.Shutdown();
         }
 
-        private static string QuoteArgument(string argument)
+        private static string QuoteArgument(string argument) =>
+            argument.Contains(' ') ? $"\"{argument}\"" : argument;
+
+        private static void ObserveFailure(Task task, string context)
         {
-            return argument.Contains(' ') ? $"\"{argument}\"" : argument;
+            if (task.Exception is not { } aggregate)
+            {
+                return;
+            }
+
+            var exception = aggregate.GetBaseException();
+            Trace.TraceError("{0}: {1}", context, exception);
+            aggregate.Handle(_ => true);
+            Dispatcher.UIThread.Post(() => ExceptionDispatchInfo.Capture(exception).Throw());
         }
     }
 }

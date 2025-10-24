@@ -6,6 +6,7 @@ namespace GRCFinancialControl.Persistence.Services.Interfaces
 {
     public interface ISettingsService
     {
+        Dictionary<string, string> GetAll();
         Task<Dictionary<string, string>> GetAllAsync();
         Task SaveAllAsync(Dictionary<string, string> settings);
         Task<ConnectionTestResult> TestConnectionAsync(string server, string database, string user, string password);

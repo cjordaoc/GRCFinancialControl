@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
-using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -13,7 +13,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     public partial class ManagersViewModel : ViewModelBase
     {
         private readonly IManagerService _managerService;
-        private readonly IDialogService _dialogService;
+        private readonly DialogService _dialogService;
 
         [ObservableProperty]
         private ObservableCollection<Manager> _managers = new();
@@ -21,7 +21,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private Manager? _selectedManager;
 
-        public ManagersViewModel(IManagerService managerService, IDialogService dialogService, IMessenger messenger)
+        public ManagersViewModel(IManagerService managerService, DialogService dialogService, IMessenger messenger)
             : base(messenger)
         {
             _managerService = managerService;

@@ -8,7 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
-using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
@@ -18,7 +18,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     public sealed partial class HoursAllocationEditorViewModel : ViewModelBase
     {
         private readonly IHoursAllocationService _hoursAllocationService;
-        private readonly ILoggingService _loggingService;
+        private readonly LoggingService _loggingService;
         private readonly int _engagementId;
 
         [ObservableProperty]
@@ -63,7 +63,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public HoursAllocationEditorViewModel(
             HoursAllocationSnapshot snapshot,
             IHoursAllocationService hoursAllocationService,
-            ILoggingService loggingService,
+            LoggingService loggingService,
             IMessenger messenger,
             string? initialRank = null)
             : base(messenger)

@@ -7,7 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
-using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
@@ -20,7 +20,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly IManagerAssignmentService _assignmentService;
         private readonly IEngagementService _engagementService;
         private readonly IManagerService _managerService;
-        private readonly IDialogService _dialogService;
+        private readonly DialogService _dialogService;
 
         [ObservableProperty]
         private ObservableCollection<EngagementOption> _engagements = new();
@@ -40,7 +40,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             IManagerAssignmentService assignmentService,
             IEngagementService engagementService,
             IManagerService managerService,
-            IDialogService dialogService,
+            DialogService dialogService,
             IMessenger messenger)
             : base(messenger)
         {

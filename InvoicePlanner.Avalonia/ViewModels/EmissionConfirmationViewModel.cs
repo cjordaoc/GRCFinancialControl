@@ -11,7 +11,6 @@ using Invoices.Core.Enums;
 using Invoices.Core.Models;
 using Invoices.Data.Repositories;
 using Microsoft.Extensions.Logging;
-using InvoicePlanner.Avalonia.Services.Interfaces;
 using InvoicePlanner.Avalonia.Services;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
@@ -23,14 +22,14 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
     private readonly IInvoiceAccessScope _accessScope;
     private readonly RelayCommand _loadPlanCommand;
     private readonly RelayCommand _savePlanDetailsCommand;
-    private readonly IDialogService _dialogService;
+    private readonly DialogService _dialogService;
     private EmissionConfirmationDialogViewModel? _dialogViewModel;
 
     public EmissionConfirmationViewModel(
         IInvoicePlanRepository repository,
         ILogger<EmissionConfirmationViewModel> logger,
         IInvoiceAccessScope accessScope,
-        IDialogService dialogService,
+        DialogService dialogService,
         IMessenger messenger)
         : base(messenger)
     {

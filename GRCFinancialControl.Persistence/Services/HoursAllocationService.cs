@@ -130,9 +130,12 @@ namespace GRCFinancialControl.Persistence.Services
                 budget.UpdateConsumedHours(update.ConsumedHours);
             }
 
-            var adjustmentLookup = adjustmentList
-                .GroupBy(adj => NormalizeRank(adj.RankName), StringComparer.OrdinalIgnoreCase)
-                .ToDictionary(group => group.Key, group => Math.Round(group.Last().AdditionalHours, 2, MidpointRounding.AwayFromZero), StringComparer.OrdinalIgnoreCase);
+            var adjustmentLookup = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
+            foreach (var adjustment in adjustmentList)
+            {
+                var normalizedRank = NormalizeRank(adjustment.RankName);
+                adjustmentLookup[normalizedRank] = Math.Round(adjustment.AdditionalHours, 2, MidpointRounding.AwayFromZero);
+            }
 
             foreach (var group in budgets
                 .GroupBy(b => NormalizeRank(b.RankName), StringComparer.OrdinalIgnoreCase))
@@ -142,26 +145,32 @@ namespace GRCFinancialControl.Persistence.Services
                     .ThenBy(b => b.FiscalYearId)
                     .ToList();
 
-                var summaryBudget = orderedBudgets.First();
+                var summaryBudget = orderedBudgets[0];
 
                 if (adjustmentLookup.TryGetValue(group.Key, out var additionalHours))
                 {
                     summaryBudget.UpdateAdditionalHours(additionalHours);
                 }
 
+                var nonSummaryBudgets = new List<EngagementRankBudget>(Math.Max(orderedBudgets.Count - 1, 0));
+                decimal totalBudget = 0m;
+                decimal forecastHours = 0m;
+
                 foreach (var budget in orderedBudgets)
                 {
+                    totalBudget += budget.BudgetHours;
+                    forecastHours += budget.ConsumedHours;
+
                     var cellRemaining = Math.Round(budget.BudgetHours - budget.ConsumedHours, 2, MidpointRounding.AwayFromZero);
                     budget.RemainingHours = cellRemaining;
 
                     if (!ReferenceEquals(budget, summaryBudget))
                     {
                         budget.UpdateAdditionalHours(0m);
+                        nonSummaryBudgets.Add(budget);
                     }
                 }
 
-                var totalBudget = orderedBudgets.Sum(b => b.BudgetHours);
-                var forecastHours = orderedBudgets.Sum(b => b.ConsumedHours);
                 var incurredHours = summaryBudget.CalculateIncurredHours();
                 var remaining = Math.Round(totalBudget + summaryBudget.AdditionalHours - (incurredHours + forecastHours), 2, MidpointRounding.AwayFromZero);
                 var status = DetermineStatus(remaining);
@@ -176,7 +185,7 @@ namespace GRCFinancialControl.Persistence.Services
                 summaryBudget.RemainingHours = remaining;
                 summaryBudget.Status = statusText;
 
-                foreach (var budget in orderedBudgets.Where(b => !ReferenceEquals(b, summaryBudget)))
+                foreach (var budget in nonSummaryBudgets)
                 {
                     budget.Status = statusText;
                     budget.ApplyIncurredHours(0m);
@@ -303,10 +312,21 @@ namespace GRCFinancialControl.Persistence.Services
                     : summaryBudget.CalculateIncurredHours();
 
                 var cells = new List<HoursAllocationCellSnapshot>(fiscalYears.Count);
+                var budgetsByFiscalYear = new Dictionary<int, EngagementRankBudget>(orderedBudgets.Count);
+                decimal totalBudget = 0m;
+                decimal forecastHours = 0m;
+
+                foreach (var budget in orderedBudgets)
+                {
+                    totalBudget += budget.BudgetHours;
+                    forecastHours += budget.ConsumedHours;
+
+                    budgetsByFiscalYear.TryAdd(budget.FiscalYearId, budget);
+                }
+
                 foreach (var fiscalYear in fiscalYears)
                 {
-                    var match = orderedBudgets.FirstOrDefault(b => b.FiscalYearId == fiscalYear.Id);
-                    if (match is null)
+                    if (!budgetsByFiscalYear.TryGetValue(fiscalYear.Id, out var match))
                     {
                         cells.Add(new HoursAllocationCellSnapshot(
                             null,
@@ -315,23 +335,20 @@ namespace GRCFinancialControl.Persistence.Services
                             0m,
                             0m,
                             fiscalYear.IsLocked));
+                        continue;
                     }
-                    else
-                    {
-                        var isLocked = match.FiscalYear?.IsLocked ?? fiscalYearLookup[fiscalYear.Id].IsLocked;
-                        var remainingHours = Math.Round(match.BudgetHours - match.ConsumedHours, 2, MidpointRounding.AwayFromZero);
-                        cells.Add(new HoursAllocationCellSnapshot(
-                            match.Id,
-                            match.FiscalYearId,
-                            match.BudgetHours,
-                            match.ConsumedHours,
-                            remainingHours,
-                            isLocked));
-                    }
+
+                    var isLocked = match.FiscalYear?.IsLocked ?? fiscalYearLookup[fiscalYear.Id].IsLocked;
+                    var remainingHours = Math.Round(match.BudgetHours - match.ConsumedHours, 2, MidpointRounding.AwayFromZero);
+                    cells.Add(new HoursAllocationCellSnapshot(
+                        match.Id,
+                        match.FiscalYearId,
+                        match.BudgetHours,
+                        match.ConsumedHours,
+                        remainingHours,
+                        isLocked));
                 }
 
-                var totalBudget = orderedBudgets.Sum(b => b.BudgetHours);
-                var forecastHours = orderedBudgets.Sum(b => b.ConsumedHours);
                 var remaining = Math.Round(totalBudget + additionalHours - (incurredHours + forecastHours), 2, MidpointRounding.AwayFromZero);
                 var status = DetermineStatus(remaining);
 

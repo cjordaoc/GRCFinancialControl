@@ -7,7 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using InvoicePlanner.Avalonia.Messages;
-using InvoicePlanner.Avalonia.Services.Interfaces;
+using InvoicePlanner.Avalonia.Services;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
 using Invoices.Data.Repositories;
@@ -22,14 +22,14 @@ public partial class RequestConfirmationViewModel : ViewModelBase
     private readonly IInvoiceAccessScope _accessScope;
     private readonly RelayCommand _loadPlanCommand;
     private readonly RelayCommand _savePlanDetailsCommand;
-    private readonly IDialogService _dialogService;
+    private readonly DialogService _dialogService;
     private RequestConfirmationDialogViewModel? _dialogViewModel;
 
     public RequestConfirmationViewModel(
         IInvoicePlanRepository repository,
         ILogger<RequestConfirmationViewModel> logger,
         IInvoiceAccessScope accessScope,
-        IDialogService dialogService,
+        DialogService dialogService,
         IMessenger messenger)
         : base(messenger)
     {

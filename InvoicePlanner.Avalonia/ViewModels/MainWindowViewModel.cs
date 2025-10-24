@@ -48,7 +48,7 @@ public partial class MainWindowViewModel : ViewModelBase
         };
 
         MenuItems = items;
-        var settings = settingsService.GetAllAsync().GetAwaiter().GetResult();
+        var settings = settingsService.GetAll();
         var isConfigured = settings.TryGetValue(SettingKeys.Server, out var server) && !string.IsNullOrWhiteSpace(server)
             && settings.TryGetValue(SettingKeys.Database, out var database) && !string.IsNullOrWhiteSpace(database)
             && settings.TryGetValue(SettingKeys.User, out var user) && !string.IsNullOrWhiteSpace(user)

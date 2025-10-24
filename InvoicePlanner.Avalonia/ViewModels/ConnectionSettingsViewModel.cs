@@ -17,7 +17,7 @@ namespace InvoicePlanner.Avalonia.ViewModels;
 
 public partial class ConnectionSettingsViewModel : ViewModelBase
 {
-    private readonly IFilePickerService _filePickerService;
+    private readonly FilePickerService _filePickerService;
     private readonly IConnectionPackageService _connectionPackageService;
     private readonly ISettingsService _settingsService;
     private readonly IDatabaseSchemaInitializer _schemaInitializer;
@@ -46,7 +46,7 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
     private bool _initializingLanguage = true;
 
     public ConnectionSettingsViewModel(
-        IFilePickerService filePickerService,
+        FilePickerService filePickerService,
         IConnectionPackageService connectionPackageService,
         ISettingsService settingsService,
         IDatabaseSchemaInitializer schemaInitializer,
@@ -63,7 +63,7 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
 
         Languages = LocalizationLanguageOptions.Create();
 
-        var settings = _settingsService.GetAllAsync().GetAwaiter().GetResult();
+        var settings = _settingsService.GetAll();
         settings.TryGetValue(SettingKeys.Language, out var language);
         SelectedLanguage = Languages
             .FirstOrDefault(option => string.Equals(option.CultureName, language, StringComparison.OrdinalIgnoreCase))

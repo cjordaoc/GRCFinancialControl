@@ -9,7 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
-using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -19,7 +19,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         private readonly IClosingPeriodService _closingPeriodService;
         private readonly IFiscalYearService _fiscalYearService;
-        private readonly IDialogService _dialogService;
+        private readonly DialogService _dialogService;
 
         [ObservableProperty]
         private ObservableCollection<ClosingPeriod> _closingPeriods = new();
@@ -36,7 +36,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public ClosingPeriodsViewModel(
             IClosingPeriodService closingPeriodService,
             IFiscalYearService fiscalYearService,
-            IDialogService dialogService,
+            DialogService dialogService,
             IMessenger messenger)
             : base(messenger)
         {

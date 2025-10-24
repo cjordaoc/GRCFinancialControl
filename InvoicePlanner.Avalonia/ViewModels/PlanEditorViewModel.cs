@@ -8,7 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using InvoicePlanner.Avalonia.Messages;
-using InvoicePlanner.Avalonia.Services.Interfaces;
+using InvoicePlanner.Avalonia.Services;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
 using Invoices.Core.Validation;
@@ -23,7 +23,7 @@ public partial class PlanEditorViewModel : ViewModelBase
     private readonly IInvoicePlanValidator _validator;
     private readonly ILogger<PlanEditorViewModel> _logger;
     private readonly IInvoiceAccessScope _accessScope;
-    private readonly IDialogService _dialogService;
+    private readonly DialogService _dialogService;
     private bool _suppressLineUpdates;
     private bool _isInitializing;
     private PlanEditorDialogViewModel? _dialogViewModel;
@@ -33,7 +33,7 @@ public partial class PlanEditorViewModel : ViewModelBase
         IInvoicePlanValidator validator,
         ILogger<PlanEditorViewModel> logger,
         IInvoiceAccessScope accessScope,
-        IDialogService dialogService,
+        DialogService dialogService,
         IMessenger messenger)
         : base(messenger)
     {
@@ -142,14 +142,14 @@ public partial class PlanEditorViewModel : ViewModelBase
                 value = 1;
             }
 
-        if (SetProperty(ref _numInvoices, value))
-        {
-            if (!_isInitializing)
+            if (SetProperty(ref _numInvoices, value))
             {
-                EnsureItemCount();
+                if (!_isInitializing)
+                {
+                    EnsureItemCount();
+                }
             }
         }
-    }
     }
 
     public bool RequiresFirstEmissionDate => PlanType == InvoicePlanType.ByDate;

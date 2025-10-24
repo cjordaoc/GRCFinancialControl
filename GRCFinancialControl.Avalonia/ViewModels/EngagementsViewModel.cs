@@ -5,7 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
-using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -16,12 +16,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly IEngagementService _engagementService;
         private readonly ICustomerService _customerService;
         private readonly IClosingPeriodService _closingPeriodService;
-        private readonly IDialogService _dialogService;
+        private readonly DialogService _dialogService;
 
         [ObservableProperty]
         private Engagement? _selectedEngagement;
 
-        public EngagementsViewModel(IEngagementService engagementService, ICustomerService customerService, IClosingPeriodService closingPeriodService, IDialogService dialogService, IMessenger messenger)
+        public EngagementsViewModel(IEngagementService engagementService, ICustomerService customerService, IClosingPeriodService closingPeriodService, DialogService dialogService, IMessenger messenger)
             : base(messenger)
         {
             _engagementService = engagementService;

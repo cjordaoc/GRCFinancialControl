@@ -6,15 +6,31 @@ using Avalonia.Platform.Storage;
 
 namespace App.Presentation.Services;
 
-public class FilePickerService : IFilePickerService
+/// <summary>
+/// Provides file picker helpers backed by an Avalonia <see cref="Window"/>.
+/// </summary>
+public sealed class FilePickerService
 {
+    private const string DefaultFilterLabel = "Files";
+
     private readonly Window _target;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FilePickerService"/> class.
+    /// </summary>
+    /// <param name="target">The window that owns the picker dialogs.</param>
     public FilePickerService(Window target)
     {
         _target = target;
     }
 
+    /// <summary>
+    /// Displays an open file dialog and returns the selected file path, if any.
+    /// </summary>
+    /// <param name="title">Dialog title shown to the user.</param>
+    /// <param name="defaultExtension">Default file extension to use when the picker does not provide one.</param>
+    /// <param name="allowedPatterns">Optional filter patterns to restrict selectable files.</param>
+    /// <returns>The absolute path to the selected file, or <c>null</c> when the dialog is cancelled.</returns>
     public async Task<string?> OpenFileAsync(string title = "Open File", string? defaultExtension = ".xlsx", string[]? allowedPatterns = null)
     {
         var extension = NormalizeExtension(defaultExtension);
@@ -26,7 +42,7 @@ public class FilePickerService : IFilePickerService
             AllowMultiple = false,
             FileTypeFilter = new[]
             {
-                new FilePickerFileType("Files")
+                new FilePickerFileType(DefaultFilterLabel)
                 {
                     Patterns = patterns
                 }
@@ -59,6 +75,14 @@ public class FilePickerService : IFilePickerService
         return tempPath;
     }
 
+    /// <summary>
+    /// Displays a save file dialog and returns the chosen destination path.
+    /// </summary>
+    /// <param name="defaultFileName">Suggested file name shown to the user.</param>
+    /// <param name="title">Dialog title shown to the user.</param>
+    /// <param name="defaultExtension">Default file extension to append when the user omits one.</param>
+    /// <param name="allowedPatterns">Optional filter patterns to restrict selectable files.</param>
+    /// <returns>The absolute path selected by the user, or <c>null</c> when the dialog is cancelled.</returns>
     public async Task<string?> SaveFileAsync(
         string defaultFileName,
         string title = "Save File",
@@ -74,7 +98,7 @@ public class FilePickerService : IFilePickerService
             Title = title,
             FileTypeChoices = new[]
             {
-                new FilePickerFileType("Files")
+                new FilePickerFileType(DefaultFilterLabel)
                 {
                     Patterns = patterns
                 }
@@ -98,18 +122,31 @@ public class FilePickerService : IFilePickerService
         }
 
         var trimmed = extension.Trim();
-        if (!trimmed.StartsWith('.'))
-        {
-            trimmed = "." + trimmed.TrimStart('*', '.');
-        }
-
-        return trimmed;
+        return trimmed.StartsWith('.')
+            ? trimmed
+            : string.Concat(".", trimmed.TrimStart('*', '.'));
     }
 
     private static string[] NormalizePatterns(string extension, string[]? allowedPatterns)
     {
         if (allowedPatterns is { Length: > 0 })
         {
+            var requiresNormalization = false;
+            for (var i = 0; i < allowedPatterns.Length; i++)
+            {
+                var pattern = allowedPatterns[i];
+                if (string.IsNullOrWhiteSpace(pattern) || pattern![0] != '*')
+                {
+                    requiresNormalization = true;
+                    break;
+                }
+            }
+
+            if (!requiresNormalization)
+            {
+                return allowedPatterns;
+            }
+
             var normalized = new string[allowedPatterns.Length];
             for (var i = 0; i < allowedPatterns.Length; i++)
             {
@@ -138,11 +175,8 @@ public class FilePickerService : IFilePickerService
         }
 
         var currentExtension = Path.GetExtension(path);
-        if (string.Equals(currentExtension, extension, StringComparison.OrdinalIgnoreCase))
-        {
-            return path;
-        }
-
-        return path + extension;
+        return string.Equals(currentExtension, extension, StringComparison.OrdinalIgnoreCase)
+            ? path
+            : string.Concat(path, extension);
     }
 }
