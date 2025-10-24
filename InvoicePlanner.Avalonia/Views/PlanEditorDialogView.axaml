@@ -5,6 +5,7 @@
              xmlns:vm="clr-namespace:InvoicePlanner.Avalonia.ViewModels"
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              xmlns:conv="clr-namespace:App.Presentation.Converters;assembly=App.Presentation"
+             xmlns:behaviors="using:InvoicePlanner.Avalonia.Behaviors"
              x:Class="InvoicePlanner.Avalonia.Views.PlanEditorDialogView"
              x:Name="PlanEditorRoot"
              x:DataType="vm:PlanEditorDialogViewModel"
@@ -15,7 +16,7 @@
     <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
         <ScrollViewer Grid.Row="0"
                       VerticalScrollBarVisibility="Auto"
-                      HorizontalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
                       HorizontalContentAlignment="Stretch"
                       Padding="{StaticResource SpaceThickness24}"
                       DataContext="{Binding Editor}">
@@ -187,13 +188,15 @@
                         Margin="0,12,0,12">
                     <ScrollViewer HorizontalScrollBarVisibility="Auto"
                                   VerticalScrollBarVisibility="Auto"
+                                  HorizontalContentAlignment="Left"
                                   MinHeight="320">
                         <DataGrid ItemsSource="{Binding Items}"
                                   AutoGenerateColumns="False"
                                   HeadersVisibility="Column"
                                   GridLinesVisibility="All"
-                                  HorizontalScrollBarVisibility="Auto"
-                                  VerticalScrollBarVisibility="Disabled">
+                                  HorizontalAlignment="Left"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                  ScrollViewer.VerticalScrollBarVisibility="Disabled">
                             <DataGrid.Columns>
                                 <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Sequence}" Width="60">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -223,7 +226,8 @@
                                 <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Cnpj}" Width="180">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <TextBox Text="{Binding PayerCnpj, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                            <TextBox Text="{Binding PayerCnpj, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                     behaviors:CnpjMaskBehavior.IsEnabled="True" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>

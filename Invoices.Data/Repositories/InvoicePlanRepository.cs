@@ -7,6 +7,7 @@ using GRCFinancialControl.Persistence.Services.Interfaces;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 
 namespace Invoices.Data.Repositories;
@@ -168,58 +169,60 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             throw new ArgumentNullException(nameof(plan));
         }
 
-        using var context = _dbContextFactory.CreateDbContext();
-        using var transaction = context.Database.BeginTransaction();
-
-        try
+        return ExecuteWithStrategy(context =>
         {
-            var now = DateTime.UtcNow;
-            var created = 0;
-            var updated = 0;
-            var deleted = 0;
+            using var transaction = context.Database.BeginTransaction();
 
-            if (plan.Id == 0)
+            try
             {
-                if (!_accessScope.IsEngagementAllowed(plan.EngagementId))
+                var now = DateTime.UtcNow;
+                var created = 0;
+                var updated = 0;
+                var deleted = 0;
+
+                if (plan.Id == 0)
                 {
-                    throw new InvalidOperationException(
-                        $"The current user does not have access to engagement '{plan.EngagementId}'.");
+                    if (!_accessScope.IsEngagementAllowed(plan.EngagementId))
+                    {
+                        throw new InvalidOperationException(
+                            $"The current user does not have access to engagement '{plan.EngagementId}'.");
+                    }
+
+                    PrepareNewPlan(plan, now);
+                    context.InvoicePlans.Add(plan);
+                    created = 1;
+                }
+                else
+                {
+                    var tracked = context.InvoicePlans
+                        .Include(p => p.Items)
+                        .Include(p => p.AdditionalEmails)
+                        .FirstOrDefault(p => p.Id == plan.Id)
+                        ?? throw new InvalidOperationException($"Invoice plan {plan.Id} not found.");
+
+                    EnsurePlanAccess(tracked);
+
+                    ApplyPlanUpdates(tracked, plan, now, context, ref deleted);
+                    updated = 1;
                 }
 
-                PrepareNewPlan(plan, now);
-                context.InvoicePlans.Add(plan);
-                created = 1;
+                var affectedRows = context.SaveChanges();
+                transaction.Commit();
+
+                return new RepositorySaveResult(created, updated, deleted, affectedRows);
             }
-            else
+            catch (DbUpdateException ex)
             {
-                var tracked = context.InvoicePlans
-                    .Include(p => p.Items)
-                    .Include(p => p.AdditionalEmails)
-                    .FirstOrDefault(p => p.Id == plan.Id)
-                    ?? throw new InvalidOperationException($"Invoice plan {plan.Id} not found.");
-
-                EnsurePlanAccess(tracked);
-
-                ApplyPlanUpdates(tracked, plan, now, context, ref deleted);
-                updated = 1;
+                _logger.LogError(ex, "Failed to persist invoice plan {PlanId}.", plan.Id);
+                transaction.Rollback();
+                throw;
             }
-
-            var affectedRows = context.SaveChanges();
-            transaction.Commit();
-
-            return new RepositorySaveResult(created, updated, deleted, affectedRows);
-        }
-        catch (DbUpdateException ex)
-        {
-            _logger.LogError(ex, "Failed to persist invoice plan {PlanId}.", plan.Id);
-            transaction.Rollback();
-            throw;
-        }
-        catch
-        {
-            transaction.Rollback();
-            throw;
-        }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+        });
     }
 
     public RepositorySaveResult MarkItemsAsRequested(int planId, IReadOnlyCollection<InvoiceRequestUpdate> updates)
@@ -234,81 +237,83 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             return RepositorySaveResult.Empty;
         }
 
-        using var context = _dbContextFactory.CreateDbContext();
-        using var transaction = context.Database.BeginTransaction();
-
-        try
+        return ExecuteWithStrategy(context =>
         {
-            var plan = context.InvoicePlans
-                .Include(p => p.Items)
-                .FirstOrDefault(p => p.Id == planId)
-                ?? throw new InvalidOperationException($"Invoice plan {planId} not found.");
+            using var transaction = context.Database.BeginTransaction();
 
-            EnsurePlanAccess(plan);
-
-            var now = DateTime.UtcNow;
-            var updated = 0;
-            var itemsById = plan.Items.ToDictionary(item => item.Id);
-
-            foreach (var update in updates
-                         .GroupBy(u => u.ItemId)
-                         .Select(group => group.Last()))
+            try
             {
-                if (!itemsById.TryGetValue(update.ItemId, out var item))
+                var plan = context.InvoicePlans
+                    .Include(p => p.Items)
+                    .FirstOrDefault(p => p.Id == planId)
+                    ?? throw new InvalidOperationException($"Invoice plan {planId} not found.");
+
+                EnsurePlanAccess(plan);
+
+                var now = DateTime.UtcNow;
+                var updated = 0;
+                var itemsById = plan.Items.ToDictionary(item => item.Id);
+
+                foreach (var update in updates
+                             .GroupBy(u => u.ItemId)
+                             .Select(group => group.Last()))
                 {
-                    throw new InvalidOperationException($"Invoice item {update.ItemId} not found in plan {planId}.");
+                    if (!itemsById.TryGetValue(update.ItemId, out var item))
+                    {
+                        throw new InvalidOperationException($"Invoice item {update.ItemId} not found in plan {planId}.");
+                    }
+
+                    if (item.Status != InvoiceItemStatus.Planned)
+                    {
+                        throw new InvalidOperationException($"Invoice item {item.Id} is not in Planned status.");
+                    }
+
+                    if (string.IsNullOrWhiteSpace(update.RitmNumber))
+                    {
+                        throw new InvalidOperationException($"RITM number is required for item {item.Id}.");
+                    }
+
+                    if (string.IsNullOrWhiteSpace(update.CoeResponsible))
+                    {
+                        throw new InvalidOperationException($"COE responsible is required for item {item.Id}.");
+                    }
+
+                    if (update.RequestDate == default)
+                    {
+                        throw new InvalidOperationException($"Request date is required for item {item.Id}.");
+                    }
+
+                    item.RitmNumber = update.RitmNumber.Trim();
+                    item.CoeResponsible = update.CoeResponsible.Trim();
+                    item.RequestDate = update.RequestDate.Date;
+                    item.Status = InvoiceItemStatus.Requested;
+                    item.UpdatedAt = now;
+
+                    updated++;
                 }
 
-                if (item.Status != InvoiceItemStatus.Planned)
+                if (updated > 0)
                 {
-                    throw new InvalidOperationException($"Invoice item {item.Id} is not in Planned status.");
+                    plan.UpdatedAt = now;
                 }
 
-                if (string.IsNullOrWhiteSpace(update.RitmNumber))
-                {
-                    throw new InvalidOperationException($"RITM number is required for item {item.Id}.");
-                }
+                var affectedRows = context.SaveChanges();
+                transaction.Commit();
 
-                if (string.IsNullOrWhiteSpace(update.CoeResponsible))
-                {
-                    throw new InvalidOperationException($"COE responsible is required for item {item.Id}.");
-                }
-
-                if (update.RequestDate == default)
-                {
-                    throw new InvalidOperationException($"Request date is required for item {item.Id}.");
-                }
-
-                item.RitmNumber = update.RitmNumber.Trim();
-                item.CoeResponsible = update.CoeResponsible.Trim();
-                item.RequestDate = update.RequestDate.Date;
-                item.Status = InvoiceItemStatus.Requested;
-                item.UpdatedAt = now;
-
-                updated++;
+                return new RepositorySaveResult(0, updated, 0, affectedRows);
             }
-
-            if (updated > 0)
+            catch (DbUpdateException ex)
             {
-                plan.UpdatedAt = now;
+                _logger.LogError(ex, "Failed to mark request for plan {PlanId}.", planId);
+                transaction.Rollback();
+                throw;
             }
-
-            var affectedRows = context.SaveChanges();
-            transaction.Commit();
-
-            return new RepositorySaveResult(0, updated, 0, affectedRows);
-        }
-        catch (DbUpdateException ex)
-        {
-            _logger.LogError(ex, "Failed to mark request for plan {PlanId}.", planId);
-            transaction.Rollback();
-            throw;
-        }
-        catch
-        {
-            transaction.Rollback();
-            throw;
-        }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+        });
     }
 
     public RepositorySaveResult UndoRequest(int planId, IReadOnlyCollection<int> itemIds)
@@ -323,63 +328,65 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             return RepositorySaveResult.Empty;
         }
 
-        using var context = _dbContextFactory.CreateDbContext();
-        using var transaction = context.Database.BeginTransaction();
-
-        try
+        return ExecuteWithStrategy(context =>
         {
-            var plan = context.InvoicePlans
-                .Include(p => p.Items)
-                .FirstOrDefault(p => p.Id == planId)
-                ?? throw new InvalidOperationException($"Invoice plan {planId} not found.");
+            using var transaction = context.Database.BeginTransaction();
 
-            EnsurePlanAccess(plan);
-
-            var now = DateTime.UtcNow;
-            var updated = 0;
-            var itemsById = plan.Items.ToDictionary(item => item.Id);
-
-            foreach (var itemId in itemIds.Distinct())
+            try
             {
-                if (!itemsById.TryGetValue(itemId, out var item))
+                var plan = context.InvoicePlans
+                    .Include(p => p.Items)
+                    .FirstOrDefault(p => p.Id == planId)
+                    ?? throw new InvalidOperationException($"Invoice plan {planId} not found.");
+
+                EnsurePlanAccess(plan);
+
+                var now = DateTime.UtcNow;
+                var updated = 0;
+                var itemsById = plan.Items.ToDictionary(item => item.Id);
+
+                foreach (var itemId in itemIds.Distinct())
                 {
-                    throw new InvalidOperationException($"Invoice item {itemId} not found in plan {planId}.");
+                    if (!itemsById.TryGetValue(itemId, out var item))
+                    {
+                        throw new InvalidOperationException($"Invoice item {itemId} not found in plan {planId}.");
+                    }
+
+                    if (item.Status != InvoiceItemStatus.Requested)
+                    {
+                        continue;
+                    }
+
+                    item.Status = InvoiceItemStatus.Planned;
+                    item.RitmNumber = null;
+                    item.CoeResponsible = null;
+                    item.RequestDate = null;
+                    item.UpdatedAt = now;
+                    updated++;
                 }
 
-                if (item.Status != InvoiceItemStatus.Requested)
+                if (updated > 0)
                 {
-                    continue;
+                    plan.UpdatedAt = now;
                 }
 
-                item.Status = InvoiceItemStatus.Planned;
-                item.RitmNumber = null;
-                item.CoeResponsible = null;
-                item.RequestDate = null;
-                item.UpdatedAt = now;
-                updated++;
-            }
+                var affectedRows = context.SaveChanges();
+                transaction.Commit();
 
-            if (updated > 0)
+                return new RepositorySaveResult(0, updated, 0, affectedRows);
+            }
+            catch (DbUpdateException ex)
             {
-                plan.UpdatedAt = now;
+                _logger.LogError(ex, "Failed to undo request for plan {PlanId}.", planId);
+                transaction.Rollback();
+                throw;
             }
-
-            var affectedRows = context.SaveChanges();
-            transaction.Commit();
-
-            return new RepositorySaveResult(0, updated, 0, affectedRows);
-        }
-        catch (DbUpdateException ex)
-        {
-            _logger.LogError(ex, "Failed to undo request for plan {PlanId}.", planId);
-            transaction.Rollback();
-            throw;
-        }
-        catch
-        {
-            transaction.Rollback();
-            throw;
-        }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+        });
     }
 
     public RepositorySaveResult CloseItems(int planId, IReadOnlyCollection<InvoiceEmissionUpdate> updates)
@@ -394,77 +401,79 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             return RepositorySaveResult.Empty;
         }
 
-        using var context = _dbContextFactory.CreateDbContext();
-        using var transaction = context.Database.BeginTransaction();
-
-        try
+        return ExecuteWithStrategy(context =>
         {
-            var plan = context.InvoicePlans
-                .Include(p => p.Items)
-                .FirstOrDefault(p => p.Id == planId)
-                ?? throw new InvalidOperationException($"Invoice plan {planId} not found.");
+            using var transaction = context.Database.BeginTransaction();
 
-            EnsurePlanAccess(plan);
-
-            var now = DateTime.UtcNow;
-            var updated = 0;
-            var itemsById = plan.Items.ToDictionary(item => item.Id);
-
-            foreach (var update in updates
-                         .GroupBy(u => u.ItemId)
-                         .Select(group => group.Last()))
+            try
             {
-                if (!itemsById.TryGetValue(update.ItemId, out var item))
+                var plan = context.InvoicePlans
+                    .Include(p => p.Items)
+                    .FirstOrDefault(p => p.Id == planId)
+                    ?? throw new InvalidOperationException($"Invoice plan {planId} not found.");
+
+                EnsurePlanAccess(plan);
+
+                var now = DateTime.UtcNow;
+                var updated = 0;
+                var itemsById = plan.Items.ToDictionary(item => item.Id);
+
+                foreach (var update in updates
+                             .GroupBy(u => u.ItemId)
+                             .Select(group => group.Last()))
                 {
-                    throw new InvalidOperationException($"Invoice item {update.ItemId} not found in plan {planId}.");
+                    if (!itemsById.TryGetValue(update.ItemId, out var item))
+                    {
+                        throw new InvalidOperationException($"Invoice item {update.ItemId} not found in plan {planId}.");
+                    }
+
+                    if (item.Status != InvoiceItemStatus.Requested)
+                    {
+                        throw new InvalidOperationException($"Invoice item {item.Id} is not in Requested status.");
+                    }
+
+                    if (string.IsNullOrWhiteSpace(item.RitmNumber))
+                    {
+                        throw new InvalidOperationException($"Invoice item {item.Id} cannot be closed without a RITM.");
+                    }
+
+                    if (string.IsNullOrWhiteSpace(update.BzCode))
+                    {
+                        throw new InvalidOperationException($"BZ code is required to close invoice item {item.Id}.");
+                    }
+
+                    var emittedDate = update.EmittedAt?.Date ?? DateTime.UtcNow.Date;
+
+                    item.BzCode = update.BzCode.Trim();
+                    item.EmittedAt = emittedDate;
+                    item.Status = InvoiceItemStatus.Closed;
+                    item.UpdatedAt = now;
+
+                    updated++;
                 }
 
-                if (item.Status != InvoiceItemStatus.Requested)
+                if (updated > 0)
                 {
-                    throw new InvalidOperationException($"Invoice item {item.Id} is not in Requested status.");
+                    plan.UpdatedAt = now;
                 }
 
-                if (string.IsNullOrWhiteSpace(item.RitmNumber))
-                {
-                    throw new InvalidOperationException($"Invoice item {item.Id} cannot be closed without a RITM.");
-                }
+                var affectedRows = context.SaveChanges();
+                transaction.Commit();
 
-                if (string.IsNullOrWhiteSpace(update.BzCode))
-                {
-                    throw new InvalidOperationException($"BZ code is required to close invoice item {item.Id}.");
-                }
-
-                var emittedDate = update.EmittedAt?.Date ?? DateTime.UtcNow.Date;
-
-                item.BzCode = update.BzCode.Trim();
-                item.EmittedAt = emittedDate;
-                item.Status = InvoiceItemStatus.Closed;
-                item.UpdatedAt = now;
-
-                updated++;
+                return new RepositorySaveResult(0, updated, 0, affectedRows);
             }
-
-            if (updated > 0)
+            catch (DbUpdateException ex)
             {
-                plan.UpdatedAt = now;
+                _logger.LogError(ex, "Failed to close invoice items for plan {PlanId}.", planId);
+                transaction.Rollback();
+                throw;
             }
-
-            var affectedRows = context.SaveChanges();
-            transaction.Commit();
-
-            return new RepositorySaveResult(0, updated, 0, affectedRows);
-        }
-        catch (DbUpdateException ex)
-        {
-            _logger.LogError(ex, "Failed to close invoice items for plan {PlanId}.", planId);
-            transaction.Rollback();
-            throw;
-        }
-        catch
-        {
-            transaction.Rollback();
-            throw;
-        }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+        });
     }
 
     public RepositorySaveResult CancelAndReissue(int planId, IReadOnlyCollection<InvoiceReissueRequest> requests)
@@ -479,116 +488,118 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             return RepositorySaveResult.Empty;
         }
 
-        using var context = _dbContextFactory.CreateDbContext();
-        using var transaction = context.Database.BeginTransaction();
-
-        try
+        return ExecuteWithStrategy(context =>
         {
-            var plan = context.InvoicePlans
-                .Include(p => p.Items)
-                .FirstOrDefault(p => p.Id == planId)
-                ?? throw new InvalidOperationException($"Invoice plan {planId} not found.");
+            using var transaction = context.Database.BeginTransaction();
 
-            EnsurePlanAccess(plan);
-
-            var now = DateTime.UtcNow;
-            var created = 0;
-            var updated = 0;
-            var nextSeq = plan.Items.Count == 0 ? 1 : plan.Items.Max(item => item.SeqNo) + 1;
-            var itemsById = plan.Items.ToDictionary(item => item.Id);
-            var replacements = new List<(InvoiceItem canceled, InvoiceItem replacement)>();
-
-            foreach (var request in requests
-                         .GroupBy(r => r.ItemId)
-                         .Select(group => group.Last()))
+            try
             {
-                if (!itemsById.TryGetValue(request.ItemId, out var item))
+                var plan = context.InvoicePlans
+                    .Include(p => p.Items)
+                    .FirstOrDefault(p => p.Id == planId)
+                    ?? throw new InvalidOperationException($"Invoice plan {planId} not found.");
+
+                EnsurePlanAccess(plan);
+
+                var now = DateTime.UtcNow;
+                var created = 0;
+                var updated = 0;
+                var nextSeq = plan.Items.Count == 0 ? 1 : plan.Items.Max(item => item.SeqNo) + 1;
+                var itemsById = plan.Items.ToDictionary(item => item.Id);
+                var replacements = new List<(InvoiceItem canceled, InvoiceItem replacement)>();
+
+                foreach (var request in requests
+                             .GroupBy(r => r.ItemId)
+                             .Select(group => group.Last()))
                 {
-                    throw new InvalidOperationException($"Invoice item {request.ItemId} not found in plan {planId}.");
+                    if (!itemsById.TryGetValue(request.ItemId, out var item))
+                    {
+                        throw new InvalidOperationException($"Invoice item {request.ItemId} not found in plan {planId}.");
+                    }
+
+                    if (item.Status != InvoiceItemStatus.Requested)
+                    {
+                        throw new InvalidOperationException($"Invoice item {item.Id} must be Requested before it can be canceled.");
+                    }
+
+                    if (string.IsNullOrWhiteSpace(request.CancelReason))
+                    {
+                        throw new InvalidOperationException($"Cancel reason is required for invoice item {item.Id}.");
+                    }
+
+                    var replacement = new InvoiceItem
+                    {
+                        PlanId = plan.Id,
+                        Plan = plan,
+                        SeqNo = nextSeq++,
+                        Percentage = item.Percentage,
+                        Amount = item.Amount,
+                        PayerCnpj = item.PayerCnpj,
+                        PoNumber = item.PoNumber,
+                        FrsNumber = item.FrsNumber,
+                        CustomerTicket = item.CustomerTicket,
+                        AdditionalInfo = item.AdditionalInfo,
+                        DeliveryDescription = item.DeliveryDescription,
+                        Status = InvoiceItemStatus.Planned,
+                        CreatedAt = now,
+                        UpdatedAt = now,
+                    };
+
+                    var emissionDate = request.ReplacementEmissionDate ?? item.EmissionDate;
+                    replacement.EmissionDate = emissionDate;
+                    replacement.DueDate = request.ReplacementDueDate
+                        ?? (emissionDate.HasValue ? emissionDate.Value.AddDays(plan.PaymentTermDays) : null);
+
+                    plan.Items.Add(replacement);
+                    context.Entry(replacement).State = EntityState.Added;
+
+                    item.Status = InvoiceItemStatus.Canceled;
+                    item.CanceledAt = now.Date;
+                    item.CancelReason = request.CancelReason.Trim();
+                    item.BzCode = null;
+                    item.EmittedAt = null;
+                    item.ReplacementItem = replacement;
+                    item.UpdatedAt = now;
+
+                    replacements.Add((item, replacement));
+
+                    created++;
+                    updated++;
                 }
 
-                if (item.Status != InvoiceItemStatus.Requested)
+                if (updated > 0)
                 {
-                    throw new InvalidOperationException($"Invoice item {item.Id} must be Requested before it can be canceled.");
+                    plan.UpdatedAt = now;
                 }
 
-                if (string.IsNullOrWhiteSpace(request.CancelReason))
+                var affectedRows = context.SaveChanges();
+
+                foreach (var pair in replacements)
                 {
-                    throw new InvalidOperationException($"Cancel reason is required for invoice item {item.Id}.");
+                    pair.canceled.ReplacementItemId = pair.replacement.Id;
                 }
 
-                var replacement = new InvoiceItem
+                if (replacements.Count > 0)
                 {
-                    PlanId = plan.Id,
-                    Plan = plan,
-                    SeqNo = nextSeq++,
-                    Percentage = item.Percentage,
-                    Amount = item.Amount,
-                    PayerCnpj = item.PayerCnpj,
-                    PoNumber = item.PoNumber,
-                    FrsNumber = item.FrsNumber,
-                    CustomerTicket = item.CustomerTicket,
-                    AdditionalInfo = item.AdditionalInfo,
-                    DeliveryDescription = item.DeliveryDescription,
-                    Status = InvoiceItemStatus.Planned,
-                    CreatedAt = now,
-                    UpdatedAt = now,
-                };
+                    affectedRows += context.SaveChanges();
+                }
 
-                var emissionDate = request.ReplacementEmissionDate ?? item.EmissionDate;
-                replacement.EmissionDate = emissionDate;
-                replacement.DueDate = request.ReplacementDueDate
-                    ?? (emissionDate.HasValue ? emissionDate.Value.AddDays(plan.PaymentTermDays) : null);
+                transaction.Commit();
 
-                plan.Items.Add(replacement);
-                context.Entry(replacement).State = EntityState.Added;
-
-                item.Status = InvoiceItemStatus.Canceled;
-                item.CanceledAt = now.Date;
-                item.CancelReason = request.CancelReason.Trim();
-                item.BzCode = null;
-                item.EmittedAt = null;
-                item.ReplacementItem = replacement;
-                item.UpdatedAt = now;
-
-                replacements.Add((item, replacement));
-
-                created++;
-                updated++;
+                return new RepositorySaveResult(created, updated, 0, affectedRows);
             }
-
-            if (updated > 0)
+            catch (DbUpdateException ex)
             {
-                plan.UpdatedAt = now;
+                _logger.LogError(ex, "Failed to cancel and reissue invoice items for plan {PlanId}.", planId);
+                transaction.Rollback();
+                throw;
             }
-
-            var affectedRows = context.SaveChanges();
-
-            foreach (var pair in replacements)
+            catch
             {
-                pair.canceled.ReplacementItemId = pair.replacement.Id;
+                transaction.Rollback();
+                throw;
             }
-
-            if (replacements.Count > 0)
-            {
-                affectedRows += context.SaveChanges();
-            }
-
-            transaction.Commit();
-
-            return new RepositorySaveResult(created, updated, 0, affectedRows);
-        }
-        catch (DbUpdateException ex)
-        {
-            _logger.LogError(ex, "Failed to cancel and reissue invoice items for plan {PlanId}.", planId);
-            transaction.Rollback();
-            throw;
-        }
-        catch
-        {
-            transaction.Rollback();
-            throw;
-        }
+        });
     }
 
     public InvoiceSummaryResult SearchSummary(InvoiceSummaryFilter filter)
@@ -879,6 +890,18 @@ public class InvoicePlanRepository : IInvoicePlanRepository
         return !(_accessScope.IsInitialized
                  && !hasFilter
                  && string.IsNullOrWhiteSpace(_accessScope.InitializationError));
+    }
+
+    private T ExecuteWithStrategy<T>(Func<ApplicationDbContext, T> operation)
+    {
+        using var strategyContext = _dbContextFactory.CreateDbContext();
+        var strategy = strategyContext.Database.CreateExecutionStrategy();
+
+        return strategy.Execute(() =>
+        {
+            using var context = _dbContextFactory.CreateDbContext();
+            return operation(context);
+        });
     }
 
     private void EnsurePlanAccess(InvoicePlan plan)
