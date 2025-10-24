@@ -16,6 +16,7 @@ using GRCFinancialControl.Core.Configuration;
 using GRCFinancialControl.Persistence;
 using GRCFinancialControl.Persistence.Configuration;
 using GRCFinancialControl.Persistence.Services;
+using GRCFinancialControl.Persistence.Services.Exporters;
 using GRCFinancialControl.Persistence.Services.Importers;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using GRCFinancialControl.Persistence.Services.People;
@@ -127,6 +128,7 @@ namespace GRCFinancialControl.Avalonia
             services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
             services.AddSingleton<IDialogService, DialogService>();
             services.AddTransient<IExportService, ExportService>();
+            services.AddTransient<IRetainTemplateGenerator, RetainTemplateGenerator>();
             services.AddSingleton<IConnectionPackageService, ConnectionPackageService>();
             services.AddSingleton<IPowerBiEmbeddingService, PowerBiEmbeddingService>();
 
