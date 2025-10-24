@@ -5,7 +5,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
-using GRCFinancialControl.Avalonia.Utilities;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -36,34 +35,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         [ObservableProperty]
         private bool _isReadOnlyMode;
-
-        partial void OnStartDateChanged(DateTime value)
-        {
-            OnPropertyChanged(nameof(StartDateOffset));
-        }
-
-        partial void OnEndDateChanged(DateTime value)
-        {
-            OnPropertyChanged(nameof(EndDateOffset));
-        }
-
-        public DateTimeOffset? StartDateOffset
-        {
-            get => DateTimeOffsetHelper.FromDate(StartDate);
-            set
-            {
-                StartDate = DateTimeOffsetHelper.ToDate(value) ?? default;
-            }
-        }
-
-        public DateTimeOffset? EndDateOffset
-        {
-            get => DateTimeOffsetHelper.FromDate(EndDate);
-            set
-            {
-                EndDate = DateTimeOffsetHelper.ToDate(value) ?? default;
-            }
-        }
 
         public FiscalYear FiscalYear { get; }
 

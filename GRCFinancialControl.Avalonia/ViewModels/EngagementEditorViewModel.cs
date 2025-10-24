@@ -7,7 +7,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
-using GRCFinancialControl.Avalonia.Utilities;
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
@@ -90,18 +89,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         [ObservableProperty]
         private DateTime? _proposedNextEtcDate;
-
-        public DateTimeOffset? LastEtcDateOffset
-        {
-            get => DateTimeOffsetHelper.FromDate(LastEtcDate);
-            set => LastEtcDate = DateTimeOffsetHelper.ToDate(value);
-        }
-
-        public DateTimeOffset? ProposedNextEtcDateOffset
-        {
-            get => DateTimeOffsetHelper.FromDate(ProposedNextEtcDate);
-            set => ProposedNextEtcDate = DateTimeOffsetHelper.ToDate(value);
-        }
 
         [ObservableProperty]
         private ObservableCollection<string> _statusTextOptions = new(DefaultStatusTextChoices);
@@ -476,14 +463,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         partial void OnLastEtcDateChanged(DateTime? value)
         {
-            OnPropertyChanged(nameof(LastEtcDateOffset));
             UpdateSchedulingFields();
         }
 
-        partial void OnProposedNextEtcDateChanged(DateTime? value)
-        {
-            OnPropertyChanged(nameof(ProposedNextEtcDateOffset));
-        }
+
 
         partial void OnSelectedFinancialEvolutionEntryChanged(EngagementFinancialEvolutionEntryViewModel? value)
         {

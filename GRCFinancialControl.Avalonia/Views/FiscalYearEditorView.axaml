@@ -34,7 +34,7 @@
                                VerticalAlignment="Center"/>
                     <CalendarDatePicker Grid.Row="1"
                                         Grid.Column="1"
-                                        SelectedDate="{Binding StartDateOffset}"
+                                        SelectedDate="{Binding StartDate, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}"
                                         IsEnabled="{Binding AllowEditing}"
                                         HorizontalAlignment="Stretch"/>
 
@@ -44,7 +44,7 @@
                                VerticalAlignment="Center"/>
                     <CalendarDatePicker Grid.Row="2"
                                         Grid.Column="1"
-                                        SelectedDate="{Binding EndDateOffset}"
+                                        SelectedDate="{Binding EndDate, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}"
                                         IsEnabled="{Binding AllowEditing}"
                                         HorizontalAlignment="Stretch"/>
 

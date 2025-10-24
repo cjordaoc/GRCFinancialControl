@@ -50,7 +50,7 @@
                                VerticalAlignment="Center"/>
                     <CalendarDatePicker Grid.Row="2"
                                         Grid.Column="1"
-                                        SelectedDate="{Binding PeriodStartOffset}"
+                                        SelectedDate="{Binding PeriodStart, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}"
                                         IsEnabled="{Binding AllowEditing}"/>
 
                     <TextBlock Grid.Row="3"
@@ -59,7 +59,7 @@
                                VerticalAlignment="Center"/>
                     <CalendarDatePicker Grid.Row="3"
                                         Grid.Column="1"
-                                        SelectedDate="{Binding PeriodEndOffset}"
+                                        SelectedDate="{Binding PeriodEnd, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}"
                                         IsEnabled="{Binding AllowEditing}"/>
                 </Grid>
                 <TextBlock Text="{Binding StatusMessage}" Foreground="Red"/>
