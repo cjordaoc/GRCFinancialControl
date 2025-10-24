@@ -11,6 +11,7 @@
         <TextBlock Text="{loc:Loc Key=Tasks.Title.Primary}" FontSize="28" FontWeight="Bold"/>
         <TextBlock Text="{loc:Loc Key=Tasks.Description.Primary}" TextWrapping="Wrap"/>
         <Button Content="{loc:Loc Key=Tasks.Button.Generate}" Command="{Binding GenerateTasksFileCommand}" Width="220"/>
+        <Button Content="{loc:Loc Key=Tasks.Button.GenerateRetainTemplate}" Command="{Binding GenerateRetainTemplateCommand}" Width="220"/>
         <Button Content="{loc:Loc Key=Tasks.Button.ExportRetain}" Command="{Binding ExportRetainFileCommand}" Width="220"/>
         <TextBlock Text="{Binding StatusMessage}"
                    TextWrapping="Wrap"

@@ -6,8 +6,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\Templates\RetainTemplate.xlsx.b64">
+      <Link>Templates/RetainTemplate.xlsx.b64</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="ExcelDataReader" Version="3.8.0" />
     <PackageReference Include="ExcelDataReader.DataSet" Version="3.8.0" />
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.10" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
     <PackageReference Include="MySqlConnector" Version="2.4.0" />

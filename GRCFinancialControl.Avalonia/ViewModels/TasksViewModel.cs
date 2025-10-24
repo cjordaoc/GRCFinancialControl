@@ -8,24 +8,30 @@ using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
     public partial class TasksViewModel : ViewModelBase
     {
         private readonly IFilePickerService _filePickerService;
+        private readonly IRetainTemplateGenerator _retainTemplateGenerator;
 
         [ObservableProperty]
         private string? _statusMessage;
 
-        public TasksViewModel(IFilePickerService filePickerService)
+        public TasksViewModel(IFilePickerService filePickerService, IRetainTemplateGenerator retainTemplateGenerator)
         {
             _filePickerService = filePickerService;
+            _retainTemplateGenerator = retainTemplateGenerator;
             GenerateTasksFileCommand = new AsyncRelayCommand(GenerateTasksFileAsync);
+            GenerateRetainTemplateCommand = new AsyncRelayCommand(GenerateRetainTemplateAsync);
             ExportRetainFileCommand = new AsyncRelayCommand(ExportRetainFileAsync);
         }
 
         public IAsyncRelayCommand GenerateTasksFileCommand { get; }
+
+        public IAsyncRelayCommand GenerateRetainTemplateCommand { get; }
 
         public IAsyncRelayCommand ExportRetainFileCommand { get; }
 
@@ -141,6 +147,32 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             catch (Exception ex)
             {
                 StatusMessage = LocalizationRegistry.Format("Tasks.Status.GenerationFailure", ex.Message);
+            }
+        }
+
+        private async Task GenerateRetainTemplateAsync()
+        {
+            StatusMessage = null;
+
+            var filePath = await _filePickerService.OpenFileAsync(
+                title: LocalizationRegistry.Get("Tasks.Dialog.GenerateRetainTemplateTitle"),
+                defaultExtension: ".xlsx",
+                allowedPatterns: new[] { "*.xlsx" });
+
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                StatusMessage = LocalizationRegistry.Get("Tasks.Status.RetainTemplateCancelled");
+                return;
+            }
+
+            try
+            {
+                var generatedFilePath = await _retainTemplateGenerator.GenerateRetainTemplateAsync(filePath);
+                StatusMessage = LocalizationRegistry.Format("Tasks.Status.RetainTemplateSuccess", generatedFilePath);
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = LocalizationRegistry.Format("Tasks.Status.RetainTemplateFailure", ex.Message);
             }
         }
 
