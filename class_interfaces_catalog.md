@@ -67,4 +67,11 @@ Authoritative reference for reusable classes and interfaces. Consult this catalo
 
 ---
 
+## UI Utilities
+| Type | Namespace | Name | Purpose | Key Members | Dependencies | Status | Notes |
+|------|-----------|------|---------|-------------|--------------|--------|-------|
+| Class | `InvoicePlanner.Avalonia.Behaviors` | `CnpjMaskBehavior` | Applies Brazilian CNPJ mask formatting to text inputs. | Attached property `IsEnabled` | Avalonia `TextBox` | New | Formats digits as `00.000.000/0000-00` during edits. |
+
+---
+
 > ⚠️ **Keep synchronized:** Whenever you introduce a new class/interface for a feature, append it to the appropriate section above, noting purpose and dependencies.
