@@ -23,9 +23,17 @@ public sealed class DateTimeOffsetConverter : IValueConverter
             return CreateOffset(dateTime);
         }
 
-        if (value is string text && DateTimeOffset.TryParse(text, culture, DateTimeStyles.AssumeUniversal, out var parsedOffset))
+        if (value is string text)
         {
-            return Normalize(parsedOffset);
+            if (TryParseDateTimeOffset(text, culture, out var parsedOffset))
+            {
+                return Normalize(parsedOffset);
+            }
+
+            if (TryParseDateTime(text, culture, out var parsedDate))
+            {
+                return CreateOffset(parsedDate);
+            }
         }
 
         return null;
@@ -48,12 +56,44 @@ public sealed class DateTimeOffsetConverter : IValueConverter
             return dateTime.Date;
         }
 
-        if (value is string text && DateTimeOffset.TryParse(text, culture, DateTimeStyles.AssumeUniversal, out var parsedOffset))
+        if (value is string text)
         {
-            return parsedOffset.Date;
+            if (TryParseDateTimeOffset(text, culture, out var parsedOffset))
+            {
+                return parsedOffset.Date;
+            }
+
+            if (TryParseDateTime(text, culture, out var parsedDate))
+            {
+                return parsedDate.Date;
+            }
         }
 
         return null;
+    }
+
+    private static bool TryParseDateTimeOffset(string text, CultureInfo? culture, out DateTimeOffset result)
+    {
+        var styles = DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal;
+
+        if (DateTimeOffset.TryParse(text, culture, styles, out result))
+        {
+            return true;
+        }
+
+        return DateTimeOffset.TryParse(text, CultureInfo.InvariantCulture, styles, out result);
+    }
+
+    private static bool TryParseDateTime(string text, CultureInfo? culture, out DateTime result)
+    {
+        var styles = DateTimeStyles.AllowWhiteSpaces;
+
+        if (DateTime.TryParse(text, culture, styles, out result))
+        {
+            return true;
+        }
+
+        return DateTime.TryParse(text, CultureInfo.InvariantCulture, styles, out result);
     }
 
     private static DateTimeOffset Normalize(DateTimeOffset dateTimeOffset)
