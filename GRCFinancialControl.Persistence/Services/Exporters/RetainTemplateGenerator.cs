@@ -21,7 +21,7 @@ public sealed class RetainTemplateGenerator : IRetainTemplateGenerator
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public Task<string> GenerateRetainTemplateAsync(string allocationFilePath)
+    public Task<string> GenerateRetainTemplateAsync(string allocationFilePath, string destinationFilePath)
     {
         if (string.IsNullOrWhiteSpace(allocationFilePath))
         {
@@ -31,6 +31,11 @@ public sealed class RetainTemplateGenerator : IRetainTemplateGenerator
         if (!File.Exists(allocationFilePath))
         {
             throw new FileNotFoundException("Allocation planning workbook could not be found.", allocationFilePath);
+        }
+
+        if (string.IsNullOrWhiteSpace(destinationFilePath))
+        {
+            throw new ArgumentException("The output file path must be provided.", nameof(destinationFilePath));
         }
 
         var templateBytes = LoadTemplateBytes();
@@ -64,7 +69,7 @@ public sealed class RetainTemplateGenerator : IRetainTemplateGenerator
                 saturdayHeaders[^1]);
         }
 
-        var outputFilePath = CreateTemplateCopy(allocationFilePath, templateBytes);
+        var outputFilePath = PrepareTemplateCopy(destinationFilePath, templateBytes);
         PopulateTemplate(outputFilePath, planningSnapshot, saturdayHeaders);
 
         _logger.LogInformation("Retain template generated at {OutputFilePath}", outputFilePath);
@@ -94,20 +99,21 @@ public sealed class RetainTemplateGenerator : IRetainTemplateGenerator
         }
     }
 
-    private static string CreateTemplateCopy(string allocationFilePath, byte[] templateBytes)
+    private static string PrepareTemplateCopy(string destinationFilePath, byte[] templateBytes)
     {
-        var outputDirectory = Path.GetDirectoryName(allocationFilePath);
+        var outputDirectory = Path.GetDirectoryName(destinationFilePath);
         if (string.IsNullOrWhiteSpace(outputDirectory))
         {
-            outputDirectory = Directory.GetCurrentDirectory();
+            throw new InvalidOperationException("A valid directory must be provided for the generated template.");
         }
 
-        var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
-        var outputFileName = $"RetainTemplate_{timestamp}.xlsx";
-        var outputFilePath = Path.Combine(outputDirectory, outputFileName);
+        if (!Directory.Exists(outputDirectory))
+        {
+            Directory.CreateDirectory(outputDirectory);
+        }
 
-        File.WriteAllBytes(outputFilePath, templateBytes);
-        return outputFilePath;
+        File.WriteAllBytes(destinationFilePath, templateBytes);
+        return destinationFilePath;
     }
 
     private static void PopulateTemplate(

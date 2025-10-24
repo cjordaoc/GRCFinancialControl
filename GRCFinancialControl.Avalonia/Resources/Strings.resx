@@ -379,6 +379,9 @@
   <data name="Tasks.Dialog.GenerateRetainTemplateTitle" xml:space="preserve">
     <value>Select allocation planning file</value>
   </data>
+  <data name="Tasks.Dialog.SaveRetainTemplateTitle" xml:space="preserve">
+    <value>Choose where to save the generated template</value>
+  </data>
   <data name="Tasks.Status.RetainTemplateCancelled" xml:space="preserve">
     <value>Retain template generation cancelled.</value>
   </data>

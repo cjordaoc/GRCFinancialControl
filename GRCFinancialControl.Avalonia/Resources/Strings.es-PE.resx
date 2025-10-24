@@ -379,6 +379,9 @@
   <data name="Tasks.Dialog.GenerateRetainTemplateTitle" xml:space="preserve">
     <value>Seleccionar archivo de planificación de asignaciones</value>
   </data>
+  <data name="Tasks.Dialog.SaveRetainTemplateTitle" xml:space="preserve">
+    <value>Selecciona dónde guardar la plantilla generada</value>
+  </data>
   <data name="Tasks.Status.RetainTemplateCancelled" xml:space="preserve">
     <value>Generación de plantilla Retain cancelada.</value>
   </data>

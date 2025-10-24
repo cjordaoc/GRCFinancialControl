@@ -108,10 +108,10 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 ## 7 · Retain Template Generation
 **Happy Path**
 1. Staffing teams request a Retain template based on the latest allocation planning workbook.
-2. The generator clones the sanitized template asset (mirroring `DataTemplate/Retain_Template.xlsx`) next to the allocation file and resets the Saturday header row while preserving the workbook instructions.
+2. The generator clones the sanitized template asset (mirroring `DataTemplate/Retain_Template.xlsx`) into the user-selected destination and resets the Saturday header row while preserving the workbook instructions.
 3. Allocation entries are flattened by engagement/resource and spread across the weekly columns.
 4. Sequential rows start at row 4, filling job code, resource GPN, resource name, and weekly hours in the exact columns expected by the Retain importer.
-5. The populated Excel file is saved next to the source workbook and logged for traceability.
+5. The populated Excel file is saved in the chosen location and logged for traceability.
 
 **Validation & Consolidation Rules**
 - The generator validates the input path and ensures both the planning workbook and the embedded template asset exist before proceeding.

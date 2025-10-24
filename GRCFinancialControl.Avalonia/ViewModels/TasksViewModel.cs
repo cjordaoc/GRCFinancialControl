@@ -149,12 +149,25 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             StatusMessage = null;
 
-            var filePath = await _filePickerService.OpenFileAsync(
+            var allocationFilePath = await _filePickerService.OpenFileAsync(
                 title: LocalizationRegistry.Get("Tasks.Dialog.GenerateRetainTemplateTitle"),
                 defaultExtension: ".xlsx",
                 allowedPatterns: new[] { "*.xlsx" });
 
-            if (string.IsNullOrWhiteSpace(filePath))
+            if (string.IsNullOrWhiteSpace(allocationFilePath))
+            {
+                StatusMessage = LocalizationRegistry.Get("Tasks.Status.RetainTemplateCancelled");
+                return;
+            }
+
+            var defaultFileName = $"RetainTemplate_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+            var destinationFilePath = await _filePickerService.SaveFileAsync(
+                defaultFileName,
+                title: LocalizationRegistry.Get("Tasks.Dialog.SaveRetainTemplateTitle"),
+                defaultExtension: ".xlsx",
+                allowedPatterns: new[] { "*.xlsx" });
+
+            if (string.IsNullOrWhiteSpace(destinationFilePath))
             {
                 StatusMessage = LocalizationRegistry.Get("Tasks.Status.RetainTemplateCancelled");
                 return;
@@ -162,7 +175,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             try
             {
-                var generatedFilePath = await _retainTemplateGenerator.GenerateRetainTemplateAsync(filePath);
+                var generatedFilePath = await _retainTemplateGenerator.GenerateRetainTemplateAsync(
+                    allocationFilePath,
+                    destinationFilePath);
                 StatusMessage = LocalizationRegistry.Format("Tasks.Status.RetainTemplateSuccess", generatedFilePath);
             }
             catch (Exception ex)

@@ -98,10 +98,10 @@ This document details the implementation for every functional capability describ
 - **Primary Components:** `RetainTemplateGenerator`, `RetainTemplatePlanningWorkbook`, `RetainTemplatePlanningSnapshot`
 - **Libraries:** ClosedXML for Excel manipulation
 - **Workflow:**
-  1. `GenerateRetainTemplateAsync` validates the allocation workbook path and loads the sanitized template asset that mirrors `DataTemplate/Retain_Template.xlsx`.
+  1. `GenerateRetainTemplateAsync` validates both the allocation workbook path and the caller-provided destination, then loads the sanitized template asset that mirrors `DataTemplate/Retain_Template.xlsx`.
   2. `RetainTemplatePlanningWorkbook.Load` reads the planning sheet, producing a `RetainTemplatePlanningSnapshot` with entries grouped by resource/job and reference week.
   3. Saturday headers are built from the reference date to cover all detected weeks and written into row 1 while the Monday formulas on row 2 remain untouched.
-  4. `PopulateTemplate` clears data rows from row 4 onward, writes job code/resource identifiers plus weekly hours, and saves the workbook copy alongside the source file.
+  4. `PopulateTemplate` clears data rows from row 4 onward, writes job code/resource identifiers plus weekly hours, and saves the workbook copy to the requested destination.
 - **Validation Mechanics:**
   - Template asset presence and format are validated; invalid Base64 raises `InvalidDataException`.
   - Missing `Data Entry` worksheet halts processing with a clear error.
