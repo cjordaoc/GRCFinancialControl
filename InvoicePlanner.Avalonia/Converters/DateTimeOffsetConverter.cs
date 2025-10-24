@@ -15,12 +15,17 @@ public sealed class DateTimeOffsetConverter : IValueConverter
 
         if (value is DateTimeOffset dateTimeOffset)
         {
-            return dateTimeOffset;
+            return Normalize(dateTimeOffset);
         }
 
         if (value is DateTime dateTime)
         {
-            return new DateTimeOffset(DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified));
+            return CreateOffset(dateTime);
+        }
+
+        if (value is string text && DateTimeOffset.TryParse(text, culture, DateTimeStyles.AssumeUniversal, out var parsedOffset))
+        {
+            return Normalize(parsedOffset);
         }
 
         return null;
@@ -35,14 +40,30 @@ public sealed class DateTimeOffsetConverter : IValueConverter
 
         if (value is DateTimeOffset dateTimeOffset)
         {
-            return dateTimeOffset.DateTime;
+            return dateTimeOffset.Date;
         }
 
         if (value is DateTime dateTime)
         {
-            return dateTime;
+            return dateTime.Date;
+        }
+
+        if (value is string text && DateTimeOffset.TryParse(text, culture, DateTimeStyles.AssumeUniversal, out var parsedOffset))
+        {
+            return parsedOffset.Date;
         }
 
         return null;
+    }
+
+    private static DateTimeOffset Normalize(DateTimeOffset dateTimeOffset)
+    {
+        return new DateTimeOffset(dateTimeOffset.Date, TimeSpan.Zero);
+    }
+
+    private static DateTimeOffset CreateOffset(DateTime dateTime)
+    {
+        var unspecified = DateTime.SpecifyKind(dateTime.Date, DateTimeKind.Unspecified);
+        return new DateTimeOffset(unspecified, TimeSpan.Zero);
     }
 }

@@ -112,8 +112,8 @@
                                Increment="100"
                                FormatString="F2"
                                Value="{Binding PlanningBaseValue, Mode=TwoWay}"
-                               Width="160"
-                               HorizontalAlignment="Left" />
+                               HorizontalAlignment="Stretch"
+                               MinWidth="200" />
                 <TextBlock Grid.Row="2"
                            Grid.Column="2"
                            Text="{loc:Loc Key=InvoicePlan.Label.FirstEmission}"
@@ -192,7 +192,7 @@
                                   AutoGenerateColumns="False"
                                   HeadersVisibility="Column"
                                   GridLinesVisibility="All"
-                                  HorizontalScrollBarVisibility="Disabled"
+                                  HorizontalScrollBarVisibility="Auto"
                                   VerticalScrollBarVisibility="Disabled">
                             <DataGrid.Columns>
                                 <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Sequence}" Width="60">
