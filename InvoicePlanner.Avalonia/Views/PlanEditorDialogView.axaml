@@ -122,7 +122,7 @@
                            IsVisible="{Binding RequiresFirstEmissionDate}" />
                 <CalendarDatePicker Grid.Row="2"
                                     Grid.Column="3"
-                                    SelectedDate="{Binding FirstEmissionDate, Mode=TwoWay, Converter={StaticResource DateTimeOffsetConverter}}"
+                                    SelectedDate="{Binding FirstEmissionDate, Mode=TwoWay, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}"
                                     IsVisible="{Binding RequiresFirstEmissionDate}"
                                     IsEnabled="{Binding RequiresFirstEmissionDate}"
                                     HorizontalAlignment="Left"
@@ -205,7 +205,7 @@
                                 <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.EmissionDate}" Width="180">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <CalendarDatePicker SelectedDate="{Binding EmissionDate, Mode=TwoWay, Converter={StaticResource DateTimeOffsetConverter}}"
+                                            <CalendarDatePicker SelectedDate="{Binding EmissionDate, Mode=TwoWay, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}"
                                                                IsEnabled="{Binding CanEditEmissionDate}" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>

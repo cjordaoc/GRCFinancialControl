@@ -71,7 +71,7 @@
                     <DataGridTemplateColumn Header="{loc:Loc Key=Emission.TableHeader.EmittedAt}" Width="160">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
-                                <CalendarDatePicker SelectedDate="{Binding EmittedAt, Mode=TwoWay, Converter={StaticResource DateTimeOffsetConverter}}" />
+                                <CalendarDatePicker SelectedDate="{Binding EmittedAt, Mode=TwoWay, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}" />
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
@@ -86,7 +86,7 @@
                     <DataGridTemplateColumn Header="{loc:Loc Key=Emission.TableHeader.NewEmissionDate}" Width="160">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
-                                <CalendarDatePicker SelectedDate="{Binding ReissueEmissionDate, Mode=TwoWay, Converter={StaticResource DateTimeOffsetConverter}}" />
+                                <CalendarDatePicker SelectedDate="{Binding ReissueEmissionDate, Mode=TwoWay, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}" />
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>

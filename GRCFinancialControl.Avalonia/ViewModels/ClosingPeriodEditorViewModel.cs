@@ -8,7 +8,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
-using GRCFinancialControl.Avalonia.Utilities;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -33,34 +32,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         [ObservableProperty]
         private DateTime _periodEnd = DateTime.Today;
-
-        partial void OnPeriodStartChanged(DateTime value)
-        {
-            OnPropertyChanged(nameof(PeriodStartOffset));
-        }
-
-        partial void OnPeriodEndChanged(DateTime value)
-        {
-            OnPropertyChanged(nameof(PeriodEndOffset));
-        }
-
-        public DateTimeOffset? PeriodStartOffset
-        {
-            get => DateTimeOffsetHelper.FromDate(PeriodStart);
-            set
-            {
-                PeriodStart = DateTimeOffsetHelper.ToDate(value) ?? default;
-            }
-        }
-
-        public DateTimeOffset? PeriodEndOffset
-        {
-            get => DateTimeOffsetHelper.FromDate(PeriodEnd);
-            set
-            {
-                PeriodEnd = DateTimeOffsetHelper.ToDate(value) ?? default;
-            }
-        }
 
         [ObservableProperty]
         private string? _statusMessage;

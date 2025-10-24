@@ -1,7 +1,7 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="using:InvoicePlanner.Avalonia"
-             xmlns:conv="clr-namespace:InvoicePlanner.Avalonia.Converters"
+             xmlns:sharedConverters="clr-namespace:App.Presentation.Converters;assembly=App.Presentation"
              x:Class="InvoicePlanner.Avalonia.App"
              RequestedThemeVariant="Dark">
     <Application.DataTemplates>
@@ -9,7 +9,7 @@
     </Application.DataTemplates>
 
     <Application.Resources>
-        <conv:DateTimeOffsetConverter x:Key="DateTimeOffsetConverter" />
+        <sharedConverters:DateTimeOffsetToDateTimeConverter x:Key="DateTimeOffsetToDateTimeConverter" />
     </Application.Resources>
 
     <Application.Styles>
