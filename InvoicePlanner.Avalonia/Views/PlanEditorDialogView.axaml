@@ -1,3 +1,15 @@
+<!-- PlanEditorDialogView.axaml (Refactored to use TreeDataGrid)
+NOTE: TreeDataGrid binds to a source of type FlatTreeDataGridSource<T> (or ITreeDataGridSource).
+Expose in your ViewModel: Editor.LinesSource : FlatTreeDataGridSource<InvoicePlanLineViewModel>
+constructed from Editor.Items. Example (in VM):
+    LinesSource = new FlatTreeDataGridSource<InvoicePlanLineViewModel>(Items) {
+        Columns = {
+            new TemplateColumn<InvoicePlanLineViewModel>("#", ...),
+            ...
+        }
+    };
+If you prefer to keep columns in XAML (as below), keep LinesSource rows-only and let XAML define columns.
+-->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -6,280 +18,204 @@
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              xmlns:conv="clr-namespace:App.Presentation.Converters;assembly=App.Presentation"
              xmlns:behaviors="using:InvoicePlanner.Avalonia.Behaviors"
+             xmlns:tgrid="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.TreeDataGrid"
              x:Class="InvoicePlanner.Avalonia.Views.PlanEditorDialogView"
              x:Name="PlanEditorRoot"
              x:DataType="vm:PlanEditorDialogViewModel"
              mc:Ignorable="d">
+
     <UserControl.Resources>
         <conv:PercentageOfSizeConverter x:Key="PercentageOfSizeConverter" />
     </UserControl.Resources>
+
     <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
+
+        <!-- MAIN SCROLLABLE CONTENT -->
         <ScrollViewer Grid.Row="0"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled"
                       HorizontalContentAlignment="Stretch"
                       Padding="{StaticResource SpaceThickness24}"
                       DataContext="{Binding Editor}">
-            <StackPanel Spacing="{StaticResource Space24}"
-                        HorizontalAlignment="Stretch"
-                        MaxWidth="{Binding ElementName=PlanEditorRoot,
-                                            Path=Bounds.Width}">
-                <TextBlock Classes="TitleLarge" Text="{loc:Loc Key=InvoicePlan.Title.Primary}" />
-                <TextBlock Text="{loc:Loc Key=InvoicePlan.Description.Primary}" />
-                <Grid Margin="0,12,0,0"
+
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto"
+                  RowSpacing="{StaticResource Space24}"
+                  HorizontalAlignment="Stretch">
+
+                <!-- Header -->
+                <StackPanel Grid.Row="0" Spacing="{StaticResource Space8}">
+                    <TextBlock Classes="TitleLarge" Text="{loc:Loc Key=InvoicePlan.Title.Primary}" />
+                    <TextBlock Text="{loc:Loc Key=InvoicePlan.Description.Primary}" />
+                </StackPanel>
+
+                <!-- General details -->
+                <Grid Grid.Row="1"
+                      Margin="0,12,0,0"
                       ColumnSpacing="{StaticResource Space24}"
                       RowSpacing="{StaticResource Space12}"
                       ColumnDefinitions="Auto,*,Auto,Auto">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0"
-                           Grid.Column="0"
-                           Text="{loc:Loc Key=InvoicePlan.Label.Engagement}"
-                           Classes="Caption"
-                           VerticalAlignment="Center" />
-                <Grid Grid.Row="0"
-                      Grid.Column="1"
-                      ColumnSpacing="{StaticResource Space12}"
-                      ColumnDefinitions="180,*"
-                      VerticalAlignment="Center">
-                    <TextBox Grid.Column="0"
-                             Text="{Binding EngagementId, Mode=TwoWay}"
-                             Watermark="{loc:Loc Key=Common.Placeholder.Code}"
-                             IsReadOnly="True"
-                             IsEnabled="False"
-                             IsTabStop="False" />
-                    <TextBox Grid.Column="1"
-                             Text="{Binding EngagementName, Mode=TwoWay}"
-                             Watermark="{loc:Loc Key=Common.Placeholder.Name}"
-                             IsReadOnly="True"
-                             IsEnabled="False"
-                             IsTabStop="False" />
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.Engagement}" Classes="Caption" VerticalAlignment="Center" />
+                    <Grid Grid.Row="0" Grid.Column="1" ColumnSpacing="{StaticResource Space12}" ColumnDefinitions="180,*" VerticalAlignment="Center">
+                        <TextBox Grid.Column="0" Text="{Binding EngagementId}" Watermark="{loc:Loc Key=Common.Placeholder.Code}" IsReadOnly="True" IsEnabled="False" IsTabStop="False" />
+                        <TextBox Grid.Column="1" Text="{Binding EngagementName}" Watermark="{loc:Loc Key=Common.Placeholder.Name}" IsReadOnly="True" IsEnabled="False" IsTabStop="False" />
+                    </Grid>
+                    <TextBlock Grid.Row="0" Grid.Column="2" Text="{loc:Loc Key=InvoicePlan.Label.InvoiceCount}" Classes="Caption" VerticalAlignment="Center" />
+                    <NumericUpDown Grid.Row="0" Grid.Column="3" Minimum="1" Maximum="48" Increment="1" Value="{Binding NumInvoices}" Width="160" HorizontalAlignment="Left" />
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.PlanType}" Classes="Caption" VerticalAlignment="Center" />
+                    <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding PlanTypes}" SelectedItem="{Binding PlanType}" HorizontalAlignment="Left" Width="200" />
+                    <TextBlock Grid.Row="1" Grid.Column="2" Text="{loc:Loc Key=InvoicePlan.Label.PaymentTerms}" Classes="Caption" VerticalAlignment="Center" />
+                    <NumericUpDown Grid.Row="1" Grid.Column="3" Minimum="0" Maximum="120" Increment="1" Value="{Binding PaymentTermDays}" Width="160" HorizontalAlignment="Left" />
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.BaseValue}" Classes="Caption" VerticalAlignment="Center" />
+                    <NumericUpDown Grid.Row="2" Grid.Column="1" Minimum="0" Maximum="100000000" Increment="100" FormatString="F2" Value="{Binding PlanningBaseValue}" HorizontalAlignment="Stretch" MinWidth="200" />
+                    <TextBlock Grid.Row="2" Grid.Column="2" Text="{loc:Loc Key=InvoicePlan.Label.FirstEmission}" Classes="Caption" VerticalAlignment="Center" IsVisible="{Binding RequiresFirstEmissionDate}" />
+                    <CalendarDatePicker Grid.Row="2" Grid.Column="3" SelectedDate="{Binding FirstEmissionDate, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}" IsVisible="{Binding RequiresFirstEmissionDate}" IsEnabled="{Binding RequiresFirstEmissionDate}" HorizontalAlignment="Left" Width="240" />
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.FocalPoint}" Classes="Caption" VerticalAlignment="Center" />
+                    <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding CustomerFocalPointName}" Watermark="{loc:Loc Key=Common.Placeholder.Name}" />
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.Instructions}" Classes="Caption" VerticalAlignment="Top" />
+                    <TextBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="80" Text="{Binding CustomInstructions}" />
+
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.RecipientEmails}" Classes="Caption" VerticalAlignment="Top" />
+                    <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="80" Text="{Binding RecipientEmails}" Watermark="{loc:Loc Key=InvoicePlan.Placeholder.Recipients}" />
                 </Grid>
-                <TextBlock Grid.Row="0"
-                           Grid.Column="2"
-                           Text="{loc:Loc Key=InvoicePlan.Label.InvoiceCount}"
-                           Classes="Caption"
-                           VerticalAlignment="Center" />
-                <NumericUpDown Grid.Row="0"
-                               Grid.Column="3"
-                               Minimum="1"
-                               Maximum="48"
-                               Increment="1"
-                               Value="{Binding NumInvoices, Mode=TwoWay}"
-                               Width="160"
-                               HorizontalAlignment="Left" />
 
-                <TextBlock Grid.Row="1"
-                           Grid.Column="0"
-                           Text="{loc:Loc Key=InvoicePlan.Label.PlanType}"
-                           Classes="Caption"
-                           VerticalAlignment="Center" />
-                <ComboBox Grid.Row="1"
-                          Grid.Column="1"
-                          ItemsSource="{Binding PlanTypes}"
-                          SelectedItem="{Binding PlanType, Mode=TwoWay}"
-                          HorizontalAlignment="Left"
-                          Width="200" />
-                <TextBlock Grid.Row="1"
-                           Grid.Column="2"
-                           Text="{loc:Loc Key=InvoicePlan.Label.PaymentTerms}"
-                           Classes="Caption"
-                           VerticalAlignment="Center" />
-                <NumericUpDown Grid.Row="1"
-                               Grid.Column="3"
-                               Minimum="0"
-                               Maximum="120"
-                               Increment="1"
-                               Value="{Binding PaymentTermDays, Mode=TwoWay}"
-                               Width="160"
-                               HorizontalAlignment="Left" />
+                <!-- Messages -->
+                <StackPanel Grid.Row="2" Spacing="{StaticResource Space12}">
+                    <TextBlock Text="{Binding ValidationMessage}" Classes="StatusError" IsVisible="{Binding HasValidationMessage}" />
+                    <TextBlock Text="{Binding StatusMessage}" Classes="StatusSuccess" IsVisible="{Binding HasStatusMessage}" />
+                </StackPanel>
 
-                <TextBlock Grid.Row="2"
-                           Grid.Column="0"
-                           Text="{loc:Loc Key=InvoicePlan.Label.BaseValue}"
-                           Classes="Caption"
-                           VerticalAlignment="Center" />
-                <NumericUpDown Grid.Row="2"
-                               Grid.Column="1"
-                               Minimum="0"
-                               Maximum="100000000"
-                               Increment="100"
-                               FormatString="F2"
-                               Value="{Binding PlanningBaseValue, Mode=TwoWay}"
-                               HorizontalAlignment="Stretch"
-                               MinWidth="200" />
-                <TextBlock Grid.Row="2"
-                           Grid.Column="2"
-                           Text="{loc:Loc Key=InvoicePlan.Label.FirstEmission}"
-                           Classes="Caption"
-                           VerticalAlignment="Center"
-                           IsVisible="{Binding RequiresFirstEmissionDate}" />
-                <CalendarDatePicker Grid.Row="2"
-                                    Grid.Column="3"
-                                    SelectedDate="{Binding FirstEmissionDate, Mode=TwoWay, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}"
-                                    IsVisible="{Binding RequiresFirstEmissionDate}"
-                                    IsEnabled="{Binding RequiresFirstEmissionDate}"
-                                    HorizontalAlignment="Left"
-                                    Width="240" />
+                <!-- Invoice lines with TreeDataGrid -->
+                <Grid Grid.Row="3" RowDefinitions="Auto,*">
+                    <TextBlock Grid.Row="0"
+                               Classes="TitleMedium"
+                               Text="{loc:Loc Key=InvoicePlan.Section.InvoiceLines.Title}" />
 
-                <TextBlock Grid.Row="3"
-                           Grid.Column="0"
-                           Text="{loc:Loc Key=InvoicePlan.Label.FocalPoint}"
-                           Classes="Caption"
-                           VerticalAlignment="Center" />
-                <TextBox Grid.Row="3"
-                         Grid.Column="1"
-                         Grid.ColumnSpan="3"
-                         Text="{Binding CustomerFocalPointName, Mode=TwoWay}"
-                         Watermark="{loc:Loc Key=Common.Placeholder.Name}" />
-
-                <TextBlock Grid.Row="4"
-                           Grid.Column="0"
-                           Text="{loc:Loc Key=InvoicePlan.Label.Instructions}"
-                           Classes="Caption"
-                           VerticalAlignment="Top" />
-                <TextBox Grid.Row="4"
-                         Grid.Column="1"
-                         Grid.ColumnSpan="3"
-                         TextWrapping="Wrap"
-                         AcceptsReturn="True"
-                         MinHeight="80"
-                         Text="{Binding CustomInstructions, Mode=TwoWay}" />
-
-                <TextBlock Grid.Row="5"
-                           Grid.Column="0"
-                           Text="{loc:Loc Key=InvoicePlan.Label.RecipientEmails}"
-                           Classes="Caption"
-                           VerticalAlignment="Top" />
-                <TextBox Grid.Row="5"
-                         Grid.Column="1"
-                         Grid.ColumnSpan="3"
-                         TextWrapping="Wrap"
-                         AcceptsReturn="True"
-                         MinHeight="80"
-                         Text="{Binding RecipientEmails, Mode=TwoWay}"
-                         Watermark="{loc:Loc Key=InvoicePlan.Placeholder.Recipients}" />
-            </Grid>
-
-            <StackPanel Spacing="{StaticResource Space12}">
-                <TextBlock Text="{Binding ValidationMessage}"
-                           Classes="StatusError"
-                           IsVisible="{Binding HasValidationMessage}" />
-                <TextBlock Text="{Binding StatusMessage}"
-                           Classes="StatusSuccess"
-                           IsVisible="{Binding HasStatusMessage}" />
-            </StackPanel>
-
-            <Grid RowDefinitions="Auto,*,Auto">
-                <TextBlock Grid.Row="0"
-                           Classes="TitleMedium"
-                           Text="{loc:Loc Key=InvoicePlan.Section.InvoiceLines.Title}" />
-                <Border Grid.Row="1"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                        CornerRadius="4"
-                        Margin="0,12,0,12">
-                    <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                                  VerticalScrollBarVisibility="Auto"
-                                  HorizontalContentAlignment="Left"
-                                  MinHeight="320">
-                        <DataGrid ItemsSource="{Binding Items}"
-                                  AutoGenerateColumns="False"
-                                  HeadersVisibility="Column"
-                                  GridLinesVisibility="All"
-                                  HorizontalAlignment="Left"
-                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                                  ScrollViewer.VerticalScrollBarVisibility="Disabled">
-                            <DataGrid.Columns>
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Sequence}" Width="60">
-                                    <DataGridTemplateColumn.CellTemplate>
+                    <Border Grid.Row="1"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                            CornerRadius="4"
+                            Margin="0,12,0,12"
+                            HorizontalAlignment="Stretch">
+                        <!-- TreeDataGrid expects a Source (ITreeDataGridSource). Bind to Editor.LinesSource -->
+                        <tgrid:TreeDataGrid Source="{Binding LinesSource}"
+                                            HorizontalScrollBarVisibility="Auto"
+                                            VerticalScrollBarVisibility="Auto"
+                                            SelectionMode="Single"
+                                            AreRowDetailsFrozen="True"
+                                            CanUserResizeColumns="False">
+                            <tgrid:TreeDataGrid.Columns>
+                                <!-- Sequence -->
+                                <tgrid:TemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Sequence}" Width="60">
+                                    <tgrid:TemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <TextBlock Text="{Binding Sequence}" HorizontalAlignment="Center" />
+                                            <TextBlock Text="{Binding Sequence}" HorizontalAlignment="Center"/>
                                         </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.EmissionDate}" Width="180">
-                                    <DataGridTemplateColumn.CellTemplate>
+                                    </tgrid:TemplateColumn.CellTemplate>
+                                </tgrid:TemplateColumn>
+
+                                <!-- Emission date -->
+                                <tgrid:TemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.EmissionDate}" Width="180">
+                                    <tgrid:TemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <CalendarDatePicker SelectedDate="{Binding EmissionDate, Mode=TwoWay, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}"
-                                                               IsEnabled="{Binding CanEditEmissionDate}" />
+                                            <CalendarDatePicker SelectedDate="{Binding EmissionDate, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}"
+                                                                IsEnabled="{Binding CanEditEmissionDate}" />
                                         </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Delivery}" Width="220">
-                                    <DataGridTemplateColumn.CellTemplate>
+                                    </tgrid:TemplateColumn.CellTemplate>
+                                </tgrid:TemplateColumn>
+
+                                <!-- Delivery description -->
+                                <tgrid:TemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Delivery}" Width="220">
+                                    <tgrid:TemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <TextBox Text="{Binding DeliveryDescription, Mode=TwoWay}"
+                                            <TextBox Text="{Binding DeliveryDescription}"
                                                      Watermark="{loc:Loc Key=InvoicePlan.Placeholder.DeliveryNotes}"
                                                      IsVisible="{Binding ShowDeliveryDescription}"
                                                      IsEnabled="{Binding ShowDeliveryDescription}" />
                                         </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Cnpj}" Width="180">
-                                    <DataGridTemplateColumn.CellTemplate>
+                                    </tgrid:TemplateColumn.CellTemplate>
+                                </tgrid:TemplateColumn>
+
+                                <!-- CNPJ -->
+                                <tgrid:TemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Cnpj}" Width="180">
+                                    <tgrid:TemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <TextBox Text="{Binding PayerCnpj, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            <TextBox Text="{Binding PayerCnpj, UpdateSourceTrigger=PropertyChanged}"
                                                      behaviors:CnpjMaskBehavior.IsEnabled="True" />
                                         </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Po}" Width="140">
-                                    <DataGridTemplateColumn.CellTemplate>
+                                    </tgrid:TemplateColumn.CellTemplate>
+                                </tgrid:TemplateColumn>
+
+                                <!-- PO -->
+                                <tgrid:TemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Po}" Width="140">
+                                    <tgrid:TemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <TextBox Text="{Binding PoNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                            <TextBox Text="{Binding PoNumber, UpdateSourceTrigger=PropertyChanged}" />
                                         </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Frs}" Width="140">
-                                    <DataGridTemplateColumn.CellTemplate>
+                                    </tgrid:TemplateColumn.CellTemplate>
+                                </tgrid:TemplateColumn>
+
+                                <!-- FRS -->
+                                <tgrid:TemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Frs}" Width="140">
+                                    <tgrid:TemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <TextBox Text="{Binding FrsNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                            <TextBox Text="{Binding FrsNumber, UpdateSourceTrigger=PropertyChanged}" />
                                         </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Ticket}" Width="160">
-                                    <DataGridTemplateColumn.CellTemplate>
+                                    </tgrid:TemplateColumn.CellTemplate>
+                                </tgrid:TemplateColumn>
+
+                                <!-- Ticket -->
+                                <tgrid:TemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Ticket}" Width="160">
+                                    <tgrid:TemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <TextBox Text="{Binding CustomerTicket, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                            <TextBox Text="{Binding CustomerTicket, UpdateSourceTrigger=PropertyChanged}" />
                                         </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Percent}" Width="120">
-                                    <DataGridTemplateColumn.CellTemplate>
+                                    </tgrid:TemplateColumn.CellTemplate>
+                                </tgrid:TemplateColumn>
+
+                                <!-- Percent -->
+                                <tgrid:TemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Percent}" Width="120">
+                                    <tgrid:TemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <NumericUpDown Value="{Binding Percentage, Mode=TwoWay}"
-                                                           Minimum="0"
-                                                           Maximum="100"
-                                                           Increment="0.0100"
+                                            <NumericUpDown Value="{Binding Percentage}"
+                                                           Minimum="0" Maximum="100"
+                                                           Increment="0.01"
                                                            FormatString="F4" />
                                         </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Amount}" Width="140">
-                                    <DataGridTemplateColumn.CellTemplate>
+                                    </tgrid:TemplateColumn.CellTemplate>
+                                </tgrid:TemplateColumn>
+
+                                <!-- Amount -->
+                                <tgrid:TemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Amount}" Width="140">
+                                    <tgrid:TemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <NumericUpDown Value="{Binding Amount, Mode=TwoWay}"
-                                                           Minimum="0"
-                                                           Maximum="100000000"
+                                            <NumericUpDown Value="{Binding Amount}"
+                                                           Minimum="0" Maximum="100000000"
                                                            Increment="10"
                                                            FormatString="F2" />
                                         </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </ScrollViewer>
-                </Border>
-                <Grid Grid.Row="2">
-                    <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space16}">
+                                    </tgrid:TemplateColumn.CellTemplate>
+                                </tgrid:TemplateColumn>
+                            </tgrid:TreeDataGrid.Columns>
+                        </tgrid:TreeDataGrid>
+                    </Border>
+
+                    <!-- Totals (bind through Editor scope) -->
+                    <StackPanel Grid.Row="2"
+                                Orientation="Horizontal"
+                                Spacing="{StaticResource Space16}">
                         <TextBlock Text="{loc:Loc Key=InvoicePlan.Section.Totals.Label}" Classes="Caption" />
                         <TextBlock Text="{loc:Loc Key=InvoicePlan.Section.Totals.Percent}" />
                         <TextBlock Text="{Binding TotalPercentage, StringFormat={}{0:F4}%}" />
@@ -288,12 +224,14 @@
                     </StackPanel>
                 </Grid>
             </Grid>
-            </StackPanel>
         </ScrollViewer>
+
+        <!-- FOOTER (fixed) -->
         <StackPanel Grid.Row="1"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Spacing="{StaticResource Space12}">
+                    Spacing="{StaticResource Space12}"
+                    Margin="{StaticResource SpaceThickness24}">
             <Button Content="{loc:Loc Key=Common.Button.Save}"
                     Command="{Binding SaveCommand}"
                     IsEnabled="{Binding CanSave}"
