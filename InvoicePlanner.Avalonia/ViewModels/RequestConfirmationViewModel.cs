@@ -93,6 +93,18 @@ public partial class RequestConfirmationViewModel : ViewModelBase
 
     public bool HasAvailablePlans => AvailablePlans.Count > 0;
 
+    public string EngagementDisplay => LocalizationRegistry.Format(
+        "Request.Status.EngagementFormat",
+        string.IsNullOrWhiteSpace(EngagementId) ? string.Empty : EngagementId);
+
+    public string PlannedCountDisplay => LocalizationRegistry.Format(
+        "Request.Status.PlannedFormat",
+        PlannedCount);
+
+    public string RequestedCountDisplay => LocalizationRegistry.Format(
+        "Request.Status.RequestedFormat",
+        RequestedCount);
+
     public IRelayCommand LoadPlanCommand => _loadPlanCommand;
 
     public IRelayCommand ClosePlanDetailsCommand { get; }
@@ -104,6 +116,12 @@ public partial class RequestConfirmationViewModel : ViewModelBase
     partial void OnValidationMessageChanged(string? value) => OnPropertyChanged(nameof(HasValidationMessage));
 
     partial void OnStatusMessageChanged(string? value) => OnPropertyChanged(nameof(HasStatusMessage));
+
+    partial void OnEngagementIdChanged(string value) => OnPropertyChanged(nameof(EngagementDisplay));
+
+    partial void OnPlannedCountChanged(int value) => OnPropertyChanged(nameof(PlannedCountDisplay));
+
+    partial void OnRequestedCountChanged(int value) => OnPropertyChanged(nameof(RequestedCountDisplay));
 
     partial void OnSelectedPlanChanged(InvoicePlanSummaryViewModel? value)
     {
