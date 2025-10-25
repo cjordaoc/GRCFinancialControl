@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
+             xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="150"
              x:Class="GRCFinancialControl.Avalonia.Views.CustomerEditorView"
              x:DataType="vm:CustomerEditorViewModel">
@@ -12,25 +13,39 @@
             <StackPanel Spacing="{StaticResource Space16}">
                 <TextBlock Text="Customer Details" FontSize="18" FontWeight="Bold"/>
                 <Grid ColumnDefinitions="Auto,*"
-                      RowDefinitions="Auto,Auto"
+                      RowDefinitions="Auto,Auto,Auto,Auto"
                       RowSpacing="{StaticResource Space12}"
                       ColumnSpacing="{StaticResource Space16}">
                     <TextBlock Grid.Row="0"
                                Grid.Column="0"
                                Text="Name:"
                                VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="0"
+                    <TextBox x:Name="NameBox"
+                             Grid.Row="0"
                              Grid.Column="1"
-                             Text="{Binding Name}"
+                             Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
                              IsEnabled="{Binding AllowEditing}"/>
                     <TextBlock Grid.Row="1"
+                               Grid.Column="1"
+                               Text="{Binding NameError}"
+                               Classes="StatusError"
+                               Margin="0,2,0,0"
+                               IsVisible="{Binding NameError, Converter={x:Static converters:ObjectConverters.IsNotNull}}"/>
+                    <TextBlock Grid.Row="2"
                                Grid.Column="0"
                                Text="Customer Code:"
                                VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="1"
+                    <TextBox x:Name="CustomerCodeBox"
+                             Grid.Row="2"
                              Grid.Column="1"
-                             Text="{Binding CustomerCode}"
+                             Text="{Binding CustomerCode, UpdateSourceTrigger=PropertyChanged}"
                              IsEnabled="{Binding AllowEditing}"/>
+                    <TextBlock Grid.Row="3"
+                               Grid.Column="1"
+                               Text="{Binding CustomerCodeError}"
+                               Classes="StatusError"
+                               Margin="0,2,0,0"
+                               IsVisible="{Binding CustomerCodeError, Converter={x:Static converters:ObjectConverters.IsNotNull}}"/>
                 </Grid>
             </StackPanel>
         </ScrollViewer>

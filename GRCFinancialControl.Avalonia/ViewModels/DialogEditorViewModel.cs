@@ -15,6 +15,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             : base(messenger)
         {
             IsReadOnlyMode = isReadOnlyMode;
+            ErrorsChanged += (_, _) => SaveCommand.NotifyCanExecuteChanged();
         }
 
         [ObservableProperty]
@@ -40,7 +41,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Messenger.Send(new CloseDialogMessage(false));
         }
 
-        private bool CanSave() => !IsReadOnlyMode;
+        private bool CanSave() => !IsReadOnlyMode && !HasErrors;
 
         partial void OnIsReadOnlyModeChanged(bool value)
         {

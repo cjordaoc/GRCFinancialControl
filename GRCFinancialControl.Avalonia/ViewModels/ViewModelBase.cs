@@ -11,7 +11,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     /// <summary>
     /// Serves as the base type for view models that participate in refresh messaging.
     /// </summary>
-    public abstract class ViewModelBase : ObservableObject, IRecipient<RefreshDataMessage>
+    public abstract class ViewModelBase : ObservableValidator, IRecipient<RefreshDataMessage>
     {
         /// <summary>
         /// Gets the messenger responsible for delivering application-wide notifications.

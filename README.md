@@ -146,3 +146,17 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 - Validation summaries surface inline errors from importers and planners to reduce back-and-forth.
 
 [See Technical Spec →](readme_specs.md#ui-architecture)
+
+---
+
+## 10 · Master Data Editors
+**Happy Path**
+1. Administrators open the master data workspace to maintain supporting catalog entries.
+2. Customer records expose a dialog editor with inline validation cues for required fields.
+3. Once all mandatory fields pass validation, the Save action becomes available and persists changes through the shared dialog pipeline.
+
+**Validation & Consolidation Rules**
+- Customer Name and Customer Code must both contain non-whitespace values; invalid entries surface inline error text with the shared `StatusError` style.
+- The dialog Save button remains disabled until all validation errors are cleared, preventing incomplete records from being persisted.
+
+[See Technical Spec →](readme_specs.md#master-data-editors)
