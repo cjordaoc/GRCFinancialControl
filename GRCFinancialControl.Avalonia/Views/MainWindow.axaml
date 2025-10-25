@@ -11,6 +11,9 @@
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="{loc:Loc Key=Shell.Title.Application}"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent"
+        ExtendClientAreaToDecorationsHint="True"
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen">
 
@@ -18,52 +21,63 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Grid ColumnDefinitions="240,*" Margin="16">
-        <Border Grid.Column="0"
-                Padding="16"
-                Background="{StaticResource BrushSurfaceVariant}"
-                CornerRadius="{StaticResource CornerRadiusMD}">
-            <StackPanel Spacing="12">
-                <TextBlock Text="{loc:Loc Key=Shell.Brand.Primary}"
-                           FontSize="{StaticResource FontSizeXL}"
-                           FontWeight="Bold"
-                           Foreground="{StaticResource BrushOnSurface}"/>
-                <ItemsControl ItemsSource="{Binding NavigationItems}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:NavigationItem">
-                            <StackPanel Spacing="4">
-                                <ToggleButton Content="{Binding Title}"
-                                              Command="{Binding DataContext.SelectNavigationItemCommand, ElementName=MainWindowRoot}"
-                                              CommandParameter="{Binding}"
-                                              IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                                              Classes="NavButton"/>
-                                <ItemsControl ItemsSource="{Binding Children}"
-                                              Margin="16,0,0,0"
-                                              IsVisible="{Binding HasChildren}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate x:DataType="vm:NavigationItem">
-                                            <ToggleButton Content="{Binding Title}"
-                                                          Command="{Binding DataContext.SelectNavigationItemCommand, ElementName=MainWindowRoot}"
-                                                          CommandParameter="{Binding}"
-                                                          IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                                                          Classes="NavButton"
-                                                          Margin="0,4,0,0"/>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
-        </Border>
+    <Panel>
+        <ExperimentalAcrylicBorder IsHitTestVisible="False">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial BackgroundSource="Digger"
+                                             TintColor="Black"
+                                             TintOpacity="1"
+                                             MaterialOpacity="0.65"/>
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
 
-        <Border Grid.Column="1"
-                Classes="Card"
-                Padding="0"
-                Margin="16,0,0,0">
-            <ContentControl Content="{Binding ActiveView}"
-                            IsVisible="{Binding ActiveView, Converter={x:Static converters:ObjectConverters.IsNotNull}}"/>
-        </Border>
-    </Grid>
+        <Grid ColumnDefinitions="240,*" Margin="16" Panel.ZIndex="1">
+            <Border Grid.Column="0"
+                    Padding="16"
+                    Background="{StaticResource BrushSurfaceVariant}"
+                    CornerRadius="{StaticResource CornerRadiusMD}">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="{loc:Loc Key=Shell.Brand.Primary}"
+                               FontSize="{StaticResource FontSizeXL}"
+                               FontWeight="Bold"
+                               Foreground="{StaticResource BrushOnSurface}"/>
+                    <ItemsControl ItemsSource="{Binding NavigationItems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:NavigationItem">
+                                <StackPanel Spacing="4">
+                                    <ToggleButton Content="{Binding Title}"
+                                                  Command="{Binding DataContext.SelectNavigationItemCommand, ElementName=MainWindowRoot}"
+                                                  CommandParameter="{Binding}"
+                                                  IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                  Classes="NavButton"/>
+                                    <ItemsControl ItemsSource="{Binding Children}"
+                                                  Margin="16,0,0,0"
+                                                  IsVisible="{Binding HasChildren}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:NavigationItem">
+                                                <ToggleButton Content="{Binding Title}"
+                                                              Command="{Binding DataContext.SelectNavigationItemCommand, ElementName=MainWindowRoot}"
+                                                              CommandParameter="{Binding}"
+                                                              IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                              Classes="NavButton"
+                                                              Margin="0,4,0,0"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="1"
+                    Classes="Card"
+                    Padding="0"
+                    Margin="16,0,0,0">
+                <ContentControl Content="{Binding ActiveView}"
+                                IsVisible="{Binding ActiveView, Converter={x:Static converters:ObjectConverters.IsNotNull}}"/>
+            </Border>
+        </Grid>
+    </Panel>
 </Window>
