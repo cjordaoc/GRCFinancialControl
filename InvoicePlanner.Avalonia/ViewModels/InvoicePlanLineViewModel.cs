@@ -1,5 +1,6 @@
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Invoices.Core.Enums;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
@@ -43,6 +44,11 @@ public partial class InvoicePlanLineViewModel : ObservableObject
 
     [ObservableProperty]
     private bool showDeliveryDescription;
+
+    [ObservableProperty]
+    private InvoiceItemStatus status = InvoiceItemStatus.Planned;
+
+    public bool IsEditable => Status == InvoiceItemStatus.Planned;
 
     internal void Attach(PlanEditorViewModel owner)
     {
@@ -93,5 +99,10 @@ public partial class InvoicePlanLineViewModel : ObservableObject
         _suppressNotifications = true;
         EmissionDate = value;
         _suppressNotifications = false;
+    }
+
+    partial void OnStatusChanged(InvoiceItemStatus value)
+    {
+        OnPropertyChanged(nameof(IsEditable));
     }
 }

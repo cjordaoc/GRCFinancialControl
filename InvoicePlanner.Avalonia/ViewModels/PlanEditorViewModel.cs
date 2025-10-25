@@ -304,13 +304,15 @@ public partial class PlanEditorViewModel : ViewModelBase
                     DeliveryDescription = item.DeliveryDescription,
                     Percentage = item.Percentage,
                     Amount = item.Amount,
-                    CanEditEmissionDate = plan.Type != InvoicePlanType.ByDate,
-                    ShowDeliveryDescription = plan.Type == InvoicePlanType.ByDelivery,
                     PayerCnpj = item.PayerCnpj,
                     PoNumber = item.PoNumber,
                     FrsNumber = item.FrsNumber,
                     CustomerTicket = item.CustomerTicket,
+                    Status = item.Status,
                 };
+
+                line.CanEditEmissionDate = line.IsEditable && plan.Type != InvoicePlanType.ByDate;
+                line.ShowDeliveryDescription = plan.Type == InvoicePlanType.ByDelivery;
 
                 Items.Add(line);
             }
@@ -374,13 +376,15 @@ public partial class PlanEditorViewModel : ViewModelBase
             {
                 Sequence = Items.Count + 1,
                 EmissionDate = DateTime.Today,
-                CanEditEmissionDate = PlanType != InvoicePlanType.ByDate,
-                ShowDeliveryDescription = PlanType == InvoicePlanType.ByDelivery,
                 PayerCnpj = string.Empty,
                 PoNumber = string.Empty,
                 FrsNumber = string.Empty,
                 CustomerTicket = string.Empty,
+                Status = InvoiceItemStatus.Planned,
             };
+
+            line.CanEditEmissionDate = line.IsEditable && PlanType != InvoicePlanType.ByDate;
+            line.ShowDeliveryDescription = PlanType == InvoicePlanType.ByDelivery;
 
             Items.Add(line);
         }
@@ -464,7 +468,7 @@ public partial class PlanEditorViewModel : ViewModelBase
 
         foreach (var line in Items)
         {
-            line.CanEditEmissionDate = !isByDate;
+            line.CanEditEmissionDate = line.IsEditable && !isByDate;
             line.ShowDeliveryDescription = isByDelivery;
         }
     }
@@ -660,11 +664,39 @@ public partial class PlanEditorViewModel : ViewModelBase
         }
     }
 
+    private bool TryOpenExistingPlan(EngagementOptionViewModel engagement)
+    {
+        try
+        {
+            var plans = _repository.ListPlansForEngagement(engagement.EngagementId);
+            var existing = plans
+                .OrderByDescending(plan => plan.UpdatedAt)
+                .ThenByDescending(plan => plan.CreatedAt)
+                .FirstOrDefault();
+
+            return existing is not null && LoadPlan(existing.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Failed to load existing invoice plan for engagement {EngagementId}.",
+                engagement.EngagementId);
+            ValidationMessage = LocalizationRegistry.Format("InvoicePlan.Status.LoadFailure", ex.Message);
+            return false;
+        }
+    }
+
     private bool CanCreatePlan() => SelectedEngagement is not null;
 
     private void CreatePlan()
     {
         if (SelectedEngagement is null)
+        {
+            return;
+        }
+
+        if (TryOpenExistingPlan(SelectedEngagement))
         {
             return;
         }

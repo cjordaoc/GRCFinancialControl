@@ -73,6 +73,7 @@ This document details the implementation for every functional capability describ
   1. Invoice plans define schedule metadata per engagement/period.
   2. Daily event triggers stored procedure execution, which selects due invoice items and inserts messages into `MailOutbox`.
   3. Background worker dequeues `MailOutbox` entries, sends e-mails, and archives results in `MailOutboxLog`.
+  4. The Invoice Planner's Add / Edit action loads the most recent plan for the selected engagement (or starts a new draft) and displays invoice lines in a flat grid with confirmed items locked for editing.
 - **Validation Mechanics:**
   - Stored procedure filters by due date and checks `MailOutboxLog` to prevent duplicates.
   - Planner services validate references to engagements and closing periods prior to saving schedules.

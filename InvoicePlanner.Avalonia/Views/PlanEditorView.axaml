@@ -33,7 +33,7 @@
                             <Button Content="{loc:Loc Key=Common.Button.Refresh}"
                                     Command="{Binding RefreshCommand}"
                                     MinWidth="140" />
-                            <Button Content="{loc:Loc Key=InvoicePlan.Selection.Button.Create}"
+                            <Button Content="{loc:Loc Key=InvoicePlan.Selection.Button.AddEdit}"
                                     Command="{Binding CreatePlanCommand}"
                                     MinWidth="200" />
                         </StackPanel>
