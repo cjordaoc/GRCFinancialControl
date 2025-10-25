@@ -131,3 +131,12 @@ This document details the implementation for every functional capability describ
   - Modal overlays use opaque backgrounds to focus attention.
   - Validation feedback is surfaced via bound properties fed by importer/planner summaries.
 
+
+---
+
+## Master Data Editors
+- **Primary Components:** `CustomerEditorView`, `CustomerEditorViewModel`, `DialogEditorViewModel`
+- **Validation Mechanics:**
+  - `ViewModelBase` now derives from `ObservableValidator`, enabling dialog editors to participate in `INotifyDataErrorInfo` workflows.
+  - `CustomerEditorViewModel` annotates Name and Customer Code with `[Required]` attributes and exposes `NameError`/`CustomerCodeError` accessors for inline messaging.
+  - `DialogEditorViewModel` listens to `ErrorsChanged` and disables the Save command while any validation errors remain, ensuring only complete records are persisted.

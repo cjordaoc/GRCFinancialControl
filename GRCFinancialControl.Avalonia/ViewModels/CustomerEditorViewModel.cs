@@ -1,4 +1,7 @@
 using System;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
@@ -11,10 +14,17 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         private readonly ICustomerService _customerService;
 
+        private const string NameRequiredMessage = "Name is required.";
+        private const string CustomerCodeRequiredMessage = "Customer Code is required.";
+
         [ObservableProperty]
+        [NotifyDataErrorInfo]
+        [Required(ErrorMessage = NameRequiredMessage)]
         private string _name = string.Empty;
 
         [ObservableProperty]
+        [NotifyDataErrorInfo]
+        [Required(ErrorMessage = CustomerCodeRequiredMessage)]
         private string _customerCode = string.Empty;
 
         public Customer Customer { get; }
@@ -29,8 +39,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Customer = customer ?? throw new ArgumentNullException(nameof(customer));
             _customerService = customerService ?? throw new ArgumentNullException(nameof(customerService));
 
+            ErrorsChanged += OnValidationErrorsChanged;
+
             Name = customer.Name;
             CustomerCode = customer.CustomerCode;
+
+            OnPropertyChanged(nameof(NameError));
+            OnPropertyChanged(nameof(CustomerCodeError));
         }
 
         protected override async Task PersistChangesAsync()
@@ -45,6 +60,23 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             else
             {
                 await _customerService.UpdateAsync(Customer);
+            }
+        }
+
+        public string? NameError => GetErrors(nameof(Name)).FirstOrDefault()?.ErrorMessage;
+
+        public string? CustomerCodeError => GetErrors(nameof(CustomerCode)).FirstOrDefault()?.ErrorMessage;
+
+        private void OnValidationErrorsChanged(object? sender, DataErrorsChangedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(e.PropertyName) || e.PropertyName == nameof(Name))
+            {
+                OnPropertyChanged(nameof(NameError));
+            }
+
+            if (string.IsNullOrEmpty(e.PropertyName) || e.PropertyName == nameof(CustomerCode))
+            {
+                OnPropertyChanged(nameof(CustomerCodeError));
             }
         }
     }
