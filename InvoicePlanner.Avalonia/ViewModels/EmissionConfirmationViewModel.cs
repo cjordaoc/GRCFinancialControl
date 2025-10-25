@@ -96,6 +96,22 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
 
     public bool HasAvailablePlans => AvailablePlans.Count > 0;
 
+    public string EngagementDisplay => LocalizationRegistry.Format(
+        "Emission.Status.EngagementFormat",
+        string.IsNullOrWhiteSpace(EngagementId) ? string.Empty : EngagementId);
+
+    public string RequestedCountDisplay => LocalizationRegistry.Format(
+        "Emission.Status.RequestedFormat",
+        RequestedCount);
+
+    public string ClosedCountDisplay => LocalizationRegistry.Format(
+        "Emission.Status.ClosedFormat",
+        ClosedCount);
+
+    public string CanceledCountDisplay => LocalizationRegistry.Format(
+        "Emission.Status.CanceledFormat",
+        CanceledCount);
+
     public IRelayCommand LoadPlanCommand => _loadPlanCommand;
 
     public IRelayCommand ClosePlanDetailsCommand { get; }
@@ -107,6 +123,14 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
     partial void OnValidationMessageChanged(string? value) => OnPropertyChanged(nameof(HasValidationMessage));
 
     partial void OnStatusMessageChanged(string? value) => OnPropertyChanged(nameof(HasStatusMessage));
+
+    partial void OnEngagementIdChanged(string value) => OnPropertyChanged(nameof(EngagementDisplay));
+
+    partial void OnRequestedCountChanged(int value) => OnPropertyChanged(nameof(RequestedCountDisplay));
+
+    partial void OnClosedCountChanged(int value) => OnPropertyChanged(nameof(ClosedCountDisplay));
+
+    partial void OnCanceledCountChanged(int value) => OnPropertyChanged(nameof(CanceledCountDisplay));
 
     partial void OnSelectedPlanChanged(InvoicePlanSummaryViewModel? value)
     {
