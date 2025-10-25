@@ -1,15 +1,4 @@
-<!-- PlanEditorDialogView.axaml (Refactored to use TreeDataGrid)
-NOTE: TreeDataGrid binds to a source of type FlatTreeDataGridSource<T> (or ITreeDataGridSource).
-Expose in your ViewModel: Editor.LinesSource : FlatTreeDataGridSource<InvoicePlanLineViewModel>
-constructed from Editor.Items. Example (in VM):
-    LinesSource = new FlatTreeDataGridSource<InvoicePlanLineViewModel>(Items) {
-        Columns = {
-            new TemplateColumn<InvoicePlanLineViewModel>("#", ...),
-            ...
-        }
-    };
-If you prefer to keep columns in XAML (as below), keep LinesSource rows-only and let XAML define columns.
--->
+<!-- PlanEditorDialogView.axaml -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -18,7 +7,6 @@ If you prefer to keep columns in XAML (as below), keep LinesSource rows-only and
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              xmlns:conv="clr-namespace:App.Presentation.Converters;assembly=App.Presentation"
              xmlns:behaviors="using:InvoicePlanner.Avalonia.Behaviors"
-             xmlns:tgrid="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.TreeDataGrid"
              x:Class="InvoicePlanner.Avalonia.Views.PlanEditorDialogView"
              x:Name="PlanEditorRoot"
              x:DataType="vm:PlanEditorDialogViewModel"
@@ -97,7 +85,7 @@ If you prefer to keep columns in XAML (as below), keep LinesSource rows-only and
                     <TextBlock Text="{Binding StatusMessage}" Classes="StatusSuccess" IsVisible="{Binding HasStatusMessage}" />
                 </StackPanel>
 
-                <!-- Invoice lines with TreeDataGrid -->
+                <!-- Invoice lines grid -->
                 <Grid Grid.Row="3" RowDefinitions="Auto,*">
                     <TextBlock Grid.Row="0"
                                Classes="TitleMedium"
@@ -109,107 +97,104 @@ If you prefer to keep columns in XAML (as below), keep LinesSource rows-only and
                             CornerRadius="4"
                             Margin="0,12,0,12"
                             HorizontalAlignment="Stretch">
-                        <!-- TreeDataGrid expects a Source (ITreeDataGridSource). Bind to Editor.LinesSource -->
-                        <tgrid:TreeDataGrid Source="{Binding LinesSource}"
-                                            HorizontalScrollBarVisibility="Auto"
-                                            VerticalScrollBarVisibility="Auto"
-                                            SelectionMode="Single"
-                                            AreRowDetailsFrozen="True"
-                                            CanUserResizeColumns="False">
-                            <tgrid:TreeDataGrid.Columns>
-                                <!-- Sequence -->
-                                <tgrid:TemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Sequence}" Width="60">
-                                    <tgrid:TemplateColumn.CellTemplate>
+                        <DataGrid ItemsSource="{Binding Items}"
+                                  AutoGenerateColumns="False"
+                                  HeadersVisibility="Column"
+                                  GridLinesVisibility="All"
+                                  HorizontalScrollBarVisibility="Auto">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Sequence}" Width="60">
+                                    <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <TextBlock Text="{Binding Sequence}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Sequence}" HorizontalAlignment="Center" />
                                         </DataTemplate>
-                                    </tgrid:TemplateColumn.CellTemplate>
-                                </tgrid:TemplateColumn>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                                <!-- Emission date -->
-                                <tgrid:TemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.EmissionDate}" Width="180">
-                                    <tgrid:TemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.EmissionDate}" Width="180">
+                                    <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
                                             <CalendarDatePicker SelectedDate="{Binding EmissionDate, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}"
                                                                 IsEnabled="{Binding CanEditEmissionDate}" />
                                         </DataTemplate>
-                                    </tgrid:TemplateColumn.CellTemplate>
-                                </tgrid:TemplateColumn>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                                <!-- Delivery description -->
-                                <tgrid:TemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Delivery}" Width="220">
-                                    <tgrid:TemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Delivery}" Width="220">
+                                    <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
                                             <TextBox Text="{Binding DeliveryDescription}"
                                                      Watermark="{loc:Loc Key=InvoicePlan.Placeholder.DeliveryNotes}"
                                                      IsVisible="{Binding ShowDeliveryDescription}"
-                                                     IsEnabled="{Binding ShowDeliveryDescription}" />
+                                                     IsEnabled="{Binding IsEditable}" />
                                         </DataTemplate>
-                                    </tgrid:TemplateColumn.CellTemplate>
-                                </tgrid:TemplateColumn>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                                <!-- CNPJ -->
-                                <tgrid:TemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Cnpj}" Width="180">
-                                    <tgrid:TemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Cnpj}" Width="180">
+                                    <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
                                             <TextBox Text="{Binding PayerCnpj, UpdateSourceTrigger=PropertyChanged}"
-                                                     behaviors:CnpjMaskBehavior.IsEnabled="True" />
+                                                     behaviors:CnpjMaskBehavior.IsEnabled="True"
+                                                     IsEnabled="{Binding IsEditable}" />
                                         </DataTemplate>
-                                    </tgrid:TemplateColumn.CellTemplate>
-                                </tgrid:TemplateColumn>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                                <!-- PO -->
-                                <tgrid:TemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Po}" Width="140">
-                                    <tgrid:TemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Po}" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <TextBox Text="{Binding PoNumber, UpdateSourceTrigger=PropertyChanged}" />
+                                            <TextBox Text="{Binding PoNumber, UpdateSourceTrigger=PropertyChanged}"
+                                                     IsEnabled="{Binding IsEditable}" />
                                         </DataTemplate>
-                                    </tgrid:TemplateColumn.CellTemplate>
-                                </tgrid:TemplateColumn>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                                <!-- FRS -->
-                                <tgrid:TemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Frs}" Width="140">
-                                    <tgrid:TemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Frs}" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <TextBox Text="{Binding FrsNumber, UpdateSourceTrigger=PropertyChanged}" />
+                                            <TextBox Text="{Binding FrsNumber, UpdateSourceTrigger=PropertyChanged}"
+                                                     IsEnabled="{Binding IsEditable}" />
                                         </DataTemplate>
-                                    </tgrid:TemplateColumn.CellTemplate>
-                                </tgrid:TemplateColumn>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                                <!-- Ticket -->
-                                <tgrid:TemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Ticket}" Width="160">
-                                    <tgrid:TemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Ticket}" Width="160">
+                                    <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <TextBox Text="{Binding CustomerTicket, UpdateSourceTrigger=PropertyChanged}" />
+                                            <TextBox Text="{Binding CustomerTicket, UpdateSourceTrigger=PropertyChanged}"
+                                                     IsEnabled="{Binding IsEditable}" />
                                         </DataTemplate>
-                                    </tgrid:TemplateColumn.CellTemplate>
-                                </tgrid:TemplateColumn>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                                <!-- Percent -->
-                                <tgrid:TemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Percent}" Width="120">
-                                    <tgrid:TemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Percent}" Width="120">
+                                    <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
                                             <NumericUpDown Value="{Binding Percentage}"
-                                                           Minimum="0" Maximum="100"
+                                                           Minimum="0"
+                                                           Maximum="100"
                                                            Increment="0.01"
-                                                           FormatString="F4" />
+                                                           FormatString="F4"
+                                                           IsEnabled="{Binding IsEditable}" />
                                         </DataTemplate>
-                                    </tgrid:TemplateColumn.CellTemplate>
-                                </tgrid:TemplateColumn>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                                <!-- Amount -->
-                                <tgrid:TemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Amount}" Width="140">
-                                    <tgrid:TemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Amount}" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
                                             <NumericUpDown Value="{Binding Amount}"
-                                                           Minimum="0" Maximum="100000000"
+                                                           Minimum="0"
+                                                           Maximum="100000000"
                                                            Increment="10"
-                                                           FormatString="F2" />
+                                                           FormatString="F2"
+                                                           IsEnabled="{Binding IsEditable}" />
                                         </DataTemplate>
-                                    </tgrid:TemplateColumn.CellTemplate>
-                                </tgrid:TemplateColumn>
-                            </tgrid:TreeDataGrid.Columns>
-                        </tgrid:TreeDataGrid>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
                     </Border>
 
                     <!-- Totals (bind through Editor scope) -->

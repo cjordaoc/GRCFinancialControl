@@ -204,11 +204,14 @@
   <data name="InvoicePlan.Selection.Button.Create" xml:space="preserve">
     <value>Criar plano</value>
   </data>
+  <data name="InvoicePlan.Selection.Button.AddEdit" xml:space="preserve">
+    <value>Adicionar / Editar plano</value>
+  </data>
   <data name="InvoicePlan.Selection.Message.Empty" xml:space="preserve">
     <value>Nenhum engagement disponível. Configure a conexão de dados e tente novamente.</value>
   </data>
   <data name="InvoicePlan.Selection.Message.SelectHint" xml:space="preserve">
-    <value>Selecione um engagement e clique em Criar plano para abrir o editor de faturas.</value>
+    <value>Selecione um engagement e clique em Adicionar / Editar plano para abrir ou atualizar o cronograma de faturas.</value>
   </data>
   <data name="InvoicePlan.Selection.Status.LoadFailure" xml:space="preserve">
     <value>Não foi possível carregar os engagements: {0}</value>
