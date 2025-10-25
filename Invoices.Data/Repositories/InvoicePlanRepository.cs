@@ -169,11 +169,8 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             throw new ArgumentNullException(nameof(plan));
         }
 
-        var strategy = CreateExecutionStrategy();
-
-        return strategy.Execute(() =>
+        return ExecuteWithStrategy(context =>
         {
-            using var context = _dbContextFactory.CreateDbContext();
             using var transaction = context.Database.BeginTransaction();
 
             try
@@ -240,11 +237,8 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             return RepositorySaveResult.Empty;
         }
 
-        var strategy = CreateExecutionStrategy();
-
-        return strategy.Execute(() =>
+        return ExecuteWithStrategy(context =>
         {
-            using var context = _dbContextFactory.CreateDbContext();
             using var transaction = context.Database.BeginTransaction();
 
             try
@@ -334,11 +328,8 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             return RepositorySaveResult.Empty;
         }
 
-        var strategy = CreateExecutionStrategy();
-
-        return strategy.Execute(() =>
+        return ExecuteWithStrategy(context =>
         {
-            using var context = _dbContextFactory.CreateDbContext();
             using var transaction = context.Database.BeginTransaction();
 
             try
@@ -410,11 +401,8 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             return RepositorySaveResult.Empty;
         }
 
-        var strategy = CreateExecutionStrategy();
-
-        return strategy.Execute(() =>
+        return ExecuteWithStrategy(context =>
         {
-            using var context = _dbContextFactory.CreateDbContext();
             using var transaction = context.Database.BeginTransaction();
 
             try
@@ -500,106 +488,103 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             return RepositorySaveResult.Empty;
         }
 
-        var strategy = CreateExecutionStrategy();
-
-        return strategy.Execute(() =>
+        return ExecuteWithStrategy(context =>
         {
-            using var context = _dbContextFactory.CreateDbContext();
             using var transaction = context.Database.BeginTransaction();
 
             try
             {
-            var plan = context.InvoicePlans
-                .Include(p => p.Items)
-                .FirstOrDefault(p => p.Id == planId)
-                ?? throw new InvalidOperationException($"Invoice plan {planId} not found.");
+                var plan = context.InvoicePlans
+                    .Include(p => p.Items)
+                    .FirstOrDefault(p => p.Id == planId)
+                    ?? throw new InvalidOperationException($"Invoice plan {planId} not found.");
 
-            EnsurePlanAccess(plan);
+                EnsurePlanAccess(plan);
 
-            var now = DateTime.UtcNow;
-            var created = 0;
-            var updated = 0;
-            var nextSeq = plan.Items.Count == 0 ? 1 : plan.Items.Max(item => item.SeqNo) + 1;
-            var itemsById = plan.Items.ToDictionary(item => item.Id);
-            var replacements = new List<(InvoiceItem canceled, InvoiceItem replacement)>();
+                var now = DateTime.UtcNow;
+                var created = 0;
+                var updated = 0;
+                var nextSeq = plan.Items.Count == 0 ? 1 : plan.Items.Max(item => item.SeqNo) + 1;
+                var itemsById = plan.Items.ToDictionary(item => item.Id);
+                var replacements = new List<(InvoiceItem canceled, InvoiceItem replacement)>();
 
-            foreach (var request in requests
-                         .GroupBy(r => r.ItemId)
-                         .Select(group => group.Last()))
-            {
-                if (!itemsById.TryGetValue(request.ItemId, out var item))
+                foreach (var request in requests
+                             .GroupBy(r => r.ItemId)
+                             .Select(group => group.Last()))
                 {
-                    throw new InvalidOperationException($"Invoice item {request.ItemId} not found in plan {planId}.");
+                    if (!itemsById.TryGetValue(request.ItemId, out var item))
+                    {
+                        throw new InvalidOperationException($"Invoice item {request.ItemId} not found in plan {planId}.");
+                    }
+
+                    if (item.Status != InvoiceItemStatus.Requested)
+                    {
+                        throw new InvalidOperationException($"Invoice item {item.Id} must be Requested before it can be canceled.");
+                    }
+
+                    if (string.IsNullOrWhiteSpace(request.CancelReason))
+                    {
+                        throw new InvalidOperationException($"Cancel reason is required for invoice item {item.Id}.");
+                    }
+
+                    var replacement = new InvoiceItem
+                    {
+                        PlanId = plan.Id,
+                        Plan = plan,
+                        SeqNo = nextSeq++,
+                        Percentage = item.Percentage,
+                        Amount = item.Amount,
+                        PayerCnpj = item.PayerCnpj,
+                        PoNumber = item.PoNumber,
+                        FrsNumber = item.FrsNumber,
+                        CustomerTicket = item.CustomerTicket,
+                        AdditionalInfo = item.AdditionalInfo,
+                        DeliveryDescription = item.DeliveryDescription,
+                        Status = InvoiceItemStatus.Planned,
+                        CreatedAt = now,
+                        UpdatedAt = now,
+                    };
+
+                    var emissionDate = request.ReplacementEmissionDate ?? item.EmissionDate;
+                    replacement.EmissionDate = emissionDate;
+                    replacement.DueDate = request.ReplacementDueDate
+                        ?? (emissionDate.HasValue ? emissionDate.Value.AddDays(plan.PaymentTermDays) : null);
+
+                    plan.Items.Add(replacement);
+                    context.Entry(replacement).State = EntityState.Added;
+
+                    item.Status = InvoiceItemStatus.Canceled;
+                    item.CanceledAt = now.Date;
+                    item.CancelReason = request.CancelReason.Trim();
+                    item.BzCode = null;
+                    item.EmittedAt = null;
+                    item.ReplacementItem = replacement;
+                    item.UpdatedAt = now;
+
+                    replacements.Add((item, replacement));
+
+                    created++;
+                    updated++;
                 }
 
-                if (item.Status != InvoiceItemStatus.Requested)
+                if (updated > 0)
                 {
-                    throw new InvalidOperationException($"Invoice item {item.Id} must be Requested before it can be canceled.");
+                    plan.UpdatedAt = now;
                 }
 
-                if (string.IsNullOrWhiteSpace(request.CancelReason))
+                var affectedRows = context.SaveChanges();
+
+                foreach (var pair in replacements)
                 {
-                    throw new InvalidOperationException($"Cancel reason is required for invoice item {item.Id}.");
+                    pair.canceled.ReplacementItemId = pair.replacement.Id;
                 }
 
-                var replacement = new InvoiceItem
+                if (replacements.Count > 0)
                 {
-                    PlanId = plan.Id,
-                    Plan = plan,
-                    SeqNo = nextSeq++,
-                    Percentage = item.Percentage,
-                    Amount = item.Amount,
-                    PayerCnpj = item.PayerCnpj,
-                    PoNumber = item.PoNumber,
-                    FrsNumber = item.FrsNumber,
-                    CustomerTicket = item.CustomerTicket,
-                    AdditionalInfo = item.AdditionalInfo,
-                    DeliveryDescription = item.DeliveryDescription,
-                    Status = InvoiceItemStatus.Planned,
-                    CreatedAt = now,
-                    UpdatedAt = now,
-                };
+                    affectedRows += context.SaveChanges();
+                }
 
-                var emissionDate = request.ReplacementEmissionDate ?? item.EmissionDate;
-                replacement.EmissionDate = emissionDate;
-                replacement.DueDate = request.ReplacementDueDate
-                    ?? (emissionDate.HasValue ? emissionDate.Value.AddDays(plan.PaymentTermDays) : null);
-
-                plan.Items.Add(replacement);
-                context.Entry(replacement).State = EntityState.Added;
-
-                item.Status = InvoiceItemStatus.Canceled;
-                item.CanceledAt = now.Date;
-                item.CancelReason = request.CancelReason.Trim();
-                item.BzCode = null;
-                item.EmittedAt = null;
-                item.ReplacementItem = replacement;
-                item.UpdatedAt = now;
-
-                replacements.Add((item, replacement));
-
-                created++;
-                updated++;
-            }
-
-            if (updated > 0)
-            {
-                plan.UpdatedAt = now;
-            }
-
-            var affectedRows = context.SaveChanges();
-
-            foreach (var pair in replacements)
-            {
-                pair.canceled.ReplacementItemId = pair.replacement.Id;
-            }
-
-            if (replacements.Count > 0)
-            {
-                affectedRows += context.SaveChanges();
-            }
-
-            transaction.Commit();
+                transaction.Commit();
 
                 return new RepositorySaveResult(created, updated, 0, affectedRows);
             }
@@ -907,10 +892,16 @@ public class InvoicePlanRepository : IInvoicePlanRepository
                  && string.IsNullOrWhiteSpace(_accessScope.InitializationError));
     }
 
-    private IExecutionStrategy CreateExecutionStrategy()
+    private T ExecuteWithStrategy<T>(Func<ApplicationDbContext, T> operation)
     {
-        using var context = _dbContextFactory.CreateDbContext();
-        return context.Database.CreateExecutionStrategy();
+        using var strategyContext = _dbContextFactory.CreateDbContext();
+        var strategy = strategyContext.Database.CreateExecutionStrategy();
+
+        return strategy.Execute(() =>
+        {
+            using var context = _dbContextFactory.CreateDbContext();
+            return operation(context);
+        });
     }
 
     private void EnsurePlanAccess(InvoicePlan plan)
