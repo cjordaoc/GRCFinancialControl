@@ -39,11 +39,10 @@
                 <!-- General details -->
                 <Grid Grid.Row="1"
                       Margin="0,12,0,0"
+                      ColumnDefinitions="Auto,*"
                       ColumnSpacing="{StaticResource Space24}"
-                      RowSpacing="{StaticResource Space12}"
-                      ColumnDefinitions="Auto,*,Auto,Auto">
+                      RowSpacing="{StaticResource Space12}">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -56,29 +55,17 @@
                         <TextBox Grid.Column="0" Text="{Binding EngagementId}" Watermark="{loc:Loc Key=Common.Placeholder.Code}" IsReadOnly="True" IsEnabled="False" IsTabStop="False" />
                         <TextBox Grid.Column="1" Text="{Binding EngagementName}" Watermark="{loc:Loc Key=Common.Placeholder.Name}" IsReadOnly="True" IsEnabled="False" IsTabStop="False" />
                     </Grid>
-                    <TextBlock Grid.Row="0" Grid.Column="2" Text="{loc:Loc Key=InvoicePlan.Label.InvoiceCount}" Classes="Caption" VerticalAlignment="Center" />
-                    <NumericUpDown Grid.Row="0" Grid.Column="3" Minimum="1" Maximum="48" Increment="1" Value="{Binding NumInvoices}" Width="160" HorizontalAlignment="Left" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.BaseValue}" Classes="Caption" VerticalAlignment="Center" />
+                    <NumericUpDown Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="100000000" Increment="100" FormatString="F2" Value="{Binding PlanningBaseValue}" HorizontalAlignment="Stretch" MinWidth="200" />
 
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.PlanType}" Classes="Caption" VerticalAlignment="Center" />
-                    <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding PlanTypes}" SelectedItem="{Binding PlanType}" HorizontalAlignment="Left" Width="200" />
-                    <TextBlock Grid.Row="1" Grid.Column="2" Text="{loc:Loc Key=InvoicePlan.Label.PaymentTerms}" Classes="Caption" VerticalAlignment="Center" />
-                    <NumericUpDown Grid.Row="1" Grid.Column="3" Minimum="0" Maximum="120" Increment="1" Value="{Binding PaymentTermDays}" Width="160" HorizontalAlignment="Left" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.FocalPoint}" Classes="Caption" VerticalAlignment="Center" />
+                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding CustomerFocalPointName}" Watermark="{loc:Loc Key=Common.Placeholder.Name}" />
 
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.BaseValue}" Classes="Caption" VerticalAlignment="Center" />
-                    <NumericUpDown Grid.Row="2" Grid.Column="1" Minimum="0" Maximum="100000000" Increment="100" FormatString="F2" Value="{Binding PlanningBaseValue}" HorizontalAlignment="Stretch" MinWidth="200" />
-                    <TextBlock Grid.Row="2" Grid.Column="2" Text="{loc:Loc Key=InvoicePlan.Label.FirstEmission}" Classes="Caption" VerticalAlignment="Center" IsVisible="{Binding RequiresFirstEmissionDate}" />
-                    <CalendarDatePicker Grid.Row="2" Grid.Column="3" SelectedDate="{Binding FirstEmissionDate, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}" IsVisible="{Binding RequiresFirstEmissionDate}" IsEnabled="{Binding RequiresFirstEmissionDate}" HorizontalAlignment="Left" Width="240" />
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.Instructions}" Classes="Caption" VerticalAlignment="Top" />
+                    <TextBox Grid.Row="3" Grid.Column="1" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="80" Text="{Binding CustomInstructions}" />
 
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.FocalPoint}" Classes="Caption" VerticalAlignment="Center" />
-                    <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding CustomerFocalPointName}" Watermark="{loc:Loc Key=Common.Placeholder.Name}" />
-
-                    <TextBlock Grid.Row="4" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.Instructions}" Classes="Caption" VerticalAlignment="Top" />
-                    <TextBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="80" Text="{Binding CustomInstructions}" />
-
-
-
-                    <TextBlock Grid.Row="5" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.RecipientEmails}" Classes="Caption" VerticalAlignment="Top" />
-                    <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="80" Text="{Binding RecipientEmails}" Watermark="{loc:Loc Key=InvoicePlan.Placeholder.Recipients}" />
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.RecipientEmails}" Classes="Caption" VerticalAlignment="Top" />
+                    <TextBox Grid.Row="4" Grid.Column="1" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="80" Text="{Binding RecipientEmails}" Watermark="{loc:Loc Key=InvoicePlan.Placeholder.Recipients}" />
                 </Grid>
 
                 <!-- Messages -->
@@ -98,7 +85,7 @@
                     HorizontalAlignment="Right"
                     Spacing="{StaticResource Space12}"
                     Margin="{StaticResource SpaceThickness24}">
-            <Button Content="{loc:Loc Key=InvoicePlan.Selection.Button.AddEdit}"
+            <Button Content="{loc:Loc Key=InvoicePlan.Dialog.Button.EditPlan}"
                     Command="{Binding EditLinesCommand}"
                     MinWidth="200" />
             <Button Content="{loc:Loc Key=Common.Button.Cancel}"
