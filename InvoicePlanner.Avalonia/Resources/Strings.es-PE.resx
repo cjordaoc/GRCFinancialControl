@@ -207,6 +207,9 @@
   <data name="InvoicePlan.Selection.Button.AddEdit" xml:space="preserve">
     <value>Agregar / Editar detalles de la factura</value>
   </data>
+  <data name="InvoicePlan.Dialog.Button.EditPlan" xml:space="preserve">
+    <value>Agregar / Editar plan</value>
+  </data>
   <data name="InvoicePlan.Selection.Message.Empty" xml:space="preserve">
     <value>No engagements are available. Configure the data connection and try again.</value>
   </data>

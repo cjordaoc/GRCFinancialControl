@@ -138,9 +138,12 @@ public partial class PlanEditorViewModel : ViewModelBase
         get => _numInvoices;
         set
         {
-            if (value < 1)
+            var lockedCount = Items.Count(line => !line.IsEditable);
+            var minimum = Math.Max(1, lockedCount);
+
+            if (value < minimum)
             {
-                value = 1;
+                value = minimum;
             }
 
             if (SetProperty(ref _numInvoices, value))
@@ -372,33 +375,47 @@ public partial class PlanEditorViewModel : ViewModelBase
 
     private void EnsureItemCount()
     {
-        while (Items.Count < NumInvoices)
+        var targetCount = Math.Max(NumInvoices, Items.Count(line => !line.IsEditable));
+
+        while (Items.Count > targetCount)
         {
-            var line = new InvoicePlanLineViewModel
+            var removable = Items.LastOrDefault(line => line.IsEditable);
+            if (removable is null)
             {
-                Sequence = Items.Count + 1,
-                EmissionDate = DateTime.Today,
-                PayerCnpj = string.Empty,
-                PoNumber = string.Empty,
-                FrsNumber = string.Empty,
-                CustomerTicket = string.Empty,
-                Status = InvoiceItemStatus.Planned,
-            };
+                break;
+            }
 
-            line.CanEditEmissionDate = line.IsEditable && PlanType != InvoicePlanType.ByDate;
-            line.ShowDeliveryDescription = PlanType == InvoicePlanType.ByDelivery;
-
-            Items.Add(line);
+            Items.Remove(removable);
         }
 
-        while (Items.Count > NumInvoices)
+        while (Items.Count < targetCount)
         {
-            Items.RemoveAt(Items.Count - 1);
+            Items.Add(CreateNewLine());
         }
 
         UpdateLineTypeSettings();
         DistributePercentages();
         ApplyEmissionDateRule();
+        RecalculateTotals();
+    }
+
+    private InvoicePlanLineViewModel CreateNewLine()
+    {
+        var line = new InvoicePlanLineViewModel
+        {
+            Sequence = Items.Count + 1,
+            EmissionDate = FirstEmissionDate ?? DateTime.Today,
+            PayerCnpj = string.Empty,
+            PoNumber = string.Empty,
+            FrsNumber = string.Empty,
+            CustomerTicket = string.Empty,
+            Status = InvoiceItemStatus.Planned,
+        };
+
+        line.CanEditEmissionDate = line.IsEditable && PlanType != InvoicePlanType.ByDate;
+        line.ShowDeliveryDescription = PlanType == InvoicePlanType.ByDelivery;
+
+        return line;
     }
 
     private void RefreshSequences()
@@ -411,19 +428,66 @@ public partial class PlanEditorViewModel : ViewModelBase
 
     private void DistributePercentages()
     {
-        if (Items.Count == 0)
+        var editableLines = Items.Where(line => line.IsEditable).ToList();
+
+        if (editableLines.Count == 0)
         {
+            RecalculateTotals();
             return;
         }
 
-        var evenPercent = Math.Round(100m / Items.Count, 4, MidpointRounding.AwayFromZero);
+        var lockedPercent = Items.Where(line => !line.IsEditable).Sum(line => line.Percentage);
+        var lockedAmount = Items.Where(line => !line.IsEditable).Sum(line => line.Amount);
+
+        var remainingPercent = Math.Max(0m, 100m - lockedPercent);
+        var remainingAmount = Math.Max(0m, PlanningBaseValue - lockedAmount);
+
+        var evenPercent = editableLines.Count > 0 && remainingPercent > 0
+            ? Math.Round(remainingPercent / editableLines.Count, 4, MidpointRounding.AwayFromZero)
+            : 0m;
 
         _suppressLineUpdates = true;
-        foreach (var line in Items)
+        decimal percentAssigned = 0m;
+        decimal amountAssigned = 0m;
+
+        for (var index = 0; index < editableLines.Count; index++)
         {
-            line.SetPercentage(evenPercent);
-            line.SetAmount(Math.Round(PlanningBaseValue * evenPercent / 100m, 2, MidpointRounding.AwayFromZero));
+            var line = editableLines[index];
+            var percent = index == editableLines.Count - 1
+                ? Math.Round(remainingPercent - percentAssigned, 4, MidpointRounding.AwayFromZero)
+                : evenPercent;
+
+            if (percent < 0)
+            {
+                percent = 0;
+            }
+
+            decimal amount;
+            if (remainingPercent == 0m || remainingAmount == 0m)
+            {
+                amount = 0m;
+            }
+            else if (index == editableLines.Count - 1)
+            {
+                amount = Math.Round(remainingAmount - amountAssigned, 2, MidpointRounding.AwayFromZero);
+            }
+            else
+            {
+                amount = Math.Round(remainingAmount * (percent / remainingPercent), 2, MidpointRounding.AwayFromZero);
+            }
+
+            if (amount < 0)
+            {
+                amount = 0;
+            }
+
+            line.SetPercentage(percent);
+            line.SetAmount(amount);
+
+            percentAssigned += percent;
+            amountAssigned += amount;
         }
+
         _suppressLineUpdates = false;
 
         RecalculateTotals();
@@ -431,12 +495,49 @@ public partial class PlanEditorViewModel : ViewModelBase
 
     private void RecalculateAmountsFromPercentages()
     {
-        _suppressLineUpdates = true;
-        foreach (var line in Items)
+        var editableLines = Items.Where(line => line.IsEditable).ToList();
+
+        if (editableLines.Count == 0)
         {
-            var amount = Math.Round(PlanningBaseValue * line.Percentage / 100m, 2, MidpointRounding.AwayFromZero);
-            line.SetAmount(amount);
+            RecalculateTotals();
+            return;
         }
+
+        var lockedAmount = Items.Where(line => !line.IsEditable).Sum(line => line.Amount);
+        var remainingAmount = Math.Max(0m, PlanningBaseValue - lockedAmount);
+        var totalEditablePercent = editableLines.Sum(line => line.Percentage);
+
+        _suppressLineUpdates = true;
+        decimal amountAssigned = 0m;
+
+        for (var index = 0; index < editableLines.Count; index++)
+        {
+            var line = editableLines[index];
+            decimal amount;
+
+            if (remainingAmount <= 0m || totalEditablePercent <= 0m)
+            {
+                amount = 0m;
+            }
+            else if (index == editableLines.Count - 1)
+            {
+                amount = Math.Round(remainingAmount - amountAssigned, 2, MidpointRounding.AwayFromZero);
+            }
+            else
+            {
+                var ratio = line.Percentage / totalEditablePercent;
+                amount = Math.Round(remainingAmount * ratio, 2, MidpointRounding.AwayFromZero);
+            }
+
+            if (amount < 0m)
+            {
+                amount = 0m;
+            }
+
+            line.SetAmount(amount);
+            amountAssigned += amount;
+        }
+
         _suppressLineUpdates = false;
 
         RecalculateTotals();
@@ -455,7 +556,7 @@ public partial class PlanEditorViewModel : ViewModelBase
         }
 
         _suppressLineUpdates = true;
-        foreach (var line in Items)
+        foreach (var line in Items.Where(line => line.IsEditable))
         {
             var emissionDate = FirstEmissionDate.Value.AddMonths(line.Sequence - 1);
             line.SetEmissionDate(emissionDate);
@@ -754,27 +855,32 @@ public partial class PlanEditorViewModel : ViewModelBase
 
     private void AdjustLastLineForTotals()
     {
-        if (Items.Count == 0)
+        var editableLines = Items.Where(line => line.IsEditable).ToList();
+
+        if (editableLines.Count == 0)
         {
             return;
         }
 
-        var expectedAmount = PlanningBaseValue;
-        const decimal expectedPercent = 100m;
+        var lockedPercent = Items.Where(line => !line.IsEditable).Sum(line => line.Percentage);
+        var lockedAmount = Items.Where(line => !line.IsEditable).Sum(line => line.Amount);
 
-        if (Items.Count == 1)
+        var expectedAmount = Math.Max(0m, PlanningBaseValue - lockedAmount);
+        var expectedPercent = Math.Max(0m, 100m - lockedPercent);
+
+        if (editableLines.Count == 1)
         {
             _suppressLineUpdates = true;
-            var onlyLine = Items[0];
+            var onlyLine = editableLines[0];
             onlyLine.SetPercentage(Math.Round(expectedPercent, 4, MidpointRounding.AwayFromZero));
             onlyLine.SetAmount(Math.Round(expectedAmount, 2, MidpointRounding.AwayFromZero));
             _suppressLineUpdates = false;
             return;
         }
 
-        var percentExceptLast = Items.Take(Items.Count - 1).Sum(line => line.Percentage);
-        var amountExceptLast = Items.Take(Items.Count - 1).Sum(line => line.Amount);
-        var lastLine = Items[^1];
+        var percentExceptLast = editableLines.Take(editableLines.Count - 1).Sum(line => line.Percentage);
+        var amountExceptLast = editableLines.Take(editableLines.Count - 1).Sum(line => line.Amount);
+        var lastLine = editableLines[^1];
 
         var adjustedPercent = Math.Round(expectedPercent - percentExceptLast, 4, MidpointRounding.AwayFromZero);
         var adjustedAmount = Math.Round(expectedAmount - amountExceptLast, 2, MidpointRounding.AwayFromZero);

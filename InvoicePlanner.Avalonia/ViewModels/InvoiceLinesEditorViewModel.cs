@@ -28,6 +28,8 @@ public partial class InvoiceLinesEditorViewModel : ViewModelBase
         CloseCommand = new RelayCommand(Close);
     }
 
+    public PlanEditorViewModel Editor => _parentViewModel;
+
     public ObservableCollection<InvoicePlanLineViewModel> Items => _parentViewModel.Items;
     public decimal TotalPercentage => _parentViewModel.TotalPercentage;
     public decimal TotalAmount => _parentViewModel.TotalAmount;
