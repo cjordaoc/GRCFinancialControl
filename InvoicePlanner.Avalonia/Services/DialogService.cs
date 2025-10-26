@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
@@ -18,13 +19,15 @@ namespace InvoicePlanner.Avalonia.Services
     public class DialogService
     {
         private readonly ViewLocator _viewLocator = new();
-        private Window? _currentDialog;
+        private readonly Stack<Window> _dialogStack = new();
+
+        private Window? CurrentDialog => _dialogStack.Count > 0 ? _dialogStack.Peek() : null;
 
         public DialogService(IMessenger messenger)
         {
             messenger.Register<CloseDialogMessage>(this, (r, m) =>
             {
-                _currentDialog?.Close(m.Value);
+                CurrentDialog?.Close(m.Value);
             });
         }
 
@@ -82,9 +85,11 @@ namespace InvoicePlanner.Avalonia.Services
 
             KeyboardNavigation.SetTabNavigation(container, KeyboardNavigationMode.Cycle);
 
+            Window? dialog = null;
+
             void UpdateDialogGeometry()
             {
-                if (_currentDialog is null)
+                if (dialog is null)
                 {
                     return;
                 }
@@ -93,23 +98,23 @@ namespace InvoicePlanner.Avalonia.Services
 
                 if (owner.WindowState == WindowState.Maximized)
                 {
-                    if (_currentDialog.WindowState != WindowState.Maximized)
+                    if (dialog.WindowState != WindowState.Maximized)
                     {
-                        _currentDialog.WindowState = WindowState.Maximized;
+                        dialog.WindowState = WindowState.Maximized;
                     }
 
-                    _currentDialog.Position = owner.Position;
+                    dialog.Position = owner.Position;
                 }
                 else
                 {
-                    if (_currentDialog.WindowState != WindowState.Normal)
+                    if (dialog.WindowState != WindowState.Normal)
                     {
-                        _currentDialog.WindowState = WindowState.Normal;
+                        dialog.WindowState = WindowState.Normal;
                     }
 
-                    _currentDialog.Width = bounds.Width;
-                    _currentDialog.Height = bounds.Height;
-                    _currentDialog.Position = owner.Position;
+                    dialog.Width = bounds.Width;
+                    dialog.Height = bounds.Height;
+                    dialog.Position = owner.Position;
                 }
             }
 
@@ -152,7 +157,7 @@ namespace InvoicePlanner.Avalonia.Services
                 Children = { container }
             };
 
-            _currentDialog = new Window
+            dialog = new Window
             {
                 Title = title,
                 Content = overlay,
@@ -176,7 +181,7 @@ namespace InvoicePlanner.Avalonia.Services
             bool IsEligibleForFocus(Control control) =>
                 control.Focusable && control.IsEffectivelyEnabled && control.IsEffectivelyVisible && control is not ScrollViewer;
 
-            System.Collections.Generic.List<Control> GetFocusableControls()
+            List<Control> GetFocusableControls()
             {
                 return container
                     .GetVisualDescendants()
@@ -215,7 +220,7 @@ namespace InvoicePlanner.Avalonia.Services
                     return;
                 }
 
-                var current = TopLevel.GetTopLevel(_currentDialog)?.FocusManager?.GetFocusedElement() as Control;
+                var current = TopLevel.GetTopLevel(dialog)?.FocusManager?.GetFocusedElement() as Control;
                 var currentIndex = current is not null ? focusables.IndexOf(current) : -1;
 
                 if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
@@ -236,31 +241,65 @@ namespace InvoicePlanner.Avalonia.Services
                 }
             }
 
-            _currentDialog.Opened += (_, _) =>
+            dialog.Opened += (_, _) =>
             {
                 Dispatcher.UIThread.Post(FocusFirstElement, DispatcherPriority.Background);
-                _currentDialog.KeyDown += HandleKeyDown;
+                dialog.KeyDown += HandleKeyDown;
             };
 
-            var previousFocus = owner.FocusManager?.GetFocusedElement();
+            var previousDialog = CurrentDialog;
+            var focusScope = previousDialog ?? owner;
+            var previousFocus = focusScope.FocusManager?.GetFocusedElement();
+
+            if (previousDialog is null)
+            {
+                owner.IsEnabled = false;
+            }
+            else
+            {
+                previousDialog.IsEnabled = false;
+            }
+
+            _dialogStack.Push(dialog);
 
             try
             {
-                owner.IsEnabled = false;
-                var result = await _currentDialog.ShowDialog<bool?>(owner);
+                var result = await dialog.ShowDialog<bool?>(owner);
                 return result ?? false;
             }
             finally
             {
-                owner.IsEnabled = true;
+                if (_dialogStack.Count > 0 && ReferenceEquals(_dialogStack.Peek(), dialog))
+                {
+                    _dialogStack.Pop();
+                }
+
                 sizeSubscription?.Dispose();
                 owner.PositionChanged -= OwnerPositionChanged;
-                if (_currentDialog is not null)
+                dialog.KeyDown -= HandleKeyDown;
+
+                var restoredDialog = CurrentDialog;
+
+                if (restoredDialog is not null)
                 {
-                    _currentDialog.KeyDown -= HandleKeyDown;
+                    restoredDialog.IsEnabled = true;
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        if (previousFocus is Control control)
+                        {
+                            control.Focus();
+                        }
+                        else
+                        {
+                            restoredDialog.Focus();
+                        }
+                    }, DispatcherPriority.Background);
                 }
-                Dispatcher.UIThread.Post(() => previousFocus?.Focus(), DispatcherPriority.Background);
-                _currentDialog = null;
+                else
+                {
+                    owner.IsEnabled = true;
+                    Dispatcher.UIThread.Post(() => previousFocus?.Focus(), DispatcherPriority.Background);
+                }
             }
         }
 
