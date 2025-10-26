@@ -1,0 +1,173 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:InvoicePlanner.Avalonia.ViewModels"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
+             xmlns:conv="clr-namespace:App.Presentation.Converters;assembly=App.Presentation"
+             xmlns:behaviors="using:InvoicePlanner.Avalonia.Behaviors"
+             x:Class="InvoicePlanner.Avalonia.Views.InvoiceLinesEditorView"
+             x:DataType="vm:InvoiceLinesEditorViewModel"
+             mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <conv:PercentageOfSizeConverter x:Key="PercentageOfSizeConverter" />
+    </UserControl.Resources>
+
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
+
+        <!-- MAIN SCROLLABLE CONTENT -->
+        <ScrollViewer Grid.Row="0"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Auto"
+                      HorizontalContentAlignment="Stretch"
+                      Padding="{StaticResource SpaceThickness24}">
+
+            <Grid RowDefinitions="Auto,*"
+                  RowSpacing="{StaticResource Space24}"
+                  HorizontalAlignment="Stretch">
+
+                <!-- Invoice lines grid -->
+                <Grid Grid.Row="0" RowDefinitions="Auto,*">
+                    <TextBlock Grid.Row="0"
+                               Classes="TitleMedium"
+                               Text="{loc:Loc Key=InvoicePlan.Section.InvoiceLines.Title}" />
+
+                    <Border Grid.Row="1"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                            CornerRadius="4"
+                            Margin="0,12,0,12"
+                            HorizontalAlignment="Stretch">
+                        <DataGrid ItemsSource="{Binding Items}"
+                                  AutoGenerateColumns="False"
+                                  HeadersVisibility="Column"
+                                  GridLinesVisibility="All"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Auto">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Sequence}" Width="60">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                            <TextBlock Text="{Binding Sequence}" HorizontalAlignment="Center" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.EmissionDate}" Width="180">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                            <CalendarDatePicker SelectedDate="{Binding EmissionDate, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}"
+                                                                IsEnabled="{Binding CanEditEmissionDate}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Delivery}" Width="220">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                            <TextBox Text="{Binding DeliveryDescription}"
+                                                     Watermark="{loc:Loc Key=InvoicePlan.Placeholder.DeliveryNotes}"
+                                                     IsVisible="{Binding ShowDeliveryDescription}"
+                                                     IsEnabled="{Binding IsEditable}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Cnpj}" Width="180">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                            <TextBox Text="{Binding PayerCnpj, UpdateSourceTrigger=PropertyChanged}"
+                                                     behaviors:CnpjMaskBehavior.IsEnabled="True"
+                                                     IsEnabled="{Binding IsEditable}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Po}" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                            <TextBox Text="{Binding PoNumber, UpdateSourceTrigger=PropertyChanged}"
+                                                     IsEnabled="{Binding IsEditable}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Frs}" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                            <TextBox Text="{Binding FrsNumber, UpdateSourceTrigger=PropertyChanged}"
+                                                     IsEnabled="{Binding IsEditable}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Ticket}" Width="160">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                            <TextBox Text="{Binding CustomerTicket, UpdateSourceTrigger=PropertyChanged}"
+                                                     IsEnabled="{Binding IsEditable}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Percent}" Width="120">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                            <NumericUpDown Value="{Binding Percentage}"
+                                                           Minimum="0"
+                                                           Maximum="100"
+                                                           Increment="0.01"
+                                                           FormatString="F4"
+                                                           IsEnabled="{Binding IsEditable}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Amount}" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                            <NumericUpDown Value="{Binding Amount}"
+                                                           Minimum="0"
+                                                           Maximum="100000000"
+                                                           Increment="10"
+                                                           FormatString="F2"
+                                                           IsEnabled="{Binding IsEditable}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                </Grid>
+
+                <!-- Totals -->
+                <StackPanel Grid.Row="1"
+                            Orientation="Horizontal"
+                            Spacing="{StaticResource Space16}">
+                    <TextBlock Text="{loc:Loc Key=InvoicePlan.Section.Totals.Label}" Classes="Caption" />
+                    <TextBlock Text="{loc:Loc Key=InvoicePlan.Section.Totals.Percent}" />
+                    <TextBlock Text="{Binding TotalPercentage, StringFormat={}{0:F4}%}" />
+                    <TextBlock Text="{loc:Loc Key=InvoicePlan.Section.Totals.Amount}" />
+                    <TextBlock Text="{Binding TotalAmount, StringFormat={}{0:F2}}" />
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- FOOTER (fixed) -->
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="{StaticResource Space12}"
+                    Margin="{StaticResource SpaceThickness24}">
+            <Button Content="{loc:Loc Key=Common.Button.Save}"
+                    Command="{Binding SaveCommand}"
+                    IsDefault="True"
+                    MinWidth="120" />
+            <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+                    Command="{Binding CloseCommand}"
+                    IsCancel="True"
+                    MinWidth="120" />
+        </StackPanel>
+    </Grid>
+</UserControl>
