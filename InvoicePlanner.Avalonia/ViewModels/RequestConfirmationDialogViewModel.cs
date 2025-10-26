@@ -9,6 +9,7 @@ public sealed partial class RequestConfirmationDialogViewModel : ViewModelBase
     public RequestConfirmationDialogViewModel(RequestConfirmationViewModel request)
     {
         Request = request ?? throw new ArgumentNullException(nameof(request));
+        request.LoadPlanCommand.Execute(null);
     }
 
     public RequestConfirmationViewModel Request { get; }

@@ -21,7 +21,7 @@
         <!-- MAIN SCROLLABLE CONTENT -->
         <ScrollViewer Grid.Row="0"
                       VerticalScrollBarVisibility="Auto"
-                      HorizontalScrollBarVisibility="Disabled"
+                      HorizontalScrollBarVisibility="Auto"
                       HorizontalContentAlignment="Stretch"
                       Padding="{StaticResource SpaceThickness24}"
                       DataContext="{Binding Editor}">
@@ -75,6 +75,8 @@
                     <TextBlock Grid.Row="4" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.Instructions}" Classes="Caption" VerticalAlignment="Top" />
                     <TextBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="80" Text="{Binding CustomInstructions}" />
 
+
+
                     <TextBlock Grid.Row="5" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.RecipientEmails}" Classes="Caption" VerticalAlignment="Top" />
                     <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="80" Text="{Binding RecipientEmails}" Watermark="{loc:Loc Key=InvoicePlan.Placeholder.Recipients}" />
                 </Grid>
@@ -101,7 +103,8 @@
                                   AutoGenerateColumns="False"
                                   HeadersVisibility="Column"
                                   GridLinesVisibility="All"
-                                  HorizontalScrollBarVisibility="Auto">
+                                  HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Auto">
                             <DataGrid.Columns>
                                 <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Sequence}" Width="60">
                                     <DataGridTemplateColumn.CellTemplate>
