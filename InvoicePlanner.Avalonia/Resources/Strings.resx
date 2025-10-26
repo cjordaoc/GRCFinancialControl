@@ -205,13 +205,13 @@
     <value>Create plan</value>
   </data>
   <data name="InvoicePlan.Selection.Button.AddEdit" xml:space="preserve">
-    <value>Add / Edit plan</value>
+    <value>Add / Edit invoice details</value>
   </data>
   <data name="InvoicePlan.Selection.Message.Empty" xml:space="preserve">
     <value>No engagements are available. Configure the data connection and try again.</value>
   </data>
   <data name="InvoicePlan.Selection.Message.SelectHint" xml:space="preserve">
-    <value>Select an engagement and choose Add / Edit plan to open or update the invoice schedule.</value>
+    <value>Select an engagement and choose Add / Edit invoice details to open or update the invoice schedule.</value>
   </data>
   <data name="InvoicePlan.Selection.Status.LoadFailure" xml:space="preserve">
     <value>Could not load engagements: {0}</value>

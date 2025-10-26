@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.Linq;
+using System.ComponentModel;
 using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -24,8 +22,10 @@ public partial class InvoiceLinesEditorViewModel : ViewModelBase
     {
         _parentViewModel = parentViewModel;
 
+        _parentViewModel.PropertyChanged += OnParentPropertyChanged;
+
         SaveCommand = new RelayCommand(Save);
-        CloseCommand = new RelayCommand(() => Messenger.Send(new CloseDialogMessage(false)));
+        CloseCommand = new RelayCommand(Close);
     }
 
     public ObservableCollection<InvoicePlanLineViewModel> Items => _parentViewModel.Items;
@@ -38,6 +38,33 @@ public partial class InvoiceLinesEditorViewModel : ViewModelBase
     private void Save()
     {
         _parentViewModel.SavePlanCommand.Execute(null);
-        Messenger.Send(new CloseDialogMessage(true));
+        CloseDialog(true);
+    }
+
+    private void Close()
+    {
+        CloseDialog(false);
+    }
+
+    private void CloseDialog(bool result)
+    {
+        _parentViewModel.PropertyChanged -= OnParentPropertyChanged;
+        Messenger.Send(new CloseDialogMessage(result));
+    }
+
+    private void OnParentPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(PlanEditorViewModel.TotalAmount):
+                OnPropertyChanged(nameof(TotalAmount));
+                break;
+            case nameof(PlanEditorViewModel.TotalPercentage):
+                OnPropertyChanged(nameof(TotalPercentage));
+                break;
+            case nameof(PlanEditorViewModel.Items):
+                OnPropertyChanged(nameof(Items));
+                break;
+        }
     }
 }
