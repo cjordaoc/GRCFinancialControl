@@ -26,7 +26,7 @@
                       Padding="{StaticResource SpaceThickness24}"
                       DataContext="{Binding Editor}">
 
-            <Grid RowDefinitions="Auto,Auto,Auto,Auto"
+            <Grid RowDefinitions="Auto,Auto,Auto"
                   RowSpacing="{StaticResource Space24}"
                   HorizontalAlignment="Stretch">
 
@@ -84,130 +84,6 @@
                     <TextBlock Text="{Binding ValidationMessage}" Classes="StatusError" IsVisible="{Binding HasValidationMessage}" />
                     <TextBlock Text="{Binding StatusMessage}" Classes="StatusSuccess" IsVisible="{Binding HasStatusMessage}" />
                 </StackPanel>
-
-                <!-- Invoice lines grid -->
-                <Grid Grid.Row="3" RowDefinitions="Auto,*">
-                    <TextBlock Grid.Row="0"
-                               Classes="TitleMedium"
-                               Text="{loc:Loc Key=InvoicePlan.Section.InvoiceLines.Title}" />
-
-                    <Border Grid.Row="1"
-                            BorderThickness="1"
-                            BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                            CornerRadius="4"
-                            Margin="0,12,0,12"
-                            HorizontalAlignment="Stretch">
-                        <DataGrid ItemsSource="{Binding Items}"
-                                  AutoGenerateColumns="False"
-                                  HeadersVisibility="Column"
-                                  GridLinesVisibility="All"
-                                  HorizontalScrollBarVisibility="Auto">
-                            <DataGrid.Columns>
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Sequence}" Width="60">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <TextBlock Text="{Binding Sequence}" HorizontalAlignment="Center" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.EmissionDate}" Width="180">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <CalendarDatePicker SelectedDate="{Binding EmissionDate, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}"
-                                                                IsEnabled="{Binding CanEditEmissionDate}" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Delivery}" Width="220">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <TextBox Text="{Binding DeliveryDescription}"
-                                                     Watermark="{loc:Loc Key=InvoicePlan.Placeholder.DeliveryNotes}"
-                                                     IsVisible="{Binding ShowDeliveryDescription}"
-                                                     IsEnabled="{Binding IsEditable}" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Cnpj}" Width="180">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <TextBox Text="{Binding PayerCnpj, UpdateSourceTrigger=PropertyChanged}"
-                                                     behaviors:CnpjMaskBehavior.IsEnabled="True"
-                                                     IsEnabled="{Binding IsEditable}" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Po}" Width="140">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <TextBox Text="{Binding PoNumber, UpdateSourceTrigger=PropertyChanged}"
-                                                     IsEnabled="{Binding IsEditable}" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Frs}" Width="140">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <TextBox Text="{Binding FrsNumber, UpdateSourceTrigger=PropertyChanged}"
-                                                     IsEnabled="{Binding IsEditable}" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Ticket}" Width="160">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <TextBox Text="{Binding CustomerTicket, UpdateSourceTrigger=PropertyChanged}"
-                                                     IsEnabled="{Binding IsEditable}" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Percent}" Width="120">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <NumericUpDown Value="{Binding Percentage}"
-                                                           Minimum="0"
-                                                           Maximum="100"
-                                                           Increment="0.01"
-                                                           FormatString="F4"
-                                                           IsEnabled="{Binding IsEditable}" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Amount}" Width="140">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <NumericUpDown Value="{Binding Amount}"
-                                                           Minimum="0"
-                                                           Maximum="100000000"
-                                                           Increment="10"
-                                                           FormatString="F2"
-                                                           IsEnabled="{Binding IsEditable}" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </Border>
-
-                    <!-- Totals (bind through Editor scope) -->
-                    <StackPanel Grid.Row="2"
-                                Orientation="Horizontal"
-                                Spacing="{StaticResource Space16}">
-                        <TextBlock Text="{loc:Loc Key=InvoicePlan.Section.Totals.Label}" Classes="Caption" />
-                        <TextBlock Text="{loc:Loc Key=InvoicePlan.Section.Totals.Percent}" />
-                        <TextBlock Text="{Binding TotalPercentage, StringFormat={}{0:F4}%}" />
-                        <TextBlock Text="{loc:Loc Key=InvoicePlan.Section.Totals.Amount}" />
-                        <TextBlock Text="{Binding TotalAmount, StringFormat={}{0:F2}}" />
-                    </StackPanel>
-                </Grid>
             </Grid>
         </ScrollViewer>
 
@@ -217,12 +93,12 @@
                     HorizontalAlignment="Right"
                     Spacing="{StaticResource Space12}"
                     Margin="{StaticResource SpaceThickness24}">
-            <Button Content="{loc:Loc Key=Common.Button.Save}"
-                    Command="{Binding SaveCommand}"
-                    IsEnabled="{Binding CanSave}"
-                    IsDefault="{Binding CanSave}"
+            <Button Content="{loc:Loc Key=InvoicePlan.Button.EditLines}"
+                    Command="{Binding EditLinesCommand}"
+                    IsEnabled="{Binding CanEditLines}"
+                    IsDefault="True"
                     MinWidth="120" />
-            <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+            <Button Content="{loc:Loc Key=Common.Button.Close}"
                     Command="{Binding CloseCommand}"
                     IsCancel="True"
                     MinWidth="120" />

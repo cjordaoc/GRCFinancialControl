@@ -51,7 +51,7 @@ public partial class PlanEditorViewModel : ViewModelBase
 
         PlanTypes = Enum.GetValues<InvoicePlanType>();
 
-        SavePlanCommand = new RelayCommand(SavePlan);
+        EditLinesCommand = new RelayCommand(EditLines);
         CreatePlanCommand = new RelayCommand(CreatePlan, CanCreatePlan);
         ClosePlanFormCommand = new RelayCommand(() => Messenger.Send(new CloseDialogMessage(false)));
         RefreshCommand = new RelayCommand(() =>
@@ -245,7 +245,7 @@ public partial class PlanEditorViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasRecipientEmails));
     }
 
-    public IRelayCommand SavePlanCommand { get; }
+    public IRelayCommand EditLinesCommand { get; }
 
     public IRelayCommand CreatePlanCommand { get; }
 
@@ -272,6 +272,59 @@ public partial class PlanEditorViewModel : ViewModelBase
             _logger.LogError(ex, "Failed to load invoice plan {PlanId}.", planId);
             ValidationMessage = LocalizationRegistry.Format("InvoicePlan.Status.LoadFailure", ex.Message);
             return false;
+        }
+    }
+
+    private void SavePlan()
+    {
+        ValidationMessage = null;
+        StatusMessage = null;
+
+        if (RequiresFirstEmissionDate && FirstEmissionDate is null)
+        {
+            ValidationMessage = LocalizationRegistry.Get("InvoicePlan.Validation.FirstEmissionRequired");
+            return;
+        }
+
+        if (Items.Count == 0)
+        {
+            ValidationMessage = LocalizationRegistry.Get("InvoicePlan.Validation.NoLines");
+            return;
+        }
+
+        RebalanceTotals();
+
+        RefreshSequences();
+        var plan = BuildPlanModel();
+        var validationErrors = _validator.Validate(plan, PlanningBaseValue);
+
+        if (validationErrors.Count > 0)
+        {
+            ValidationMessage = string.Join(Environment.NewLine, validationErrors.Distinct());
+            return;
+        }
+
+        try
+        {
+            var result = _repository.SavePlan(plan);
+            var persisted = _repository.GetPlan(plan.Id) ?? plan;
+            ApplyPlan(persisted);
+
+            var action = result.Created == 1
+                ? LocalizationRegistry.Get("InvoicePlan.Status.ActionCreated")
+                : LocalizationRegistry.Get("InvoicePlan.Status.ActionUpdated");
+            StatusMessage = LocalizationRegistry.Format(
+                "InvoicePlan.Status.PlanSaved",
+                PlanId,
+                action,
+                Items.Count,
+                result.AffectedRows,
+                result.Deleted);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save invoice plan {PlanId}.", plan.Id);
+            ValidationMessage = LocalizationRegistry.Format("InvoicePlan.Status.SaveFailure", ex.Message);
         }
     }
 
@@ -741,8 +794,19 @@ public partial class PlanEditorViewModel : ViewModelBase
     private void ShowPlanDialog()
     {
         _dialogViewModel ??= new PlanEditorDialogViewModel(this);
-        _dialogViewModel.CanSave = true;
+        _dialogViewModel.CanEditLines = true;
         _ = _dialogService.ShowDialogAsync(_dialogViewModel, LocalizationRegistry.Get("InvoicePlan.Title.Primary"));
+    }
+
+    private async void EditLines()
+    {
+        var linesViewModel = new InvoiceLinesDialogViewModel(Items, Messenger);
+        var result = await _dialogService.ShowDialogAsync(linesViewModel, LocalizationRegistry.Get("InvoicePlan.Section.InvoiceLines.Title"));
+
+        if (result)
+        {
+            SavePlan();
+        }
     }
 
     private void AdjustLastLineForTotals()

@@ -13,9 +13,9 @@ public sealed partial class PlanEditorDialogViewModel : ViewModelBase
 
     public PlanEditorViewModel Editor { get; }
 
-    public IRelayCommand SaveCommand => Editor.SavePlanCommand;
+    public IRelayCommand EditLinesCommand => Editor.EditLinesCommand;
     public IRelayCommand CloseCommand => Editor.ClosePlanFormCommand;
 
     [ObservableProperty]
-    private bool canSave;
+    private bool canEditLines;
 }
