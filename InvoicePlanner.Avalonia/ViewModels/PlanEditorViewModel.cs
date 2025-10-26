@@ -52,6 +52,7 @@ public partial class PlanEditorViewModel : ViewModelBase
         PlanTypes = Enum.GetValues<InvoicePlanType>();
 
         SavePlanCommand = new RelayCommand(SavePlan);
+        EditLinesCommand = new RelayCommand(ShowInvoiceLinesDialog);
         CreatePlanCommand = new RelayCommand(CreatePlan, CanCreatePlan);
         ClosePlanFormCommand = new RelayCommand(() => Messenger.Send(new CloseDialogMessage(false)));
         RefreshCommand = new RelayCommand(() =>
@@ -246,6 +247,7 @@ public partial class PlanEditorViewModel : ViewModelBase
     }
 
     public IRelayCommand SavePlanCommand { get; }
+    public IRelayCommand EditLinesCommand { get; }
 
     public IRelayCommand CreatePlanCommand { get; }
 
@@ -741,8 +743,13 @@ public partial class PlanEditorViewModel : ViewModelBase
     private void ShowPlanDialog()
     {
         _dialogViewModel ??= new PlanEditorDialogViewModel(this);
-        _dialogViewModel.CanSave = true;
         _ = _dialogService.ShowDialogAsync(_dialogViewModel, LocalizationRegistry.Get("InvoicePlan.Title.Primary"));
+    }
+
+    private void ShowInvoiceLinesDialog()
+    {
+        var invoiceLinesEditorViewModel = new InvoiceLinesEditorViewModel(this);
+        _ = _dialogService.ShowDialogAsync(invoiceLinesEditorViewModel, LocalizationRegistry.Get("InvoicePlan.Section.InvoiceLines.Title"));
     }
 
     private void AdjustLastLineForTotals()
