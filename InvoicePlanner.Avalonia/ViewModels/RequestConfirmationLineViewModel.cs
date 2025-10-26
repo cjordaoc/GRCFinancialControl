@@ -45,6 +45,14 @@ public partial class RequestConfirmationLineViewModel : ObservableObject
     [ObservableProperty]
     private DateTime? requestDate;
 
+    public InvoiceItemStatus[] StatusOptions { get; } =
+    {
+        InvoiceItemStatus.Planned,
+        InvoiceItemStatus.Requested,
+        InvoiceItemStatus.Closed,
+        InvoiceItemStatus.Canceled
+    };
+
     public bool IsPlanned => Status == InvoiceItemStatus.Planned;
 
     public bool IsRequested => Status == InvoiceItemStatus.Requested;

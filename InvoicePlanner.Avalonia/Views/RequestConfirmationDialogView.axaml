@@ -29,7 +29,8 @@
                           HeadersVisibility="Column"
                           GridLinesVisibility="All"
                           HorizontalAlignment="Stretch"
-                          HorizontalScrollBarVisibility="Auto">
+                          HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto">
                     <DataGrid.Columns>
                         <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Sequence}" Width="60">
                             <DataGridTemplateColumn.CellTemplate>
@@ -76,7 +77,7 @@
                         <DataGridTemplateColumn Header="{loc:Loc Key=Request.TableHeader.Status}" Width="140">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate x:DataType="vm:RequestConfirmationLineViewModel">
-                                    <TextBlock Text="{Binding Status}" />
+                                    <ComboBox ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding Status}" />
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
@@ -85,9 +86,11 @@
                                 <DataTemplate x:DataType="vm:RequestConfirmationLineViewModel">
                                     <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space12}">
                                         <Button Content="{loc:Loc Key=Request.Button.MarkRequested}"
-                                                Command="{Binding RequestCommand}" />
+                                                Command="{Binding RequestCommand}"
+                                                ToolTip.Tip="{loc:Loc Key=Request.Button.MarkRequested.Tooltip}" />
                                         <Button Content="{loc:Loc Key=Common.Button.Undo}"
-                                                Command="{Binding UndoCommand}" />
+                                                Command="{Binding UndoCommand}"
+                                                ToolTip.Tip="{loc:Loc Key=Common.Button.Undo.Tooltip}" />
                                     </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
