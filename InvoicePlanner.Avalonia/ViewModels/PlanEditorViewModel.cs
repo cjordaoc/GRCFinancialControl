@@ -37,6 +37,7 @@ public partial class PlanEditorViewModel : ViewModelBase
         IMessenger messenger)
         : base(messenger)
     {
+        // This is a trivial comment to force a new commit.
         // NOTE: This view model orchestrates the creation and editing of invoice plans.
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
