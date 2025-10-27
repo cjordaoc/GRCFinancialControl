@@ -132,8 +132,8 @@
   <data name="InvoicePlan.Button.CloseInvoice" xml:space="preserve">
     <value>Fechar fatura</value>
   </data>
-  <data name="Emission.Button.CancelAndReissue" xml:space="preserve">
-    <value>Cancelar e reemitir</value>
+  <data name="Emission.Button.CancelEmission" xml:space="preserve">
+    <value>Cancelar emissão</value>
   </data>
   <data name="InvoiceSummary.Button.ApplyFilters" xml:space="preserve">
     <value>Aplicar filtros</value>
@@ -179,6 +179,9 @@
   </data>
   <data name="InvoicePlan.Selection.Column.Requested" xml:space="preserve">
     <value>Solicitadas</value>
+  </data>
+  <data name="InvoicePlan.Selection.Column.Emitted" xml:space="preserve">
+    <value>Emitidas</value>
   </data>
   <data name="InvoicePlan.Selection.Column.Closed" xml:space="preserve">
     <value>Fechadas</value>
@@ -424,13 +427,16 @@
     <value>Confirmação de emissão</value>
   </data>
   <data name="Emission.Description.Primary" xml:space="preserve">
-    <value>Informe códigos BZ para fechar faturas solicitadas ou cancele linhas que devem ser reemitidas.</value>
+    <value>Informe códigos BZ para emitir faturas solicitadas ou cancele uma emissão existente.</value>
   </data>
   <data name="Emission.Section.AvailablePlans.Header" xml:space="preserve">
     <value>Planos prontos para captura BZ</value>
   </data>
+  <data name="Emission.Section.InvoiceDetails.Header" xml:space="preserve">
+    <value>Detalhes da fatura</value>
+  </data>
   <data name="Emission.Message.SelectHint" xml:space="preserve">
-    <value>Selecione um plano para confirmar emissões ou solicitar reemissão.</value>
+    <value>Selecione um plano para emitir faturas ou cancelar emissões anteriores.</value>
   </data>
   <data name="Emission.Message.Empty" xml:space="preserve">
     <value>Nenhum plano aguarda confirmação de BZ.</value>
@@ -444,8 +450,8 @@
   <data name="Emission.Status.RequestedFormat" xml:space="preserve">
     <value>Solicitado: {0}</value>
   </data>
-  <data name="Emission.Status.ClosedFormat" xml:space="preserve">
-    <value>Fechado: {0}</value>
+  <data name="Emission.Status.EmittedFormat" xml:space="preserve">
+    <value>Emitido: {0}</value>
   </data>
   <data name="Emission.Status.CanceledFormat" xml:space="preserve">
     <value>Cancelado: {0}</value>
@@ -471,26 +477,23 @@
   <data name="Emission.Validation.BzCode" xml:space="preserve">
     <value>Informe o código BZ antes de fechar a fatura.</value>
   </data>
-  <data name="Emission.Status.NoClosures" xml:space="preserve">
-    <value>Nenhuma linha foi fechada.</value>
+  <data name="Emission.Status.NoEmissions" xml:space="preserve">
+    <value>Nenhuma linha foi emitida.</value>
   </data>
-  <data name="Emission.Status.LineClosed" xml:space="preserve">
-    <value>Linha {0} fechada.</value>
+  <data name="Emission.Status.LineEmitted" xml:space="preserve">
+    <value>Linha {0} emitida.</value>
   </data>
   <data name="Emission.Validation.CancelPlanRequired" xml:space="preserve">
     <value>Carregue um plano antes de cancelar faturas.</value>
   </data>
   <data name="Emission.Validation.CancelReason" xml:space="preserve">
-    <value>Informe o motivo do cancelamento antes de reemitir a fatura.</value>
-  </data>
-  <data name="Emission.Validation.ReissueDate" xml:space="preserve">
-    <value>Informe a nova data de emissão para a fatura substituta.</value>
+    <value>Informe o motivo do cancelamento antes de desfazer a emissão.</value>
   </data>
   <data name="Emission.Status.NoCancellations" xml:space="preserve">
     <value>Nenhuma linha foi cancelada.</value>
   </data>
   <data name="Emission.Status.LineCanceled" xml:space="preserve">
-    <value>Linha {0} cancelada. Uma substituição foi criada.</value>
+    <value>Linha {0} cancelada e retornou para o planejamento.</value>
   </data>
   <data name="Emission.TableHeader.EmissionDate" xml:space="preserve">
     <value>Emissão</value>
@@ -513,8 +516,8 @@
   <data name="Emission.TableHeader.CancelReason" xml:space="preserve">
     <value>Motivo do cancelamento</value>
   </data>
-  <data name="Emission.TableHeader.NewEmissionDate" xml:space="preserve">
-    <value>Nova emissão</value>
+  <data name="Emission.TableHeader.LastCancelReason" xml:space="preserve">
+    <value>Último motivo de cancelamento</value>
   </data>
   <data name="Emission.TableHeader.Status" xml:space="preserve">
     <value>Status</value>

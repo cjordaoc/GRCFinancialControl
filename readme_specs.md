@@ -67,7 +67,7 @@ This document details the implementation for every functional capability describ
 ---
 
 ## Invoice Planner and Notifications
-- **Database Objects:** Tables `InvoicePlan`, `InvoiceItem`, `MailOutbox`, `MailOutboxLog`; event `ev_FillMailOutbox_Daily`; procedure `sp_FillMailOutboxForDate`
+- **Database Objects:** Tables `InvoicePlan`, `InvoiceItem`, `InvoiceEmission`, `MailOutbox`, `MailOutboxLog`; event `ev_FillMailOutbox_Daily`; procedure `sp_FillMailOutboxForDate`
 - **Services:** `InvoicePlannerService` (planning), SMTP worker (`NotificationWorker`)
 - **Workflow:**
   1. Invoice plans define schedule metadata per engagement/period.
@@ -75,7 +75,8 @@ This document details the implementation for every functional capability describ
   3. Background worker dequeues `MailOutbox` entries, sends e-mails, and archives results in `MailOutboxLog`.
   4. The Invoice Planner's Add / Edit action loads the most recent plan for the selected engagement (or starts a new draft) and displays invoice lines in a flat grid with confirmed items locked for editing.
   5. The Confirm Request workspace keeps plans and line editing on a single screen: `RequestConfirmationViewModel` loads plan summaries, surfaces invoice lines in a read-only grid, and binds the inline form to `SelectedLine`. `SavePlanDetailsCommand` calls `MarkItemsAsRequested`, while `ReverseSelectedLineCommand` invokes `UndoRequest` to reset the invoice back to Planned.
-  6. Controllers can delete the active plan from the editor dialog, removing the header and all invoice items and refreshing the engagement list for a clean restart.
+  6. The Confirm Emission workspace keeps the full workflow inline: controllers load the plan, select a requested line, and provide BZ code plus emission date before invoking `CloseItems`, which persists the new `InvoiceEmission` entry and flips the status to Emitted. `CancelEmissions` captures a cancel reason from the same editor, marks the latest emission as canceled, and returns the invoice to Planned without deleting history.
+  7. Controllers can delete the active plan from the editor dialog, removing the header and all invoice items and refreshing the engagement list for a clean restart.
 - **Invoice Line Grid Rules:**
   - Plan type **By Date** auto-generates emission dates from the first emission date plus payment term days; the delivery column is hidden. Plan type **By Milestone** leaves emission dates and delivery descriptions fully manual.
   - Emitted/requested/canceled items remain visible but read-only; only planned items can be recalculated or removed when the invoice count changes (at least one editable line is always present).
@@ -85,6 +86,7 @@ This document details the implementation for every functional capability describ
   - Totals highlight in red and the Save action is disabled whenever the aggregated percentage or amount diverges from the required targets (100.00% / engagement total).
 - **Validation Mechanics:**
   - Stored procedure filters by due date and checks `MailOutboxLog` to prevent duplicates.
+  - Emission confirmation requires a non-empty BZ code and emission date before closing, and cancellation requests must supply a reason before the invoice reopens.
   - Planner services validate references to engagements and closing periods prior to saving schedules.
 
 ---

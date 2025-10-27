@@ -14,12 +14,12 @@ public partial class EmissionConfirmationLineViewModel : ObservableObject
     public EmissionConfirmationLineViewModel()
     {
         _closeCommand = new RelayCommand(ExecuteClose, CanExecuteClose);
-        _cancelCommand = new RelayCommand(ExecuteCancelAndReissue, CanExecuteCancelAndReissue);
+        _cancelCommand = new RelayCommand(ExecuteCancel, CanExecuteCancel);
     }
 
     public IRelayCommand CloseCommand => _closeCommand;
 
-    public IRelayCommand CancelAndReissueCommand => _cancelCommand;
+    public IRelayCommand CancelCommand => _cancelCommand;
 
     [ObservableProperty]
     private int id;
@@ -52,11 +52,11 @@ public partial class EmissionConfirmationLineViewModel : ObservableObject
     private string? cancelReason;
 
     [ObservableProperty]
-    private DateTime? reissueEmissionDate;
+    private string? lastCancellationReason;
 
     public bool IsRequested => Status == InvoiceItemStatus.Requested;
 
-    public bool IsClosed => Status == InvoiceItemStatus.Closed;
+    public bool IsEmitted => Status == InvoiceItemStatus.Emitted;
 
     public bool IsCanceled => Status == InvoiceItemStatus.Canceled;
 
@@ -72,18 +72,11 @@ public partial class EmissionConfirmationLineViewModel : ObservableObject
         NotifyCommandStates();
     }
 
-    internal void ApplyClosedState(string bzCodeValue, DateTime emittedDate)
-    {
-        BzCode = bzCodeValue;
-        EmittedAt = emittedDate;
-        Status = InvoiceItemStatus.Closed;
-    }
-
     partial void OnStatusChanged(InvoiceItemStatus value)
     {
         NotifyCommandStates();
         OnPropertyChanged(nameof(IsRequested));
-        OnPropertyChanged(nameof(IsClosed));
+        OnPropertyChanged(nameof(IsEmitted));
         OnPropertyChanged(nameof(IsCanceled));
         _owner?.RefreshSummaries();
     }
@@ -93,8 +86,6 @@ public partial class EmissionConfirmationLineViewModel : ObservableObject
     partial void OnEmittedAtChanged(DateTime? value) => NotifyCommandStates();
 
     partial void OnCancelReasonChanged(string? value) => NotifyCommandStates();
-
-    partial void OnReissueEmissionDateChanged(DateTime? value) => NotifyCommandStates();
 
     private bool CanExecuteClose()
     {
@@ -109,17 +100,16 @@ public partial class EmissionConfirmationLineViewModel : ObservableObject
         _owner?.HandleClose(this);
     }
 
-    private bool CanExecuteCancelAndReissue()
+    private bool CanExecuteCancel()
     {
         return _owner is not null
-            && Status == InvoiceItemStatus.Requested
-            && !string.IsNullOrWhiteSpace(CancelReason)
-            && ReissueEmissionDate is not null;
+            && Status == InvoiceItemStatus.Emitted
+            && !string.IsNullOrWhiteSpace(CancelReason);
     }
 
-    private void ExecuteCancelAndReissue()
+    private void ExecuteCancel()
     {
-        _owner?.HandleCancelAndReissue(this);
+        _owner?.HandleCancel(this);
     }
 
     private void NotifyCommandStates()
