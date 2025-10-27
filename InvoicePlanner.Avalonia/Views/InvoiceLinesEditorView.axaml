@@ -13,8 +13,8 @@
     <UserControl.Resources>
         <conv:PercentageOfSizeConverter x:Key="PercentageOfSizeConverter" />
         <conv:BoolToBrushConverter x:Key="TotalsBrushConverter"
-                                    TrueResourceKey="ThemeErrorBrush"
-                                    FalseResourceKey="ThemeForegroundBrush" />
+                                    TrueResourceKey="BrushError"
+                                    FalseResourceKey="BrushOnSurface" />
     </UserControl.Resources>
 
     <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
@@ -36,69 +36,80 @@
                                Classes="TitleMedium"
                                Text="{loc:Loc Key=InvoicePlan.Section.InvoiceLines.Title}" />
 
-                    <Grid Grid.Row="1"
-                          Margin="0,12,0,0"
-                          ColumnDefinitions="Auto,*,Auto,Auto,Auto"
-                          RowDefinitions="Auto,Auto"
-                          ColumnSpacing="{StaticResource Space24}"
-                          RowSpacing="{StaticResource Space12}">
-                        <TextBlock Grid.Row="0"
-                                   Grid.Column="0"
-                                   Classes="Caption"
-                                   Text="{loc:Loc Key=InvoicePlan.Label.PlanType}" />
-                        <ComboBox Grid.Row="0"
-                                  Grid.Column="1"
-                                  ItemsSource="{Binding Editor.PlanTypes}"
-                                  SelectedItem="{Binding Editor.PlanType}"
-                                  HorizontalAlignment="Left"
-                                  Width="200" />
+                    <StackPanel Grid.Row="1"
+                                Margin="0,12,0,0"
+                                Spacing="{StaticResource Space12}">
+                        <WrapPanel>
+                            <StackPanel Orientation="Horizontal"
+                                        Spacing="{StaticResource Space12}"
+                                        VerticalAlignment="Center"
+                                        Margin="0,0,24,0">
+                                <TextBlock Classes="Caption"
+                                           VerticalAlignment="Center"
+                                           Text="{loc:Loc Key=InvoicePlan.Label.PlanType}" />
+                                <ComboBox ItemsSource="{Binding Editor.PlanTypes}"
+                                          SelectedItem="{Binding Editor.PlanType}"
+                                          MinWidth="180"
+                                          Width="200"
+                                          HorizontalAlignment="Left" />
+                            </StackPanel>
 
-                        <TextBlock Grid.Row="0"
-                                   Grid.Column="2"
-                                   Classes="Caption"
-                                   Text="{loc:Loc Key=InvoicePlan.Label.InvoiceCount}" />
-                        <NumericUpDown Grid.Row="0"
-                                       Grid.Column="3"
-                                       Minimum="1"
-                                       Maximum="48"
-                                       Increment="1"
-                                       Value="{Binding Editor.NumInvoices}"
-                                       Width="160"
-                                       HorizontalAlignment="Left" />
+                            <StackPanel Orientation="Horizontal"
+                                        Spacing="{StaticResource Space12}"
+                                        VerticalAlignment="Center"
+                                        Margin="0,0,24,0">
+                                <TextBlock Classes="Caption"
+                                           VerticalAlignment="Center"
+                                           Text="{loc:Loc Key=InvoicePlan.Label.InvoiceCount}" />
+                                <NumericUpDown Minimum="1"
+                                               Maximum="48"
+                                               Increment="1"
+                                               Value="{Binding Editor.NumInvoices}"
+                                               MinWidth="120"
+                                               Width="160"
+                                               HorizontalAlignment="Left" />
+                            </StackPanel>
 
-                        <Button Grid.Row="0"
-                                Grid.Column="4"
-                                Content="{loc:Loc Key=Common.Button.Refresh}"
-                                Command="{Binding RefreshCommand}"
-                                MinWidth="120"
-                                HorizontalAlignment="Right" />
+                            <Button Content="{loc:Loc Key=Common.Button.Refresh}"
+                                    Command="{Binding RefreshCommand}"
+                                    MinWidth="120"
+                                    HorizontalAlignment="Stretch"
+                                    Margin="0,0,24,0" />
+                        </WrapPanel>
 
-                        <TextBlock Grid.Row="1"
-                                   Grid.Column="0"
-                                   Classes="Caption"
-                                   Text="{loc:Loc Key=InvoicePlan.Label.PaymentTerms}" />
-                        <NumericUpDown Grid.Row="1"
-                                       Grid.Column="1"
-                                       Minimum="0"
-                                       Maximum="120"
-                                       Increment="1"
-                                       Value="{Binding Editor.PaymentTermDays}"
-                                       Width="160"
-                                       HorizontalAlignment="Left" />
+                        <WrapPanel>
+                            <StackPanel Orientation="Horizontal"
+                                        Spacing="{StaticResource Space12}"
+                                        VerticalAlignment="Center"
+                                        Margin="0,0,24,0">
+                                <TextBlock Classes="Caption"
+                                           VerticalAlignment="Center"
+                                           Text="{loc:Loc Key=InvoicePlan.Label.PaymentTerms}" />
+                                <NumericUpDown Minimum="0"
+                                               Maximum="120"
+                                               Increment="1"
+                                               Value="{Binding Editor.PaymentTermDays}"
+                                               MinWidth="120"
+                                               Width="160"
+                                               HorizontalAlignment="Left" />
+                            </StackPanel>
 
-                        <TextBlock Grid.Row="1"
-                                   Grid.Column="2"
-                                   Classes="Caption"
-                                   Text="{loc:Loc Key=InvoicePlan.Label.FirstEmission}"
-                                   IsVisible="{Binding Editor.RequiresFirstEmissionDate}" />
-                        <CalendarDatePicker Grid.Row="1"
-                                            Grid.Column="3"
-                                            SelectedDate="{Binding Editor.FirstEmissionDate, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}"
-                                            IsVisible="{Binding Editor.RequiresFirstEmissionDate}"
-                                            IsEnabled="{Binding Editor.RequiresFirstEmissionDate}"
-                                            HorizontalAlignment="Left"
-                                            Width="240" />
-                    </Grid>
+                            <StackPanel Orientation="Horizontal"
+                                        Spacing="{StaticResource Space12}"
+                                        VerticalAlignment="Center"
+                                        IsVisible="{Binding Editor.RequiresFirstEmissionDate}"
+                                        Margin="0,0,24,0">
+                                <TextBlock Classes="Caption"
+                                           VerticalAlignment="Center"
+                                           Text="{loc:Loc Key=InvoicePlan.Label.FirstEmission}" />
+                                <CalendarDatePicker SelectedDate="{Binding Editor.FirstEmissionDate, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}"
+                                                    IsVisible="{Binding Editor.RequiresFirstEmissionDate}"
+                                                    IsEnabled="{Binding Editor.RequiresFirstEmissionDate}"
+                                                    HorizontalAlignment="Left"
+                                                    Width="240" />
+                            </StackPanel>
+                        </WrapPanel>
+                    </StackPanel>
 
                     <Border Grid.Row="2"
                             BorderThickness="1"
@@ -231,11 +242,11 @@
                     <TextBlock Grid.Column="0"
                                Text="{loc:Loc Key=InvoicePlan.Section.Totals.Label}"
                                Classes="Caption"
-                               Foreground="{StaticResource ThemeForegroundBrush}"
+                               Foreground="{StaticResource BrushOnSurface}"
                                VerticalAlignment="Center" />
                     <TextBlock Grid.Column="1"
                                Text="{loc:Loc Key=InvoicePlan.Section.Totals.Percent}"
-                               Foreground="{StaticResource ThemeForegroundBrush}"
+                               Foreground="{StaticResource BrushOnSurface}"
                                VerticalAlignment="Center" />
                     <StackPanel Grid.Column="2"
                                 Orientation="Horizontal"
@@ -251,7 +262,7 @@
                     </StackPanel>
                     <TextBlock Grid.Column="3"
                                Text="{loc:Loc Key=InvoicePlan.Section.Totals.Amount}"
-                               Foreground="{StaticResource ThemeForegroundBrush}"
+                               Foreground="{StaticResource BrushOnSurface}"
                                VerticalAlignment="Center" />
                     <StackPanel Grid.Column="4"
                                 Orientation="Horizontal"

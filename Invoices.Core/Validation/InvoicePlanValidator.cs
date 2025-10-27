@@ -3,6 +3,7 @@ using System.Net.Mail;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
 using Invoices.Core.Resources;
+using Invoices.Core.Utilities;
 
 namespace Invoices.Core.Validation;
 
@@ -92,7 +93,8 @@ public class InvoicePlanValidator : IInvoicePlanValidator
 
             if (plan.PaymentTermDays > 0 && item.EmissionDate is not null)
             {
-                var expectedDue = item.EmissionDate.Value.AddDays(plan.PaymentTermDays);
+                var expectedDue = BusinessDayCalculator.AdjustToNextBusinessDay(
+                    item.EmissionDate.Value.AddDays(plan.PaymentTermDays));
                 if (item.DueDate != expectedDue)
                 {
                     errors.Add(ValidationStrings.Format("DueDateMustMatch", expectedSeq));
