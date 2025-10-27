@@ -14,6 +14,9 @@ public partial class InvoiceLinesEditorViewModel : ViewModelBase
     private readonly PlanEditorViewModel _parentViewModel;
     private readonly RelayCommand _saveCommand;
 
+    [ObservableProperty]
+    private string? _statusMessage;
+
     public InvoiceLinesEditorViewModel(PlanEditorViewModel parentViewModel)
     {
         _parentViewModel = parentViewModel;
@@ -31,10 +34,11 @@ public partial class InvoiceLinesEditorViewModel : ViewModelBase
         OnPropertyChanged(nameof(CurrencySymbol));
         OnPropertyChanged(nameof(HasCurrencySymbol));
         OnPropertyChanged(nameof(HasTotalsMismatch));
-        OnPropertyChanged(nameof(StatusMessage));
         OnPropertyChanged(nameof(ValidationMessage));
-        OnPropertyChanged(nameof(HasStatusMessage));
         OnPropertyChanged(nameof(HasValidationMessage));
+
+        // Trigger the UI to refresh and show the datagrid rows.
+        OnPropertyChanged(nameof(Items));
     }
 
     public PlanEditorViewModel Editor => _parentViewModel;
@@ -47,9 +51,8 @@ public partial class InvoiceLinesEditorViewModel : ViewModelBase
     public bool HasTotalsMismatch => _parentViewModel.HasTotalsMismatch;
     public bool CanSavePlan => _parentViewModel.CanSavePlan;
     public string? ValidationMessage => _parentViewModel.ValidationMessage;
-    public string? StatusMessage => _parentViewModel.StatusMessage;
     public bool HasValidationMessage => _parentViewModel.HasValidationMessage;
-    public bool HasStatusMessage => _parentViewModel.HasStatusMessage;
+    public bool HasStatusMessage => !string.IsNullOrWhiteSpace(StatusMessage);
 
     public IRelayCommand SaveCommand => _saveCommand;
     public IRelayCommand CloseCommand { get; }
@@ -58,22 +61,19 @@ public partial class InvoiceLinesEditorViewModel : ViewModelBase
     {
         _parentViewModel.SavePlanCommand.Execute(null);
         _saveCommand.NotifyCanExecuteChanged();
+        StatusMessage = _parentViewModel.StatusMessage;
     }
 
     private void Close()
     {
-        CloseDialog(false, true);
+        CloseDialog(false);
     }
 
-    private void CloseDialog(bool result, bool closeParent = false)
+    private void CloseDialog(bool result)
     {
         _parentViewModel.PropertyChanged -= OnParentPropertyChanged;
         _parentViewModel.Items.CollectionChanged -= OnItemsCollectionChanged;
         Messenger.Send(new CloseDialogMessage(result));
-        if (closeParent)
-        {
-            _parentViewModel.ClosePlanFormCommand.Execute(null);
-        }
     }
 
     private void OnItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -112,14 +112,9 @@ public partial class InvoiceLinesEditorViewModel : ViewModelBase
                 OnPropertyChanged(nameof(HasValidationMessage));
                 break;
             case nameof(PlanEditorViewModel.StatusMessage):
-                OnPropertyChanged(nameof(StatusMessage));
-                OnPropertyChanged(nameof(HasStatusMessage));
-                break;
-            case nameof(PlanEditorViewModel.HasValidationMessage):
-                OnPropertyChanged(nameof(HasValidationMessage));
-                break;
-            case nameof(PlanEditorViewModel.HasStatusMessage):
-                OnPropertyChanged(nameof(HasStatusMessage));
+                // The parent's status message is copied to the local property
+                // after a save. When it changes again, we clear the local message.
+                StatusMessage = null;
                 break;
         }
     }
