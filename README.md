@@ -132,7 +132,23 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 
 ---
 
-## 8 · Reporting Dashboards
+## 8 · Power Automate Tasks Export
+**Happy Path**
+1. Controllers choose **Generate Tasks File** in the Tasks workspace and select the destination JSON file.
+2. The exporter resolves the upcoming Monday at 10:00 (America/Sao_Paulo) and queries invoice plans that notify on that date.
+3. The resulting payload writes each invoice line (customer, project code, emission date, PO, FRS, amount, contacts and managers) into `messages[0].invoices`.
+4. Engagements with a proposed ETC date due on or before that Monday are grouped by manager under `messages[0].etcs`, each containing the manager contact, active engagements, and the incurred/remaining hours per fiscal year and rank.
+
+**Validation & Consolidation Rules**
+- The exporter reads directly from the live database; connection issues or missing timezone information surface localized status messages.
+- Invoice recipients and manager contact lists are deduplicated and trimmed before serialization so Power Automate flows receive clean CSV data.
+- ETC data omits the legacy attachment block and relies solely on structured JSON for Power BI to generate per-manager spreadsheets.
+
+[See Technical Spec →](readme_specs.md#power-automate-tasks-export)
+
+---
+
+## 9 · Reporting Dashboards
 **Happy Path**
 1. Users open the reporting dashboards within the Avalonia client.
 2. KPI widgets query MySQL views for budgets, allocation by rank, and invoice status.
@@ -147,7 +163,7 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 
 ---
 
-## 9 · UI Architecture
+## 10 · UI Architecture
 - Avalonia + MVVM pattern with one View ↔ one ViewModel.
 - Commands leverage `RelayCommand`/`AsyncRelayCommand` to encapsulate interactions.
 - Modal dialogs use a centralized overlay with an opaque background to maintain focus.
@@ -157,7 +173,7 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 
 ---
 
-## 10 · Master Data Editors
+## 11 · Master Data Editors
 **Happy Path**
 1. Administrators open the master data workspace to maintain supporting catalog entries.
 2. Customer records expose a dialog editor with inline validation cues for required fields.
