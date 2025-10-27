@@ -14,8 +14,7 @@
         <conv:PercentageOfSizeConverter x:Key="PercentageOfSizeConverter" />
         <conv:BoolToBrushConverter x:Key="TotalsBrushConverter"
                                     TrueResourceKey="ThemeErrorBrush"
-                                    FalseResourceKey="TotalsNeutralBrush" />
-        <SolidColorBrush x:Key="TotalsNeutralBrush" Color="#FFFFFFFF" />
+                                    FalseResourceKey="BrushOnSurface" />
     </UserControl.Resources>
 
     <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
@@ -224,9 +223,11 @@
                     <TextBlock Grid.Column="0"
                                Text="{loc:Loc Key=InvoicePlan.Section.Totals.Label}"
                                Classes="Caption"
+                               Foreground="{StaticResource BrushOnSurface}"
                                VerticalAlignment="Center" />
                     <TextBlock Grid.Column="1"
                                Text="{loc:Loc Key=InvoicePlan.Section.Totals.Percent}"
+                               Foreground="{StaticResource BrushOnSurface}"
                                VerticalAlignment="Center" />
                     <StackPanel Grid.Column="2"
                                 Orientation="Horizontal"
@@ -242,6 +243,7 @@
                     </StackPanel>
                     <TextBlock Grid.Column="3"
                                Text="{loc:Loc Key=InvoicePlan.Section.Totals.Amount}"
+                               Foreground="{StaticResource BrushOnSurface}"
                                VerticalAlignment="Center" />
                     <StackPanel Grid.Column="4"
                                 Orientation="Horizontal"
@@ -256,6 +258,17 @@
                                    Foreground="{Binding HasTotalsMismatch, Converter={StaticResource TotalsBrushConverter}}" />
                     </StackPanel>
                 </Grid>
+
+                <!-- Messages -->
+                <StackPanel Grid.Row="2"
+                            Spacing="{StaticResource Space12}">
+                    <TextBlock Text="{Binding ValidationMessage}"
+                               Classes="StatusError"
+                               IsVisible="{Binding HasValidationMessage}" />
+                    <TextBlock Text="{Binding StatusMessage}"
+                               Classes="StatusSuccess"
+                               IsVisible="{Binding HasStatusMessage}" />
+                </StackPanel>
             </Grid>
         </ScrollViewer>
 
