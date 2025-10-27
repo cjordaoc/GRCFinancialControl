@@ -82,45 +82,51 @@
                             </DataGrid.Columns>
                         </DataGrid>
                         <StackPanel Spacing="{StaticResource Space12}" IsVisible="{Binding HasSelectedLine}">
-                            <Grid ColumnDefinitions="Auto,1*"
-                                  RowDefinitions="Auto,Auto,Auto,Auto"
-                                  ColumnSpacing="{StaticResource Space16}"
-                                  RowSpacing="{StaticResource Space12}">
-                                <TextBlock Grid.Row="0"
-                                           Grid.Column="0"
-                                           VerticalAlignment="Center"
-                                           Text="{loc:Loc Key=Emission.TableHeader.BzCode}" />
-                                <TextBox Grid.Row="0"
-                                         Grid.Column="1"
-                                         Text="{Binding SelectedLine.BzCode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <ContentControl Content="{Binding SelectedLine}">
+                                <ContentControl.ContentTemplate>
+                                    <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
+                                        <Grid ColumnDefinitions="Auto,1*"
+                                              RowDefinitions="Auto,Auto,Auto,Auto"
+                                              ColumnSpacing="{StaticResource Space16}"
+                                              RowSpacing="{StaticResource Space12}">
+                                            <TextBlock Grid.Row="0"
+                                                       Grid.Column="0"
+                                                       VerticalAlignment="Center"
+                                                       Text="{loc:Loc Key=Emission.TableHeader.BzCode}" />
+                                            <TextBox Grid.Row="0"
+                                                     Grid.Column="1"
+                                                     Text="{Binding BzCode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-                                <TextBlock Grid.Row="1"
-                                           Grid.Column="0"
-                                           VerticalAlignment="Center"
-                                           Text="{loc:Loc Key=Emission.TableHeader.EmittedAt}" />
-                                <CalendarDatePicker Grid.Row="1"
-                                                   Grid.Column="1"
-                                                   SelectedDate="{Binding SelectedLine.EmittedAt, Mode=TwoWay, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}" />
+                                            <TextBlock Grid.Row="1"
+                                                       Grid.Column="0"
+                                                       VerticalAlignment="Center"
+                                                       Text="{loc:Loc Key=Emission.TableHeader.EmittedAt}" />
+                                            <CalendarDatePicker Grid.Row="1"
+                                                               Grid.Column="1"
+                                                               SelectedDate="{Binding EmittedAt, Mode=TwoWay, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}" />
 
-                                <TextBlock Grid.Row="2"
-                                           Grid.Column="0"
-                                           VerticalAlignment="Center"
-                                           Text="{loc:Loc Key=Emission.TableHeader.CancelReason}" />
-                                <TextBox Grid.Row="2"
-                                         Grid.Column="1"
-                                         Text="{Binding SelectedLine.CancelReason, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                         IsEnabled="{Binding SelectedLine.IsEmitted}"
-                                         Watermark="{loc:Loc Key=Common.Placeholder.Reason}" />
+                                            <TextBlock Grid.Row="2"
+                                                       Grid.Column="0"
+                                                       VerticalAlignment="Center"
+                                                       Text="{loc:Loc Key=Emission.TableHeader.CancelReason}" />
+                                            <TextBox Grid.Row="2"
+                                                     Grid.Column="1"
+                                                     Text="{Binding CancelReason, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                     IsEnabled="{Binding IsEmitted}"
+                                                     Watermark="{loc:Loc Key=Common.Placeholder.Reason}" />
 
-                                <TextBlock Grid.Row="3"
-                                           Grid.Column="0"
-                                           VerticalAlignment="Center"
-                                           Text="{loc:Loc Key=Emission.TableHeader.LastCancelReason}" />
-                                <TextBlock Grid.Row="3"
-                                           Grid.Column="1"
-                                           Text="{Binding SelectedLine.LastCancellationReason}"
-                                           TextWrapping="Wrap" />
-                            </Grid>
+                                            <TextBlock Grid.Row="3"
+                                                       Grid.Column="0"
+                                                       VerticalAlignment="Center"
+                                                       Text="{loc:Loc Key=Emission.TableHeader.LastCancelReason}" />
+                                            <TextBlock Grid.Row="3"
+                                                       Grid.Column="1"
+                                                       Text="{Binding LastCancellationReason}"
+                                                       TextWrapping="Wrap" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ContentControl.ContentTemplate>
+                            </ContentControl>
                             <StackPanel Orientation="Horizontal"
                                         HorizontalAlignment="Right"
                                         Spacing="{StaticResource Space12}">
