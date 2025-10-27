@@ -56,7 +56,10 @@
                         <TextBox Grid.Column="1" Text="{Binding EngagementName}" Watermark="{loc:Loc Key=Common.Placeholder.Name}" IsReadOnly="True" IsEnabled="False" IsTabStop="False" />
                     </Grid>
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.BaseValue}" Classes="Caption" VerticalAlignment="Center" />
-                    <NumericUpDown Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="100000000" Increment="100" FormatString="F2" Value="{Binding PlanningBaseValue}" HorizontalAlignment="Stretch" MinWidth="200" />
+                    <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource Space4}" VerticalAlignment="Center">
+                        <TextBlock Grid.Column="0" Text="{Binding CurrencySymbol}" IsVisible="{Binding HasCurrencySymbol}" VerticalAlignment="Center" />
+                        <NumericUpDown Grid.Column="1" Minimum="0" Maximum="100000000" Increment="100" FormatString="F2" Value="{Binding PlanningBaseValue}" HorizontalAlignment="Stretch" MinWidth="200" />
+                    </Grid>
 
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.FocalPoint}" Classes="Caption" VerticalAlignment="Center" />
                     <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding CustomerFocalPointName}" Watermark="{loc:Loc Key=Common.Placeholder.Name}" />

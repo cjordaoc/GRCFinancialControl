@@ -102,7 +102,7 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             query = query.Where(engagement => allowedEngagements.Contains(engagement.EngagementId));
         }
 
-        return query
+            return query
             .OrderBy(engagement => engagement.EngagementId)
             .Select(engagement => new EngagementLookup
             {
@@ -114,6 +114,7 @@ public class InvoicePlanRepository : IInvoicePlanRepository
                 CustomerName = engagement.Customer == null
                     ? null
                     : engagement.Customer.Name,
+                Currency = engagement.Currency,
             })
             .ToList();
     }
