@@ -83,6 +83,7 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 - Adjusting the **# Invoices** field keeps exactly that many editable rows in the grid while preserving previously emitted lines alongside them.
 - Invoice lines auto-generate emission dates from the first emission date and payment terms, rebalance editable percentages/amounts to keep totals at 100% of the engagement value, and display all monetary fields with the engagement currency symbol.
 - Totals are continuously recalculated; mismatches highlight in red and block the Save action until both total percentage (100.00%) and total amount (engagement total) are satisfied.
+- The **Confirm Request** workspace keeps the process inline: after choosing **Insert Request Data** the plan invoices appear beneath the selector with a detail form that lets controllers enter RITM, COE responsible, and request date. **Save** marks the current invoice as Requested, while **Reverse** clears the fields and returns the line to Planned without leaving the screen.
 
 **Validation & Consolidation Rules**
 - Only invoices due on or before the execution date generate notifications, preventing premature reminders.

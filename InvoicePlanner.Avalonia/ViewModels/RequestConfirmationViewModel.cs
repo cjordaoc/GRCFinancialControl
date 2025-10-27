@@ -1,13 +1,13 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using InvoicePlanner.Avalonia.Messages;
-using InvoicePlanner.Avalonia.Services;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
 using Invoices.Data.Repositories;
@@ -22,21 +22,20 @@ public partial class RequestConfirmationViewModel : ViewModelBase
     private readonly IInvoiceAccessScope _accessScope;
     private readonly RelayCommand _loadPlanCommand;
     private readonly RelayCommand _savePlanDetailsCommand;
-    private readonly DialogService _dialogService;
-    private RequestConfirmationDialogViewModel? _dialogViewModel;
+    private readonly RelayCommand _reverseSelectedLineCommand;
+    private readonly RelayCommand _closePlanDetailsCommand;
+    private RequestConfirmationLineViewModel? _selectedLineSubscription;
 
     public RequestConfirmationViewModel(
         IInvoicePlanRepository repository,
         ILogger<RequestConfirmationViewModel> logger,
         IInvoiceAccessScope accessScope,
-        DialogService dialogService,
         IMessenger messenger)
         : base(messenger)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _accessScope = accessScope ?? throw new ArgumentNullException(nameof(accessScope));
-        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 
         _accessScope.EnsureInitialized();
 
@@ -44,8 +43,10 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         AvailablePlans.CollectionChanged += OnAvailablePlansChanged;
 
         _loadPlanCommand = new RelayCommand(LoadSelectedPlan, () => SelectedPlan is not null);
-        _savePlanDetailsCommand = new RelayCommand(SavePlanDetails, () => HasLines);
-        ClosePlanDetailsCommand = new RelayCommand(() => Messenger.Send(new CloseDialogMessage(false)));
+        _savePlanDetailsCommand = new RelayCommand(SavePlanDetails, CanSaveSelectedLine);
+        _reverseSelectedLineCommand = new RelayCommand(ReverseSelectedLine, CanReverseSelectedLine);
+        _closePlanDetailsCommand = new RelayCommand(ClosePlanDetails, () => IsPlanDetailsVisible);
+        ClosePlanDetailsCommand = _closePlanDetailsCommand;
         RefreshCommand = new RelayCommand(() =>
         {
             ResetMessages();
@@ -71,6 +72,9 @@ public partial class RequestConfirmationViewModel : ViewModelBase
     private string engagementId = string.Empty;
 
     [ObservableProperty]
+    private bool isPlanDetailsVisible;
+
+    [ObservableProperty]
     private string? statusMessage;
 
     [ObservableProperty]
@@ -85,6 +89,9 @@ public partial class RequestConfirmationViewModel : ViewModelBase
     [ObservableProperty]
     private string? planSelectionMessage;
 
+    [ObservableProperty]
+    private RequestConfirmationLineViewModel? selectedLine;
+
     public bool HasLines => Lines.Count > 0;
 
     public bool HasValidationMessage => !string.IsNullOrWhiteSpace(ValidationMessage);
@@ -92,6 +99,8 @@ public partial class RequestConfirmationViewModel : ViewModelBase
     public bool HasStatusMessage => !string.IsNullOrWhiteSpace(StatusMessage);
 
     public bool HasAvailablePlans => AvailablePlans.Count > 0;
+
+    public bool HasSelectedLine => SelectedLine is not null;
 
     public string EngagementDisplay => LocalizationRegistry.Format(
         "Request.Status.EngagementFormat",
@@ -111,6 +120,8 @@ public partial class RequestConfirmationViewModel : ViewModelBase
 
     public IRelayCommand SavePlanDetailsCommand => _savePlanDetailsCommand;
 
+    public IRelayCommand ReverseSelectedLineCommand => _reverseSelectedLineCommand;
+
     public IRelayCommand RefreshCommand { get; }
 
     partial void OnValidationMessageChanged(string? value) => OnPropertyChanged(nameof(HasValidationMessage));
@@ -126,6 +137,29 @@ public partial class RequestConfirmationViewModel : ViewModelBase
     partial void OnSelectedPlanChanged(InvoicePlanSummaryViewModel? value)
     {
         _loadPlanCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnIsPlanDetailsVisibleChanged(bool value)
+    {
+        _closePlanDetailsCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnSelectedLineChanged(RequestConfirmationLineViewModel? value)
+    {
+        if (_selectedLineSubscription is not null)
+        {
+            _selectedLineSubscription.PropertyChanged -= OnSelectedLinePropertyChanged;
+        }
+
+        _selectedLineSubscription = value;
+
+        if (_selectedLineSubscription is not null)
+        {
+            _selectedLineSubscription.PropertyChanged += OnSelectedLinePropertyChanged;
+        }
+
+        OnPropertyChanged(nameof(HasSelectedLine));
+        RefreshActionCommands();
     }
 
     private void OnLinesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -148,7 +182,8 @@ public partial class RequestConfirmationViewModel : ViewModelBase
 
         OnPropertyChanged(nameof(HasLines));
         RefreshSummaries();
-        UpdateDialogSaveState();
+        EnsureSelectedLineIsValid();
+        RefreshActionCommands();
     }
 
     private void OnAvailablePlansChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -163,7 +198,6 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         if (SelectedPlan is null)
         {
             ValidationMessage = LocalizationRegistry.Get("Request.Validation.PlanSelection");
-            UpdateDialogSaveState();
             return;
         }
 
@@ -176,7 +210,6 @@ public partial class RequestConfirmationViewModel : ViewModelBase
                 EngagementId = string.Empty;
                 CurrentPlanId = 0;
                 ValidationMessage = LocalizationRegistry.Format("Request.Validation.PlanNotFound", SelectedPlan.Id);
-                UpdateDialogSaveState();
                 return;
             }
 
@@ -211,21 +244,21 @@ public partial class RequestConfirmationViewModel : ViewModelBase
             RefreshSummaries();
 
             StatusMessage = LocalizationRegistry.Format("Request.Status.PlanLoaded", plan.Id, Lines.Count);
+
             if (Lines.Count > 0)
             {
-                UpdateDialogSaveState();
-                ShowPlanDetailsDialog();
+                SelectedLine = Lines.FirstOrDefault();
+                IsPlanDetailsVisible = true;
             }
             else
             {
-                UpdateDialogSaveState();
+                IsPlanDetailsVisible = false;
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load invoice plan {PlanId}.", SelectedPlan.Id);
             ValidationMessage = LocalizationRegistry.Format("Request.Status.LoadFailureDetail", ex.Message);
-            UpdateDialogSaveState();
         }
     }
 
@@ -271,6 +304,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
             line.ApplyRequestedState(update.RitmNumber, update.CoeResponsible, update.RequestDate.Date);
 
             StatusMessage = LocalizationRegistry.Format("Request.Status.LineRequested", line.Sequence);
+            RefreshActionCommands();
         }
         catch (Exception ex)
         {
@@ -307,6 +341,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
             line.ResetToPlanned(DateTime.Today);
 
             StatusMessage = LocalizationRegistry.Format("Request.Status.LineUndone", line.Sequence);
+            RefreshActionCommands();
         }
         catch (Exception ex)
         {
@@ -336,9 +371,10 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         }
 
         Lines.Clear();
+        SelectedLine = null;
+        IsPlanDetailsVisible = false;
         RefreshSummaries();
         OnPropertyChanged(nameof(HasLines));
-        UpdateDialogSaveState();
     }
 
     private void LoadAvailablePlans()
@@ -376,13 +412,6 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         }
     }
 
-    private void ShowPlanDetailsDialog()
-    {
-        _dialogViewModel ??= new RequestConfirmationDialogViewModel(this);
-        _dialogViewModel.CanSave = HasLines;
-        _ = _dialogService.ShowDialogAsync(_dialogViewModel, LocalizationRegistry.Get("Request.Title.Primary"));
-    }
-
     private void UpdateSelectedPlanSummaryCounts()
     {
         if (SelectedPlan is null || SelectedPlan.Id != CurrentPlanId)
@@ -398,16 +427,68 @@ public partial class RequestConfirmationViewModel : ViewModelBase
 
     private void SavePlanDetails()
     {
-        Messenger.Send(new CloseDialogMessage(true));
+        if (SelectedLine is null)
+        {
+            ValidationMessage = LocalizationRegistry.Get("Request.Validation.LineSelection");
+            return;
+        }
+
+        HandleRequest(SelectedLine);
     }
 
-    private void UpdateDialogSaveState()
+    private bool CanSaveSelectedLine()
+    {
+        return SelectedLine is not null
+            && SelectedLine.Status == InvoiceItemStatus.Planned
+            && !string.IsNullOrWhiteSpace(SelectedLine.RitmNumber)
+            && !string.IsNullOrWhiteSpace(SelectedLine.CoeResponsible)
+            && SelectedLine.RequestDate is not null;
+    }
+
+    private void ReverseSelectedLine()
+    {
+        if (SelectedLine is null)
+        {
+            ValidationMessage = LocalizationRegistry.Get("Request.Validation.LineSelection");
+            return;
+        }
+
+        HandleUndo(SelectedLine);
+    }
+
+    private bool CanReverseSelectedLine()
+    {
+        return SelectedLine is not null && SelectedLine.Status == InvoiceItemStatus.Requested;
+    }
+
+    private void ClosePlanDetails()
+    {
+        ResetMessages();
+        ClearLines();
+        CurrentPlanId = 0;
+        EngagementId = string.Empty;
+    }
+
+    private void EnsureSelectedLineIsValid()
+    {
+        if (SelectedLine is not null && !Lines.Contains(SelectedLine))
+        {
+            SelectedLine = null;
+        }
+        else if (SelectedLine is null && Lines.Count > 0)
+        {
+            SelectedLine = Lines.FirstOrDefault();
+        }
+    }
+
+    private void RefreshActionCommands()
     {
         _savePlanDetailsCommand.NotifyCanExecuteChanged();
+        _reverseSelectedLineCommand.NotifyCanExecuteChanged();
+    }
 
-        if (_dialogViewModel is not null)
-        {
-            _dialogViewModel.CanSave = HasLines;
-        }
+    private void OnSelectedLinePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        RefreshActionCommands();
     }
 }

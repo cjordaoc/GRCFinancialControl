@@ -47,16 +47,89 @@
                                         MinWidth="200"/>
                             </StackPanel>
                         </StackPanel>
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="{Binding ValidationMessage}"
-                                       Classes="StatusError"
-                                       IsVisible="{Binding HasValidationMessage}" />
-                            <TextBlock Text="{Binding StatusMessage}"
-                                       Classes="StatusSuccess"
-                                       IsVisible="{Binding HasStatusMessage}" />
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="Card" Padding="24" IsVisible="{Binding IsPlanDetailsVisible}">
+                    <StackPanel Spacing="16">
+                        <TextBlock Classes="TitleMedium" Text="{loc:Loc Key=Request.Section.InvoiceDetails.Header}" />
+                        <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space16}">
+                            <TextBlock Text="{Binding EngagementDisplay}" />
+                            <TextBlock Text="{Binding PlannedCountDisplay}" />
+                            <TextBlock Text="{Binding RequestedCountDisplay}" />
+                        </StackPanel>
+                        <DataGrid ItemsSource="{Binding Lines}"
+                                  SelectedItem="{Binding SelectedLine, Mode=TwoWay}"
+                                  AutoGenerateColumns="False"
+                                  HeadersVisibility="Column"
+                                  GridLinesVisibility="All"
+                                  HorizontalAlignment="Stretch"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Auto"
+                                  IsReadOnly="True"
+                                  MaxHeight="260">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Sequence}" Binding="{Binding Sequence}" Width="80"/>
+                                <DataGridTextColumn Header="{loc:Loc Key=Request.TableHeader.EmissionDate}" Binding="{Binding EmissionDate, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
+                                <DataGridTextColumn Header="{loc:Loc Key=Request.TableHeader.Amount}" Binding="{Binding Amount, StringFormat={}{0:F2}}" Width="140"/>
+                                <DataGridTextColumn Header="{loc:Loc Key=Request.TableHeader.Ritm}" Binding="{Binding RitmNumber}" Width="160"/>
+                                <DataGridTextColumn Header="{loc:Loc Key=Request.TableHeader.Coe}" Binding="{Binding CoeResponsible}" Width="180"/>
+                                <DataGridTextColumn Header="{loc:Loc Key=Request.TableHeader.RequestDate}" Binding="{Binding RequestDate, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
+                                <DataGridTextColumn Header="{loc:Loc Key=Request.TableHeader.Status}" Binding="{Binding Status}" Width="120"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Spacing="{StaticResource Space12}" IsVisible="{Binding HasSelectedLine}">
+                            <Grid ColumnDefinitions="Auto,1*"
+                                  RowDefinitions="Auto,Auto,Auto"
+                                  ColumnSpacing="{StaticResource Space16}"
+                                  RowSpacing="{StaticResource Space12}">
+                                <TextBlock Grid.Row="0"
+                                           Grid.Column="0"
+                                           VerticalAlignment="Center"
+                                           Text="{loc:Loc Key=Request.TableHeader.Ritm}" />
+                                <TextBox Grid.Row="0"
+                                         Grid.Column="1"
+                                         Text="{Binding SelectedLine.RitmNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Grid.Row="1"
+                                           Grid.Column="0"
+                                           VerticalAlignment="Center"
+                                           Text="{loc:Loc Key=Request.TableHeader.Coe}" />
+                                <TextBox Grid.Row="1"
+                                         Grid.Column="1"
+                                         Text="{Binding SelectedLine.CoeResponsible, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Grid.Row="2"
+                                           Grid.Column="0"
+                                           VerticalAlignment="Center"
+                                           Text="{loc:Loc Key=Request.TableHeader.RequestDate}" />
+                                <CalendarDatePicker Grid.Row="2"
+                                                   Grid.Column="1"
+                                                   SelectedDate="{Binding SelectedLine.RequestDate, Mode=TwoWay, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}" />
+                            </Grid>
+                            <StackPanel Orientation="Horizontal"
+                                        HorizontalAlignment="Right"
+                                        Spacing="{StaticResource Space12}">
+                                <Button Content="{loc:Loc Key=Common.Button.Save}"
+                                        Command="{Binding SavePlanDetailsCommand}"
+                                        MinWidth="120" />
+                                <Button Content="{loc:Loc Key=Request.Button.Reverse}"
+                                        Command="{Binding ReverseSelectedLineCommand}"
+                                        MinWidth="120" />
+                                <Button Content="{loc:Loc Key=Common.Button.Close}"
+                                        Command="{Binding ClosePlanDetailsCommand}"
+                                        MinWidth="120" />
+                            </StackPanel>
                         </StackPanel>
                     </StackPanel>
                 </Border>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="{Binding ValidationMessage}"
+                               Classes="StatusError"
+                               IsVisible="{Binding HasValidationMessage}" />
+                    <TextBlock Text="{Binding StatusMessage}"
+                               Classes="StatusSuccess"
+                               IsVisible="{Binding HasStatusMessage}" />
+                </StackPanel>
             </StackPanel>
         </ScrollViewer>
 
