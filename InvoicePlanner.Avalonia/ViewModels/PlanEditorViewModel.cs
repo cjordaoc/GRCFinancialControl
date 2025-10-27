@@ -30,6 +30,7 @@ public partial class PlanEditorViewModel : ViewModelBase
     private readonly RelayCommand _createPlanCommand;
     private readonly RelayCommand _refreshCommand;
     private readonly RelayCommand _deletePlanCommand;
+    private readonly RelayCommand _closePlanFormCommand;
     private bool _suppressLineUpdates;
     private bool _isInitializing;
     private PlanEditorDialogViewModel? _dialogViewModel;
@@ -64,6 +65,7 @@ public partial class PlanEditorViewModel : ViewModelBase
         _createPlanCommand = new RelayCommand(CreatePlan, CanCreatePlan);
         _refreshCommand = new RelayCommand(LoadEngagements);
         _deletePlanCommand = new RelayCommand(DeletePlan, CanDeletePlan);
+        _closePlanFormCommand = new RelayCommand(ClosePlanForm);
 
         // Seed with default values so the editor presents a useful layout.
         PlanType = InvoicePlanType.ByDate;
@@ -287,6 +289,8 @@ public partial class PlanEditorViewModel : ViewModelBase
     public IRelayCommand RefreshCommand => _refreshCommand;
 
     public IRelayCommand DeletePlanCommand => _deletePlanCommand;
+
+    public IRelayCommand ClosePlanFormCommand => _closePlanFormCommand;
 
     public bool HasCurrencySymbol => !string.IsNullOrWhiteSpace(CurrencySymbol);
 
@@ -1130,6 +1134,11 @@ public partial class PlanEditorViewModel : ViewModelBase
     {
         _dialogViewModel ??= new PlanEditorDialogViewModel(this);
         _ = _dialogService.ShowDialogAsync(_dialogViewModel, LocalizationRegistry.Get("InvoicePlan.Title.Primary"));
+    }
+
+    private void ClosePlanForm()
+    {
+        Messenger.Send(new CloseDialogMessage(false));
     }
 
     private async void ShowInvoiceLinesDialog()
