@@ -238,6 +238,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
             SelectedPlan.UpdateCounts(
                 plan.Items.Count(item => item.Status == InvoiceItemStatus.Planned),
                 plan.Items.Count(item => item.Status == InvoiceItemStatus.Requested),
+                plan.Items.Count(item => item.Status == InvoiceItemStatus.Emitted),
                 plan.Items.Count(item => item.Status == InvoiceItemStatus.Closed),
                 plan.Items.Count(item => item.Status == InvoiceItemStatus.Canceled));
 
@@ -419,10 +420,11 @@ public partial class RequestConfirmationViewModel : ViewModelBase
             return;
         }
 
+        var emitted = Lines.Count(line => line.Status == InvoiceItemStatus.Emitted);
         var closed = Lines.Count(line => line.Status == InvoiceItemStatus.Closed);
         var canceled = Lines.Count(line => line.Status == InvoiceItemStatus.Canceled);
 
-        SelectedPlan.UpdateCounts(PlannedCount, RequestedCount, closed, canceled);
+        SelectedPlan.UpdateCounts(PlannedCount, RequestedCount, emitted, closed, canceled);
     }
 
     private void SavePlanDetails()

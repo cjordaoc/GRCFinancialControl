@@ -24,7 +24,7 @@ public interface IInvoicePlanRepository
 
     RepositorySaveResult CloseItems(int planId, IReadOnlyCollection<InvoiceEmissionUpdate> updates);
 
-    RepositorySaveResult CancelAndReissue(int planId, IReadOnlyCollection<InvoiceReissueRequest> requests);
+    RepositorySaveResult CancelEmissions(int planId, IReadOnlyCollection<InvoiceEmissionCancellation> cancellations);
 
     InvoiceSummaryResult SearchSummary(InvoiceSummaryFilter filter);
 

@@ -38,18 +38,6 @@ public class InvoiceItem
 
     public DateTime? RequestDate { get; set; }
 
-    public string? BzCode { get; set; }
-
-    public DateTime? EmittedAt { get; set; }
-
-    public DateTime? CanceledAt { get; set; }
-
-    public string? CancelReason { get; set; }
-
-    public int? ReplacementItemId { get; set; }
-
-    public InvoiceItem? ReplacementItem { get; set; }
-
     public DateTime CreatedAt { get; set; }
 
     public DateTime UpdatedAt { get; set; }
@@ -57,4 +45,6 @@ public class InvoiceItem
     public InvoicePlan? Plan { get; set; }
 
     public ICollection<MailOutbox> OutboxEntries { get; } = new List<MailOutbox>();
+
+    public ICollection<InvoiceEmission> Emissions { get; } = new List<InvoiceEmission>();
 }

@@ -144,7 +144,6 @@ public partial class App : Application
                     provider.GetRequiredService<IInvoicePlanRepository>(),
                     provider.GetRequiredService<ILogger<EmissionConfirmationViewModel>>(),
                     provider.GetRequiredService<IInvoiceAccessScope>(),
-                    provider.GetRequiredService<DialogService>(),
                     provider.GetRequiredService<IMessenger>()));
                 services.AddSingleton<InvoiceSummaryViewModel>();
                 services.AddSingleton<NotificationPreviewViewModel>();
