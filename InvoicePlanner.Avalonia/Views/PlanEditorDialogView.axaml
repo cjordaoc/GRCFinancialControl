@@ -88,6 +88,10 @@
                     HorizontalAlignment="Right"
                     Spacing="{StaticResource Space12}"
                     Margin="{StaticResource SpaceThickness24}">
+            <Button Content="{loc:Loc Key=InvoicePlan.Dialog.Button.DeletePlan}"
+                    Command="{Binding DeletePlanCommand}"
+                    MinWidth="160"
+                    Classes="Danger" />
             <Button Content="{loc:Loc Key=InvoicePlan.Dialog.Button.EditPlan}"
                     Command="{Binding EditLinesCommand}"
                     MinWidth="200" />

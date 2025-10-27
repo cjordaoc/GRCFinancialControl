@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -18,6 +19,7 @@ public partial class InvoiceLinesEditorViewModel : ViewModelBase
         _parentViewModel = parentViewModel;
 
         _parentViewModel.PropertyChanged += OnParentPropertyChanged;
+        _parentViewModel.Items.CollectionChanged += OnItemsCollectionChanged;
 
         _saveCommand = new RelayCommand(Save, () => _parentViewModel.CanSavePlan);
         CloseCommand = new RelayCommand(Close);
@@ -51,7 +53,13 @@ public partial class InvoiceLinesEditorViewModel : ViewModelBase
     private void CloseDialog(bool result)
     {
         _parentViewModel.PropertyChanged -= OnParentPropertyChanged;
+        _parentViewModel.Items.CollectionChanged -= OnItemsCollectionChanged;
         Messenger.Send(new CloseDialogMessage(result));
+    }
+
+    private void OnItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(Items));
     }
 
     private void OnParentPropertyChanged(object? sender, PropertyChangedEventArgs e)

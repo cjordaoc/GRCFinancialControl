@@ -30,6 +30,7 @@ public partial class PlanEditorViewModel : ViewModelBase
     private readonly RelayCommand _createPlanCommand;
     private readonly RelayCommand _closePlanFormCommand;
     private readonly RelayCommand _refreshCommand;
+    private readonly RelayCommand _deletePlanCommand;
     private bool _suppressLineUpdates;
     private bool _isInitializing;
     private PlanEditorDialogViewModel? _dialogViewModel;
@@ -64,6 +65,7 @@ public partial class PlanEditorViewModel : ViewModelBase
         _createPlanCommand = new RelayCommand(CreatePlan, CanCreatePlan);
         _closePlanFormCommand = new RelayCommand(() => Messenger.Send(new CloseDialogMessage(false)));
         _refreshCommand = new RelayCommand(LoadEngagements);
+        _deletePlanCommand = new RelayCommand(DeletePlan, CanDeletePlan);
 
         // Seed with default values so the editor presents a useful layout.
         PlanType = InvoicePlanType.ByDate;
@@ -184,6 +186,7 @@ public partial class PlanEditorViewModel : ViewModelBase
         RefreshSequences();
         RecalculateTotals();
         _savePlanCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(Items));
     }
 
     public bool HasRecipientEmails => !string.IsNullOrWhiteSpace(RecipientEmails);
@@ -257,6 +260,11 @@ public partial class PlanEditorViewModel : ViewModelBase
         UpdateCurrencySymbol(value?.Currency);
     }
 
+    partial void OnPlanIdChanged(int value)
+    {
+        _deletePlanCommand.NotifyCanExecuteChanged();
+    }
+
     partial void OnRecipientEmailsChanged(string? value)
     {
         OnPropertyChanged(nameof(HasRecipientEmails));
@@ -281,6 +289,8 @@ public partial class PlanEditorViewModel : ViewModelBase
     public IRelayCommand ClosePlanFormCommand => _closePlanFormCommand;
 
     public IRelayCommand RefreshCommand => _refreshCommand;
+
+    public IRelayCommand DeletePlanCommand => _deletePlanCommand;
 
     public bool HasCurrencySymbol => !string.IsNullOrWhiteSpace(CurrencySymbol);
 
@@ -1068,6 +1078,8 @@ public partial class PlanEditorViewModel : ViewModelBase
 
     private bool CanExecuteSavePlan() => !HasTotalsMismatch && Items.Count > 0;
 
+    private bool CanDeletePlan() => PlanId > 0;
+
     private void CreatePlan()
     {
         if (SelectedEngagement is null)
@@ -1128,6 +1140,53 @@ public partial class PlanEditorViewModel : ViewModelBase
     {
         var invoiceLinesEditorViewModel = new InvoiceLinesEditorViewModel(this);
         _ = _dialogService.ShowDialogAsync(invoiceLinesEditorViewModel, LocalizationRegistry.Get("InvoicePlan.Section.InvoiceLines.Title"));
+    }
+
+    private void DeletePlan()
+    {
+        var currentPlanId = PlanId;
+
+        if (currentPlanId <= 0)
+        {
+            return;
+        }
+
+        ValidationMessage = null;
+        StatusMessage = null;
+
+        try
+        {
+            var result = _repository.DeletePlan(currentPlanId);
+
+            if (result.Deleted == 0)
+            {
+                ValidationMessage = LocalizationRegistry.Format("InvoicePlan.Validation.PlanNotFound", currentPlanId);
+                return;
+            }
+
+            var selectedEngagement = SelectedEngagement;
+
+            ResetPlanEditor();
+            Messenger.Send(new CloseDialogMessage(true));
+
+            LoadEngagements();
+            if (selectedEngagement is not null)
+            {
+                SelectedEngagement = Engagements.FirstOrDefault(option =>
+                    string.Equals(option.EngagementId, selectedEngagement.EngagementId, StringComparison.OrdinalIgnoreCase));
+            }
+
+            EngagementSelectionMessage = LocalizationRegistry.Format("InvoicePlan.Selection.Status.PlanDeleted", currentPlanId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete invoice plan {PlanId}.", currentPlanId);
+            ValidationMessage = LocalizationRegistry.Format("InvoicePlan.Status.DeleteFailure", ex.Message);
+        }
+        finally
+        {
+            _deletePlanCommand.NotifyCanExecuteChanged();
+        }
     }
 
     private void AdjustLastLineForTotals()

@@ -210,6 +210,9 @@
   <data name="InvoicePlan.Dialog.Button.EditPlan" xml:space="preserve">
     <value>Add / Edit plan</value>
   </data>
+  <data name="InvoicePlan.Dialog.Button.DeletePlan" xml:space="preserve">
+    <value>Delete plan</value>
+  </data>
   <data name="InvoicePlan.Selection.Message.Empty" xml:space="preserve">
     <value>No engagements are available. Configure the data connection and try again.</value>
   </data>
@@ -218,6 +221,9 @@
   </data>
   <data name="InvoicePlan.Selection.Status.LoadFailure" xml:space="preserve">
     <value>Could not load engagements: {0}</value>
+  </data>
+  <data name="InvoicePlan.Selection.Status.PlanDeleted" xml:space="preserve">
+    <value>Invoice plan {0} deleted. Select the engagement again to start a new schedule.</value>
   </data>
   <data name="InvoicePlan.Title.Primary" xml:space="preserve">
     <value>Invoice plan</value>
@@ -329,6 +335,9 @@
   </data>
   <data name="InvoicePlan.Status.SaveFailure" xml:space="preserve">
     <value>Failed to save plan: {0}</value>
+  </data>
+  <data name="InvoicePlan.Status.DeleteFailure" xml:space="preserve">
+    <value>Failed to delete plan: {0}</value>
   </data>
   <data name="Request.Title.Primary" xml:space="preserve">
     <value>Request confirmation</value>

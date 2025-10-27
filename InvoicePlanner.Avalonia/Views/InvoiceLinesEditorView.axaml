@@ -14,7 +14,8 @@
         <conv:PercentageOfSizeConverter x:Key="PercentageOfSizeConverter" />
         <conv:BoolToBrushConverter x:Key="TotalsBrushConverter"
                                     TrueResourceKey="ThemeErrorBrush"
-                                    FalseResourceKey="ThemeForegroundBrush" />
+                                    FalseResourceKey="TotalsNeutralBrush" />
+        <SolidColorBrush x:Key="TotalsNeutralBrush" Color="#FFFFFFFF" />
     </UserControl.Resources>
 
     <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
@@ -103,6 +104,8 @@
                                   AutoGenerateColumns="False"
                                   HeadersVisibility="Column"
                                   GridLinesVisibility="All"
+                                  CanUserResizeColumns="True"
+                                  behaviors:DataGridRowResizeBehavior.IsEnabled="True"
                                   HorizontalScrollBarVisibility="Auto"
                                   VerticalScrollBarVisibility="Auto">
                             <DataGrid.Columns>
