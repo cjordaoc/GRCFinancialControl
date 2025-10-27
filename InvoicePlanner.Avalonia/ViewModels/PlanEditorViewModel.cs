@@ -28,7 +28,6 @@ public partial class PlanEditorViewModel : ViewModelBase
     private readonly RelayCommand _savePlanCommand;
     private readonly RelayCommand _editLinesCommand;
     private readonly RelayCommand _createPlanCommand;
-    private readonly RelayCommand _closePlanFormCommand;
     private readonly RelayCommand _refreshCommand;
     private readonly RelayCommand _deletePlanCommand;
     private bool _suppressLineUpdates;
@@ -63,7 +62,6 @@ public partial class PlanEditorViewModel : ViewModelBase
         _savePlanCommand = new RelayCommand(SavePlan, CanExecuteSavePlan);
         _editLinesCommand = new RelayCommand(ShowInvoiceLinesDialog);
         _createPlanCommand = new RelayCommand(CreatePlan, CanCreatePlan);
-        _closePlanFormCommand = new RelayCommand(() => Messenger.Send(new CloseDialogMessage(false)));
         _refreshCommand = new RelayCommand(LoadEngagements);
         _deletePlanCommand = new RelayCommand(DeletePlan, CanDeletePlan);
 
@@ -285,8 +283,6 @@ public partial class PlanEditorViewModel : ViewModelBase
     public IRelayCommand EditLinesCommand => _editLinesCommand;
 
     public IRelayCommand CreatePlanCommand => _createPlanCommand;
-
-    public IRelayCommand ClosePlanFormCommand => _closePlanFormCommand;
 
     public IRelayCommand RefreshCommand => _refreshCommand;
 
@@ -1136,10 +1132,16 @@ public partial class PlanEditorViewModel : ViewModelBase
         _ = _dialogService.ShowDialogAsync(_dialogViewModel, LocalizationRegistry.Get("InvoicePlan.Title.Primary"));
     }
 
-    private void ShowInvoiceLinesDialog()
+    private async void ShowInvoiceLinesDialog()
     {
         var invoiceLinesEditorViewModel = new InvoiceLinesEditorViewModel(this);
-        _ = _dialogService.ShowDialogAsync(invoiceLinesEditorViewModel, LocalizationRegistry.Get("InvoicePlan.Section.InvoiceLines.Title"));
+        var result = await _dialogService.ShowDialogAsync(invoiceLinesEditorViewModel, LocalizationRegistry.Get("InvoicePlan.Section.InvoiceLines.Title"));
+
+        if (result == false)
+        {
+            // The user cancelled the lines editor, so close the parent dialog as well.
+            Messenger.Send(new CloseDialogMessage(false));
+        }
     }
 
     private void DeletePlan()
