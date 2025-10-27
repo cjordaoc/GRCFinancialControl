@@ -14,7 +14,7 @@
         <conv:PercentageOfSizeConverter x:Key="PercentageOfSizeConverter" />
         <conv:BoolToBrushConverter x:Key="TotalsBrushConverter"
                                     TrueResourceKey="ThemeErrorBrush"
-                                    FalseResourceKey="BrushOnSurface" />
+                                    FalseResourceKey="ThemeForegroundBrush" />
     </UserControl.Resources>
 
     <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
@@ -38,7 +38,7 @@
 
                     <Grid Grid.Row="1"
                           Margin="0,12,0,0"
-                          ColumnDefinitions="Auto,*,Auto,Auto"
+                          ColumnDefinitions="Auto,*,Auto,Auto,Auto"
                           RowDefinitions="Auto,Auto"
                           ColumnSpacing="{StaticResource Space24}"
                           RowSpacing="{StaticResource Space12}">
@@ -65,6 +65,13 @@
                                        Value="{Binding Editor.NumInvoices}"
                                        Width="160"
                                        HorizontalAlignment="Left" />
+
+                        <Button Grid.Row="0"
+                                Grid.Column="4"
+                                Content="{loc:Loc Key=Common.Button.Refresh}"
+                                Command="{Binding RefreshCommand}"
+                                MinWidth="120"
+                                HorizontalAlignment="Right" />
 
                         <TextBlock Grid.Row="1"
                                    Grid.Column="0"
@@ -99,7 +106,8 @@
                             CornerRadius="4"
                             Margin="0,12,0,12"
                             HorizontalAlignment="Stretch">
-                        <DataGrid ItemsSource="{Binding Items}"
+                        <DataGrid x:Name="InvoiceLinesGrid"
+                                  ItemsSource="{Binding Items}"
                                   AutoGenerateColumns="False"
                                   HeadersVisibility="Column"
                                   GridLinesVisibility="All"
@@ -197,8 +205,8 @@
                                             <StackPanel Orientation="Horizontal"
                                                         Spacing="{StaticResource Space4}"
                                                         VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Owner.CurrencySymbol}"
-                                                           IsVisible="{Binding Owner.HasCurrencySymbol}"
+                                                <TextBlock Text="{Binding CurrencySymbol}"
+                                                           IsVisible="{Binding HasCurrencySymbol}"
                                                            VerticalAlignment="Center" />
                                                 <NumericUpDown Value="{Binding Amount}"
                                                                Minimum="0"
@@ -223,11 +231,11 @@
                     <TextBlock Grid.Column="0"
                                Text="{loc:Loc Key=InvoicePlan.Section.Totals.Label}"
                                Classes="Caption"
-                               Foreground="{StaticResource BrushOnSurface}"
+                               Foreground="{StaticResource ThemeForegroundBrush}"
                                VerticalAlignment="Center" />
                     <TextBlock Grid.Column="1"
                                Text="{loc:Loc Key=InvoicePlan.Section.Totals.Percent}"
-                               Foreground="{StaticResource BrushOnSurface}"
+                               Foreground="{StaticResource ThemeForegroundBrush}"
                                VerticalAlignment="Center" />
                     <StackPanel Grid.Column="2"
                                 Orientation="Horizontal"
@@ -243,7 +251,7 @@
                     </StackPanel>
                     <TextBlock Grid.Column="3"
                                Text="{loc:Loc Key=InvoicePlan.Section.Totals.Amount}"
-                               Foreground="{StaticResource BrushOnSurface}"
+                               Foreground="{StaticResource ThemeForegroundBrush}"
                                VerticalAlignment="Center" />
                     <StackPanel Grid.Column="4"
                                 Orientation="Horizontal"
