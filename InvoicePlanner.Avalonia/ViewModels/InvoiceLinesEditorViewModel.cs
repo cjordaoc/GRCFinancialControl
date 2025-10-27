@@ -1,22 +1,17 @@
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using InvoicePlanner.Avalonia.Messages;
-using InvoicePlanner.Avalonia.Services;
-using Invoices.Core.Enums;
-using Invoices.Core.Models;
-using Invoices.Core.Validation;
-using Microsoft.Extensions.Logging;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
 public partial class InvoiceLinesEditorViewModel : ViewModelBase
 {
     private readonly PlanEditorViewModel _parentViewModel;
+    private readonly RelayCommand _saveCommand;
 
     public InvoiceLinesEditorViewModel(PlanEditorViewModel parentViewModel)
     {
@@ -24,8 +19,9 @@ public partial class InvoiceLinesEditorViewModel : ViewModelBase
 
         _parentViewModel.PropertyChanged += OnParentPropertyChanged;
 
-        SaveCommand = new RelayCommand(Save);
+        _saveCommand = new RelayCommand(Save, () => _parentViewModel.CanSavePlan);
         CloseCommand = new RelayCommand(Close);
+        _saveCommand.NotifyCanExecuteChanged();
     }
 
     public PlanEditorViewModel Editor => _parentViewModel;
@@ -33,8 +29,12 @@ public partial class InvoiceLinesEditorViewModel : ViewModelBase
     public ObservableCollection<InvoicePlanLineViewModel> Items => _parentViewModel.Items;
     public decimal TotalPercentage => _parentViewModel.TotalPercentage;
     public decimal TotalAmount => _parentViewModel.TotalAmount;
+    public string CurrencySymbol => _parentViewModel.CurrencySymbol;
+    public bool HasCurrencySymbol => _parentViewModel.HasCurrencySymbol;
+    public bool HasTotalsMismatch => _parentViewModel.HasTotalsMismatch;
+    public bool CanSavePlan => _parentViewModel.CanSavePlan;
 
-    public IRelayCommand SaveCommand { get; }
+    public IRelayCommand SaveCommand => _saveCommand;
     public IRelayCommand CloseCommand { get; }
 
     private void Save()
@@ -66,6 +66,19 @@ public partial class InvoiceLinesEditorViewModel : ViewModelBase
                 break;
             case nameof(PlanEditorViewModel.Items):
                 OnPropertyChanged(nameof(Items));
+                break;
+            case nameof(PlanEditorViewModel.CurrencySymbol):
+                OnPropertyChanged(nameof(CurrencySymbol));
+                OnPropertyChanged(nameof(HasCurrencySymbol));
+                break;
+            case nameof(PlanEditorViewModel.HasTotalsMismatch):
+                OnPropertyChanged(nameof(HasTotalsMismatch));
+                OnPropertyChanged(nameof(CanSavePlan));
+                _saveCommand.NotifyCanExecuteChanged();
+                break;
+            case nameof(PlanEditorViewModel.CanSavePlan):
+                OnPropertyChanged(nameof(CanSavePlan));
+                _saveCommand.NotifyCanExecuteChanged();
                 break;
         }
     }

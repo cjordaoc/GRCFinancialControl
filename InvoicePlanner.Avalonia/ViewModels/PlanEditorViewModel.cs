@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Globalization;
 using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -24,9 +25,16 @@ public partial class PlanEditorViewModel : ViewModelBase
     private readonly ILogger<PlanEditorViewModel> _logger;
     private readonly IInvoiceAccessScope _accessScope;
     private readonly DialogService _dialogService;
+    private readonly RelayCommand _savePlanCommand;
+    private readonly RelayCommand _editLinesCommand;
+    private readonly RelayCommand _createPlanCommand;
+    private readonly RelayCommand _closePlanFormCommand;
+    private readonly RelayCommand _refreshCommand;
     private bool _suppressLineUpdates;
     private bool _isInitializing;
     private PlanEditorDialogViewModel? _dialogViewModel;
+
+    private static readonly Dictionary<string, string> CurrencySymbolCache = new(StringComparer.OrdinalIgnoreCase);
 
     public PlanEditorViewModel(
         IInvoicePlanRepository repository,
@@ -51,14 +59,11 @@ public partial class PlanEditorViewModel : ViewModelBase
 
         PlanTypes = Enum.GetValues<InvoicePlanType>();
 
-        SavePlanCommand = new RelayCommand(SavePlan);
-        EditLinesCommand = new RelayCommand(ShowInvoiceLinesDialog);
-        CreatePlanCommand = new RelayCommand(CreatePlan, CanCreatePlan);
-        ClosePlanFormCommand = new RelayCommand(() => Messenger.Send(new CloseDialogMessage(false)));
-        RefreshCommand = new RelayCommand(() =>
-        {
-            LoadEngagements();
-        });
+        _savePlanCommand = new RelayCommand(SavePlan, CanExecuteSavePlan);
+        _editLinesCommand = new RelayCommand(ShowInvoiceLinesDialog);
+        _createPlanCommand = new RelayCommand(CreatePlan, CanCreatePlan);
+        _closePlanFormCommand = new RelayCommand(() => Messenger.Send(new CloseDialogMessage(false)));
+        _refreshCommand = new RelayCommand(LoadEngagements);
 
         // Seed with default values so the editor presents a useful layout.
         PlanType = InvoicePlanType.ByDate;
@@ -120,10 +125,16 @@ public partial class PlanEditorViewModel : ViewModelBase
     private decimal totalAmount;
 
     [ObservableProperty]
+    private string currencySymbol = string.Empty;
+
+    [ObservableProperty]
     private string? statusMessage;
 
     [ObservableProperty]
     private string? validationMessage;
+
+    [ObservableProperty]
+    private bool hasTotalsMismatch;
 
     private int _numInvoices = 1;
 
@@ -138,15 +149,9 @@ public partial class PlanEditorViewModel : ViewModelBase
         get => _numInvoices;
         set
         {
-            var lockedCount = Items.Count(line => !line.IsEditable);
-            var minimum = Math.Max(1, lockedCount);
+            var sanitizedValue = Math.Max(1, value);
 
-            if (value < minimum)
-            {
-                value = minimum;
-            }
-
-            if (SetProperty(ref _numInvoices, value))
+            if (SetProperty(ref _numInvoices, sanitizedValue))
             {
                 if (!_isInitializing)
                 {
@@ -178,11 +183,8 @@ public partial class PlanEditorViewModel : ViewModelBase
 
         RefreshSequences();
         RecalculateTotals();
+        _savePlanCommand.NotifyCanExecuteChanged();
     }
-
-    public IRelayCommand ClosePlanFormCommand { get; }
-
-    public IRelayCommand RefreshCommand { get; }
 
     public bool HasRecipientEmails => !string.IsNullOrWhiteSpace(RecipientEmails);
 
@@ -201,6 +203,16 @@ public partial class PlanEditorViewModel : ViewModelBase
 
         ApplyEmissionDateRule();
         OnPropertyChanged(nameof(RequiresFirstEmissionDate));
+    }
+
+    partial void OnPaymentTermDaysChanged(int value)
+    {
+        if (_isInitializing)
+        {
+            return;
+        }
+
+        ApplyEmissionDateRule();
     }
 
     partial void OnPlanningBaseValueChanged(decimal value)
@@ -241,7 +253,8 @@ public partial class PlanEditorViewModel : ViewModelBase
 
     partial void OnSelectedEngagementChanged(EngagementOptionViewModel? value)
     {
-        CreatePlanCommand.NotifyCanExecuteChanged();
+        _createPlanCommand.NotifyCanExecuteChanged();
+        UpdateCurrencySymbol(value?.Currency);
     }
 
     partial void OnRecipientEmailsChanged(string? value)
@@ -249,10 +262,29 @@ public partial class PlanEditorViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasRecipientEmails));
     }
 
-    public IRelayCommand SavePlanCommand { get; }
-    public IRelayCommand EditLinesCommand { get; }
+    partial void OnCurrencySymbolChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasCurrencySymbol));
+    }
 
-    public IRelayCommand CreatePlanCommand { get; }
+    partial void OnHasTotalsMismatchChanged(bool value)
+    {
+        OnPropertyChanged(nameof(CanSavePlan));
+        _savePlanCommand.NotifyCanExecuteChanged();
+    }
+
+    public IRelayCommand SavePlanCommand => _savePlanCommand;
+    public IRelayCommand EditLinesCommand => _editLinesCommand;
+
+    public IRelayCommand CreatePlanCommand => _createPlanCommand;
+
+    public IRelayCommand ClosePlanFormCommand => _closePlanFormCommand;
+
+    public IRelayCommand RefreshCommand => _refreshCommand;
+
+    public bool HasCurrencySymbol => !string.IsNullOrWhiteSpace(CurrencySymbol);
+
+    public bool CanSavePlan => !HasTotalsMismatch;
 
     public bool LoadPlan(int planId)
     {
@@ -336,6 +368,7 @@ public partial class PlanEditorViewModel : ViewModelBase
             RecalculateTotals();
             OnPropertyChanged(nameof(RequiresFirstEmissionDate));
             OnPropertyChanged(nameof(HasRecipientEmails));
+            UpdateCurrencySymbol(SelectedEngagement?.Currency);
             ShowPlanDialog();
         }
     }
@@ -347,10 +380,15 @@ public partial class PlanEditorViewModel : ViewModelBase
             return;
         }
 
-        _suppressLineUpdates = true;
-        var amount = Math.Round(PlanningBaseValue * line.Percentage / 100m, 2, MidpointRounding.AwayFromZero);
-        line.SetAmount(amount);
-        _suppressLineUpdates = false;
+        try
+        {
+            _suppressLineUpdates = true;
+            RebalanceFromPercentageChange(line);
+        }
+        finally
+        {
+            _suppressLineUpdates = false;
+        }
 
         RecalculateTotals();
     }
@@ -362,22 +400,198 @@ public partial class PlanEditorViewModel : ViewModelBase
             return;
         }
 
-        _suppressLineUpdates = true;
-        var baseValue = PlanningBaseValue;
-        var percent = baseValue == 0
-            ? 0
-            : Math.Round(line.Amount / baseValue * 100m, 4, MidpointRounding.AwayFromZero);
-        line.SetPercentage(percent);
-        _suppressLineUpdates = false;
+        try
+        {
+            _suppressLineUpdates = true;
+            RebalanceFromAmountChange(line);
+        }
+        finally
+        {
+            _suppressLineUpdates = false;
+        }
 
         RecalculateTotals();
     }
 
+    private void RebalanceFromPercentageChange(InvoicePlanLineViewModel changedLine)
+    {
+        var editableLines = Items.Where(line => line.IsEditable).ToList();
+
+        if (editableLines.Count == 0)
+        {
+            return;
+        }
+
+        var lockedPercent = Items.Where(line => !line.IsEditable).Sum(line => line.Percentage);
+        var lockedAmount = Items.Where(line => !line.IsEditable).Sum(line => line.Amount);
+
+        var availablePercent = Math.Max(0m, 100m - lockedPercent);
+        var availableAmount = Math.Max(0m, PlanningBaseValue - lockedAmount);
+
+        var clampedPercent = Math.Clamp(changedLine.Percentage, 0m, availablePercent);
+        var roundedPercent = Math.Round(clampedPercent, 4, MidpointRounding.AwayFromZero);
+        changedLine.SetPercentage(roundedPercent);
+
+        decimal lineAmount = 0m;
+        if (availablePercent > 0m && availableAmount > 0m)
+        {
+            var ratio = roundedPercent / availablePercent;
+            lineAmount = Math.Round(availableAmount * ratio, 2, MidpointRounding.AwayFromZero);
+        }
+
+        changedLine.SetAmount(lineAmount);
+
+        var remainingLines = editableLines.Where(line => !ReferenceEquals(line, changedLine)).ToList();
+
+        if (remainingLines.Count == 0)
+        {
+            return;
+        }
+
+        var remainingPercent = Math.Max(0m, availablePercent - changedLine.Percentage);
+        var remainingAmount = Math.Max(0m, availableAmount - changedLine.Amount);
+        var evenPercent = remainingLines.Count > 0
+            ? Math.Round(remainingPercent / remainingLines.Count, 4, MidpointRounding.AwayFromZero)
+            : 0m;
+
+        decimal percentAssigned = 0m;
+        decimal amountAssigned = 0m;
+
+        for (var index = 0; index < remainingLines.Count; index++)
+        {
+            var line = remainingLines[index];
+            var isLast = index == remainingLines.Count - 1;
+
+            var percent = isLast
+                ? Math.Round(remainingPercent - percentAssigned, 4, MidpointRounding.AwayFromZero)
+                : evenPercent;
+
+            if (percent < 0m)
+            {
+                percent = 0m;
+            }
+
+            decimal amount;
+            if (availablePercent <= 0m || availableAmount <= 0m)
+            {
+                amount = 0m;
+            }
+            else if (isLast)
+            {
+                amount = Math.Round(remainingAmount - amountAssigned, 2, MidpointRounding.AwayFromZero);
+            }
+            else
+            {
+                var ratio = availablePercent == 0m ? 0m : percent / availablePercent;
+                amount = Math.Round(availableAmount * ratio, 2, MidpointRounding.AwayFromZero);
+            }
+
+            if (amount < 0m)
+            {
+                amount = 0m;
+            }
+
+            line.SetPercentage(percent);
+            line.SetAmount(amount);
+
+            percentAssigned += percent;
+            amountAssigned += amount;
+        }
+    }
+
+    private void RebalanceFromAmountChange(InvoicePlanLineViewModel changedLine)
+    {
+        var editableLines = Items.Where(line => line.IsEditable).ToList();
+
+        if (editableLines.Count == 0)
+        {
+            return;
+        }
+
+        var lockedPercent = Items.Where(line => !line.IsEditable).Sum(line => line.Percentage);
+        var lockedAmount = Items.Where(line => !line.IsEditable).Sum(line => line.Amount);
+
+        var availableAmount = Math.Max(0m, PlanningBaseValue - lockedAmount);
+        var availablePercent = Math.Max(0m, 100m - lockedPercent);
+
+        var clampedAmount = Math.Clamp(changedLine.Amount, 0m, availableAmount);
+        var roundedAmount = Math.Round(clampedAmount, 2, MidpointRounding.AwayFromZero);
+        changedLine.SetAmount(roundedAmount);
+
+        decimal linePercent = 0m;
+        if (availableAmount > 0m && availablePercent > 0m)
+        {
+            var ratio = roundedAmount / availableAmount;
+            ratio = Math.Clamp(ratio, 0m, 1m);
+            linePercent = Math.Round(availablePercent * ratio, 4, MidpointRounding.AwayFromZero);
+        }
+
+        changedLine.SetPercentage(linePercent);
+
+        var remainingLines = editableLines.Where(line => !ReferenceEquals(line, changedLine)).ToList();
+
+        if (remainingLines.Count == 0)
+        {
+            return;
+        }
+
+        var remainingAmount = Math.Max(0m, availableAmount - changedLine.Amount);
+        var remainingPercent = Math.Max(0m, availablePercent - changedLine.Percentage);
+        var evenAmount = remainingLines.Count > 0
+            ? Math.Round(remainingAmount / remainingLines.Count, 2, MidpointRounding.AwayFromZero)
+            : 0m;
+
+        decimal amountAssigned = 0m;
+        decimal percentAssigned = 0m;
+
+        for (var index = 0; index < remainingLines.Count; index++)
+        {
+            var line = remainingLines[index];
+            var isLast = index == remainingLines.Count - 1;
+
+            var amount = isLast
+                ? Math.Round(remainingAmount - amountAssigned, 2, MidpointRounding.AwayFromZero)
+                : evenAmount;
+
+            if (amount < 0m)
+            {
+                amount = 0m;
+            }
+
+            decimal percent;
+            if (availableAmount <= 0m || availablePercent <= 0m)
+            {
+                percent = 0m;
+            }
+            else if (isLast)
+            {
+                percent = Math.Round(remainingPercent - percentAssigned, 4, MidpointRounding.AwayFromZero);
+            }
+            else
+            {
+                var ratio = amount / availableAmount;
+                percent = Math.Round(availablePercent * ratio, 4, MidpointRounding.AwayFromZero);
+            }
+
+            if (percent < 0m)
+            {
+                percent = 0m;
+            }
+
+            line.SetAmount(amount);
+            line.SetPercentage(percent);
+
+            amountAssigned += amount;
+            percentAssigned += percent;
+        }
+    }
+
     private void EnsureItemCount()
     {
-        var targetCount = Math.Max(NumInvoices, Items.Count(line => !line.IsEditable));
+        var desiredEditableCount = Math.Max(NumInvoices, 1);
+        var currentEditableCount = Items.Count(line => line.IsEditable);
 
-        while (Items.Count > targetCount)
+        while (currentEditableCount > desiredEditableCount)
         {
             var removable = Items.LastOrDefault(line => line.IsEditable);
             if (removable is null)
@@ -386,11 +600,13 @@ public partial class PlanEditorViewModel : ViewModelBase
             }
 
             Items.Remove(removable);
+            currentEditableCount--;
         }
 
-        while (Items.Count < targetCount)
+        while (currentEditableCount < desiredEditableCount)
         {
             Items.Add(CreateNewLine());
+            currentEditableCount++;
         }
 
         UpdateLineTypeSettings();
@@ -555,10 +771,12 @@ public partial class PlanEditorViewModel : ViewModelBase
             return;
         }
 
+        var incrementDays = Math.Max(1, PaymentTermDays);
         _suppressLineUpdates = true;
         foreach (var line in Items.Where(line => line.IsEditable))
         {
-            var emissionDate = FirstEmissionDate.Value.AddMonths(line.Sequence - 1);
+            var offsetDays = (line.Sequence - 1) * incrementDays;
+            var emissionDate = FirstEmissionDate.Value.AddDays(offsetDays);
             line.SetEmissionDate(emissionDate);
         }
         _suppressLineUpdates = false;
@@ -580,6 +798,19 @@ public partial class PlanEditorViewModel : ViewModelBase
     {
         TotalPercentage = Math.Round(Items.Sum(line => line.Percentage), 4, MidpointRounding.AwayFromZero);
         TotalAmount = Math.Round(Items.Sum(line => line.Amount), 2, MidpointRounding.AwayFromZero);
+        UpdateTotalsState();
+    }
+
+    private void UpdateTotalsState()
+    {
+        var expectedAmount = Math.Round(PlanningBaseValue, 2, MidpointRounding.AwayFromZero);
+        var totalAmount = Math.Round(TotalAmount, 2, MidpointRounding.AwayFromZero);
+        var totalPercent = Math.Round(TotalPercentage, 4, MidpointRounding.AwayFromZero);
+
+        var mismatch = Math.Abs(totalPercent - 100m) > 0.0001m
+            || Math.Abs(totalAmount - expectedAmount) > 0.01m;
+
+        HasTotalsMismatch = mismatch;
     }
 
     private void SavePlan()
@@ -728,6 +959,49 @@ public partial class PlanEditorViewModel : ViewModelBase
             .ToList();
     }
 
+    private void UpdateCurrencySymbol(string? currencyCode)
+    {
+        if (string.IsNullOrWhiteSpace(currencyCode))
+        {
+            CurrencySymbol = string.Empty;
+            return;
+        }
+
+        if (!CurrencySymbolCache.TryGetValue(currencyCode, out var symbol))
+        {
+            symbol = ResolveCurrencySymbol(currencyCode);
+            CurrencySymbolCache[currencyCode] = symbol;
+        }
+
+        CurrencySymbol = symbol;
+    }
+
+    private static string ResolveCurrencySymbol(string currencyCode)
+    {
+        try
+        {
+            foreach (var culture in CultureInfo.GetCultures(CultureTypes.SpecificCultures))
+            {
+                try
+                {
+                    var region = new RegionInfo(culture.Name);
+                    if (string.Equals(region.ISOCurrencySymbol, currencyCode, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return region.CurrencySymbol;
+                    }
+                }
+                catch (ArgumentException)
+                {
+                }
+            }
+        }
+        catch (CultureNotFoundException)
+        {
+        }
+
+        return currencyCode.ToUpperInvariant();
+    }
+
     private void LoadEngagements()
     {
         try
@@ -792,6 +1066,8 @@ public partial class PlanEditorViewModel : ViewModelBase
 
     private bool CanCreatePlan() => SelectedEngagement is not null;
 
+    private bool CanExecuteSavePlan() => !HasTotalsMismatch && Items.Count > 0;
+
     private void CreatePlan()
     {
         if (SelectedEngagement is null)
@@ -839,6 +1115,7 @@ public partial class PlanEditorViewModel : ViewModelBase
         EnsureItemCount();
         RecalculateTotals();
         OnPropertyChanged(nameof(HasRecipientEmails));
+        UpdateCurrencySymbol(SelectedEngagement?.Currency);
     }
 
     private void ShowPlanDialog()

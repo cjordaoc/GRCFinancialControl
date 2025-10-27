@@ -50,14 +50,18 @@ public partial class InvoicePlanLineViewModel : ObservableObject
 
     public bool IsEditable => Status == InvoiceItemStatus.Planned;
 
+    public PlanEditorViewModel? Owner => _owner;
+
     internal void Attach(PlanEditorViewModel owner)
     {
         _owner = owner;
+        OnPropertyChanged(nameof(Owner));
     }
 
     internal void Detach()
     {
         _owner = null;
+        OnPropertyChanged(nameof(Owner));
     }
 
     partial void OnPercentageChanged(decimal value)
@@ -83,14 +87,14 @@ public partial class InvoicePlanLineViewModel : ObservableObject
     internal void SetPercentage(decimal value)
     {
         _suppressNotifications = true;
-        Percentage = value;
+        Percentage = Math.Round(value, 4, MidpointRounding.AwayFromZero);
         _suppressNotifications = false;
     }
 
     internal void SetAmount(decimal value)
     {
         _suppressNotifications = true;
-        Amount = value;
+        Amount = Math.Round(value, 2, MidpointRounding.AwayFromZero);
         _suppressNotifications = false;
     }
 

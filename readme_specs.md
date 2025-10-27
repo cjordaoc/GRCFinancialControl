@@ -74,6 +74,13 @@ This document details the implementation for every functional capability describ
   2. Daily event triggers stored procedure execution, which selects due invoice items and inserts messages into `MailOutbox`.
   3. Background worker dequeues `MailOutbox` entries, sends e-mails, and archives results in `MailOutboxLog`.
   4. The Invoice Planner's Add / Edit action loads the most recent plan for the selected engagement (or starts a new draft) and displays invoice lines in a flat grid with confirmed items locked for editing.
+- **Invoice Line Grid Rules:**
+  - Plan type **By Date** auto-generates emission dates from the first emission date plus payment term days; the delivery column is hidden. Plan type **By Milestone** leaves emission dates and delivery descriptions fully manual.
+  - Emitted/requested/canceled items remain visible but read-only; only planned items can be recalculated or removed when the invoice count changes (at least one editable line is always present).
+  - Changing the **# Invoices** field enforces that the grid shows exactly that number of editable rows in addition to any emitted items already stored for the engagement.
+  - Editing the percentage or amount on a planned line recalculates the companion value and redistributes the remaining editable lines evenly so that total percentage stays at 100% and total amount matches the engagement total. Rounding differences flow into the last editable line.
+  - Monetary inputs and totals display the engagement currency symbol; percentages show two decimals plus the `%` suffix. Emission dates use short-date formatting.
+  - Totals highlight in red and the Save action is disabled whenever the aggregated percentage or amount diverges from the required targets (100.00% / engagement total).
 - **Validation Mechanics:**
   - Stored procedure filters by due date and checks `MailOutboxLog` to prevent duplicates.
   - Planner services validate references to engagements and closing periods prior to saving schedules.

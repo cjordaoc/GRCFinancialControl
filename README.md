@@ -79,6 +79,9 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 3. Due invoices produce email payloads in `MailOutbox`, which are later sent by the SMTP worker and tracked in `MailOutboxLog`.
 4. Recipients receive reminders with invoice details and due dates.
 - The planner's Add / Edit action opens the latest plan for the selected engagement (or starts a new one) and renders invoice lines in a tabular editor where confirmed items remain visible but read-only.
+- Adjusting the **# Invoices** field keeps exactly that many editable rows in the grid while preserving previously emitted lines alongside them.
+- Invoice lines auto-generate emission dates from the first emission date and payment terms, rebalance editable percentages/amounts to keep totals at 100% of the engagement value, and display all monetary fields with the engagement currency symbol.
+- Totals are continuously recalculated; mismatches highlight in red and block the Save action until both total percentage (100.00%) and total amount (engagement total) are satisfied.
 
 **Validation & Consolidation Rules**
 - Only invoices due on or before the execution date generate notifications, preventing premature reminders.

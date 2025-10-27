@@ -15,6 +15,7 @@ public partial class EngagementOptionViewModel : ObservableObject
         EngagementId = lookup.EngagementId;
         Name = lookup.Name;
         CustomerName = lookup.CustomerName;
+        Currency = lookup.Currency;
     }
 
     [ObservableProperty]
@@ -28,4 +29,7 @@ public partial class EngagementOptionViewModel : ObservableObject
 
     [ObservableProperty]
     private string? customerName;
+
+    [ObservableProperty]
+    private string currency = string.Empty;
 }

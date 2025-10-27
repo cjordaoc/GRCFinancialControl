@@ -12,6 +12,9 @@
 
     <UserControl.Resources>
         <conv:PercentageOfSizeConverter x:Key="PercentageOfSizeConverter" />
+        <conv:BoolToBrushConverter x:Key="TotalsBrushConverter"
+                                    TrueResourceKey="ThemeErrorBrush"
+                                    FalseResourceKey="ThemeForegroundBrush" />
     </UserControl.Resources>
 
     <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
@@ -168,28 +171,40 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Percent}" Width="120">
+                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Percent}" Width="140">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <NumericUpDown Value="{Binding Percentage}"
-                                                           Minimum="0"
-                                                           Maximum="100"
-                                                           Increment="0.01"
-                                                           FormatString="F4"
-                                                           IsEnabled="{Binding IsEditable}" />
+                                            <StackPanel Orientation="Horizontal"
+                                                        Spacing="{StaticResource Space4}"
+                                                        VerticalAlignment="Center">
+                                                <NumericUpDown Value="{Binding Percentage}"
+                                                               Minimum="0"
+                                                               Maximum="100"
+                                                               Increment="0.01"
+                                                               FormatString="F2"
+                                                               IsEnabled="{Binding IsEditable}" />
+                                                <TextBlock Text="%" VerticalAlignment="Center" />
+                                            </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Amount}" Width="140">
+                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Amount}" Width="160">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <NumericUpDown Value="{Binding Amount}"
-                                                           Minimum="0"
-                                                           Maximum="100000000"
-                                                           Increment="10"
-                                                           FormatString="F2"
-                                                           IsEnabled="{Binding IsEditable}" />
+                                            <StackPanel Orientation="Horizontal"
+                                                        Spacing="{StaticResource Space4}"
+                                                        VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Owner.CurrencySymbol}"
+                                                           IsVisible="{Binding Owner.HasCurrencySymbol}"
+                                                           VerticalAlignment="Center" />
+                                                <NumericUpDown Value="{Binding Amount}"
+                                                               Minimum="0"
+                                                               Maximum="100000000"
+                                                               Increment="10"
+                                                               FormatString="F2"
+                                                               IsEnabled="{Binding IsEditable}" />
+                                            </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -199,15 +214,45 @@
                 </Grid>
 
                 <!-- Totals -->
-                <StackPanel Grid.Row="1"
-                            Orientation="Horizontal"
-                            Spacing="{StaticResource Space16}">
-                    <TextBlock Text="{loc:Loc Key=InvoicePlan.Section.Totals.Label}" Classes="Caption" />
-                    <TextBlock Text="{loc:Loc Key=InvoicePlan.Section.Totals.Percent}" />
-                    <TextBlock Text="{Binding TotalPercentage, StringFormat={}{0:F4}%}" />
-                    <TextBlock Text="{loc:Loc Key=InvoicePlan.Section.Totals.Amount}" />
-                    <TextBlock Text="{Binding TotalAmount, StringFormat={}{0:F2}}" />
-                </StackPanel>
+                <Grid Grid.Row="1"
+                      ColumnDefinitions="Auto,Auto,Auto,Auto,Auto"
+                      ColumnSpacing="{StaticResource Space16}"
+                      x:Name="TotalsRow">
+                    <TextBlock Grid.Column="0"
+                               Text="{loc:Loc Key=InvoicePlan.Section.Totals.Label}"
+                               Classes="Caption"
+                               VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1"
+                               Text="{loc:Loc Key=InvoicePlan.Section.Totals.Percent}"
+                               VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="2"
+                                Orientation="Horizontal"
+                                Spacing="{StaticResource Space4}"
+                                VerticalAlignment="Center">
+                        <TextBlock Text="{Binding TotalPercentage, StringFormat={}{0:F2}}"
+                                   FontWeight="Bold"
+                                   Foreground="{Binding HasTotalsMismatch, Converter={StaticResource TotalsBrushConverter}}" />
+                        <TextBlock Text="%"
+                                   FontWeight="Bold"
+                                   Foreground="{Binding HasTotalsMismatch, Converter={StaticResource TotalsBrushConverter}}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="3"
+                               Text="{loc:Loc Key=InvoicePlan.Section.Totals.Amount}"
+                               VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="4"
+                                Orientation="Horizontal"
+                                Spacing="{StaticResource Space4}"
+                                VerticalAlignment="Center">
+                        <TextBlock Text="{Binding CurrencySymbol}"
+                                   FontWeight="Bold"
+                                   Foreground="{Binding HasTotalsMismatch, Converter={StaticResource TotalsBrushConverter}}"
+                                   IsVisible="{Binding HasCurrencySymbol}" />
+                        <TextBlock Text="{Binding TotalAmount, StringFormat={}{0:F2}}"
+                                   FontWeight="Bold"
+                                   Foreground="{Binding HasTotalsMismatch, Converter={StaticResource TotalsBrushConverter}}" />
+                    </StackPanel>
+                </Grid>
             </Grid>
         </ScrollViewer>
 
