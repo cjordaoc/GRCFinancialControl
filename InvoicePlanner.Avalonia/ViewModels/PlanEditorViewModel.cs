@@ -15,11 +15,13 @@ using Invoices.Core.Models;
 using Invoices.Core.Validation;
 using Invoices.Data.Repositories;
 using Microsoft.Extensions.Logging;
+using Invoices.Core.Utilities;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
 public partial class PlanEditorViewModel : ViewModelBase
 {
+    private const int ByDateEmissionIntervalDays = 30;
     private readonly IInvoicePlanRepository _repository;
     private readonly IInvoicePlanValidator _validator;
     private readonly ILogger<PlanEditorViewModel> _logger;
@@ -33,6 +35,7 @@ public partial class PlanEditorViewModel : ViewModelBase
     private readonly RelayCommand _closePlanFormCommand;
     private bool _suppressLineUpdates;
     private bool _isInitializing;
+    private bool _isNormalizingFirstEmissionDate;
     private PlanEditorDialogViewModel? _dialogViewModel;
 
     private static readonly Dictionary<string, string> CurrencySymbolCache = new(StringComparer.OrdinalIgnoreCase);
@@ -239,6 +242,25 @@ public partial class PlanEditorViewModel : ViewModelBase
         if (_isInitializing)
         {
             return;
+        }
+
+        if (!_isNormalizingFirstEmissionDate && PlanType == InvoicePlanType.ByDate && value is DateTime firstEmission)
+        {
+            var adjusted = BusinessDayCalculator.AdjustToNextBusinessDay(firstEmission);
+
+            if (adjusted != firstEmission)
+            {
+                try
+                {
+                    _isNormalizingFirstEmissionDate = true;
+                    FirstEmissionDate = adjusted;
+                    value = adjusted;
+                }
+                finally
+                {
+                    _isNormalizingFirstEmissionDate = false;
+                }
+            }
         }
 
         ApplyEmissionDateRule();
@@ -781,12 +803,12 @@ public partial class PlanEditorViewModel : ViewModelBase
             return;
         }
 
-        var incrementDays = Math.Max(1, PaymentTermDays);
+        var baseEmissionDate = BusinessDayCalculator.AdjustToNextBusinessDay(FirstEmissionDate.Value);
         _suppressLineUpdates = true;
         foreach (var line in Items.Where(line => line.IsEditable))
         {
-            var offsetDays = (line.Sequence - 1) * incrementDays;
-            var emissionDate = FirstEmissionDate.Value.AddDays(offsetDays);
+            var offsetDays = (line.Sequence - 1) * ByDateEmissionIntervalDays;
+            var emissionDate = BusinessDayCalculator.AdjustToNextBusinessDay(baseEmissionDate.AddDays(offsetDays));
             line.SetEmissionDate(emissionDate);
         }
         _suppressLineUpdates = false;
@@ -896,6 +918,10 @@ public partial class PlanEditorViewModel : ViewModelBase
         foreach (var line in Items.OrderBy(line => line.Sequence))
         {
             var emissionDate = line.EmissionDate;
+            var dueDate = emissionDate is null
+                ? (DateTime?)null
+                : BusinessDayCalculator.AdjustToNextBusinessDay(emissionDate.Value.AddDays(Math.Max(0, PaymentTermDays)));
+
             var item = new InvoiceItem
             {
                 Id = line.Id,
@@ -904,7 +930,7 @@ public partial class PlanEditorViewModel : ViewModelBase
                 Percentage = Math.Round(line.Percentage, 4, MidpointRounding.AwayFromZero),
                 Amount = Math.Round(line.Amount, 2, MidpointRounding.AwayFromZero),
                 EmissionDate = emissionDate,
-                DueDate = emissionDate?.AddDays(PaymentTermDays),
+                DueDate = dueDate,
                 DeliveryDescription = string.IsNullOrWhiteSpace(line.DeliveryDescription) ? null : line.DeliveryDescription.Trim(),
                 PayerCnpj = line.PayerCnpj?.Trim() ?? string.Empty,
                 PoNumber = string.IsNullOrWhiteSpace(line.PoNumber) ? null : line.PoNumber.Trim(),
