@@ -339,6 +339,9 @@
   <data name="Request.Section.AvailablePlans.Header" xml:space="preserve">
     <value>Available plans</value>
   </data>
+  <data name="Request.Section.InvoiceDetails.Header" xml:space="preserve">
+    <value>Detalles de la factura</value>
+  </data>
   <data name="Request.Message.SelectHint" xml:space="preserve">
     <value>Select a plan with pending invoices to insert request details.</value>
   </data>
@@ -360,6 +363,9 @@
   <data name="Request.Validation.PlanSelection" xml:space="preserve">
     <value>Select a plan before inserting request data.</value>
   </data>
+  <data name="Request.Validation.LineSelection" xml:space="preserve">
+    <value>Seleccione una factura antes de guardar.</value>
+  </data>
   <data name="Request.Validation.PlanNotFound" xml:space="preserve">
     <value>Invoice plan {0} was not found.</value>
   </data>
@@ -377,6 +383,9 @@
   </data>
   <data name="Request.Status.NoUpdates" xml:space="preserve">
     <value>No invoice lines required updates.</value>
+  </data>
+  <data name="Request.Button.Reverse" xml:space="preserve">
+    <value>Revertir</value>
   </data>
   <data name="Request.Status.LineRequested" xml:space="preserve">
     <value>Invoice line {0} marked as requested.</value>

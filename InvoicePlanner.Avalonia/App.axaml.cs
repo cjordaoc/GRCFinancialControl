@@ -139,7 +139,6 @@ public partial class App : Application
                     provider.GetRequiredService<IInvoicePlanRepository>(),
                     provider.GetRequiredService<ILogger<RequestConfirmationViewModel>>(),
                     provider.GetRequiredService<IInvoiceAccessScope>(),
-                    provider.GetRequiredService<DialogService>(),
                     provider.GetRequiredService<IMessenger>()));
                 services.AddSingleton(provider => new EmissionConfirmationViewModel(
                     provider.GetRequiredService<IInvoicePlanRepository>(),
