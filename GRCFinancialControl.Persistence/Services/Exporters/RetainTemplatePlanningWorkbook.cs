@@ -551,38 +551,43 @@ internal sealed record RetainTemplatePlanningSnapshot(
     {
         var saturdays = new List<DateTime>();
 
-        var firstSaturday = NextOrSameSaturday(referenceDate);
-        if (LastWeekStart is null)
+        if (Entries.Count > 0)
         {
-            saturdays.Add(firstSaturday);
-            return saturdays;
-        }
+            var orderedWeekStarts = Entries
+                .Select(entry => entry.WeekStartDate.Date)
+                .Distinct()
+                .OrderBy(date => date)
+                .ToList();
 
-        var endSaturday = LastWeekStart.Value.Date.AddDays(5);
-        if (endSaturday < firstSaturday)
-        {
-            saturdays.Add(firstSaturday);
-            return saturdays;
-        }
+            if (orderedWeekStarts.Count > 0)
+            {
+                var firstSaturday = PreviousOrSameSaturday(orderedWeekStarts[0]);
+                var lastSaturday = PreviousOrSameSaturday(orderedWeekStarts[^1]);
 
-        for (var current = firstSaturday; current <= endSaturday; current = current.AddDays(7))
-        {
-            saturdays.Add(current);
+                for (var current = firstSaturday; current <= lastSaturday; current = current.AddDays(7))
+                {
+                    saturdays.Add(current);
+                }
+            }
         }
 
         if (saturdays.Count == 0)
         {
-            saturdays.Add(firstSaturday);
+            var baseline = ReferenceWeekStart != default
+                ? ReferenceWeekStart
+                : referenceDate;
+
+            saturdays.Add(PreviousOrSameSaturday(baseline));
         }
 
         return saturdays;
     }
 
-    private static DateTime NextOrSameSaturday(DateTime date)
+    private static DateTime PreviousOrSameSaturday(DateTime date)
     {
         var current = date.Date;
-        var daysToSaturday = ((int)DayOfWeek.Saturday - (int)current.DayOfWeek + 7) % 7;
-        return current.AddDays(daysToSaturday);
+        var daysSinceSaturday = ((int)current.DayOfWeek - (int)DayOfWeek.Saturday + 7) % 7;
+        return current.AddDays(-daysSinceSaturday);
     }
 }
 
