@@ -71,6 +71,7 @@ Authoritative reference for reusable classes and interfaces. Consult this catalo
 | Type | Namespace | Name | Purpose | Key Members | Dependencies | Status | Notes |
 |------|-----------|------|---------|-------------|--------------|--------|-------|
 | Class | `InvoicePlanner.Avalonia.Behaviors` | `CnpjMaskBehavior` | Applies Brazilian CNPJ mask formatting to text inputs. | Attached property `IsEnabled` | Avalonia `TextBox` | New | Formats digits as `00.000.000/0000-00` during edits. |
+| Class | `InvoicePlanner.Avalonia.Behaviors` | `DataGridRowResizeBehavior` | Enables resizing DataGrid rows via pointer drag. | Attached property `IsEnabled` | Avalonia `DataGrid`, pointer events | New | Captures pointer near row edge to adjust row height. |
 | Class | `App.Presentation.Converters` | `BoolToBrushConverter` | Maps boolean flags to Avalonia brushes for highlighting validation states. | `Convert`, `ConvertBack` | Avalonia `IBrush`, `BindingNotification` | New | Used by invoice planner totals to switch between default and warning brushes. |
 
 ---

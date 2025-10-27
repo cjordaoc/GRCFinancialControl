@@ -29,4 +29,6 @@ public interface IInvoicePlanRepository
     InvoiceSummaryResult SearchSummary(InvoiceSummaryFilter filter);
 
     IReadOnlyList<InvoiceNotificationPreview> PreviewNotifications(DateTime notificationDate);
+
+    RepositorySaveResult DeletePlan(int planId);
 }

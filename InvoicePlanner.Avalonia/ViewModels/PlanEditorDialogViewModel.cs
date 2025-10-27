@@ -14,5 +14,6 @@ public sealed partial class PlanEditorDialogViewModel : ViewModelBase
     public PlanEditorViewModel Editor { get; }
 
     public IRelayCommand EditLinesCommand => Editor.EditLinesCommand;
+    public IRelayCommand DeletePlanCommand => Editor.DeletePlanCommand;
     public IRelayCommand CloseCommand => Editor.ClosePlanFormCommand;
 }
