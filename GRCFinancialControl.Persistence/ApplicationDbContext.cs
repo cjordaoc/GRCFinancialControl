@@ -662,6 +662,10 @@ namespace GRCFinancialControl.Persistence
                 .HasMaxLength(64);
 
             modelBuilder.Entity<InvoiceItem>()
+                .Property(item => item.PaymentTypeCode)
+                .HasMaxLength(64);
+
+            modelBuilder.Entity<InvoiceItem>()
                 .Property(item => item.DeliveryDescription)
                 .HasMaxLength(255);
 

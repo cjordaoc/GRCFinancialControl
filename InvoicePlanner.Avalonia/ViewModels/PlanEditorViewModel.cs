@@ -12,6 +12,7 @@ using InvoicePlanner.Avalonia.Messages;
 using InvoicePlanner.Avalonia.Services;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
+using Invoices.Core.Payments;
 using Invoices.Core.Validation;
 using Invoices.Data.Repositories;
 using Microsoft.Extensions.Logging;
@@ -90,6 +91,7 @@ public partial class PlanEditorViewModel : ViewModelBase
     public ObservableCollection<EngagementOptionViewModel> Engagements { get; } = new();
 
     public ObservableCollection<InvoicePlanLineViewModel> Items { get; } = new();
+    public IReadOnlyList<PaymentTypeOption> PaymentTypeOptions { get; } = PaymentTypeCatalog.Options;
 
     public IReadOnlyList<InvoicePlanType> PlanTypes { get; }
 
@@ -380,6 +382,7 @@ public partial class PlanEditorViewModel : ViewModelBase
                     Status = item.Status,
                 };
 
+                line.SetPaymentType(item.PaymentTypeCode);
                 line.CanEditEmissionDate = line.IsEditable && plan.Type != InvoicePlanType.ByDate;
                 line.ShowDeliveryDescription = plan.Type == InvoicePlanType.ByDelivery;
 
@@ -660,6 +663,7 @@ public partial class PlanEditorViewModel : ViewModelBase
             Status = InvoiceItemStatus.Planned,
         };
 
+        line.SetPaymentType(PaymentTypeCatalog.TransferenciaBancariaCode);
         line.CanEditEmissionDate = line.IsEditable && PlanType != InvoicePlanType.ByDate;
         line.ShowDeliveryDescription = PlanType == InvoicePlanType.ByDelivery;
 
@@ -936,6 +940,7 @@ public partial class PlanEditorViewModel : ViewModelBase
                 PoNumber = string.IsNullOrWhiteSpace(line.PoNumber) ? null : line.PoNumber.Trim(),
                 FrsNumber = string.IsNullOrWhiteSpace(line.FrsNumber) ? null : line.FrsNumber.Trim(),
                 CustomerTicket = string.IsNullOrWhiteSpace(line.CustomerTicket) ? null : line.CustomerTicket.Trim(),
+                PaymentTypeCode = PaymentTypeCatalog.NormalizeCode(line.PaymentTypeCode),
             };
 
             plan.Items.Add(item);

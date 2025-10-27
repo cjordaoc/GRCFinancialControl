@@ -42,6 +42,7 @@ Authoritative reference for reusable classes and interfaces. Consult this catalo
 | Class | `GRCFinancialControl.Persistence.Services.Exporters` | `RetainTemplatePlanningWorkbook` | Loads allocation planning workbook into structured snapshot. | `Load`, `BuildSaturdayHeaders` | ClosedXML | Stable | Provides reference dates & entries for template generator. |
 | Class | `GRCFinancialControl.Persistence.Services.Exporters` | `RetainTemplatePlanningSnapshot` | Holds flattened allocation entries per resource/week. | `Entries`, `ReferenceWeekStart`, `LastWeekStart` | — | Stable | Used only by template generation flow. |
 | Class | `GRCFinancialControl.Persistence.Services.Importers.StaffAllocations` | `SimplifiedStaffAllocationParser` | Parses simplified staff allocation sheets. | `ParseAsync` | ExcelDataReader | Stable | Produces normalized allocation rows consumed by planner. |
+| Static Class | `Invoices.Core.Payments` | `PaymentTypeCatalog` | Defines supported invoice payment types and helper lookups. | `Options`, `GetByCode`, `NormalizeCode` | — | New | Codes: TRANSFERENCIA_BANCARIA, BOLETOS. |
 
 ---
 

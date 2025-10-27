@@ -134,16 +134,17 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 
 ## 8 · Power Automate Tasks Export
 **Happy Path**
-1. Controllers choose **Generate Tasks File** in the Tasks workspace and select the destination JSON file.
+1. Controllers choose **Generate Tasks File** in the Tasks workspace and select the destination XML file (the dialog defaults to the last-used folder).
 2. The exporter resolves the upcoming Monday at 10:00 (America/Sao_Paulo) and queries invoice plans that notify on that date.
-3. The resulting payload writes each invoice line with planner data into `messages[0].invoices`, including engagement identifiers/descriptions, focal point contact, CNPJ, PO/FRS, share metadata (current/total), engagement total, invoice value, delivery name for ByDelivery plans, a generated `invoiceDescription`, COE notes, and the deduplicated email list that will receive the message.
-4. Engagements with a proposed ETC date due on or before that Monday are grouped by manager under `messages[0].etcs`. Only engagements that have at least one assigned manager are exported, and each manager entry lists active engagements plus incurred/remaining hours grouped by fiscal year and rank (fiscal years without data are omitted).
+3. A `WeeklyTasks_YYYYMMDD.xml` document (schema version 1.3) is produced with `<Meta>` timestamps, one `<Message>` per recipient audience (Manager, Senior Manager, or mixed), and deduplicated `<Recipient>` entries keyed by email/role.
+4. Each `<Invoice>` node now carries the normalized payment type (`TRANSFERENCIA_BANCARIA`/`BOLETOS`), the runtime-generated billing description that mirrors the Excel “Texto de Faturamento” pattern, optional PO/FRS/Ticket lines, and the customer email list ready for Power Automate.
+5. `<ETC>` sections enumerate dynamic fiscal-year columns for consumed/remaining hours per rank, expanding to any number of fiscal years required while skipping engagements without manager assignments.
 
 **Validation & Consolidation Rules**
 - The exporter reads directly from the live database; connection issues or missing timezone information surface localized status messages.
-- Invoice recipients and manager contact lists are deduplicated and trimmed before serialization so Power Automate flows receive clean CSV data.
-- ETC data omits the legacy attachment block and relies solely on structured JSON for Power BI to generate per-manager spreadsheets.
-- Engagements without manager assignments are skipped, and fiscal-year nodes with zero incurred and remaining hours are excluded to keep the JSON concise for downstream processing.
+- Payment types are constrained to the catalog defined in `Invoices.Core.Payments.PaymentTypeCatalog` and surfaced through the planner ComboBox before export.
+- Invoice and ETC recipients are deduplicated and trimmed before serialization so Power Automate flows receive clean XPath targets and HTML-ready tables.
+- Engagements without manager or senior manager assignments are skipped, and fiscal-year nodes with zero incurred and remaining hours are filtered to keep the XML lean for downstream automation.
 
 [See Technical Spec →](readme_specs.md#power-automate-tasks-export)
 

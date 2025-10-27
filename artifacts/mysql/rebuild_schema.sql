@@ -332,6 +332,7 @@ CREATE TABLE `InvoiceItem` (
   `PoNumber`            VARCHAR(64) NULL,
   `FrsNumber`           VARCHAR(64) NULL,
   `CustomerTicket`      VARCHAR(64) NULL,
+  `PaymentTypeCode`     VARCHAR(64) NOT NULL DEFAULT 'TRANSFERENCIA_BANCARIA',
   `AdditionalInfo`      TEXT NULL,
   `DeliveryDescription` VARCHAR(255) NULL,
   `Status`              VARCHAR(16) NOT NULL DEFAULT 'Planned',

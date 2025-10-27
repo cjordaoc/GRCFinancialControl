@@ -53,5 +53,12 @@ Confirm .NET 8, restore dependencies, and ensure `dotnet build -c Release` passe
 
 ---
 
+## 7 · Tasks Export Conventions
+- Weekly tasks exports must target the XML schema `WeeklyTasks.xsd` (version 1.3) — legacy JSON payloads are no longer supported.
+- Planner payment types surface through `PaymentTypeCatalog` (`TRANSFERENCIA_BANCARIA`, `BOLETOS`); do not introduce free-form values.
+- Invoice descriptions are generated at runtime following the Excel “Texto de Faturamento” pattern and must not be persisted in the database.
+
+---
+
 ✅ **Core Mantra**
 > Make it work → Make it simple → Keep it consistent → **Make it perform.**
