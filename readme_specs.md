@@ -96,13 +96,14 @@ This document details the implementation for every functional capability describ
 - **Dependencies:** `IDbContextFactory<ApplicationDbContext>`, view entity `InvoiceNotificationPreview`, tables `InvoiceItem`, `InvoicePlan`, `Engagements`, `EngagementRankBudgets`, `FiscalYears`.
 - **Workflow:**
   1. `GenerateTasksFileAsync` computes the next Monday at 10:00 in the `America/Sao_Paulo` timezone; this date becomes the notification pivot for both invoices and ETCs.
-  2. `LoadInvoiceEntriesAsync` filters `InvoiceNotificationPreviews` by the pivot date, joins invoice items for CNPJ/ticket data, and looks up plan instructions plus engagement descriptions to compose `messages[0].invoices`.
-  3. The exporter normalizes emission/competence strings, rounds amounts to two decimals, and deduplicates customer/manager email lists before serializing recipients and contacts.
-  4. `LoadEtcEntriesAsync` loads active engagements whose `ProposedNextEtcDate` is on or before the pivot, groups them by manager (falling back to "Sem gerente" when none is assigned), and projects rank budgets with fiscal-year context into `messages[0].etcs`.
+  2. `LoadInvoiceEntriesAsync` filters `InvoiceNotificationPreviews` by the pivot date, resolves planner items/plans to surface CNPJ, PO/FRS, share number/total, engagement totals, delivery names (when the plan type is `ByDelivery`), COE notes, and the deduplicated email list inside `messages[0].invoices`.
+  3. `BuildInvoiceDescription` assembles the `invoiceDescription` string by combining engagement/service names, PO/FRS references, installment metadata, currency-formatted amounts, due dates, focal point contacts (with optional COE responsible), delivery names, and the semicolon-separated recipient list.
+  4. `LoadEtcEntriesAsync` loads active engagements whose `ProposedNextEtcDate` is on or before the pivot, skips those without manager assignments, and groups the remainder by manager while projecting rank budgets grouped by fiscal year (removing fiscal years whose ranks sum to zero hours) into `messages[0].etcs`.
 - **Validation Mechanics:**
   - Missing timezone data surfaces `Tasks.Status.TimeZoneMissing`; other failures bubble to `Tasks.Status.GenerationFailure` so the UI reports the issue.
   - Email lists are trimmed and deduplicated prior to serialization to keep Power Automate connectors from receiving malformed CSV strings.
-  - Attachments are no longer emitted; Power BI consumes the structured ETC payload to build per-manager spreadsheets at runtime.
+- Attachments are no longer emitted; Power BI consumes the structured ETC payload to build per-manager spreadsheets at runtime.
+- Engagements without managers are ignored, and fiscal-year nodes with zero incurred/remaining hours are filtered before serialization so downstream flows receive only actionable data.
 
 ---
 

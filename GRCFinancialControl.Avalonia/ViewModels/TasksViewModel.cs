@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
 using App.Presentation.Services;
@@ -13,6 +15,7 @@ using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence;
 using GRCFinancialControl.Persistence.Services.Interfaces;
+using Invoices.Core.Enums;
 using Invoices.Core.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -113,7 +116,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     }
                 };
 
-                var options = new JsonSerializerOptions { WriteIndented = true };
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                };
                 await using var stream = File.Create(filePath);
                 await JsonSerializer.SerializeAsync(stream, payload, options);
 
@@ -231,6 +238,108 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             return contacts;
         }
 
+        private static string BuildInvoiceDescription(
+            InvoiceNotificationPreview preview,
+            Engagement? engagement,
+            string? deliveryDescription,
+            IReadOnlyList<string> recipients,
+            string currency,
+            decimal invoiceAmount,
+            string? coeResponsible,
+            InvoicePlanType? planType)
+        {
+            var builder = new StringBuilder();
+
+            var service = string.IsNullOrWhiteSpace(engagement?.Description)
+                ? preview.EngagementId
+                : engagement!.Description.Trim();
+
+            if (planType == InvoicePlanType.ByDelivery && !string.IsNullOrWhiteSpace(deliveryDescription))
+            {
+                service = string.Concat(service, " - ", deliveryDescription.Trim());
+            }
+
+            builder.Append("Serviço: ").AppendLine(service);
+
+            if (!string.IsNullOrWhiteSpace(preview.PoNumber) || !string.IsNullOrWhiteSpace(preview.FrsNumber))
+            {
+                builder.Append("PO: ").Append(preview.PoNumber ?? string.Empty);
+                if (!string.IsNullOrWhiteSpace(preview.FrsNumber))
+                {
+                    builder.Append("/FRS: ").Append(preview.FrsNumber);
+                }
+
+                builder.AppendLine();
+            }
+
+            if (!string.IsNullOrWhiteSpace(preview.RitmNumber))
+            {
+                builder.Append("Chamado: ").Append(preview.RitmNumber).AppendLine();
+            }
+
+            builder
+                .Append("Parcela ")
+                .Append(preview.SeqNo)
+                .Append(" de ")
+                .Append(preview.NumInvoices)
+                .AppendLine();
+
+            builder
+                .Append("Valor da Parcela: ")
+                .AppendLine(FormatCurrency(invoiceAmount, currency));
+
+            builder
+                .Append("Vencimento: ")
+                .AppendLine(preview.ComputedDueDate.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture));
+
+            var customerName = preview.CustomerName ?? string.Empty;
+            var focalName = (preview.CustomerFocalPointName ?? string.Empty).Trim();
+            builder.Append("Contato ");
+            if (!string.IsNullOrWhiteSpace(customerName))
+            {
+                builder.Append(customerName.Trim()).Append(": ");
+            }
+
+            if (!string.IsNullOrWhiteSpace(focalName))
+            {
+                builder.Append(focalName);
+            }
+            else if (!string.IsNullOrWhiteSpace(preview.CustomerFocalPointEmail))
+            {
+                builder.Append(preview.CustomerFocalPointEmail.Trim());
+            }
+
+            if (!string.IsNullOrWhiteSpace(coeResponsible))
+            {
+                builder.Append(" - ").Append(coeResponsible.Trim());
+            }
+
+            builder.AppendLine();
+
+            var emailCsv = recipients.Count == 0 ? string.Empty : string.Join(';', recipients);
+            if (!string.IsNullOrWhiteSpace(emailCsv))
+            {
+                builder.Append("E-mails para envio: ").AppendLine(emailCsv);
+            }
+
+            if (planType == InvoicePlanType.ByDelivery && !string.IsNullOrWhiteSpace(deliveryDescription))
+            {
+                builder.Append("Entrega: ").AppendLine(deliveryDescription.Trim());
+            }
+
+            return builder.ToString().TrimEnd();
+        }
+
+        private static string FormatCurrency(decimal amount, string currencyCode)
+        {
+            var culture = CultureInfo.GetCultureInfo("pt-BR");
+            var formatted = amount.ToString("N2", culture);
+
+            return string.Equals(currencyCode, "BRL", StringComparison.OrdinalIgnoreCase)
+                ? $"R$ {formatted}"
+                : string.Concat(currencyCode.ToUpperInvariant(), " ", formatted);
+        }
+
         private static IReadOnlyList<object> BuildRankHours(Engagement engagement)
         {
             if (engagement.RankBudgets.Count == 0)
@@ -238,18 +347,41 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return Array.Empty<object>();
             }
 
-            return engagement.RankBudgets
+            var grouped = engagement.RankBudgets
                 .Where(budget => budget.FiscalYear != null)
-                .OrderBy(budget => budget.FiscalYear!.StartDate)
-                .ThenBy(budget => budget.RankName, StringComparer.OrdinalIgnoreCase)
-                .Select(budget => new
+                .GroupBy(budget => budget.FiscalYear!)
+                .OrderBy(group => group.Key.StartDate)
+                .Select(group =>
                 {
-                    fiscalYear = budget.FiscalYear!.Name,
-                    rank = budget.RankName,
-                    horasIncurridas = Math.Round(budget.ConsumedHours, 2, MidpointRounding.AwayFromZero),
-                    horasRestantes = Math.Round(budget.RemainingHours, 2, MidpointRounding.AwayFromZero)
+                    var ranks = group
+                        .OrderBy(budget => budget.RankName, StringComparer.OrdinalIgnoreCase)
+                        .Select(budget => new
+                        {
+                            rank = budget.RankName,
+                            horasIncurridas = Math.Round(budget.ConsumedHours, 2, MidpointRounding.AwayFromZero),
+                            horasRestantes = Math.Round(budget.RemainingHours, 2, MidpointRounding.AwayFromZero)
+                        })
+                        .Where(entry => entry.horasIncurridas != 0m || entry.horasRestantes != 0m)
+                        .ToList<object>();
+
+                    if (ranks.Count == 0)
+                    {
+                        return null;
+                    }
+
+                    return new
+                    {
+                        fiscalYear = group.Key.Name,
+                        ranks
+                    } as object;
                 })
+                .Where(entry => entry != null)
+                .Select(entry => entry!)
                 .ToList<object>();
+
+            return grouped.Count == 0
+                ? Array.Empty<object>()
+                : grouped;
         }
 
         private static IReadOnlyList<Manager> ResolveManagers(Engagement engagement)
@@ -294,10 +426,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 .Select(item => new
                 {
                     item.Id,
+                    item.PlanId,
                     item.PayerCnpj,
                     item.CustomerTicket,
                     item.AdditionalInfo,
-                    item.DeliveryDescription
+                    item.DeliveryDescription,
+                    item.CoeResponsible
                 })
                 .ToDictionaryAsync(item => item.Id)
                 .ConfigureAwait(false);
@@ -313,9 +447,23 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 .Select(plan => new
                 {
                     plan.Id,
+                    plan.Type,
+                    plan.NumInvoices,
                     plan.CustomInstructions
                 })
                 .ToDictionaryAsync(plan => plan.Id)
+                .ConfigureAwait(false);
+
+            var planTotals = await context.InvoiceItems
+                .AsNoTracking()
+                .Where(item => planIds.Contains(item.PlanId))
+                .GroupBy(item => item.PlanId)
+                .Select(group => new
+                {
+                    PlanId = group.Key,
+                    Total = group.Sum(invoice => invoice.Amount)
+                })
+                .ToDictionaryAsync(entry => entry.PlanId, entry => entry.Total)
                 .ConfigureAwait(false);
 
             var engagementIds = previews
@@ -349,38 +497,59 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
                 var currency = engagement?.Currency ?? "BRL";
                 var amountValue = Math.Round(preview.Amount, 2, MidpointRounding.AwayFromZero);
-                var competence = preview.EmissionDate.ToString("MM/yyyy", CultureInfo.InvariantCulture);
-                var formaPagamento = preview.PaymentTermDays > 0
-                    ? $"{preview.PaymentTermDays} dias"
-                    : string.Empty;
+                var engagementTotal = engagement?.ValueToAllocate ?? 0m;
+                if (planTotals.TryGetValue(preview.PlanId, out var planTotal) && planTotal > 0m)
+                {
+                    engagementTotal = planTotal;
+                }
 
                 var recipients = BuildRecipientEmails(preview);
                 var managers = BuildManagerContacts(preview);
+                var planType = plan?.Type;
+                var totalShares = plan?.NumInvoices ?? preview.NumInvoices;
+                var focalName = (preview.CustomerFocalPointName ?? string.Empty).Trim();
+                var focalEmail = (preview.CustomerFocalPointEmail ?? string.Empty).Trim();
+                var deliveryName = item?.DeliveryDescription;
+
+                var description = BuildInvoiceDescription(
+                    preview,
+                    engagement,
+                    deliveryName,
+                    recipients,
+                    currency,
+                    amountValue,
+                    item?.CoeResponsible,
+                    planType);
 
                 invoices.Add(new
                 {
-                    cliente = preview.CustomerName ?? string.Empty,
+                    engagementId = preview.EngagementId,
+                    engagementDescription = engagement?.Description ?? string.Empty,
+                    customer = preview.CustomerName ?? string.Empty,
+                    focalPoint = new
+                    {
+                        name = focalName,
+                        email = focalEmail
+                    },
                     cnpj = item?.PayerCnpj ?? string.Empty,
-                    codigoProjeto = preview.EngagementId,
-                    descricaoProjeto = engagement?.Description ?? string.Empty,
-                    dataEmissao = preview.EmissionDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-                    competencia = competence,
                     po = preview.PoNumber ?? string.Empty,
                     frs = preview.FrsNumber ?? string.Empty,
-                    chamado = preview.RitmNumber ?? string.Empty,
-                    montante = new { value = amountValue, currency },
-                    formaPagamento,
+                    shareNumber = preview.SeqNo,
+                    totalShares,
+                    engagementTotal = new { value = Math.Round(engagementTotal, 2, MidpointRounding.AwayFromZero), currency },
+                    invoiceValue = new { value = amountValue, currency },
+                    emailsToBeSent = recipients,
+                    emailsCsv = recipients.Count == 0 ? string.Empty : string.Join(";", recipients),
+                    invoiceDescription = description,
+                    invoiceNotesCoeEy = item?.AdditionalInfo ?? string.Empty,
+                    deliveryName = planType == InvoicePlanType.ByDelivery && !string.IsNullOrWhiteSpace(deliveryName)
+                        ? deliveryName
+                        : null,
+                    emissionDate = preview.EmissionDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    dueDate = preview.ComputedDueDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                     textoFatura = plan?.CustomInstructions ?? string.Empty,
-                    observacoesEmissao = item?.AdditionalInfo ?? string.Empty,
-                    descricaoEntrega = item?.DeliveryDescription ?? string.Empty,
-                    ticketCliente = item?.CustomerTicket ?? string.Empty,
-                    contatoCliente = new
-                    {
-                        name = (preview.CustomerFocalPointName ?? string.Empty).Trim(),
-                        email = (preview.CustomerFocalPointEmail ?? string.Empty).Trim()
-                    },
-                    destinatarios = recipients,
-                    gestores = managers
+                    gestorContatos = managers,
+                    coeResponsible = item?.CoeResponsible ?? string.Empty
                 });
             }
 
@@ -428,15 +597,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 var managers = ResolveManagers(engagement);
                 if (managers.Count == 0)
                 {
-                    const string key = "__sem_gerente__";
-                    if (!managerEngagements.TryGetValue(key, out var list))
-                    {
-                        list = new List<object>();
-                        managerEngagements[key] = list;
-                        managerInfo[key] = ("Sem gerente", string.Empty);
-                    }
-
-                    list.Add(engagementEntry);
                     continue;
                 }
 

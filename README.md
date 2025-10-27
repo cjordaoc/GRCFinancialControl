@@ -136,13 +136,14 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 **Happy Path**
 1. Controllers choose **Generate Tasks File** in the Tasks workspace and select the destination JSON file.
 2. The exporter resolves the upcoming Monday at 10:00 (America/Sao_Paulo) and queries invoice plans that notify on that date.
-3. The resulting payload writes each invoice line (customer, project code, emission date, PO, FRS, amount, contacts and managers) into `messages[0].invoices`.
-4. Engagements with a proposed ETC date due on or before that Monday are grouped by manager under `messages[0].etcs`, each containing the manager contact, active engagements, and the incurred/remaining hours per fiscal year and rank.
+3. The resulting payload writes each invoice line with planner data into `messages[0].invoices`, including engagement identifiers/descriptions, focal point contact, CNPJ, PO/FRS, share metadata (current/total), engagement total, invoice value, delivery name for ByDelivery plans, a generated `invoiceDescription`, COE notes, and the deduplicated email list that will receive the message.
+4. Engagements with a proposed ETC date due on or before that Monday are grouped by manager under `messages[0].etcs`. Only engagements that have at least one assigned manager are exported, and each manager entry lists active engagements plus incurred/remaining hours grouped by fiscal year and rank (fiscal years without data are omitted).
 
 **Validation & Consolidation Rules**
 - The exporter reads directly from the live database; connection issues or missing timezone information surface localized status messages.
 - Invoice recipients and manager contact lists are deduplicated and trimmed before serialization so Power Automate flows receive clean CSV data.
 - ETC data omits the legacy attachment block and relies solely on structured JSON for Power BI to generate per-manager spreadsheets.
+- Engagements without manager assignments are skipped, and fiscal-year nodes with zero incurred and remaining hours are excluded to keep the JSON concise for downstream processing.
 
 [See Technical Spec →](readme_specs.md#power-automate-tasks-export)
 
