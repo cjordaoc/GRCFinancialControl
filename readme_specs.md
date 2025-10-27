@@ -74,6 +74,7 @@ This document details the implementation for every functional capability describ
   2. Daily event triggers stored procedure execution, which selects due invoice items and inserts messages into `MailOutbox`.
   3. Background worker dequeues `MailOutbox` entries, sends e-mails, and archives results in `MailOutboxLog`.
   4. The Invoice Planner's Add / Edit action loads the most recent plan for the selected engagement (or starts a new draft) and displays invoice lines in a flat grid with confirmed items locked for editing.
+  5. Controllers can delete the active plan from the editor dialog, removing the header and all invoice items and refreshing the engagement list for a clean restart.
 - **Invoice Line Grid Rules:**
   - Plan type **By Date** auto-generates emission dates from the first emission date plus payment term days; the delivery column is hidden. Plan type **By Milestone** leaves emission dates and delivery descriptions fully manual.
   - Emitted/requested/canceled items remain visible but read-only; only planned items can be recalculated or removed when the invoice count changes (at least one editable line is always present).

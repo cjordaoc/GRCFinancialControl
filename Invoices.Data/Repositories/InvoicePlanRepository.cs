@@ -603,6 +603,35 @@ public class InvoicePlanRepository : IInvoicePlanRepository
         });
     }
 
+    public RepositorySaveResult DeletePlan(int planId)
+    {
+        if (planId <= 0)
+        {
+            return RepositorySaveResult.Empty;
+        }
+
+        return ExecuteWithStrategy(context =>
+        {
+            var plan = context.InvoicePlans
+                .Include(p => p.Items)
+                .Include(p => p.AdditionalEmails)
+                .FirstOrDefault(p => p.Id == planId);
+
+            if (plan is null)
+            {
+                return RepositorySaveResult.Empty;
+            }
+
+            EnsurePlanAccess(plan);
+
+            context.InvoicePlans.Remove(plan);
+
+            var affectedRows = context.SaveChanges();
+
+            return new RepositorySaveResult(0, 0, 1, affectedRows);
+        });
+    }
+
     public InvoiceSummaryResult SearchSummary(InvoiceSummaryFilter filter)
     {
         if (filter is null)
