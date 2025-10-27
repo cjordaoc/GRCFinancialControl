@@ -91,6 +91,21 @@ This document details the implementation for every functional capability describ
 
 ---
 
+## Power Automate Tasks Export
+- **Primary Component:** `TasksViewModel`
+- **Dependencies:** `IDbContextFactory<ApplicationDbContext>`, view entity `InvoiceNotificationPreview`, tables `InvoiceItem`, `InvoicePlan`, `Engagements`, `EngagementRankBudgets`, `FiscalYears`.
+- **Workflow:**
+  1. `GenerateTasksFileAsync` computes the next Monday at 10:00 in the `America/Sao_Paulo` timezone; this date becomes the notification pivot for both invoices and ETCs.
+  2. `LoadInvoiceEntriesAsync` filters `InvoiceNotificationPreviews` by the pivot date, joins invoice items for CNPJ/ticket data, and looks up plan instructions plus engagement descriptions to compose `messages[0].invoices`.
+  3. The exporter normalizes emission/competence strings, rounds amounts to two decimals, and deduplicates customer/manager email lists before serializing recipients and contacts.
+  4. `LoadEtcEntriesAsync` loads active engagements whose `ProposedNextEtcDate` is on or before the pivot, groups them by manager (falling back to "Sem gerente" when none is assigned), and projects rank budgets with fiscal-year context into `messages[0].etcs`.
+- **Validation Mechanics:**
+  - Missing timezone data surfaces `Tasks.Status.TimeZoneMissing`; other failures bubble to `Tasks.Status.GenerationFailure` so the UI reports the issue.
+  - Email lists are trimmed and deduplicated prior to serialization to keep Power Automate connectors from receiving malformed CSV strings.
+  - Attachments are no longer emitted; Power BI consumes the structured ETC payload to build per-manager spreadsheets at runtime.
+
+---
+
 ## Excel Importers and Validation
 - **Shared Infrastructure:** `ImportService`, `FullManagementDataImporter`, `SimplifiedStaffAllocationParser`, `ImportSummaryFormatter`, `WorksheetValueHelper`
 - **Libraries:** ExcelDataReader, ClosedXML (for template interactions)
