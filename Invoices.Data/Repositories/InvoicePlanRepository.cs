@@ -44,7 +44,7 @@ public class InvoicePlanRepository : IInvoicePlanRepository
 
         var plan = context.InvoicePlans
             .Include(plan => plan.Items)
-            .ThenInclude(item => item.ReplacementItem)
+            .ThenInclude(item => item.Emissions)
             .Include(plan => plan.AdditionalEmails)
             .AsNoTracking()
             .FirstOrDefault(plan => plan.Id == planId);
@@ -76,7 +76,7 @@ public class InvoicePlanRepository : IInvoicePlanRepository
         return context.InvoicePlans
             .Where(plan => plan.EngagementId == engagementId)
             .Include(plan => plan.Items)
-            .ThenInclude(item => item.ReplacementItem)
+            .ThenInclude(item => item.Emissions)
             .Include(plan => plan.AdditionalEmails)
             .AsNoTracking()
             .OrderBy(plan => plan.CreatedAt)
@@ -158,7 +158,7 @@ public class InvoicePlanRepository : IInvoicePlanRepository
         }
 
         return ProjectSummaries(query.AsNoTracking())
-            .Where(summary => summary.RequestedItemCount > 0 || summary.CanceledItemCount > 0)
+            .Where(summary => summary.RequestedItemCount > 0 || summary.EmittedItemCount > 0)
             .OrderByDescending(summary => summary.CreatedAt)
             .ToList();
     }
@@ -253,7 +253,8 @@ public class InvoicePlanRepository : IInvoicePlanRepository
 
                 var now = DateTime.UtcNow;
                 var updated = 0;
-                var itemsById = plan.Items.ToDictionary(item => item.Id);
+                var itemsById = plan.Items
+                    .ToDictionary(item => item.Id);
 
                 foreach (var update in updates
                              .GroupBy(u => u.ItemId)
@@ -445,9 +446,18 @@ public class InvoicePlanRepository : IInvoicePlanRepository
 
                     var emittedDate = update.EmittedAt?.Date ?? DateTime.UtcNow.Date;
 
-                    item.BzCode = update.BzCode.Trim();
-                    item.EmittedAt = emittedDate;
-                    item.Status = InvoiceItemStatus.Closed;
+                    var emission = new InvoiceEmission
+                    {
+                        InvoiceItemId = item.Id,
+                        BzCode = update.BzCode.Trim(),
+                        EmittedAt = emittedDate,
+                        CreatedAt = now,
+                        UpdatedAt = now,
+                    };
+
+                    context.InvoiceEmissions.Add(emission);
+
+                    item.Status = InvoiceItemStatus.Emitted;
                     item.UpdatedAt = now;
 
                     updated++;
@@ -477,14 +487,14 @@ public class InvoicePlanRepository : IInvoicePlanRepository
         });
     }
 
-    public RepositorySaveResult CancelAndReissue(int planId, IReadOnlyCollection<InvoiceReissueRequest> requests)
+    public RepositorySaveResult CancelEmissions(int planId, IReadOnlyCollection<InvoiceEmissionCancellation> cancellations)
     {
-        if (requests is null)
+        if (cancellations is null)
         {
-            throw new ArgumentNullException(nameof(requests));
+            throw new ArgumentNullException(nameof(cancellations));
         }
 
-        if (requests.Count == 0)
+        if (cancellations.Count == 0)
         {
             return RepositorySaveResult.Empty;
         }
@@ -497,74 +507,54 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             {
                 var plan = context.InvoicePlans
                     .Include(p => p.Items)
+                    .ThenInclude(item => item.Emissions)
                     .FirstOrDefault(p => p.Id == planId)
                     ?? throw new InvalidOperationException($"Invoice plan {planId} not found.");
 
                 EnsurePlanAccess(plan);
 
                 var now = DateTime.UtcNow;
-                var created = 0;
                 var updated = 0;
-                var nextSeq = plan.Items.Count == 0 ? 1 : plan.Items.Max(item => item.SeqNo) + 1;
                 var itemsById = plan.Items.ToDictionary(item => item.Id);
-                var replacements = new List<(InvoiceItem canceled, InvoiceItem replacement)>();
 
-                foreach (var request in requests
-                             .GroupBy(r => r.ItemId)
+                foreach (var cancellation in cancellations
+                             .GroupBy(request => request.ItemId)
                              .Select(group => group.Last()))
                 {
-                    if (!itemsById.TryGetValue(request.ItemId, out var item))
+                    if (!itemsById.TryGetValue(cancellation.ItemId, out var item))
                     {
-                        throw new InvalidOperationException($"Invoice item {request.ItemId} not found in plan {planId}.");
+                        throw new InvalidOperationException($"Invoice item {cancellation.ItemId} not found in plan {planId}.");
                     }
 
-                    if (item.Status != InvoiceItemStatus.Requested)
+                    if (item.Status != InvoiceItemStatus.Emitted)
                     {
-                        throw new InvalidOperationException($"Invoice item {item.Id} must be Requested before it can be canceled.");
+                        throw new InvalidOperationException($"Invoice item {item.Id} is not emitted.");
                     }
 
-                    if (string.IsNullOrWhiteSpace(request.CancelReason))
+                    if (string.IsNullOrWhiteSpace(cancellation.CancelReason))
                     {
                         throw new InvalidOperationException($"Cancel reason is required for invoice item {item.Id}.");
                     }
 
-                    var replacement = new InvoiceItem
+                    var emission = item.Emissions
+                        .OrderByDescending(entry => entry.EmittedAt)
+                        .FirstOrDefault(entry => entry.CanceledAt == null);
+
+                    if (emission is null)
                     {
-                        PlanId = plan.Id,
-                        Plan = plan,
-                        SeqNo = nextSeq++,
-                        Percentage = item.Percentage,
-                        Amount = item.Amount,
-                        PayerCnpj = item.PayerCnpj,
-                        PoNumber = item.PoNumber,
-                        FrsNumber = item.FrsNumber,
-                        CustomerTicket = item.CustomerTicket,
-                        AdditionalInfo = item.AdditionalInfo,
-                        DeliveryDescription = item.DeliveryDescription,
-                        Status = InvoiceItemStatus.Planned,
-                        CreatedAt = now,
-                        UpdatedAt = now,
-                    };
+                        throw new InvalidOperationException($"No active emission found for invoice item {item.Id}.");
+                    }
 
-                    var emissionDate = request.ReplacementEmissionDate ?? item.EmissionDate;
-                    replacement.EmissionDate = emissionDate;
-                    replacement.DueDate = request.ReplacementDueDate
-                        ?? (emissionDate.HasValue ? emissionDate.Value.AddDays(plan.PaymentTermDays) : null);
+                    emission.CanceledAt = cancellation.CanceledAt?.Date ?? now.Date;
+                    emission.CancelReason = cancellation.CancelReason.Trim();
+                    emission.UpdatedAt = now;
 
-                    plan.Items.Add(replacement);
-                    context.Entry(replacement).State = EntityState.Added;
-
-                    item.Status = InvoiceItemStatus.Canceled;
-                    item.CanceledAt = now.Date;
-                    item.CancelReason = request.CancelReason.Trim();
-                    item.BzCode = null;
-                    item.EmittedAt = null;
-                    item.ReplacementItem = replacement;
+                    item.Status = InvoiceItemStatus.Planned;
+                    item.RitmNumber = null;
+                    item.CoeResponsible = null;
+                    item.RequestDate = null;
                     item.UpdatedAt = now;
 
-                    replacements.Add((item, replacement));
-
-                    created++;
                     updated++;
                 }
 
@@ -575,23 +565,13 @@ public class InvoicePlanRepository : IInvoicePlanRepository
 
                 var affectedRows = context.SaveChanges();
 
-                foreach (var pair in replacements)
-                {
-                    pair.canceled.ReplacementItemId = pair.replacement.Id;
-                }
-
-                if (replacements.Count > 0)
-                {
-                    affectedRows += context.SaveChanges();
-                }
-
                 transaction.Commit();
 
-                return new RepositorySaveResult(created, updated, 0, affectedRows);
+                return new RepositorySaveResult(0, updated, 0, affectedRows);
             }
             catch (DbUpdateException ex)
             {
-                _logger.LogError(ex, "Failed to cancel and reissue invoice items for plan {PlanId}.", planId);
+                _logger.LogError(ex, "Failed to cancel invoice emissions for plan {PlanId}.", planId);
                 transaction.Rollback();
                 throw;
             }
@@ -704,6 +684,38 @@ public class InvoicePlanRepository : IInvoicePlanRepository
                 .Where(customer => customerIds.Contains(customer.Id))
                 .ToDictionary(customer => customer.Id);
 
+        var itemIds = rows
+            .Select(row => row.Item.Id)
+            .Distinct()
+            .ToArray();
+
+        var emissions = itemIds.Length == 0
+            ? new List<InvoiceEmission>()
+            : context.InvoiceEmissions
+                .AsNoTracking()
+                .Where(emission => itemIds.Contains(emission.InvoiceItemId))
+                .ToList();
+
+        var activeEmissions = emissions
+            .Where(emission => emission.CanceledAt == null)
+            .GroupBy(emission => emission.InvoiceItemId)
+            .ToDictionary(
+                group => group.Key,
+                group => group
+                    .OrderByDescending(emission => emission.EmittedAt)
+                    .ThenByDescending(emission => emission.Id)
+                    .First());
+
+        var lastCanceledEmissions = emissions
+            .Where(emission => emission.CanceledAt != null)
+            .GroupBy(emission => emission.InvoiceItemId)
+            .ToDictionary(
+                group => group.Key,
+                group => group
+                    .OrderByDescending(emission => emission.CanceledAt)
+                    .ThenByDescending(emission => emission.Id)
+                    .First());
+
         var planBaseAmounts = rows
             .GroupBy(row => row.Plan.Id)
             .ToDictionary(group => group.Key, group => group.Sum(row => row.Item.Amount));
@@ -729,24 +741,30 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             var items = engagementGroup
                 .OrderBy(row => row.Plan.Id)
                 .ThenBy(row => row.Item.SeqNo)
-                .Select(row => new InvoiceSummaryItem
+                .Select(row =>
                 {
-                    ItemId = row.Item.Id,
-                    PlanId = row.Plan.Id,
-                    Sequence = row.Item.SeqNo,
-                    PlanType = row.Plan.Type,
-                    Status = row.Item.Status,
-                    Percentage = row.Item.Percentage,
-                    Amount = row.Item.Amount,
-                    EmissionDate = row.Item.EmissionDate,
-                    DueDate = row.Item.DueDate,
-                    RitmNumber = row.Item.RitmNumber,
-                    BzCode = row.Item.BzCode,
-                    RequestDate = row.Item.RequestDate,
-                    EmittedAt = row.Item.EmittedAt,
-                    CanceledAt = row.Item.CanceledAt,
-                    CancelReason = row.Item.CancelReason,
-                    BaseValue = planBaseAmounts.TryGetValue(row.Plan.Id, out var baseValue) ? baseValue : null,
+                    activeEmissions.TryGetValue(row.Item.Id, out var activeEmission);
+                    lastCanceledEmissions.TryGetValue(row.Item.Id, out var canceledEmission);
+
+                    return new InvoiceSummaryItem
+                    {
+                        ItemId = row.Item.Id,
+                        PlanId = row.Plan.Id,
+                        Sequence = row.Item.SeqNo,
+                        PlanType = row.Plan.Type,
+                        Status = row.Item.Status,
+                        Percentage = row.Item.Percentage,
+                        Amount = row.Item.Amount,
+                        EmissionDate = row.Item.EmissionDate,
+                        DueDate = row.Item.DueDate,
+                        RitmNumber = row.Item.RitmNumber,
+                        BzCode = activeEmission?.BzCode,
+                        RequestDate = row.Item.RequestDate,
+                        EmittedAt = activeEmission?.EmittedAt,
+                        CanceledAt = canceledEmission?.CanceledAt,
+                        CancelReason = canceledEmission?.CancelReason,
+                        BaseValue = planBaseAmounts.TryGetValue(row.Plan.Id, out var baseValue) ? baseValue : null,
+                    };
                 })
                 .ToList();
 
@@ -903,6 +921,7 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             FirstEmissionDate = plan.FirstEmissionDate,
             PlannedItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Planned),
             RequestedItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Requested),
+            EmittedItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Emitted),
             ClosedItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Closed),
             CanceledItemCount = plan.Items.Count(item => item.Status == InvoiceItemStatus.Canceled),
         });
@@ -962,12 +981,7 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             item.RitmNumber = null;
             item.CoeResponsible = null;
             item.RequestDate = null;
-            item.BzCode = null;
-            item.EmittedAt = null;
-            item.CanceledAt = null;
-            item.CancelReason = null;
-            item.ReplacementItemId = null;
-            item.ReplacementItem = null;
+            item.Emissions.Clear();
         }
 
         foreach (var email in plan.AdditionalEmails)
@@ -1036,12 +1050,7 @@ public class InvoicePlanRepository : IInvoicePlanRepository
                 incomingItem.RitmNumber = null;
                 incomingItem.CoeResponsible = null;
                 incomingItem.RequestDate = null;
-                incomingItem.BzCode = null;
-                incomingItem.EmittedAt = null;
-                incomingItem.CanceledAt = null;
-                incomingItem.CancelReason = null;
-                incomingItem.ReplacementItemId = null;
-                incomingItem.ReplacementItem = null;
+                incomingItem.Emissions.Clear();
                 tracked.Items.Add(incomingItem);
                 context.Entry(incomingItem).State = EntityState.Added;
                 retainedIds.Add(incomingItem.Id);

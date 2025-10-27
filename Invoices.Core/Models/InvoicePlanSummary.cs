@@ -19,6 +19,8 @@ public sealed class InvoicePlanSummary
 
     public int RequestedItemCount { get; init; }
 
+    public int EmittedItemCount { get; init; }
+
     public int ClosedItemCount { get; init; }
 
     public int CanceledItemCount { get; init; }

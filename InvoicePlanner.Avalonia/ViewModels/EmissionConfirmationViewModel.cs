@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -11,7 +12,6 @@ using Invoices.Core.Enums;
 using Invoices.Core.Models;
 using Invoices.Data.Repositories;
 using Microsoft.Extensions.Logging;
-using InvoicePlanner.Avalonia.Services;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
@@ -21,22 +21,21 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
     private readonly ILogger<EmissionConfirmationViewModel> _logger;
     private readonly IInvoiceAccessScope _accessScope;
     private readonly RelayCommand _loadPlanCommand;
-    private readonly RelayCommand _savePlanDetailsCommand;
-    private readonly DialogService _dialogService;
-    private EmissionConfirmationDialogViewModel? _dialogViewModel;
+    private readonly RelayCommand _saveSelectedLineCommand;
+    private readonly RelayCommand _cancelSelectedLineCommand;
+    private readonly RelayCommand _closePlanDetailsCommand;
+    private EmissionConfirmationLineViewModel? _selectedLineSubscription;
 
     public EmissionConfirmationViewModel(
         IInvoicePlanRepository repository,
         ILogger<EmissionConfirmationViewModel> logger,
         IInvoiceAccessScope accessScope,
-        DialogService dialogService,
         IMessenger messenger)
         : base(messenger)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _accessScope = accessScope ?? throw new ArgumentNullException(nameof(accessScope));
-        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 
         _accessScope.EnsureInitialized();
 
@@ -44,8 +43,10 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         AvailablePlans.CollectionChanged += OnAvailablePlansChanged;
 
         _loadPlanCommand = new RelayCommand(LoadSelectedPlan, () => SelectedPlan is not null);
-        _savePlanDetailsCommand = new RelayCommand(SavePlanDetails, () => HasLines);
-        ClosePlanDetailsCommand = new RelayCommand(() => Messenger.Send(new CloseDialogMessage(false)));
+        _saveSelectedLineCommand = new RelayCommand(SaveSelectedLine, CanSaveSelectedLine);
+        _cancelSelectedLineCommand = new RelayCommand(CancelSelectedLine, CanCancelSelectedLine);
+        _closePlanDetailsCommand = new RelayCommand(ClosePlanDetails, () => IsPlanDetailsVisible);
+        ClosePlanDetailsCommand = _closePlanDetailsCommand;
         RefreshCommand = new RelayCommand(() =>
         {
             ResetMessages();
@@ -71,6 +72,9 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
     private string engagementId = string.Empty;
 
     [ObservableProperty]
+    private bool isPlanDetailsVisible;
+
+    [ObservableProperty]
     private string? statusMessage;
 
     [ObservableProperty]
@@ -80,13 +84,16 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
     private int requestedCount;
 
     [ObservableProperty]
-    private int closedCount;
+    private int emittedCount;
 
     [ObservableProperty]
     private int canceledCount;
 
     [ObservableProperty]
     private string? planSelectionMessage;
+
+    [ObservableProperty]
+    private EmissionConfirmationLineViewModel? selectedLine;
 
     public bool HasLines => Lines.Count > 0;
 
@@ -96,6 +103,8 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
 
     public bool HasAvailablePlans => AvailablePlans.Count > 0;
 
+    public bool HasSelectedLine => SelectedLine is not null;
+
     public string EngagementDisplay => LocalizationRegistry.Format(
         "Emission.Status.EngagementFormat",
         string.IsNullOrWhiteSpace(EngagementId) ? string.Empty : EngagementId);
@@ -104,9 +113,9 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         "Emission.Status.RequestedFormat",
         RequestedCount);
 
-    public string ClosedCountDisplay => LocalizationRegistry.Format(
-        "Emission.Status.ClosedFormat",
-        ClosedCount);
+    public string EmittedCountDisplay => LocalizationRegistry.Format(
+        "Emission.Status.EmittedFormat",
+        EmittedCount);
 
     public string CanceledCountDisplay => LocalizationRegistry.Format(
         "Emission.Status.CanceledFormat",
@@ -116,7 +125,9 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
 
     public IRelayCommand ClosePlanDetailsCommand { get; }
 
-    public IRelayCommand SavePlanDetailsCommand => _savePlanDetailsCommand;
+    public IRelayCommand SavePlanDetailsCommand => _saveSelectedLineCommand;
+
+    public IRelayCommand CancelSelectedLineCommand => _cancelSelectedLineCommand;
 
     public IRelayCommand RefreshCommand { get; }
 
@@ -128,13 +139,36 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
 
     partial void OnRequestedCountChanged(int value) => OnPropertyChanged(nameof(RequestedCountDisplay));
 
-    partial void OnClosedCountChanged(int value) => OnPropertyChanged(nameof(ClosedCountDisplay));
+    partial void OnEmittedCountChanged(int value) => OnPropertyChanged(nameof(EmittedCountDisplay));
 
     partial void OnCanceledCountChanged(int value) => OnPropertyChanged(nameof(CanceledCountDisplay));
+
+    partial void OnIsPlanDetailsVisibleChanged(bool value)
+    {
+        _closePlanDetailsCommand.NotifyCanExecuteChanged();
+    }
 
     partial void OnSelectedPlanChanged(InvoicePlanSummaryViewModel? value)
     {
         _loadPlanCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnSelectedLineChanged(EmissionConfirmationLineViewModel? value)
+    {
+        if (_selectedLineSubscription is not null)
+        {
+            _selectedLineSubscription.PropertyChanged -= OnSelectedLinePropertyChanged;
+        }
+
+        _selectedLineSubscription = value;
+
+        if (_selectedLineSubscription is not null)
+        {
+            _selectedLineSubscription.PropertyChanged += OnSelectedLinePropertyChanged;
+        }
+
+        OnPropertyChanged(nameof(HasSelectedLine));
+        RefreshActionCommands();
     }
 
     private void OnLinesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -157,7 +191,8 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
 
         OnPropertyChanged(nameof(HasLines));
         RefreshSummaries();
-        UpdateDialogSaveState();
+        EnsureSelectedLineIsValid();
+        RefreshActionCommands();
     }
 
     private void OnAvailablePlansChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -170,7 +205,6 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         if (SelectedPlan is null)
         {
             ValidationMessage = LocalizationRegistry.Get("Emission.Validation.PlanSelection");
-            UpdateDialogSaveState();
             return;
         }
 
@@ -191,7 +225,6 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
                 EngagementId = string.Empty;
                 CurrentPlanId = 0;
                 ValidationMessage = LocalizationRegistry.Format("Emission.Validation.PlanNotFound", planId);
-                UpdateDialogSaveState();
                 return;
             }
 
@@ -204,6 +237,16 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
                          .Where(item => item.Status != InvoiceItemStatus.Planned)
                          .OrderBy(item => item.SeqNo))
             {
+                var defaultEmissionDate = item.EmissionDate ?? DateTime.Today;
+                var activeEmission = item.Emissions
+                    .OrderByDescending(emission => emission.EmittedAt)
+                    .FirstOrDefault(emission => emission.CanceledAt == null);
+                var lastCanceledEmission = item.Emissions
+                    .Where(emission => emission.CanceledAt != null && !string.IsNullOrWhiteSpace(emission.CancelReason))
+                    .OrderByDescending(emission => emission.CanceledAt)
+                    .ThenByDescending(emission => emission.Id)
+                    .FirstOrDefault();
+
                 var line = new EmissionConfirmationLineViewModel
                 {
                     Id = item.Id,
@@ -213,10 +256,10 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
                     DueDate = item.DueDate,
                     Status = item.Status,
                     RitmNumber = string.IsNullOrWhiteSpace(item.RitmNumber) ? string.Empty : item.RitmNumber,
-                    BzCode = string.IsNullOrWhiteSpace(item.BzCode) ? string.Empty : item.BzCode,
-                    EmittedAt = item.EmittedAt ?? DateTime.Today,
-                    CancelReason = string.IsNullOrWhiteSpace(item.CancelReason) ? string.Empty : item.CancelReason,
-                    ReissueEmissionDate = item.EmissionDate ?? DateTime.Today,
+                    BzCode = activeEmission?.BzCode ?? string.Empty,
+                    EmittedAt = activeEmission?.EmittedAt ?? defaultEmissionDate,
+                    CancelReason = string.Empty,
+                    LastCancellationReason = lastCanceledEmission?.CancelReason ?? string.Empty,
                 };
 
                 Lines.Add(line);
@@ -227,32 +270,27 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
                 SelectedPlan.UpdateCounts(
                     plan.Items.Count(item => item.Status == InvoiceItemStatus.Planned),
                     plan.Items.Count(item => item.Status == InvoiceItemStatus.Requested),
+                    plan.Items.Count(item => item.Status == InvoiceItemStatus.Emitted),
                     plan.Items.Count(item => item.Status == InvoiceItemStatus.Closed),
                     plan.Items.Count(item => item.Status == InvoiceItemStatus.Canceled));
             }
 
             RefreshSummaries();
 
+            SelectedLine = Lines.FirstOrDefault();
+            IsPlanDetailsVisible = Lines.Count > 0;
+
             if (!suppressStatusMessage)
             {
                 StatusMessage = LocalizationRegistry.Format("Emission.Status.PlanLoaded", plan.Id, Lines.Count);
             }
 
-            if (Lines.Count > 0)
-            {
-                UpdateDialogSaveState();
-                ShowPlanDetailsDialog();
-            }
-            else
-            {
-                UpdateDialogSaveState();
-            }
+            RefreshActionCommands();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load invoice plan {PlanId} for emission confirmation.", planId);
             ValidationMessage = LocalizationRegistry.Format("Emission.Status.LoadFailureDetail", ex.Message);
-            UpdateDialogSaveState();
         }
     }
 
@@ -296,13 +334,14 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
 
             if (result.Updated == 0)
             {
-                StatusMessage = LocalizationRegistry.Get("Emission.Status.NoClosures");
+                StatusMessage = LocalizationRegistry.Get("Emission.Status.NoEmissions");
                 return;
             }
 
-            line.ApplyClosedState(update.BzCode, update.EmittedAt.Value.Date);
-
-            StatusMessage = LocalizationRegistry.Format("Emission.Status.LineClosed", line.Sequence);
+            var sequence = line.Sequence;
+            LoadPlanById(CurrentPlanId, suppressStatusMessage: true);
+            SelectedLine = Lines.FirstOrDefault(l => l.Sequence == sequence);
+            StatusMessage = LocalizationRegistry.Format("Emission.Status.LineEmitted", sequence);
         }
         catch (Exception ex)
         {
@@ -311,7 +350,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         }
     }
 
-    internal void HandleCancelAndReissue(EmissionConfirmationLineViewModel line)
+    internal void HandleCancel(EmissionConfirmationLineViewModel line)
     {
         if (line is null)
         {
@@ -332,22 +371,16 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
             return;
         }
 
-        if (line.ReissueEmissionDate is null)
-        {
-            ValidationMessage = LocalizationRegistry.Get("Emission.Validation.ReissueDate");
-            return;
-        }
-
-        var request = new InvoiceReissueRequest
+        var cancellation = new InvoiceEmissionCancellation
         {
             ItemId = line.Id,
             CancelReason = line.CancelReason.Trim(),
-            ReplacementEmissionDate = line.ReissueEmissionDate.Value,
+            CanceledAt = DateTime.Today,
         };
 
         try
         {
-            var result = _repository.CancelAndReissue(CurrentPlanId, new[] { request });
+            var result = _repository.CancelEmissions(CurrentPlanId, new[] { cancellation });
 
             if (result.Updated == 0)
             {
@@ -356,6 +389,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
             }
 
             LoadPlanById(CurrentPlanId, suppressStatusMessage: true);
+            SelectedLine = Lines.FirstOrDefault(l => l.Sequence == line.Sequence);
 
             StatusMessage = LocalizationRegistry.Format("Emission.Status.LineCanceled", line.Sequence);
         }
@@ -369,7 +403,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
     internal void RefreshSummaries()
     {
         RequestedCount = Lines.Count(line => line.Status == InvoiceItemStatus.Requested);
-        ClosedCount = Lines.Count(line => line.Status == InvoiceItemStatus.Closed);
+        EmittedCount = Lines.Count(line => line.Status == InvoiceItemStatus.Emitted);
         CanceledCount = Lines.Count(line => line.Status == InvoiceItemStatus.Canceled);
         UpdateSelectedPlanSummaryCounts();
     }
@@ -388,9 +422,11 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         }
 
         Lines.Clear();
+        SelectedLine = null;
+        IsPlanDetailsVisible = false;
         RefreshSummaries();
         OnPropertyChanged(nameof(HasLines));
-        UpdateDialogSaveState();
+        RefreshActionCommands();
     }
 
     private void LoadAvailablePlans()
@@ -436,28 +472,76 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         }
 
         var planned = SelectedPlan.PlannedItemCount;
-        SelectedPlan.UpdateCounts(planned, RequestedCount, ClosedCount, CanceledCount);
+        SelectedPlan.UpdateCounts(planned, RequestedCount, EmittedCount, Lines.Count(line => line.Status == InvoiceItemStatus.Closed), CanceledCount);
     }
 
-    private void ShowPlanDetailsDialog()
+    private void EnsureSelectedLineIsValid()
     {
-        _dialogViewModel ??= new EmissionConfirmationDialogViewModel(this);
-        _dialogViewModel.CanSave = HasLines;
-        _ = _dialogService.ShowDialogAsync(_dialogViewModel, LocalizationRegistry.Get("Emission.Title.Primary"));
-    }
-
-    private void SavePlanDetails()
-    {
-        Messenger.Send(new CloseDialogMessage(true));
-    }
-
-    private void UpdateDialogSaveState()
-    {
-        _savePlanDetailsCommand.NotifyCanExecuteChanged();
-
-        if (_dialogViewModel is not null)
+        if (Lines.Count == 0)
         {
-            _dialogViewModel.CanSave = HasLines;
+            SelectedLine = null;
+            IsPlanDetailsVisible = false;
+            return;
+        }
+
+        if (SelectedLine is null || !Lines.Contains(SelectedLine))
+        {
+            SelectedLine = Lines.FirstOrDefault();
+        }
+
+        IsPlanDetailsVisible = SelectedLine is not null;
+    }
+
+    private bool CanSaveSelectedLine()
+    {
+        return SelectedLine is { Status: InvoiceItemStatus.Requested } line
+               && !string.IsNullOrWhiteSpace(line.BzCode)
+               && line.EmittedAt is not null;
+    }
+
+    private void SaveSelectedLine()
+    {
+        if (SelectedLine is not null)
+        {
+            HandleClose(SelectedLine);
+        }
+    }
+
+    private bool CanCancelSelectedLine()
+    {
+        return SelectedLine is { Status: InvoiceItemStatus.Emitted } line
+               && !string.IsNullOrWhiteSpace(line.CancelReason);
+    }
+
+    private void CancelSelectedLine()
+    {
+        if (SelectedLine is not null)
+        {
+            HandleCancel(SelectedLine);
+        }
+    }
+
+    private void ClosePlanDetails()
+    {
+        IsPlanDetailsVisible = false;
+        SelectedLine = null;
+    }
+
+    private void RefreshActionCommands()
+    {
+        _saveSelectedLineCommand.NotifyCanExecuteChanged();
+        _cancelSelectedLineCommand.NotifyCanExecuteChanged();
+        _closePlanDetailsCommand.NotifyCanExecuteChanged();
+    }
+
+    private void OnSelectedLinePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(EmissionConfirmationLineViewModel.BzCode)
+            or nameof(EmissionConfirmationLineViewModel.EmittedAt)
+            or nameof(EmissionConfirmationLineViewModel.Status)
+            or nameof(EmissionConfirmationLineViewModel.CancelReason))
+        {
+            RefreshActionCommands();
         }
     }
 }
