@@ -116,7 +116,7 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 ## 7 · Retain Template Generation
 **Happy Path**
 1. Staffing teams request a Retain template based on the latest allocation planning workbook.
-2. The generator clones the sanitized template asset (mirroring `DataTemplate/Retain_Template.xlsx`) into the user-selected destination and resets the Saturday header row while preserving the workbook instructions.
+2. The generator clones the sanitized template asset (mirroring `DataTemplate/Retain_Template.xlsx`) into the user-selected destination and seeds cell `E1` with the Saturday that precedes the first planned week while preserving the workbook instructions.
 3. Allocation entries are flattened by engagement/resource and spread across the weekly columns.
 4. Sequential rows start at row 4, filling job code, resource GPN, resource name, and weekly hours in the exact columns expected by the Retain importer.
 5. The populated Excel file is saved in the chosen location and logged for traceability.
@@ -124,7 +124,8 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 **Validation & Consolidation Rules**
 - The generator validates the input path and ensures both the planning workbook and the embedded template asset exist before proceeding.
 - It verifies the template contains the `Data Entry` sheet; absence results in a blocking error.
-- Saturday header cells (row 1, columns `E` onward) are cleared before writing to avoid stale dates while the Monday formulas on row 2 remain intact.
+- Weekly columns align to the Saturday immediately preceding each allocation week, so hours for 03/11/2025 post to the `01/11/2025` column.
+- Only cell `E1` is overwritten with the computed Saturday while downstream header formulas remain intact.
 - All data rows from row 4 onward are cleared prior to writing new values, and hours per week are rounded to two decimals (skipping zeros) to keep the template lean.
 
 [See Technical Spec →](readme_specs.md#retain-template-generation)

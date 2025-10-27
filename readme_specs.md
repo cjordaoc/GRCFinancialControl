@@ -112,12 +112,12 @@ This document details the implementation for every functional capability describ
 - **Workflow:**
   1. `GenerateRetainTemplateAsync` validates both the allocation workbook path and the caller-provided destination, then loads the sanitized template asset that mirrors `DataTemplate/Retain_Template.xlsx`.
   2. `RetainTemplatePlanningWorkbook.Load` reads the planning sheet, producing a `RetainTemplatePlanningSnapshot` with entries grouped by resource/job and reference week.
-  3. Saturday headers are built from the reference date to cover all detected weeks and written into row 1 while the Monday formulas on row 2 remain untouched.
+  3. Saturday headers are derived by taking the Saturday preceding each detected planning week; only cell `E1` is populated so that built-in formulas propagate the remaining header values.
   4. `PopulateTemplate` clears data rows from row 4 onward, writes job code/resource identifiers plus weekly hours, and saves the workbook copy to the requested destination.
 - **Validation Mechanics:**
   - Template asset presence and format are validated; invalid Base64 raises `InvalidDataException`.
   - Missing `Data Entry` worksheet halts processing with a clear error.
-  - Saturday header cells (row 1) are cleared before writing to prevent stale dates.
+  - Hours post to the Saturday that immediately precedes each allocation week (e.g., 03/11/2025 maps to 01/11/2025), with only `E1` being overwritten.
   - Hours per week are rounded to two decimals, zero values omitted, and data rows reset from row 4 onward to keep the template compact.
 
 ---

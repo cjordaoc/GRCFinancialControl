@@ -133,21 +133,19 @@ public sealed class RetainTemplateGenerator : IRetainTemplateGenerator
             worksheet.LastColumnUsed()?.ColumnNumber() ?? firstWeekColumnIndex - 1,
             firstWeekColumnIndex + Math.Max(saturdayHeaders.Count, 1) - 1);
 
-        for (var column = firstWeekColumnIndex; column <= lastColumnToClear; column++)
+        var saturdayHeaderCell = worksheet.Cell(saturdayHeaderRowIndex, firstWeekColumnIndex);
+        if (saturdayHeaders.Count > 0)
         {
-            worksheet.Cell(saturdayHeaderRowIndex, column).Clear(XLClearOptions.Contents);
-        }
-
-        for (var index = 0; index < saturdayHeaders.Count; index++)
-        {
-            var columnIndex = firstWeekColumnIndex + index;
-            var headerCell = worksheet.Cell(saturdayHeaderRowIndex, columnIndex);
-            headerCell.Value = saturdayHeaders[index];
-            headerCell.Style.DateFormat.Format = headerCell.Style.DateFormat.Format switch
+            saturdayHeaderCell.Value = saturdayHeaders[0];
+            saturdayHeaderCell.Style.DateFormat.Format = saturdayHeaderCell.Style.DateFormat.Format switch
             {
                 null or "" => "yyyy-MM-dd",
                 var existing => existing
             };
+        }
+        else
+        {
+            saturdayHeaderCell.Value = string.Empty;
         }
 
         var lastRowUsed = worksheet.LastRowUsed()?.RowNumber() ?? 0;
@@ -178,7 +176,7 @@ public sealed class RetainTemplateGenerator : IRetainTemplateGenerator
             {
                 var columnIndex = firstWeekColumnIndex + headerIndex;
                 var saturday = saturdayHeaders[headerIndex];
-                var monday = saturday.AddDays(-5).Date;
+                var monday = saturday.AddDays(2).Date;
 
                 if (!row.HoursByWeek.TryGetValue(monday, out var hours))
                 {
@@ -232,20 +230,13 @@ public sealed class RetainTemplateGenerator : IRetainTemplateGenerator
 
     private static string ComposeJobName(string engagementName, string engagementCode)
     {
-        var name = engagementName?.Trim() ?? string.Empty;
         var code = engagementCode?.Trim() ?? string.Empty;
-
-        if (string.IsNullOrEmpty(name))
+        if (!string.IsNullOrEmpty(code))
         {
             return code;
         }
 
-        if (string.IsNullOrEmpty(code))
-        {
-            return name;
-        }
-
-        return $"{name} ({code})";
+        return engagementName?.Trim() ?? string.Empty;
     }
 
     private sealed record RetainTemplateRow(
