@@ -13,6 +13,7 @@ public partial class InvoiceLinesEditorViewModel : ViewModelBase
 {
     private readonly PlanEditorViewModel _parentViewModel;
     private readonly RelayCommand _saveCommand;
+    private readonly RelayCommand _refreshCommand;
 
     [ObservableProperty]
     private string? _statusMessage;
@@ -25,6 +26,7 @@ public partial class InvoiceLinesEditorViewModel : ViewModelBase
         _parentViewModel.Items.CollectionChanged += OnItemsCollectionChanged;
 
         _saveCommand = new RelayCommand(Save, () => _parentViewModel.CanSavePlan);
+        _refreshCommand = new RelayCommand(RefreshGrid);
         CloseCommand = new RelayCommand(Close);
         _saveCommand.NotifyCanExecuteChanged();
 
@@ -56,6 +58,7 @@ public partial class InvoiceLinesEditorViewModel : ViewModelBase
 
     public IRelayCommand SaveCommand => _saveCommand;
     public IRelayCommand CloseCommand { get; }
+    public IRelayCommand RefreshCommand => _refreshCommand;
 
     private void Save()
     {
@@ -79,6 +82,12 @@ public partial class InvoiceLinesEditorViewModel : ViewModelBase
     private void OnItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         OnPropertyChanged(nameof(Items));
+    }
+
+    private void RefreshGrid()
+    {
+        OnPropertyChanged(nameof(Items));
+        Messenger.Send(new RefreshInvoiceLinesGridMessage());
     }
 
     private void OnParentPropertyChanged(object? sender, PropertyChangedEventArgs e)
