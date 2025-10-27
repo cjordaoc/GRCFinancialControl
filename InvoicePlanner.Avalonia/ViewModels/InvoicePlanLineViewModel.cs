@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Invoices.Core.Enums;
+using Invoices.Core.Payments;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
@@ -41,6 +42,9 @@ public partial class InvoicePlanLineViewModel : ObservableObject
     private decimal amount;
 
     [ObservableProperty]
+    private string paymentTypeCode = PaymentTypeCatalog.TransferenciaBancariaCode;
+
+    [ObservableProperty]
     private bool canEditEmissionDate = true;
 
     [ObservableProperty]
@@ -56,6 +60,22 @@ public partial class InvoicePlanLineViewModel : ObservableObject
     public string CurrencySymbol => _owner?.CurrencySymbol ?? string.Empty;
 
     public bool HasCurrencySymbol => _owner?.HasCurrencySymbol ?? false;
+
+    public PaymentTypeOption SelectedPaymentTypeOption
+    {
+        get => PaymentTypeCatalog.GetByCode(PaymentTypeCode);
+        set
+        {
+            var resolvedCode = value is null
+                ? PaymentTypeCatalog.TransferenciaBancariaCode
+                : PaymentTypeCatalog.NormalizeCode(value.Code);
+
+            if (!string.Equals(PaymentTypeCode, resolvedCode, StringComparison.Ordinal))
+            {
+                PaymentTypeCode = resolvedCode;
+            }
+        }
+    }
 
     internal void Attach(PlanEditorViewModel owner)
     {
@@ -118,6 +138,13 @@ public partial class InvoicePlanLineViewModel : ObservableObject
         _suppressNotifications = false;
     }
 
+    internal void SetPaymentType(string? code)
+    {
+        _suppressNotifications = true;
+        PaymentTypeCode = PaymentTypeCatalog.NormalizeCode(code);
+        _suppressNotifications = false;
+    }
+
     internal void SetEmissionDate(DateTime value)
     {
         _suppressNotifications = true;
@@ -128,6 +155,11 @@ public partial class InvoicePlanLineViewModel : ObservableObject
     partial void OnStatusChanged(InvoiceItemStatus value)
     {
         OnPropertyChanged(nameof(IsEditable));
+    }
+
+    partial void OnPaymentTypeCodeChanged(string value)
+    {
+        OnPropertyChanged(nameof(SelectedPaymentTypeOption));
     }
 
     private void OnOwnerPropertyChanged(object? sender, PropertyChangedEventArgs e)

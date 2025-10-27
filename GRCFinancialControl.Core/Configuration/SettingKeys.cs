@@ -10,4 +10,5 @@ public static class SettingKeys
     public const string DefaultFiscalYearId = "DefaultFiscalYearId";
     public const string DefaultClosingPeriodId = "DefaultClosingPeriodId";
     public const string Language = "Language";
+    public const string TasksExportDirectory = "TasksExportDirectory";
 }

@@ -82,20 +82,46 @@ public sealed class FilePickerService
     /// <param name="title">Dialog title shown to the user.</param>
     /// <param name="defaultExtension">Default file extension to append when the user omits one.</param>
     /// <param name="allowedPatterns">Optional filter patterns to restrict selectable files.</param>
+    /// <param name="initialDirectory">Optional initial directory to open when the dialog starts.</param>
     /// <returns>The absolute path selected by the user, or <c>null</c> when the dialog is cancelled.</returns>
     public async Task<string?> SaveFileAsync(
         string defaultFileName,
         string title = "Save File",
         string defaultExtension = ".xlsx",
-        string[]? allowedPatterns = null)
+        string[]? allowedPatterns = null,
+        string? initialDirectory = null)
     {
         var extension = NormalizeExtension(defaultExtension);
         var patterns = NormalizePatterns(extension, allowedPatterns);
+
+        IStorageFolder? startLocation = null;
+        if (!string.IsNullOrWhiteSpace(initialDirectory))
+        {
+            try
+            {
+                var directoryPath = Path.GetFullPath(initialDirectory);
+                if (Directory.Exists(directoryPath))
+                {
+                    if (!directoryPath.EndsWith(Path.DirectorySeparatorChar))
+                    {
+                        directoryPath += Path.DirectorySeparatorChar;
+                    }
+
+                    var folderUri = new Uri(directoryPath);
+                    startLocation = await _target.StorageProvider.TryGetFolderFromPathAsync(folderUri).ConfigureAwait(false);
+                }
+            }
+            catch
+            {
+                startLocation = null;
+            }
+        }
 
         var file = await _target.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             SuggestedFileName = defaultFileName,
             Title = title,
+            SuggestedStartLocation = startLocation,
             FileTypeChoices = new[]
             {
                 new FilePickerFileType(DefaultFilterLabel)

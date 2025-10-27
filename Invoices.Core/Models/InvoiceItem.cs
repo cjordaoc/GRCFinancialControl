@@ -1,4 +1,5 @@
 using Invoices.Core.Enums;
+using Invoices.Core.Payments;
 
 namespace Invoices.Core.Models;
 
@@ -41,6 +42,8 @@ public class InvoiceItem
     public DateTime CreatedAt { get; set; }
 
     public DateTime UpdatedAt { get; set; }
+
+    public string PaymentTypeCode { get; set; } = PaymentTypeCatalog.TransferenciaBancariaCode;
 
     public InvoicePlan? Plan { get; set; }
 

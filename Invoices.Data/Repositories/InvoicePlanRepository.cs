@@ -6,6 +6,7 @@ using GRCFinancialControl.Persistence;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
+using Invoices.Core.Payments;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
@@ -1037,6 +1038,7 @@ public class InvoicePlanRepository : IInvoicePlanRepository
                 trackedItem.CustomerTicket = incomingItem.CustomerTicket;
                 trackedItem.AdditionalInfo = incomingItem.AdditionalInfo;
                 trackedItem.DeliveryDescription = incomingItem.DeliveryDescription;
+                trackedItem.PaymentTypeCode = PaymentTypeCatalog.NormalizeCode(incomingItem.PaymentTypeCode);
                 trackedItem.UpdatedAt = utcNow;
                 retainedIds.Add(trackedItem.Id);
             }
@@ -1050,6 +1052,7 @@ public class InvoicePlanRepository : IInvoicePlanRepository
                 incomingItem.RitmNumber = null;
                 incomingItem.CoeResponsible = null;
                 incomingItem.RequestDate = null;
+                incomingItem.PaymentTypeCode = PaymentTypeCatalog.NormalizeCode(incomingItem.PaymentTypeCode);
                 incomingItem.Emissions.Clear();
                 tracked.Items.Add(incomingItem);
                 context.Entry(incomingItem).State = EntityState.Added;

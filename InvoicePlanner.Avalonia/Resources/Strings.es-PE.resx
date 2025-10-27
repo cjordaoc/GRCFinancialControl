@@ -291,6 +291,9 @@
   <data name="InvoicePlan.TableHeader.Ticket" xml:space="preserve">
     <value>Customer ticket</value>
   </data>
+  <data name="InvoicePlan.TableHeader.PaymentType" xml:space="preserve">
+    <value>Tipo de pago</value>
+  </data>
   <data name="InvoicePlan.TableHeader.Percent" xml:space="preserve">
     <value>Percent</value>
   </data>
