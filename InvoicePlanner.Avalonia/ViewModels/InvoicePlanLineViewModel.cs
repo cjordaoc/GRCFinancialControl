@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Invoices.Core.Enums;
 
@@ -52,16 +53,35 @@ public partial class InvoicePlanLineViewModel : ObservableObject
 
     public PlanEditorViewModel? Owner => _owner;
 
+    public string CurrencySymbol => _owner?.CurrencySymbol ?? string.Empty;
+
+    public bool HasCurrencySymbol => _owner?.HasCurrencySymbol ?? false;
+
     internal void Attach(PlanEditorViewModel owner)
     {
+        if (_owner is not null)
+        {
+            _owner.PropertyChanged -= OnOwnerPropertyChanged;
+        }
+
         _owner = owner;
+        _owner.PropertyChanged += OnOwnerPropertyChanged;
         OnPropertyChanged(nameof(Owner));
+        OnPropertyChanged(nameof(CurrencySymbol));
+        OnPropertyChanged(nameof(HasCurrencySymbol));
     }
 
     internal void Detach()
     {
+        if (_owner is not null)
+        {
+            _owner.PropertyChanged -= OnOwnerPropertyChanged;
+        }
+
         _owner = null;
         OnPropertyChanged(nameof(Owner));
+        OnPropertyChanged(nameof(CurrencySymbol));
+        OnPropertyChanged(nameof(HasCurrencySymbol));
     }
 
     partial void OnPercentageChanged(decimal value)
@@ -108,5 +128,14 @@ public partial class InvoicePlanLineViewModel : ObservableObject
     partial void OnStatusChanged(InvoiceItemStatus value)
     {
         OnPropertyChanged(nameof(IsEditable));
+    }
+
+    private void OnOwnerPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.PropertyName) || e.PropertyName == nameof(PlanEditorViewModel.CurrencySymbol))
+        {
+            OnPropertyChanged(nameof(CurrencySymbol));
+            OnPropertyChanged(nameof(HasCurrencySymbol));
+        }
     }
 }
