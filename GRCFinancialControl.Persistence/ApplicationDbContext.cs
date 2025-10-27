@@ -30,6 +30,7 @@ namespace GRCFinancialControl.Persistence
         public DbSet<InvoicePlan> InvoicePlans { get; set; }
         public DbSet<InvoicePlanEmail> InvoicePlanEmails { get; set; }
         public DbSet<InvoiceItem> InvoiceItems { get; set; }
+        public DbSet<InvoiceEmission> InvoiceEmissions { get; set; }
         public DbSet<MailOutbox> MailOutboxEntries { get; set; }
         public DbSet<MailOutboxLog> MailOutboxLogs { get; set; }
         public DbSet<InvoiceNotificationPreview> InvoiceNotificationPreviews { get; set; }
@@ -674,14 +675,6 @@ namespace GRCFinancialControl.Persistence
                 .HasMySqlColumnType("date", isMySql);
 
             modelBuilder.Entity<InvoiceItem>()
-                .Property(item => item.EmittedAt)
-                .HasMySqlColumnType("date", isMySql);
-
-            modelBuilder.Entity<InvoiceItem>()
-                .Property(item => item.CanceledAt)
-                .HasMySqlColumnType("date", isMySql);
-
-            modelBuilder.Entity<InvoiceItem>()
                 .Property(item => item.CreatedAt)
                 .HasMySqlColumnType("timestamp", isMySql);
 
@@ -703,10 +696,41 @@ namespace GRCFinancialControl.Persistence
                 .HasDatabaseName("IX_InvoiceItem_Status");
 
             modelBuilder.Entity<InvoiceItem>()
-                .HasOne(item => item.ReplacementItem)
-                .WithMany()
-                .HasForeignKey(item => item.ReplacementItemId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .HasMany(item => item.Emissions)
+                .WithOne(emission => emission.InvoiceItem)
+                .HasForeignKey(emission => emission.InvoiceItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<InvoiceEmission>()
+                .ToTable("InvoiceEmission");
+
+            modelBuilder.Entity<InvoiceEmission>()
+                .Property(emission => emission.BzCode)
+                .HasMaxLength(64);
+
+            modelBuilder.Entity<InvoiceEmission>()
+                .Property(emission => emission.CancelReason)
+                .HasMaxLength(255);
+
+            modelBuilder.Entity<InvoiceEmission>()
+                .Property(emission => emission.EmittedAt)
+                .HasMySqlColumnType("date", isMySql);
+
+            modelBuilder.Entity<InvoiceEmission>()
+                .Property(emission => emission.CanceledAt)
+                .HasMySqlColumnType("date", isMySql);
+
+            modelBuilder.Entity<InvoiceEmission>()
+                .Property(emission => emission.CreatedAt)
+                .HasMySqlColumnType("timestamp", isMySql);
+
+            modelBuilder.Entity<InvoiceEmission>()
+                .Property(emission => emission.UpdatedAt)
+                .HasMySqlColumnType("timestamp", isMySql);
+
+            modelBuilder.Entity<InvoiceEmission>()
+                .HasIndex(emission => emission.InvoiceItemId)
+                .HasDatabaseName("IX_InvoiceEmission_Item");
 
             modelBuilder.Entity<MailOutbox>()
                 .ToTable("MailOutbox");

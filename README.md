@@ -84,10 +84,12 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 - Invoice lines auto-generate emission dates from the first emission date and payment terms, rebalance editable percentages/amounts to keep totals at 100% of the engagement value, and display all monetary fields with the engagement currency symbol.
 - Totals are continuously recalculated; mismatches highlight in red and block the Save action until both total percentage (100.00%) and total amount (engagement total) are satisfied.
 - The **Confirm Request** workspace keeps the process inline: after choosing **Insert Request Data** the plan invoices appear beneath the selector with a detail form that lets controllers enter RITM, COE responsible, and request date. **Save** marks the current invoice as Requested, while **Reverse** clears the fields and returns the line to Planned without leaving the screen.
+- The **Confirm Emission** workspace mirrors the request flow: controllers load a plan, pick a requested invoice, and capture the BZ code plus the actual emission date directly in the inline editor. Saving calls `CloseItems` to persist both the status change and a new `InvoiceEmission` record. Emitted invoices can be canceled from the same panel by supplying a reason, which records the cancellation and reopens the line as Planned without losing the emission history.
 
 **Validation & Consolidation Rules**
 - Only invoices due on or before the execution date generate notifications, preventing premature reminders.
 - Duplicate reminders are avoided by checking `MailOutboxLog` before inserting new entries for the same invoice and period.
+- Emission confirmation enforces that BZ code and emission date are provided before closing, and cancellations require a reason before the invoice is returned to the Planned state.
 - The planner enforces that schedules reference valid engagements and fiscal periods; inconsistent records are rejected during save.
 
 [See Technical Spec →](readme_specs.md#invoice-planner-and-notifications)

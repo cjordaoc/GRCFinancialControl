@@ -14,6 +14,9 @@ public partial class InvoicePlanSummaryViewModel : ObservableObject
     private int requestedItemCount;
 
     [ObservableProperty]
+    private int emittedItemCount;
+
+    [ObservableProperty]
     private int closedItemCount;
 
     [ObservableProperty]
@@ -33,7 +36,7 @@ public partial class InvoicePlanSummaryViewModel : ObservableObject
 
     public bool HasPendingRequests => PlannedItemCount > 0;
 
-    public bool HasPendingEmissions => RequestedItemCount > 0;
+    public bool HasPendingEmissions => RequestedItemCount > 0 || EmittedItemCount > 0;
 
     private InvoicePlanSummaryViewModel(
         int id,
@@ -43,6 +46,7 @@ public partial class InvoicePlanSummaryViewModel : ObservableObject
         DateTime? firstEmissionDate,
         int planned,
         int requested,
+        int emitted,
         int closed,
         int canceled)
     {
@@ -53,6 +57,7 @@ public partial class InvoicePlanSummaryViewModel : ObservableObject
         FirstEmissionDate = firstEmissionDate;
         plannedItemCount = planned;
         requestedItemCount = requested;
+        emittedItemCount = emitted;
         closedItemCount = closed;
         canceledItemCount = canceled;
     }
@@ -72,14 +77,16 @@ public partial class InvoicePlanSummaryViewModel : ObservableObject
             summary.FirstEmissionDate,
             summary.PlannedItemCount,
             summary.RequestedItemCount,
+            summary.EmittedItemCount,
             summary.ClosedItemCount,
             summary.CanceledItemCount);
     }
 
-    public void UpdateCounts(int planned, int requested, int closed, int canceled)
+    public void UpdateCounts(int planned, int requested, int emitted, int closed, int canceled)
     {
         PlannedItemCount = planned;
         RequestedItemCount = requested;
+        EmittedItemCount = emitted;
         ClosedItemCount = closed;
         CanceledItemCount = canceled;
     }
@@ -87,4 +94,6 @@ public partial class InvoicePlanSummaryViewModel : ObservableObject
     partial void OnPlannedItemCountChanged(int value) => OnPropertyChanged(nameof(HasPendingRequests));
 
     partial void OnRequestedItemCountChanged(int value) => OnPropertyChanged(nameof(HasPendingEmissions));
+
+    partial void OnEmittedItemCountChanged(int value) => OnPropertyChanged(nameof(HasPendingEmissions));
 }
