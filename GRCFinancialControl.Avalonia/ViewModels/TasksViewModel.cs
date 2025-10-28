@@ -324,9 +324,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private async Task<IReadOnlyList<InvoiceExport>> LoadInvoiceEntriesAsync(ApplicationDbContext context, DateTime notifyDate)
         {
+            var nextDay = notifyDate.AddDays(1);
+
             var previews = await context.InvoiceNotificationPreviews
                 .AsNoTracking()
-                .Where(entry => entry.NotifyDate == notifyDate)
+                .Where(entry => entry.NotifyDate >= notifyDate && entry.NotifyDate < nextDay)
                 .OrderBy(entry => entry.EngagementId)
                 .ThenBy(entry => entry.SeqNo)
                 .ToListAsync()
@@ -694,7 +696,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             var groups = engagement.RankBudgets
                 .Where(budget => budget.FiscalYear != null)
-                .GroupBy(budget => budget.FiscalYear!)
+                .GroupBy(budget => new
+                {
+                    budget.FiscalYear!.Id,
+                    budget.FiscalYear!.Name,
+                    budget.FiscalYear!.StartDate
+                })
                 .OrderBy(group => group.Key.StartDate)
                 .ThenBy(group => group.Key.Name, StringComparer.OrdinalIgnoreCase)
                 .ToList();
@@ -718,6 +725,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     })
                     .Where(rank => rank.ConsumedHours != 0m || rank.RemainingHours != 0m)
                     .ToList();
+
+                if (ranks.Count == 0)
+                {
+                    continue;
+                }
 
                 fiscalYears.Add(new EtcFiscalYear
                 {
