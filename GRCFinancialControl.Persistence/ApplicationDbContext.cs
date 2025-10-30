@@ -228,6 +228,9 @@ namespace GRCFinancialControl.Persistence
                 .HasDefaultValue(0m);
 
             modelBuilder.Entity<Engagement>()
+                .Property(e => e.UnbilledRevenueDays);
+
+            modelBuilder.Entity<Engagement>()
                 .HasOne(e => e.LastClosingPeriod)
                 .WithMany(cp => cp.Engagements)
                 .HasForeignKey(e => e.LastClosingPeriodId)

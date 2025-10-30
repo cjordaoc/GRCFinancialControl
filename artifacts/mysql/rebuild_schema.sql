@@ -146,6 +146,7 @@ CREATE TABLE `Engagements`
     `EtcpHours`            DECIMAL(18, 2) NOT NULL DEFAULT 0,
     `ValueEtcp`            DECIMAL(18, 2) NOT NULL DEFAULT 0,
     `ExpensesEtcp`         DECIMAL(18, 2) NOT NULL DEFAULT 0,
+    `UnbilledRevenueDays`  INT            NULL,
     `LastClosingPeriodId`  INT            NULL,
     CONSTRAINT `PK_Engagements` PRIMARY KEY (`Id`),
     CONSTRAINT `UX_Engagements_EngagementId` UNIQUE (`EngagementId`),

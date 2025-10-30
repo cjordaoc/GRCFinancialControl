@@ -39,6 +39,7 @@ namespace GRCFinancialControl.Persistence.Services
         private readonly ILogger<ImportService> _logger;
         private readonly ILoggerFactory _loggerFactory;
         private readonly IFiscalCalendarConsistencyService _fiscalCalendarConsistencyService;
+        private readonly IFullManagementDataImporter _fullManagementDataImporter;
         private const string FinancialEvolutionInitialPeriodId = "INITIAL";
         private const int FcsHeaderSearchLimit = 20;
         private const int FcsDataStartRowIndex = 11; // Default row 12 in Excel (1-based)
@@ -72,17 +73,20 @@ namespace GRCFinancialControl.Persistence.Services
         public ImportService(IDbContextFactory<ApplicationDbContext> contextFactory,
             ILogger<ImportService> logger,
             ILoggerFactory loggerFactory,
-            IFiscalCalendarConsistencyService fiscalCalendarConsistencyService)
+            IFiscalCalendarConsistencyService fiscalCalendarConsistencyService,
+            IFullManagementDataImporter fullManagementDataImporter)
         {
             ArgumentNullException.ThrowIfNull(contextFactory);
             ArgumentNullException.ThrowIfNull(logger);
             ArgumentNullException.ThrowIfNull(loggerFactory);
             ArgumentNullException.ThrowIfNull(fiscalCalendarConsistencyService);
+            ArgumentNullException.ThrowIfNull(fullManagementDataImporter);
 
             _contextFactory = contextFactory;
             _logger = logger;
             _loggerFactory = loggerFactory;
             _fiscalCalendarConsistencyService = fiscalCalendarConsistencyService;
+            _fullManagementDataImporter = fullManagementDataImporter;
         }
 
         public async Task<string> ImportBudgetAsync(string filePath)
@@ -1999,446 +2003,12 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new ArgumentException("File path must be provided.", nameof(filePath));
             }
 
-            if (!File.Exists(filePath))
-            {
-                throw new FileNotFoundException("Full Management Data workbook could not be found.", filePath);
-            }
-
-            using var workbook = LoadWorkbook(filePath);
-
-            var worksheet = workbook.GetWorksheet("Engagement Detail") ??
-                            workbook.GetWorksheet("GRC");
-            if (worksheet == null)
-            {
-                throw new InvalidDataException("Expected sheet not found (Engagement Detail/GRC).");
-            }
-
-            if (worksheet.RowCount <= FullManagementHeaderRowIndex)
-            {
-                throw new InvalidDataException("The Full Management Data worksheet is missing the required header row.");
-            }
-
-            var headerText = GetCellString(worksheet, 3, 0);
-            var header = ParseFullManagementHeader(headerText);
-
-            var engagementColumnIndex = ColumnNameToIndex("A");
-            var currentToGoColumnIndex = ColumnNameToIndex("IN");
-            var nextToGoColumnIndex = ColumnNameToIndex("IO");
-            var openingColumnIndex = ResolveOpeningColumnIndex(worksheet.ColumnCount);
-
-            EnsureColumnExists(worksheet, engagementColumnIndex, "Engagement ID (column A)");
-            EnsureColumnExists(worksheet, currentToGoColumnIndex, "FYTG Backlog (column IN)");
-            EnsureColumnExists(worksheet, nextToGoColumnIndex, "Future FY Backlog (column IO)");
-            EnsureColumnExists(worksheet, openingColumnIndex, "Original Budget (column JN)");
-
-            var parsedRows = new List<FullManagementRevenueRow>();
-            var skippedMissingEngagement = 0;
-            var skippedInvalidNumbers = 0;
-
-            for (var rowIndex = FullManagementDataStartRowIndex; rowIndex < worksheet.RowCount; rowIndex++)
-            {
-                var engagementRaw = NormalizeWhitespace(GetCellString(worksheet, rowIndex, engagementColumnIndex));
-
-                if (string.IsNullOrEmpty(engagementRaw))
-                {
-                    if (IsAllocationRowEmpty(worksheet, rowIndex, openingColumnIndex, currentToGoColumnIndex, nextToGoColumnIndex))
-                    {
-                        continue;
-                    }
-
-                    skippedMissingEngagement++;
-                    continue;
-                }
-
-                var engagementCode = ExtractEngagementCode(engagementRaw);
-                if (engagementCode is null)
-                {
-                    if (IsAllocationRowEmpty(worksheet, rowIndex, openingColumnIndex, currentToGoColumnIndex, nextToGoColumnIndex))
-                    {
-                        continue;
-                    }
-
-                    skippedInvalidNumbers++;
-                    continue;
-                }
-
-                var openingValue = ParseMoneyOrDefault(worksheet.GetValue(rowIndex, openingColumnIndex), ref skippedInvalidNumbers);
-                var currentToGoValue = ParseMoneyOrDefault(worksheet.GetValue(rowIndex, currentToGoColumnIndex), ref skippedInvalidNumbers);
-                var nextToGoValue = ParseMoneyOrDefault(worksheet.GetValue(rowIndex, nextToGoColumnIndex), ref skippedInvalidNumbers);
-
-                var currentToDateValue = RoundMoney(openingValue - currentToGoValue - nextToGoValue);
-
-                parsedRows.Add(new FullManagementRevenueRow(
-                    engagementCode,
-                    RoundMoney(currentToGoValue),
-                    RoundMoney(nextToGoValue),
-                    currentToDateValue));
-            }
-
-            await using var context = await _contextFactory
-                .CreateDbContextAsync()
+            var result = await _fullManagementDataImporter
+                .ImportAsync(filePath)
                 .ConfigureAwait(false);
 
-            var engagements = await LoadEngagementsAsync(context, parsedRows.Select(r => r.EngagementId)).ConfigureAwait(false);
-            var currentFiscalYear = await FindFiscalYearByCodeAsync(context, header.CurrentFiscalYear)
-                .ConfigureAwait(false)
-                ?? throw new InvalidDataException($"Fiscal year '{header.CurrentFiscalYear}' referenced by the workbook could not be found in the database.");
-            var nextFiscalYear = await FindFiscalYearByCodeAsync(context, header.NextFiscalYear)
-                .ConfigureAwait(false)
-                ?? throw new InvalidDataException($"Fiscal year '{header.NextFiscalYear}' referenced by the workbook could not be found in the database.");
-
-            var allocationLookup = await LoadExistingRevenueAllocationsAsync(
-                context,
-                engagements.Values.Select(e => e.Id),
-                currentFiscalYear.Id,
-                nextFiscalYear.Id).ConfigureAwait(false);
-
-            var upserts = 0;
-            var skippedLockedFiscalYears = 0;
-            var isCurrentLocked = IsFiscalYearLocked(currentFiscalYear);
-            var isNextLocked = IsFiscalYearLocked(nextFiscalYear);
-
-            foreach (var row in parsedRows)
-            {
-                if (!engagements.TryGetValue(row.EngagementId, out var engagement))
-                {
-                    skippedMissingEngagement++;
-                    continue;
-                }
-
-                if (isCurrentLocked)
-                {
-                    skippedLockedFiscalYears++;
-                }
-                else
-                {
-                    await UpsertEngagementFYAllocationAsync(
-                        context,
-                        allocationLookup,
-                        engagement.Id,
-                        currentFiscalYear.Id,
-                        row.CurrentFiscalYearToDate,
-                        row.CurrentFiscalYearToGo,
-                        header.LastUpdateDate).ConfigureAwait(false);
-                    upserts++;
-                }
-
-                if (isNextLocked)
-                {
-                    skippedLockedFiscalYears++;
-                    continue;
-                }
-
-                await UpsertEngagementFYAllocationAsync(
-                    context,
-                    allocationLookup,
-                    engagement.Id,
-                    nextFiscalYear.Id,
-                    0m,
-                    row.NextFiscalYearToGo,
-                    header.LastUpdateDate).ConfigureAwait(false);
-                upserts++;
-            }
-
-            await context.SaveChangesAsync().ConfigureAwait(false);
-
-            var summary = string.Join('\n', new[]
-            {
-                $"FYc={header.CurrentFiscalYear}, FYn={header.NextFiscalYear}, LastUpdateDate={header.LastUpdateDate:yyyy-MM-dd}",
-                $"Upserts={upserts}",
-                $"SkippedMissingEngagement={skippedMissingEngagement}",
-                $"SkippedLockedFY={skippedLockedFiscalYears}",
-                $"SkippedInvalidNumbers={skippedInvalidNumbers}"
-            });
-
-            return summary;
+            return result.Summary;
         }
-
-        private static FullManagementHeader ParseFullManagementHeader(string headerCell)
-        {
-            if (!TryExtractFiscalYearCode(headerCell, out var normalized, out var currentFiscalYear))
-            {
-                var messageValue = string.IsNullOrEmpty(normalized) ? string.Empty : normalized;
-                throw new InvalidDataException($"Cell A4 must specify the current fiscal year (e.g., FY26). Detected value: '{messageValue}'.");
-            }
-
-            if (!TryExtractLastUpdateDate(normalized, out var lastUpdateDate, out var invalidCandidate, out var hasCandidate))
-            {
-                if (hasCandidate && !string.IsNullOrWhiteSpace(invalidCandidate))
-                {
-                    throw new InvalidDataException($"The Full Management Data header contains an unrecognized Last Update date: '{invalidCandidate}'.");
-                }
-
-                throw new InvalidDataException("The Full Management Data header must specify the last update date (e.g., 'Last Update : 29 Sep 2025').");
-            }
-
-            var nextFiscalYear = IncrementFiscalYearName(currentFiscalYear);
-
-            return new FullManagementHeader(currentFiscalYear, nextFiscalYear, lastUpdateDate);
-        }
-
-        private static bool TryExtractLastUpdateDate(string normalized, out DateTime lastUpdateDate, out string? invalidCandidate, out bool hasCandidate)
-        {
-            invalidCandidate = null;
-            hasCandidate = false;
-
-            var dateMatch = LastUpdateDateRegex.Match(normalized);
-            if (dateMatch.Success)
-            {
-                hasCandidate = true;
-                var candidate = dateMatch.Groups[1].Value;
-                if (TryParseHeaderDate(candidate, out lastUpdateDate))
-                {
-                    return true;
-                }
-
-                invalidCandidate = candidate;
-                lastUpdateDate = default;
-                return false;
-            }
-
-            foreach (var segment in normalized.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            {
-                var separatorIndex = segment.IndexOf(':');
-                if (separatorIndex < 0)
-                {
-                    continue;
-                }
-
-                var label = segment[..separatorIndex].Trim();
-                if (!IsLastUpdateLabel(label))
-                {
-                    continue;
-                }
-
-                hasCandidate = true;
-                var value = segment[(separatorIndex + 1)..].Trim();
-                if (TryParseHeaderDate(value, out lastUpdateDate))
-                {
-                    return true;
-                }
-
-                invalidCandidate = value;
-                lastUpdateDate = default;
-                return false;
-            }
-
-            lastUpdateDate = default;
-            return false;
-        }
-
-        private static bool IsLastUpdateLabel(string label)
-        {
-            return label.Equals("Last Update", StringComparison.OrdinalIgnoreCase) ||
-                   label.Equals("Última Atualização", StringComparison.OrdinalIgnoreCase) ||
-                   label.Equals("Ultima Atualizacao", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static bool TryParseHeaderDate(string candidate, out DateTime date)
-        {
-            if (DateTime.TryParseExact(candidate, "dd MMM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedExact))
-            {
-                date = DateTime.SpecifyKind(parsedExact.Date, DateTimeKind.Unspecified);
-                return true;
-            }
-
-            if (DateTime.TryParse(candidate, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var parsedInvariant))
-            {
-                date = DateTime.SpecifyKind(parsedInvariant.Date, DateTimeKind.Unspecified);
-                return true;
-            }
-
-            if (DateTime.TryParse(candidate, PtBrCulture, DateTimeStyles.AssumeLocal, out var parsedPtBr))
-            {
-                date = DateTime.SpecifyKind(parsedPtBr.Date, DateTimeKind.Unspecified);
-                return true;
-            }
-
-            date = default;
-            return false;
-        }
-
-        private static int ResolveOpeningColumnIndex(int columnCount)
-        {
-            var primaryIndex = ColumnNameToIndex("JN");
-            if (primaryIndex < columnCount)
-            {
-                return primaryIndex;
-            }
-
-            var fallbackIndex = ColumnNameToIndex("JF");
-            if (fallbackIndex < columnCount)
-            {
-                return fallbackIndex;
-            }
-
-            throw new InvalidDataException("The Full Management Data worksheet is missing the Original Budget column (JN).");
-        }
-
-        private static string? ExtractEngagementCode(string value)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                return null;
-            }
-
-            var match = EngagementIdRegex.Match(value);
-            if (match.Success)
-            {
-                return match.Value.ToUpperInvariant();
-            }
-
-            var trimmed = value.Trim();
-            return trimmed.StartsWith("E-", StringComparison.OrdinalIgnoreCase)
-                ? trimmed.ToUpperInvariant()
-                : null;
-        }
-
-        private static decimal ParseMoneyOrDefault(object? value, ref int skippedInvalidNumbers)
-        {
-            if (value == null || value == DBNull.Value)
-            {
-                return 0m;
-            }
-
-            try
-            {
-                var parsed = ParseDecimal(value, 2);
-                return parsed ?? 0m;
-            }
-            catch (InvalidDataException)
-            {
-                skippedInvalidNumbers++;
-            }
-            catch (Exception)
-            {
-                skippedInvalidNumbers++;
-            }
-
-            return 0m;
-        }
-
-        private static bool IsAllocationRowEmpty(IWorksheet worksheet, int rowIndex, params int[] columnIndexes)
-        {
-            foreach (var columnIndex in columnIndexes)
-            {
-                if (columnIndex < 0 || columnIndex >= worksheet.ColumnCount)
-                {
-                    continue;
-                }
-
-                var value = worksheet.GetValue(rowIndex, columnIndex);
-                if (value == null || value == DBNull.Value)
-                {
-                    continue;
-                }
-
-                var text = NormalizeWhitespace(Convert.ToString(value, CultureInfo.InvariantCulture));
-                if (!string.IsNullOrEmpty(text))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        private static async Task<Dictionary<string, Engagement>> LoadEngagementsAsync(
-            ApplicationDbContext context,
-            IEnumerable<string> engagementCodes)
-        {
-            var codes = engagementCodes
-                .Where(code => !string.IsNullOrWhiteSpace(code))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            if (codes.Count == 0)
-            {
-                return new Dictionary<string, Engagement>(StringComparer.OrdinalIgnoreCase);
-            }
-
-            var engagements = await context.Engagements
-                .Where(e => codes.Contains(e.EngagementId))
-                .ToListAsync()
-                .ConfigureAwait(false);
-
-            return engagements.ToDictionary(e => e.EngagementId, StringComparer.OrdinalIgnoreCase);
-        }
-
-        private static async Task<FiscalYear?> FindFiscalYearByCodeAsync(ApplicationDbContext context, string fiscalYearCode)
-        {
-            return await context.FiscalYears
-                .FirstOrDefaultAsync(fy => fy.Name == fiscalYearCode)
-                .ConfigureAwait(false);
-        }
-
-        private static bool IsFiscalYearLocked(FiscalYear fiscalYear) => fiscalYear?.IsLocked ?? false;
-
-        private static async Task<Dictionary<(int EngagementId, int FiscalYearId), EngagementFiscalYearRevenueAllocation>> LoadExistingRevenueAllocationsAsync(
-            ApplicationDbContext context,
-            IEnumerable<int> engagementIds,
-            int currentFiscalYearId,
-            int nextFiscalYearId)
-        {
-            var engagementIdList = engagementIds
-                .Distinct()
-                .ToList();
-
-            if (engagementIdList.Count == 0)
-            {
-                return new Dictionary<(int, int), EngagementFiscalYearRevenueAllocation>();
-            }
-
-            var fiscalYearIds = new HashSet<int> { currentFiscalYearId, nextFiscalYearId };
-
-            var allocations = await context.EngagementFiscalYearRevenueAllocations
-                .Where(a => engagementIdList.Contains(a.EngagementId) && fiscalYearIds.Contains(a.FiscalYearId))
-                .ToListAsync()
-                .ConfigureAwait(false);
-
-            return allocations.ToDictionary(a => (a.EngagementId, a.FiscalYearId));
-        }
-
-        private static async Task UpsertEngagementFYAllocationAsync(
-            ApplicationDbContext context,
-            IDictionary<(int EngagementId, int FiscalYearId), EngagementFiscalYearRevenueAllocation> allocationLookup,
-            int engagementId,
-            int fiscalYearId,
-            decimal toDateValue,
-            decimal toGoValue,
-            DateTime lastUpdateDate)
-        {
-            var key = (engagementId, fiscalYearId);
-            if (allocationLookup.TryGetValue(key, out var allocation))
-            {
-                allocation.ToDateValue = toDateValue;
-                allocation.ToGoValue = toGoValue;
-                allocation.LastUpdateDate = lastUpdateDate;
-                allocation.UpdatedAt = DateTime.UtcNow;
-                return;
-            }
-
-            var newAllocation = new EngagementFiscalYearRevenueAllocation
-            {
-                EngagementId = engagementId,
-                FiscalYearId = fiscalYearId,
-                ToDateValue = toDateValue,
-                ToGoValue = toGoValue,
-                LastUpdateDate = lastUpdateDate,
-                UpdatedAt = DateTime.UtcNow
-            };
-
-            await context.EngagementFiscalYearRevenueAllocations.AddAsync(newAllocation).ConfigureAwait(false);
-            allocationLookup[key] = newAllocation;
-        }
-
-        private sealed record FullManagementHeader(string CurrentFiscalYear, string NextFiscalYear, DateTime LastUpdateDate);
-
-        private sealed record FullManagementRevenueRow(
-            string EngagementId,
-            decimal CurrentFiscalYearToGo,
-            decimal NextFiscalYearToGo,
-            decimal CurrentFiscalYearToDate);
 
         public async Task<string> ImportAllocationPlanningAsync(string filePath)
         {
@@ -2517,6 +2087,8 @@ namespace GRCFinancialControl.Persistence.Services
                 .Where(rank => !string.IsNullOrEmpty(rank))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .Count();
+
+            var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>();
 
             if (aggregatedRecords.Count == 0)
             {
@@ -2612,7 +2184,6 @@ namespace GRCFinancialControl.Persistence.Services
                 var normalizedCode = NormalizeEngagementCode(record.EngagementCode);
                 if (string.IsNullOrEmpty(normalizedCode))
                 {
-                    unknownEngagements.Add("<empty>");
                     continue;
                 }
 
@@ -2769,38 +2340,25 @@ namespace GRCFinancialControl.Persistence.Services
 
                 historyEntry.Hours = 0m;
                 historyEntry.UploadedAt = updateTimestamp;
+                processedHistoryKeys.Add(historyKey);
                 historyUpserts++;
             }
 
-            await context.SaveChangesAsync().ConfigureAwait(false);
+            if (unknownEngagements.Count > 0)
+            {
+                skipReasons[MissingEngagementWarningKey] = unknownEngagements.Select(e => $"{e} (closing period {activeClosingPeriod.Name})").ToList();
+            }
 
             var notes = new List<string>
             {
-                $"Active closing period: {activeClosingPeriod.Name}",
-                $"Records mapped to active closing period: {aggregatedRecords.Count}",
-                $"Distinct engagements in active period: {groupedImports.Keys.Select(key => key.EngagementId).Distinct().Count()}",
-                $"History entries upserted: {historyUpserts}"
+                $"Rows processed: {processedRowCount}",
+                $"Distinct engagements detected: {distinctEngagementCount}",
+                $"Distinct ranks detected: {distinctRankCount}",
+                $"History entries updated: {historyUpserts}",
+                $"Engagement budgets inserted: {inserted}",
+                $"Engagement budgets updated: {updated}",
+                $"Unknown engagements skipped: {unknownEngagements.Count}"
             };
-
-            if (distinctRankCount > 0)
-            {
-                notes.Add($"Distinct ranks detected: {distinctRankCount}");
-            }
-
-            var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>();
-
-            if (unknownEngagements.Count > 0)
-            {
-                skipReasons["Unknown engagement"] = unknownEngagements.ToList();
-            }
-
-            _logger.LogInformation(
-                "Allocation planning import processed {Rows} rows. BudgetsInserted={Inserted}, BudgetsUpdated={Updated}, HistoryUpserts={HistoryUpserts}, UnknownEngagements={Unknown}.",
-                processedRowCount,
-                inserted,
-                updated,
-                historyUpserts,
-                unknownEngagements.Count);
 
             return ImportSummaryFormatter.Build(
                 "Allocation planning import",
@@ -2810,7 +2368,6 @@ namespace GRCFinancialControl.Persistence.Services
                 notes,
                 processed: processedRowCount);
         }
-
 
         private static (string FiscalYearName, DateTime? LastUpdateDate) ParseFcsMetadata(IWorksheet worksheet)
         {
@@ -2842,6 +2399,7 @@ namespace GRCFinancialControl.Persistence.Services
             {
                 normalized = NormalizeWhitespace(rawValue);
             }
+
             var resolvedFiscalYearName = fiscalYearName;
             if (string.IsNullOrEmpty(resolvedFiscalYearName))
             {
@@ -2897,661 +2455,6 @@ namespace GRCFinancialControl.Persistence.Services
             return (prefix + formattedNumber + suffix).ToUpperInvariant();
         }
 
-        private static string MapWarningKeyToDescription(string key) => key switch
-        {
-            MissingRankWarningKey => "Missing rank mapping",
-            MissingEngagementWarningKey => "Unknown engagement",
-            MissingBudgetWarningKey => "Missing allocation",
-            _ => key
-        };
-
-        private static string NormalizeEngagementCode(string? value)
-        {
-            var normalized = NormalizeWhitespace(value);
-            return string.IsNullOrEmpty(normalized) ? string.Empty : normalized.ToUpperInvariant();
-        }
-
-        private static string NormalizeRankKey(string? value)
-        {
-            var normalized = NormalizeWhitespace(value);
-            return string.IsNullOrEmpty(normalized) ? string.Empty : normalized.ToUpperInvariant();
-        }
-
-        private static decimal RoundMoney(decimal value) => Math.Round(value, 2, MidpointRounding.AwayFromZero);
-
-        private sealed record FcsBacklogRow(string EngagementId, decimal CurrentBacklog, decimal FutureBacklog, int RowNumber);
-
-        public async Task<string> ImportActualsAsync(string filePath, int closingPeriodId)
-        {
-            if (string.IsNullOrWhiteSpace(filePath))
-            {
-                throw new ArgumentException("File path must be provided.", nameof(filePath));
-            }
-
-            if (!File.Exists(filePath))
-            {
-                throw new FileNotFoundException("ETC-P workbook could not be found.", filePath);
-            }
-
-            await using var context = await _contextFactory
-                .CreateDbContextAsync()
-                .ConfigureAwait(false);
-
-            var closingPeriod = await context.ClosingPeriods
-                .Include(cp => cp.FiscalYear)
-                .FirstOrDefaultAsync(cp => cp.Id == closingPeriodId)
-                .ConfigureAwait(false);
-            if (closingPeriod == null)
-            {
-                return "Selected closing period could not be found. Please refresh and try again.";
-            }
-
-            if (closingPeriod.FiscalYear?.IsLocked ?? false)
-            {
-                var fiscalYearName = string.IsNullOrWhiteSpace(closingPeriod.FiscalYear.Name)
-                    ? $"Id={closingPeriod.FiscalYear.Id}"
-                    : closingPeriod.FiscalYear.Name;
-
-                return $"Closing period '{closingPeriod.Name}' belongs to locked fiscal year '{fiscalYearName}'. Unlock it before running the ETC-P import.";
-            }
-
-            var customerCache = new Dictionary<string, Customer>(StringComparer.OrdinalIgnoreCase);
-            var engagementCache = new Dictionary<string, Engagement>(StringComparer.OrdinalIgnoreCase);
-            var processedEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var rowErrors = new List<string>();
-
-            var customersCreated = 0;
-            var engagementsCreated = 0;
-            var engagementsUpdated = 0;
-            var rowsProcessed = 0;
-            var manualOnlyDetails = new List<string>();
-
-            using var workbook = LoadWorkbook(filePath);
-
-            var etcpTable = ResolveEtcpWorksheet(workbook);
-            if (etcpTable == null)
-            {
-                return "The ETC-P workbook does not contain the expected worksheet.";
-            }
-
-            const int headerRowIndex = 4; // Row 5 in Excel (1-based)
-            if (etcpTable.RowCount <= headerRowIndex)
-            {
-                return $"The ETC-P worksheet does not contain any data rows for closing period '{closingPeriod.Name}'.";
-            }
-
-            EnsureColumnExists(etcpTable, 2, "Client Name (ID)");
-            EnsureColumnExists(etcpTable, 3, "Engagement Name (ID) Currency");
-            EnsureColumnExists(etcpTable, 4, "Engagement Status");
-            EnsureColumnExists(etcpTable, 8, "Charged Hours Bud");
-            EnsureColumnExists(etcpTable, 9, "Charged Hours ETC-P");
-            EnsureColumnExists(etcpTable, 11, "TER Bud");
-            EnsureColumnExists(etcpTable, 12, "TER ETC-P");
-            EnsureColumnExists(etcpTable, 14, "Margin % Bud");
-            EnsureColumnExists(etcpTable, 15, "Margin % ETC-P");
-            EnsureColumnExists(etcpTable, 17, "Expenses Bud");
-            EnsureColumnExists(etcpTable, 18, "Expenses ETC-P");
-            EnsureColumnExists(etcpTable, 20, "ETC Age Days");
-
-            var etcpAsOfDate = ExtractEtcAsOfDate(etcpTable);
-
-            var parsedRows = new List<EtcpImportRow>();
-            for (var rowIndex = headerRowIndex + 1; rowIndex < etcpTable.RowCount; rowIndex++)
-            {
-                var rowNumber = rowIndex + 1; // Excel is 1-based
-
-                try
-                {
-                    if (IsRowEmpty(etcpTable, rowIndex))
-                    {
-                        continue;
-                    }
-
-                    var parsedRow = ParseEtcpRow(etcpTable, rowIndex);
-                    if (parsedRow == null)
-                    {
-                        continue;
-                    }
-
-                    parsedRows.Add(parsedRow);
-                }
-                catch (Exception ex)
-                {
-                    rowErrors.Add($"Row {rowNumber}: {ex.Message}");
-                    _logger.LogError(ex, "Failed to import ETC-P row {RowNumber} from file {FilePath}", rowNumber, filePath);
-                }
-            }
-
-            var pendingCustomerCodes = parsedRows.Count > 0
-                ? await PrefetchCustomersAsync(context, customerCache, parsedRows.Select(r => r.CustomerCode)).ConfigureAwait(false)
-                : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            var pendingEngagementIds = parsedRows.Count > 0
-                ? await PrefetchEngagementsAsync(context, engagementCache, parsedRows.Select(r => r.EngagementId)).ConfigureAwait(false)
-                : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (var parsedRow in parsedRows)
-            {
-                var rowNumber = parsedRow.RowNumber;
-
-                try
-                {
-                    var (customer, customerCreated) = await GetOrCreateCustomerAsync(
-                        context,
-                        customerCache,
-                        parsedRow,
-                        pendingCustomerCodes).ConfigureAwait(false);
-                    if (customerCreated)
-                    {
-                        customersCreated++;
-                    }
-
-                    var (engagement, engagementCreated) = await GetOrCreateEngagementAsync(
-                        context,
-                        engagementCache,
-                        parsedRow,
-                        pendingEngagementIds).ConfigureAwait(false);
-                    if (engagementCreated)
-                    {
-                        engagementsCreated++;
-                        processedEngagements.Add(engagement.EngagementId);
-                    }
-                    else if (engagement.Source == EngagementSource.S4Project)
-                    {
-                        manualOnlyDetails.Add($"{engagement.EngagementId} (row {rowNumber})");
-                        _logger.LogInformation(
-                            "Skipping ETC-P row {RowNumber} for engagement {EngagementId} from file {FilePath} because it is manual-only (source: {Source}).",
-                            rowNumber,
-                            engagement.EngagementId,
-                            filePath,
-                            engagement.Source);
-                        continue;
-                    }
-                    else if (processedEngagements.Add(engagement.EngagementId))
-                    {
-                        engagementsUpdated++;
-                    }
-
-                    UpdateCustomer(customer, parsedRow);
-
-                    UpdateEngagement(engagement, customer, parsedRow, closingPeriod, etcpAsOfDate);
-
-                    UpsertFinancialEvolution(
-                        context,
-                        engagement,
-                        FinancialEvolutionInitialPeriodId,
-                        parsedRow.BudgetHours,
-                        parsedRow.BudgetValue,
-                        parsedRow.MarginBudget,
-                        parsedRow.BudgetExpenses);
-                    UpsertFinancialEvolution(
-                        context,
-                        engagement,
-                        closingPeriod.Name,
-                        parsedRow.EstimatedToCompleteHours,
-                        parsedRow.EtcpValue,
-                        parsedRow.MarginEtcp,
-                        parsedRow.EtcpExpenses);
-
-                    rowsProcessed++;
-                }
-                catch (Exception ex)
-                {
-                    rowErrors.Add($"Row {rowNumber}: {ex.Message}");
-                    _logger.LogError(ex, "Failed to import ETC-P row {RowNumber} from file {FilePath}", rowNumber, filePath);
-                }
-            }
-
-            await context.SaveChangesAsync().ConfigureAwait(false);
-
-            var consumedUpdates = await SynchronizeConsumedHoursInternalAsync(context, closingPeriod)
-                .ConfigureAwait(false);
-
-            var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>();
-
-            if (manualOnlyDetails.Count > 0)
-            {
-                skipReasons["ManualOnly"] = manualOnlyDetails;
-            }
-
-            if (rowErrors.Count > 0)
-            {
-                skipReasons["RowError"] = rowErrors;
-            }
-
-            var notes = new List<string>
-            {
-                $"Customers created: {customersCreated}",
-                $"Engagements created: {engagementsCreated}",
-                $"Engagements updated: {engagementsUpdated}"
-            };
-
-            if (consumedUpdates > 0)
-            {
-                notes.Add($"Consumed hour updates applied: {consumedUpdates}");
-            }
-
-            if (rowsProcessed == 0)
-            {
-                notes.Insert(0, $"No ETC-P rows were imported for closing period '{closingPeriod.Name}'.");
-            }
-
-            if (manualOnlyDetails.Count > 0)
-            {
-                notes.Add($"Manual-only rows skipped: {manualOnlyDetails.Count}");
-            }
-
-            if (rowErrors.Count > 0)
-            {
-                notes.Add($"Rows with issues: {rowErrors.Count} (see logs for details)");
-            }
-
-            return ImportSummaryFormatter.Build(
-                $"ETC-P import ({closingPeriod.Name})",
-                customersCreated + engagementsCreated,
-                engagementsUpdated,
-                skipReasons,
-                notes,
-                rowsProcessed);
-        }
-
-        internal async Task<int> RefreshConsumedHoursAsync(int closingPeriodId)
-        {
-            await using var context = await _contextFactory
-                .CreateDbContextAsync()
-                .ConfigureAwait(false);
-
-            var closingPeriod = await context.ClosingPeriods
-                .Include(cp => cp.FiscalYear)
-                .FirstOrDefaultAsync(cp => cp.Id == closingPeriodId)
-                .ConfigureAwait(false);
-
-            if (closingPeriod is null)
-            {
-                return 0;
-            }
-
-            return await SynchronizeConsumedHoursInternalAsync(context, closingPeriod)
-                .ConfigureAwait(false);
-        }
-
-        private async Task<int> SynchronizeConsumedHoursInternalAsync(ApplicationDbContext context, ClosingPeriod closingPeriod)
-        {
-            var cutoff = closingPeriod.PeriodEnd.Date;
-
-            var actuals = await context.ActualsEntries
-                .Join(context.ClosingPeriods,
-                    entry => entry.ClosingPeriodId,
-                    period => period.Id,
-                    (entry, period) => new
-                    {
-                        entry.EngagementId,
-                        entry.Hours,
-                        period.PeriodEnd,
-                        period.FiscalYearId
-                    })
-                .Join(context.FiscalYears,
-                    temp => temp.FiscalYearId,
-                    fiscalYear => fiscalYear.Id,
-                    (temp, fiscalYear) => new
-                    {
-                        temp.EngagementId,
-                        temp.Hours,
-                        temp.PeriodEnd,
-                        FiscalYearId = fiscalYear.Id,
-                        fiscalYear.IsLocked
-                    })
-                .Where(record => record.PeriodEnd.Date <= cutoff && !record.IsLocked)
-                .ToListAsync()
-                .ConfigureAwait(false);
-
-            if (actuals.Count == 0)
-            {
-                return 0;
-            }
-
-            var totals = actuals
-                .GroupBy(record => new { record.EngagementId, record.FiscalYearId })
-                .Select(group => new
-                {
-                    group.Key.EngagementId,
-                    group.Key.FiscalYearId,
-                    Hours = group.Sum(item => item.Hours)
-                })
-                .ToList();
-
-            if (totals.Count == 0)
-            {
-                return 0;
-            }
-
-            var engagementIds = totals
-                .Select(item => item.EngagementId)
-                .Distinct()
-                .ToList();
-
-            var budgets = await context.EngagementRankBudgets
-                .Include(b => b.FiscalYear)
-                .Where(b => engagementIds.Contains(b.EngagementId))
-                .ToListAsync()
-                .ConfigureAwait(false);
-
-            if (budgets.Count == 0)
-            {
-                return 0;
-            }
-
-            var budgetsByKey = budgets
-                .GroupBy(b => (b.EngagementId, b.FiscalYearId))
-                .ToDictionary(group => group.Key, group => group.ToList());
-
-            var totalUpdates = 0;
-
-            foreach (var total in totals)
-            {
-                if (!budgetsByKey.TryGetValue((total.EngagementId, total.FiscalYearId), out var fiscalYearBudgets) ||
-                    fiscalYearBudgets.Count == 0)
-                {
-                    continue;
-                }
-
-                var fiscalYear = fiscalYearBudgets[0].FiscalYear;
-                if (fiscalYear?.IsLocked ?? false)
-                {
-                    continue;
-                }
-
-                if (ApplyConsumedHours(total.Hours, fiscalYearBudgets))
-                {
-                    totalUpdates += fiscalYearBudgets.Count;
-                }
-            }
-
-            if (totalUpdates == 0)
-            {
-                return 0;
-            }
-
-            await context.SaveChangesAsync().ConfigureAwait(false);
-            return totalUpdates;
-        }
-
-        private static bool ApplyConsumedHours(decimal totalHours, List<EngagementRankBudget> budgets)
-        {
-            if (budgets.Count == 0)
-            {
-                return false;
-            }
-
-            totalHours = Math.Round(Math.Max(totalHours, 0m), 2, MidpointRounding.AwayFromZero);
-
-            var currentTotal = budgets.Sum(b => b.ConsumedHours);
-            if (Math.Abs(currentTotal - totalHours) <= 0.005m)
-            {
-                return false;
-            }
-
-            var allocations = new decimal[budgets.Count];
-
-            if (totalHours == 0m)
-            {
-                Array.Fill(allocations, 0m);
-            }
-            else
-            {
-                var totalBudget = budgets.Sum(b => b.BudgetHours);
-
-                if (totalBudget > 0m)
-                {
-                    var assigned = 0m;
-                    for (var index = 0; index < budgets.Count; index++)
-                    {
-                        var budget = budgets[index];
-                        var proportion = budget.BudgetHours / totalBudget;
-                        var value = index == budgets.Count - 1
-                            ? totalHours - assigned
-                            : totalHours * proportion;
-
-                        value = Math.Round(value, 2, MidpointRounding.AwayFromZero);
-                        assigned += value;
-                        allocations[index] = value;
-                    }
-
-                    var delta = Math.Round(totalHours - allocations.Sum(), 2, MidpointRounding.AwayFromZero);
-                    if (delta != 0m)
-                    {
-                        allocations[^1] = Math.Round(allocations[^1] + delta, 2, MidpointRounding.AwayFromZero);
-                    }
-                }
-                else
-                {
-                    var existingTotal = budgets.Sum(b => Math.Max(b.ConsumedHours, 0m));
-                    if (existingTotal > 0m)
-                    {
-                        var assigned = 0m;
-                        for (var index = 0; index < budgets.Count; index++)
-                        {
-                            var budget = budgets[index];
-                            var baseline = Math.Max(budget.ConsumedHours, 0m) / existingTotal;
-                            var value = index == budgets.Count - 1
-                                ? totalHours - assigned
-                                : totalHours * baseline;
-
-                            value = Math.Round(value, 2, MidpointRounding.AwayFromZero);
-                            assigned += value;
-                            allocations[index] = value;
-                        }
-
-                        var delta = Math.Round(totalHours - allocations.Sum(), 2, MidpointRounding.AwayFromZero);
-                        if (delta != 0m)
-                        {
-                            allocations[^1] = Math.Round(allocations[^1] + delta, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    else
-                    {
-                        var evenShare = Math.Round(totalHours / budgets.Count, 2, MidpointRounding.AwayFromZero);
-                        for (var index = 0; index < budgets.Count - 1; index++)
-                        {
-                            allocations[index] = evenShare;
-                        }
-
-                        allocations[^1] = Math.Round(totalHours - allocations.Take(budgets.Count - 1).Sum(), 2, MidpointRounding.AwayFromZero);
-                    }
-                }
-            }
-
-            var updated = false;
-            for (var index = 0; index < budgets.Count; index++)
-            {
-                var normalized = Math.Round(allocations[index], 2, MidpointRounding.AwayFromZero);
-                var budget = budgets[index];
-                var previousConsumed = budget.ConsumedHours;
-                var previousRemaining = budget.RemainingHours;
-                budget.UpdateConsumedHours(normalized);
-
-                if (Math.Abs(previousConsumed - budget.ConsumedHours) > 0.005m ||
-                    Math.Abs(previousRemaining - budget.RemainingHours) > 0.005m)
-                {
-                    updated = true;
-                }
-            }
-
-            return updated;
-        }
-
-        private static IWorksheet? ResolveEtcpWorksheet(WorkbookData workbook)
-        {
-            foreach (var table in workbook.Worksheets)
-            {
-                if (table.RowCount <= 4 || table.ColumnCount <= 3)
-                {
-                    continue;
-                }
-
-                var clientHeader = NormalizeWhitespace(Convert.ToString(table.GetValue(4, 2), CultureInfo.InvariantCulture));
-                var engagementHeader = NormalizeWhitespace(Convert.ToString(table.GetValue(4, 3), CultureInfo.InvariantCulture));
-
-                if (clientHeader.Contains("client", StringComparison.OrdinalIgnoreCase) &&
-                    engagementHeader.Contains("engagement", StringComparison.OrdinalIgnoreCase))
-                {
-                    return table;
-                }
-            }
-
-            return workbook.FirstWorksheet;
-        }
-
-        private static void EnsureColumnExists(IWorksheet table, int columnIndex, string friendlyName)
-        {
-            if (columnIndex < table.ColumnCount)
-            {
-                return;
-            }
-
-            var columnName = ColumnIndexToName(columnIndex);
-            throw new InvalidDataException($"The ETC-P worksheet is missing expected column '{friendlyName}' at position {columnName}.");
-        }
-
-        private DateTime? ExtractEtcAsOfDate(IWorksheet etcpTable)
-        {
-            const int rowIndex = 2;
-            const int columnIndex = 0;
-
-            var rawValue = GetCellString(etcpTable, rowIndex, columnIndex);
-            if (string.IsNullOrWhiteSpace(rawValue))
-            {
-                return null;
-            }
-
-            var normalized = NormalizeWhitespace(rawValue);
-            var lower = normalized.ToLowerInvariant();
-            const string marker = "etd as of:";
-            var markerIndex = lower.IndexOf(marker, StringComparison.Ordinal);
-            if (markerIndex < 0)
-            {
-                _logger.LogWarning("Unable to locate 'ETD as of' marker in ETC-P cell A3 value '{Value}'.", rawValue);
-                return null;
-            }
-
-            var remainder = normalized[(markerIndex + marker.Length)..].Trim();
-            var gmtIndex = remainder.IndexOf("GMT", StringComparison.OrdinalIgnoreCase);
-            if (gmtIndex >= 0)
-            {
-                remainder = remainder[..gmtIndex].Trim();
-            }
-
-            remainder = remainder.Trim(':').Trim();
-
-            if (TryParseAsOfDate(remainder, out var parsed))
-            {
-                return DateTime.SpecifyKind(parsed.Date, DateTimeKind.Unspecified);
-            }
-
-            _logger.LogWarning("Unable to parse ETC-P as-of date from cell A3 value '{Value}'.", rawValue);
-            return null;
-        }
-
-        private static bool TryParseAsOfDate(string text, out DateTime parsed)
-        {
-            if (string.IsNullOrWhiteSpace(text))
-            {
-                parsed = default;
-                return false;
-            }
-
-            var cultures = new[]
-            {
-                CultureInfo.InvariantCulture,
-                CultureInfo.GetCultureInfo("en-US"),
-                PtBrCulture
-            };
-
-            var stylesWithTimezone = DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal;
-            foreach (var culture in cultures)
-            {
-                if (DateTime.TryParse(text, culture, stylesWithTimezone, out parsed))
-                {
-                    return true;
-                }
-
-                if (DateTime.TryParse(text, culture, DateTimeStyles.AllowWhiteSpaces, out parsed))
-                {
-                    return true;
-                }
-            }
-
-            var formats = new[]
-            {
-                "dd/MM/yyyy",
-                "dd/MM/yyyy HH:mm",
-                "dd/MM/yyyy HH:mm:ss",
-                "dd-MMM-yyyy",
-                "dd-MMM-yyyy HH:mm",
-                "dd-MMM-yyyy HH:mm:ss",
-                "MM/dd/yyyy",
-                "MM/dd/yyyy HH:mm",
-                "MM/dd/yyyy HH:mm:ss",
-                "yyyy-MM-dd",
-                "yyyy-MM-dd HH:mm",
-                "yyyy-MM-dd HH:mm:ss"
-            };
-
-            foreach (var culture in cultures)
-            {
-                if (DateTime.TryParseExact(text, formats, culture, stylesWithTimezone, out parsed))
-                {
-                    return true;
-                }
-
-                if (DateTime.TryParseExact(text, formats, culture, DateTimeStyles.AllowWhiteSpaces, out parsed))
-                {
-                    return true;
-                }
-            }
-
-            parsed = default;
-            return false;
-        }
-
-        private static int ColumnNameToIndex(string columnName)
-        {
-            if (string.IsNullOrWhiteSpace(columnName))
-            {
-                throw new ArgumentException("Column name must be provided.", nameof(columnName));
-            }
-
-            var normalized = columnName.Trim().ToUpperInvariant();
-            var index = 0;
-
-            foreach (var ch in normalized)
-            {
-                if (ch is < 'A' or > 'Z')
-                {
-                    throw new ArgumentException($"Invalid column name '{columnName}'.", nameof(columnName));
-                }
-
-                index = (index * 26) + (ch - 'A' + 1);
-            }
-
-            return index - 1;
-        }
-
-        private static string ColumnIndexToName(int columnIndex)
-        {
-            var dividend = columnIndex + 1;
-            var columnName = new StringBuilder();
-
-            while (dividend > 0)
-            {
-                var modulo = (dividend - 1) % 26;
-                columnName.Insert(0, Convert.ToChar('A' + modulo));
-                dividend = (dividend - modulo) / 26;
-            }
-
-            return columnName.ToString();
-        }
-
         private static bool IsRowEmpty(IWorksheet worksheet, int rowIndex)
         {
             for (var columnIndex = 0; columnIndex < worksheet.ColumnCount; columnIndex++)
@@ -3572,97 +2475,27 @@ namespace GRCFinancialControl.Persistence.Services
             return true;
         }
 
-        private EtcpImportRow? ParseEtcpRow(IWorksheet worksheet, int rowIndex)
+        private static bool TryParseAsOfDate(string text, out DateTime parsed)
         {
-            var customerCell = NormalizeWhitespace(GetCellString(worksheet, rowIndex, 2));
-            var engagementCell = NormalizeWhitespace(GetCellString(worksheet, rowIndex, 3));
-
-            if (string.IsNullOrWhiteSpace(customerCell) && string.IsNullOrWhiteSpace(engagementCell))
+            parsed = default;
+            if (string.IsNullOrWhiteSpace(text))
             {
-                return null;
+                return false;
             }
 
-            if (string.IsNullOrWhiteSpace(customerCell))
+            if (DateTime.TryParseExact(text, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var exactDate))
             {
-                throw new InvalidDataException("Client Name (ID) is required.");
+                parsed = exactDate;
+                return true;
             }
 
-            if (string.IsNullOrWhiteSpace(engagementCell))
+            if (DateTime.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var fallback))
             {
-                throw new InvalidDataException("Engagement Name (ID) Currency is required.");
+                parsed = fallback;
+                return true;
             }
 
-            var (customerName, customerCode) = ParseEtcpCustomerCell(customerCell);
-            var (engagementDescription, engagementId, currency) = ParseEngagementCell(engagementCell);
-
-            var statusText = NormalizeWhitespace(GetCellString(worksheet, rowIndex, 4));
-
-            var budgetHours = ParsePtBrNumber(worksheet.GetValue(rowIndex, 8));
-            var estimatedToCompleteHours = ParsePtBrNumber(worksheet.GetValue(rowIndex, 9));
-            var budgetValue = ParsePtBrMoney(worksheet.GetValue(rowIndex, 11));
-            var etcpValue = ParsePtBrMoney(worksheet.GetValue(rowIndex, 12));
-            var marginBudget = ParsePtBrPercent(worksheet.GetValue(rowIndex, 14));
-            var marginEtcp = ParsePtBrPercent(worksheet.GetValue(rowIndex, 15));
-            var budgetExpenses = ParsePtBrMoney(worksheet.GetValue(rowIndex, 17));
-            var etcpExpenses = ParsePtBrMoney(worksheet.GetValue(rowIndex, 18));
-            var ageDays = ParseInt(worksheet.GetValue(rowIndex, 20));
-
-            return new EtcpImportRow
-            {
-                RowNumber = rowIndex + 1,
-                CustomerName = customerName,
-                CustomerCode = customerCode,
-                EngagementDescription = engagementDescription,
-                EngagementId = engagementId,
-                Currency = currency,
-                StatusText = statusText,
-                BudgetHours = budgetHours,
-                EstimatedToCompleteHours = estimatedToCompleteHours,
-                BudgetValue = budgetValue,
-                EtcpValue = etcpValue,
-                MarginBudget = marginBudget,
-                MarginEtcp = marginEtcp,
-                BudgetExpenses = budgetExpenses,
-                EtcpExpenses = etcpExpenses,
-                EtcpAgeDays = ageDays
-            };
-        }
-
-        private static EngagementStatus ParseStatus(string? statusText)
-        {
-            if (string.IsNullOrWhiteSpace(statusText))
-            {
-                return EngagementStatus.Active;
-            }
-
-            return statusText.Trim().ToLowerInvariant() switch
-            {
-                "closing" => EngagementStatus.Closed,
-                "closed" => EngagementStatus.Closed,
-                "inactive" => EngagementStatus.Inactive,
-                _ => EngagementStatus.Active
-            };
-        }
-
-        private static decimal? ParsePtBrNumber(object? value) => ParseDecimal(value, null);
-
-        private static decimal? ParsePtBrMoney(object? value) => ParseDecimal(value, 2);
-
-        private static decimal? ParsePtBrPercent(object? value)
-        {
-            var parsed = ParseDecimal(value, 4);
-            if (!parsed.HasValue)
-            {
-                return null;
-            }
-
-            var normalized = parsed.Value;
-            if (Math.Abs(normalized) <= 1m)
-            {
-                normalized *= 100m;
-            }
-
-            return Math.Round(normalized, 4, MidpointRounding.AwayFromZero);
+            return false;
         }
 
         private static decimal? ParseDecimal(object? value, int? decimals)
@@ -3702,6 +2535,7 @@ namespace GRCFinancialControl.Persistence.Services
                     {
                         throw new InvalidDataException($"Unable to parse decimal value '{str}'.");
                     }
+
                     break;
                 default:
                     try
@@ -3712,6 +2546,7 @@ namespace GRCFinancialControl.Persistence.Services
                     {
                         throw new InvalidDataException($"Unable to parse decimal value '{value}'.", ex);
                     }
+
                     break;
             }
 
@@ -3740,13 +2575,13 @@ namespace GRCFinancialControl.Persistence.Services
             var isNegative = sanitized.StartsWith("(") && sanitized.EndsWith(")");
             if (isNegative)
             {
-                sanitized = sanitized[1..^1];
+                sanitized = sanitized.Trim('(', ')');
             }
 
-            sanitized = sanitized.Replace(" ", string.Empty);
-            sanitized = sanitized.Trim();
+            sanitized = sanitized.Replace(".", string.Empty, StringComparison.Ordinal);
+            sanitized = sanitized.Replace(",", ".", StringComparison.Ordinal);
 
-            if (isNegative && sanitized.Length > 0)
+            if (isNegative)
             {
                 sanitized = "-" + sanitized;
             }
@@ -3754,425 +2589,23 @@ namespace GRCFinancialControl.Persistence.Services
             return sanitized;
         }
 
-        private static int? ParseInt(object? value)
-        {
-            if (value == null || value == DBNull.Value)
-            {
-                return null;
-            }
-
-            switch (value)
-            {
-                case int i:
-                    return i;
-                case long l:
-                    return (int)l;
-                case short s:
-                    return s;
-                case decimal dec:
-                    return (int)Math.Round(dec, MidpointRounding.AwayFromZero);
-                case double dbl:
-                    return (int)Math.Round(dbl, MidpointRounding.AwayFromZero);
-                case float flt:
-                    return (int)Math.Round(flt, MidpointRounding.AwayFromZero);
-                case string str:
-                    var trimmed = NormalizeWhitespace(str);
-                    if (trimmed.Length == 0)
-                    {
-                        return null;
-                    }
-
-                    if (int.TryParse(trimmed, NumberStyles.Integer, CultureInfo.InvariantCulture, out var invariantParsed))
-                    {
-                        return invariantParsed;
-                    }
-
-                    if (int.TryParse(trimmed, NumberStyles.Integer, PtBrCulture, out var ptBrParsed))
-                    {
-                        return ptBrParsed;
-                    }
-
-                    throw new InvalidDataException($"Unable to parse integer value '{str}'.");
-                default:
-                    try
-                    {
-                        return Convert.ToInt32(value, CultureInfo.InvariantCulture);
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new InvalidDataException($"Unable to parse integer value '{value}'.", ex);
-                    }
-            }
-        }
-
-        private static (string EngagementDisplayName, string EngagementCode, string Currency) ParseEngagementCell(string value)
+        private static string NormalizeEngagementCode(string? value)
         {
             var normalized = NormalizeWhitespace(value);
-            var match = Regex.Match(normalized, @"\((E-[^)]+)\)", RegexOptions.IgnoreCase);
-            if (!match.Success)
-            {
-                throw new InvalidDataException($"Engagement code could not be found in '{value}'.");
-            }
-
-            var engagementCode = NormalizeWhitespace(match.Groups[1].Value).ToUpperInvariant();
-            var displayName = NormalizeWhitespace(normalized[..match.Index]);
-
-            var remainder = NormalizeWhitespace(normalized[(match.Index + match.Length)..]);
-            var currency = string.Empty;
-            if (!string.IsNullOrEmpty(remainder))
-            {
-                var tokens = remainder.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                if (tokens.Length > 0)
-                {
-                    currency = tokens[^1];
-                }
-            }
-
-            if (string.IsNullOrEmpty(currency))
-            {
-                throw new InvalidDataException($"Currency could not be determined from '{value}'.");
-            }
-
-            return (displayName, engagementCode, currency);
+            return string.IsNullOrEmpty(normalized) ? string.Empty : normalized.ToUpperInvariant();
         }
 
-        private static (string CustomerName, string CustomerCode) ParseEtcpCustomerCell(string value)
+        private static string NormalizeRankKey(string? value)
         {
             var normalized = NormalizeWhitespace(value);
-            var match = Regex.Match(normalized, @"\(([^)]+)\)\s*$");
-            if (!match.Success)
-            {
-                throw new InvalidDataException($"Client identifier could not be parsed from '{value}'.");
-            }
-
-            var digits = DigitsRegex.Match(match.Groups[1].Value);
-            if (!digits.Success)
-            {
-                throw new InvalidDataException($"Client identifier must contain digits in '{value}'.");
-            }
-
-            var name = NormalizeWhitespace(normalized[..match.Index]);
-            if (string.IsNullOrEmpty(name))
-            {
-                throw new InvalidDataException($"Client name is missing in '{value}'.");
-            }
-
-            return (name, digits.Value);
+            return string.IsNullOrEmpty(normalized) ? string.Empty : normalized.ToUpperInvariant();
         }
 
-        private static async Task<HashSet<string>> PrefetchCustomersAsync(
-            ApplicationDbContext context,
-            IDictionary<string, Customer> cache,
-            IEnumerable<string> customerCodes)
-        {
-            var pending = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private static decimal RoundMoney(decimal value) => Math.Round(value, 2, MidpointRounding.AwayFromZero);
 
-            foreach (var code in customerCodes)
-            {
-                if (string.IsNullOrWhiteSpace(code))
-                {
-                    continue;
-                }
+        private sealed record FcsBacklogRow(string EngagementId, decimal CurrentBacklog, decimal FutureBacklog, int RowNumber);
 
-                if (cache.ContainsKey(code))
-                {
-                    continue;
-                }
-
-                pending.Add(code);
-            }
-
-            if (pending.Count == 0)
-            {
-                return pending;
-            }
-
-            var lookup = pending.ToList();
-            var existingCustomers = await context.Customers
-                .Where(c => lookup.Contains(c.CustomerCode))
-                .ToListAsync()
-                .ConfigureAwait(false);
-
-            foreach (var customer in existingCustomers)
-            {
-                cache[customer.CustomerCode] = customer;
-                pending.Remove(customer.CustomerCode);
-            }
-
-            return pending;
-        }
-
-        private static async Task<HashSet<string>> PrefetchEngagementsAsync(
-            ApplicationDbContext context,
-            IDictionary<string, Engagement> cache,
-            IEnumerable<string> engagementIds)
-        {
-            var pending = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (var engagementId in engagementIds)
-            {
-                if (string.IsNullOrWhiteSpace(engagementId))
-                {
-                    continue;
-                }
-
-                if (cache.ContainsKey(engagementId))
-                {
-                    continue;
-                }
-
-                pending.Add(engagementId);
-            }
-
-            if (pending.Count == 0)
-            {
-                return pending;
-            }
-
-            var lookup = pending.ToList();
-            var existingEngagements = await context.Engagements
-                .Include(e => e.FinancialEvolutions)
-                .Include(e => e.LastClosingPeriod)
-                .Where(e => lookup.Contains(e.EngagementId))
-                .ToListAsync()
-                .ConfigureAwait(false);
-
-            foreach (var engagement in existingEngagements)
-            {
-                cache[engagement.EngagementId] = engagement;
-                pending.Remove(engagement.EngagementId);
-            }
-
-            return pending;
-        }
-
-        private static async Task<(Customer customer, bool created)> GetOrCreateCustomerAsync(
-            ApplicationDbContext context,
-            IDictionary<string, Customer> cache,
-            EtcpImportRow row,
-            ISet<string> pendingCustomerCodes)
-        {
-            if (cache.TryGetValue(row.CustomerCode, out var cachedCustomer))
-            {
-                return (cachedCustomer, false);
-            }
-
-            if (pendingCustomerCodes.Contains(row.CustomerCode))
-            {
-                var newCustomer = new Customer
-                {
-                    CustomerCode = row.CustomerCode,
-                    Name = row.CustomerName
-                };
-
-                await context.Customers.AddAsync(newCustomer).ConfigureAwait(false);
-                cache[row.CustomerCode] = newCustomer;
-                pendingCustomerCodes.Remove(row.CustomerCode);
-                return (newCustomer, true);
-            }
-
-            var customer = await context.Customers
-                .FirstOrDefaultAsync(c => c.CustomerCode == row.CustomerCode)
-                .ConfigureAwait(false);
-
-            var created = false;
-            if (customer == null)
-            {
-                customer = new Customer
-                {
-                    CustomerCode = row.CustomerCode,
-                    Name = row.CustomerName
-                };
-
-                await context.Customers.AddAsync(customer).ConfigureAwait(false);
-                created = true;
-            }
-
-            cache[row.CustomerCode] = customer;
-            return (customer, created);
-        }
-
-        private static void UpdateCustomer(Customer customer, EtcpImportRow row)
-        {
-            if (!string.IsNullOrWhiteSpace(row.CustomerName) &&
-                !string.Equals(customer.Name, row.CustomerName, StringComparison.Ordinal))
-            {
-                customer.Name = row.CustomerName;
-            }
-        }
-
-        private static async Task<(Engagement engagement, bool created)> GetOrCreateEngagementAsync(
-            ApplicationDbContext context,
-            IDictionary<string, Engagement> cache,
-            EtcpImportRow row,
-            ISet<string> pendingEngagementIds)
-        {
-            if (cache.TryGetValue(row.EngagementId, out var cachedEngagement))
-            {
-                return (cachedEngagement, false);
-            }
-
-            if (pendingEngagementIds.Contains(row.EngagementId))
-            {
-                var newEngagement = new Engagement
-                {
-                    EngagementId = row.EngagementId
-                };
-
-                await context.Engagements.AddAsync(newEngagement).ConfigureAwait(false);
-                cache[row.EngagementId] = newEngagement;
-                pendingEngagementIds.Remove(row.EngagementId);
-                return (newEngagement, true);
-            }
-
-            var engagement = await context.Engagements
-                .Include(e => e.FinancialEvolutions)
-                .Include(e => e.LastClosingPeriod)
-                .FirstOrDefaultAsync(e => e.EngagementId == row.EngagementId)
-                .ConfigureAwait(false);
-
-            var created = false;
-            if (engagement == null)
-            {
-                engagement = new Engagement
-                {
-                    EngagementId = row.EngagementId
-                };
-
-                await context.Engagements.AddAsync(engagement).ConfigureAwait(false);
-                created = true;
-            }
-
-            cache[row.EngagementId] = engagement;
-            return (engagement, created);
-        }
-
-        private static void UpdateEngagement(
-            Engagement engagement,
-            Customer customer,
-            EtcpImportRow row,
-            ClosingPeriod closingPeriod,
-            DateTime? etcpAsOfDate)
-        {
-            if (!string.IsNullOrWhiteSpace(row.EngagementDescription))
-            {
-                engagement.Description = row.EngagementDescription;
-            }
-
-            engagement.Currency = row.Currency;
-            engagement.Customer = customer;
-            if (customer.Id > 0)
-            {
-                engagement.CustomerId = customer.Id;
-            }
-
-            if (!string.IsNullOrWhiteSpace(row.StatusText))
-            {
-                engagement.StatusText = row.StatusText;
-            }
-
-            engagement.Status = ParseStatus(row.StatusText);
-
-            if (row.MarginBudget.HasValue)
-            {
-                engagement.MarginPctBudget = row.MarginBudget;
-            }
-
-            if (row.BudgetValue.HasValue)
-            {
-                engagement.OpeningValue = row.BudgetValue.Value;
-            }
-
-            if (row.BudgetExpenses.HasValue)
-            {
-                engagement.OpeningExpenses = row.BudgetExpenses.Value;
-            }
-
-            if (row.BudgetHours.HasValue)
-            {
-                engagement.InitialHoursBudget = row.BudgetHours.Value;
-            }
-
-            engagement.MarginPctEtcp = row.MarginEtcp;
-            engagement.EstimatedToCompleteHours = row.EstimatedToCompleteHours ?? 0m;
-            engagement.ValueEtcp = row.EtcpValue ?? 0m;
-            engagement.ExpensesEtcp = row.EtcpExpenses ?? 0m;
-            var lastEtcDate = DetermineLastEtcDate(etcpAsOfDate, row.EtcpAgeDays, closingPeriod);
-            engagement.LastEtcDate = lastEtcDate;
-            engagement.ProposedNextEtcDate = CalculateProposedNextEtcDate(lastEtcDate);
-            engagement.LastClosingPeriodId = closingPeriod.Id;
-            engagement.LastClosingPeriod = closingPeriod;
-        }
-
-        private static DateTime? DetermineLastEtcDate(DateTime? etcpAsOfDate, int? ageDays, ClosingPeriod closingPeriod)
-        {
-            var normalizedAge = ageDays.HasValue ? Math.Max(ageDays.Value, 0) : (int?)null;
-
-            if (etcpAsOfDate.HasValue)
-            {
-                var baseDate = etcpAsOfDate.Value.Date;
-                if (normalizedAge.HasValue)
-                {
-                    return DateTime.SpecifyKind(baseDate.AddDays(-normalizedAge.Value), DateTimeKind.Unspecified);
-                }
-
-                return DateTime.SpecifyKind(baseDate, DateTimeKind.Unspecified);
-            }
-
-            var periodEndDate = closingPeriod.PeriodEnd.Date;
-
-            if (normalizedAge.HasValue)
-            {
-                return DateTime.SpecifyKind(periodEndDate.AddDays(-normalizedAge.Value), DateTimeKind.Unspecified);
-            }
-
-            return DateTime.SpecifyKind(periodEndDate, DateTimeKind.Unspecified);
-        }
-
-        private static DateTime? CalculateProposedNextEtcDate(DateTime? lastEtcDate)
-        {
-            if (!lastEtcDate.HasValue)
-            {
-                return null;
-            }
-
-            var proposal = lastEtcDate.Value.Date.AddMonths(1);
-            return DateTime.SpecifyKind(proposal, DateTimeKind.Unspecified);
-        }
-
-        private static void UpsertFinancialEvolution(
-            ApplicationDbContext context,
-            Engagement engagement,
-            string closingPeriodId,
-            decimal? hours,
-            decimal? value,
-            decimal? margin,
-            decimal? expenses)
-        {
-            var evolution = engagement.FinancialEvolutions
-                .FirstOrDefault(fe => string.Equals(fe.ClosingPeriodId, closingPeriodId, StringComparison.OrdinalIgnoreCase));
-
-            if (evolution == null)
-            {
-                evolution = new FinancialEvolution
-                {
-                    ClosingPeriodId = closingPeriodId,
-                    Engagement = engagement
-                };
-
-                engagement.FinancialEvolutions.Add(evolution);
-                context.FinancialEvolutions.Add(evolution);
-            }
-
-            evolution.EngagementId = engagement.Id;
-            evolution.Engagement = engagement;
-            evolution.HoursData = hours;
-            evolution.ValueData = value;
-            evolution.MarginData = margin;
-            evolution.ExpenseData = expenses;
-        }
-
-        private static string NormalizeAllocationCode(string? value)
+                private static string NormalizeAllocationCode(string? value)
         {
             return string.IsNullOrWhiteSpace(value)
                 ? string.Empty

@@ -27,6 +27,7 @@ namespace GRCFinancialControl.Core.Models
         public decimal EstimatedToCompleteHours { get; set; }
         public decimal ValueEtcp { get; set; }
         public decimal ExpensesEtcp { get; set; }
+        public int? UnbilledRevenueDays { get; set; }
 
         public int? LastClosingPeriodId { get; set; }
         public ClosingPeriod? LastClosingPeriod { get; set; }
