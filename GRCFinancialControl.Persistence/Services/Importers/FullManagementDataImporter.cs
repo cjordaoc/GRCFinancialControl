@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using ExcelDataReader;
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
+using GRCFinancialControl.Persistence.Services.Infrastructure;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -234,6 +235,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     Array.Empty<string>(),
                     Array.Empty<string>(),
                     Array.Empty<string>(),
+                    Array.Empty<string>(),
+                    Array.Empty<string>(),
                     Array.Empty<string>());
             }
 
@@ -285,10 +288,12 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
                     var updatedEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                     var manualOnlySkips = new List<string>();
+                    var closedEngagementSkips = new List<string>();
                     var lockedFiscalYearSkips = new List<string>();
                     var missingClosingPeriodSkips = new List<string>();
                     var missingEngagementSkips = new List<string>();
                     var errors = new List<string>();
+                    var warningMessages = new HashSet<string>(StringComparer.Ordinal);
 
                     var financialEvolutionUpserts = 0;
 
@@ -336,13 +341,21 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                 continue;
                             }
 
-                            if (engagement.Source == EngagementSource.S4Project)
+                            if (EngagementImportSkipEvaluator.TryCreate(engagement, out var skipMetadata))
                             {
-                                manualOnlySkips.Add($"{engagement.EngagementId} (row {row.RowNumber})");
-                                _logger.LogInformation(
-                                    "Skipping row {RowNumber} for engagement {EngagementId} because the engagement is sourced from S/4Project and must be managed manually.",
-                                    row.RowNumber,
-                                    engagement.EngagementId);
+                                var detail = $"{engagement.EngagementId} (row {row.RowNumber})";
+                                switch (skipMetadata.ReasonKey)
+                                {
+                                    case "ManualOnly":
+                                        manualOnlySkips.Add(detail);
+                                        break;
+                                    case "ClosedEngagement":
+                                        closedEngagementSkips.Add(detail);
+                                        break;
+                                }
+
+                                warningMessages.Add(skipMetadata.WarningMessage);
+                                _logger.LogWarning(skipMetadata.WarningMessage);
                                 continue;
                             }
 
@@ -472,6 +485,11 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         skipReasons["ManualOnly"] = manualOnlySkips;
                     }
 
+                    if (closedEngagementSkips.Count > 0)
+                    {
+                        skipReasons["ClosedEngagement"] = closedEngagementSkips;
+                    }
+
                     if (lockedFiscalYearSkips.Count > 0)
                     {
                         skipReasons["LockedFiscalYear"] = lockedFiscalYearSkips;
@@ -510,6 +528,14 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         notes.Add($"Rows missing closing period: {missingClosingPeriodSkips.Count} (sample: {sample}{suffix}). Period-specific metrics were skipped.");
                     }
 
+                    if (warningMessages.Count > 0)
+                    {
+                        foreach (var warning in warningMessages)
+                        {
+                            notes.Insert(0, warning);
+                        }
+                    }
+
                     var summary = ImportSummaryFormatter.Build(
                         "Full Management Data import",
                         0,
@@ -529,7 +555,9 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         lockedFiscalYearSkips.ToArray(),
                         missingClosingPeriodSkips.ToArray(),
                         missingEngagementSkips.ToArray(),
-                        errors.ToArray());
+                        closedEngagementSkips.ToArray(),
+                        errors.ToArray(),
+                        warningMessages.ToArray());
                 }
                 catch
                 {

@@ -14,7 +14,9 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             IReadOnlyCollection<string> lockedFiscalYearSkips,
             IReadOnlyCollection<string> missingClosingPeriodSkips,
             IReadOnlyCollection<string> missingEngagementSkips,
-            IReadOnlyCollection<string> errors)
+            IReadOnlyCollection<string> closedEngagementSkips,
+            IReadOnlyCollection<string> errors,
+            IReadOnlyCollection<string> warningMessages)
         {
             Summary = summary;
             RowsProcessed = rowsProcessed;
@@ -25,7 +27,9 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             LockedFiscalYearSkips = lockedFiscalYearSkips;
             MissingClosingPeriodSkips = missingClosingPeriodSkips;
             MissingEngagementSkips = missingEngagementSkips;
+            ClosedEngagementSkips = closedEngagementSkips;
             Errors = errors;
+            WarningMessages = warningMessages;
         }
 
         public string Summary { get; }
@@ -37,6 +41,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers
         public IReadOnlyCollection<string> LockedFiscalYearSkips { get; }
         public IReadOnlyCollection<string> MissingClosingPeriodSkips { get; }
         public IReadOnlyCollection<string> MissingEngagementSkips { get; }
+        public IReadOnlyCollection<string> ClosedEngagementSkips { get; }
         public IReadOnlyCollection<string> Errors { get; }
+        public IReadOnlyCollection<string> WarningMessages { get; }
     }
 }
