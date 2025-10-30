@@ -9,165 +9,214 @@
              d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="24" Spacing="16">
-            <Border Classes="Card" Padding="24">
-                <StackPanel Spacing="12">
-                    <TextBlock Text="{loc:Loc Key=Settings.Section.Localization.Title}" Classes="TitleMedium"/>
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <TextBlock Text="{loc:Loc Key=Settings.Label.Language}" VerticalAlignment="Center"/>
-                        <ComboBox ItemsSource="{Binding Languages}"
-                                  SelectedItem="{Binding SelectedLanguage}"
-                                  Width="200">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding DisplayName}"/>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-
-            <Border Classes="Card" Padding="24">
-                <StackPanel Spacing="12">
-                    <TextBlock Text="{loc:Loc Key=Settings.Section.Database.Title}" Classes="TitleLarge"/>
-                    <TextBox Text="{Binding Server}" Watermark="{loc:Loc Key=Settings.Label.Server}"/>
-                    <TextBox Text="{Binding Database}" Watermark="{loc:Loc Key=Settings.Label.Database}"/>
-                    <TextBox Text="{Binding User}" Watermark="{loc:Loc Key=Settings.Label.User}"/>
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBox Grid.Column="0"
-                                 Text="{Binding Password}"
-                                 Watermark="{loc:Loc Key=Settings.Label.Password}"
-                                 PasswordChar="{Binding DatabasePasswordChar}"/>
-                        <ToggleButton Grid.Column="1"
-                                      Width="36"
-                                      Content="{Binding DatabasePasswordToggleIcon}"
-                                      IsChecked="{Binding IsDatabasePasswordVisible}"
-                                      Margin="8,0,0,0"
-                                      VerticalAlignment="Center"/>
-                    </Grid>
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <Button Content="{loc:Loc Key=Settings.Button.Load}" Command="{Binding LoadSettingsCommand}" MinWidth="120"/>
-                        <Button Content="{loc:Loc Key=Settings.Button.Save}" Command="{Binding SaveSettingsCommand}" MinWidth="120"/>
-                        <Button Content="{loc:Loc Key=Settings.Button.Test}" Command="{Binding TestConnectionCommand}" MinWidth="140"/>
-                        <Button Content="{loc:Loc Key=Settings.Button.ClearAll}" Command="{Binding ClearAllDataCommand}" Classes="danger" MinWidth="140"/>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-
-            <Border Classes="Card" Padding="24">
-                <StackPanel Spacing="12">
-                    <TextBlock Text="{loc:Loc Key=Settings.Section.Package.Title}" Classes="TitleLarge"/>
-                    <TextBlock Text="{loc:Loc Key=Settings.Section.Package.Description}" TextWrapping="Wrap"/>
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="{loc:Loc Key=Settings.Label.Passphrase}"/>
-                        <Grid ColumnDefinitions="*,Auto">
-                            <TextBox Grid.Column="0"
-                                     Text="{Binding ExportPassphrase}"
-                                     PasswordChar="{Binding ExportPassphraseChar}"/>
-                            <ToggleButton Grid.Column="1"
-                                          Width="36"
-                                          Content="{Binding ExportPassphraseToggleIcon}"
-                                          IsChecked="{Binding IsExportPassphraseVisible}"
-                                          Margin="8,0,0,0"
-                                          VerticalAlignment="Center"/>
-                        </Grid>
-                        <TextBlock Text="{loc:Loc Key=Settings.Label.ConfirmPassphrase}"/>
-                        <Grid ColumnDefinitions="*,Auto">
-                            <TextBox Grid.Column="0"
-                                     Text="{Binding ConfirmExportPassphrase}"
-                                     PasswordChar="{Binding ConfirmExportPassphraseChar}"/>
-                            <ToggleButton Grid.Column="1"
-                                          Width="36"
-                                          Content="{Binding ConfirmExportPassphraseToggleIcon}"
-                                          IsChecked="{Binding IsConfirmExportPassphraseVisible}"
-                                          Margin="8,0,0,0"
-                                          VerticalAlignment="Center"/>
-                        </Grid>
-                        <Button Content="{loc:Loc Key=Settings.Button.ExportPackage}"
-                                Command="{Binding ExportConnectionPackageCommand}"
-                                MinWidth="180"
-                                HorizontalAlignment="Left"/>
-                    </StackPanel>
-                    <Separator/>
-                    <TextBlock Text="{loc:Loc Key=Settings.Section.Package.ImportDescription}" TextWrapping="Wrap"/>
-                    <StackPanel Spacing="12">
-                        <Grid ColumnDefinitions="Auto,16,*"
-                              RowDefinitions="Auto,Auto"
-                              RowSpacing="{StaticResource Space8}">
-                            <TextBlock Grid.Row="0"
-                                       Grid.Column="0"
-                                       Text="{loc:Loc Key=Settings.Label.ImportPassphrase}"
-                                       VerticalAlignment="Center"/>
-                            <Grid Grid.Row="0"
-                                  Grid.Column="2"
-                                  ColumnDefinitions="*,Auto"
-                                  MinWidth="240">
-                                <TextBox Grid.Column="0"
-                                         Text="{Binding ImportPassphrase}"
-                                         PasswordChar="{Binding ImportPassphraseChar}"/>
-                                <ToggleButton Grid.Column="1"
-                                              Width="36"
-                                              Content="{Binding ImportPassphraseToggleIcon}"
-                                              IsChecked="{Binding IsImportPassphraseVisible}"
-                                              Margin="8,0,0,0"
-                                              VerticalAlignment="Center"/>
-                            </Grid>
-                            <TextBlock Grid.Row="1"
-                                       Grid.Column="0"
-                                       Text="{loc:Loc Key=Settings.Label.ImportPackage}"
-                                       VerticalAlignment="Center"/>
-                            <StackPanel Grid.Row="1"
-                                        Grid.Column="2"
-                                        Orientation="Horizontal"
-                                        Spacing="8">
-                                <TextBox Width="320"
-                                         Text="{Binding SelectedImportPackagePath}"
-                                         Watermark="{loc:Loc Key=Settings.Placeholder.ImportPackage}"
-                                         IsReadOnly="True"/>
-                                <Button Content="{loc:Loc Key=Settings.Button.SelectPackage}"
-                                        Command="{Binding BrowseImportPackageCommand}"
-                                        MinWidth="140"
-                                        IsEnabled="{Binding IsImporting, Converter={StaticResource InverseBooleanConverter}}"/>
+    <Grid RowDefinitions="*,Auto">
+        <TabControl Margin="24">
+            <TabItem Header="{loc:Loc Key=Settings.Tab.Localization}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="16" Spacing="16">
+                        <Border Classes="Card" Padding="24">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="{loc:Loc Key=Settings.Section.Localization.Title}" Classes="TitleMedium"/>
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <TextBlock Text="{loc:Loc Key=Settings.Label.Language}" VerticalAlignment="Center"/>
+                                    <ComboBox ItemsSource="{Binding Languages}"
+                                              SelectedItem="{Binding SelectedLanguage}"
+                                              Width="200">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding DisplayName}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
                             </StackPanel>
-                        </Grid>
-                        <StackPanel Orientation="Horizontal"
-                                    Spacing="{StaticResource Space12}">
-                            <Button Content="{loc:Loc Key=Settings.Button.ImportPackage}"
-                                    Command="{Binding ImportConnectionPackageCommand}"
-                                    MinWidth="180"
-                                    IsEnabled="{Binding IsImporting, Converter={StaticResource InverseBooleanConverter}}"/>
-                            <ProgressBar Width="120"
-                                         IsIndeterminate="True"
-                                         IsVisible="{Binding IsImporting}"/>
-                        </StackPanel>
-                        <TextBlock Opacity="0.7"
-                                   FontStyle="Italic"
-                                   IsVisible="{Binding HasSelectedImportPackage}">
-                            <TextBlock.Inlines>
-                                <Run Text="{loc:Loc Key=Settings.Label.SelectedImportPackagePrefix}" />
-                                <Run Text="{Binding SelectedImportPackageFileName}" />
-                            </TextBlock.Inlines>
-                        </TextBlock>
+                        </Border>
                     </StackPanel>
-                </StackPanel>
-            </Border>
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="{loc:Loc Key=Settings.Tab.Connection}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="16" Spacing="16">
+                        <Border Classes="Card" Padding="24">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="{loc:Loc Key=Settings.Section.Database.Title}" Classes="TitleLarge"/>
+                                <TextBox Text="{Binding Server}" Watermark="{loc:Loc Key=Settings.Label.Server}"/>
+                                <TextBox Text="{Binding Database}" Watermark="{loc:Loc Key=Settings.Label.Database}"/>
+                                <TextBox Text="{Binding User}" Watermark="{loc:Loc Key=Settings.Label.User}"/>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBox Grid.Column="0"
+                                             Text="{Binding Password}"
+                                             Watermark="{loc:Loc Key=Settings.Label.Password}"
+                                             PasswordChar="{Binding DatabasePasswordChar}"/>
+                                    <ToggleButton Grid.Column="1"
+                                                  Width="36"
+                                                  Content="{Binding DatabasePasswordToggleIcon}"
+                                                  IsChecked="{Binding IsDatabasePasswordVisible}"
+                                                  Margin="8,0,0,0"
+                                                  VerticalAlignment="Center"/>
+                                </Grid>
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Button Content="{loc:Loc Key=Settings.Button.Load}" Command="{Binding LoadSettingsCommand}" MinWidth="120"/>
+                                    <Button Content="{loc:Loc Key=Settings.Button.Save}" Command="{Binding SaveSettingsCommand}" MinWidth="120"/>
+                                    <Button Content="{loc:Loc Key=Settings.Button.Test}" Command="{Binding TestConnectionCommand}" MinWidth="140"/>
+                                    <Button Content="{loc:Loc Key=Settings.Button.ClearAll}" Command="{Binding ClearAllDataCommand}" Classes="danger" MinWidth="140"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="{loc:Loc Key=Settings.Tab.ConnectionPackages}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="16" Spacing="16">
+                        <Border Classes="Card" Padding="24">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="{loc:Loc Key=Settings.Section.Package.Title}" Classes="TitleLarge"/>
+                                <TextBlock Text="{loc:Loc Key=Settings.Section.Package.Description}" TextWrapping="Wrap"/>
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="{loc:Loc Key=Settings.Label.Passphrase}"/>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBox Grid.Column="0"
+                                                 Text="{Binding ExportPassphrase}"
+                                                 PasswordChar="{Binding ExportPassphraseChar}"/>
+                                        <ToggleButton Grid.Column="1"
+                                                      Width="36"
+                                                      Content="{Binding ExportPassphraseToggleIcon}"
+                                                      IsChecked="{Binding IsExportPassphraseVisible}"
+                                                      Margin="8,0,0,0"
+                                                      VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <TextBlock Text="{loc:Loc Key=Settings.Label.ConfirmPassphrase}"/>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBox Grid.Column="0"
+                                                 Text="{Binding ConfirmExportPassphrase}"
+                                                 PasswordChar="{Binding ConfirmExportPassphraseChar}"/>
+                                        <ToggleButton Grid.Column="1"
+                                                      Width="36"
+                                                      Content="{Binding ConfirmExportPassphraseToggleIcon}"
+                                                      IsChecked="{Binding IsConfirmExportPassphraseVisible}"
+                                                      Margin="8,0,0,0"
+                                                      VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <Button Content="{loc:Loc Key=Settings.Button.ExportPackage}"
+                                            Command="{Binding ExportConnectionPackageCommand}"
+                                            MinWidth="180"
+                                            HorizontalAlignment="Left"/>
+                                </StackPanel>
+                                <Separator/>
+                                <TextBlock Text="{loc:Loc Key=Settings.Section.Package.ImportDescription}" TextWrapping="Wrap"/>
+                                <StackPanel Spacing="12">
+                                    <Grid ColumnDefinitions="Auto,16,*"
+                                          RowDefinitions="Auto,Auto"
+                                          RowSpacing="{StaticResource Space8}">
+                                        <TextBlock Grid.Row="0"
+                                                   Grid.Column="0"
+                                                   Text="{loc:Loc Key=Settings.Label.ImportPassphrase}"
+                                                   VerticalAlignment="Center"/>
+                                        <Grid Grid.Row="0"
+                                              Grid.Column="2"
+                                              ColumnDefinitions="*,Auto"
+                                              MinWidth="240">
+                                            <TextBox Grid.Column="0"
+                                                     Text="{Binding ImportPassphrase}"
+                                                     PasswordChar="{Binding ImportPassphraseChar}"/>
+                                            <ToggleButton Grid.Column="1"
+                                                          Width="36"
+                                                          Content="{Binding ImportPassphraseToggleIcon}"
+                                                          IsChecked="{Binding IsImportPassphraseVisible}"
+                                                          Margin="8,0,0,0"
+                                                          VerticalAlignment="Center"/>
+                                        </Grid>
+                                        <TextBlock Grid.Row="1"
+                                                   Grid.Column="0"
+                                                   Text="{loc:Loc Key=Settings.Label.ImportPackage}"
+                                                   VerticalAlignment="Center"/>
+                                        <StackPanel Grid.Row="1"
+                                                    Grid.Column="2"
+                                                    Orientation="Horizontal"
+                                                    Spacing="8">
+                                            <TextBox Width="320"
+                                                     Text="{Binding SelectedImportPackagePath}"
+                                                     Watermark="{loc:Loc Key=Settings.Placeholder.ImportPackage}"
+                                                     IsReadOnly="True"/>
+                                            <Button Content="{loc:Loc Key=Settings.Button.SelectPackage}"
+                                                    Command="{Binding BrowseImportPackageCommand}"
+                                                    MinWidth="140"
+                                                    IsEnabled="{Binding IsImporting, Converter={StaticResource InverseBooleanConverter}}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <StackPanel Orientation="Horizontal"
+                                                Spacing="{StaticResource Space12}">
+                                        <Button Content="{loc:Loc Key=Settings.Button.ImportPackage}"
+                                                Command="{Binding ImportConnectionPackageCommand}"
+                                                MinWidth="180"
+                                                IsEnabled="{Binding IsImporting, Converter={StaticResource InverseBooleanConverter}}"/>
+                                        <ProgressBar Width="120"
+                                                     IsIndeterminate="True"
+                                                     IsVisible="{Binding IsImporting}"/>
+                                    </StackPanel>
+                                    <TextBlock Opacity="0.7"
+                                               FontStyle="Italic"
+                                               IsVisible="{Binding HasSelectedImportPackage}">
+                                        <TextBlock.Inlines>
+                                            <Run Text="{loc:Loc Key=Settings.Label.SelectedImportPackagePrefix}" />
+                                            <Run Text="{Binding SelectedImportPackageFileName}" />
+                                        </TextBlock.Inlines>
+                                    </TextBlock>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="{loc:Loc Key=Settings.Tab.ApplicationData}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="16" Spacing="16">
+                        <Border Classes="Card" Padding="24">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="{loc:Loc Key=Settings.Section.ApplicationData.Title}" Classes="TitleLarge"/>
+                                <TextBlock Text="{loc:Loc Key=Settings.Section.ApplicationData.Description}" TextWrapping="Wrap"/>
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Button Content="{loc:Loc Key=Settings.Button.ExportData}"
+                                            Command="{Binding ExportApplicationDataCommand}"
+                                            MinWidth="160"
+                                            IsEnabled="{Binding IsApplicationDataOperationRunning, Converter={StaticResource InverseBooleanConverter}}"/>
+                                    <Button Content="{loc:Loc Key=Settings.Button.ImportData}"
+                                            Command="{Binding ImportApplicationDataCommand}"
+                                            MinWidth="160"
+                                            IsEnabled="{Binding IsApplicationDataOperationRunning, Converter={StaticResource InverseBooleanConverter}}"/>
+                                    <ProgressBar Width="120"
+                                                 IsIndeterminate="True"
+                                                 IsVisible="{Binding IsApplicationDataOperationRunning}"/>
+                                </StackPanel>
+                                <TextBlock Text="{loc:Loc Key=Settings.Section.ApplicationData.RestoreNotice}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="{loc:Loc Key=Settings.Tab.PowerBi}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="16" Spacing="16">
+                        <Border Classes="Card" Padding="24">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="{loc:Loc Key=Settings.Section.PowerBi.Title}" Classes="TitleLarge"/>
+                                <TextBlock Text="{loc:Loc Key=Settings.Section.PowerBi.Description}" TextWrapping="Wrap"/>
+                                <TextBox Text="{Binding PowerBiEmbedUrl}" Watermark="{loc:Loc Key=Settings.Label.PowerBiUrl}"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
 
-            <Border Classes="Card" Padding="24">
-                <StackPanel Spacing="12">
-                    <TextBlock Text="{loc:Loc Key=Settings.Section.PowerBi.Title}" Classes="TitleLarge"/>
-                    <TextBlock Text="{loc:Loc Key=Settings.Section.PowerBi.Description}" TextWrapping="Wrap"/>
-                    <TextBox Text="{Binding PowerBiEmbedUrl}" Watermark="{loc:Loc Key=Settings.Label.PowerBiUrl}"/>
-                </StackPanel>
-            </Border>
-
-            <Border Background="{StaticResource BrushSurfaceVariant}"
-                    Padding="12"
-                    CornerRadius="{StaticResource CornerRadiusMD}"
-                    IsVisible="{Binding HasStatusMessage}">
-                <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
-            </Border>
-        </StackPanel>
-    </ScrollViewer>
+        <Border Grid.Row="1"
+                Background="{StaticResource BrushSurfaceVariant}"
+                Padding="12"
+                CornerRadius="{StaticResource CornerRadiusMD}"
+                Margin="24,0,24,24"
+                IsVisible="{Binding HasStatusMessage}">
+            <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
+        </Border>
+    </Grid>
 </UserControl>

@@ -11,7 +11,8 @@ namespace GRCFinancialControl.Persistence.Services.Infrastructure
         public static async Task EnsureCanMutateAsync(
             ApplicationDbContext context,
             int engagementId,
-            string operationDescription)
+            string operationDescription,
+            bool allowManualSources = false)
         {
             if (context == null)
             {
@@ -34,7 +35,7 @@ namespace GRCFinancialControl.Persistence.Services.Infrastructure
                     $"Engagement with Id={engagementId} could not be found. {operationDescription} cannot continue.");
             }
 
-            if (engagement.Source == EngagementSource.S4Project)
+            if (engagement.Source == EngagementSource.S4Project && !allowManualSources)
             {
                 throw new InvalidOperationException(
                     $"Engagement '{engagement.EngagementId}' is sourced from S/4Project and must be managed manually. " +

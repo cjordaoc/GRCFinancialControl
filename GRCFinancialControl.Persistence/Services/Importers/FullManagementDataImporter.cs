@@ -217,6 +217,10 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             }
 
             var metadata = ExtractReportMetadata(worksheet);
+            if (string.IsNullOrWhiteSpace(metadata.ClosingPeriodName))
+            {
+                throw new ImportWarningException("Full Management Data workbook is missing the closing period filter. Set the period before exporting and try again.");
+            }
             var parsedRows = ParseRows(worksheet, metadata.ClosingPeriodName);
             if (parsedRows.Count == 0)
             {
@@ -292,21 +296,22 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     {
                         try
                         {
-                            if (!closingPeriodLookup.TryGetValue(row.ClosingPeriodName, out var closingPeriod))
+                            var closingPeriodFound = closingPeriodLookup.TryGetValue(row.ClosingPeriodName, out var closingPeriod);
+
+                            if (!closingPeriodFound)
                             {
                                 var missingLabel = string.IsNullOrWhiteSpace(row.ClosingPeriodName)
                                     ? "<blank>"
                                     : row.ClosingPeriodName;
                                 missingClosingPeriodSkips.Add($"{missingLabel} (row {row.RowNumber})");
                                 _logger.LogWarning(
-                                    "Skipping row {RowNumber} for engagement {EngagementId} because closing period '{ClosingPeriod}' was not found.",
+                                    "Closing period '{ClosingPeriod}' not found for Full Management Data row {RowNumber} (Engagement {EngagementId}). Period-specific metrics will be skipped.",
+                                    missingLabel,
                                     row.RowNumber,
-                                    row.EngagementId,
-                                    row.ClosingPeriodName);
-                                continue;
+                                    row.EngagementId);
                             }
 
-                            if (closingPeriod.FiscalYear?.IsLocked ?? false)
+                            if (closingPeriodFound && (closingPeriod!.FiscalYear?.IsLocked ?? false))
                             {
                                 var fiscalYearName = string.IsNullOrWhiteSpace(closingPeriod.FiscalYear.Name)
                                     ? $"Id={closingPeriod.FiscalYear.Id}"
@@ -386,44 +391,47 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                 engagement.OpeningExpenses = row.OriginalBudgetExpenses.Value;
                             }
 
-                            if (row.ChargedHoursMercuryProjected.HasValue)
+                            if (closingPeriodFound)
                             {
-                                engagement.EstimatedToCompleteHours = row.ChargedHoursMercuryProjected.Value;
-                            }
+                                if (row.ChargedHoursMercuryProjected.HasValue)
+                                {
+                                    engagement.EstimatedToCompleteHours = row.ChargedHoursMercuryProjected.Value;
+                                }
 
-                            if (row.TERMercuryProjectedOppCurrency.HasValue)
-                            {
-                                engagement.ValueEtcp = row.TERMercuryProjectedOppCurrency.Value;
-                            }
+                                if (row.TERMercuryProjectedOppCurrency.HasValue)
+                                {
+                                    engagement.ValueEtcp = row.TERMercuryProjectedOppCurrency.Value;
+                                }
 
-                            if (row.MarginPercentMercuryProjected.HasValue)
-                            {
-                                engagement.MarginPctEtcp = row.MarginPercentMercuryProjected;
-                            }
+                                if (row.MarginPercentMercuryProjected.HasValue)
+                                {
+                                    engagement.MarginPctEtcp = row.MarginPercentMercuryProjected;
+                                }
 
-                            if (row.ExpensesMercuryProjected.HasValue)
-                            {
-                                engagement.ExpensesEtcp = row.ExpensesMercuryProjected.Value;
-                            }
+                                if (row.ExpensesMercuryProjected.HasValue)
+                                {
+                                    engagement.ExpensesEtcp = row.ExpensesMercuryProjected.Value;
+                                }
 
-                            if (row.UnbilledRevenueDays.HasValue)
-                            {
-                                engagement.UnbilledRevenueDays = row.UnbilledRevenueDays.Value;
-                            }
+                                if (row.UnbilledRevenueDays.HasValue)
+                                {
+                                    engagement.UnbilledRevenueDays = row.UnbilledRevenueDays.Value;
+                                }
 
-                            var lastEtcDate = ResolveLastEtcDate(row, closingPeriod);
-                            if (lastEtcDate.HasValue)
-                            {
-                                engagement.LastEtcDate = lastEtcDate;
-                                engagement.ProposedNextEtcDate = CalculateProposedNextEtcDate(lastEtcDate);
-                            }
-                            else if (row.NextEtcDate.HasValue)
-                            {
-                                engagement.ProposedNextEtcDate = DateTime.SpecifyKind(row.NextEtcDate.Value.Date, DateTimeKind.Unspecified);
-                            }
+                                var lastEtcDate = ResolveLastEtcDate(row, closingPeriod!);
+                                if (lastEtcDate.HasValue)
+                                {
+                                    engagement.LastEtcDate = lastEtcDate;
+                                    engagement.ProposedNextEtcDate = CalculateProposedNextEtcDate(lastEtcDate);
+                                }
+                                else if (row.NextEtcDate.HasValue)
+                                {
+                                    engagement.ProposedNextEtcDate = DateTime.SpecifyKind(row.NextEtcDate.Value.Date, DateTimeKind.Unspecified);
+                                }
 
-                            engagement.LastClosingPeriodId = closingPeriod.Id;
-                            engagement.LastClosingPeriod = closingPeriod;
+                                engagement.LastClosingPeriodId = closingPeriod!.Id;
+                                engagement.LastClosingPeriod = closingPeriod;
+                            }
 
                             financialEvolutionUpserts += UpsertFinancialEvolution(
                                 context,
@@ -434,14 +442,17 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                 row.OriginalBudgetMarginPercent,
                                 row.OriginalBudgetExpenses);
 
-                            financialEvolutionUpserts += UpsertFinancialEvolution(
-                                context,
-                                engagement,
-                                closingPeriod.Name,
-                                row.ChargedHoursMercuryProjected,
-                                row.TERMercuryProjectedOppCurrency,
-                                row.MarginPercentMercuryProjected,
-                                row.ExpensesMercuryProjected);
+                            if (closingPeriodFound)
+                            {
+                                financialEvolutionUpserts += UpsertFinancialEvolution(
+                                    context,
+                                    engagement,
+                                    closingPeriod!.Name,
+                                    row.ChargedHoursMercuryProjected,
+                                    row.TERMercuryProjectedOppCurrency,
+                                    row.MarginPercentMercuryProjected,
+                                    row.ExpensesMercuryProjected);
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -464,11 +475,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     if (lockedFiscalYearSkips.Count > 0)
                     {
                         skipReasons["LockedFiscalYear"] = lockedFiscalYearSkips;
-                    }
-
-                    if (missingClosingPeriodSkips.Count > 0)
-                    {
-                        skipReasons["MissingClosingPeriod"] = missingClosingPeriodSkips;
                     }
 
                     if (missingEngagementSkips.Count > 0)
@@ -495,6 +501,13 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     if (metadata.LastUpdateDate.HasValue)
                     {
                         notes.Add($"Workbook last update: {metadata.LastUpdateDate:yyyy-MM-dd}");
+                    }
+
+                    if (missingClosingPeriodSkips.Count > 0)
+                    {
+                        var sample = string.Join(", ", missingClosingPeriodSkips.Take(5));
+                        var suffix = missingClosingPeriodSkips.Count > 5 ? ", ..." : string.Empty;
+                        notes.Add($"Rows missing closing period: {missingClosingPeriodSkips.Count} (sample: {sample}{suffix}). Period-specific metrics were skipped.");
                     }
 
                     var summary = ImportSummaryFormatter.Build(
@@ -596,11 +609,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     closingPeriod = defaultClosingPeriodName!;
                 }
 
-                if (string.IsNullOrWhiteSpace(closingPeriod))
-                {
-                    continue;
-                }
-
                 rows.Add(new FullManagementDataRow
                 {
                     RowNumber = rowNumber,
@@ -608,7 +616,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     EngagementName = engagementNameIndex.HasValue ? NormalizeWhitespace(Convert.ToString(row[engagementNameIndex.Value], CultureInfo.InvariantCulture)) : string.Empty,
                     CustomerName = customerNameIndex.HasValue ? NormalizeWhitespace(Convert.ToString(row[customerNameIndex.Value], CultureInfo.InvariantCulture)) : string.Empty,
                     OpportunityCurrency = opportunityCurrencyIndex.HasValue ? NormalizeWhitespace(Convert.ToString(row[opportunityCurrencyIndex.Value], CultureInfo.InvariantCulture)) : string.Empty,
-                    ClosingPeriodName = closingPeriod,
+                    ClosingPeriodName = closingPeriod ?? string.Empty,
                     OriginalBudgetHours = originalBudgetHoursIndex.HasValue ? ParseDecimal(row[originalBudgetHoursIndex.Value], 2) : null,
                     OriginalBudgetTer = originalBudgetTerIndex.HasValue ? ParseDecimal(row[originalBudgetTerIndex.Value], 2) : null,
                     OriginalBudgetMarginPercent = originalBudgetMarginPercentIndex.HasValue ? ParsePercent(row[originalBudgetMarginPercentIndex.Value]) : null,
@@ -1043,14 +1051,14 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             };
         }
 
-        private static DateTime? ResolveLastEtcDate(FullManagementDataRow row, ClosingPeriod closingPeriod)
+        private static DateTime? ResolveLastEtcDate(FullManagementDataRow row, ClosingPeriod? closingPeriod)
         {
             if (row.LastActiveEtcPDate.HasValue)
             {
                 return DateTime.SpecifyKind(row.LastActiveEtcPDate.Value.Date, DateTimeKind.Unspecified);
             }
 
-            if (row.EtcpAgeDays.HasValue)
+            if (row.EtcpAgeDays.HasValue && closingPeriod != null)
             {
                 var normalizedAge = Math.Max(row.EtcpAgeDays.Value, 0);
                 var baseDate = closingPeriod.PeriodEnd.Date;

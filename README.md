@@ -15,6 +15,7 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 **Validation & Consolidation Rules**
 - Header schema detection requires all mandatory groups (Engagement Id/Name, Closing Period, Budget/ETC metrics). Missing groups block the import with actionable errors.
 - Metadata parsing ensures the workbook closing period is populated either from the header row or cell `A4`; the import stops if neither is found.
+- When the workbook omits the closing period filter entirely, the import aborts with a warning in the import console so users can adjust the report before retrying.
 - Numeric fields accept localized (pt-BR) and invariant formats; parsing fails fast on invalid decimals/percentages to avoid silent truncation.
 - During adjustments the system disallows changes on fiscal years flagged as locked and recalculates remaining hours with midpoint rounding to two decimals.
 - Rank consolidation aggregates all rows for the same normalized rank, recalculates additional hours, and propagates the computed traffic-light status across the grouped rows.
@@ -108,7 +109,7 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 - Numeric parsing supports localized decimal separators and enforces midpoint rounding for currency/hours.
 - The loader sanitizes whitespace, strips non-printable characters, and normalizes ranks/status text for consistent persistence.
 - Import summaries include counts of processed rows, warnings (e.g., missing engagements), and accumulated totals to aid reconciliation.
-- The Full Management Data importer now owns budget/margin/projection updates, mapping Original Budget, Mercury projections, and the new Unbilled Revenue Days column onto existing engagements while logging "Engagement not found" when an ID is absent.
+- The Full Management Data importer now owns budget/margin/projection updates, mapping Original Budget, Mercury projections, and the new Unbilled Revenue Days column onto existing engagements while logging "Engagement not found" when an ID is absent. Rows without a closing period still refresh opening budgets but skip ETC metrics and are summarized as warnings in the import notes.
 
 [See Technical Spec →](readme_specs.md#excel-importers-and-validation)
 
@@ -187,3 +188,18 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 - The dialog Save button remains disabled until all validation errors are cleared, preventing incomplete records from being persisted.
 
 [See Technical Spec →](readme_specs.md#master-data-editors)
+
+---
+
+## 12 · Settings & Application Data Backup
+**Happy Path**
+1. Administrators open the Settings view and switch to the Application Data tab after validating the database connection.
+2. Selecting **Export data** prompts for a destination and writes an XML snapshot of every table in the connected database.
+3. Choosing **Restore data** prompts for a backup file, confirms the destructive operation, and reloads data into MySQL.
+
+**Validation & Consolidation Rules**
+- Export and restore commands require valid connection settings; missing credentials surface inline status messages.
+- XML exports include column-type metadata and preserve null/binary values so restores round-trip schema fidelity.
+- Restores disable foreign-key checks within a transaction, clear existing rows, insert the backup payload, re-enable constraints, and refresh in-app data caches.
+
+[See Technical Spec →](readme_specs.md#settings-and-application-data-backup)

@@ -16,10 +16,11 @@ This document details the implementation for every functional capability describ
   5. The service upserts rank budgets, records change history, and recalculates incurred/remaining totals via `EngagementRankBudget` domain methods.
 - **Validation Mechanics:**
   - Header detection searches the first 12 rows and requires each mandatory header group.
-  - Closing period metadata must be present either in the worksheet metadata or the first data row; otherwise import halts.
+  - Closing period metadata must be present either in the worksheet metadata or the first data row; missing metadata raises an `ImportWarningException` that the UI surfaces as a warning before aborting the import.
   - Numeric parsing supports pt-BR and invariant formats; invalid decimals/percentages raise descriptive errors.
   - Only existing engagements are updated; unknown IDs are skipped with "Engagement not found" warnings in the import summary.
   - Import result aggregates processed/skipped counts and exposes warnings for unresolved engagements.
+  - Rows that reach the importer without a closing period still update opening budget columns but skip ETC metrics; these rows are listed in the `MissingClosingPeriodSkips` summary collection.
 
 ---
 
@@ -149,6 +150,20 @@ This document details the implementation for every functional capability describ
 - **Validation Mechanics:**
   - Views encapsulate aggregation rules to ensure consistent metrics across the application.
   - Services refresh caches after imports complete to avoid stale dimension data.
+
+---
+
+## Settings and Application Data Backup
+- **Primary Components:** `ApplicationDataBackupService`, `IApplicationDataBackupService`, `SettingsViewModel`
+- **Dependencies:** `IDbContextFactory<ApplicationDbContext>`, `ISettingsService`, `FilePickerService`, `DialogService`
+- **Workflow:**
+  1. Export requests call `ApplicationDataBackupService.ExportAsync`, which opens a database connection, enumerates tables from the EF model, and writes an XML document with column metadata and serialized values.
+  2. Import requests prompt the user for confirmation and delegate to `ImportAsync`, which parses the XML, disables foreign-key checks, deletes existing rows, inserts the payload with typed parameters, and re-enables constraints within a transaction.
+  3. `SettingsViewModel` exposes `ExportApplicationDataCommand` and `ImportApplicationDataCommand`, updating the UI status area and refreshing in-memory caches via `RefreshDataMessage` after a successful restore.
+- **Validation Mechanics:**
+  - Both export/import paths fall back to building a context from saved settings if the DI factory lacks a configured provider; missing credentials raise `InvalidOperationException` with guidance.
+  - XML serialization captures type information (including binary data) using invariant formatting to ensure round-trippable values on restore.
+  - Imports roll back on failure, guaranteeing foreign-key checks are re-enabled even when errors occur.
 
 ---
 
