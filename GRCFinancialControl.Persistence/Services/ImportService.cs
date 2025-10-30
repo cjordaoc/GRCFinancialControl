@@ -14,6 +14,7 @@ using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Importers;
 using GRCFinancialControl.Persistence.Services.Importers.StaffAllocations;
 using GRCFinancialControl.Persistence.Services.Interfaces;
+using GRCFinancialControl.Persistence.Services.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using static GRCFinancialControl.Persistence.Services.Importers.WorksheetValueHelper;
@@ -189,42 +190,31 @@ namespace GRCFinancialControl.Persistence.Services
                         engagementCreated = true;
                     }
 
-                    else
+                    else if (EngagementImportSkipEvaluator.TryCreate(engagement, out var skipMetadata))
                     {
-                        if (engagement.Source == EngagementSource.S4Project)
+                        _logger.LogWarning(skipMetadata.WarningMessage);
+                        await transaction.RollbackAsync().ConfigureAwait(false);
+
+                        var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>
                         {
-                            var manualOnlyMessage =
-                                $"Engagement '{engagement.EngagementId}' is sourced from S/4Project and must be managed manually. " +
-                                "Budget workbook import skipped.";
+                            [skipMetadata.ReasonKey] = new[] { engagement.EngagementId }
+                        };
 
-                            _logger.LogInformation(
-                                "Skipping budget import for engagement {EngagementId} from file {FilePath} because it is manual-only (source: {Source}).",
-                                engagement.EngagementId,
-                                filePath,
-                                engagement.Source);
+                        var skipNotes = new List<string>(1)
+                        {
+                            skipMetadata.WarningMessage
+                        };
 
-                            await transaction.RollbackAsync().ConfigureAwait(false);
-                            var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>
-                            {
-                                ["ManualOnly"] = new[] { engagement.EngagementId }
-                            };
-
-                            var skipNotes = new List<string>(1)
-                            {
-                                manualOnlyMessage
-                            };
-
-                            return ImportSummaryFormatter.Build(
-                                "Budget import",
-                                inserted: 0,
-                                updated: 0,
-                                skipReasons,
-                                skipNotes);
-                        }
-
-                        engagement.Description = engagementDescription;
-                        engagement.InitialHoursBudget = totalBudgetHours;
+                        return ImportSummaryFormatter.Build(
+                            "Budget import",
+                            inserted: 0,
+                            updated: 0,
+                            skipReasons,
+                            skipNotes);
                     }
+
+                    engagement.Description = engagementDescription;
+                    engagement.InitialHoursBudget = totalBudgetHours;
 
                     await UpsertRankMappingsAsync(context, resourcingParseResult.RankMappings, generatedAtUtc)
                         .ConfigureAwait(false);
@@ -1836,9 +1826,11 @@ namespace GRCFinancialControl.Persistence.Services
             var engagementLookup = engagements.ToDictionary(e => e.EngagementId, StringComparer.OrdinalIgnoreCase);
 
             var manualOnlyDetails = new List<string>();
+            var closedEngagementDetails = new List<string>();
             var missingEngagementDetails = new List<string>();
             var lockedFiscalYearDetails = new List<string>();
             var touchedEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var warningMessages = new HashSet<string>(StringComparer.Ordinal);
 
             var createdAllocations = 0;
             var updatedAllocations = 0;
@@ -1855,15 +1847,21 @@ namespace GRCFinancialControl.Persistence.Services
                     continue;
                 }
 
-                if (engagement.Source == EngagementSource.S4Project)
+                if (EngagementImportSkipEvaluator.TryCreate(engagement, out var skipMetadata))
                 {
-                    _logger.LogInformation(
-                        "Skipping FCS backlog row {RowNumber} for engagement {EngagementId} from file {FilePath} because it is manual-only (source: {Source}).",
-                        row.RowNumber,
-                        engagement.EngagementId,
-                        filePath,
-                        engagement.Source);
-                    manualOnlyDetails.Add($"{engagement.EngagementId} (row {row.RowNumber})");
+                    var detail = $"{engagement.EngagementId} (row {row.RowNumber})";
+                    switch (skipMetadata.ReasonKey)
+                    {
+                        case "ManualOnly":
+                            manualOnlyDetails.Add(detail);
+                            break;
+                        case "ClosedEngagement":
+                            closedEngagementDetails.Add(detail);
+                            break;
+                    }
+
+                    warningMessages.Add(skipMetadata.WarningMessage);
+                    _logger.LogWarning("{Warning} (row {RowNumber})", skipMetadata.WarningMessage, row.RowNumber);
                     continue;
                 }
 
@@ -1962,6 +1960,11 @@ namespace GRCFinancialControl.Persistence.Services
                 skipReasons["ManualOnly"] = manualOnlyDetails;
             }
 
+            if (closedEngagementDetails.Count > 0)
+            {
+                skipReasons["ClosedEngagement"] = closedEngagementDetails;
+            }
+
             if (lockedFiscalYearDetails.Count > 0)
             {
                 skipReasons["LockedFiscalYear"] = lockedFiscalYearDetails;
@@ -1976,6 +1979,14 @@ namespace GRCFinancialControl.Persistence.Services
             {
                 $"Engagements affected: {touchedEngagements.Count}"
             };
+
+            if (warningMessages.Count > 0)
+            {
+                foreach (var warning in warningMessages)
+                {
+                    notes.Insert(0, warning);
+                }
+            }
 
             if (lastUpdateDate.HasValue)
             {

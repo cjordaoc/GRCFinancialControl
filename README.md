@@ -110,6 +110,7 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 - The loader sanitizes whitespace, strips non-printable characters, and normalizes ranks/status text for consistent persistence.
 - Import summaries include counts of processed rows, warnings (e.g., missing engagements), and accumulated totals to aid reconciliation.
 - The Full Management Data importer now owns budget/margin/projection updates, mapping Original Budget, Mercury projections, and the new Unbilled Revenue Days column onto existing engagements while logging "Engagement not found" when an ID is absent. Rows without a closing period still refresh opening budgets but skip ETC metrics and are summarized as warnings in the import notes.
+- All importers skip S/4 Project engagements and engagements marked as Closed, logging the warning message `⚠ Values for S/4 Projects must be inserted manually. Data import was skipped for Engagement {EngagementID}.` or `⚠ Engagement {EngagementID} skipped – status Closed.` while adding the reasons to the import summary output.
 
 [See Technical Spec →](readme_specs.md#excel-importers-and-validation)
 
