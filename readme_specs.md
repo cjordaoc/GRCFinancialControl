@@ -12,12 +12,13 @@ This document details the implementation for every functional capability describ
   1. `ImportService` routes "Full Management Data" uploads to `FullManagementDataImporter`.
   2. The importer scans the worksheet to locate the header row (`HeaderGroups`) and resolves report metadata (`ExtractReportMetadata`).
   3. Required columns are validated; missing headers trigger `InvalidDataException` with friendly messages.
-  4. Rows are parsed into engagement aggregates (hours, value, margin, expenses, ETC) with culture-aware decimal parsing.
+  4. Rows are parsed into engagement aggregates (Original Budget Hours/TER/Margin/Expenses, Mercury projections, Unbilled Revenue Days) with culture-aware decimal parsing.
   5. The service upserts rank budgets, records change history, and recalculates incurred/remaining totals via `EngagementRankBudget` domain methods.
 - **Validation Mechanics:**
   - Header detection searches the first 12 rows and requires each mandatory header group.
   - Closing period metadata must be present either in the worksheet metadata or the first data row; otherwise import halts.
   - Numeric parsing supports pt-BR and invariant formats; invalid decimals/percentages raise descriptive errors.
+  - Only existing engagements are updated; unknown IDs are skipped with "Engagement not found" warnings in the import summary.
   - Import result aggregates processed/skipped counts and exposes warnings for unresolved engagements.
 
 ---

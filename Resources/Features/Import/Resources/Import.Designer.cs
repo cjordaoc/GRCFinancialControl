@@ -26,7 +26,6 @@ public static class Import
 
     public static string Import_Button_Budget => ResourceManager.GetString("Import.Button.Budget", resourceCulture) ?? "Import.Button.Budget";
 
-    public static string Import_Button_Actuals => ResourceManager.GetString("Import.Button.Actuals", resourceCulture) ?? "Import.Button.Actuals";
 
     public static string Import_Button_AllocationPlanning => ResourceManager.GetString("Import.Button.AllocationPlanning", resourceCulture) ?? "Import.Button.AllocationPlanning";
 
@@ -34,25 +33,19 @@ public static class Import
 
     public static string Import_Section_Selected_TitleFormat => ResourceManager.GetString("Import.Section.Selected.TitleFormat", resourceCulture) ?? "Import.Section.Selected.TitleFormat";
 
-    public static string Import_Label_ClosingPeriod => ResourceManager.GetString("Import.Label.ClosingPeriod", resourceCulture) ?? "Import.Label.ClosingPeriod";
 
-    public static string Import_Status_NoUnlockedClosingPeriods => ResourceManager.GetString("Import.Status.NoUnlockedClosingPeriods", resourceCulture) ?? "Import.Status.NoUnlockedClosingPeriods";
 
-    public static string Import_Status_SelectedClosingPeriod => ResourceManager.GetString("Import.Status.SelectedClosingPeriod", resourceCulture) ?? "Import.Status.SelectedClosingPeriod";
 
     public static string Import_Button_SelectFile => ResourceManager.GetString("Import.Button.SelectFile", resourceCulture) ?? "Import.Button.SelectFile";
 
     public static string Import_FileType_Budget => ResourceManager.GetString("Import.FileType.Budget", resourceCulture) ?? "Import.FileType.Budget";
 
-    public static string Import_FileType_Actuals => ResourceManager.GetString("Import.FileType.Actuals", resourceCulture) ?? "Import.FileType.Actuals";
 
     public static string Import_FileType_AllocationPlanning => ResourceManager.GetString("Import.FileType.AllocationPlanning", resourceCulture) ?? "Import.FileType.AllocationPlanning";
 
     public static string Import_FileType_FullManagement => ResourceManager.GetString("Import.FileType.FullManagement", resourceCulture) ?? "Import.FileType.FullManagement";
 
-    public static string Import_Status_LockedClosingPeriods => ResourceManager.GetString("Import.Status.LockedClosingPeriods", resourceCulture) ?? "Import.Status.LockedClosingPeriods";
 
-    public static string Import_Validation_ClosingPeriodRequired => ResourceManager.GetString("Import.Validation.ClosingPeriodRequired", resourceCulture) ?? "Import.Validation.ClosingPeriodRequired";
 
     public static string Import_Status_InProgress => ResourceManager.GetString("Import.Status.InProgress", resourceCulture) ?? "Import.Status.InProgress";
 

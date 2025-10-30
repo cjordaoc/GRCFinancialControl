@@ -43,58 +43,79 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             "closing"
         };
 
-        private static readonly string[] BudgetHoursHeaders =
+        private static readonly string[] CustomerNameHeaders =
         {
+            "customer name",
+            "client name",
+            "client name (id)"
+        };
+
+        private static readonly string[] OpportunityCurrencyHeaders =
+        {
+            "opportunity currency",
+            "engagement currency"
+        };
+
+        private static readonly string[] OriginalBudgetHoursHeaders =
+        {
+            "original budget hours",
             "budget hours",
             "hours budget",
             "bud hours"
         };
 
-        private static readonly string[] BudgetValueHeaders =
+        private static readonly string[] OriginalBudgetTerHeaders =
         {
+            "original budget ter",
             "budget value",
             "value bud",
             "revenue bud"
         };
 
-        private static readonly string[] BudgetMarginHeaders =
+        private static readonly string[] OriginalBudgetMarginPercentHeaders =
         {
+            "original budget margin %",
             "margin % bud",
             "budget margin",
             "margin budget"
         };
 
-        private static readonly string[] BudgetExpensesHeaders =
+        private static readonly string[] OriginalBudgetExpensesHeaders =
         {
+            "original budget expenses",
             "expenses bud",
             "budget expenses"
         };
 
-        private static readonly string[] EstimatedToCompleteHoursHeaders =
+        private static readonly string[] ChargedHoursMercuryProjectedHeaders =
         {
+            "charged hours mercury projected",
             "etcp hours",
             "hours etc-p",
             "etp hours",
             "etc hours"
         };
 
-        private static readonly string[] EtcpValueHeaders =
+        private static readonly string[] TermMercuryProjectedHeaders =
         {
+            "ter mercury projected opp currency",
             "etcp value",
             "value etc-p",
             "etp value",
             "etc value"
         };
 
-        private static readonly string[] EtcpMarginHeaders =
+        private static readonly string[] MarginPercentMercuryProjectedHeaders =
         {
+            "margin % mercury projected",
             "margin % etc-p",
             "etcp margin",
             "margin etc"
         };
 
-        private static readonly string[] EtcpExpensesHeaders =
+        private static readonly string[] ExpensesMercuryProjectedHeaders =
         {
+            "expenses mercury projected",
             "expenses etc-p",
             "etcp expenses",
             "expenses etc"
@@ -112,8 +133,14 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             "age days"
         };
 
-        private static readonly string[] LastEtcDateHeaders =
+        private static readonly string[] UnbilledRevenueDaysHeaders =
         {
+            "unbilled revenue days"
+        };
+
+        private static readonly string[] LastActiveEtcPDateHeaders =
+        {
+            "last active etc-p date",
             "last etc date",
             "last etc-p",
             "last etc"
@@ -142,17 +169,20 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             EngagementIdHeaders,
             EngagementNameHeaders,
             ClosingPeriodHeaders,
-            BudgetHoursHeaders,
-            BudgetValueHeaders,
-            BudgetMarginHeaders,
-            BudgetExpensesHeaders,
-            EstimatedToCompleteHoursHeaders,
-            EtcpValueHeaders,
-            EtcpMarginHeaders,
-            EtcpExpensesHeaders,
+            CustomerNameHeaders,
+            OpportunityCurrencyHeaders,
+            OriginalBudgetHoursHeaders,
+            OriginalBudgetTerHeaders,
+            OriginalBudgetMarginPercentHeaders,
+            OriginalBudgetExpensesHeaders,
+            ChargedHoursMercuryProjectedHeaders,
+            TermMercuryProjectedHeaders,
+            MarginPercentMercuryProjectedHeaders,
+            ExpensesMercuryProjectedHeaders,
             StatusHeaders,
             EtcAgeDaysHeaders,
-            LastEtcDateHeaders,
+            UnbilledRevenueDaysHeaders,
+            LastActiveEtcPDateHeaders,
             NextEtcDateHeaders
         };
 
@@ -199,6 +229,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     Array.Empty<string>(),
                     Array.Empty<string>(),
                     Array.Empty<string>(),
+                    Array.Empty<string>(),
                     Array.Empty<string>());
             }
 
@@ -221,6 +252,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
                     var engagements = await context.Engagements
                         .Include(e => e.FinancialEvolutions)
+                        .Include(e => e.Customer)
                         .Where(e => engagementIds.Contains(e.EngagementId))
                         .ToListAsync();
 
@@ -233,11 +265,25 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
                     var closingPeriodLookup = closingPeriods.ToDictionary(cp => cp.Name, StringComparer.OrdinalIgnoreCase);
 
-                    var createdEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    var customerNames = parsedRows
+                        .Select(r => r.CustomerName)
+                        .Where(name => !string.IsNullOrWhiteSpace(name))
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+
+                    var customers = customerNames.Count > 0
+                        ? await context.Customers
+                            .Where(c => customerNames.Contains(c.Name))
+                            .ToListAsync()
+                        : new List<Customer>();
+
+                    var customerLookup = customers.ToDictionary(c => c.Name, StringComparer.OrdinalIgnoreCase);
+
                     var updatedEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                     var manualOnlySkips = new List<string>();
                     var lockedFiscalYearSkips = new List<string>();
                     var missingClosingPeriodSkips = new List<string>();
+                    var missingEngagementSkips = new List<string>();
                     var errors = new List<string>();
 
                     var financialEvolutionUpserts = 0;
@@ -276,38 +322,42 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
                             if (!engagementLookup.TryGetValue(row.EngagementId, out var engagement))
                             {
-                                engagement = new Engagement
-                                {
-                                    EngagementId = row.EngagementId,
-                                    Description = string.IsNullOrWhiteSpace(row.EngagementName)
-                                        ? row.EngagementId
-                                        : row.EngagementName,
-                                    Status = EngagementStatus.Active,
-                                    Source = EngagementSource.GrcProject
-                                };
-
-                                await context.Engagements.AddAsync(engagement);
-                                engagementLookup[row.EngagementId] = engagement;
-                                createdEngagements.Add(row.EngagementId);
+                                var detail = $"{row.EngagementId} (row {row.RowNumber})";
+                                missingEngagementSkips.Add(detail);
+                                _logger.LogWarning(
+                                    "Engagement not found for Full Management Data row {RowNumber} (Engagement ID {EngagementId}).",
+                                    row.RowNumber,
+                                    row.EngagementId);
+                                continue;
                             }
-                            else
+
+                            if (engagement.Source == EngagementSource.S4Project)
                             {
-                                if (engagement.Source == EngagementSource.S4Project)
-                                {
-                                    manualOnlySkips.Add($"{engagement.EngagementId} (row {row.RowNumber})");
-                                    _logger.LogInformation(
-                                        "Skipping row {RowNumber} for engagement {EngagementId} because the engagement is sourced from S/4Project and must be managed manually.",
-                                        row.RowNumber,
-                                        engagement.EngagementId);
-                                    continue;
-                                }
-
-                                updatedEngagements.Add(engagement.EngagementId);
+                                manualOnlySkips.Add($"{engagement.EngagementId} (row {row.RowNumber})");
+                                _logger.LogInformation(
+                                    "Skipping row {RowNumber} for engagement {EngagementId} because the engagement is sourced from S/4Project and must be managed manually.",
+                                    row.RowNumber,
+                                    engagement.EngagementId);
+                                continue;
                             }
+
+                            updatedEngagements.Add(engagement.EngagementId);
 
                             if (!string.IsNullOrWhiteSpace(row.EngagementName))
                             {
                                 engagement.Description = row.EngagementName;
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(row.CustomerName) &&
+                                customerLookup.TryGetValue(row.CustomerName, out var customer))
+                            {
+                                engagement.Customer = customer;
+                                engagement.CustomerId = customer.Id;
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(row.OpportunityCurrency))
+                            {
+                                engagement.Currency = row.OpportunityCurrency;
                             }
 
                             if (!string.IsNullOrWhiteSpace(row.StatusText))
@@ -316,44 +366,49 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                 engagement.Status = ParseStatus(row.StatusText);
                             }
 
-                            if (row.BudgetHours.HasValue)
+                            if (row.OriginalBudgetHours.HasValue)
                             {
-                                engagement.InitialHoursBudget = row.BudgetHours.Value;
+                                engagement.InitialHoursBudget = row.OriginalBudgetHours.Value;
                             }
 
-                            if (row.BudgetValue.HasValue)
+                            if (row.OriginalBudgetTer.HasValue)
                             {
-                                engagement.OpeningValue = row.BudgetValue.Value;
+                                engagement.OpeningValue = row.OriginalBudgetTer.Value;
                             }
 
-                            if (row.BudgetMargin.HasValue)
+                            if (row.OriginalBudgetMarginPercent.HasValue)
                             {
-                                engagement.MarginPctBudget = row.BudgetMargin;
+                                engagement.MarginPctBudget = row.OriginalBudgetMarginPercent;
                             }
 
-                            if (row.BudgetExpenses.HasValue)
+                            if (row.OriginalBudgetExpenses.HasValue)
                             {
-                                engagement.OpeningExpenses = row.BudgetExpenses.Value;
+                                engagement.OpeningExpenses = row.OriginalBudgetExpenses.Value;
                             }
 
-                            if (row.EstimatedToCompleteHours.HasValue)
+                            if (row.ChargedHoursMercuryProjected.HasValue)
                             {
-                                engagement.EstimatedToCompleteHours = row.EstimatedToCompleteHours.Value;
+                                engagement.EstimatedToCompleteHours = row.ChargedHoursMercuryProjected.Value;
                             }
 
-                            if (row.EtcpValue.HasValue)
+                            if (row.TERMercuryProjectedOppCurrency.HasValue)
                             {
-                                engagement.ValueEtcp = row.EtcpValue.Value;
+                                engagement.ValueEtcp = row.TERMercuryProjectedOppCurrency.Value;
                             }
 
-                            if (row.EtcpMargin.HasValue)
+                            if (row.MarginPercentMercuryProjected.HasValue)
                             {
-                                engagement.MarginPctEtcp = row.EtcpMargin;
+                                engagement.MarginPctEtcp = row.MarginPercentMercuryProjected;
                             }
 
-                            if (row.EtcpExpenses.HasValue)
+                            if (row.ExpensesMercuryProjected.HasValue)
                             {
-                                engagement.ExpensesEtcp = row.EtcpExpenses.Value;
+                                engagement.ExpensesEtcp = row.ExpensesMercuryProjected.Value;
+                            }
+
+                            if (row.UnbilledRevenueDays.HasValue)
+                            {
+                                engagement.UnbilledRevenueDays = row.UnbilledRevenueDays.Value;
                             }
 
                             var lastEtcDate = ResolveLastEtcDate(row, closingPeriod);
@@ -374,19 +429,19 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                 context,
                                 engagement,
                                 FinancialEvolutionInitialPeriodId,
-                                row.BudgetHours,
-                                row.BudgetValue,
-                                row.BudgetMargin,
-                                row.BudgetExpenses);
+                                row.OriginalBudgetHours,
+                                row.OriginalBudgetTer,
+                                row.OriginalBudgetMarginPercent,
+                                row.OriginalBudgetExpenses);
 
                             financialEvolutionUpserts += UpsertFinancialEvolution(
                                 context,
                                 engagement,
                                 closingPeriod.Name,
-                                row.EstimatedToCompleteHours,
-                                row.EtcpValue,
-                                row.EtcpMargin,
-                                row.EtcpExpenses);
+                                row.ChargedHoursMercuryProjected,
+                                row.TERMercuryProjectedOppCurrency,
+                                row.MarginPercentMercuryProjected,
+                                row.ExpensesMercuryProjected);
                         }
                         catch (Exception ex)
                         {
@@ -416,6 +471,11 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         skipReasons["MissingClosingPeriod"] = missingClosingPeriodSkips;
                     }
 
+                    if (missingEngagementSkips.Count > 0)
+                    {
+                        skipReasons["Engagement not found"] = missingEngagementSkips;
+                    }
+
                     if (errors.Count > 0)
                     {
                         skipReasons["Error"] = errors;
@@ -424,7 +484,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     var notes = new List<string>
                     {
                         $"Financial evolution entries upserted: {financialEvolutionUpserts}",
-                        $"Distinct engagements touched: {createdEngagements.Count + updatedEngagements.Count}"
+                        $"Distinct engagements updated: {updatedEngagements.Count}"
                     };
 
                     if (!string.IsNullOrWhiteSpace(metadata.ClosingPeriodName))
@@ -439,7 +499,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
                     var summary = ImportSummaryFormatter.Build(
                         "Full Management Data import",
-                        createdEngagements.Count,
+                        0,
                         updatedEngagements.Count,
                         skipReasons,
                         notes,
@@ -449,12 +509,13 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     return new FullManagementDataImportResult(
                         summary,
                         parsedRows.Count,
-                        createdEngagements.Count,
+                        0,
                         updatedEngagements.Count,
                         financialEvolutionUpserts,
                         manualOnlySkips.ToArray(),
                         lockedFiscalYearSkips.ToArray(),
                         missingClosingPeriodSkips.ToArray(),
+                        missingEngagementSkips.ToArray(),
                         errors.ToArray());
                 }
                 catch
@@ -487,17 +548,20 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             var engagementIdIndex = GetRequiredColumnIndex(headerMap, EngagementIdHeaders, "Engagement ID");
             var closingPeriodIndex = GetOptionalColumnIndex(headerMap, ClosingPeriodHeaders);
             var engagementNameIndex = GetOptionalColumnIndex(headerMap, EngagementNameHeaders);
-            var budgetHoursIndex = GetOptionalColumnIndex(headerMap, BudgetHoursHeaders);
-            var budgetValueIndex = GetOptionalColumnIndex(headerMap, BudgetValueHeaders);
-            var budgetMarginIndex = GetOptionalColumnIndex(headerMap, BudgetMarginHeaders);
-            var budgetExpensesIndex = GetOptionalColumnIndex(headerMap, BudgetExpensesHeaders);
-            var estimatedToCompleteHoursIndex = GetOptionalColumnIndex(headerMap, EstimatedToCompleteHoursHeaders);
-            var etcpValueIndex = GetOptionalColumnIndex(headerMap, EtcpValueHeaders);
-            var etcpMarginIndex = GetOptionalColumnIndex(headerMap, EtcpMarginHeaders);
-            var etcpExpensesIndex = GetOptionalColumnIndex(headerMap, EtcpExpensesHeaders);
+            var customerNameIndex = GetOptionalColumnIndex(headerMap, CustomerNameHeaders);
+            var opportunityCurrencyIndex = GetOptionalColumnIndex(headerMap, OpportunityCurrencyHeaders);
+            var originalBudgetHoursIndex = GetOptionalColumnIndex(headerMap, OriginalBudgetHoursHeaders);
+            var originalBudgetTerIndex = GetOptionalColumnIndex(headerMap, OriginalBudgetTerHeaders);
+            var originalBudgetMarginPercentIndex = GetOptionalColumnIndex(headerMap, OriginalBudgetMarginPercentHeaders);
+            var originalBudgetExpensesIndex = GetOptionalColumnIndex(headerMap, OriginalBudgetExpensesHeaders);
+            var chargedHoursMercuryProjectedIndex = GetOptionalColumnIndex(headerMap, ChargedHoursMercuryProjectedHeaders);
+            var termMercuryProjectedIndex = GetOptionalColumnIndex(headerMap, TermMercuryProjectedHeaders);
+            var marginPercentMercuryProjectedIndex = GetOptionalColumnIndex(headerMap, MarginPercentMercuryProjectedHeaders);
+            var expensesMercuryProjectedIndex = GetOptionalColumnIndex(headerMap, ExpensesMercuryProjectedHeaders);
             var statusIndex = GetOptionalColumnIndex(headerMap, StatusHeaders);
             var etcAgeDaysIndex = GetOptionalColumnIndex(headerMap, EtcAgeDaysHeaders);
-            var lastEtcDateIndex = GetOptionalColumnIndex(headerMap, LastEtcDateHeaders);
+            var unbilledRevenueDaysIndex = GetOptionalColumnIndex(headerMap, UnbilledRevenueDaysHeaders);
+            var lastActiveEtcPDateIndex = GetOptionalColumnIndex(headerMap, LastActiveEtcPDateHeaders);
             var nextEtcDateIndex = GetOptionalColumnIndex(headerMap, NextEtcDateHeaders);
 
             if (!closingPeriodIndex.HasValue && string.IsNullOrWhiteSpace(defaultClosingPeriodName))
@@ -542,18 +606,21 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     RowNumber = rowNumber,
                     EngagementId = engagementId,
                     EngagementName = engagementNameIndex.HasValue ? NormalizeWhitespace(Convert.ToString(row[engagementNameIndex.Value], CultureInfo.InvariantCulture)) : string.Empty,
+                    CustomerName = customerNameIndex.HasValue ? NormalizeWhitespace(Convert.ToString(row[customerNameIndex.Value], CultureInfo.InvariantCulture)) : string.Empty,
+                    OpportunityCurrency = opportunityCurrencyIndex.HasValue ? NormalizeWhitespace(Convert.ToString(row[opportunityCurrencyIndex.Value], CultureInfo.InvariantCulture)) : string.Empty,
                     ClosingPeriodName = closingPeriod,
-                    BudgetHours = budgetHoursIndex.HasValue ? ParseDecimal(row[budgetHoursIndex.Value], 2) : null,
-                    BudgetValue = budgetValueIndex.HasValue ? ParseDecimal(row[budgetValueIndex.Value], 2) : null,
-                    BudgetMargin = budgetMarginIndex.HasValue ? ParsePercent(row[budgetMarginIndex.Value]) : null,
-                    BudgetExpenses = budgetExpensesIndex.HasValue ? ParseDecimal(row[budgetExpensesIndex.Value], 2) : null,
-                    EstimatedToCompleteHours = estimatedToCompleteHoursIndex.HasValue ? ParseDecimal(row[estimatedToCompleteHoursIndex.Value], 2) : null,
-                    EtcpValue = etcpValueIndex.HasValue ? ParseDecimal(row[etcpValueIndex.Value], 2) : null,
-                    EtcpMargin = etcpMarginIndex.HasValue ? ParsePercent(row[etcpMarginIndex.Value]) : null,
-                    EtcpExpenses = etcpExpensesIndex.HasValue ? ParseDecimal(row[etcpExpensesIndex.Value], 2) : null,
+                    OriginalBudgetHours = originalBudgetHoursIndex.HasValue ? ParseDecimal(row[originalBudgetHoursIndex.Value], 2) : null,
+                    OriginalBudgetTer = originalBudgetTerIndex.HasValue ? ParseDecimal(row[originalBudgetTerIndex.Value], 2) : null,
+                    OriginalBudgetMarginPercent = originalBudgetMarginPercentIndex.HasValue ? ParsePercent(row[originalBudgetMarginPercentIndex.Value]) : null,
+                    OriginalBudgetExpenses = originalBudgetExpensesIndex.HasValue ? ParseDecimal(row[originalBudgetExpensesIndex.Value], 2) : null,
+                    ChargedHoursMercuryProjected = chargedHoursMercuryProjectedIndex.HasValue ? ParseDecimal(row[chargedHoursMercuryProjectedIndex.Value], 2) : null,
+                    TERMercuryProjectedOppCurrency = termMercuryProjectedIndex.HasValue ? ParseDecimal(row[termMercuryProjectedIndex.Value], 2) : null,
+                    MarginPercentMercuryProjected = marginPercentMercuryProjectedIndex.HasValue ? ParsePercent(row[marginPercentMercuryProjectedIndex.Value]) : null,
+                    ExpensesMercuryProjected = expensesMercuryProjectedIndex.HasValue ? ParseDecimal(row[expensesMercuryProjectedIndex.Value], 2) : null,
                     StatusText = statusIndex.HasValue ? NormalizeWhitespace(Convert.ToString(row[statusIndex.Value], CultureInfo.InvariantCulture)) : string.Empty,
                     EtcpAgeDays = etcAgeDaysIndex.HasValue ? ParseInt(row[etcAgeDaysIndex.Value]) : null,
-                    LastEtcDate = lastEtcDateIndex.HasValue ? ParseDate(row[lastEtcDateIndex.Value]) : null,
+                    UnbilledRevenueDays = unbilledRevenueDaysIndex.HasValue ? ParseInt(row[unbilledRevenueDaysIndex.Value]) : null,
+                    LastActiveEtcPDate = lastActiveEtcPDateIndex.HasValue ? ParseDate(row[lastActiveEtcPDateIndex.Value]) : null,
                     NextEtcDate = nextEtcDateIndex.HasValue ? ParseDate(row[nextEtcDateIndex.Value]) : null
                 });
             }
@@ -978,9 +1045,9 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
         private static DateTime? ResolveLastEtcDate(FullManagementDataRow row, ClosingPeriod closingPeriod)
         {
-            if (row.LastEtcDate.HasValue)
+            if (row.LastActiveEtcPDate.HasValue)
             {
-                return DateTime.SpecifyKind(row.LastEtcDate.Value.Date, DateTimeKind.Unspecified);
+                return DateTime.SpecifyKind(row.LastActiveEtcPDate.Value.Date, DateTimeKind.Unspecified);
             }
 
             if (row.EtcpAgeDays.HasValue)
@@ -1049,18 +1116,21 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             public int RowNumber { get; init; }
             public string EngagementId { get; init; } = string.Empty;
             public string EngagementName { get; init; } = string.Empty;
+            public string CustomerName { get; init; } = string.Empty;
+            public string OpportunityCurrency { get; init; } = string.Empty;
             public string ClosingPeriodName { get; init; } = string.Empty;
-            public decimal? BudgetHours { get; init; }
-            public decimal? BudgetValue { get; init; }
-            public decimal? BudgetMargin { get; init; }
-            public decimal? BudgetExpenses { get; init; }
-            public decimal? EstimatedToCompleteHours { get; init; }
-            public decimal? EtcpValue { get; init; }
-            public decimal? EtcpMargin { get; init; }
-            public decimal? EtcpExpenses { get; init; }
+            public decimal? OriginalBudgetHours { get; init; }
+            public decimal? OriginalBudgetTer { get; init; }
+            public decimal? OriginalBudgetMarginPercent { get; init; }
+            public decimal? OriginalBudgetExpenses { get; init; }
+            public decimal? ChargedHoursMercuryProjected { get; init; }
+            public decimal? TERMercuryProjectedOppCurrency { get; init; }
+            public decimal? MarginPercentMercuryProjected { get; init; }
+            public decimal? ExpensesMercuryProjected { get; init; }
             public string StatusText { get; init; } = string.Empty;
             public int? EtcpAgeDays { get; init; }
-            public DateTime? LastEtcDate { get; init; }
+            public int? UnbilledRevenueDays { get; init; }
+            public DateTime? LastActiveEtcPDate { get; init; }
             public DateTime? NextEtcDate { get; init; }
         }
     }

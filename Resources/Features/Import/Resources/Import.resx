@@ -18,9 +18,6 @@
   <data name="Import.Button.Budget" xml:space="preserve">
     <value>Import budget file</value>
   </data>
-  <data name="Import.Button.Actuals" xml:space="preserve">
-    <value>Import margin data</value>
-  </data>
   <data name="Import.Button.AllocationPlanning" xml:space="preserve">
     <value>Import allocation planning file</value>
   </data>
@@ -31,35 +28,17 @@
     <value>Import {0} data</value>
     <comment>{0}: Selected import type display name.</comment>
   </data>
-  <data name="Import.Label.ClosingPeriod" xml:space="preserve">
-    <value>Closing period</value>
-  </data>
-  <data name="Import.Status.NoUnlockedClosingPeriods" xml:space="preserve">
-    <value>All closing periods are locked. Unlock a fiscal year to import ETC-P data.</value>
-  </data>
-  <data name="Import.Status.SelectedClosingPeriod" xml:space="preserve">
-    <value>Using closing period: {0} ({1:yyyy-MM-dd} – {2:yyyy-MM-dd})</value>
-  </data>
   <data name="Import.Button.SelectFile" xml:space="preserve">
     <value>Select file and import</value>
   </data>
   <data name="Import.FileType.Budget" xml:space="preserve">
     <value>Budget</value>
   </data>
-  <data name="Import.FileType.Actuals" xml:space="preserve">
-    <value>ETC-P</value>
-  </data>
   <data name="Import.FileType.AllocationPlanning" xml:space="preserve">
     <value>Allocation planning</value>
   </data>
   <data name="Import.FileType.FullManagement" xml:space="preserve">
     <value>Full management data</value>
-  </data>
-  <data name="Import.Status.LockedClosingPeriods" xml:space="preserve">
-    <value>All closing periods belong to locked fiscal years. Unlock a fiscal year to import ETC-P data.</value>
-  </data>
-  <data name="Import.Validation.ClosingPeriodRequired" xml:space="preserve">
-    <value>Select a closing period before importing ETC-P data.</value>
   </data>
   <data name="Import.Status.InProgress" xml:space="preserve">
     <value>Importing {0} data…</value>

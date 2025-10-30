@@ -25,10 +25,6 @@
                                 Command="{Binding SetImportTypeCommand}"
                                 CommandParameter="AllocationPlanning"
                                 Classes="accent"/>
-                        <Button Content="{loc:Loc Key=Import.Button.Actuals}"
-                                Command="{Binding SetImportTypeCommand}"
-                                CommandParameter="Actuals"
-                                Classes="accent"/>
                         <Button Content="{loc:Loc Key=Import.Button.FullManagement}"
                                 Command="{Binding SetImportTypeCommand}"
                                 CommandParameter="FullManagement"
@@ -42,16 +38,6 @@
                             <TextBlock Text="{Binding SelectedImportTitle}"
                                        FontSize="{StaticResource FontSizeLG}"
                                        FontWeight="SemiBold"/>
-                            <StackPanel Orientation="Horizontal"
-                                        Spacing="12"
-                                        VerticalAlignment="Center"
-                                        IsVisible="{Binding ShouldShowClosingPeriodSummary}">
-                                <TextBlock Text="{loc:Loc Key=Import.Label.ClosingPeriod}"
-                                           VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding SelectedClosingPeriodSummary}"
-                                           VerticalAlignment="Center"
-                                           FontWeight="SemiBold"/>
-                            </StackPanel>
                             <Button Content="{loc:Loc Key=Import.Button.SelectFile}"
                                     Command="{Binding ImportCommand}"
                                     Classes="accent"

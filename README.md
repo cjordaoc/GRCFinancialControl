@@ -108,6 +108,7 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 - Numeric parsing supports localized decimal separators and enforces midpoint rounding for currency/hours.
 - The loader sanitizes whitespace, strips non-printable characters, and normalizes ranks/status text for consistent persistence.
 - Import summaries include counts of processed rows, warnings (e.g., missing engagements), and accumulated totals to aid reconciliation.
+- The Full Management Data importer now owns budget/margin/projection updates, mapping Original Budget, Mercury projections, and the new Unbilled Revenue Days column onto existing engagements while logging "Engagement not found" when an ID is absent.
 
 [See Technical Spec →](readme_specs.md#excel-importers-and-validation)
 
