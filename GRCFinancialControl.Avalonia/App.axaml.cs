@@ -138,6 +138,7 @@ namespace GRCFinancialControl.Avalonia
             services.AddSingleton<DialogService>();
             services.AddTransient<IRetainTemplateGenerator, RetainTemplateGenerator>();
             services.AddSingleton<IConnectionPackageService, ConnectionPackageService>();
+            services.AddSingleton<IApplicationDataBackupService, ApplicationDataBackupService>();
             services.AddSingleton<PowerBiEmbeddingService>();
 
             services.AddTransient<HomeViewModel>();

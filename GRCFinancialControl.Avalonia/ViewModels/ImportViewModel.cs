@@ -6,6 +6,7 @@ using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GRCFinancialControl.Avalonia.Services;
+using GRCFinancialControl.Persistence.Services.Importers;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
@@ -102,11 +103,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var displayName = FileTypeDisplayName ?? FileType ?? string.Empty;
             _loggingService.LogInfo(LocalizationRegistry.Format("Import.Status.InProgress", displayName));
 
+            string? result = null;
+
             try
             {
                 IsImporting = true;
 
-                string result = FileType switch
+                result = FileType switch
                 {
                     BudgetType => await Task.Run(() => _importService.ImportBudgetAsync(filePath)),
                     FullManagementType => await Task.Run(() => _importService.ImportFullManagementDataAsync(filePath)),
@@ -114,7 +117,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     _ => LocalizationRegistry.Get("Import.Status.InvalidType")
                 };
 
-                _loggingService.LogInfo(result);
+                if (!string.IsNullOrWhiteSpace(result))
+                {
+                    _loggingService.LogInfo(result);
+                }
+            }
+            catch (ImportWarningException warning)
+            {
+                _loggingService.LogWarning(warning.Message);
             }
             catch (Exception ex)
             {

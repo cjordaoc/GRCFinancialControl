@@ -61,7 +61,8 @@ namespace GRCFinancialControl.Persistence.Services
             await EngagementMutationGuard.EnsureCanMutateAsync(
                 context,
                 assignment.EngagementId,
-                "Adding manager assignments");
+                "Adding manager assignments",
+                allowManualSources: true);
 
             await context.EngagementManagerAssignments.AddAsync(assignment);
             await context.SaveChangesAsync();
@@ -79,14 +80,16 @@ namespace GRCFinancialControl.Persistence.Services
             await EngagementMutationGuard.EnsureCanMutateAsync(
                 context,
                 existingAssignment.EngagementId,
-                "Updating manager assignments");
+                "Updating manager assignments",
+                allowManualSources: true);
 
             if (existingAssignment.EngagementId != assignment.EngagementId)
             {
                 await EngagementMutationGuard.EnsureCanMutateAsync(
                     context,
                     assignment.EngagementId,
-                    "Reassigning manager assignments");
+                    "Reassigning manager assignments",
+                    allowManualSources: true);
             }
 
             existingAssignment.EngagementId = assignment.EngagementId;
@@ -107,7 +110,8 @@ namespace GRCFinancialControl.Persistence.Services
             await EngagementMutationGuard.EnsureCanMutateAsync(
                 context,
                 existingAssignment.EngagementId,
-                "Deleting manager assignments");
+                "Deleting manager assignments",
+                allowManualSources: true);
 
             context.EngagementManagerAssignments.Remove(existingAssignment);
             await context.SaveChangesAsync();

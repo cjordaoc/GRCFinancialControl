@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using App.Presentation.Localization;
 using App.Presentation.Messages;
 using App.Presentation.Services;
@@ -22,6 +23,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly IDatabaseSchemaInitializer _schemaInitializer;
         private readonly DialogService _dialogService;
         private readonly IConnectionPackageService _connectionPackageService;
+        private readonly IApplicationDataBackupService _applicationDataBackupService;
         private readonly FilePickerService _filePickerService;
         private bool _initializingLanguage;
 
@@ -77,6 +79,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private bool _isImportPassphraseVisible;
 
+        [ObservableProperty]
+        private bool _isApplicationDataOperationRunning;
+
         public IReadOnlyList<LanguageOption> Languages { get; }
 
         [ObservableProperty]
@@ -87,12 +92,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             IDatabaseSchemaInitializer schemaInitializer,
             DialogService dialogService,
             IConnectionPackageService connectionPackageService,
+            IApplicationDataBackupService applicationDataBackupService,
             FilePickerService filePickerService)
         {
             _settingsService = settingsService;
             _schemaInitializer = schemaInitializer;
             _dialogService = dialogService;
             _connectionPackageService = connectionPackageService;
+            _applicationDataBackupService = applicationDataBackupService;
             _filePickerService = filePickerService;
 
             LoadSettingsCommand = new AsyncRelayCommand(LoadSettingsAsync);
@@ -106,6 +113,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 () => !string.IsNullOrWhiteSpace(SelectedImportPackagePath)
                       && !string.IsNullOrWhiteSpace(ImportPassphrase)
                       && !IsImporting);
+            ExportApplicationDataCommand = new AsyncRelayCommand(
+                ExportApplicationDataAsync,
+                () => !IsApplicationDataOperationRunning);
+            ImportApplicationDataCommand = new AsyncRelayCommand(
+                ImportApplicationDataAsync,
+                () => !IsApplicationDataOperationRunning);
 
             Languages = LocalizationLanguageOptions.Create();
         }
@@ -117,6 +130,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public IAsyncRelayCommand ExportConnectionPackageCommand { get; }
         public IAsyncRelayCommand BrowseImportPackageCommand { get; }
         public IAsyncRelayCommand ImportConnectionPackageCommand { get; }
+        public IAsyncRelayCommand ExportApplicationDataCommand { get; }
+        public IAsyncRelayCommand ImportApplicationDataCommand { get; }
 
         public char DatabasePasswordChar => IsDatabasePasswordVisible ? '\0' : '•';
         public string DatabasePasswordToggleIcon => IsDatabasePasswordVisible ? "🙈" : "👁";
@@ -146,16 +161,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             settings.TryGetValue(SettingKeys.PowerBiEmbedUrl, out var embedUrl);
             settings.TryGetValue(SettingKeys.Language, out var language);
 
-            Server = server ?? string.Empty;
-            Database = database ?? string.Empty;
-            User = user ?? string.Empty;
-            Password = password ?? string.Empty;
-            PowerBiEmbedUrl = embedUrl ?? string.Empty;
-            SelectedLanguage = Languages
-                .FirstOrDefault(option => string.Equals(option.CultureName, language, StringComparison.OrdinalIgnoreCase))
-                ?? Languages.FirstOrDefault();
-            _initializingLanguage = false;
-            StatusMessage = LocalizationRegistry.Get("Settings.Status.Loaded");
+            RunOnUiThread(() =>
+            {
+                Server = server ?? string.Empty;
+                Database = database ?? string.Empty;
+                User = user ?? string.Empty;
+                Password = password ?? string.Empty;
+                PowerBiEmbedUrl = embedUrl ?? string.Empty;
+                SelectedLanguage = Languages
+                    .FirstOrDefault(option => string.Equals(option.CultureName, language, StringComparison.OrdinalIgnoreCase))
+                    ?? Languages.FirstOrDefault();
+                _initializingLanguage = false;
+                StatusMessage = LocalizationRegistry.Get("Settings.Status.Loaded");
+            });
         }
 
         private Dictionary<string, string> BuildSettingsDictionary()
@@ -175,24 +193,28 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             var settings = BuildSettingsDictionary();
             await _settingsService.SaveAllAsync(settings);
-            StatusMessage = LocalizationRegistry.Get("Settings.Status.Saved");
+            RunOnUiThread(() =>
+                StatusMessage = LocalizationRegistry.Get("Settings.Status.Saved"));
         }
 
         private async Task TestConnectionAsync()
         {
-            StatusMessage = LocalizationRegistry.Get("Settings.Status.Testing");
+            RunOnUiThread(() => StatusMessage = LocalizationRegistry.Get("Settings.Status.Testing"));
             var settings = BuildSettingsDictionary();
             var result = await _settingsService.TestConnectionAsync(Server, Database, User, Password);
 
             if (!result.Success)
             {
-                StatusMessage = result.Message;
+                RunOnUiThread(() => StatusMessage = result.Message);
                 return;
             }
 
             await _settingsService.SaveAllAsync(settings);
-            StatusMessage = LocalizationRegistry.Get("Settings.Status.TestSuccess");
-            Messenger.Send(new RefreshDataMessage());
+            RunOnUiThread(() =>
+            {
+                StatusMessage = LocalizationRegistry.Get("Settings.Status.TestSuccess");
+                Messenger.Send(new RefreshDataMessage());
+            });
         }
 
         private async Task ClearAllDataAsync()
@@ -206,24 +228,26 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            StatusMessage = LocalizationRegistry.Get("Settings.Status.Clearing");
+            RunOnUiThread(() => StatusMessage = LocalizationRegistry.Get("Settings.Status.Clearing"));
             await _schemaInitializer.ClearAllDataAsync();
-            StatusMessage = LocalizationRegistry.Get("Settings.Status.Cleared");
+            RunOnUiThread(() => StatusMessage = LocalizationRegistry.Get("Settings.Status.Cleared"));
         }
 
         private async Task ExportConnectionPackageAsync()
         {
-            StatusMessage = null;
+            RunOnUiThread(() => StatusMessage = null);
 
             if (string.IsNullOrWhiteSpace(ExportPassphrase))
             {
-                StatusMessage = LocalizationRegistry.Get("Settings.Validation.ExportPassphraseRequired");
+                RunOnUiThread(() =>
+                    StatusMessage = LocalizationRegistry.Get("Settings.Validation.ExportPassphraseRequired"));
                 return;
             }
 
             if (!string.Equals(ExportPassphrase, ConfirmExportPassphrase, StringComparison.Ordinal))
             {
-                StatusMessage = LocalizationRegistry.Get("Settings.Validation.ExportPassphraseMismatch");
+                RunOnUiThread(() =>
+                    StatusMessage = LocalizationRegistry.Get("Settings.Validation.ExportPassphraseMismatch"));
                 return;
             }
 
@@ -236,34 +260,43 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             if (string.IsNullOrWhiteSpace(filePath))
             {
-                StatusMessage = LocalizationRegistry.Get("Settings.Status.ExportCancelled");
+                RunOnUiThread(() =>
+                    StatusMessage = LocalizationRegistry.Get("Settings.Status.ExportCancelled"));
                 return;
             }
 
             try
             {
-                StatusMessage = LocalizationRegistry.Get("Settings.Status.ExportInProgress");
+                RunOnUiThread(() =>
+                    StatusMessage = LocalizationRegistry.Get("Settings.Status.ExportInProgress"));
                 await _connectionPackageService.ExportAsync(filePath, ExportPassphrase);
-                StatusMessage = LocalizationRegistry.Format("Settings.Status.ExportSuccess", Path.GetFileName(filePath));
+                RunOnUiThread(() =>
+                    StatusMessage = LocalizationRegistry.Format(
+                        "Settings.Status.ExportSuccess",
+                        Path.GetFileName(filePath)));
             }
             catch (InvalidOperationException ex)
             {
-                StatusMessage = ex.Message;
+                RunOnUiThread(() => StatusMessage = ex.Message);
             }
             catch (Exception ex)
             {
-                StatusMessage = LocalizationRegistry.Format("Settings.Status.ExportFailure", ex.Message);
+                RunOnUiThread(() =>
+                    StatusMessage = LocalizationRegistry.Format("Settings.Status.ExportFailure", ex.Message));
             }
             finally
             {
-                ExportPassphrase = string.Empty;
-                ConfirmExportPassphrase = string.Empty;
+                RunOnUiThread(() =>
+                {
+                    ExportPassphrase = string.Empty;
+                    ConfirmExportPassphrase = string.Empty;
+                });
             }
         }
 
         private async Task BrowseImportPackageAsync()
         {
-            StatusMessage = null;
+            RunOnUiThread(() => StatusMessage = null);
 
             var filePath = await _filePickerService.OpenFileAsync(
                 title: LocalizationRegistry.Get("Settings.Dialog.Import.Title"),
@@ -275,29 +308,32 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            SelectedImportPackagePath = filePath;
+            RunOnUiThread(() => SelectedImportPackagePath = filePath);
         }
 
         private async Task ImportConnectionPackageAsync()
         {
-            StatusMessage = null;
+            RunOnUiThread(() => StatusMessage = null);
 
             if (string.IsNullOrWhiteSpace(ImportPassphrase))
             {
-                StatusMessage = LocalizationRegistry.Get("Settings.Validation.ImportPassphraseRequired");
+                RunOnUiThread(() =>
+                    StatusMessage = LocalizationRegistry.Get("Settings.Validation.ImportPassphraseRequired"));
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(SelectedImportPackagePath))
             {
-                StatusMessage = LocalizationRegistry.Get("Settings.Validation.ImportPackageRequired");
+                RunOnUiThread(() =>
+                    StatusMessage = LocalizationRegistry.Get("Settings.Validation.ImportPackageRequired"));
                 return;
             }
 
             try
             {
-                IsImporting = true;
-                StatusMessage = LocalizationRegistry.Get("Settings.Status.ImportInProgress");
+                SetIsImporting(true);
+                RunOnUiThread(() =>
+                    StatusMessage = LocalizationRegistry.Get("Settings.Status.ImportInProgress"));
                 var importedSettings = await _connectionPackageService.ImportAsync(SelectedImportPackagePath, ImportPassphrase);
                 var existingSettings = await _settingsService.GetAllAsync();
 
@@ -309,37 +345,141 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 await _settingsService.SaveAllAsync(existingSettings);
                 await _schemaInitializer.EnsureSchemaAsync();
 
-                Server = importedSettings.TryGetValue(SettingKeys.Server, out var server)
-                    ? server
-                    : Server;
-                Database = importedSettings.TryGetValue(SettingKeys.Database, out var database)
-                    ? database
-                    : Database;
-                User = importedSettings.TryGetValue(SettingKeys.User, out var user)
-                    ? user
-                    : User;
-                Password = importedSettings.TryGetValue(SettingKeys.Password, out var password)
-                    ? password
-                    : Password;
+                RunOnUiThread(() =>
+                {
+                    Server = importedSettings.TryGetValue(SettingKeys.Server, out var importedServer)
+                        ? importedServer
+                        : Server;
+                    Database = importedSettings.TryGetValue(SettingKeys.Database, out var importedDatabase)
+                        ? importedDatabase
+                        : Database;
+                    User = importedSettings.TryGetValue(SettingKeys.User, out var importedUser)
+                        ? importedUser
+                        : User;
+                    Password = importedSettings.TryGetValue(SettingKeys.Password, out var importedPassword)
+                        ? importedPassword
+                        : Password;
 
-                StatusMessage = LocalizationRegistry.Format(
-                    "Settings.Status.ImportSuccess",
-                    Path.GetFileName(SelectedImportPackagePath));
-                Messenger.Send(new RefreshDataMessage());
-                Messenger.Send(ApplicationRestartRequestedMessage.Instance);
+                    StatusMessage = LocalizationRegistry.Format(
+                        "Settings.Status.ImportSuccess",
+                        Path.GetFileName(SelectedImportPackagePath));
+                    Messenger.Send(new RefreshDataMessage());
+                    Messenger.Send(ApplicationRestartRequestedMessage.Instance);
+                });
             }
             catch (InvalidOperationException ex)
             {
-                StatusMessage = ex.Message;
+                RunOnUiThread(() => StatusMessage = ex.Message);
             }
             catch (Exception ex)
             {
-                StatusMessage = LocalizationRegistry.Format("Settings.Status.ImportFailure", ex.Message);
+                RunOnUiThread(() =>
+                    StatusMessage = LocalizationRegistry.Format("Settings.Status.ImportFailure", ex.Message));
             }
             finally
             {
-                IsImporting = false;
-                ImportPassphrase = string.Empty;
+                SetIsImporting(false);
+                RunOnUiThread(() => ImportPassphrase = string.Empty);
+            }
+        }
+
+        private async Task ExportApplicationDataAsync()
+        {
+            RunOnUiThread(() => StatusMessage = null);
+
+            var defaultFileName = $"GRCData_{DateTime.Now:yyyyMMdd_HHmm}.xml";
+            var filePath = await _filePickerService.SaveFileAsync(
+                defaultFileName,
+                title: LocalizationRegistry.Get("Settings.Dialog.DataExport.Title"),
+                defaultExtension: ".xml",
+                allowedPatterns: new[] { "*.xml" });
+
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                RunOnUiThread(() =>
+                    StatusMessage = LocalizationRegistry.Get("Settings.Status.DataExportCancelled"));
+                return;
+            }
+
+            try
+            {
+                SetIsApplicationDataOperationRunning(true);
+                RunOnUiThread(() =>
+                    StatusMessage = LocalizationRegistry.Get("Settings.Status.DataExportInProgress"));
+                await _applicationDataBackupService.ExportAsync(filePath).ConfigureAwait(false);
+                RunOnUiThread(() =>
+                    StatusMessage = LocalizationRegistry.Format(
+                        "Settings.Status.DataExportSuccess",
+                        Path.GetFileName(filePath)));
+            }
+            catch (InvalidOperationException ex)
+            {
+                RunOnUiThread(() => StatusMessage = ex.Message);
+            }
+            catch (Exception ex)
+            {
+                RunOnUiThread(() =>
+                    StatusMessage = LocalizationRegistry.Format(
+                        "Settings.Status.DataExportFailure",
+                        ex.Message));
+            }
+            finally
+            {
+                SetIsApplicationDataOperationRunning(false);
+            }
+        }
+
+        private async Task ImportApplicationDataAsync()
+        {
+            RunOnUiThread(() => StatusMessage = null);
+
+            var filePath = await _filePickerService.OpenFileAsync(
+                title: LocalizationRegistry.Get("Settings.Dialog.DataImport.Title"),
+                defaultExtension: ".xml",
+                allowedPatterns: new[] { "*.xml" });
+
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                return;
+            }
+
+            var confirmed = await _dialogService.ShowConfirmationAsync(
+                LocalizationRegistry.Get("Settings.Dialog.DataImport.Title"),
+                LocalizationRegistry.Get("Settings.Dialog.DataImport.Message"));
+
+            if (!confirmed)
+            {
+                return;
+            }
+
+            try
+            {
+                SetIsApplicationDataOperationRunning(true);
+                RunOnUiThread(() =>
+                    StatusMessage = LocalizationRegistry.Get("Settings.Status.DataImportInProgress"));
+                await _applicationDataBackupService.ImportAsync(filePath).ConfigureAwait(false);
+                RunOnUiThread(() =>
+                {
+                    StatusMessage = LocalizationRegistry.Format(
+                        "Settings.Status.DataImportSuccess",
+                        Path.GetFileName(filePath));
+                    Messenger.Send(new RefreshDataMessage());
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                RunOnUiThread(() => StatusMessage = ex.Message);
+            }
+            catch (Exception ex)
+            {
+                RunOnUiThread(() =>
+                    StatusMessage = LocalizationRegistry.Format(
+                        "Settings.Status.DataImportFailure",
+                        ex.Message));
+            }
+            finally
+            {
+                SetIsApplicationDataOperationRunning(false);
             }
         }
 
@@ -361,12 +501,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 var settings = await _settingsService.GetAllAsync();
                 settings[SettingKeys.Language] = language.CultureName;
                 await _settingsService.SaveAllAsync(settings);
-                StatusMessage = LocalizationRegistry.Get("Localization.Language.PreferenceSaved");
-                Messenger.Send(ApplicationRestartRequestedMessage.Instance);
+                RunOnUiThread(() =>
+                {
+                    StatusMessage = LocalizationRegistry.Get("Localization.Language.PreferenceSaved");
+                    Messenger.Send(ApplicationRestartRequestedMessage.Instance);
+                });
             }
             catch (Exception ex)
             {
-                StatusMessage = LocalizationRegistry.Format("Localization.Language.PreferenceSaveFailure", ex.Message);
+                RunOnUiThread(() =>
+                    StatusMessage = LocalizationRegistry.Format(
+                        "Localization.Language.PreferenceSaveFailure",
+                        ex.Message));
             }
         }
 
@@ -380,17 +526,39 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             SelectedImportPackageFileName = string.IsNullOrWhiteSpace(value)
                 ? string.Empty
                 : Path.GetFileName(value);
-            ImportConnectionPackageCommand.NotifyCanExecuteChanged();
+            NotifyCommandCanExecute(ImportConnectionPackageCommand);
         }
 
         partial void OnImportPassphraseChanged(string value)
         {
-            ImportConnectionPackageCommand.NotifyCanExecuteChanged();
+            NotifyCommandCanExecute(ImportConnectionPackageCommand);
         }
 
         partial void OnIsImportingChanged(bool value)
         {
-            ImportConnectionPackageCommand.NotifyCanExecuteChanged();
+            NotifyCommandCanExecute(ImportConnectionPackageCommand);
+        }
+
+        private static void RunOnUiThread(Action action)
+        {
+            if (Dispatcher.UIThread.CheckAccess())
+            {
+                action();
+                return;
+            }
+
+            Dispatcher.UIThread.Post(action);
+        }
+
+        private void SetIsImporting(bool value)
+        {
+            if (Dispatcher.UIThread.CheckAccess())
+            {
+                IsImporting = value;
+                return;
+            }
+
+            Dispatcher.UIThread.Post(() => IsImporting = value);
         }
 
         partial void OnSelectedImportPackageFileNameChanged(string value)
@@ -420,6 +588,23 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             OnPropertyChanged(nameof(ImportPassphraseChar));
             OnPropertyChanged(nameof(ImportPassphraseToggleIcon));
+        }
+
+        partial void OnIsApplicationDataOperationRunningChanged(bool value)
+        {
+            NotifyCommandCanExecute(ExportApplicationDataCommand);
+            NotifyCommandCanExecute(ImportApplicationDataCommand);
+        }
+
+        private void SetIsApplicationDataOperationRunning(bool value)
+        {
+            if (Dispatcher.UIThread.CheckAccess())
+            {
+                IsApplicationDataOperationRunning = value;
+                return;
+            }
+
+            Dispatcher.UIThread.Post(() => IsApplicationDataOperationRunning = value);
         }
     }
 }

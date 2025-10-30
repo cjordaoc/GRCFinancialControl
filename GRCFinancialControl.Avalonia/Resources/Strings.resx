@@ -60,6 +60,21 @@
   <data name="Navigation.Settings" xml:space="preserve">
     <value>Settings</value>
   </data>
+  <data name="Settings.Tab.Localization" xml:space="preserve">
+    <value>Localization</value>
+  </data>
+  <data name="Settings.Tab.Connection" xml:space="preserve">
+    <value>Connection</value>
+  </data>
+  <data name="Settings.Tab.ConnectionPackages" xml:space="preserve">
+    <value>Connection packages</value>
+  </data>
+  <data name="Settings.Tab.ApplicationData" xml:space="preserve">
+    <value>Application data</value>
+  </data>
+  <data name="Settings.Tab.PowerBi" xml:space="preserve">
+    <value>Power BI</value>
+  </data>
   <data name="Settings.Section.Database.Title" xml:space="preserve">
     <value>MySQL connection settings</value>
   </data>
@@ -110,6 +125,21 @@
   </data>
   <data name="Settings.Button.ImportPackage" xml:space="preserve">
     <value>Import connection package</value>
+  </data>
+  <data name="Settings.Section.ApplicationData.Title" xml:space="preserve">
+    <value>Application data backup</value>
+  </data>
+  <data name="Settings.Section.ApplicationData.Description" xml:space="preserve">
+    <value>Create an XML snapshot of the configured database or restore a previous export.</value>
+  </data>
+  <data name="Settings.Section.ApplicationData.RestoreNotice" xml:space="preserve">
+    <value>Restoring data replaces all existing records in the connected database.</value>
+  </data>
+  <data name="Settings.Button.ExportData" xml:space="preserve">
+    <value>Export data</value>
+  </data>
+  <data name="Settings.Button.ImportData" xml:space="preserve">
+    <value>Restore data</value>
   </data>
   <data name="Settings.Section.PowerBi.Title" xml:space="preserve">
     <value>Power BI embedding</value>
@@ -197,6 +227,36 @@
   </data>
   <data name="Settings.Status.ImportFailure" xml:space="preserve">
     <value>Failed to import the connection package: {0}</value>
+  </data>
+  <data name="Settings.Dialog.DataExport.Title" xml:space="preserve">
+    <value>Export application data</value>
+  </data>
+  <data name="Settings.Status.DataExportCancelled" xml:space="preserve">
+    <value>Data export cancelled.</value>
+  </data>
+  <data name="Settings.Status.DataExportInProgress" xml:space="preserve">
+    <value>Exporting application data…</value>
+  </data>
+  <data name="Settings.Status.DataExportSuccess" xml:space="preserve">
+    <value>Application data saved as {0}.</value>
+  </data>
+  <data name="Settings.Status.DataExportFailure" xml:space="preserve">
+    <value>Failed to export application data: {0}</value>
+  </data>
+  <data name="Settings.Dialog.DataImport.Title" xml:space="preserve">
+    <value>Restore application data</value>
+  </data>
+  <data name="Settings.Dialog.DataImport.Message" xml:space="preserve">
+    <value>Restoring the backup will overwrite all existing information in the database. Continue?</value>
+  </data>
+  <data name="Settings.Status.DataImportInProgress" xml:space="preserve">
+    <value>Restoring application data…</value>
+  </data>
+  <data name="Settings.Status.DataImportSuccess" xml:space="preserve">
+    <value>Application data restored from {0}.</value>
+  </data>
+  <data name="Settings.Status.DataImportFailure" xml:space="preserve">
+    <value>Failed to restore application data: {0}</value>
   </data>
   <data name="Home.Title" xml:space="preserve">
     <value>Welcome</value>
