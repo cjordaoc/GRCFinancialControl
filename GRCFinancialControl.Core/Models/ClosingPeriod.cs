@@ -18,6 +18,6 @@ namespace GRCFinancialControl.Core.Models
         public ICollection<ActualsEntry> ActualsEntries { get; } = new List<ActualsEntry>();
         public ICollection<PlannedAllocation> PlannedAllocations { get; } = new List<PlannedAllocation>();
         public ICollection<Engagement> Engagements { get; } = new List<Engagement>();
-        public bool IsLocked => FiscalYear?.IsLocked ?? false;
+        public bool IsLocked { get; set; }
     }
 }

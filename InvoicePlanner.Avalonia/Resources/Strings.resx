@@ -342,6 +342,24 @@
   <data name="InvoicePlan.Status.SaveFailure" xml:space="preserve">
     <value>Failed to save plan: {0}</value>
   </data>
+  <data name="InvoicePlan.Toast.ValidationFailed" xml:space="preserve">
+    <value>Resolve validation issues before saving.</value>
+  </data>
+  <data name="InvoicePlan.Toast.PlanSaved" xml:space="preserve">
+    <value>Invoice plan {0} saved.</value>
+  </data>
+  <data name="InvoicePlan.Toast.SaveFailed" xml:space="preserve">
+    <value>Unable to save the invoice plan.</value>
+  </data>
+  <data name="InvoicePlan.Toast.PlanDeleted" xml:space="preserve">
+    <value>Invoice plan {0} deleted.</value>
+  </data>
+  <data name="InvoicePlan.Toast.DeleteMissing" xml:space="preserve">
+    <value>Invoice plan {0} is no longer available.</value>
+  </data>
+  <data name="InvoicePlan.Toast.DeleteFailed" xml:space="preserve">
+    <value>Unable to delete the invoice plan.</value>
+  </data>
   <data name="InvoicePlan.Status.DeleteFailure" xml:space="preserve">
     <value>Failed to delete plan: {0}</value>
   </data>
@@ -413,6 +431,24 @@
   </data>
   <data name="Request.Status.LineUndone" xml:space="preserve">
     <value>Invoice line {0} returned to Planned.</value>
+  </data>
+  <data name="Request.Toast.NoUpdates" xml:space="preserve">
+    <value>No invoice lines were updated.</value>
+  </data>
+  <data name="Request.Toast.LineRequested" xml:space="preserve">
+    <value>Invoice line {0} marked as requested.</value>
+  </data>
+  <data name="Request.Toast.RequestFailed" xml:space="preserve">
+    <value>Unable to mark the selected line as requested.</value>
+  </data>
+  <data name="Request.Toast.NoUndo" xml:space="preserve">
+    <value>No invoice lines were undone.</value>
+  </data>
+  <data name="Request.Toast.LineUndone" xml:space="preserve">
+    <value>Invoice line {0} returned to Planned.</value>
+  </data>
+  <data name="Request.Toast.UndoFailed" xml:space="preserve">
+    <value>Unable to undo the selected line.</value>
   </data>
   <data name="Request.TableHeader.EmissionDate" xml:space="preserve">
     <value>Emission</value>

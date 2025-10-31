@@ -51,7 +51,9 @@ namespace GRCFinancialControl.Persistence.Services.Importers
         {
             "customer name",
             "client name",
-            "client name (id)"
+            "client name (id)",
+            "client description",
+            "customer description"
         };
 
         private static readonly string[] CustomerIdHeaders =
@@ -243,6 +245,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     0,
                     0,
                     0,
+                    0,
                     Array.Empty<string>(),
                     Array.Empty<string>(),
                     Array.Empty<string>(),
@@ -328,6 +331,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     var warningMessages = new HashSet<string>(StringComparer.Ordinal);
 
                     var financialEvolutionUpserts = 0;
+                    var s4MetadataRefreshes = 0;
 
                     foreach (var row in parsedRows)
                     {
@@ -363,9 +367,15 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
                             if (engagement.Source == EngagementSource.S4Project)
                             {
+                                var metadataChanged = false;
+
                                 if (!string.IsNullOrWhiteSpace(row.EngagementName))
                                 {
-                                    engagement.Description = row.EngagementName;
+                                    if (!string.Equals(engagement.Description, row.EngagementName, StringComparison.Ordinal))
+                                    {
+                                        engagement.Description = row.EngagementName;
+                                        metadataChanged = true;
+                                    }
                                 }
 
                                 var upsertedCustomer = ResolveCustomer(
@@ -377,11 +387,47 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
                                 if (upsertedCustomer != null)
                                 {
-                                    engagement.Customer = upsertedCustomer;
-                                    engagement.CustomerId = upsertedCustomer.Id;
+                                    if (!ReferenceEquals(engagement.Customer, upsertedCustomer) || engagement.CustomerId != upsertedCustomer.Id)
+                                    {
+                                        engagement.Customer = upsertedCustomer;
+                                        engagement.CustomerId = upsertedCustomer.Id;
+                                        metadataChanged = true;
+                                    }
+                                }
+
+                                if (TryUpdateCustomerMetadataForPlaceholder(
+                                    engagement,
+                                    row,
+                                    customersByCode,
+                                    customersByName))
+                                {
+                                    metadataChanged = true;
+                                }
+
+                                if (!string.IsNullOrWhiteSpace(row.OpportunityCurrency))
+                                {
+                                    if (!string.Equals(engagement.Currency, row.OpportunityCurrency, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        engagement.Currency = row.OpportunityCurrency;
+                                        metadataChanged = true;
+                                    }
+                                }
+
+                                if (!string.IsNullOrWhiteSpace(row.StatusText))
+                                {
+                                    if (!string.Equals(engagement.StatusText, row.StatusText, StringComparison.Ordinal))
+                                    {
+                                        engagement.StatusText = row.StatusText;
+                                        engagement.Status = ParseStatus(row.StatusText);
+                                        metadataChanged = true;
+                                    }
                                 }
 
                                 updatedEngagements.Add(engagement.EngagementId);
+                                if (metadataChanged)
+                                {
+                                    s4MetadataRefreshes++;
+                                }
 
                                 if (EngagementImportSkipEvaluator.TryCreate(engagement, out var manualMetadata) &&
                                     manualMetadata.ReasonKey == "ManualOnly")
@@ -619,6 +665,11 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         }
                     }
 
+                    if (s4MetadataRefreshes > 0)
+                    {
+                        notes.Insert(0, $"S/4 metadata rows refreshed: {s4MetadataRefreshes}");
+                    }
+
                     var summary = ImportSummaryFormatter.Build(
                         "Full Management Data import",
                         0,
@@ -634,6 +685,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         0,
                         updatedEngagements.Count,
                         financialEvolutionUpserts,
+                        s4MetadataRefreshes,
                         manualOnlySkips.ToArray(),
                         lockedFiscalYearSkips.ToArray(),
                         missingClosingPeriodSkips.ToArray(),
@@ -1310,7 +1362,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             return resolved;
         }
 
-        private static void TryUpdateCustomerMetadataForPlaceholder(
+        private static bool TryUpdateCustomerMetadataForPlaceholder(
             Engagement engagement,
             FullManagementDataRow row,
             IDictionary<string, Customer> customersByCode,
@@ -1318,7 +1370,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
         {
             if (engagement.Customer is null)
             {
-                return;
+                return false;
             }
 
             var customer = engagement.Customer;
@@ -1343,7 +1395,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
             if (!updated)
             {
-                return;
+                return false;
             }
 
             if (!string.IsNullOrWhiteSpace(originalCode) &&
@@ -1367,6 +1419,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             {
                 customersByName[customer.Name] = customer;
             }
+
+            return true;
         }
 
         private static string DetermineCustomerCodeForInsert(

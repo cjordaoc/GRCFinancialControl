@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -133,12 +134,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     await _closingPeriodService.UpdateAsync(ClosingPeriod);
                 }
 
+                ToastService.ShowSuccess("ClosingPeriods.Toast.Saved", ClosingPeriod.Name);
                 _messenger.Send(new ClosingPeriodsChangedMessage());
                 _messenger.Send(new CloseDialogMessage(true));
             }
             catch (InvalidOperationException ex)
             {
                 StatusMessage = ex.Message;
+                ToastService.ShowWarning("ClosingPeriods.Toast.SaveFailed");
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = ex.Message;
+                ToastService.ShowError("ClosingPeriods.Toast.SaveFailed");
             }
         }
 

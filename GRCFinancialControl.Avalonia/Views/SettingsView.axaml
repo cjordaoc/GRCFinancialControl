@@ -38,6 +38,13 @@
                                 <TextBlock Text="{loc:Loc Key=Settings.Help.DefaultCurrency}"
                                            TextWrapping="Wrap"
                                            Opacity="0.7"/>
+                                <StackPanel Orientation="Horizontal"
+                                            HorizontalAlignment="Right"
+                                            Spacing="12">
+                                    <Button Content="{loc:Loc Key=Settings.Button.Apply}"
+                                            Command="{Binding SaveLocalizationSettingsCommand}"
+                                            MinWidth="140"/>
+                                </StackPanel>
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -212,6 +219,13 @@
                                 <TextBlock Text="{loc:Loc Key=Settings.Section.PowerBi.Title}" Classes="TitleLarge"/>
                                 <TextBlock Text="{loc:Loc Key=Settings.Section.PowerBi.Description}" TextWrapping="Wrap"/>
                                 <TextBox Text="{Binding PowerBiEmbedUrl}" Watermark="{loc:Loc Key=Settings.Label.PowerBiUrl}"/>
+                                <StackPanel Orientation="Horizontal"
+                                            HorizontalAlignment="Right"
+                                            Spacing="12">
+                                    <Button Content="{loc:Loc Key=Settings.Button.Apply}"
+                                            Command="{Binding SavePowerBiSettingsCommand}"
+                                            MinWidth="140"/>
+                                </StackPanel>
                             </StackPanel>
                         </Border>
                     </StackPanel>

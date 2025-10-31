@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -20,6 +21,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly IClosingPeriodService _closingPeriodService;
         private readonly IFiscalYearService _fiscalYearService;
         private readonly DialogService _dialogService;
+        private readonly List<ClosingPeriod> _allClosingPeriods = new();
+        private bool _isInitializingFilters;
 
         [ObservableProperty]
         private ObservableCollection<ClosingPeriod> _closingPeriods = new();
@@ -28,7 +31,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private ObservableCollection<FiscalYear> _fiscalYears = new();
 
         [ObservableProperty]
+        private ObservableCollection<FiscalYearFilterOption> _fiscalYearFilters = new();
+
+        [ObservableProperty]
         private ClosingPeriod? _selectedClosingPeriod;
+
+        [ObservableProperty]
+        private FiscalYearFilterOption? _selectedFiscalYearFilter;
 
         [ObservableProperty]
         private string? _statusMessage;
@@ -49,14 +58,31 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public bool AreAllFiscalYearsLocked => !HasUnlockedFiscalYears;
 
+        public string LockButtonLabel => SelectedClosingPeriod?.IsLocked == true
+            ? LocalizationRegistry.Get("ClosingPeriods.Button.Unlock")
+            : LocalizationRegistry.Get("ClosingPeriods.Button.Lock");
+
         public override async Task LoadDataAsync()
         {
+            var preferredFiscalYearId = SelectedFiscalYearFilter?.FiscalYearId;
+            var preferredClosingPeriodId = SelectedClosingPeriod?.Id;
+            await ReloadAsync(preferredFiscalYearId, preferredClosingPeriodId);
+        }
+
+        private async Task ReloadAsync(int? preferredFiscalYearId, int? preferredClosingPeriodId)
+        {
             StatusMessage = null;
+
             var periods = await _closingPeriodService.GetAllAsync();
-            ClosingPeriods = new ObservableCollection<ClosingPeriod>(periods);
+            _allClosingPeriods.Clear();
+            _allClosingPeriods.AddRange(periods.OrderBy(cp => cp.PeriodStart));
 
             var fiscalYears = await _fiscalYearService.GetAllAsync();
-            FiscalYears = new ObservableCollection<FiscalYear>(fiscalYears.OrderBy(fy => fy.StartDate));
+            var orderedFiscalYears = fiscalYears.OrderBy(fy => fy.StartDate).ToList();
+            FiscalYears = new ObservableCollection<FiscalYear>(orderedFiscalYears);
+
+            UpdateFiscalYearFilters(orderedFiscalYears, preferredFiscalYearId);
+            ApplyFiscalYearFilter(preferredClosingPeriodId);
         }
 
         [RelayCommand(CanExecute = nameof(CanAdd))]
@@ -144,18 +170,28 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 }
 
                 await _closingPeriodService.DeleteAsync(closingPeriod.Id);
+                ToastService.ShowSuccess("ClosingPeriods.Toast.Deleted", closingPeriod.Name);
                 Messenger.Send(new RefreshDataMessage());
             }
             catch (InvalidOperationException ex)
             {
                 StatusMessage = ex.Message;
+                ToastService.ShowWarning("ClosingPeriods.Toast.DeleteFailed");
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = ex.Message;
+                ToastService.ShowError("ClosingPeriods.Toast.DeleteFailed");
             }
         }
 
         [RelayCommand(CanExecute = nameof(CanDeleteData))]
         private async Task DeleteData(ClosingPeriod closingPeriod)
         {
-            if (closingPeriod is null) return;
+            if (closingPeriod is null)
+            {
+                return;
+            }
 
             StatusMessage = null;
 
@@ -170,17 +206,54 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var result = await _dialogService.ShowConfirmationAsync(
                 LocalizationRegistry.Get("Common.Dialog.DeleteData.Title"),
                 LocalizationRegistry.Format("Common.Dialog.DeleteData.Message", closingPeriod.Name));
-            if (result)
+            if (!result)
             {
-                try
-                {
-                    await _closingPeriodService.DeleteDataAsync(closingPeriod.Id);
-                    Messenger.Send(new RefreshDataMessage());
-                }
-                catch (InvalidOperationException ex)
-                {
-                    StatusMessage = ex.Message;
-                }
+                return;
+            }
+
+            try
+            {
+                await _closingPeriodService.DeleteDataAsync(closingPeriod.Id);
+                ToastService.ShowSuccess("ClosingPeriods.Toast.DataDeleted", closingPeriod.Name);
+                Messenger.Send(new RefreshDataMessage());
+            }
+            catch (InvalidOperationException ex)
+            {
+                StatusMessage = ex.Message;
+                ToastService.ShowWarning("ClosingPeriods.Toast.DataDeleteFailed");
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = ex.Message;
+                ToastService.ShowError("ClosingPeriods.Toast.DataDeleteFailed");
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanToggleLock))]
+        private async Task ToggleLockAsync()
+        {
+            if (SelectedClosingPeriod is null)
+            {
+                return;
+            }
+
+            var targetState = !SelectedClosingPeriod.IsLocked;
+            var closingPeriodId = SelectedClosingPeriod.Id;
+            var filterId = SelectedFiscalYearFilter?.FiscalYearId;
+
+            try
+            {
+                await _closingPeriodService.SetLockStateAsync(closingPeriodId, targetState);
+                ToastService.ShowSuccess(targetState
+                    ? "ClosingPeriods.Toast.Locked"
+                    : "ClosingPeriods.Toast.Unlocked",
+                    SelectedClosingPeriod?.Name ?? string.Empty);
+                await ReloadAsync(filterId, closingPeriodId);
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = LocalizationRegistry.Format("ClosingPeriods.Status.ToggleFailed", ex.Message);
+                ToastService.ShowError("ClosingPeriods.Toast.ToggleFailed");
             }
         }
 
@@ -192,6 +265,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private bool CanDeleteData(ClosingPeriod closingPeriod) => IsMutationSupported && closingPeriod is not null && !closingPeriod.IsLocked;
 
+        private bool CanToggleLock() => SelectedClosingPeriod is not null;
+
         private static bool CanView(ClosingPeriod closingPeriod) => closingPeriod is not null;
 
         partial void OnSelectedClosingPeriodChanged(ClosingPeriod? value)
@@ -200,6 +275,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             DeleteCommand.NotifyCanExecuteChanged();
             DeleteDataCommand.NotifyCanExecuteChanged();
             ViewCommand.NotifyCanExecuteChanged();
+            ToggleLockCommand.NotifyCanExecuteChanged();
+            OnPropertyChanged(nameof(LockButtonLabel));
         }
 
         partial void OnFiscalYearsChanging(ObservableCollection<FiscalYear> value)
@@ -219,6 +296,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 value.CollectionChanged += OnFiscalYearsCollectionChanged;
             }
+        }
+
+        partial void OnSelectedFiscalYearFilterChanged(FiscalYearFilterOption? value)
+        {
+            if (_isInitializingFilters)
+            {
+                return;
+            }
+
+            ApplyFiscalYearFilter(SelectedClosingPeriod?.Id);
         }
 
         partial void OnClosingPeriodsChanging(ObservableCollection<ClosingPeriod> value)
@@ -274,6 +361,66 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             return $"Id={closingPeriod.FiscalYearId}";
         }
 
+        private void UpdateFiscalYearFilters(IReadOnlyCollection<FiscalYear> fiscalYears, int? preferredFiscalYearId)
+        {
+            var displayAll = LocalizationRegistry.Get("ClosingPeriods.Filter.All");
+            var options = new List<FiscalYearFilterOption>
+            {
+                new FiscalYearFilterOption(null, displayAll)
+            };
+
+            foreach (var fiscalYear in fiscalYears)
+            {
+                var displayName = string.IsNullOrWhiteSpace(fiscalYear.Name)
+                    ? $"Id={fiscalYear.Id}"
+                    : fiscalYear.Name;
+                options.Add(new FiscalYearFilterOption(fiscalYear.Id, displayName!));
+            }
+
+            _isInitializingFilters = true;
+            FiscalYearFilters = new ObservableCollection<FiscalYearFilterOption>(options);
+            SelectedFiscalYearFilter = FiscalYearFilters
+                .FirstOrDefault(option => option.FiscalYearId == preferredFiscalYearId)
+                ?? FiscalYearFilters.FirstOrDefault();
+            _isInitializingFilters = false;
+        }
+
+        private void ApplyFiscalYearFilter(int? preferredClosingPeriodId)
+        {
+            if (_isInitializingFilters)
+            {
+                return;
+            }
+
+            var selectedFiscalYearId = SelectedFiscalYearFilter?.FiscalYearId;
+            IEnumerable<ClosingPeriod> filtered = _allClosingPeriods;
+
+            if (selectedFiscalYearId.HasValue)
+            {
+                filtered = filtered.Where(cp => cp.FiscalYearId == selectedFiscalYearId.Value);
+            }
+
+            var ordered = filtered.OrderBy(cp => cp.PeriodStart).ToList();
+            var targetPeriodId = preferredClosingPeriodId ?? SelectedClosingPeriod?.Id;
+
+            ClosingPeriods = new ObservableCollection<ClosingPeriod>(ordered);
+
+            if (targetPeriodId.HasValue)
+            {
+                SelectedClosingPeriod = ClosingPeriods.FirstOrDefault(cp => cp.Id == targetPeriodId.Value)
+                    ?? ClosingPeriods.FirstOrDefault();
+            }
+            else
+            {
+                SelectedClosingPeriod = ClosingPeriods.FirstOrDefault();
+            }
+        }
+
         private const bool IsMutationSupported = true;
+
+        public sealed record FiscalYearFilterOption(int? FiscalYearId, string DisplayName)
+        {
+            public override string ToString() => DisplayName;
+        }
     }
 }

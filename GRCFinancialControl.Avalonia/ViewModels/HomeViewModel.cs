@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -24,6 +26,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private List<ClosingPeriod> _allClosingPeriods = new();
         private bool _isInitializing;
+        private bool _readmeLoaded;
 
         [ObservableProperty]
         private ObservableCollection<FiscalYear> _fiscalYears = new();
@@ -45,6 +48,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         [ObservableProperty]
         private bool _isBusy;
+
+        [ObservableProperty]
+        private string? _readmeContent;
 
         public HomeViewModel(
             IFiscalYearService fiscalYearService,
@@ -170,6 +176,44 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 _isInitializing = false;
                 IsBusy = false;
                 NotifyCommandCanExecute(ConfirmSelectionCommand);
+                await EnsureReadmeLoadedAsync().ConfigureAwait(false);
+            }
+        }
+
+        private async Task EnsureReadmeLoadedAsync()
+        {
+            if (_readmeLoaded)
+            {
+                return;
+            }
+
+            _readmeLoaded = true;
+
+            string? content = null;
+            try
+            {
+                var path = Path.Combine(AppContext.BaseDirectory, "README.md");
+                if (File.Exists(path))
+                {
+                    content = await File.ReadAllTextAsync(path).ConfigureAwait(false);
+                }
+            }
+            catch
+            {
+                content = null;
+            }
+
+            var resolved = string.IsNullOrWhiteSpace(content)
+                ? LocalizationRegistry.Get("Home.Markdown.LoadFailed")
+                : content;
+
+            if (Dispatcher.UIThread.CheckAccess())
+            {
+                ReadmeContent = resolved;
+            }
+            else
+            {
+                Dispatcher.UIThread.Post(() => ReadmeContent = resolved);
             }
         }
 

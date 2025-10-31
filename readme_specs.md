@@ -70,6 +70,22 @@ This document details the implementation for every functional capability describ
 
 ---
 
+## Closing Period Management
+- **Primary Components:** `ClosingPeriodService`, `ClosingPeriodsViewModel`, `ClosingPeriodEditorViewModel`
+- **Domain Models:** `ClosingPeriod`, `FiscalYear`
+- **Persistence:** Table `ClosingPeriods` (column `IsLocked` defaults to `0`)
+- **Workflow:**
+  1. `ClosingPeriodService.GetAllAsync` returns periods ordered by `PeriodStart` with fiscal-year navigation properties so the view model can perform in-memory filtering.
+  2. `ClosingPeriodsViewModel.LoadDataAsync` caches all periods in `_allClosingPeriods`, loads fiscal years, and builds filter options through `UpdateFiscalYearFilters`, adding a localized **All fiscal years** entry and selecting persisted preferences when present.
+  3. `ApplyFiscalYearFilter` performs client-side filtering, repopulating the observable collection and preserving the previously selected period when possible.
+  4. Lock/unlock requests flow through `ToggleLockAsync`, which invokes `ClosingPeriodService.SetLockStateAsync` to toggle `IsLocked` and then refreshes the collections so the UI reflects the persisted state immediately.
+  5. Editor dialogs (`ClosingPeriodEditorViewModel.SaveAsync`) persist changes via `IClosingPeriodService` and emit toasts on success/failure.
+- **UI Feedback:**
+  - Delete, Delete Data, and Lock/Unlock buttons surface success/warning/error toasts through `ToastService` with localized messages.
+  - The filter ComboBox binds to `FiscalYearFilters` with `DisplayName` values, while the lock button label reflects `SelectedClosingPeriod.IsLocked` using localized `ClosingPeriods.Button.Lock`/`Unlock` strings.
+
+---
+
 ## Invoice Planner and Notifications
 - **Database Objects:** Tables `InvoicePlan`, `InvoiceItem`, `InvoiceEmission`, `MailOutbox`, `MailOutboxLog`; event `ev_FillMailOutbox_Daily`; procedure `sp_FillMailOutboxForDate`
 - **Services:** `InvoicePlannerService` (planning), SMTP worker (`NotificationWorker`)
@@ -92,6 +108,10 @@ This document details the implementation for every functional capability describ
   - Stored procedure filters by due date and checks `MailOutboxLog` to prevent duplicates.
   - Emission confirmation requires a non-empty BZ code and emission date before closing, and cancellation requests must supply a reason before the invoice reopens.
   - Planner services validate references to engagements and closing periods prior to saving schedules.
+
+- **UI Feedback:**
+  - `PlanEditorViewModel.SavePlan` and `DeletePlan` emit success/warning/error toasts (`InvoicePlan.Toast.PlanSaved`, `InvoicePlan.Toast.PlanDeleted`, etc.) via `ToastService` alongside detailed status messages.
+  - `RequestConfirmationViewModel` surfaces toasts (`Request.Toast.*`) when inserting or reversing invoice requests, keeping inline actions responsive without modal dialogs.
 
 ---
 
@@ -124,7 +144,7 @@ This document details the implementation for every functional capability describ
   - Missing required headers or malformed workbooks raise `InvalidDataException` with user-centric instructions (e.g., "clear filters").
   - Decimal parsing sanitizes numeric strings, strips thousand separators, and enforces rounding precision.
   - Status/rank columns are normalized via `NormalizeWhitespace` to maintain consistent storage.
-- Importers call `EngagementImportSkipEvaluator` to ignore rows targeting S/4 Project engagements or engagements with status `Closed`, emitting the warnings `⚠ Values for S/4 Projects must be inserted manually. Data import was skipped for Engagement {EngagementID}.` and `⚠ Engagement {EngagementID} skipped – status is Closed.`; the S/4 pathway now only refreshes metadata (description + customer link), creating missing customers and replacing placeholder codes when the workbook finally includes the official identifier.
+- Importers call `EngagementImportSkipEvaluator` to ignore rows targeting S/4 Project engagements or engagements with status `Closed`, emitting the warnings `⚠ Values for S/4 Projects must be inserted manually. Data import was skipped for Engagement {EngagementID}.` and `⚠ Engagement {EngagementID} skipped – status is Closed.`; the S/4 pathway now only refreshes metadata (description + customer link), creating missing customers and replacing placeholder codes when the workbook finally includes the official identifier. Whenever at least one S/4 engagement changes, `ImportViewModel` triggers `ToastService.ShowSuccess("Import.Toast.S4MetadataSuccess")` so users receive immediate confirmation.
 - `ImportViewModel` listens for `ApplicationParametersChangedMessage` to toggle `HasClosingPeriodSelected`, keeping the Full Management import command disabled until a closing period is selected on the Home dashboard.
 
 ---
@@ -157,6 +177,19 @@ This document details the implementation for every functional capability describ
 
 ---
 
+## Home Dashboard
+- **Primary Components:** `HomeViewModel`, `HomeView`
+- **Workflow:**
+  1. `HomeViewModel.LoadDataAsync` retrieves fiscal years and closing periods, orders them chronologically, and stores `_allClosingPeriods` so filtering is performed client-side.
+  2. Default selections load from `ISettingsService` (`GetDefaultFiscalYearIdAsync`/`GetDefaultClosingPeriodIdAsync`); lacking persisted values, the first available fiscal year/period is preselected.
+  3. `UpdateClosingPeriodsForSelectedFiscalYear` rebuilds the closing-period list whenever a fiscal year changes, while `ConfirmSelectionAsync` persists the defaults and sends `ApplicationParametersChangedMessage` to refresh dependent modules.
+  4. `EnsureReadmeLoadedAsync` executes once per session (`_readmeLoaded` flag), reads `README.md` from `AppContext.BaseDirectory`, and populates `ReadmeContent` (falling back to `Home.Markdown.LoadFailed` when the file cannot be read).
+- **UI Details:**
+  - `HomeView.axaml` places the fiscal-year ComboBox and Confirm button in a three-column grid alongside an indeterminate `ProgressBar` so alignment stays horizontal on wide displays.
+  - README content renders inside `MarkdownScrollViewer` within a scrollable `Border`, keeping onboarding documentation accessible without leaving the dashboard.
+
+---
+
 ## Settings and Application Data Backup
 - **Primary Components:** `ApplicationDataBackupService`, `IApplicationDataBackupService`, `SettingsViewModel`
 - **Dependencies:** `IDbContextFactory<ApplicationDbContext>`, `ISettingsService`, `FilePickerService`, `DialogService`
@@ -171,6 +204,8 @@ This document details the implementation for every functional capability describ
   - Both export/import paths fall back to building a context from saved settings if the DI factory lacks a configured provider; missing credentials raise `InvalidOperationException` with guidance.
   - XML serialization captures type information (including binary data) using invariant formatting to ensure round-trippable values on restore.
   - Imports roll back on failure, guaranteeing foreign-key checks are re-enabled even when errors occur.
+- **UI Feedback:**
+  - `SaveSettingsAsync`, `SaveLocalizationSettingsAsync`, and `SavePowerBiSettingsAsync` persist updated dictionaries asynchronously and call `ToastService.ShowSuccess`/`ShowError` with `Settings.Toast.*` keys while keeping the tab content active (no forced reloads).
 
 ---
 
@@ -185,6 +220,7 @@ This document details the implementation for every functional capability describ
 - Numeric editors opt into `App.Presentation.Behaviors.NumericInputNullSafety`; the attached handler listens for focus loss and rewrites empty values to `0` (or `0.00` via binding formats) so Avalonia never raises binding exceptions when users clear numeric fields.
 - `EngagementEditorViewModel` evaluates the selected status text and, when it resolves to `Closed` for persisted records, forces the editor into read-only mode (papd/manager sections, source selector, and financial evolution grid) while leaving the status ComboBox and Save command enabled so users can intentionally reopen the engagement.
 - `EngagementEditorView` renders the dialog as a tabbed layout (Engagement Data, Financial Data, Financial Evolution, Assignments) so controllers can jump between detail categories without scrolling long forms.
+- `App.Presentation.Services.ToastService` exposes a shared observable toast queue consumed by both desktop shells; view models call `ShowSuccess`/`ShowWarning`/`ShowError` with localized resource keys so button actions surface consistent success/warning/error banners that auto-dismiss after three seconds.
 
 
 ---

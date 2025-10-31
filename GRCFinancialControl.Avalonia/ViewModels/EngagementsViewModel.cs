@@ -1,6 +1,8 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -80,8 +82,20 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private async Task Delete(Engagement engagement)
         {
             if (engagement == null) return;
-            await _engagementService.DeleteAsync(engagement.Id);
-            Messenger.Send(new RefreshDataMessage());
+            try
+            {
+                await _engagementService.DeleteAsync(engagement.Id);
+                ToastService.ShowSuccess("Engagements.Toast.Deleted", engagement.EngagementId);
+                Messenger.Send(new RefreshDataMessage());
+            }
+            catch (InvalidOperationException)
+            {
+                ToastService.ShowWarning("Engagements.Toast.DeleteFailed");
+            }
+            catch (Exception)
+            {
+                ToastService.ShowError("Engagements.Toast.DeleteFailed");
+            }
         }
 
         [RelayCommand(CanExecute = nameof(CanDeleteData))]
@@ -94,8 +108,20 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 LocalizationRegistry.Format("Common.Dialog.DeleteData.Message", engagement.EngagementId));
             if (result)
             {
-                await _engagementService.DeleteDataAsync(engagement.Id);
-                Messenger.Send(new RefreshDataMessage());
+                try
+                {
+                    await _engagementService.DeleteDataAsync(engagement.Id);
+                    ToastService.ShowSuccess("Engagements.Toast.DataDeleted", engagement.EngagementId);
+                    Messenger.Send(new RefreshDataMessage());
+                }
+                catch (InvalidOperationException)
+                {
+                    ToastService.ShowWarning("Engagements.Toast.DataDeleteFailed");
+                }
+                catch (Exception)
+                {
+                    ToastService.ShowError("Engagements.Toast.DataDeleteFailed");
+                }
             }
         }
 

@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using App.Presentation.Localization;
@@ -31,8 +32,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            await PersistChangesAsync();
-            Messenger.Send(new CloseDialogMessage(true));
+            try
+            {
+                await PersistChangesAsync();
+                OnSaveSucceeded();
+                Messenger.Send(new CloseDialogMessage(true));
+            }
+            catch (Exception ex)
+            {
+                OnSaveFailed(ex);
+            }
         }
 
         [RelayCommand]
@@ -50,5 +59,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         }
 
         protected abstract Task PersistChangesAsync();
+
+        protected virtual void OnSaveSucceeded()
+        {
+        }
+
+        protected virtual void OnSaveFailed(Exception exception)
+        {
+        }
     }
 }

@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
         xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
+        xmlns:services="clr-namespace:App.Presentation.Services;assembly=App.Presentation"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
@@ -31,7 +32,7 @@
             </ExperimentalAcrylicBorder.Material>
         </ExperimentalAcrylicBorder>
 
-        <Grid ColumnDefinitions="240,*" Margin="16" Panel.ZIndex="1">
+        <Grid ColumnDefinitions="240,*" Margin="16">
             <Border Grid.Column="0"
                     Padding="16"
                     Background="{StaticResource BrushSurfaceVariant}"
@@ -79,5 +80,26 @@
                                 IsVisible="{Binding ActiveView, Converter={x:Static converters:ObjectConverters.IsNotNull}}"/>
             </Border>
         </Grid>
+
+        <ItemsControl Margin="0,32,32,0"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Top"
+                      ItemsSource="{x:Static services:ToastService.Notifications}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Spacing="12"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="services:ToastNotification">
+                    <Border Classes="ToastNotification"
+                            Background="{Binding Type, Converter={StaticResource ToastBrushConverter}}">
+                        <TextBlock Text="{Binding Message}"
+                                   TextWrapping="Wrap"
+                                   Foreground="{StaticResource BrushOnSurface}"/>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
     </Panel>
 </Window>

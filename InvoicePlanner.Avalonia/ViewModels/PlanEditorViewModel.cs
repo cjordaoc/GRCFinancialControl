@@ -16,8 +16,8 @@ using Invoices.Core.Models;
 using Invoices.Core.Payments;
 using Invoices.Core.Validation;
 using Invoices.Data.Repositories;
-using Microsoft.Extensions.Logging;
 using Invoices.Core.Utilities;
+using Microsoft.Extensions.Logging;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
@@ -891,6 +891,7 @@ public partial class PlanEditorViewModel : ViewModelBase
         if (validationErrors.Count > 0)
         {
             ValidationMessage = string.Join(Environment.NewLine, validationErrors.Distinct());
+            ToastService.ShowWarning("InvoicePlan.Toast.ValidationFailed");
             return;
         }
 
@@ -910,11 +911,13 @@ public partial class PlanEditorViewModel : ViewModelBase
                 Items.Count,
                 result.AffectedRows,
                 result.Deleted);
+            ToastService.ShowSuccess("InvoicePlan.Toast.PlanSaved", PlanId);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to save invoice plan {PlanId}.", plan.Id);
             ValidationMessage = LocalizationRegistry.Format("InvoicePlan.Status.SaveFailure", ex.Message);
+            ToastService.ShowError("InvoicePlan.Toast.SaveFailed");
         }
     }
 
@@ -1182,6 +1185,7 @@ public partial class PlanEditorViewModel : ViewModelBase
             if (result.Deleted == 0)
             {
                 ValidationMessage = LocalizationRegistry.Format("InvoicePlan.Validation.PlanNotFound", currentPlanId);
+                ToastService.ShowWarning("InvoicePlan.Toast.DeleteMissing", currentPlanId);
                 return;
             }
 
@@ -1198,11 +1202,13 @@ public partial class PlanEditorViewModel : ViewModelBase
             }
 
             EngagementSelectionMessage = LocalizationRegistry.Format("InvoicePlan.Selection.Status.PlanDeleted", currentPlanId);
+            ToastService.ShowSuccess("InvoicePlan.Toast.PlanDeleted", currentPlanId);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to delete invoice plan {PlanId}.", currentPlanId);
             ValidationMessage = LocalizationRegistry.Format("InvoicePlan.Status.DeleteFailure", ex.Message);
+            ToastService.ShowError("InvoicePlan.Toast.DeleteFailed");
         }
         finally
         {

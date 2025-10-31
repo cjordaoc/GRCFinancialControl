@@ -96,6 +96,9 @@
   <data name="Settings.Button.Save" xml:space="preserve">
     <value>Save settings</value>
   </data>
+  <data name="Settings.Button.Apply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
   <data name="Settings.Button.Test" xml:space="preserve">
     <value>Test connection</value>
   </data>
@@ -156,6 +159,21 @@
   <data name="Settings.Status.Saved" xml:space="preserve">
     <value>Settings saved.</value>
   </data>
+  <data name="Settings.Status.LocalizationSaved" xml:space="preserve">
+    <value>Localization settings saved.</value>
+  </data>
+  <data name="Settings.Status.LocalizationFailed" xml:space="preserve">
+    <value>Failed to save localization settings: {0}</value>
+  </data>
+  <data name="Settings.Status.LocalizationPreview" xml:space="preserve">
+    <value>Language preview applied. Click Apply to persist.</value>
+  </data>
+  <data name="Settings.Status.PowerBiSaved" xml:space="preserve">
+    <value>Power BI settings saved.</value>
+  </data>
+  <data name="Settings.Status.PowerBiFailed" xml:space="preserve">
+    <value>Failed to save Power BI settings: {0}</value>
+  </data>
   <data name="Settings.Status.Testing" xml:space="preserve">
     <value>Testing connection…</value>
   </data>
@@ -173,6 +191,18 @@
   </data>
   <data name="Settings.Status.Cleared" xml:space="preserve">
     <value>All data has been cleared.</value>
+  </data>
+  <data name="Settings.Toast.LocalizationSaved" xml:space="preserve">
+    <value>Localization settings saved successfully.</value>
+  </data>
+  <data name="Settings.Toast.LocalizationFailed" xml:space="preserve">
+    <value>Could not save localization settings.</value>
+  </data>
+  <data name="Settings.Toast.PowerBiSaved" xml:space="preserve">
+    <value>Power BI settings saved successfully.</value>
+  </data>
+  <data name="Settings.Toast.PowerBiFailed" xml:space="preserve">
+    <value>Could not save Power BI settings.</value>
   </data>
   <data name="Settings.Validation.ExportPassphraseRequired" xml:space="preserve">
     <value>Enter a passphrase to export the connection package.</value>
@@ -459,6 +489,105 @@
   </data>
   <data name="Tasks.Status.RetainTemplateFailure" xml:space="preserve">
     <value>Failed to generate Retain template: {0}</value>
+  </data>
+
+  <data name="ClosingPeriods.Filter.All" xml:space="preserve">
+    <value>All fiscal years</value>
+  </data>
+  <data name="ClosingPeriods.Button.Lock" xml:space="preserve">
+    <value>Lock</value>
+  </data>
+  <data name="ClosingPeriods.Button.Unlock" xml:space="preserve">
+    <value>Unlock</value>
+  </data>
+  <data name="ClosingPeriods.Status.ToggleFailed" xml:space="preserve">
+    <value>Unable to change the lock state: {0}</value>
+  </data>
+  <data name="ClosingPeriods.Toast.Locked" xml:space="preserve">
+    <value>Closing period {0} locked successfully.</value>
+  </data>
+  <data name="ClosingPeriods.Toast.Unlocked" xml:space="preserve">
+    <value>Closing period {0} unlocked successfully.</value>
+  </data>
+  <data name="ClosingPeriods.Toast.ToggleFailed" xml:space="preserve">
+    <value>Unable to update closing period lock state.</value>
+  </data>
+  <data name="ClosingPeriods.Toast.Deleted" xml:space="preserve">
+    <value>Closing period {0} deleted.</value>
+  </data>
+  <data name="ClosingPeriods.Toast.DeleteFailed" xml:space="preserve">
+    <value>Unable to delete the closing period.</value>
+  </data>
+  <data name="ClosingPeriods.Toast.DataDeleted" xml:space="preserve">
+    <value>Financial data for {0} deleted.</value>
+  </data>
+  <data name="ClosingPeriods.Toast.DataDeleteFailed" xml:space="preserve">
+    <value>Unable to delete closing period data.</value>
+  </data>
+  <data name="ClosingPeriods.Toast.Saved" xml:space="preserve">
+    <value>Closing period saved.</value>
+  </data>
+  <data name="ClosingPeriods.Toast.SaveFailed" xml:space="preserve">
+    <value>Unable to save the closing period.</value>
+  </data>
+
+  <data name="Customers.Toast.Saved" xml:space="preserve">
+    <value>Customer saved.</value>
+  </data>
+  <data name="Customers.Toast.SaveFailed" xml:space="preserve">
+    <value>Unable to save the customer.</value>
+  </data>
+  <data name="Customers.Toast.Deleted" xml:space="preserve">
+    <value>Customer {0} deleted.</value>
+  </data>
+  <data name="Customers.Toast.DeleteFailed" xml:space="preserve">
+    <value>Unable to delete the customer.</value>
+  </data>
+  <data name="Customers.Toast.DataDeleted" xml:space="preserve">
+    <value>Customer data for {0} deleted.</value>
+  </data>
+  <data name="Customers.Toast.DataDeleteFailed" xml:space="preserve">
+    <value>Unable to delete customer data.</value>
+  </data>
+
+  <data name="Engagements.Toast.Saved" xml:space="preserve">
+    <value>Engagement saved.</value>
+  </data>
+  <data name="Engagements.Toast.SaveFailed" xml:space="preserve">
+    <value>Unable to save the engagement.</value>
+  </data>
+  <data name="Engagements.Toast.Deleted" xml:space="preserve">
+    <value>Engagement {0} deleted.</value>
+  </data>
+  <data name="Engagements.Toast.DeleteFailed" xml:space="preserve">
+    <value>Unable to delete the engagement.</value>
+  </data>
+  <data name="Engagements.Toast.DataDeleted" xml:space="preserve">
+    <value>Engagement data for {0} deleted.</value>
+  </data>
+  <data name="Engagements.Toast.DataDeleteFailed" xml:space="preserve">
+    <value>Unable to delete engagement data.</value>
+  </data>
+
+  <data name="Settings.Toast.ConnectionSaved" xml:space="preserve">
+    <value>Connection settings saved.</value>
+  </data>
+  <data name="Settings.Toast.ConnectionFailed" xml:space="preserve">
+    <value>Unable to save connection settings.</value>
+  </data>
+  <data name="Settings.Status.SaveError" xml:space="preserve">
+    <value>Unable to save settings: {0}</value>
+  </data>
+
+  <data name="Admin.ClosingPeriods.Filter.FiscalYear" xml:space="preserve">
+    <value>Fiscal year</value>
+  </data>
+
+  <data name="Home.Markdown.Title" xml:space="preserve">
+    <value>Project overview</value>
+  </data>
+  <data name="Home.Markdown.LoadFailed" xml:space="preserve">
+    <value>README content could not be loaded.</value>
   </data>
 
 </root>

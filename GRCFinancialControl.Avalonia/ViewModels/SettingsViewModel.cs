@@ -118,6 +118,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             LoadSettingsCommand = new AsyncRelayCommand(LoadSettingsAsync);
             SaveSettingsCommand = new AsyncRelayCommand(SaveSettingsAsync);
+            SaveLocalizationSettingsCommand = new AsyncRelayCommand(SaveLocalizationSettingsAsync);
+            SavePowerBiSettingsCommand = new AsyncRelayCommand(SavePowerBiSettingsAsync);
             TestConnectionCommand = new AsyncRelayCommand(TestConnectionAsync);
             ClearAllDataCommand = new AsyncRelayCommand(ClearAllDataAsync);
             ExportConnectionPackageCommand = new AsyncRelayCommand(ExportConnectionPackageAsync);
@@ -139,6 +141,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public IAsyncRelayCommand LoadSettingsCommand { get; }
         public IAsyncRelayCommand SaveSettingsCommand { get; }
+        public IAsyncRelayCommand SaveLocalizationSettingsCommand { get; }
+        public IAsyncRelayCommand SavePowerBiSettingsCommand { get; }
         public IAsyncRelayCommand TestConnectionCommand { get; }
         public IAsyncRelayCommand ClearAllDataCommand { get; }
         public IAsyncRelayCommand ExportConnectionPackageCommand { get; }
@@ -208,10 +212,69 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private async Task SaveSettingsAsync()
         {
-            var settings = BuildSettingsDictionary();
-            await _settingsService.SaveAllAsync(settings);
-            RunOnUiThread(() =>
-                StatusMessage = LocalizationRegistry.Get("Settings.Status.Saved"));
+            try
+            {
+                var settings = BuildSettingsDictionary();
+                await _settingsService.SaveAllAsync(settings);
+                RunOnUiThread(() =>
+                    StatusMessage = LocalizationRegistry.Get("Settings.Status.Saved"));
+                ToastService.ShowSuccess("Settings.Toast.ConnectionSaved");
+            }
+            catch (Exception ex)
+            {
+                RunOnUiThread(() =>
+                    StatusMessage = LocalizationRegistry.Format("Settings.Status.SaveError", ex.Message));
+                ToastService.ShowError("Settings.Toast.ConnectionFailed");
+            }
+        }
+
+        private async Task SaveLocalizationSettingsAsync()
+        {
+            try
+            {
+                var settings = await _settingsService.GetAllAsync().ConfigureAwait(false);
+                var language = SelectedLanguage?.CultureName ?? string.Empty;
+                settings[SettingKeys.Language] = language;
+                settings[SettingKeys.DefaultCurrency] = DefaultCurrency;
+                await _settingsService.SaveAllAsync(settings).ConfigureAwait(false);
+                CurrencyDisplayHelper.SetDefaultCurrency(DefaultCurrency);
+
+                RunOnUiThread(() =>
+                {
+                    StatusMessage = LocalizationRegistry.Get("Settings.Status.LocalizationSaved");
+                });
+
+                ToastService.ShowSuccess("Settings.Toast.LocalizationSaved");
+            }
+            catch (Exception ex)
+            {
+                RunOnUiThread(() =>
+                    StatusMessage = LocalizationRegistry.Format("Settings.Status.LocalizationFailed", ex.Message));
+                ToastService.ShowError("Settings.Toast.LocalizationFailed");
+            }
+        }
+
+        private async Task SavePowerBiSettingsAsync()
+        {
+            try
+            {
+                var settings = await _settingsService.GetAllAsync().ConfigureAwait(false);
+                settings[SettingKeys.PowerBiEmbedUrl] = PowerBiEmbedUrl ?? string.Empty;
+                await _settingsService.SaveAllAsync(settings).ConfigureAwait(false);
+
+                RunOnUiThread(() =>
+                {
+                    StatusMessage = LocalizationRegistry.Get("Settings.Status.PowerBiSaved");
+                });
+
+                ToastService.ShowSuccess("Settings.Toast.PowerBiSaved");
+            }
+            catch (Exception ex)
+            {
+                RunOnUiThread(() =>
+                    StatusMessage = LocalizationRegistry.Format("Settings.Status.PowerBiFailed", ex.Message));
+                ToastService.ShowError("Settings.Toast.PowerBiFailed");
+            }
         }
 
         private static string NormalizeCurrencyCode(string? value)
@@ -516,29 +579,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
 
             LocalizationCultureManager.ApplyCulture(value.CultureName);
-            _ = PersistLanguageAsync(value);
-        }
-
-        private async Task PersistLanguageAsync(LanguageOption language)
-        {
-            try
-            {
-                var settings = await _settingsService.GetAllAsync();
-                settings[SettingKeys.Language] = language.CultureName;
-                await _settingsService.SaveAllAsync(settings);
-                RunOnUiThread(() =>
-                {
-                    StatusMessage = LocalizationRegistry.Get("Localization.Language.PreferenceSaved");
-                    Messenger.Send(ApplicationRestartRequestedMessage.Instance);
-                });
-            }
-            catch (Exception ex)
-            {
-                RunOnUiThread(() =>
-                    StatusMessage = LocalizationRegistry.Format(
-                        "Localization.Language.PreferenceSaveFailure",
-                        ex.Message));
-            }
+            StatusMessage = LocalizationRegistry.Get("Settings.Status.LocalizationPreview");
         }
 
         partial void OnStatusMessageChanged(string? value)

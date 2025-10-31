@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -382,79 +383,91 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            Engagement.EngagementId = EngagementId.Trim();
-            Engagement.Description = Description;
-            Engagement.CustomerId = SelectedCustomer?.Id;
-            Engagement.Customer = SelectedCustomer;
-            Engagement.Currency = Currency?.Trim() ?? string.Empty;
-            Engagement.OpeningValue = OpeningValue;
-            Engagement.OpeningExpenses = OpeningExpenses;
-            var normalizedStatusText = string.IsNullOrWhiteSpace(SelectedStatusText)
-                ? null
-                : SelectedStatusText.Trim();
+            try
+            {
+                Engagement.EngagementId = EngagementId.Trim();
+                Engagement.Description = Description;
+                Engagement.CustomerId = SelectedCustomer?.Id;
+                Engagement.Customer = SelectedCustomer;
+                Engagement.Currency = Currency?.Trim() ?? string.Empty;
+                Engagement.OpeningValue = OpeningValue;
+                Engagement.OpeningExpenses = OpeningExpenses;
+                var normalizedStatusText = string.IsNullOrWhiteSpace(SelectedStatusText)
+                    ? null
+                    : SelectedStatusText.Trim();
 
-            Engagement.StatusText = normalizedStatusText;
-            Engagement.Status = MapStatusFromText(normalizedStatusText);
-            Engagement.InitialHoursBudget = InitialHoursBudget;
-            Engagement.EstimatedToCompleteHours = EstimatedToCompleteHours;
-            Engagement.ValueEtcp = ValueEtcp;
-            Engagement.ExpensesEtcp = ExpensesEtcp;
-            Engagement.MarginPctEtcp = MarginPctEtcp;
-            Engagement.MarginPctBudget = MarginPctBudget;
-            Engagement.LastEtcDate = LastEtcDate;
-            Engagement.ProposedNextEtcDate = ProposedNextEtcDate;
-            Engagement.LastClosingPeriodId = LastClosingPeriod?.Id;
-            Engagement.LastClosingPeriod = LastClosingPeriod;
-            Engagement.Source = (SelectedSource?.Value) ?? EngagementSource.GrcProject;
+                Engagement.StatusText = normalizedStatusText;
+                Engagement.Status = MapStatusFromText(normalizedStatusText);
+                Engagement.InitialHoursBudget = InitialHoursBudget;
+                Engagement.EstimatedToCompleteHours = EstimatedToCompleteHours;
+                Engagement.ValueEtcp = ValueEtcp;
+                Engagement.ExpensesEtcp = ExpensesEtcp;
+                Engagement.MarginPctEtcp = MarginPctEtcp;
+                Engagement.MarginPctBudget = MarginPctBudget;
+                Engagement.LastEtcDate = LastEtcDate;
+                Engagement.ProposedNextEtcDate = ProposedNextEtcDate;
+                Engagement.LastClosingPeriodId = LastClosingPeriod?.Id;
+                Engagement.LastClosingPeriod = LastClosingPeriod;
+                Engagement.Source = (SelectedSource?.Value) ?? EngagementSource.GrcProject;
 
-            var papdAssignments = PapdAssignments
-                .Where(a => a.PapdId != 0 || a.Papd?.Id > 0)
-                .Select(a => new EngagementPapd
+                var papdAssignments = PapdAssignments
+                    .Where(a => a.PapdId != 0 || a.Papd?.Id > 0)
+                    .Select(a => new EngagementPapd
+                    {
+                        Id = a.Id,
+                        PapdId = a.PapdId != 0 ? a.PapdId : a.Papd!.Id,
+                        EngagementId = Engagement.Id,
+                        Engagement = Engagement,
+                        Papd = a.Papd
+                    })
+                    .ToList();
+
+                var engagementPapds = Engagement.EngagementPapds;
+                engagementPapds.Clear();
+                foreach (var assignment in papdAssignments)
                 {
-                    Id = a.Id,
-                    PapdId = a.PapdId != 0 ? a.PapdId : a.Papd!.Id,
-                    EngagementId = Engagement.Id,
-                    Engagement = Engagement,
-                    Papd = a.Papd
-                })
-                .ToList();
+                    engagementPapds.Add(assignment);
+                }
 
-            var engagementPapds = Engagement.EngagementPapds;
-            engagementPapds.Clear();
-            foreach (var assignment in papdAssignments)
-            {
-                engagementPapds.Add(assignment);
-            }
+                var evolutions = Engagement.FinancialEvolutions;
+                evolutions.Clear();
+                foreach (var evolution in FinancialEvolutionEntries
+                             .Where(e => !string.IsNullOrWhiteSpace(e.ClosingPeriodId))
+                             .Select(e => new FinancialEvolution
+                             {
+                                 Id = e.Id,
+                                 ClosingPeriodId = e.ClosingPeriodId.Trim(),
+                                 EngagementId = Engagement.Id,
+                                 Engagement = Engagement,
+                                 HoursData = e.Hours,
+                                 ValueData = e.Value,
+                                 MarginData = e.Margin,
+                                 ExpenseData = e.Expenses
+                             }))
+                {
+                    evolutions.Add(evolution);
+                }
 
-            var evolutions = Engagement.FinancialEvolutions;
-            evolutions.Clear();
-            foreach (var evolution in FinancialEvolutionEntries
-                         .Where(e => !string.IsNullOrWhiteSpace(e.ClosingPeriodId))
-                         .Select(e => new FinancialEvolution
-                         {
-                             Id = e.Id,
-                             ClosingPeriodId = e.ClosingPeriodId.Trim(),
-                             EngagementId = Engagement.Id,
-                             Engagement = Engagement,
-                             HoursData = e.Hours,
-                             ValueData = e.Value,
-                             MarginData = e.Margin,
-                             ExpenseData = e.Expenses
-                         }))
-            {
-                evolutions.Add(evolution);
-            }
+                if (Engagement.Id == 0)
+                {
+                    await _engagementService.AddAsync(Engagement);
+                }
+                else
+                {
+                    await _engagementService.UpdateAsync(Engagement);
+                }
 
-            if (Engagement.Id == 0)
-            {
-                await _engagementService.AddAsync(Engagement);
+                ToastService.ShowSuccess("Engagements.Toast.Saved", Engagement.EngagementId);
+                _messenger.Send(new CloseDialogMessage(true));
             }
-            else
+            catch (InvalidOperationException)
             {
-                await _engagementService.UpdateAsync(Engagement);
+                ToastService.ShowWarning("Engagements.Toast.SaveFailed");
             }
-
-            _messenger.Send(new CloseDialogMessage(true));
+            catch (Exception)
+            {
+                ToastService.ShowError("Engagements.Toast.SaveFailed");
+            }
         }
 
         private void InitializeSourceSelection(EngagementSource source)

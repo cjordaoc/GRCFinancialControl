@@ -135,6 +135,10 @@ namespace GRCFinancialControl.Persistence
                 .HasMySqlColumnType("datetime(6)", isMySql);
 
             modelBuilder.Entity<ClosingPeriod>()
+                .Property(cp => cp.IsLocked)
+                .HasDefaultValue(false);
+
+            modelBuilder.Entity<ClosingPeriod>()
                 .HasOne(cp => cp.FiscalYear)
                 .WithMany(fy => fy.ClosingPeriods)
                 .HasForeignKey(cp => cp.FiscalYearId)

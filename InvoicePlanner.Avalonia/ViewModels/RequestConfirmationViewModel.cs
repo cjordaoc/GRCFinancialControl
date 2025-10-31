@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using App.Presentation.Localization;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -303,18 +304,21 @@ public partial class RequestConfirmationViewModel : ViewModelBase
             if (result.Updated == 0)
             {
                 StatusMessage = LocalizationRegistry.Get("Request.Status.NoUpdates");
+                ToastService.ShowWarning("Request.Toast.NoUpdates");
                 return;
             }
 
             line.ApplyRequestedState(update.RitmNumber, update.CoeResponsible, update.RequestDate.Date);
 
             StatusMessage = LocalizationRegistry.Format("Request.Status.LineRequested", line.Sequence);
+            ToastService.ShowSuccess("Request.Toast.LineRequested", line.Sequence);
             RefreshActionCommands();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to request invoice item {ItemId}.", line.Id);
             ValidationMessage = ex.Message;
+            ToastService.ShowError("Request.Toast.RequestFailed");
         }
     }
 
@@ -340,18 +344,21 @@ public partial class RequestConfirmationViewModel : ViewModelBase
             if (result.Updated == 0)
             {
                 StatusMessage = LocalizationRegistry.Get("Request.Status.NoUndo");
+                ToastService.ShowWarning("Request.Toast.NoUndo");
                 return;
             }
 
             line.ResetToPlanned(DateTime.Today);
 
             StatusMessage = LocalizationRegistry.Format("Request.Status.LineUndone", line.Sequence);
+            ToastService.ShowSuccess("Request.Toast.LineUndone", line.Sequence);
             RefreshActionCommands();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to undo invoice item {ItemId} request.", line.Id);
             ValidationMessage = ex.Message;
+            ToastService.ShowError("Request.Toast.UndoFailed");
         }
     }
 
