@@ -33,8 +33,10 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
         private static readonly string[] EngagementNameHeaders =
         {
+            "engagement description",
             "engagement name",
             "project name",
+            "engagement",
             "description"
         };
 
@@ -133,8 +135,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
         private static readonly string[] StatusHeaders =
         {
-            "status",
-            "engagement status"
+            "engagement status",
+            "status"
         };
 
         private static readonly string[] EtcAgeDaysHeaders =
@@ -821,10 +823,40 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             {
                 foreach (var kvp in headerMap)
                 {
-                    if (kvp.Value.Contains(candidate, StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(kvp.Value, candidate, StringComparison.Ordinal))
                     {
                         return kvp.Key;
                     }
+                }
+            }
+
+            foreach (var candidate in candidates)
+            {
+                foreach (var kvp in headerMap)
+                {
+                    var header = kvp.Value;
+                    if (string.IsNullOrEmpty(header))
+                    {
+                        continue;
+                    }
+
+                    if (!header.Contains(candidate, StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    if (candidate.Contains("engagement", StringComparison.Ordinal) && header.Contains("id", StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    if (string.Equals(candidate, "description", StringComparison.Ordinal) &&
+                        (header.Contains("customer", StringComparison.Ordinal) || header.Contains("client", StringComparison.Ordinal)))
+                    {
+                        continue;
+                    }
+
+                    return kvp.Key;
                 }
             }
 
