@@ -141,7 +141,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public bool IsFinancialEvolutionReadOnly => IsReadOnlyMode || ShouldLockForClosedStatus;
 
-        public bool CanEditCustomer => AllowEditing && !IsExistingRecord;
+        public bool CanEditCustomer => AllowEditing;
 
         public bool CanEditStatus => !IsReadOnlyMode;
 
