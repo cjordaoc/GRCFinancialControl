@@ -123,7 +123,7 @@ This document details the implementation for every functional capability describ
   - Missing required headers or malformed workbooks raise `InvalidDataException` with user-centric instructions (e.g., "clear filters").
   - Decimal parsing sanitizes numeric strings, strips thousand separators, and enforces rounding precision.
   - Status/rank columns are normalized via `NormalizeWhitespace` to maintain consistent storage.
-- Importers call `EngagementImportSkipEvaluator` to ignore rows targeting S/4 Project engagements or engagements with status `Closed`, emitting the warnings `⚠ Values for S/4 Projects must be inserted manually. Data import was skipped for Engagement {EngagementID}.` and `⚠ Engagement {EngagementID} skipped – status is Closed.` while recording the skip reasons in the summary payloads.
+- Importers call `EngagementImportSkipEvaluator` to ignore rows targeting S/4 Project engagements or engagements with status `Closed`, emitting the warnings `⚠ Values for S/4 Projects must be inserted manually. Data import was skipped for Engagement {EngagementID}.` and `⚠ Engagement {EngagementID} skipped – status is Closed.`; before the S/4 warning is logged, `FullManagementDataImporter` upserts the engagement description and Customer ID/name so manual teams still receive the latest identifiers.
 
 ---
 
