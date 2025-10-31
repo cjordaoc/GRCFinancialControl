@@ -1,6 +1,8 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -63,8 +65,20 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private async Task Delete(Customer customer)
         {
             if (customer == null) return;
-            await _customerService.DeleteAsync(customer.Id);
-            Messenger.Send(new RefreshDataMessage());
+            try
+            {
+                await _customerService.DeleteAsync(customer.Id);
+                ToastService.ShowSuccess("Customers.Toast.Deleted", customer.Name);
+                Messenger.Send(new RefreshDataMessage());
+            }
+            catch (InvalidOperationException)
+            {
+                ToastService.ShowWarning("Customers.Toast.DeleteFailed");
+            }
+            catch (Exception)
+            {
+                ToastService.ShowError("Customers.Toast.DeleteFailed");
+            }
         }
 
         [RelayCommand(CanExecute = nameof(CanDeleteData))]
@@ -77,8 +91,20 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 LocalizationRegistry.Format("Common.Dialog.DeleteData.Message", customer.Name));
             if (result)
             {
-                await _customerService.DeleteDataAsync(customer.Id);
-                Messenger.Send(new RefreshDataMessage());
+                try
+                {
+                    await _customerService.DeleteDataAsync(customer.Id);
+                    ToastService.ShowSuccess("Customers.Toast.DataDeleted", customer.Name);
+                    Messenger.Send(new RefreshDataMessage());
+                }
+                catch (InvalidOperationException)
+                {
+                    ToastService.ShowWarning("Customers.Toast.DataDeleteFailed");
+                }
+                catch (Exception)
+                {
+                    ToastService.ShowError("Customers.Toast.DataDeleteFailed");
+                }
             }
         }
 

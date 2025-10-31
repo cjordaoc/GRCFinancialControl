@@ -11,5 +11,6 @@ namespace GRCFinancialControl.Persistence.Services.Interfaces
         Task UpdateAsync(ClosingPeriod period);
         Task DeleteAsync(int id);
         Task DeleteDataAsync(int closingPeriodId);
+        Task SetLockStateAsync(int closingPeriodId, bool isLocked);
     }
 }

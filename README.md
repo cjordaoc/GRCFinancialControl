@@ -112,7 +112,8 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 - Import summaries include counts of processed rows, warnings (e.g., missing engagements), and accumulated totals to aid reconciliation.
 - The Full Management Data importer now owns budget/margin/projection updates, mapping Original Budget, Mercury projections, and the new Unbilled Revenue Days column onto existing engagements while logging "Engagement not found" when an ID is absent. Rows without a closing period still refresh opening budgets but skip ETC metrics and are summarized as warnings in the import notes.
 - Full Management imports remain disabled until a closing period is selected on the Home dashboard, preventing uploads when the workbook filter is undefined.
-- S/4 Project engagements still trigger the manual-entry warning, but now only metadata (description and customer link) is refreshed. Customer records missing from the catalog are created on the fly, and placeholder codes such as `AUTO-xxxxx` are replaced when the workbook later supplies the official customer ID.
+- S/4 Project engagements still trigger the manual-entry warning; the importer now limits updates to metadata (description, project status, and customer assignment) while leaving budget/ETC metrics untouched. Customer records missing from the catalog are created on the fly and placeholder codes such as `AUTO-xxxxx` are replaced when the workbook later supplies the official customer ID.
+- When S/4 metadata changes are detected the UI surfaces a localized toast (“S/4HANA project metadata imported successfully.”), giving controllers immediate confirmation without opening the log panel.
 
 [See Technical Spec →](readme_specs.md#excel-importers-and-validation)
 
@@ -180,6 +181,9 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 - Engagements whose status resolves to **Closed** automatically suppress editing across the detail dialog (including assignment and financial-evolution controls) while leaving the Status selector enabled so controllers can intentionally reopen them.
 - The engagement editor dialog organizes content into tabs (Engagement Data, Financial Data, Financial Evolution, Assignments) to keep related fields together and reduce vertical scrolling.
 - Manager assignments mirror the PAPD workflow: controllers pick a manager first and then maintain that manager's engagement list, keeping the selection logic consistent across the team workspace.
+- The Home workspace now renders the project README beneath the fiscal year selector using a markdown viewer so onboarding guidance travels with the app layout.
+- Closing period management includes a fiscal-year filter ComboBox that performs instant client-side filtering and a lock/unlock toggle that persists immediately while displaying success/failure toasts.
+- Save, Delete, Lock/Unlock, and Reverse actions across both desktop shells emit localized toast notifications (success, warning, error) instead of silent state changes, aligning feedback for controllers and planners.
 
 [See Technical Spec →](readme_specs.md#ui-architecture)
 
@@ -195,6 +199,7 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 - Customer Name and Customer Code must both contain non-whitespace values; invalid entries surface inline error text with the shared `StatusError` style.
 - The dialog Save button remains disabled until all validation errors are cleared, preventing incomplete records from being persisted.
 - Selecting **View** from any master-data grid reuses the same dialog with `IsReadOnlyMode = true`, so users can inspect details without enabling the Save pathway or editable inputs.
+- Engagement and customer grids wrap long descriptions/names and the associated editors enforce wider input fields so values are readable without horizontal scrolling.
 
 [See Technical Spec →](readme_specs.md#master-data-editors)
 

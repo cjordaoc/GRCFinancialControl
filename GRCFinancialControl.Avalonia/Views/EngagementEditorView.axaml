@@ -57,7 +57,10 @@
                                 <TextBox Text="{Binding Description}"
                                          IsReadOnly="{Binding IsGeneralFieldReadOnly}"
                                          HorizontalAlignment="Stretch"
-                                         MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
+                                         MinWidth="{StaticResource PopupTextBoxMinWidth}"
+                                         MinHeight="80"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"/>
                             </StackPanel>
 
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource Space16}">

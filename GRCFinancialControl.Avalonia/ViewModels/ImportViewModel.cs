@@ -123,23 +123,38 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var displayName = FileTypeDisplayName ?? FileType ?? string.Empty;
             _loggingService.LogInfo(LocalizationRegistry.Format("Import.Status.InProgress", displayName));
 
-            string? result = null;
+            string? resultSummary = null;
+            FullManagementDataImportResult? managementResult = null;
 
             try
             {
                 IsImporting = true;
 
-                result = FileType switch
+                switch (FileType)
                 {
-                    BudgetType => await Task.Run(() => _importService.ImportBudgetAsync(filePath)),
-                    FullManagementType => await Task.Run(() => _importService.ImportFullManagementDataAsync(filePath)),
-                    AllocationPlanningType => await Task.Run(() => _importService.ImportAllocationPlanningAsync(filePath)),
-                    _ => LocalizationRegistry.Get("Import.Status.InvalidType")
-                };
+                    case BudgetType:
+                        resultSummary = await Task.Run(() => _importService.ImportBudgetAsync(filePath));
+                        break;
+                    case FullManagementType:
+                        managementResult = await Task.Run(() => _importService.ImportFullManagementDataAsync(filePath));
+                        resultSummary = managementResult?.Summary;
+                        break;
+                    case AllocationPlanningType:
+                        resultSummary = await Task.Run(() => _importService.ImportAllocationPlanningAsync(filePath));
+                        break;
+                    default:
+                        resultSummary = LocalizationRegistry.Get("Import.Status.InvalidType");
+                        break;
+                }
 
-                if (!string.IsNullOrWhiteSpace(result))
+                if (!string.IsNullOrWhiteSpace(resultSummary))
                 {
-                    _loggingService.LogInfo(result);
+                    _loggingService.LogInfo(resultSummary);
+                }
+
+                if (managementResult?.S4MetadataRefreshes > 0)
+                {
+                    ToastService.ShowSuccess("Import.Toast.S4MetadataSuccess");
                 }
             }
             catch (ImportWarningException warning)

@@ -62,6 +62,7 @@ CREATE TABLE `ClosingPeriods`
     `FiscalYearId` INT           NOT NULL,
     `PeriodStart`  DATETIME(6)   NOT NULL,
     `PeriodEnd`    DATETIME(6)   NOT NULL,
+    `IsLocked`     TINYINT(1)    NOT NULL DEFAULT 0,
     CONSTRAINT `PK_ClosingPeriods` PRIMARY KEY (`Id`),
     CONSTRAINT `UX_ClosingPeriods_Name` UNIQUE (`Name`),
     CONSTRAINT `FK_ClosingPeriods_FiscalYears` FOREIGN KEY (`FiscalYearId`) REFERENCES `FiscalYears` (`Id`) ON DELETE RESTRICT

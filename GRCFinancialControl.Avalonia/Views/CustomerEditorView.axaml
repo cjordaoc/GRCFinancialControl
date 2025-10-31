@@ -23,6 +23,7 @@
                     <TextBox x:Name="NameBox"
                              Grid.Row="0"
                              Grid.Column="1"
+                             MinWidth="360"
                              Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
                              IsReadOnly="{Binding IsReadOnlyMode}"/>
                     <TextBlock Grid.Row="1"
@@ -38,6 +39,7 @@
                     <TextBox x:Name="CustomerCodeBox"
                              Grid.Row="2"
                              Grid.Column="1"
+                             MinWidth="360"
                              Text="{Binding CustomerCode, UpdateSourceTrigger=PropertyChanged}"
                              IsReadOnly="{Binding IsReadOnlyMode}"/>
                     <TextBlock Grid.Row="3"

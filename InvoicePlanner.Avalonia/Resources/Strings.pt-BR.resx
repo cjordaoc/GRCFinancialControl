@@ -336,6 +336,24 @@
   <data name="InvoicePlan.Status.SaveFailure" xml:space="preserve">
     <value>Falha ao salvar plano: {0}</value>
   </data>
+  <data name="InvoicePlan.Toast.ValidationFailed" xml:space="preserve">
+    <value>Resolva as pendências antes de salvar.</value>
+  </data>
+  <data name="InvoicePlan.Toast.PlanSaved" xml:space="preserve">
+    <value>Plano de faturamento {0} salvo.</value>
+  </data>
+  <data name="InvoicePlan.Toast.SaveFailed" xml:space="preserve">
+    <value>Não foi possível salvar o plano de faturamento.</value>
+  </data>
+  <data name="InvoicePlan.Toast.PlanDeleted" xml:space="preserve">
+    <value>Plano de faturamento {0} excluído.</value>
+  </data>
+  <data name="InvoicePlan.Toast.DeleteMissing" xml:space="preserve">
+    <value>Plano de faturamento {0} não está mais disponível.</value>
+  </data>
+  <data name="InvoicePlan.Toast.DeleteFailed" xml:space="preserve">
+    <value>Não foi possível excluir o plano de faturamento.</value>
+  </data>
   <data name="Request.Title.Primary" xml:space="preserve">
     <value>Confirmação de solicitação</value>
   </data>
@@ -404,6 +422,24 @@
   </data>
   <data name="Request.Status.LineUndone" xml:space="preserve">
     <value>Linha {0} retornou para Planejado.</value>
+  </data>
+  <data name="Request.Toast.NoUpdates" xml:space="preserve">
+    <value>Nenhuma linha foi atualizada.</value>
+  </data>
+  <data name="Request.Toast.LineRequested" xml:space="preserve">
+    <value>Linha {0} marcada como solicitada.</value>
+  </data>
+  <data name="Request.Toast.RequestFailed" xml:space="preserve">
+    <value>Não foi possível marcar a linha selecionada como solicitada.</value>
+  </data>
+  <data name="Request.Toast.NoUndo" xml:space="preserve">
+    <value>Nenhuma linha foi revertida.</value>
+  </data>
+  <data name="Request.Toast.LineUndone" xml:space="preserve">
+    <value>Linha {0} revertida para Planejada.</value>
+  </data>
+  <data name="Request.Toast.UndoFailed" xml:space="preserve">
+    <value>Não foi possível reverter a linha selecionada.</value>
   </data>
   <data name="Request.TableHeader.EmissionDate" xml:space="preserve">
     <value>Emissão</value>

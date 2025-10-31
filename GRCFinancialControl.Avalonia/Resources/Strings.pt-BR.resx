@@ -96,6 +96,9 @@
   <data name="Settings.Button.Save" xml:space="preserve">
     <value>Save settings</value>
   </data>
+  <data name="Settings.Button.Apply" xml:space="preserve">
+    <value>Aplicar</value>
+  </data>
   <data name="Settings.Button.Test" xml:space="preserve">
     <value>Test connection</value>
   </data>
@@ -156,6 +159,21 @@
   <data name="Settings.Status.Saved" xml:space="preserve">
     <value>Settings saved.</value>
   </data>
+  <data name="Settings.Status.LocalizationSaved" xml:space="preserve">
+    <value>Configurações de localização salvas.</value>
+  </data>
+  <data name="Settings.Status.LocalizationFailed" xml:space="preserve">
+    <value>Falha ao salvar as configurações de localização: {0}</value>
+  </data>
+  <data name="Settings.Status.LocalizationPreview" xml:space="preserve">
+    <value>Pré-visualização de idioma aplicada. Clique em Aplicar para persistir.</value>
+  </data>
+  <data name="Settings.Status.PowerBiSaved" xml:space="preserve">
+    <value>Configurações do Power BI salvas.</value>
+  </data>
+  <data name="Settings.Status.PowerBiFailed" xml:space="preserve">
+    <value>Falha ao salvar as configurações do Power BI: {0}</value>
+  </data>
   <data name="Settings.Status.Testing" xml:space="preserve">
     <value>Testing connection…</value>
   </data>
@@ -173,6 +191,18 @@
   </data>
   <data name="Settings.Status.Cleared" xml:space="preserve">
     <value>All data has been cleared.</value>
+  </data>
+  <data name="Settings.Toast.LocalizationSaved" xml:space="preserve">
+    <value>Configurações de localização salvas com sucesso.</value>
+  </data>
+  <data name="Settings.Toast.LocalizationFailed" xml:space="preserve">
+    <value>Não foi possível salvar as configurações de localização.</value>
+  </data>
+  <data name="Settings.Toast.PowerBiSaved" xml:space="preserve">
+    <value>Configurações do Power BI salvas com sucesso.</value>
+  </data>
+  <data name="Settings.Toast.PowerBiFailed" xml:space="preserve">
+    <value>Não foi possível salvar as configurações do Power BI.</value>
   </data>
   <data name="Settings.Validation.ExportPassphraseRequired" xml:space="preserve">
     <value>Enter a passphrase to export the connection package.</value>
@@ -459,6 +489,105 @@
   </data>
   <data name="Tasks.Status.RetainTemplateFailure" xml:space="preserve">
     <value>Falha ao gerar o template Retain: {0}</value>
+  </data>
+
+  <data name="ClosingPeriods.Filter.All" xml:space="preserve">
+    <value>Todos os exercícios</value>
+  </data>
+  <data name="ClosingPeriods.Button.Lock" xml:space="preserve">
+    <value>Bloquear</value>
+  </data>
+  <data name="ClosingPeriods.Button.Unlock" xml:space="preserve">
+    <value>Desbloquear</value>
+  </data>
+  <data name="ClosingPeriods.Status.ToggleFailed" xml:space="preserve">
+    <value>Não foi possível alterar o bloqueio: {0}</value>
+  </data>
+  <data name="ClosingPeriods.Toast.Locked" xml:space="preserve">
+    <value>Período de fechamento {0} bloqueado com sucesso.</value>
+  </data>
+  <data name="ClosingPeriods.Toast.Unlocked" xml:space="preserve">
+    <value>Período de fechamento {0} desbloqueado com sucesso.</value>
+  </data>
+  <data name="ClosingPeriods.Toast.ToggleFailed" xml:space="preserve">
+    <value>Não foi possível atualizar o bloqueio do período.</value>
+  </data>
+  <data name="ClosingPeriods.Toast.Deleted" xml:space="preserve">
+    <value>Período de fechamento {0} excluído.</value>
+  </data>
+  <data name="ClosingPeriods.Toast.DeleteFailed" xml:space="preserve">
+    <value>Não foi possível excluir o período de fechamento.</value>
+  </data>
+  <data name="ClosingPeriods.Toast.DataDeleted" xml:space="preserve">
+    <value>Dados do período {0} excluídos.</value>
+  </data>
+  <data name="ClosingPeriods.Toast.DataDeleteFailed" xml:space="preserve">
+    <value>Não foi possível excluir os dados do período.</value>
+  </data>
+  <data name="ClosingPeriods.Toast.Saved" xml:space="preserve">
+    <value>Período de fechamento salvo.</value>
+  </data>
+  <data name="ClosingPeriods.Toast.SaveFailed" xml:space="preserve">
+    <value>Não foi possível salvar o período de fechamento.</value>
+  </data>
+
+  <data name="Customers.Toast.Saved" xml:space="preserve">
+    <value>Cliente salvo.</value>
+  </data>
+  <data name="Customers.Toast.SaveFailed" xml:space="preserve">
+    <value>Não foi possível salvar o cliente.</value>
+  </data>
+  <data name="Customers.Toast.Deleted" xml:space="preserve">
+    <value>Cliente {0} excluído.</value>
+  </data>
+  <data name="Customers.Toast.DeleteFailed" xml:space="preserve">
+    <value>Não foi possível excluir o cliente.</value>
+  </data>
+  <data name="Customers.Toast.DataDeleted" xml:space="preserve">
+    <value>Dados do cliente {0} excluídos.</value>
+  </data>
+  <data name="Customers.Toast.DataDeleteFailed" xml:space="preserve">
+    <value>Não foi possível excluir os dados do cliente.</value>
+  </data>
+
+  <data name="Engagements.Toast.Saved" xml:space="preserve">
+    <value>Engajamento salvo.</value>
+  </data>
+  <data name="Engagements.Toast.SaveFailed" xml:space="preserve">
+    <value>Não foi possível salvar o engajamento.</value>
+  </data>
+  <data name="Engagements.Toast.Deleted" xml:space="preserve">
+    <value>Engajamento {0} excluído.</value>
+  </data>
+  <data name="Engagements.Toast.DeleteFailed" xml:space="preserve">
+    <value>Não foi possível excluir o engajamento.</value>
+  </data>
+  <data name="Engagements.Toast.DataDeleted" xml:space="preserve">
+    <value>Dados do engajamento {0} excluídos.</value>
+  </data>
+  <data name="Engagements.Toast.DataDeleteFailed" xml:space="preserve">
+    <value>Não foi possível excluir os dados do engajamento.</value>
+  </data>
+
+  <data name="Settings.Toast.ConnectionSaved" xml:space="preserve">
+    <value>Configurações de conexão salvas.</value>
+  </data>
+  <data name="Settings.Toast.ConnectionFailed" xml:space="preserve">
+    <value>Não foi possível salvar as configurações de conexão.</value>
+  </data>
+  <data name="Settings.Status.SaveError" xml:space="preserve">
+    <value>Não foi possível salvar as configurações: {0}</value>
+  </data>
+
+  <data name="Admin.ClosingPeriods.Filter.FiscalYear" xml:space="preserve">
+    <value>Exercício</value>
+  </data>
+
+  <data name="Home.Markdown.Title" xml:space="preserve">
+    <value>Visão geral do projeto</value>
+  </data>
+  <data name="Home.Markdown.LoadFailed" xml:space="preserve">
+    <value>Não foi possível carregar o conteúdo do README.</value>
   </data>
 
 </root>

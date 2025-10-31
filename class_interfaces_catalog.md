@@ -86,6 +86,8 @@ Authoritative reference for reusable classes and interfaces. Consult this catalo
 | Struct | `App.Presentation.Services` | `CurrencyFormatInfo` | Immutable metadata describing a currency code, symbol, and formatting culture. | `Code`, `Symbol`, `Culture` | `CurrencyDisplayHelper` | New | Cached per currency code for fast lookups. |
 | Static Class | `App.Presentation.Behaviors` | `NumericInputNullSafety` | Attached property that forces empty numeric inputs to zero on focus loss. | `IsEnabledProperty`, `GetIsEnabled`, `SetIsEnabled` | Avalonia `TextBox`, `NumericUpDown` | New | Prevents binding exceptions when users clear numeric fields across both apps. |
 | Static Class | `Invoices.Core.Utilities` | `BusinessDayCalculator` | Normalizes invoice dates to the next business day (Mon–Fri). | `AdjustToNextBusinessDay`, `IsBusinessDay` | — | New | Weekend dates advance to Monday for emission and due date rules. |
+| Static Class | `App.Presentation.Services` | `ToastService` | Centralized toast notification queue with auto-dismiss timers. | `ShowSuccess`, `ShowWarning`, `ShowError`, `Notifications` | Avalonia Dispatcher, `LocalizationRegistry` | New | Provides consistent success/warning/error toasts across both apps. |
+| Class | `App.Presentation.Services` | `ToastNotification` | Immutable toast payload exposed to view overlays. | `Id`, `Type`, `Message`, `CreatedAt` | — | New | Created by `ToastService`; consumed by toast overlays in Avalonia shells. |
 
 ---
 

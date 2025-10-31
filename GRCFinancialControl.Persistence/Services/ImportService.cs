@@ -2039,18 +2039,16 @@ namespace GRCFinancialControl.Persistence.Services
                 parsedRows.Count);
         }
 
-        public async Task<string> ImportFullManagementDataAsync(string filePath)
+        public async Task<FullManagementDataImportResult> ImportFullManagementDataAsync(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
             {
                 throw new ArgumentException("File path must be provided.", nameof(filePath));
             }
 
-            var result = await _fullManagementDataImporter
+            return await _fullManagementDataImporter
                 .ImportAsync(filePath)
                 .ConfigureAwait(false);
-
-            return result.Summary;
         }
 
         public async Task<string> ImportAllocationPlanningAsync(string filePath)
