@@ -135,6 +135,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public bool IsEngagementIdReadOnly => IsReadOnlyMode || IsExistingRecord;
 
+        public bool CanEditEngagementId => !IsEngagementIdReadOnly;
+
         public bool IsFinancialSnapshotReadOnly => IsReadOnlyMode || IsExistingRecord;
 
         public bool IsGeneralFieldReadOnly => IsReadOnlyMode || ShouldLockForClosedStatus;
@@ -495,6 +497,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             OnPropertyChanged(nameof(AllowEditing));
             OnPropertyChanged(nameof(CanSave));
             OnPropertyChanged(nameof(IsEngagementIdReadOnly));
+            OnPropertyChanged(nameof(CanEditEngagementId));
             OnPropertyChanged(nameof(IsFinancialSnapshotReadOnly));
             OnPropertyChanged(nameof(IsGeneralFieldReadOnly));
             OnPropertyChanged(nameof(IsFinancialEvolutionReadOnly));

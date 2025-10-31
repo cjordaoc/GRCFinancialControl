@@ -35,6 +35,7 @@
                             <TextBlock Text="Engagement ID:" VerticalAlignment="Center"/>
                             <TextBox Text="{Binding EngagementId}"
                                      IsReadOnly="{Binding IsEngagementIdReadOnly}"
+                                     IsEnabled="{Binding CanEditEngagementId}"
                                      HorizontalAlignment="Stretch"
                                      MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
                         </StackPanel>
