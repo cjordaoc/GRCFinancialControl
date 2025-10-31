@@ -26,15 +26,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private ObservableCollection<EngagementOption> _engagements = new();
 
         [ObservableProperty]
-        private EngagementOption? _selectedEngagement;
+        private ObservableCollection<Manager> _managers = new();
+
+        [ObservableProperty]
+        private Manager? _selectedManager;
 
         [ObservableProperty]
         private ObservableCollection<ManagerAssignmentItem> _assignments = new();
 
         [ObservableProperty]
         private ManagerAssignmentItem? _selectedAssignment;
-
-        private ObservableCollection<Manager> _managers = new();
 
         public ManagerAssignmentsViewModel(
             IManagerAssignmentService assignmentService,
@@ -58,50 +59,54 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 .Select(e => new EngagementOption(e.Id, e.EngagementId, e.Description))
                 .ToList();
 
-            var previousSelectionId = SelectedEngagement?.InternalId;
             Engagements = new ObservableCollection<EngagementOption>(engagementOptions);
-            if (previousSelectionId.HasValue)
-            {
-                SelectedEngagement = Engagements.FirstOrDefault(e => e.InternalId == previousSelectionId.Value)
-                    ?? Engagements.FirstOrDefault();
-            }
-            else if (SelectedEngagement is null)
-            {
-                SelectedEngagement = Engagements.FirstOrDefault();
-            }
 
             var managers = await _managerService.GetAllAsync();
-            _managers = new ObservableCollection<Manager>(managers
+            var orderedManagers = managers
                 .Where(m => m.Position is ManagerPosition.Manager or ManagerPosition.SeniorManager)
-                .OrderBy(m => m.Name, StringComparer.OrdinalIgnoreCase));
+                .OrderBy(m => m.Name, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var previousManagerId = SelectedManager?.Id;
+            Managers = new ObservableCollection<Manager>(orderedManagers);
+            if (previousManagerId.HasValue)
+            {
+                SelectedManager = Managers.FirstOrDefault(m => m.Id == previousManagerId.Value)
+                    ?? Managers.FirstOrDefault();
+            }
+            else if (SelectedManager is null)
+            {
+                SelectedManager = Managers.FirstOrDefault();
+            }
 
             AddCommand.NotifyCanExecuteChanged();
 
-            await LoadAssignmentsForSelectedEngagementAsync();
+            await LoadAssignmentsForSelectedManagerAsync();
         }
 
         [RelayCommand(CanExecute = nameof(CanAddAssignment))]
         private async Task AddAsync()
         {
-            if (SelectedEngagement is null)
+            if (SelectedManager is null)
             {
                 return;
             }
 
             var assignment = new EngagementManagerAssignment
             {
-                EngagementId = SelectedEngagement.InternalId
+                ManagerId = SelectedManager.Id,
+                Manager = SelectedManager
             };
 
             var editorViewModel = new ManagerAssignmentEditorViewModel(
                 assignment,
                 Engagements,
-                _managers,
+                Managers,
                 _assignmentService,
                 Messenger)
             {
-                SelectedEngagement = SelectedEngagement,
-                SelectedManager = _managers.FirstOrDefault()
+                SelectedManager = SelectedManager,
+                SelectedEngagement = Engagements.FirstOrDefault()
             };
 
             await editorViewModel.LoadDataAsync();
@@ -129,12 +134,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var editorViewModel = new ManagerAssignmentEditorViewModel(
                 existingAssignment,
                 Engagements,
-                _managers,
+                Managers,
                 _assignmentService,
                 Messenger)
             {
                 SelectedEngagement = Engagements.FirstOrDefault(e => e.InternalId == existingAssignment.EngagementId),
-                SelectedManager = _managers.FirstOrDefault(m => m.Id == existingAssignment.ManagerId)
+                SelectedManager = Managers.FirstOrDefault(m => m.Id == existingAssignment.ManagerId)
             };
 
             await editorViewModel.LoadDataAsync();
@@ -162,13 +167,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var editorViewModel = new ManagerAssignmentEditorViewModel(
                 existingAssignment,
                 Engagements,
-                _managers,
+                Managers,
                 _assignmentService,
                 Messenger,
                 isReadOnlyMode: true)
             {
                 SelectedEngagement = Engagements.FirstOrDefault(e => e.InternalId == existingAssignment.EngagementId),
-                SelectedManager = _managers.FirstOrDefault(m => m.Id == existingAssignment.ManagerId)
+                SelectedManager = Managers.FirstOrDefault(m => m.Id == existingAssignment.ManagerId)
             };
 
             await editorViewModel.LoadDataAsync();
@@ -200,14 +205,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Messenger.Send(new RefreshDataMessage());
         }
 
-        private bool CanAddAssignment() => SelectedEngagement is not null && _managers.Count > 0;
+        private bool CanAddAssignment() => SelectedManager is not null && Engagements.Count > 0;
 
         private bool CanModifySelection() => SelectedAssignment is not null;
 
-        partial void OnSelectedEngagementChanged(EngagementOption? value)
+        partial void OnSelectedManagerChanged(Manager? value)
         {
             AddCommand.NotifyCanExecuteChanged();
-            _ = LoadAssignmentsForSelectedEngagementAsync();
+            _ = LoadAssignmentsForSelectedManagerAsync();
         }
 
         partial void OnSelectedAssignmentChanged(ManagerAssignmentItem? value)
@@ -217,25 +222,25 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             ViewCommand.NotifyCanExecuteChanged();
         }
 
-        private async Task LoadAssignmentsForSelectedEngagementAsync()
+        private async Task LoadAssignmentsForSelectedManagerAsync()
         {
-            if (SelectedEngagement is null)
+            if (SelectedManager is null)
             {
                 Assignments = new ObservableCollection<ManagerAssignmentItem>();
                 return;
             }
 
-            var assignments = await _assignmentService.GetByEngagementIdAsync(SelectedEngagement.InternalId);
+            var assignments = await _assignmentService.GetByManagerIdAsync(SelectedManager.Id);
             var assignmentItems = assignments
                 .Select(a => new ManagerAssignmentItem(
                     a.Id,
                     a.EngagementId,
-                    SelectedEngagement.EngagementId,
-                    SelectedEngagement.Description,
+                    a.Engagement.EngagementId,
+                    a.Engagement.Description,
                     a.ManagerId,
                     a.Manager.Name,
                     a.Manager.Position))
-                .OrderBy(a => a.ManagerName, StringComparer.OrdinalIgnoreCase)
+                .OrderBy(a => a.EngagementDisplay, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
             Assignments = new ObservableCollection<ManagerAssignmentItem>(assignmentItems);

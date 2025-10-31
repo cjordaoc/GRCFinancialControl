@@ -51,4 +51,7 @@
     <value>An error occurred during import: {0}</value>
     <comment>{0}: Error message returned by the importer.</comment>
   </data>
+  <data name="Import.Warning.SelectClosingPeriod" xml:space="preserve">
+    <value>Selecione um período de fechamento antes de importar o full management data.</value>
+  </data>
 </root>

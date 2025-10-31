@@ -5,13 +5,15 @@ using App.Presentation.Localization;
 using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Persistence.Services.Importers;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
-    public partial class ImportViewModel : ViewModelBase
+    public partial class ImportViewModel : ViewModelBase, IRecipient<ApplicationParametersChangedMessage>
     {
         private const string BudgetType = "Budget";
         private const string FullManagementType = "FullManagement";
@@ -20,6 +22,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly FilePickerService _filePickerService;
         private readonly IImportService _importService;
         private readonly LoggingService _loggingService;
+        private readonly ISettingsService _settingsService;
         private readonly Action<string> _logHandler;
 
         [ObservableProperty]
@@ -30,6 +33,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         [ObservableProperty]
         private string? _fileType;
+
+        [ObservableProperty]
+        private bool _hasClosingPeriodSelected;
+
+        public bool CanSelectFullManagement => HasClosingPeriodSelected && !IsImporting;
+
+        public string? ClosingPeriodSelectionWarning => HasClosingPeriodSelected
+            ? null
+            : LocalizationRegistry.Get("Import.Warning.SelectClosingPeriod");
 
         public string? FileTypeDisplayName => FileType switch
         {
@@ -45,11 +57,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public ImportViewModel(FilePickerService filePickerService,
                                IImportService importService,
-                               LoggingService loggingService)
+                               LoggingService loggingService,
+                               ISettingsService settingsService)
         {
             _filePickerService = filePickerService;
             _importService = importService;
             _loggingService = loggingService;
+            _settingsService = settingsService;
             _logHandler = message =>
             {
                 if (Dispatcher.UIThread.CheckAccess())
@@ -74,6 +88,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             if (IsImporting)
             {
+                return;
+            }
+
+            if (string.Equals(fileType, FullManagementType, StringComparison.Ordinal) && !HasClosingPeriodSelected)
+            {
+                StatusMessage = LocalizationRegistry.Get("Import.Warning.SelectClosingPeriod");
                 return;
             }
 
@@ -138,18 +158,33 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private bool CanImport()
         {
-            return !IsImporting && !string.IsNullOrEmpty(FileType);
+            if (IsImporting || string.IsNullOrEmpty(FileType))
+            {
+                return false;
+            }
+
+            if (string.Equals(FileType, FullManagementType, StringComparison.Ordinal))
+            {
+                return HasClosingPeriodSelected;
+            }
+
+            return true;
         }
 
-        public override Task LoadDataAsync()
+        public override async Task LoadDataAsync()
         {
             StatusMessage = null;
-            return Task.CompletedTask;
+            var defaultClosingPeriodId = await _settingsService
+                .GetDefaultClosingPeriodIdAsync()
+                .ConfigureAwait(false);
+
+            HasClosingPeriodSelected = defaultClosingPeriodId.HasValue;
         }
 
         partial void OnIsImportingChanged(bool value)
         {
             ImportCommand.NotifyCanExecuteChanged();
+            OnPropertyChanged(nameof(CanSelectFullManagement));
         }
 
         partial void OnFileTypeChanged(string? value)
@@ -158,6 +193,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             OnPropertyChanged(nameof(SelectedImportTitle));
             StatusMessage = null;
             ImportCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnHasClosingPeriodSelectedChanged(bool value)
+        {
+            NotifyCommandCanExecute(ImportCommand);
+            OnPropertyChanged(nameof(CanSelectFullManagement));
+            OnPropertyChanged(nameof(ClosingPeriodSelectionWarning));
+        }
+
+        public void Receive(ApplicationParametersChangedMessage message)
+        {
+            HasClosingPeriodSelected = message.ClosingPeriodId.HasValue;
         }
     }
 }

@@ -52,4 +52,6 @@ public static class Import
     public static string Import_Status_InvalidType => ResourceManager.GetString("Import.Status.InvalidType", resourceCulture) ?? "Import.Status.InvalidType";
 
     public static string Import_Status_Error => ResourceManager.GetString("Import.Status.Error", resourceCulture) ?? "Import.Status.Error";
+
+    public static string Import_Warning_SelectClosingPeriod => ResourceManager.GetString("Import.Warning.SelectClosingPeriod", resourceCulture) ?? "Import.Warning.SelectClosingPeriod";
 }
