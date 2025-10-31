@@ -8,14 +8,24 @@ public partial class NavigationItemViewModel : ObservableObject
 {
     private readonly Action<NavigationItemViewModel> _activate;
 
-    public NavigationItemViewModel(string title, Action<NavigationItemViewModel> activate)
+    public NavigationItemViewModel(
+        string key,
+        string title,
+        ViewModelBase targetViewModel,
+        Action<NavigationItemViewModel> activate)
     {
+        Key = key ?? throw new ArgumentNullException(nameof(key));
         Title = title ?? throw new ArgumentNullException(nameof(title));
+        TargetViewModel = targetViewModel ?? throw new ArgumentNullException(nameof(targetViewModel));
         _activate = activate ?? throw new ArgumentNullException(nameof(activate));
         SelectCommand = new RelayCommand(() => _activate(this));
     }
 
+    public string Key { get; }
+
     public string Title { get; }
+
+    public ViewModelBase TargetViewModel { get; }
 
     [ObservableProperty]
     private bool _isSelected;

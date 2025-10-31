@@ -32,6 +32,7 @@ This document details the implementation for every functional capability describ
   1. `GetAllocationAsync` loads engagement budgets with fiscal-year metadata and builds snapshot rows (`BuildRows`).
   2. `SaveAsync` validates requested updates and applies them to tracked budgets, recalculating consumed/remaining hours and traffic-light status through domain methods such as `UpdateConsumedHours`, `UpdateAdditionalHours`, and `CalculateIncurredHours`.
   3. Adjustment requests are grouped by normalized rank and persisted with midpoint rounding.
+  4. `AllocationEditorViewModel` resolves each row's display currency via `CurrencyDisplayHelper`, showing target/current/variance amounts with the engagement currency or the default fallback configured in Settings.
 - **Validation Mechanics:**
   - Ensures the engagement exists and has budgets; missing records throw `InvalidOperationException`.
   - Fiscal years flagged `IsLocked` are guarded against edits.
@@ -59,7 +60,7 @@ This document details the implementation for every functional capability describ
 - **Persistence:** Table `PlannedAllocations`
 - **Workflow:**
   1. `GetAllocationsForEngagementAsync` retrieves existing allocations with associated closing periods/fiscal years.
-  2. `SaveAllocationsForEngagementAsync` ensures the engagement is mutable, loads existing rows, and builds period lookups.
+  2. `SaveAllocationsForEngagementAsync` ensures the engagement is mutable (not manual-only and not Closed), loads existing rows, and builds period lookups.
   3. Locked fiscal years are compared field-by-field; any attempt to add/remove/change allocations raises `InvalidOperationException` with guidance.
   4. Unlocked allocations are deleted and re-inserted with normalized rounding prior to `SaveChangesAsync`.
 - **Validation Mechanics:**
@@ -84,7 +85,7 @@ This document details the implementation for every functional capability describ
   - Emitted/requested/canceled items remain visible but read-only; only planned items can be recalculated or removed when the invoice count changes (at least one editable line is always present).
   - Changing the **# Invoices** field enforces that the grid shows exactly that number of editable rows in addition to any emitted items already stored for the engagement.
   - Editing the percentage or amount on a planned line recalculates the companion value and redistributes the remaining editable lines evenly so that total percentage stays at 100% and total amount matches the engagement total. Rounding differences flow into the last editable line.
-  - Monetary inputs and totals display the engagement currency symbol; percentages show two decimals plus the `%` suffix. Emission dates use short-date formatting.
+  - Monetary inputs and totals display the engagement currency symbol, falling back to the default currency configured in Settings when an engagement lacks a code; percentages show two decimals plus the `%` suffix. Emission dates use short-date formatting.
   - Totals highlight in red and the Save action is disabled whenever the aggregated percentage or amount diverges from the required targets (100.00% / engagement total).
 - **Validation Mechanics:**
   - Stored procedure filters by due date and checks `MailOutboxLog` to prevent duplicates.
@@ -122,7 +123,7 @@ This document details the implementation for every functional capability describ
   - Missing required headers or malformed workbooks raise `InvalidDataException` with user-centric instructions (e.g., "clear filters").
   - Decimal parsing sanitizes numeric strings, strips thousand separators, and enforces rounding precision.
   - Status/rank columns are normalized via `NormalizeWhitespace` to maintain consistent storage.
-  - Importers call `EngagementImportSkipEvaluator` to ignore rows targeting S/4 Project engagements or engagements with status `Closed`, emitting the warnings `⚠ Values for S/4 Projects must be inserted manually. Data import was skipped for Engagement {EngagementID}.` and `⚠ Engagement {EngagementID} skipped – status Closed.` while recording the skip reasons in the summary payloads.
+- Importers call `EngagementImportSkipEvaluator` to ignore rows targeting S/4 Project engagements or engagements with status `Closed`, emitting the warnings `⚠ Values for S/4 Projects must be inserted manually. Data import was skipped for Engagement {EngagementID}.` and `⚠ Engagement {EngagementID} skipped – status is Closed.` while recording the skip reasons in the summary payloads.
 
 ---
 
@@ -158,9 +159,11 @@ This document details the implementation for every functional capability describ
 - **Primary Components:** `ApplicationDataBackupService`, `IApplicationDataBackupService`, `SettingsViewModel`
 - **Dependencies:** `IDbContextFactory<ApplicationDbContext>`, `ISettingsService`, `FilePickerService`, `DialogService`
 - **Workflow:**
-  1. Export requests call `ApplicationDataBackupService.ExportAsync`, which opens a database connection, enumerates tables from the EF model, and writes an XML document with column metadata and serialized values.
-  2. Import requests prompt the user for confirmation and delegate to `ImportAsync`, which parses the XML, disables foreign-key checks, deletes existing rows, inserts the payload with typed parameters, and re-enables constraints within a transaction.
-  3. `SettingsViewModel` exposes `ExportApplicationDataCommand` and `ImportApplicationDataCommand`, updating the UI status area and refreshing in-memory caches via `RefreshDataMessage` after a successful restore.
+  1. `SettingsViewModel` loads persisted preferences (language, environment, and `SettingKeys.DefaultCurrency`), applying `CurrencyDisplayHelper.SetDefaultCurrency` during initialization so Avalonia layers render consistent currency symbols.
+  2. Users adjust the Default Currency selector, which persists the new value, updates the settings service, and immediately invokes `CurrencyDisplayHelper.SetDefaultCurrency` so both desktop apps share the fallback symbol without requiring a restart.
+  3. Export requests call `ApplicationDataBackupService.ExportAsync`, which opens a database connection, enumerates tables from the EF model, and writes an XML document with column metadata and serialized values.
+  4. Import requests prompt the user for confirmation and delegate to `ImportAsync`, which parses the XML, disables foreign-key checks, deletes existing rows, inserts the payload with typed parameters, and re-enables constraints within a transaction.
+  5. After a connection package import, data restore, or language change, `SettingsViewModel` sends `ApplicationRestartRequestedMessage`; both main window view models persist their last navigation key (`SettingKeys.LastGrcNavigationItemKey`/`SettingKeys.LastInvoicePlannerSectionKey`) so the restarted app returns to the previously selected workspace with the saved language.
 - **Validation Mechanics:**
   - Both export/import paths fall back to building a context from saved settings if the DI factory lacks a configured provider; missing credentials raise `InvalidOperationException` with guidance.
   - XML serialization captures type information (including binary data) using invariant formatting to ensure round-trippable values on restore.
@@ -172,9 +175,12 @@ This document details the implementation for every functional capability describ
 - **Pattern:** MVVM enforced across Avalonia projects (`App.Presentation`, `GRCFinancialControl.Avalonia`)
 - **Key Components:** View models leverage `RelayCommand`/`AsyncRelayCommand`; modal interactions flow through a centralized ModalService.
 - **Guidelines:**
-  - Views contain declarative layout only; logic belongs in view models or services.
-  - Modal overlays use opaque backgrounds to focus attention.
-  - Validation feedback is surfaced via bound properties fed by importer/planner summaries.
+- Views contain declarative layout only; logic belongs in view models or services.
+- Modal overlays use opaque backgrounds to focus attention.
+- Validation feedback is surfaced via bound properties fed by importer/planner summaries.
+- Dialog editors expose an `IsReadOnlyMode` flag; `DialogEditorViewModel` and specialized editors (closing periods, fiscal years, allocations) bind text inputs via `IsReadOnly` and disable interactive controls when the View command opens them.
+- Numeric editors opt into `App.Presentation.Behaviors.NumericInputNullSafety`; the attached handler listens for focus loss and rewrites empty values to `0` (or `0.00` via binding formats) so Avalonia never raises binding exceptions when users clear numeric fields.
+- `EngagementEditorViewModel` evaluates the selected status text and, when it resolves to `Closed` for persisted records, forces the editor into read-only mode (papd/manager sections, source selector, and financial evolution grid) while leaving the status ComboBox and Save command enabled so users can intentionally reopen the engagement.
 
 
 ---
@@ -185,3 +191,14 @@ This document details the implementation for every functional capability describ
   - `ViewModelBase` now derives from `ObservableValidator`, enabling dialog editors to participate in `INotifyDataErrorInfo` workflows.
   - `CustomerEditorViewModel` annotates Name and Customer Code with `[Required]` attributes and exposes `NameError`/`CustomerCodeError` accessors for inline messaging.
   - `DialogEditorViewModel` listens to `ErrorsChanged` and disables the Save command while any validation errors remain, ensuring only complete records are persisted.
+  - `CustomersViewModel`, `ManagersViewModel`, `PapdViewModel`, `ClosingPeriodsViewModel`, `FiscalYearsViewModel`, `EngagementsViewModel`, `ManagerAssignmentsViewModel`, and `PapdAssignmentsViewModel` pass `isReadOnlyMode: true` when executing the View command so their dialogs render in read-only state (text boxes bind `IsReadOnlyMode`, combo/date pickers use `AllowEditing`).
+
+---
+
+## Global Compliance & Verification
+- **Startup Logging:** `GRCFinancialControl.Avalonia.App` and `InvoicePlanner.Avalonia.App` resolve `ILogger<App>` after building their service providers and log the restored language, default currency, and whether connection settings were detected. Restart attempts log the executable plus argument payload before relaunching, helping support teams confirm that language/currency persistence and environment selection survived the restart trigger.
+- **Restart Messaging:** Both desktop shells emit informational log entries whenever `ApplicationRestartRequestedMessage` is processed so telemetry captures which operations (language change, package import, data restore) required a relaunch.
+- **Import Safeguards:** `EngagementImportSkipEvaluator` continues to emit structured metadata used by `ImportService`/`FullManagementDataImporter`; warning messages are added to the per-import summaries and written to the central logger so audit trails show each skipped S/4 Project or Closed engagement.
+- **Read-Only Enforcement:** Dialog view models refresh editing flags when `IsReadOnlyMode` or the engagement status changes, keeping Closed engagements locked while still allowing status updates and ensuring View-mode dialogs remain non-editable until reopened via Add/Edit flows.
+- **Currency & Numeric Stability:** `CurrencyDisplayHelper` centralizes formatting (symbol resolution, localized separators, fixed decimal places) while `NumericInputNullSafety` attaches to numeric controls in both apps to rewrite blank values to zero on focus loss, preventing Avalonia parse exceptions and ensuring totals remain accurate.
+- **Assignment Parity:** Manager and PAPD assignment tabs reuse the same anchoring logic (Add/Edit/View/Delete pipelines) so engagement links behave identically regardless of the selected anchor, avoiding divergent validation or persistence paths.

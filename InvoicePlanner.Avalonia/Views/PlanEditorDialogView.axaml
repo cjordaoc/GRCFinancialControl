@@ -7,6 +7,7 @@
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              xmlns:conv="clr-namespace:App.Presentation.Converters;assembly=App.Presentation"
              xmlns:behaviors="using:InvoicePlanner.Avalonia.Behaviors"
+             xmlns:appBehaviors="clr-namespace:App.Presentation.Behaviors;assembly=App.Presentation"
              x:Class="InvoicePlanner.Avalonia.Views.PlanEditorDialogView"
              x:Name="PlanEditorRoot"
              x:DataType="vm:PlanEditorDialogViewModel"
@@ -58,7 +59,7 @@
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.BaseValue}" Classes="Caption" VerticalAlignment="Center" />
                     <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource Space4}" VerticalAlignment="Center">
                         <TextBlock Grid.Column="0" Text="{Binding CurrencySymbol}" IsVisible="{Binding HasCurrencySymbol}" VerticalAlignment="Center" />
-                        <NumericUpDown Grid.Column="1" Minimum="0" Maximum="100000000" Increment="100" FormatString="F2" Value="{Binding PlanningBaseValue}" HorizontalAlignment="Stretch" MinWidth="200" />
+                        <NumericUpDown Grid.Column="1" Minimum="0" Maximum="100000000" Increment="100" FormatString="F2" Value="{Binding PlanningBaseValue}" HorizontalAlignment="Stretch" MinWidth="200" appBehaviors:NumericInputNullSafety.IsEnabled="True" />
                     </Grid>
 
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.FocalPoint}" Classes="Caption" VerticalAlignment="Center" />

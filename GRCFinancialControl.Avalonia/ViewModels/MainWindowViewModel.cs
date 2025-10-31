@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -8,12 +10,17 @@ using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Avalonia;
+using GRCFinancialControl.Core.Configuration;
+using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
     public partial class MainWindowViewModel : ViewModelBase
     {
         private readonly LoggingService _loggingService;
+        private readonly ISettingsService _settingsService;
+        private readonly Dictionary<string, NavigationItem> _navigationIndex;
+        private string? _lastPersistedNavigationKey;
 
         public HomeViewModel Home { get; }
         public EngagementsViewModel Engagements { get; }
@@ -45,12 +52,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                                    ControlMasterDataViewModel controlMasterDataViewModel,
                                    TasksViewModel tasksViewModel,
                                    LoggingService loggingService,
+                                   ISettingsService settingsService,
                                    IMessenger messenger)
             : base(messenger)
         {
             ArgumentNullException.ThrowIfNull(loggingService);
+            ArgumentNullException.ThrowIfNull(settingsService);
 
             _loggingService = loggingService;
+            _settingsService = settingsService;
             Home = homeViewModel;
             Engagements = engagementsViewModel;
             GrcTeam = grcTeamViewModel;
@@ -64,19 +74,31 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             NavigationItems = new ObservableCollection<NavigationItem>
             {
-                new(LocalizationRegistry.Get("Navigation.Home"), Home),
-                new(LocalizationRegistry.Get("Navigation.Import"), Import),
-                new(LocalizationRegistry.Get("Navigation.Engagements"), Engagements),
-                new(LocalizationRegistry.Get("Navigation.GrcTeam"), GrcTeam),
-                new(LocalizationRegistry.Get("Navigation.Allocations"), Allocations),
-                new(LocalizationRegistry.Get("Navigation.Reports"), Reports),
-                new(LocalizationRegistry.Get("Navigation.Tasks"), Tasks),
-                new(LocalizationRegistry.Get("Navigation.ControlMasterData"), ControlMasterData),
-                new(LocalizationRegistry.Get("Navigation.MasterData"), AppMasterData),
-                new(LocalizationRegistry.Get("Navigation.Settings"), Settings)
+                new(NavigationKeys.Home, LocalizationRegistry.Get("Navigation.Home"), Home),
+                new(NavigationKeys.Import, LocalizationRegistry.Get("Navigation.Import"), Import),
+                new(NavigationKeys.Engagements, LocalizationRegistry.Get("Navigation.Engagements"), Engagements),
+                new(NavigationKeys.GrcTeam, LocalizationRegistry.Get("Navigation.GrcTeam"), GrcTeam),
+                new(NavigationKeys.Allocations, LocalizationRegistry.Get("Navigation.Allocations"), Allocations),
+                new(NavigationKeys.Reports, LocalizationRegistry.Get("Navigation.Reports"), Reports),
+                new(NavigationKeys.Tasks, LocalizationRegistry.Get("Navigation.Tasks"), Tasks),
+                new(NavigationKeys.ControlMasterData, LocalizationRegistry.Get("Navigation.ControlMasterData"), ControlMasterData),
+                new(NavigationKeys.AppMasterData, LocalizationRegistry.Get("Navigation.MasterData"), AppMasterData),
+                new(NavigationKeys.Settings, LocalizationRegistry.Get("Navigation.Settings"), Settings)
             };
 
-            SelectedNavigationItem = NavigationItems.FirstOrDefault();
+            _navigationIndex = BuildNavigationIndex(NavigationItems);
+
+            var settings = _settingsService.GetAll();
+            NavigationItem? initialItem = null;
+            if (settings.TryGetValue(SettingKeys.LastGrcNavigationItemKey, out var storedKey)
+                && !string.IsNullOrWhiteSpace(storedKey)
+                && _navigationIndex.TryGetValue(storedKey, out var storedItem))
+            {
+                _lastPersistedNavigationKey = storedKey;
+                initialItem = storedItem;
+            }
+
+            SelectedNavigationItem = initialItem ?? NavigationItems.FirstOrDefault();
         }
 
         [RelayCommand]
@@ -102,6 +124,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (ActiveView is null)
             {
                 UpdateSelectionFlags(value);
+                await PersistSelectedNavigationItemAsync(value).ConfigureAwait(false);
                 return;
             }
 
@@ -114,10 +137,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 var sectionName = value?.Title ?? ActiveView.GetType().Name;
                 _loggingService.LogError($"Failed to load '{sectionName}': {ex.Message}");
             }
-            finally
-            {
-                UpdateSelectionFlags(value);
-            }
+
+            UpdateSelectionFlags(value);
+            await PersistSelectedNavigationItemAsync(value).ConfigureAwait(false);
         }
 
         private void UpdateSelectionFlags(NavigationItem? selectedItem)
@@ -136,24 +158,99 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 UpdateSelectionFor(child, selectedItem);
             }
         }
+
+        private async Task PersistSelectedNavigationItemAsync(NavigationItem? item)
+        {
+            var key = item?.Key ?? string.Empty;
+            if (string.Equals(_lastPersistedNavigationKey, key, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            try
+            {
+                var settings = await _settingsService.GetAllAsync().ConfigureAwait(false);
+
+                if (string.IsNullOrWhiteSpace(key))
+                {
+                    if (settings.Remove(SettingKeys.LastGrcNavigationItemKey))
+                    {
+                        await _settingsService.SaveAllAsync(settings).ConfigureAwait(false);
+                        _lastPersistedNavigationKey = key;
+                    }
+
+                    return;
+                }
+
+                settings[SettingKeys.LastGrcNavigationItemKey] = key;
+                await _settingsService.SaveAllAsync(settings).ConfigureAwait(false);
+                _lastPersistedNavigationKey = key;
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogError($"Failed to persist navigation state: {ex.Message}");
+            }
+        }
+
+        private static Dictionary<string, NavigationItem> BuildNavigationIndex(IEnumerable<NavigationItem> items)
+        {
+            var index = new Dictionary<string, NavigationItem>(StringComparer.Ordinal);
+
+            void AddItem(NavigationItem navigationItem)
+            {
+                if (!string.IsNullOrWhiteSpace(navigationItem.Key))
+                {
+                    index[navigationItem.Key] = navigationItem;
+                }
+
+                foreach (var child in navigationItem.Children)
+                {
+                    AddItem(child);
+                }
+            }
+
+            foreach (var item in items)
+            {
+                AddItem(item);
+            }
+
+            return index;
+        }
+
+        private static class NavigationKeys
+        {
+            public const string Home = "Home";
+            public const string Import = "Import";
+            public const string Engagements = "Engagements";
+            public const string GrcTeam = "GrcTeam";
+            public const string Allocations = "Allocations";
+            public const string Reports = "Reports";
+            public const string Tasks = "Tasks";
+            public const string ControlMasterData = "ControlMasterData";
+            public const string AppMasterData = "AppMasterData";
+            public const string Settings = "Settings";
+        }
     }
 
     public class NavigationItem : ObservableObject
     {
-        public NavigationItem(string title, ViewModelBase? viewModel)
+        public NavigationItem(string key, string title, ViewModelBase? viewModel)
         {
-            Title = title;
+            Key = key ?? throw new ArgumentNullException(nameof(key));
+            Title = title ?? throw new ArgumentNullException(nameof(title));
             ViewModel = viewModel;
             Children = new ObservableCollection<NavigationItem>();
         }
 
-        public NavigationItem(string title, ViewModelBase? viewModel, ObservableCollection<NavigationItem> children)
+        public NavigationItem(string key, string title, ViewModelBase? viewModel, ObservableCollection<NavigationItem> children)
         {
-            Title = title;
+            Key = key ?? throw new ArgumentNullException(nameof(key));
+            Title = title ?? throw new ArgumentNullException(nameof(title));
             ViewModel = viewModel;
-            Children = children;
+            Children = children ?? throw new ArgumentNullException(nameof(children));
         }
 
+        public string Key { get; }
         public string Title { get; }
         public ViewModelBase? ViewModel { get; }
         public ObservableCollection<NavigationItem> Children { get; }

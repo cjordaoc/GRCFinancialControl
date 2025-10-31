@@ -4,9 +4,13 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:loc="using:App.Presentation.Localization"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             xmlns:appConv="clr-namespace:App.Presentation.Converters;assembly=App.Presentation"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.EngagementsView"
              x:DataType="vm:EngagementsViewModel">
+    <UserControl.Resources>
+        <appConv:CurrencyDisplayConverter x:Key="CurrencyDisplayConverter"/>
+    </UserControl.Resources>
     <Grid RowDefinitions="Auto,*,Auto" Margin="10">
         <TextBlock Text="{loc:Loc Key=Admin.Engagements.Title.List}" FontSize="24" FontWeight="Bold" Margin="0,0,0,10"/>
 
@@ -23,7 +27,20 @@
                 <DataGridTextColumn Header="Engagement ID" Binding="{Binding EngagementId}" Width="*"/>
                 <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="2*"/>
                 <DataGridTextColumn Header="Customer Name" Binding="{Binding CustomerName}" Width="*"/>
-                <DataGridTextColumn Header="Opening Value" Binding="{Binding OpeningValue, StringFormat='{}{0:N2}'}" Width="*"/>
+                <DataGridTemplateColumn Header="Opening Value" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <TextBlock.Text>
+                                    <MultiBinding Converter="{StaticResource CurrencyDisplayConverter}">
+                                        <Binding Path="OpeningValue"/>
+                                        <Binding Path="Currency"/>
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="Auto"/>
                 <DataGridTextColumn Header="Estimated Hours" Binding="{Binding EstimatedToCompleteHours, StringFormat='{}{0:N2}'}" Width="*"/>
                 <DataGridTextColumn Header="Planned Hours" Binding="{Binding InitialHoursBudget, StringFormat='{}{0:N2}'}" Width="*"/>

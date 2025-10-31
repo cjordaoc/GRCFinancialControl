@@ -12,6 +12,8 @@ public interface IInvoicePlanRepository
 
     IReadOnlyList<EngagementLookup> ListEngagementsForPlanning();
 
+    string? GetEngagementCurrency(string engagementId);
+
     IReadOnlyList<InvoicePlanSummary> ListPlansForRequestStage();
 
     IReadOnlyList<InvoicePlanSummary> ListPlansForEmissionStage();

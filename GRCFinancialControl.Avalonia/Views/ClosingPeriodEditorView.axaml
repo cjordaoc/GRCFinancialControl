@@ -20,7 +20,7 @@
                              Grid.Column="1"
                              Text="{Binding Name}"
                              Watermark="{loc:Loc Key=Admin.ClosingPeriods.Placeholder.Name}"
-                             IsEnabled="{Binding AllowEditing}"/>
+                             IsReadOnly="{Binding IsReadOnlyMode}"/>
 
                     <TextBlock Grid.Row="1"
                                Grid.Column="0"

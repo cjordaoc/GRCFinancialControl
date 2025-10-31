@@ -2,6 +2,7 @@ using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Invoices.Core.Enums;
+using App.Presentation.Services;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
@@ -10,6 +11,7 @@ public partial class EmissionConfirmationLineViewModel : ObservableObject
     private readonly RelayCommand _closeCommand;
     private readonly RelayCommand _cancelCommand;
     private EmissionConfirmationViewModel? _owner;
+    private string? _currencyCode;
 
     public EmissionConfirmationLineViewModel()
     {
@@ -60,6 +62,8 @@ public partial class EmissionConfirmationLineViewModel : ObservableObject
 
     public bool IsCanceled => Status == InvoiceItemStatus.Canceled;
 
+    public string AmountDisplay => CurrencyDisplayHelper.Format(Amount, _currencyCode);
+
     internal void Attach(EmissionConfirmationViewModel owner)
     {
         _owner = owner;
@@ -79,6 +83,11 @@ public partial class EmissionConfirmationLineViewModel : ObservableObject
         OnPropertyChanged(nameof(IsEmitted));
         OnPropertyChanged(nameof(IsCanceled));
         _owner?.RefreshSummaries();
+    }
+
+    partial void OnAmountChanged(decimal value)
+    {
+        OnPropertyChanged(nameof(AmountDisplay));
     }
 
     partial void OnBzCodeChanged(string? value) => NotifyCommandStates();
@@ -116,5 +125,11 @@ public partial class EmissionConfirmationLineViewModel : ObservableObject
     {
         _closeCommand.NotifyCanExecuteChanged();
         _cancelCommand.NotifyCanExecuteChanged();
+    }
+
+    internal void SetCurrency(string? currencyCode)
+    {
+        _currencyCode = string.IsNullOrWhiteSpace(currencyCode) ? null : currencyCode.Trim().ToUpperInvariant();
+        OnPropertyChanged(nameof(AmountDisplay));
     }
 }

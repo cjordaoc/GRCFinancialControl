@@ -26,7 +26,7 @@ namespace GRCFinancialControl.Persistence.Services.Infrastructure
             {
                 metadata = new ImportSkipMetadata(
                     "ClosedEngagement",
-                    $"⚠ Engagement {engagement.EngagementId} skipped – status Closed.");
+                    $"⚠ Engagement {engagement.EngagementId} skipped – status is Closed.");
                 return true;
             }
 

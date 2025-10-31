@@ -3,6 +3,7 @@ using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Invoices.Core.Enums;
 using Invoices.Core.Payments;
+using App.Presentation.Services;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
@@ -55,11 +56,15 @@ public partial class InvoicePlanLineViewModel : ObservableObject
 
     public bool IsEditable => Status == InvoiceItemStatus.Planned;
 
+    public bool ShowReadOnlyAmount => !IsEditable;
+
     public PlanEditorViewModel? Owner => _owner;
 
     public string CurrencySymbol => _owner?.CurrencySymbol ?? string.Empty;
 
     public bool HasCurrencySymbol => _owner?.HasCurrencySymbol ?? false;
+
+    public string AmountDisplay => _owner?.FormatAmount(Amount) ?? CurrencyDisplayHelper.Format(Amount, null);
 
     public PaymentTypeOption SelectedPaymentTypeOption
     {
@@ -89,6 +94,7 @@ public partial class InvoicePlanLineViewModel : ObservableObject
         OnPropertyChanged(nameof(Owner));
         OnPropertyChanged(nameof(CurrencySymbol));
         OnPropertyChanged(nameof(HasCurrencySymbol));
+        OnPropertyChanged(nameof(AmountDisplay));
     }
 
     internal void Detach()
@@ -102,6 +108,7 @@ public partial class InvoicePlanLineViewModel : ObservableObject
         OnPropertyChanged(nameof(Owner));
         OnPropertyChanged(nameof(CurrencySymbol));
         OnPropertyChanged(nameof(HasCurrencySymbol));
+        OnPropertyChanged(nameof(AmountDisplay));
     }
 
     partial void OnPercentageChanged(decimal value)
@@ -122,6 +129,7 @@ public partial class InvoicePlanLineViewModel : ObservableObject
         }
 
         _owner?.HandleLineAmountChanged(this);
+        OnPropertyChanged(nameof(AmountDisplay));
     }
 
     internal void SetPercentage(decimal value)
@@ -155,6 +163,7 @@ public partial class InvoicePlanLineViewModel : ObservableObject
     partial void OnStatusChanged(InvoiceItemStatus value)
     {
         OnPropertyChanged(nameof(IsEditable));
+        OnPropertyChanged(nameof(ShowReadOnlyAmount));
     }
 
     partial void OnPaymentTypeCodeChanged(string value)
@@ -168,6 +177,14 @@ public partial class InvoicePlanLineViewModel : ObservableObject
         {
             OnPropertyChanged(nameof(CurrencySymbol));
             OnPropertyChanged(nameof(HasCurrencySymbol));
+            OnPropertyChanged(nameof(AmountDisplay));
         }
+    }
+
+    internal void NotifyCurrencyChanged()
+    {
+        OnPropertyChanged(nameof(CurrencySymbol));
+        OnPropertyChanged(nameof(HasCurrencySymbol));
+        OnPropertyChanged(nameof(AmountDisplay));
     }
 }

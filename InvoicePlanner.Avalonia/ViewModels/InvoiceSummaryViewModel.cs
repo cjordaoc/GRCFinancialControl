@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using App.Presentation.Localization;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using InvoicePlanner.Avalonia.Services;
@@ -100,6 +101,8 @@ public partial class InvoiceSummaryViewModel : ViewModelBase
 
     public bool HasValidationMessage => !string.IsNullOrWhiteSpace(ValidationMessage);
 
+    public string TotalAmountDisplay => CurrencyDisplayHelper.Format(TotalAmount, null);
+
     public IRelayCommand RefreshCommand { get; }
 
     public IRelayCommand ClearFiltersCommand { get; }
@@ -116,6 +119,11 @@ public partial class InvoiceSummaryViewModel : ViewModelBase
     partial void OnValidationMessageChanged(string? value)
     {
         OnPropertyChanged(nameof(HasValidationMessage));
+    }
+
+    partial void OnTotalAmountChanged(decimal value)
+    {
+        OnPropertyChanged(nameof(TotalAmountDisplay));
     }
 
     private void RefreshSummary()

@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using App.Presentation.Localization;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Invoices.Core.Models;
 
@@ -23,7 +24,8 @@ public class NotificationPreviewItemViewModel : ObservableObject
         ToRecipient = BuildToRecipient(preview);
         CcRecipients = BuildCcRecipients(preview);
         Subject = BuildSubject(preview);
-        Body = BuildBody(preview);
+        var formattedAmount = CurrencyDisplayHelper.Format(preview.Amount, null);
+        Body = BuildBody(preview, formattedAmount);
         RecipientEmails = BuildRecipientEmails(preview);
         ManagerNames = NormalizeList(preview.ManagerNames);
         CustomerDisplay = string.IsNullOrWhiteSpace(preview.CustomerName)
@@ -33,7 +35,7 @@ public class NotificationPreviewItemViewModel : ObservableObject
         NotifyDisplay = LocalizationRegistry.Format("Notifications.Format.NotifyDate", preview.NotifyDate);
         EmissionDisplay = LocalizationRegistry.Format("Notifications.Format.EmissionDate", preview.EmissionDate);
         DueDisplay = LocalizationRegistry.Format("Notifications.Format.DueDate", preview.ComputedDueDate);
-        AmountDisplay = LocalizationRegistry.Format("Notifications.Format.Amount", preview.Amount);
+        AmountDisplay = LocalizationRegistry.Format("Notifications.Format.Amount", formattedAmount);
         ToDisplay = LocalizationRegistry.Format("Notifications.Format.ToRecipients", ToRecipient);
         CcDisplay = LocalizationRegistry.Format("Notifications.Format.CcRecipients", string.IsNullOrWhiteSpace(CcRecipients) ? string.Empty : CcRecipients);
         RecipientsDisplay = LocalizationRegistry.Format("Notifications.Format.Recipients", RecipientEmails);
@@ -154,7 +156,7 @@ public class NotificationPreviewItemViewModel : ObservableObject
         return LocalizationRegistry.Format("Notifications.Format.Subject", preview.EmissionDate, preview.EngagementId, preview.SeqNo, preview.NumInvoices);
     }
 
-    private static string BuildBody(InvoiceNotificationPreview preview)
+    private static string BuildBody(InvoiceNotificationPreview preview, string formattedAmount)
     {
         var builder = new StringBuilder();
         var managerNames = NormalizeList(preview.ManagerNames);
@@ -168,7 +170,7 @@ public class NotificationPreviewItemViewModel : ObservableObject
         builder.AppendLine(LocalizationRegistry.Format("Notifications.Template.Frs", preview.FrsNumber ?? string.Empty));
         builder.AppendLine(LocalizationRegistry.Format("Notifications.Template.Ticket", preview.RitmNumber ?? string.Empty));
         builder.AppendLine(LocalizationRegistry.Format("Notifications.Template.Installment", preview.SeqNo, preview.NumInvoices));
-        builder.AppendLine(LocalizationRegistry.Format("Notifications.Template.Amount", preview.Amount.ToString("C2", CultureInfo.CurrentCulture)));
+        builder.AppendLine(LocalizationRegistry.Format("Notifications.Template.Amount", formattedAmount));
         builder.AppendLine(LocalizationRegistry.Format("Notifications.Template.DueDate", preview.ComputedDueDate.ToString("dd/MM/yyyy", culture)));
         builder.AppendLine(LocalizationRegistry.Format("Notifications.Template.Contact", preview.CustomerName ?? string.Empty, preview.CustomerFocalPointName ?? string.Empty));
         builder.AppendLine(LocalizationRegistry.Format("Notifications.Template.Recipients", recipientEmails));

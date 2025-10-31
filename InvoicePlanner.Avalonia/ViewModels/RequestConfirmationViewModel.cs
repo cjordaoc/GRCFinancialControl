@@ -25,6 +25,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
     private readonly RelayCommand _reverseSelectedLineCommand;
     private readonly RelayCommand _closePlanDetailsCommand;
     private RequestConfirmationLineViewModel? _selectedLineSubscription;
+    private string? _currentCurrencyCode;
 
     public RequestConfirmationViewModel(
         IInvoicePlanRepository repository,
@@ -207,6 +208,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
             if (plan is null)
             {
                 ClearLines();
+                _currentCurrencyCode = null;
                 EngagementId = string.Empty;
                 CurrentPlanId = 0;
                 ValidationMessage = LocalizationRegistry.Format("Request.Validation.PlanNotFound", SelectedPlan.Id);
@@ -215,6 +217,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
 
             CurrentPlanId = plan.Id;
             EngagementId = plan.EngagementId;
+            _currentCurrencyCode = _repository.GetEngagementCurrency(plan.EngagementId);
 
             ClearLines();
 
@@ -232,6 +235,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
                     RequestDate = item.RequestDate ?? DateTime.Today,
                 };
 
+                line.SetCurrency(_currentCurrencyCode);
                 Lines.Add(line);
             }
 
@@ -374,6 +378,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         Lines.Clear();
         SelectedLine = null;
         IsPlanDetailsVisible = false;
+        _currentCurrencyCode = null;
         RefreshSummaries();
         OnPropertyChanged(nameof(HasLines));
     }

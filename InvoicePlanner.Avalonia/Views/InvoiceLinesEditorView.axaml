@@ -6,6 +6,7 @@
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              xmlns:conv="clr-namespace:App.Presentation.Converters;assembly=App.Presentation"
              xmlns:behaviors="using:InvoicePlanner.Avalonia.Behaviors"
+             xmlns:appBehaviors="clr-namespace:App.Presentation.Behaviors;assembly=App.Presentation"
              x:Class="InvoicePlanner.Avalonia.Views.InvoiceLinesEditorView"
              x:DataType="vm:InvoiceLinesEditorViewModel"
              mc:Ignorable="d">
@@ -67,7 +68,8 @@
                                                Value="{Binding Editor.NumInvoices}"
                                                MinWidth="120"
                                                Width="160"
-                                               HorizontalAlignment="Left" />
+                                               HorizontalAlignment="Left"
+                                               appBehaviors:NumericInputNullSafety.IsEnabled="True" />
                             </StackPanel>
 
                             <Button Content="{loc:Loc Key=Common.Button.Refresh}"
@@ -91,7 +93,8 @@
                                                Value="{Binding Editor.PaymentTermDays}"
                                                MinWidth="120"
                                                Width="160"
-                                               HorizontalAlignment="Left" />
+                                               HorizontalAlignment="Left"
+                                               appBehaviors:NumericInputNullSafety.IsEnabled="True" />
                             </StackPanel>
 
                             <StackPanel Orientation="Horizontal"
@@ -219,7 +222,8 @@
                                                                Maximum="100"
                                                                Increment="0.01"
                                                                FormatString="F2"
-                                                               IsEnabled="{Binding IsEditable}" />
+                                                               IsEnabled="{Binding IsEditable}"
+                                                               appBehaviors:NumericInputNullSafety.IsEnabled="True" />
                                                 <TextBlock Text="%" VerticalAlignment="Center" />
                                             </StackPanel>
                                         </DataTemplate>
@@ -233,14 +237,19 @@
                                                         Spacing="{StaticResource Space4}"
                                                         VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding CurrencySymbol}"
-                                                           IsVisible="{Binding HasCurrencySymbol}"
+                                                           IsVisible="{Binding IsEditable}"
                                                            VerticalAlignment="Center" />
                                                 <NumericUpDown Value="{Binding Amount}"
                                                                Minimum="0"
                                                                Maximum="100000000"
                                                                Increment="10"
                                                                FormatString="F2"
-                                                               IsEnabled="{Binding IsEditable}" />
+                                                               IsEnabled="{Binding IsEditable}"
+                                                               IsVisible="{Binding IsEditable}"
+                                                               appBehaviors:NumericInputNullSafety.IsEnabled="True" />
+                                                <TextBlock Text="{Binding AmountDisplay}"
+                                                           VerticalAlignment="Center"
+                                                           IsVisible="{Binding ShowReadOnlyAmount}" />
                                             </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
@@ -284,11 +293,7 @@
                                 Orientation="Horizontal"
                                 Spacing="{StaticResource Space4}"
                                 VerticalAlignment="Center">
-                        <TextBlock Text="{Binding CurrencySymbol}"
-                                   FontWeight="Bold"
-                                   Foreground="{Binding HasTotalsMismatch, Converter={StaticResource TotalsBrushConverter}}"
-                                   IsVisible="{Binding HasCurrencySymbol}" />
-                        <TextBlock Text="{Binding TotalAmount, StringFormat={}{0:F2}}"
+                        <TextBlock Text="{Binding TotalAmountDisplay}"
                                    FontWeight="Bold"
                                    Foreground="{Binding HasTotalsMismatch, Converter={StaticResource TotalsBrushConverter}}" />
                     </StackPanel>

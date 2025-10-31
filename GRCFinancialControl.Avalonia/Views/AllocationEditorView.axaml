@@ -5,6 +5,7 @@
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
              xmlns:conv="using:GRCFinancialControl.Avalonia.Converters"
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
+             xmlns:behaviors="clr-namespace:App.Presentation.Behaviors;assembly=App.Presentation"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.AllocationEditorView"
              x:Name="AllocationEditorRoot"
@@ -46,24 +47,42 @@
                 <DataGrid ItemsSource="{Binding Allocations}"
                           AutoGenerateColumns="False"
                           CanUserSortColumns="False"
-                          IsEnabled="{Binding AllowEditing}">
+                          IsReadOnly="{Binding IsReadOnlyMode}">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Fiscal Year" Binding="{Binding FiscalYear.Name}" IsReadOnly="True"/>
                         <DataGridTemplateColumn Header="{Binding #AllocationEditorRoot.DataContext.ToDateColumnHeader}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBox Text="{Binding ToDateAmount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}"
-                                             HorizontalContentAlignment="Right"
-                                             IsEnabled="{Binding IsEditable}"/>
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource Space6}" VerticalAlignment="Center">
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding DataContext.CurrencySymbol, ElementName=AllocationEditorRoot}"
+                                                   IsVisible="{Binding DataContext.HasCurrencySymbol, ElementName=AllocationEditorRoot}"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="1"
+                                                 Text="{Binding ToDateAmount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}"
+                                                 HorizontalContentAlignment="Right"
+                                                 IsReadOnly="{Binding DataContext.IsReadOnlyMode, ElementName=AllocationEditorRoot}"
+                                                 IsEnabled="{Binding IsEditable}"
+                                                 behaviors:NumericInputNullSafety.IsEnabled="True"/>
+                                    </Grid>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
                         <DataGridTemplateColumn Header="{Binding #AllocationEditorRoot.DataContext.ToGoColumnHeader}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBox Text="{Binding ToGoAmount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}"
-                                             HorizontalContentAlignment="Right"
-                                             IsEnabled="{Binding IsEditable}"/>
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource Space6}" VerticalAlignment="Center">
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding DataContext.CurrencySymbol, ElementName=AllocationEditorRoot}"
+                                                   IsVisible="{Binding DataContext.HasCurrencySymbol, ElementName=AllocationEditorRoot}"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="1"
+                                                 Text="{Binding ToGoAmount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}"
+                                                 HorizontalContentAlignment="Right"
+                                                 IsReadOnly="{Binding DataContext.IsReadOnlyMode, ElementName=AllocationEditorRoot}"
+                                                 IsEnabled="{Binding IsEditable}"
+                                                 behaviors:NumericInputNullSafety.IsEnabled="True"/>
+                                    </Grid>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>

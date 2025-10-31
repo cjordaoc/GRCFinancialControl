@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -109,6 +109,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public bool AllowEditing => !IsReadOnlyMode;
 
+        public string CurrencySymbol => CurrencyDisplayHelper.Resolve(Engagement.Currency).Symbol;
+
+        public bool HasCurrencySymbol => !string.IsNullOrWhiteSpace(CurrencySymbol);
+
         [RelayCommand(CanExecute = nameof(CanSave))]
         private async Task SaveAsync()
         {
@@ -162,11 +166,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         partial void OnAllocationVarianceChanged(decimal value)
         {
-            var suffix = GetVarianceSuffix();
-            AllocationVarianceDisplay = value == 0
-                ? string.Empty
-                : string.Format(CultureInfo.InvariantCulture, "{0:+0.##;-0.##;0}{1}", value, suffix);
-            AllocationVarianceTooltip = LocalizationRegistry.Format("Allocations.Tooltip.Variance", value, suffix);
+            if (Math.Abs(value) < 0.005m)
+            {
+                AllocationVarianceDisplay = string.Empty;
+                AllocationVarianceTooltip = LocalizationRegistry.Format("Allocations.Tooltip.Variance", CurrencyDisplayHelper.Format(0m, Engagement.Currency));
+                return;
+            }
+
+            var formatted = CurrencyDisplayHelper.Format(Math.Abs(value), Engagement.Currency);
+            AllocationVarianceDisplay = value > 0 ? string.Concat("+", formatted) : string.Concat("-", formatted);
+            AllocationVarianceTooltip = LocalizationRegistry.Format("Allocations.Tooltip.Variance", AllocationVarianceDisplay);
         }
 
         private void UpdateVariance()
@@ -204,19 +213,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             };
         }
 
-        private string GetVarianceSuffix()
-        {
-            return string.IsNullOrWhiteSpace(Engagement.Currency)
-                ? string.Empty
-                : string.Format(CultureInfo.InvariantCulture, " {0}", Engagement.Currency);
-        }
-
         private string FormatAmount(decimal value)
         {
-            var formatted = value.ToString("N2", CultureInfo.InvariantCulture);
-            return string.IsNullOrWhiteSpace(Engagement.Currency)
-                ? formatted
-                : string.Format(CultureInfo.InvariantCulture, "{0} {1}", Engagement.Currency, formatted);
+            return CurrencyDisplayHelper.Format(value, Engagement.Currency);
         }
     }
 

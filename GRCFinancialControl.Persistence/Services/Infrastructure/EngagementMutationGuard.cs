@@ -26,7 +26,7 @@ namespace GRCFinancialControl.Persistence.Services.Infrastructure
 
             var engagement = await context.Engagements
                 .AsNoTracking()
-                .Select(e => new { e.Id, e.EngagementId, e.Source })
+                .Select(e => new { e.Id, e.EngagementId, e.Source, e.Status })
                 .FirstOrDefaultAsync(e => e.Id == engagementId);
 
             if (engagement == null)
@@ -40,6 +40,12 @@ namespace GRCFinancialControl.Persistence.Services.Infrastructure
                 throw new InvalidOperationException(
                     $"Engagement '{engagement.EngagementId}' is sourced from S/4Project and must be managed manually. " +
                     $"{operationDescription} cannot modify manual-only engagements.");
+            }
+
+            if (engagement.Status == EngagementStatus.Closed)
+            {
+                throw new InvalidOperationException(
+                    $"Engagement '{engagement.EngagementId}' is Closed. {operationDescription} can only proceed after the engagement is reopened.");
             }
         }
     }

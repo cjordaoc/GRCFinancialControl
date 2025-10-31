@@ -3,6 +3,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using App.Presentation.Localization;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Invoices.Core.Models;
 
@@ -60,7 +61,9 @@ public class InvoiceSummaryGroupViewModel : ObservableObject
 
     public ObservableCollection<InvoiceSummaryItemViewModel> Items { get; }
 
-    public string TotalAmountDisplay => LocalizationRegistry.Format("InvoiceSummary.Group.AmountFormat", TotalAmount);
+    public string TotalAmountDisplay => LocalizationRegistry.Format(
+        "InvoiceSummary.Group.AmountFormat",
+        CurrencyDisplayHelper.Format(TotalAmount, null));
 
     public string TotalPercentageDisplay => LocalizationRegistry.Format("InvoiceSummary.Group.PercentageFormat", TotalPercentage);
 
