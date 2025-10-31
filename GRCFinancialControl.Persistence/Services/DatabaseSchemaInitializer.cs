@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
+using System.Globalization;
 using System.Threading.Tasks;
 using GRCFinancialControl.Core.Configuration;
 using GRCFinancialControl.Persistence.Services.Interfaces;
@@ -14,25 +16,18 @@ namespace GRCFinancialControl.Persistence.Services
         private const string DisableForeignKeyChecksSql = "SET FOREIGN_KEY_CHECKS = 0;";
         private const string EnableForeignKeyChecksSql = "SET FOREIGN_KEY_CHECKS = 1;";
 
-        private static readonly string[] DeleteStatements =
+        private static readonly string[] TablesToClear =
         {
-            "DELETE FROM `ActualsEntries`;",
-            "DELETE FROM `PlannedAllocations`;",
-            "DELETE FROM `EngagementFiscalYearRevenueAllocations`;",
-            "DELETE FROM `EngagementRankBudgets`;",
-            "DELETE FROM `RankMappings`;",
-            "DELETE FROM `Employees`;",
-            "DELETE FROM `FinancialEvolution`;",
-            "DELETE FROM `EngagementManagerAssignments`;",
-            "DELETE FROM `EngagementPapds`;",
-            "DELETE FROM `Exceptions`;",
-            "DELETE FROM `Engagements`;",
-            "DELETE FROM `Customers`;",
-            "DELETE FROM `Managers`;",
-            "DELETE FROM `Papds`;",
-            "DELETE FROM `ClosingPeriods`;",
-            "DELETE FROM `FiscalYears`;"
+            "ActualsEntries",
+            "PlannedAllocations",
+            "EngagementFiscalYearRevenueAllocations",
+            "EngagementRankBudgets",
+            "FinancialEvolution",
+            "Exceptions"
         };
+
+        private const string TableExistsSql =
+            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = @tableName;";
 
         private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
         private readonly ISettingsService _settingsService;
@@ -63,9 +58,11 @@ namespace GRCFinancialControl.Persistence.Services
 
                 try
                 {
-                    foreach (var statement in DeleteStatements)
+                    var connection = context.Database.GetDbConnection();
+
+                    foreach (var tableName in TablesToClear)
                     {
-                        await context.Database.ExecuteSqlRawAsync(statement).ConfigureAwait(false);
+                        await DeleteAllRowsIfTableExistsAsync(context, connection, tableName).ConfigureAwait(false);
                     }
 
                     await context.Database.ExecuteSqlRawAsync(EnableForeignKeyChecksSql).ConfigureAwait(false);
@@ -78,6 +75,36 @@ namespace GRCFinancialControl.Persistence.Services
                     throw;
                 }
             }).ConfigureAwait(false);
+        }
+
+        private static async Task DeleteAllRowsIfTableExistsAsync(
+            ApplicationDbContext context,
+            DbConnection connection,
+            string tableName)
+        {
+            if (!await TableExistsAsync(connection, tableName).ConfigureAwait(false))
+            {
+                return;
+            }
+
+            var statement = $"DELETE FROM `{tableName}`;";
+            await context.Database.ExecuteSqlRawAsync(statement).ConfigureAwait(false);
+        }
+
+        private static async Task<bool> TableExistsAsync(DbConnection connection, string tableName)
+        {
+            await using var command = connection.CreateCommand();
+            command.CommandText = TableExistsSql;
+
+            var parameter = command.CreateParameter();
+            parameter.ParameterName = "@tableName";
+            parameter.Value = tableName;
+            command.Parameters.Add(parameter);
+
+            var result = await command.ExecuteScalarAsync().ConfigureAwait(false);
+            var count = Convert.ToInt32(result, CultureInfo.InvariantCulture);
+
+            return count > 0;
         }
 
         private async Task ExecuteWithContextAsync(Func<ApplicationDbContext, Task> action)

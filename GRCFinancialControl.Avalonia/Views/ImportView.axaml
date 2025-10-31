@@ -40,8 +40,7 @@
                                        FontWeight="SemiBold"/>
                             <Button Content="{loc:Loc Key=Import.Button.SelectFile}"
                                     Command="{Binding ImportCommand}"
-                                    Classes="accent"
-                                    IsEnabled="{Binding IsImporting, Converter={StaticResource InverseBooleanConverter}}"/>
+                                    Classes="accent"/>
                             <ProgressBar IsIndeterminate="True"
                                          Height="6"
                                          IsVisible="{Binding IsImporting}"/>

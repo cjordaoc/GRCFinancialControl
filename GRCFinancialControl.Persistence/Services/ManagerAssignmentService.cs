@@ -43,6 +43,20 @@ namespace GRCFinancialControl.Persistence.Services
                 .ToListAsync();
         }
 
+        public async Task<List<EngagementManagerAssignment>> GetByManagerIdAsync(int managerId)
+        {
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.EngagementManagerAssignments
+                .AsNoTracking()
+                .AsSplitQuery()
+                .Include(a => a.Manager)
+                .Include(a => a.Engagement)
+                .Where(a => a.ManagerId == managerId)
+                .OrderBy(a => a.Engagement.EngagementId)
+                .ThenBy(a => a.Engagement.Description)
+                .ToListAsync();
+        }
+
         public async Task<EngagementManagerAssignment?> GetByIdAsync(int id)
         {
             await using var context = await _contextFactory.CreateDbContextAsync();

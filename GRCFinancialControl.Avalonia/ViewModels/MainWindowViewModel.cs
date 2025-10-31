@@ -89,16 +89,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _navigationIndex = BuildNavigationIndex(NavigationItems);
 
             var settings = _settingsService.GetAll();
-            NavigationItem? initialItem = null;
             if (settings.TryGetValue(SettingKeys.LastGrcNavigationItemKey, out var storedKey)
-                && !string.IsNullOrWhiteSpace(storedKey)
-                && _navigationIndex.TryGetValue(storedKey, out var storedItem))
+                && !string.IsNullOrWhiteSpace(storedKey))
             {
                 _lastPersistedNavigationKey = storedKey;
-                initialItem = storedItem;
             }
 
-            SelectedNavigationItem = initialItem ?? NavigationItems.FirstOrDefault();
+            SelectedNavigationItem = NavigationItems.FirstOrDefault();
         }
 
         [RelayCommand]
