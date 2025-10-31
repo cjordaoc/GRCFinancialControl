@@ -5,6 +5,7 @@
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
              xmlns:models="using:GRCFinancialControl.Core.Models"
              xmlns:conv="using:GRCFinancialControl.Avalonia.Converters"
+             xmlns:appConv="clr-namespace:App.Presentation.Converters;assembly=App.Presentation"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.RevenueAllocationsView"
              x:Name="RevenueAllocationsViewRoot"
@@ -16,6 +17,7 @@
         <conv:BooleanToBrushConverter x:Key="AllocationStrokeBrush"
                                       TrueBrush="{StaticResource BrushWarning}"
                                       FalseBrush="{StaticResource BrushSuccessDark}"/>
+        <appConv:CurrencyDisplayConverter x:Key="CurrencyDisplayConverter"/>
     </UserControl.Resources>
     <Grid RowDefinitions="Auto,*">
         <TextBlock Text="{Binding Header}"
@@ -27,8 +29,34 @@
                 <DataGridTextColumn Header="Engagement ID" Binding="{Binding EngagementId}" Width="*"/>
                 <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="2*"/>
                 <DataGridTextColumn Header="Currency" Binding="{Binding Currency}" Width="Auto"/>
-                <DataGridTextColumn Header="Value to Allocate" Binding="{Binding ValueToAllocate, StringFormat='{}{0:N2}'}" Width="*"/>
-                <DataGridTextColumn Header="Current Value Allocation" Binding="{Binding CurrentRevenueAllocation, StringFormat='{}{0:N2}'}" Width="*"/>
+                <DataGridTemplateColumn Header="Value to Allocate" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <TextBlock.Text>
+                                    <MultiBinding Converter="{StaticResource CurrencyDisplayConverter}">
+                                        <Binding Path="ValueToAllocate"/>
+                                        <Binding Path="Currency"/>
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Current Value Allocation" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <TextBlock.Text>
+                                    <MultiBinding Converter="{StaticResource CurrencyDisplayConverter}">
+                                        <Binding Path="CurrentRevenueAllocation"/>
+                                        <Binding Path="Currency"/>
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTemplateColumn Header="Review" Width="Auto">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate x:DataType="models:Engagement">

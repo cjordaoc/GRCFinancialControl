@@ -2076,6 +2076,10 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new InvalidOperationException($"Fiscal year '{fiscalYearName}' is locked. Unlock it before importing allocation planning data.");
             }
 
+            var closingPeriodLabel = string.IsNullOrWhiteSpace(activeClosingPeriod.Name)
+                ? $"Id={activeClosingPeriod.Id}"
+                : activeClosingPeriod.Name;
+
             // Parse the workbook into normalized engagement/rank groupings.
             var rankMappings = await context.RankMappings
                 .AsNoTracking()
@@ -2100,6 +2104,9 @@ namespace GRCFinancialControl.Persistence.Services
                 .Count();
 
             var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>();
+            var allocationManualOnlyEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var allocationClosedEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var allocationWarningMessages = new HashSet<string>(StringComparer.Ordinal);
 
             if (aggregatedRecords.Count == 0)
             {
@@ -2202,6 +2209,25 @@ namespace GRCFinancialControl.Persistence.Services
                 {
                     var rawEngagement = NormalizeWhitespace(record.EngagementCode);
                     unknownEngagements.Add(string.IsNullOrEmpty(rawEngagement) ? "<unknown>" : rawEngagement);
+                    continue;
+                }
+
+                if (EngagementImportSkipEvaluator.TryCreate(engagement, out var skipMetadata))
+                {
+                    var detail = $"{engagement.EngagementId} (closing period {closingPeriodLabel})";
+
+                    switch (skipMetadata.ReasonKey)
+                    {
+                        case "ManualOnly":
+                            allocationManualOnlyEngagements.Add(detail);
+                            break;
+                        case "ClosedEngagement":
+                            allocationClosedEngagements.Add(detail);
+                            break;
+                    }
+
+                    allocationWarningMessages.Add(skipMetadata.WarningMessage);
+                    _logger.LogWarning("{Warning} (closing period {ClosingPeriod})", skipMetadata.WarningMessage, closingPeriodLabel);
                     continue;
                 }
 
@@ -2355,9 +2381,21 @@ namespace GRCFinancialControl.Persistence.Services
                 historyUpserts++;
             }
 
+            if (allocationManualOnlyEngagements.Count > 0)
+            {
+                skipReasons["ManualOnly"] = allocationManualOnlyEngagements.ToList();
+            }
+
+            if (allocationClosedEngagements.Count > 0)
+            {
+                skipReasons["ClosedEngagement"] = allocationClosedEngagements.ToList();
+            }
+
             if (unknownEngagements.Count > 0)
             {
-                skipReasons[MissingEngagementWarningKey] = unknownEngagements.Select(e => $"{e} (closing period {activeClosingPeriod.Name})").ToList();
+                skipReasons[MissingEngagementWarningKey] = unknownEngagements
+                    .Select(e => $"{e} (closing period {closingPeriodLabel})")
+                    .ToList();
             }
 
             var notes = new List<string>
@@ -2370,6 +2408,14 @@ namespace GRCFinancialControl.Persistence.Services
                 $"Engagement budgets updated: {updated}",
                 $"Unknown engagements skipped: {unknownEngagements.Count}"
             };
+
+            if (allocationWarningMessages.Count > 0)
+            {
+                foreach (var warning in allocationWarningMessages.OrderBy(message => message, StringComparer.Ordinal))
+                {
+                    notes.Insert(0, warning);
+                }
+            }
 
             return ImportSummaryFormatter.Build(
                 "Allocation planning import",

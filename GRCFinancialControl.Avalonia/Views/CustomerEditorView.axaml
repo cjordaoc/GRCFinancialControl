@@ -24,7 +24,7 @@
                              Grid.Row="0"
                              Grid.Column="1"
                              Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
-                             IsEnabled="{Binding AllowEditing}"/>
+                             IsReadOnly="{Binding IsReadOnlyMode}"/>
                     <TextBlock Grid.Row="1"
                                Grid.Column="1"
                                Text="{Binding NameError}"
@@ -39,7 +39,7 @@
                              Grid.Row="2"
                              Grid.Column="1"
                              Text="{Binding CustomerCode, UpdateSourceTrigger=PropertyChanged}"
-                             IsEnabled="{Binding AllowEditing}"/>
+                             IsReadOnly="{Binding IsReadOnlyMode}"/>
                     <TextBlock Grid.Row="3"
                                Grid.Column="1"
                                Text="{Binding CustomerCodeError}"

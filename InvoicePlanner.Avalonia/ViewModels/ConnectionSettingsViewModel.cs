@@ -65,6 +65,8 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
 
         var settings = _settingsService.GetAll();
         settings.TryGetValue(SettingKeys.Language, out var language);
+        settings.TryGetValue(SettingKeys.DefaultCurrency, out var defaultCurrency);
+        CurrencyDisplayHelper.SetDefaultCurrency(defaultCurrency);
         SelectedLanguage = Languages
             .FirstOrDefault(option => string.Equals(option.CultureName, language, StringComparison.OrdinalIgnoreCase))
             ?? Languages.FirstOrDefault();
@@ -121,6 +123,8 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
 
             var importedSettings = await _connectionPackageService.ImportAsync(SelectedPackagePath, Passphrase);
             await _settingsService.SaveAllAsync(new Dictionary<string, string>(importedSettings));
+            importedSettings.TryGetValue(SettingKeys.DefaultCurrency, out var importedCurrency);
+            CurrencyDisplayHelper.SetDefaultCurrency(importedCurrency);
             newSettingsPersisted = true;
 
             await _schemaInitializer.EnsureSchemaAsync();

@@ -5,6 +5,7 @@
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
              xmlns:conv="clr-namespace:App.Presentation.Converters;assembly=App.Presentation"
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
+             xmlns:behaviors="clr-namespace:App.Presentation.Behaviors;assembly=App.Presentation"
              mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="550"
              x:Class="GRCFinancialControl.Avalonia.Views.EngagementEditorView"
              x:Name="EngagementEditorRoot"
@@ -90,14 +91,16 @@
                             <TextBox Text="{Binding OpeningValue}"
                                      IsReadOnly="{Binding IsFinancialSnapshotReadOnly}"
                                      HorizontalAlignment="Stretch"
-                                     MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
+                                     MinWidth="{StaticResource PopupTextBoxMinWidth}"
+                                     behaviors:NumericInputNullSafety.IsEnabled="True"/>
                         </StackPanel>
                         <StackPanel Spacing="{StaticResource Space8}" Grid.Column="1">
                             <TextBlock Text="Value ETC-P:" VerticalAlignment="Center"/>
                             <TextBox Text="{Binding ValueEtcp}"
                                      IsReadOnly="{Binding IsGeneralFieldReadOnly}"
                                      HorizontalAlignment="Stretch"
-                                     MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
+                                     MinWidth="{StaticResource PopupTextBoxMinWidth}"
+                                     behaviors:NumericInputNullSafety.IsEnabled="True"/>
                         </StackPanel>
                     </Grid>
 
@@ -107,14 +110,16 @@
                             <TextBox Text="{Binding OpeningExpenses}"
                                      IsReadOnly="{Binding IsFinancialSnapshotReadOnly}"
                                      HorizontalAlignment="Stretch"
-                                     MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
+                                     MinWidth="{StaticResource PopupTextBoxMinWidth}"
+                                     behaviors:NumericInputNullSafety.IsEnabled="True"/>
                         </StackPanel>
                         <StackPanel Spacing="{StaticResource Space8}" Grid.Column="1">
                             <TextBlock Text="Expenses ETC-P:" VerticalAlignment="Center"/>
                             <TextBox Text="{Binding ExpensesEtcp}"
                                      IsReadOnly="{Binding IsGeneralFieldReadOnly}"
                                      HorizontalAlignment="Stretch"
-                                     MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
+                                     MinWidth="{StaticResource PopupTextBoxMinWidth}"
+                                     behaviors:NumericInputNullSafety.IsEnabled="True"/>
                         </StackPanel>
                     </Grid>
 
@@ -124,14 +129,16 @@
                             <TextBox Text="{Binding InitialHoursBudget}"
                                      IsReadOnly="{Binding IsFinancialSnapshotReadOnly}"
                                      HorizontalAlignment="Stretch"
-                                     MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
+                                     MinWidth="{StaticResource PopupTextBoxMinWidth}"
+                                     behaviors:NumericInputNullSafety.IsEnabled="True"/>
                         </StackPanel>
                         <StackPanel Spacing="{StaticResource Space8}" Grid.Column="1">
                             <TextBlock Text="Estimated Hours:" VerticalAlignment="Center"/>
                             <TextBox Text="{Binding EstimatedToCompleteHours}"
                                      IsReadOnly="{Binding IsGeneralFieldReadOnly}"
                                      HorizontalAlignment="Stretch"
-                                     MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
+                                     MinWidth="{StaticResource PopupTextBoxMinWidth}"
+                                     behaviors:NumericInputNullSafety.IsEnabled="True"/>
                         </StackPanel>
                     </Grid>
 
@@ -141,14 +148,16 @@
                             <TextBox Text="{Binding MarginPctBudget}"
                                      IsReadOnly="{Binding IsFinancialSnapshotReadOnly}"
                                      HorizontalAlignment="Stretch"
-                                     MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
+                                     MinWidth="{StaticResource PopupTextBoxMinWidth}"
+                                     behaviors:NumericInputNullSafety.IsEnabled="True"/>
                         </StackPanel>
                         <StackPanel Spacing="{StaticResource Space8}" Grid.Column="1">
                             <TextBlock Text="Margin % ETC-P:" VerticalAlignment="Center"/>
                             <TextBox Text="{Binding MarginPctEtcp}"
                                      IsReadOnly="{Binding IsGeneralFieldReadOnly}"
                                      HorizontalAlignment="Stretch"
-                                     MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
+                                     MinWidth="{StaticResource PopupTextBoxMinWidth}"
+                                     behaviors:NumericInputNullSafety.IsEnabled="True"/>
                         </StackPanel>
                     </Grid>
 
@@ -222,7 +231,7 @@
                               SelectedItem="{Binding SelectedFinancialEvolutionEntry}"
                               AutoGenerateColumns="False"
                               Height="200"
-                              IsReadOnly="{Binding IsReadOnlyMode}">
+                              IsReadOnly="{Binding IsFinancialEvolutionReadOnly}">
                         <DataGrid.Columns>
                             <DataGridTemplateColumn Header="Closing Period" Width="2*">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -260,8 +269,8 @@
                     Spacing="{StaticResource Space12}">
             <Button Content="{loc:Loc Key=Common.Button.Save}"
                     Command="{Binding SaveCommand}"
-                    IsEnabled="{Binding AllowEditing}"
-                    IsDefault="{Binding AllowEditing}"
+                    IsEnabled="{Binding CanSave}"
+                    IsDefault="{Binding CanSave}"
                     MinWidth="120" />
             <Button Content="{loc:Loc Key=Common.Button.Cancel}"
                     Command="{Binding CloseCommand}"

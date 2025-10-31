@@ -43,6 +43,7 @@ public partial class App : Application
     private bool _disposed;
     private bool _hasConnectionSettings;
     private IMessenger? _messenger;
+    private ILogger<App>? _logger;
     private bool _restartRequested;
 
     public IServiceProvider Services => _host?.Services ?? throw new InvalidOperationException("Host not initialised.");
@@ -96,6 +97,8 @@ public partial class App : Application
 
                     var settingsService = scopedProvider.GetRequiredService<ISettingsService>();
                     var initialSettings = settingsService.GetAll();
+                    initialSettings.TryGetValue(SettingKeys.DefaultCurrency, out var defaultCurrency);
+                    CurrencyDisplayHelper.SetDefaultCurrency(defaultCurrency);
                     string? initialConnection;
                     _hasConnectionSettings = TryBuildConnectionString(initialSettings, out initialConnection);
                 }
@@ -166,7 +169,8 @@ public partial class App : Application
                     provider.GetRequiredService<EmissionConfirmationViewModel>(),
                     provider.GetRequiredService<ConnectionSettingsViewModel>(),
                     provider.GetRequiredService<ISettingsService>(),
-                    provider.GetRequiredService<IMessenger>()));
+                    provider.GetRequiredService<IMessenger>(),
+                    provider.GetRequiredService<ILogger<MainWindowViewModel>>()));
                 services.AddSingleton<MainWindow>();
                 services.AddSingleton(provider =>
                 {
@@ -177,6 +181,18 @@ public partial class App : Application
             .Build();
 
         await _host.StartAsync();
+
+        _logger = Services.GetRequiredService<ILogger<App>>();
+        var settingsSnapshot = Services.GetRequiredService<ISettingsService>().GetAll();
+        settingsSnapshot.TryGetValue(SettingKeys.Language, out var restoredLanguage);
+        settingsSnapshot.TryGetValue(SettingKeys.DefaultCurrency, out var restoredDefaultCurrency);
+        _logger.LogInformation(
+            "Invoice Planner initialised with language '{Language}' and default currency '{Currency}'.",
+            string.IsNullOrWhiteSpace(restoredLanguage) ? "system" : restoredLanguage,
+            string.IsNullOrWhiteSpace(restoredDefaultCurrency) ? "system" : restoredDefaultCurrency?.Trim().ToUpperInvariant());
+        _logger.LogInformation(
+            "Connection settings detected during startup: {HasConnectionSettings}.",
+            _hasConnectionSettings);
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
@@ -241,15 +257,20 @@ public partial class App : Application
             using var context = new SettingsDbContext(options);
             context.Database.EnsureCreated();
 
-            var language = context.Settings
-                .AsNoTracking()
+            var settingsQuery = context.Settings.AsNoTracking();
+            var language = settingsQuery
                 .FirstOrDefault(setting => setting.Key == SettingKeys.Language)
                 ?.Value;
+            var defaultCurrency = settingsQuery
+                .FirstOrDefault(setting => setting.Key == SettingKeys.DefaultCurrency)
+                ?.Value;
 
+            CurrencyDisplayHelper.SetDefaultCurrency(defaultCurrency);
             LocalizationCultureManager.ApplyCulture(language);
         }
         catch
         {
+            CurrencyDisplayHelper.SetDefaultCurrency(null);
             LocalizationCultureManager.ApplyCulture(null);
         }
     }
@@ -354,6 +375,7 @@ public partial class App : Application
         }
 
         _restartRequested = true;
+        _logger?.LogInformation("Restart requested; scheduling application relaunch.");
         Dispatcher.UIThread.Post(RestartApplication);
     }
 
@@ -385,6 +407,11 @@ public partial class App : Application
                 {
                     startInfo.Arguments = string.Join(' ', args.Select(QuoteArgument));
                 }
+
+                _logger?.LogInformation(
+                    "Restarting Invoice Planner from '{Executable}' with arguments '{Arguments}'.",
+                    executablePath,
+                    startInfo.Arguments ?? string.Empty);
 
                 Process.Start(startInfo);
             }

@@ -20,7 +20,7 @@
                              Grid.Column="1"
                              Text="{Binding Name}"
                              Watermark="{loc:Loc Key=Admin.Papds.Placeholder.Name}"
-                             IsEnabled="{Binding AllowEditing}"
+                             IsReadOnly="{Binding IsReadOnlyMode}"
                              HorizontalAlignment="Stretch"
                              MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
 
@@ -45,7 +45,7 @@
                              Grid.Column="1"
                              Text="{Binding WindowsLogin}"
                              Watermark="{loc:Loc Key=Admin.Papds.Placeholder.WindowsLogin}"
-                             IsEnabled="{Binding AllowEditing}"
+                             IsReadOnly="{Binding IsReadOnlyMode}"
                              HorizontalAlignment="Stretch"
                              MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
                 </Grid>

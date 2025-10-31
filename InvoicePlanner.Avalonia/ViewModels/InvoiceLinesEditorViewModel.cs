@@ -32,6 +32,7 @@ public partial class InvoiceLinesEditorViewModel : ViewModelBase
 
         OnPropertyChanged(nameof(Items));
         OnPropertyChanged(nameof(TotalAmount));
+        OnPropertyChanged(nameof(TotalAmountDisplay));
         OnPropertyChanged(nameof(TotalPercentage));
         OnPropertyChanged(nameof(CurrencySymbol));
         OnPropertyChanged(nameof(HasCurrencySymbol));
@@ -48,6 +49,7 @@ public partial class InvoiceLinesEditorViewModel : ViewModelBase
     public ObservableCollection<InvoicePlanLineViewModel> Items => _parentViewModel.Items;
     public decimal TotalPercentage => _parentViewModel.TotalPercentage;
     public decimal TotalAmount => _parentViewModel.TotalAmount;
+    public string TotalAmountDisplay => _parentViewModel.TotalAmountDisplay;
     public string CurrencySymbol => _parentViewModel.CurrencySymbol;
     public bool HasCurrencySymbol => _parentViewModel.HasCurrencySymbol;
     public bool HasTotalsMismatch => _parentViewModel.HasTotalsMismatch;
@@ -96,6 +98,10 @@ public partial class InvoiceLinesEditorViewModel : ViewModelBase
         {
             case nameof(PlanEditorViewModel.TotalAmount):
                 OnPropertyChanged(nameof(TotalAmount));
+                OnPropertyChanged(nameof(TotalAmountDisplay));
+                break;
+            case nameof(PlanEditorViewModel.TotalAmountDisplay):
+                OnPropertyChanged(nameof(TotalAmountDisplay));
                 break;
             case nameof(PlanEditorViewModel.TotalPercentage):
                 OnPropertyChanged(nameof(TotalPercentage));

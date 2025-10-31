@@ -11,4 +11,7 @@ public static class SettingKeys
     public const string DefaultClosingPeriodId = "DefaultClosingPeriodId";
     public const string Language = "Language";
     public const string TasksExportDirectory = "TasksExportDirectory";
+    public const string LastGrcNavigationItemKey = "LastGrcNavigationItemKey";
+    public const string LastInvoicePlannerSectionKey = "LastInvoicePlannerSectionKey";
+    public const string DefaultCurrency = "DefaultCurrency";
 }

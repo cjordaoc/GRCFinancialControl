@@ -5,6 +5,7 @@
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
              xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
+             xmlns:behaviors="clr-namespace:App.Presentation.Behaviors;assembly=App.Presentation"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
              x:Class="GRCFinancialControl.Avalonia.Views.FiscalYearEditorView"
              x:DataType="vm:FiscalYearEditorViewModel">
@@ -24,7 +25,7 @@
                              Grid.Column="1"
                              Text="{Binding Name}"
                              Watermark="{loc:Loc Key=Admin.FiscalYears.Placeholder.Name}"
-                             IsEnabled="{Binding AllowEditing}"
+                             IsReadOnly="{Binding IsReadOnlyMode}"
                              HorizontalAlignment="Stretch"
                              MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
 
@@ -56,9 +57,10 @@
                              Grid.Column="1"
                              Text="{Binding AreaSalesTarget, Converter={StaticResource NumericConverter}}"
                              Watermark="{loc:Loc Key=Admin.FiscalYears.Placeholder.AreaSalesTarget}"
-                             IsEnabled="{Binding AllowEditing}"
+                             IsReadOnly="{Binding IsReadOnlyMode}"
                              HorizontalAlignment="Stretch"
-                             MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
+                             MinWidth="{StaticResource PopupTextBoxMinWidth}"
+                             behaviors:NumericInputNullSafety.IsEnabled="True"/>
 
                     <TextBlock Grid.Row="4"
                                Grid.Column="0"
@@ -68,9 +70,10 @@
                              Grid.Column="1"
                              Text="{Binding AreaRevenueTarget, Converter={StaticResource NumericConverter}}"
                              Watermark="{loc:Loc Key=Admin.FiscalYears.Placeholder.AreaRevenueTarget}"
-                             IsEnabled="{Binding AllowEditing}"
+                             IsReadOnly="{Binding IsReadOnlyMode}"
                              HorizontalAlignment="Stretch"
-                             MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
+                             MinWidth="{StaticResource PopupTextBoxMinWidth}"
+                             behaviors:NumericInputNullSafety.IsEnabled="True"/>
                 </Grid>
                 <TextBlock Text="{Binding StatusMessage}" Foreground="Red"/>
             </StackPanel>

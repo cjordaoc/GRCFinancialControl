@@ -126,17 +126,24 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public bool IsExistingRecord => Engagement.Id != 0;
 
-        public bool AllowEditing => !IsReadOnlyMode;
+        private bool ShouldLockForClosedStatus =>
+            IsExistingRecord && MapStatusFromText(SelectedStatusText) == EngagementStatus.Closed;
+
+        public bool AllowEditing => !IsReadOnlyMode && !ShouldLockForClosedStatus;
+
+        public bool CanSave => !IsReadOnlyMode;
 
         public bool IsEngagementIdReadOnly => IsReadOnlyMode || IsExistingRecord;
 
         public bool IsFinancialSnapshotReadOnly => IsReadOnlyMode || IsExistingRecord;
 
-        public bool IsGeneralFieldReadOnly => IsReadOnlyMode;
+        public bool IsGeneralFieldReadOnly => IsReadOnlyMode || ShouldLockForClosedStatus;
+
+        public bool IsFinancialEvolutionReadOnly => IsReadOnlyMode || ShouldLockForClosedStatus;
 
         public bool CanEditCustomer => AllowEditing && !IsExistingRecord;
 
-        public bool CanEditStatus => AllowEditing && !IsExistingRecord;
+        public bool CanEditStatus => !IsReadOnlyMode;
 
         public bool IsCurrencyReadOnly => IsReadOnlyMode || IsExistingRecord;
 
@@ -475,10 +482,22 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         partial void OnIsReadOnlyModeChanged(bool value)
         {
+            RefreshEditingState();
+        }
+
+        partial void OnSelectedStatusTextChanged(string? value)
+        {
+            RefreshEditingState();
+        }
+
+        private void RefreshEditingState()
+        {
             OnPropertyChanged(nameof(AllowEditing));
+            OnPropertyChanged(nameof(CanSave));
             OnPropertyChanged(nameof(IsEngagementIdReadOnly));
             OnPropertyChanged(nameof(IsFinancialSnapshotReadOnly));
             OnPropertyChanged(nameof(IsGeneralFieldReadOnly));
+            OnPropertyChanged(nameof(IsFinancialEvolutionReadOnly));
             OnPropertyChanged(nameof(CanEditCustomer));
             OnPropertyChanged(nameof(CanEditStatus));
             OnPropertyChanged(nameof(IsCurrencyReadOnly));

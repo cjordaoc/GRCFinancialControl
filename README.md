@@ -30,6 +30,7 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 2. The service loads fiscal years ordered by lock status, the latest budgets, and available rank options from the Rank Mapping catalog.
 3. Users edit consumed hours per cell or add rank-level adjustments for open fiscal years.
 4. Saving persists edits, recalculates remaining hours, and refreshes the snapshot view.
+5. Budget, adjustment, and variance columns render using the engagement currency symbol or the default currency configured in Settings when an engagement omits a code.
 
 **Validation & Consolidation Rules**
 - Every update verifies the target budget exists and belongs to the engagement before applying changes.
@@ -65,7 +66,7 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 4. Persisted allocations drive downstream retain template generation and staffing dashboards.
 
 **Validation & Consolidation Rules**
-- `EngagementMutationGuard` ensures the engagement is mutable before any write operation.
+- `EngagementMutationGuard` ensures the engagement is neither manual-only nor Closed before any write operation proceeds.
 - Fiscal years marked as locked cannot receive added, removed, or changed allocations. The save logic compares existing vs. incoming rows and blocks modifications on locked periods with clear error messages.
 - Deletions and inserts execute only for unlocked closing periods; attempts against unknown closing periods surface an error instructing the user to refresh the data.
 
@@ -82,7 +83,7 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 - The planner's Add / Edit action opens the latest plan for the selected engagement (or starts a new one) and renders invoice lines in a tabular editor where confirmed items remain visible but read-only.
 - The plan editor dialog now includes a Delete Plan action that removes the current plan (header and all invoice lines) and refreshes the engagement list so controllers can immediately start a new schedule.
 - Adjusting the **# Invoices** field keeps exactly that many editable rows in the grid while preserving previously emitted lines alongside them.
-- Invoice lines auto-generate emission dates from the first emission date and payment terms, rebalance editable percentages/amounts to keep totals at 100% of the engagement value, and display all monetary fields with the engagement currency symbol.
+- Invoice lines auto-generate emission dates from the first emission date and payment terms, rebalance editable percentages/amounts to keep totals at 100% of the engagement value, and display all monetary fields with the engagement currency symbol, falling back to the default currency configured in Settings when an engagement lacks its own code.
 - Totals are continuously recalculated; mismatches highlight in red and block the Save action until both total percentage (100.00%) and total amount (engagement total) are satisfied.
 - The **Confirm Request** workspace keeps the process inline: after choosing **Insert Request Data** the plan invoices appear beneath the selector with a detail form that lets controllers enter RITM, COE responsible, and request date. **Save** marks the current invoice as Requested, while **Reverse** clears the fields and returns the line to Planned without leaving the screen.
 - The **Confirm Emission** workspace mirrors the request flow: controllers load a plan, pick a requested invoice, and capture the BZ code plus the actual emission date directly in the inline editor. Saving calls `CloseItems` to persist both the status change and a new `InvoiceEmission` record. Emitted invoices can be canceled from the same panel by supplying a reason, which records the cancellation and reopens the line as Planned without losing the emission history.
@@ -110,7 +111,7 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 - The loader sanitizes whitespace, strips non-printable characters, and normalizes ranks/status text for consistent persistence.
 - Import summaries include counts of processed rows, warnings (e.g., missing engagements), and accumulated totals to aid reconciliation.
 - The Full Management Data importer now owns budget/margin/projection updates, mapping Original Budget, Mercury projections, and the new Unbilled Revenue Days column onto existing engagements while logging "Engagement not found" when an ID is absent. Rows without a closing period still refresh opening budgets but skip ETC metrics and are summarized as warnings in the import notes.
-- All importers skip S/4 Project engagements and engagements marked as Closed, logging the warning message `⚠ Values for S/4 Projects must be inserted manually. Data import was skipped for Engagement {EngagementID}.` or `⚠ Engagement {EngagementID} skipped – status Closed.` while adding the reasons to the import summary output.
+- All importers skip S/4 Project engagements and engagements marked as Closed, logging the warning message `⚠ Values for S/4 Projects must be inserted manually. Data import was skipped for Engagement {EngagementID}.` or `⚠ Engagement {EngagementID} skipped – status is Closed.` while adding the reasons to the import summary output.
 
 [See Technical Spec →](readme_specs.md#excel-importers-and-validation)
 
@@ -173,6 +174,9 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 - Commands leverage `RelayCommand`/`AsyncRelayCommand` to encapsulate interactions.
 - Modal dialogs use a centralized overlay with an opaque background to maintain focus.
 - Validation summaries surface inline errors from importers and planners to reduce back-and-forth.
+- Every editor dialog accepts a **View** mode that toggles `IsReadOnlyMode`, keeping text inputs in read-only state while comboboxes/date pickers disable interaction without altering layout or scroll behavior.
+- Numeric inputs across both applications automatically restore a zero value when focus leaves an empty field, preventing Avalonia binding exceptions and keeping totals reliable.
+- Engagements whose status resolves to **Closed** automatically suppress editing across the detail dialog (including assignment and financial-evolution controls) while leaving the Status selector enabled so controllers can intentionally reopen them.
 
 [See Technical Spec →](readme_specs.md#ui-architecture)
 
@@ -187,6 +191,7 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 **Validation & Consolidation Rules**
 - Customer Name and Customer Code must both contain non-whitespace values; invalid entries surface inline error text with the shared `StatusError` style.
 - The dialog Save button remains disabled until all validation errors are cleared, preventing incomplete records from being persisted.
+- Selecting **View** from any master-data grid reuses the same dialog with `IsReadOnlyMode = true`, so users can inspect details without enabling the Save pathway or editable inputs.
 
 [See Technical Spec →](readme_specs.md#master-data-editors)
 
@@ -197,10 +202,21 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 1. Administrators open the Settings view and switch to the Application Data tab after validating the database connection.
 2. Selecting **Export data** prompts for a destination and writes an XML snapshot of every table in the connected database.
 3. Choosing **Restore data** prompts for a backup file, confirms the destructive operation, and reloads data into MySQL.
+4. Finance and planning teams configure the Default Currency, which immediately updates the fallback symbol used across both desktop apps for engagements without their own currency code.
 
 **Validation & Consolidation Rules**
 - Export and restore commands require valid connection settings; missing credentials surface inline status messages.
 - XML exports include column-type metadata and preserve null/binary values so restores round-trip schema fidelity.
 - Restores disable foreign-key checks within a transaction, clear existing rows, insert the backup payload, re-enable constraints, and refresh in-app data caches.
+- Importing a connection package, restoring application data, or changing the language saves the updated configuration, requests an automatic restart, and reopens the apps in the previously selected workspace with the saved language preference.
 
 [See Technical Spec →](readme_specs.md#settings-and-application-data-backup)
+
+---
+
+## 13 · Global Compliance & Verification
+- Import pipelines record skip reasons for S/4 Projects and Closed engagements, emitting the localized warnings `⚠ Values for S/4 Projects must be inserted manually. Data import was skipped for Engagement {EngagementID}.` and `⚠ Engagement {EngagementID} skipped – status is Closed.` in both the console and the persisted import summary.
+- Automatic restarts triggered by language changes, connection package imports, or data restores now record structured log entries that capture the restored language, default currency, and whether secure connection settings were detected before relaunching.
+- View-mode dialogs continue to load in read-only state, while Closed engagements lock every editable field except Status so reopening flows remain intentional and auditable.
+- Currency rendering flows through the shared helper so all financial grids and dialogs display localized symbols with two decimal places, and numeric editors rely on the null-safety behavior to prevent Avalonia binding faults when fields are cleared.
+- Managers and PAPD assignment tabs share the same interaction logic and validation, keeping assignment workflows consistent across both anchors and avoiding data drift.

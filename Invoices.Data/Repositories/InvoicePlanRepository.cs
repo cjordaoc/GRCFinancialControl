@@ -103,7 +103,7 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             query = query.Where(engagement => allowedEngagements.Contains(engagement.EngagementId));
         }
 
-            return query
+        return query
             .OrderBy(engagement => engagement.EngagementId)
             .Select(engagement => new EngagementLookup
             {
@@ -118,6 +118,22 @@ public class InvoicePlanRepository : IInvoicePlanRepository
                 Currency = engagement.Currency,
             })
             .ToList();
+    }
+
+    public string? GetEngagementCurrency(string engagementId)
+    {
+        if (string.IsNullOrWhiteSpace(engagementId))
+        {
+            return null;
+        }
+
+        using var context = _dbContextFactory.CreateDbContext();
+
+        return context.Engagements
+            .AsNoTracking()
+            .Where(engagement => engagement.EngagementId == engagementId)
+            .Select(engagement => engagement.Currency)
+            .FirstOrDefault();
     }
 
     public IReadOnlyList<InvoicePlanSummary> ListPlansForRequestStage()

@@ -21,11 +21,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         private readonly ISettingsService _settingsService;
         private readonly IDatabaseSchemaInitializer _schemaInitializer;
-        private readonly DialogService _dialogService;
-        private readonly IConnectionPackageService _connectionPackageService;
-        private readonly IApplicationDataBackupService _applicationDataBackupService;
-        private readonly FilePickerService _filePickerService;
-        private bool _initializingLanguage;
+    private readonly DialogService _dialogService;
+    private readonly IConnectionPackageService _connectionPackageService;
+    private readonly IApplicationDataBackupService _applicationDataBackupService;
+    private readonly FilePickerService _filePickerService;
+    private bool _initializingLanguage;
+    private string _defaultCurrency = string.Empty;
 
         [ObservableProperty]
         private string _server = string.Empty;
@@ -86,6 +87,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         [ObservableProperty]
         private LanguageOption? _selectedLanguage;
+
+        public string DefaultCurrency
+        {
+            get => _defaultCurrency;
+            set
+            {
+                var sanitized = NormalizeCurrencyCode(value);
+                if (SetProperty(ref _defaultCurrency, sanitized))
+                {
+                    CurrencyDisplayHelper.SetDefaultCurrency(sanitized);
+                }
+            }
+        }
 
         public SettingsViewModel(
             ISettingsService settingsService,
@@ -160,6 +174,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             settings.TryGetValue(SettingKeys.Password, out var password);
             settings.TryGetValue(SettingKeys.PowerBiEmbedUrl, out var embedUrl);
             settings.TryGetValue(SettingKeys.Language, out var language);
+            settings.TryGetValue(SettingKeys.DefaultCurrency, out var defaultCurrency);
 
             RunOnUiThread(() =>
             {
@@ -168,6 +183,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 User = user ?? string.Empty;
                 Password = password ?? string.Empty;
                 PowerBiEmbedUrl = embedUrl ?? string.Empty;
+                DefaultCurrency = NormalizeCurrencyCode(defaultCurrency);
                 SelectedLanguage = Languages
                     .FirstOrDefault(option => string.Equals(option.CultureName, language, StringComparison.OrdinalIgnoreCase))
                     ?? Languages.FirstOrDefault();
@@ -185,7 +201,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 [SettingKeys.User] = User ?? string.Empty,
                 [SettingKeys.Password] = Password ?? string.Empty,
                 [SettingKeys.PowerBiEmbedUrl] = PowerBiEmbedUrl ?? string.Empty,
-                [SettingKeys.Language] = SelectedLanguage?.CultureName ?? string.Empty
+                [SettingKeys.Language] = SelectedLanguage?.CultureName ?? string.Empty,
+                [SettingKeys.DefaultCurrency] = DefaultCurrency
             };
         }
 
@@ -195,6 +212,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             await _settingsService.SaveAllAsync(settings);
             RunOnUiThread(() =>
                 StatusMessage = LocalizationRegistry.Get("Settings.Status.Saved"));
+        }
+
+        private static string NormalizeCurrencyCode(string? value)
+        {
+            return string.IsNullOrWhiteSpace(value)
+                ? string.Empty
+                : value.Trim().ToUpperInvariant();
         }
 
         private async Task TestConnectionAsync()
@@ -464,6 +488,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                         "Settings.Status.DataImportSuccess",
                         Path.GetFileName(filePath));
                     Messenger.Send(new RefreshDataMessage());
+                    Messenger.Send(ApplicationRestartRequestedMessage.Instance);
                 });
             }
             catch (InvalidOperationException ex)

@@ -1,6 +1,7 @@
 
 using System;
 using App.Presentation.Localization;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
@@ -68,6 +69,12 @@ public class InvoiceSummaryItemViewModel : ObservableObject
     public DateTime? CanceledAt { get; }
 
     public string? CancelReason { get; }
+
+    public string AmountDisplay => CurrencyDisplayHelper.Format(Amount, null);
+
+    public string BaseValueDisplay => BaseValue.HasValue
+        ? CurrencyDisplayHelper.Format(BaseValue.Value, null)
+        : string.Empty;
 
     private static string GetStatusDisplay(InvoiceItemStatus status)
     {

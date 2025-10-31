@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Globalization;
 using App.Presentation.Localization;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -38,8 +39,6 @@ public partial class PlanEditorViewModel : ViewModelBase
     private bool _isInitializing;
     private bool _isNormalizingFirstEmissionDate;
     private PlanEditorDialogViewModel? _dialogViewModel;
-
-    private static readonly Dictionary<string, string> CurrencySymbolCache = new(StringComparer.OrdinalIgnoreCase);
 
     public PlanEditorViewModel(
         IInvoicePlanRepository repository,
@@ -297,6 +296,16 @@ public partial class PlanEditorViewModel : ViewModelBase
     partial void OnCurrencySymbolChanged(string value)
     {
         OnPropertyChanged(nameof(HasCurrencySymbol));
+        OnPropertyChanged(nameof(TotalAmountDisplay));
+        foreach (var line in Items)
+        {
+            line.NotifyCurrencyChanged();
+        }
+    }
+
+    partial void OnTotalAmountChanged(decimal value)
+    {
+        OnPropertyChanged(nameof(TotalAmountDisplay));
     }
 
     partial void OnHasTotalsMismatchChanged(bool value)
@@ -318,7 +327,14 @@ public partial class PlanEditorViewModel : ViewModelBase
 
     public bool HasCurrencySymbol => !string.IsNullOrWhiteSpace(CurrencySymbol);
 
+    public string TotalAmountDisplay => FormatAmount(TotalAmount);
+
     public bool CanSavePlan => !HasTotalsMismatch;
+
+    internal string FormatAmount(decimal amount)
+    {
+        return CurrencyDisplayHelper.Format(amount, SelectedEngagement?.Currency);
+    }
 
     public bool LoadPlan(int planId)
     {
@@ -1002,45 +1018,8 @@ public partial class PlanEditorViewModel : ViewModelBase
 
     private void UpdateCurrencySymbol(string? currencyCode)
     {
-        if (string.IsNullOrWhiteSpace(currencyCode))
-        {
-            CurrencySymbol = string.Empty;
-            return;
-        }
-
-        if (!CurrencySymbolCache.TryGetValue(currencyCode, out var symbol))
-        {
-            symbol = ResolveCurrencySymbol(currencyCode);
-            CurrencySymbolCache[currencyCode] = symbol;
-        }
-
-        CurrencySymbol = symbol;
-    }
-
-    private static string ResolveCurrencySymbol(string currencyCode)
-    {
-        try
-        {
-            foreach (var culture in CultureInfo.GetCultures(CultureTypes.SpecificCultures))
-            {
-                try
-                {
-                    var region = new RegionInfo(culture.Name);
-                    if (string.Equals(region.ISOCurrencySymbol, currencyCode, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return region.CurrencySymbol;
-                    }
-                }
-                catch (ArgumentException)
-                {
-                }
-            }
-        }
-        catch (CultureNotFoundException)
-        {
-        }
-
-        return currencyCode.ToUpperInvariant();
+        var formatInfo = CurrencyDisplayHelper.Resolve(currencyCode);
+        CurrencySymbol = formatInfo.Symbol;
     }
 
     private void LoadEngagements()

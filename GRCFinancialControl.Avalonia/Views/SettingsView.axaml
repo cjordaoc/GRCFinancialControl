@@ -29,6 +29,15 @@
                                         </ComboBox.ItemTemplate>
                                     </ComboBox>
                                 </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <TextBlock Text="{loc:Loc Key=Settings.Label.DefaultCurrency}" VerticalAlignment="Center"/>
+                                    <TextBox Width="120"
+                                             Text="{Binding DefaultCurrency}"
+                                             Watermark="{loc:Loc Key=Settings.Placeholder.DefaultCurrency}"/>
+                                </StackPanel>
+                                <TextBlock Text="{loc:Loc Key=Settings.Help.DefaultCurrency}"
+                                           TextWrapping="Wrap"
+                                           Opacity="0.7"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>

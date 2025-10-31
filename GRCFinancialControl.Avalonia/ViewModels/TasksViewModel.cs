@@ -939,12 +939,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private static string FormatCurrency(decimal amount, string currencyCode)
         {
-            var culture = CultureInfo.GetCultureInfo("pt-BR");
-            var formatted = amount.ToString("N2", culture);
-
-            return string.Equals(currencyCode, "BRL", StringComparison.OrdinalIgnoreCase)
-                ? $"R$ {formatted}"
-                : string.Concat(currencyCode.ToUpperInvariant(), " ", formatted);
+            return CurrencyDisplayHelper.Format(amount, string.IsNullOrWhiteSpace(currencyCode) ? null : currencyCode);
         }
 
         private static IReadOnlyList<EtcColumnDefinition> BuildEtcColumns(EtcExport etc)

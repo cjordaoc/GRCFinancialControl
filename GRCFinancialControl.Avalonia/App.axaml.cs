@@ -39,6 +39,7 @@ namespace GRCFinancialControl.Avalonia
         public static new App? Current => (App?)Application.Current;
         public IServiceProvider Services { get; private set; } = null!;
         private IMessenger? _messenger;
+        private ILogger<App>? _logger;
         private bool _restartRequested;
 
         public override void RegisterServices()
@@ -76,6 +77,8 @@ namespace GRCFinancialControl.Avalonia
                     .AddLightTheme());
 
             var services = new ServiceCollection();
+            string? restoredLanguage = null;
+            string? restoredDefaultCurrency = null;
 
             services.AddDbContext<SettingsDbContext>(options =>
                 options.UseSqlite(SettingsDatabaseOptions.BuildConnectionString()));
@@ -93,6 +96,12 @@ namespace GRCFinancialControl.Avalonia
                 var settingsService = scopedProvider.GetRequiredService<ISettingsService>();
                 var settings = await settingsService.GetAllAsync();
                 settings.TryGetValue(SettingKeys.Language, out var language);
+                settings.TryGetValue(SettingKeys.DefaultCurrency, out var defaultCurrency);
+                restoredLanguage = language;
+                restoredDefaultCurrency = string.IsNullOrWhiteSpace(defaultCurrency)
+                    ? null
+                    : defaultCurrency.Trim().ToUpperInvariant();
+                CurrencyDisplayHelper.SetDefaultCurrency(defaultCurrency);
                 LocalizationCultureManager.ApplyCulture(language);
 
                 settings.TryGetValue(SettingKeys.Server, out var server);
@@ -176,6 +185,14 @@ namespace GRCFinancialControl.Avalonia
                 services.AddSingleton(new FilePickerService(mainWindow));
 
                 Services = services.BuildServiceProvider();
+                _logger = Services.GetRequiredService<ILogger<App>>();
+                _logger.LogInformation(
+                    "GRC Financial Control initialised with language '{Language}' and default currency '{Currency}'.",
+                    string.IsNullOrWhiteSpace(restoredLanguage) ? "system" : restoredLanguage,
+                    string.IsNullOrWhiteSpace(restoredDefaultCurrency) ? "system" : restoredDefaultCurrency);
+                _logger.LogInformation(
+                    "Connection settings detected during startup: {HasConnectionSettings}.",
+                    hasConnectionSettings);
 
                 _messenger = Services.GetRequiredService<IMessenger>();
                 _messenger.Register<ApplicationRestartRequestedMessage>(this, (_, _) => RequestRestart());
@@ -215,6 +232,7 @@ namespace GRCFinancialControl.Avalonia
             }
 
             _restartRequested = true;
+            _logger?.LogInformation("Restart requested; scheduling application relaunch.");
             Dispatcher.UIThread.Post(RestartApplication);
         }
 
@@ -246,6 +264,11 @@ namespace GRCFinancialControl.Avalonia
                     {
                         startInfo.Arguments = string.Join(' ', args.Select(QuoteArgument));
                     }
+
+                    _logger?.LogInformation(
+                        "Restarting application from '{Executable}' with arguments '{Arguments}'.",
+                        executablePath,
+                        startInfo.Arguments ?? string.Empty);
 
                     Process.Start(startInfo);
                 }

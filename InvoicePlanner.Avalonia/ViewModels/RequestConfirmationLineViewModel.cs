@@ -2,6 +2,7 @@ using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Invoices.Core.Enums;
+using App.Presentation.Services;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
@@ -10,6 +11,7 @@ public partial class RequestConfirmationLineViewModel : ObservableObject
     private readonly RelayCommand _requestCommand;
     private readonly RelayCommand _undoCommand;
     private RequestConfirmationViewModel? _owner;
+    private string? _currencyCode;
 
     public RequestConfirmationLineViewModel()
     {
@@ -57,6 +59,8 @@ public partial class RequestConfirmationLineViewModel : ObservableObject
 
     public bool IsRequested => Status == InvoiceItemStatus.Requested;
 
+    public string AmountDisplay => CurrencyDisplayHelper.Format(Amount, _currencyCode);
+
     internal void Attach(RequestConfirmationViewModel owner)
     {
         _owner = owner;
@@ -93,6 +97,11 @@ public partial class RequestConfirmationLineViewModel : ObservableObject
         _owner?.RefreshSummaries();
     }
 
+    partial void OnAmountChanged(decimal value)
+    {
+        OnPropertyChanged(nameof(AmountDisplay));
+    }
+
     partial void OnRitmNumberChanged(string? value) => NotifyCommandStates();
 
     partial void OnCoeResponsibleChanged(string? value) => NotifyCommandStates();
@@ -127,5 +136,11 @@ public partial class RequestConfirmationLineViewModel : ObservableObject
     {
         _requestCommand.NotifyCanExecuteChanged();
         _undoCommand.NotifyCanExecuteChanged();
+    }
+
+    internal void SetCurrency(string? currencyCode)
+    {
+        _currencyCode = string.IsNullOrWhiteSpace(currencyCode) ? null : currencyCode.Trim().ToUpperInvariant();
+        OnPropertyChanged(nameof(AmountDisplay));
     }
 }

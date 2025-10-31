@@ -73,7 +73,13 @@
                                 <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Sequence}" Binding="{Binding Sequence}" Width="80"/>
                                 <DataGridTextColumn Header="{loc:Loc Key=Emission.TableHeader.EmissionDate}" Binding="{Binding EmissionDate, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
                                 <DataGridTextColumn Header="{loc:Loc Key=Emission.TableHeader.DueDate}" Binding="{Binding DueDate, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
-                                <DataGridTextColumn Header="{loc:Loc Key=Emission.TableHeader.Amount}" Binding="{Binding Amount, StringFormat={}{0:F2}}" Width="140"/>
+                                <DataGridTemplateColumn Header="{loc:Loc Key=Emission.TableHeader.Amount}" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
+                                            <TextBlock Text="{Binding AmountDisplay}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                                 <DataGridTextColumn Header="{loc:Loc Key=Request.TableHeader.Ritm}" Binding="{Binding RitmNumber}" Width="160"/>
                                 <DataGridTextColumn Header="{loc:Loc Key=Request.TableHeader.Status}" Binding="{Binding Status}" Width="120"/>
                                 <DataGridTextColumn Header="{loc:Loc Key=Emission.TableHeader.BzCode}" Binding="{Binding BzCode}" Width="160"/>

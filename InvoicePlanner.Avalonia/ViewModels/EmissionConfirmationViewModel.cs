@@ -25,6 +25,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
     private readonly RelayCommand _cancelSelectedLineCommand;
     private readonly RelayCommand _closePlanDetailsCommand;
     private EmissionConfirmationLineViewModel? _selectedLineSubscription;
+    private string? _currentCurrencyCode;
 
     public EmissionConfirmationViewModel(
         IInvoicePlanRepository repository,
@@ -222,6 +223,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
             if (plan is null)
             {
                 ClearLines();
+                _currentCurrencyCode = null;
                 EngagementId = string.Empty;
                 CurrentPlanId = 0;
                 ValidationMessage = LocalizationRegistry.Format("Emission.Validation.PlanNotFound", planId);
@@ -230,6 +232,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
 
             CurrentPlanId = plan.Id;
             EngagementId = plan.EngagementId;
+            _currentCurrencyCode = _repository.GetEngagementCurrency(plan.EngagementId);
 
             ClearLines();
 
@@ -261,6 +264,8 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
                     CancelReason = string.Empty,
                     LastCancellationReason = lastCanceledEmission?.CancelReason ?? string.Empty,
                 };
+
+                line.SetCurrency(_currentCurrencyCode);
 
                 Lines.Add(line);
             }
@@ -424,6 +429,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         Lines.Clear();
         SelectedLine = null;
         IsPlanDetailsVisible = false;
+        _currentCurrencyCode = null;
         RefreshSummaries();
         OnPropertyChanged(nameof(HasLines));
         RefreshActionCommands();

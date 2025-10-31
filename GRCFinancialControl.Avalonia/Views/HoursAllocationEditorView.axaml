@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
              xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
+             xmlns:behaviors="clr-namespace:App.Presentation.Behaviors;assembly=App.Presentation"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
              x:Class="GRCFinancialControl.Avalonia.Views.HoursAllocationEditorView"
              x:Name="HoursAllocationEditorRoot"
@@ -59,7 +60,8 @@
                             <TextBox Text="{Binding IncurredHours, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                      IsEnabled="{Binding IsEditable}"
                                      HorizontalContentAlignment="Right"
-                                     MinWidth="100"/>
+                                     MinWidth="100"
+                                     behaviors:NumericInputNullSafety.IsEnabled="True"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
@@ -68,7 +70,8 @@
                         <DataTemplate>
                             <TextBox Text="{Binding AdditionalHours, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                      HorizontalContentAlignment="Right"
-                                     MinWidth="100"/>
+                                     MinWidth="100"
+                                     behaviors:NumericInputNullSafety.IsEnabled="True"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
