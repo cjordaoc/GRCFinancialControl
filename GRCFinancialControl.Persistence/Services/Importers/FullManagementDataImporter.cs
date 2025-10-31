@@ -437,6 +437,12 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                 engagement.CustomerId = customer.Id;
                             }
 
+                            TryUpdateCustomerMetadataForPlaceholder(
+                                engagement,
+                                row,
+                                customersByCode,
+                                customersByName);
+
                             if (!string.IsNullOrWhiteSpace(row.OpportunityCurrency))
                             {
                                 engagement.Currency = row.OpportunityCurrency;
@@ -1224,6 +1230,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             bool allowCreateOrUpdate)
         {
             Customer? resolved = null;
+            string? originalCode = null;
+            string? originalName = null;
 
             if (!string.IsNullOrWhiteSpace(row.CustomerCode) &&
                 customersByCode.TryGetValue(row.CustomerCode, out var byCode))
@@ -1258,6 +1266,9 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             }
             else if (allowCreateOrUpdate)
             {
+                originalCode = resolved.CustomerCode;
+                originalName = resolved.Name;
+
                 if (!string.IsNullOrWhiteSpace(row.CustomerCode) &&
                     !string.Equals(resolved.CustomerCode, row.CustomerCode, StringComparison.OrdinalIgnoreCase))
                 {
@@ -1273,6 +1284,18 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
             if (resolved != null)
             {
+                if (!string.IsNullOrWhiteSpace(originalCode) &&
+                    !string.Equals(originalCode, resolved.CustomerCode, StringComparison.OrdinalIgnoreCase))
+                {
+                    customersByCode.Remove(originalCode);
+                }
+
+                if (!string.IsNullOrWhiteSpace(originalName) &&
+                    !string.Equals(originalName, resolved.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    customersByName.Remove(originalName);
+                }
+
                 if (!string.IsNullOrWhiteSpace(row.CustomerName))
                 {
                     customersByName[row.CustomerName] = resolved;
@@ -1285,6 +1308,65 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             }
 
             return resolved;
+        }
+
+        private static void TryUpdateCustomerMetadataForPlaceholder(
+            Engagement engagement,
+            FullManagementDataRow row,
+            IDictionary<string, Customer> customersByCode,
+            IDictionary<string, Customer> customersByName)
+        {
+            if (engagement.Customer is null)
+            {
+                return;
+            }
+
+            var customer = engagement.Customer;
+            var originalCode = customer.CustomerCode;
+            var originalName = customer.Name;
+            var updated = false;
+
+            if (!string.IsNullOrWhiteSpace(row.CustomerCode) &&
+                (string.IsNullOrWhiteSpace(customer.CustomerCode) ||
+                 customer.CustomerCode.StartsWith("AUTO-", StringComparison.OrdinalIgnoreCase)))
+            {
+                customer.CustomerCode = row.CustomerCode;
+                updated = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(row.CustomerName) &&
+                !string.Equals(customer.Name, row.CustomerName, StringComparison.OrdinalIgnoreCase))
+            {
+                customer.Name = row.CustomerName;
+                updated = true;
+            }
+
+            if (!updated)
+            {
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(originalCode) &&
+                !string.Equals(originalCode, customer.CustomerCode, StringComparison.OrdinalIgnoreCase))
+            {
+                customersByCode.Remove(originalCode);
+            }
+
+            if (!string.IsNullOrWhiteSpace(originalName) &&
+                !string.Equals(originalName, customer.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                customersByName.Remove(originalName);
+            }
+
+            if (!string.IsNullOrWhiteSpace(customer.CustomerCode))
+            {
+                customersByCode[customer.CustomerCode] = customer;
+            }
+
+            if (!string.IsNullOrWhiteSpace(customer.Name))
+            {
+                customersByName[customer.Name] = customer;
+            }
         }
 
         private static string DetermineCustomerCodeForInsert(

@@ -70,7 +70,7 @@ Authoritative reference for reusable classes and interfaces. Consult this catalo
 | Interface | `GRCFinancialControl.Persistence.Services.Interfaces` | `IReportService` | (See Core Services table) | — | — | Stable | Listed twice for quick lookup with services. |
 | Interface | `GRCFinancialControl.Persistence.Services.Interfaces` | `IExceptionService` | Captures domain exceptions for diagnostics. | `LogAsync`, `GetRecentAsync` | `ApplicationDbContext` | Stable | Used by UI to surface errors. |
 | Interface | `GRCFinancialControl.Persistence.Services.Interfaces` | `ISettingsService` | Retrieves persisted configuration. | `GetSettingsAsync`, `SaveSettingsAsync` | `ApplicationDbContext` | Stable | Supports UI configuration panels. |
-| Interface | `GRCFinancialControl.Persistence.Services.Interfaces` | `IManagerAssignmentService` | Manages engagement manager assignments. | `GetAssignmentsAsync`, `SaveAssignmentsAsync` | `ApplicationDbContext` | Stable | Works with manager directory integration. |
+| Interface | `GRCFinancialControl.Persistence.Services.Interfaces` | `IManagerAssignmentService` | Manages engagement manager assignments. | `GetAllAsync`, `GetByEngagementIdAsync`, `GetByManagerIdAsync`, `AddAsync`, `UpdateAsync`, `DeleteAsync` | `ApplicationDbContext` | Stable | Works with manager directory integration. |
 
 ---
 
