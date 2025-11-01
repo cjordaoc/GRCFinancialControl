@@ -75,11 +75,12 @@
                                                   Margin="{StaticResource MarginLeftSmall}"
                                                   VerticalAlignment="Center"/>
                                 </Grid>
-                                <StackPanel Orientation="Horizontal" Spacing="{StaticResource Spacing12}">
-                                    <Button Content="{loc:Loc Key=FINC_Settings_Button_Load}" Command="{Binding LoadSettingsCommand}" MinWidth="120"/>
-                                    <Button Content="{loc:Loc Key=FINC_Settings_Button_Save}" Command="{Binding SaveSettingsCommand}" MinWidth="120"/>
-                                    <Button Content="{loc:Loc Key=FINC_Settings_Button_Test}" Command="{Binding TestConnectionCommand}" MinWidth="140"/>
-                                    <Button Content="{loc:Loc Key=FINC_Settings_Button_ClearAll}" Command="{Binding ClearAllDataCommand}" Classes="danger" MinWidth="140"/>
+                                <StackPanel Classes="ButtonRow"
+                                            HorizontalAlignment="Left">
+                                    <Button Content="{loc:Loc Key=FINC_Settings_Button_Load}" Command="{Binding LoadSettingsCommand}"/>
+                                    <Button Content="{loc:Loc Key=FINC_Settings_Button_Save}" Command="{Binding SaveSettingsCommand}"/>
+                                    <Button Content="{loc:Loc Key=FINC_Settings_Button_Test}" Command="{Binding TestConnectionCommand}"/>
+                                    <Button Content="{loc:Loc Key=FINC_Settings_Button_ClearAll}" Command="{Binding ClearAllDataCommand}" Classes="Danger"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>

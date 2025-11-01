@@ -142,7 +142,8 @@
     <Setter Property="Background" Value="{StaticResource BrushSurfaceVariant}" />
     <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
     <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}" />
-    <Setter Property="Padding" Value="{StaticResource SpaceThickness8}" />
+    <Setter Property="HorizontalContentAlignment" Value="Left" />
+    <Setter Property="Padding" Value="{StaticResource SpaceThickness12}" />
   </Style>
 
   <Style Selector="TabItem">

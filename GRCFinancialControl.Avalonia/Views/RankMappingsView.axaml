@@ -43,21 +43,18 @@
         </DataGrid>
 
         <StackPanel Grid.Row="2"
-                    Orientation="Horizontal"
-                    Spacing="{StaticResource Spacing12}"
+                    Classes="ButtonRow"
+                    HorizontalAlignment="Left"
                     Margin="{StaticResource MarginTopSmall}">
             <Button Content="{loc:Loc Key=FINC_Button_Add}"
-                    Command="{Binding AddCommand}"
-                    MinWidth="120"/>
+                    Command="{Binding AddCommand}"/>
             <Button Content="{loc:Loc Key=FINC_Button_Edit}"
                     Command="{Binding EditCommand}"
-                    CommandParameter="{Binding SelectedRankMapping}"
-                    MinWidth="120"/>
+                    CommandParameter="{Binding SelectedRankMapping}"/>
             <Button Content="{loc:Loc Key=FINC_Button_Delete}"
                     Command="{Binding DeleteCommand}"
                     CommandParameter="{Binding SelectedRankMapping}"
-                    Classes="danger"
-                    MinWidth="120"/>
+                    Classes="Danger"/>
         </StackPanel>
     </Grid>
 </UserControl>

@@ -1,4 +1,4 @@
-# GRC Financial Control — Functional Overview (vNext)
+# GRC Financial Control — Functional Overview (v3 Final Release)
 
 The GRC Financial Control solution orchestrates budgeting, revenue allocation, invoice planning, and reporting for consulting engagements. This document describes the platform from the **functional perspective**, including the standard (happy) paths and the validation/consolidation rules enforced during file imports and template generation. Each module references the correlated technical specification in [readme_specs.md](readme_specs.md).
 

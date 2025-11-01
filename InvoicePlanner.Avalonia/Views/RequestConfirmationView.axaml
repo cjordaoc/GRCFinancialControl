@@ -9,8 +9,8 @@
              mc:Ignorable="d">
     <Grid>
         <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="{StaticResource Spacing16}" Margin="{StaticResource SpaceThickness16}">
-                <Border Classes="Card" Padding="{StaticResource SpaceThickness24}">
+            <StackPanel Spacing="{StaticResource Spacing16}" Margin="{StaticResource MarginMedium}">
+                <Border Classes="Card" Padding="{StaticResource SpaceThickness16}">
                     <StackPanel Spacing="{StaticResource Spacing16}">
                         <TextBlock Classes="TitleMedium" Text="{loc:Loc Key=INV_Request_Title_Primary}" />
                         <TextBlock Text="{loc:Loc Key=INV_Request_Description_Primary}" />
@@ -38,7 +38,7 @@
                                     <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Canceled}" Binding="{Binding CanceledItemCount}" Width="120"/>
                                 </DataGrid.Columns>
                             </DataGrid>
-                            <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space12}">
+                            <StackPanel Orientation="Horizontal" Spacing="{StaticResource Spacing12}">
                                 <Button Content="{loc:Loc Key=INV_Button_Refresh}"
                                         Command="{Binding RefreshCommand}"
                                         MinWidth="140"/>
@@ -50,10 +50,10 @@
                     </StackPanel>
                 </Border>
 
-                <Border Classes="Card" Padding="{StaticResource SpaceThickness24}" IsVisible="{Binding IsPlanDetailsVisible}">
+                <Border Classes="Card" Padding="{StaticResource SpaceThickness16}" IsVisible="{Binding IsPlanDetailsVisible}">
                     <StackPanel Spacing="{StaticResource Spacing16}">
                         <TextBlock Classes="TitleMedium" Text="{loc:Loc Key=INV_Request_Section_InvoiceDetails_Header}" />
-                        <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space16}">
+                        <StackPanel Orientation="Horizontal" Spacing="{StaticResource Spacing16}">
                             <TextBlock Text="{Binding EngagementDisplay}" />
                             <TextBlock Text="{Binding PlannedCountDisplay}" />
                             <TextBlock Text="{Binding RequestedCountDisplay}" />

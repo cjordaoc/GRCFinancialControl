@@ -1,4 +1,3 @@
-<!-- PlanEditorDialogView.axaml -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -12,94 +11,387 @@
              x:Name="PlanEditorRoot"
              x:DataType="vm:PlanEditorDialogViewModel"
              mc:Ignorable="d">
-
     <UserControl.Resources>
-        <conv:PercentageOfSizeConverter x:Key="PercentageOfSizeConverter" />
+        <conv:BoolToBrushConverter x:Key="TotalsBrushConverter"
+                                    TrueResourceKey="BrushError"
+                                    FalseResourceKey="BrushOnSurface" />
     </UserControl.Resources>
+    <Grid RowDefinitions="Auto,*,Auto"
+          RowSpacing="{StaticResource Spacing16}">
+        <StackPanel Margin="{StaticResource MarginMedium}"
+                    Spacing="{StaticResource Spacing8}">
+            <TextBlock Classes="TitleLarge"
+                       Text="{loc:Loc Key=INV_InvoicePlan_Title_Primary}" />
+            <TextBlock Text="{loc:Loc Key=INV_InvoicePlan_Description_Primary}" />
+        </StackPanel>
 
-    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
+        <TabControl Grid.Row="1"
+                    Margin="{StaticResource MarginMedium}"
+                    SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
+            <TabItem Header="{loc:Loc Key=INV_InvoicePlan_Tab_General}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="{StaticResource Spacing16}"
+                                Margin="{StaticResource SpaceThickness0}">
+                        <Grid ColumnDefinitions="200,*"
+                              RowSpacing="{StaticResource Spacing16}"
+                              ColumnSpacing="{StaticResource Spacing16}">
+                            <TextBlock Grid.Row="0"
+                                       Grid.Column="0"
+                                       Text="{loc:Loc Key=INV_InvoicePlan_Label_Engagement}"
+                                       Classes="Caption"
+                                       VerticalAlignment="Center" />
+                            <Grid Grid.Row="0"
+                                  Grid.Column="1"
+                                  ColumnDefinitions="180,*"
+                                  ColumnSpacing="{StaticResource Spacing16}">
+                                <TextBox Grid.Column="0"
+                                         Text="{Binding Editor.EngagementId}"
+                                         IsReadOnly="True"
+                                         IsEnabled="False"
+                                         IsTabStop="False" />
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding Editor.EngagementName}"
+                                         IsReadOnly="True"
+                                         IsEnabled="False"
+                                         IsTabStop="False" />
+                            </Grid>
 
-        <!-- MAIN SCROLLABLE CONTENT -->
-        <ScrollViewer Grid.Row="0"
-                      VerticalScrollBarVisibility="Auto"
-                      HorizontalScrollBarVisibility="Auto"
-                      HorizontalContentAlignment="Stretch"
-                      Padding="{StaticResource SpaceThickness24}"
-                      DataContext="{Binding Editor}">
+                            <TextBlock Grid.Row="1"
+                                       Grid.Column="0"
+                                       Text="{loc:Loc Key=INV_InvoicePlan_Label_BaseValue}"
+                                       Classes="Caption"
+                                       VerticalAlignment="Center" />
+                            <Grid Grid.Row="1"
+                                  Grid.Column="1"
+                                  ColumnDefinitions="Auto,*"
+                                  ColumnSpacing="{StaticResource Spacing8}"
+                                  VerticalAlignment="Center">
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding Editor.CurrencySymbol}"
+                                           IsVisible="{Binding Editor.HasCurrencySymbol}"
+                                           VerticalAlignment="Center" />
+                                <NumericUpDown Grid.Column="1"
+                                               Minimum="0"
+                                               Maximum="100000000"
+                                               Increment="100"
+                                               FormatString="F2"
+                                               Value="{Binding Editor.PlanningBaseValue}"
+                                               HorizontalAlignment="Stretch"
+                                               MinWidth="200"
+                                               appBehaviors:NumericInputNullSafety.IsEnabled="True" />
+                            </Grid>
 
-            <Grid RowDefinitions="Auto,Auto,Auto,Auto"
-                  RowSpacing="{StaticResource Space24}"
-                  HorizontalAlignment="Stretch">
+                            <TextBlock Grid.Row="2"
+                                       Grid.Column="0"
+                                       Text="{loc:Loc Key=INV_InvoicePlan_Label_FocalPoint}"
+                                       Classes="Caption"
+                                       VerticalAlignment="Center" />
+                            <TextBox Grid.Row="2"
+                                     Grid.Column="1"
+                                     Text="{Binding Editor.CustomerFocalPointName}"
+                                     Watermark="{loc:Loc Key=INV_Placeholder_Name}" />
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
 
-                <!-- Header -->
-                <StackPanel Grid.Row="0" Spacing="{StaticResource Space8}">
-                    <TextBlock Classes="TitleLarge" Text="{loc:Loc Key=INV_InvoicePlan_Title_Primary}" />
-                    <TextBlock Text="{loc:Loc Key=INV_InvoicePlan_Description_Primary}" />
-                </StackPanel>
+            <TabItem Header="{loc:Loc Key=INV_InvoicePlan_Tab_Items}">
+                <Grid RowDefinitions="Auto,*,Auto,Auto"
+                      RowSpacing="{StaticResource Spacing16}"
+                      Margin="{StaticResource SpaceThickness0}">
+                    <WrapPanel Grid.Row="0"
+                              ItemSpacing="{StaticResource Spacing16}"
+                              Margin="{StaticResource MarginMedium}">
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="{StaticResource Spacing16}"
+                                    VerticalAlignment="Center">
+                            <TextBlock Classes="Caption"
+                                       VerticalAlignment="Center"
+                                       Text="{loc:Loc Key=INV_InvoicePlan_Label_PlanType}" />
+                            <ComboBox ItemsSource="{Binding Editor.PlanTypes}"
+                                      SelectedItem="{Binding Editor.PlanType}"
+                                      MinWidth="180" />
+                        </StackPanel>
 
-                <!-- General details -->
-                <Grid Grid.Row="1"
-                      Margin="{StaticResource MarginTopRegular}"
-                      ColumnDefinitions="Auto,*"
-                      ColumnSpacing="{StaticResource Space24}"
-                      RowSpacing="{StaticResource Space12}">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="{StaticResource Spacing16}"
+                                    VerticalAlignment="Center">
+                            <TextBlock Classes="Caption"
+                                       VerticalAlignment="Center"
+                                       Text="{loc:Loc Key=INV_InvoicePlan_Label_InvoiceCount}" />
+                            <NumericUpDown Minimum="1"
+                                           Maximum="48"
+                                           Increment="1"
+                                           Value="{Binding Editor.NumInvoices}"
+                                           MinWidth="120"
+                                           appBehaviors:NumericInputNullSafety.IsEnabled="True" />
+                        </StackPanel>
 
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{loc:Loc Key=INV_InvoicePlan_Label_Engagement}" Classes="Caption" VerticalAlignment="Center" />
-                    <Grid Grid.Row="0" Grid.Column="1" ColumnSpacing="{StaticResource Space12}" ColumnDefinitions="180,*" VerticalAlignment="Center">
-                        <TextBox Grid.Column="0" Text="{Binding EngagementId}" Watermark="{loc:Loc Key=INV_Placeholder_Code}" IsReadOnly="True" IsEnabled="False" IsTabStop="False" />
-                        <TextBox Grid.Column="1" Text="{Binding EngagementName}" Watermark="{loc:Loc Key=INV_Placeholder_Name}" IsReadOnly="True" IsEnabled="False" IsTabStop="False" />
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="{StaticResource Spacing16}"
+                                    VerticalAlignment="Center">
+                            <TextBlock Classes="Caption"
+                                       VerticalAlignment="Center"
+                                       Text="{loc:Loc Key=INV_InvoicePlan_Label_PaymentTerms}" />
+                            <NumericUpDown Minimum="0"
+                                           Maximum="120"
+                                           Increment="1"
+                                           Value="{Binding Editor.PaymentTermDays}"
+                                           MinWidth="120"
+                                           appBehaviors:NumericInputNullSafety.IsEnabled="True" />
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="{StaticResource Spacing16}"
+                                    VerticalAlignment="Center"
+                                    IsVisible="{Binding Editor.RequiresFirstEmissionDate}">
+                            <TextBlock Classes="Caption"
+                                       VerticalAlignment="Center"
+                                       Text="{loc:Loc Key=INV_InvoicePlan_Label_FirstEmission}" />
+                            <CalendarDatePicker SelectedDate="{Binding Editor.FirstEmissionDate, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}"
+                                                IsVisible="{Binding Editor.RequiresFirstEmissionDate}"
+                                                IsEnabled="{Binding Editor.RequiresFirstEmissionDate}"
+                                                Width="240" />
+                        </StackPanel>
+
+                        <Button Content="{loc:Loc Key=INV_Button_Refresh}"
+                                Command="{Binding Editor.RefreshCommand}" />
+
+                        <Button Content="{loc:Loc Key=INV_InvoicePlan_Button_PreviewDescription}"
+                                Command="{Binding Editor.PreviewDescriptionCommand}" />
+                    </WrapPanel>
+
+                    <Border Grid.Row="1"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                            CornerRadius="8"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch">
+                        <DataGrid x:Name="InvoiceLinesGrid"
+                                  ItemsSource="{Binding Editor.Items}"
+                                  SelectedItem="{Binding Editor.SelectedInvoiceLine, Mode=TwoWay}"
+                                  AutoGenerateColumns="False"
+                                  HeadersVisibility="Column"
+                                  GridLinesVisibility="All"
+                                  CanUserResizeColumns="True"
+                                  behaviors:DataGridRowResizeBehavior.IsEnabled="True"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Auto">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_Sequence}" Width="60">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                            <TextBlock Text="{Binding Sequence}"
+                                                       HorizontalAlignment="Stretch"
+                                                       TextAlignment="Left" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_EmissionDate}" Width="180">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                            <CalendarDatePicker SelectedDate="{Binding EmissionDate, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}"
+                                                                IsEnabled="{Binding CanEditEmissionDate}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_Delivery}" Width="220">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                            <TextBox Text="{Binding DeliveryDescription}"
+                                                     Watermark="{loc:Loc Key=INV_InvoicePlan_Placeholder_DeliveryNotes}"
+                                                     IsVisible="{Binding ShowDeliveryDescription}"
+                                                     IsEnabled="{Binding IsEditable}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_Cnpj}" Width="180">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                            <TextBox Text="{Binding PayerCnpj, UpdateSourceTrigger=PropertyChanged}"
+                                                     behaviors:CnpjMaskBehavior.IsEnabled="True"
+                                                     IsEnabled="{Binding IsEditable}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_Po}" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                            <TextBox Text="{Binding PoNumber, UpdateSourceTrigger=PropertyChanged}"
+                                                     IsEnabled="{Binding IsEditable}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_Frs}" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                            <TextBox Text="{Binding FrsNumber, UpdateSourceTrigger=PropertyChanged}"
+                                                     IsEnabled="{Binding IsEditable}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_Ticket}" Width="160">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                            <TextBox Text="{Binding CustomerTicket, UpdateSourceTrigger=PropertyChanged}"
+                                                     IsEnabled="{Binding IsEditable}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_PaymentType}" Width="200">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                            <ComboBox ItemsSource="{Binding Owner.PaymentTypeOptions}"
+                                                      SelectedItem="{Binding SelectedPaymentTypeOption, Mode=TwoWay}"
+                                                      IsEnabled="{Binding IsEditable}">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding DisplayName}" />
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_Percent}" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                            <StackPanel Orientation="Horizontal"
+                                                        Spacing="{StaticResource Spacing8}"
+                                                        VerticalAlignment="Center">
+                                                <NumericUpDown Value="{Binding Percentage}"
+                                                               Minimum="0"
+                                                               Maximum="100"
+                                                               Increment="0.01"
+                                                               FormatString="F2"
+                                                               IsEnabled="{Binding IsEditable}"
+                                                               appBehaviors:NumericInputNullSafety.IsEnabled="True" />
+                                                <TextBlock Text="%" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_Amount}" Width="160">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                            <StackPanel Orientation="Horizontal"
+                                                        Spacing="{StaticResource Spacing8}"
+                                                        VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding CurrencySymbol}"
+                                                           IsVisible="{Binding IsEditable}"
+                                                           VerticalAlignment="Center" />
+                                                <NumericUpDown Value="{Binding Amount}"
+                                                               Minimum="0"
+                                                               Maximum="100000000"
+                                                               Increment="10"
+                                                               FormatString="F2"
+                                                               IsEnabled="{Binding IsEditable}"
+                                                               IsVisible="{Binding IsEditable}"
+                                                               appBehaviors:NumericInputNullSafety.IsEnabled="True" />
+                                                <TextBlock Text="{Binding AmountDisplay}"
+                                                           VerticalAlignment="Center"
+                                                           IsVisible="{Binding ShowReadOnlyAmount}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+
+                    <Grid Grid.Row="2"
+                          ColumnDefinitions="Auto,Auto,Auto,Auto,Auto"
+                          ColumnSpacing="{StaticResource Spacing16}">
+                        <TextBlock Grid.Column="0"
+                                   Text="{loc:Loc Key=INV_InvoicePlan_Section_Totals_Label}"
+                                   Classes="Caption"
+                                   Foreground="{StaticResource BrushOnSurface}"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Loc Key=INV_InvoicePlan_Section_Totals_Percent}"
+                                   Foreground="{StaticResource BrushOnSurface}"
+                                   VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="2"
+                                    Orientation="Horizontal"
+                                    Spacing="{StaticResource Spacing8}"
+                                    VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Editor.TotalPercentage, StringFormat={}{0:F2}}"
+                                       FontWeight="{StaticResource FontWeightSemiBold}"
+                                       Foreground="{Binding Editor.HasTotalsMismatch, Converter={StaticResource TotalsBrushConverter}}" />
+                            <TextBlock Text="%"
+                                       FontWeight="{StaticResource FontWeightSemiBold}"
+                                       Foreground="{Binding Editor.HasTotalsMismatch, Converter={StaticResource TotalsBrushConverter}}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="3"
+                                   Text="{loc:Loc Key=INV_InvoicePlan_Section_Totals_Amount}"
+                                   Foreground="{StaticResource BrushOnSurface}"
+                                   VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="4"
+                                    Orientation="Horizontal"
+                                    Spacing="{StaticResource Spacing8}"
+                                    VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Editor.TotalAmountDisplay}"
+                                       FontWeight="{StaticResource FontWeightSemiBold}"
+                                       Foreground="{Binding Editor.HasTotalsMismatch, Converter={StaticResource TotalsBrushConverter}}" />
+                        </StackPanel>
                     </Grid>
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{loc:Loc Key=INV_InvoicePlan_Label_BaseValue}" Classes="Caption" VerticalAlignment="Center" />
-                    <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource Space4}" VerticalAlignment="Center">
-                        <TextBlock Grid.Column="0" Text="{Binding CurrencySymbol}" IsVisible="{Binding HasCurrencySymbol}" VerticalAlignment="Center" />
-                        <NumericUpDown Grid.Column="1" Minimum="0" Maximum="100000000" Increment="100" FormatString="F2" Value="{Binding PlanningBaseValue}" HorizontalAlignment="Stretch" MinWidth="200" appBehaviors:NumericInputNullSafety.IsEnabled="True" />
-                    </Grid>
 
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{loc:Loc Key=INV_InvoicePlan_Label_FocalPoint}" Classes="Caption" VerticalAlignment="Center" />
-                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding CustomerFocalPointName}" Watermark="{loc:Loc Key=INV_Placeholder_Name}" />
-
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="{loc:Loc Key=INV_InvoicePlan_Label_Instructions}" Classes="Caption" VerticalAlignment="Top" />
-                    <TextBox Grid.Row="3" Grid.Column="1" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="80" Text="{Binding CustomInstructions}" />
-
-                    <TextBlock Grid.Row="4" Grid.Column="0" Text="{loc:Loc Key=INV_InvoicePlan_Label_RecipientEmails}" Classes="Caption" VerticalAlignment="Top" />
-                    <TextBox Grid.Row="4" Grid.Column="1" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="80" Text="{Binding RecipientEmails}" Watermark="{loc:Loc Key=INV_InvoicePlan_Placeholder_Recipients}" />
+                    <StackPanel Grid.Row="3"
+                                Spacing="{StaticResource Spacing12}">
+                        <TextBlock Text="{Binding Editor.ValidationMessage}"
+                                   Classes="StatusError"
+                                   IsVisible="{Binding Editor.HasValidationMessage}" />
+                        <TextBlock Text="{Binding Editor.StatusMessage}"
+                                   Classes="StatusSuccess"
+                                   IsVisible="{Binding Editor.HasStatusMessage}" />
+                    </StackPanel>
                 </Grid>
+            </TabItem>
 
-                <!-- Messages -->
-                <StackPanel Grid.Row="2" Spacing="{StaticResource Space12}">
-                    <TextBlock Text="{Binding ValidationMessage}" Classes="StatusError" IsVisible="{Binding HasValidationMessage}" />
-                    <TextBlock Text="{Binding StatusMessage}" Classes="StatusSuccess" IsVisible="{Binding HasStatusMessage}" />
-                </StackPanel>
+            <TabItem Header="{loc:Loc Key=INV_InvoicePlan_Tab_Notes}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="{StaticResource Spacing16}">
+                        <TextBlock Text="{loc:Loc Key=INV_InvoicePlan_Label_Instructions}"
+                                   Classes="Caption" />
+                        <TextBox Text="{Binding Editor.CustomInstructions}"
+                                 AcceptsReturn="True"
+                                 MinHeight="100"
+                                 TextWrapping="Wrap" />
 
-                <!-- TODO: Future placeholder for invoice lines summary, if needed -->
-                <Grid Grid.Row="3" />
-            </Grid>
-        </ScrollViewer>
+                        <TextBlock Text="{loc:Loc Key=INV_InvoicePlan_Label_RecipientEmails}"
+                                   Classes="Caption" />
+                        <TextBox Text="{Binding Editor.RecipientEmails}"
+                                 AcceptsReturn="True"
+                                 MinHeight="120"
+                                 TextWrapping="Wrap"
+                                 Watermark="{loc:Loc Key=INV_InvoicePlan_Placeholder_Recipients}" />
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
 
-        <!-- FOOTER (fixed) -->
-        <StackPanel Grid.Row="1"
-                    Orientation="Horizontal"
+        <StackPanel Grid.Row="2"
+                    Classes="ButtonRow"
                     HorizontalAlignment="Right"
-                    Spacing="{StaticResource Space12}"
-                    Margin="{StaticResource SpaceThickness24}">
+                    Margin="{StaticResource MarginMedium}">
             <Button Content="{loc:Loc Key=INV_InvoicePlan_Dialog_Button_DeletePlan}"
                     Command="{Binding DeletePlanCommand}"
-                    MinWidth="160"
                     Classes="Danger" />
             <Button Content="{loc:Loc Key=INV_InvoicePlan_Dialog_Button_EditPlan}"
-                    Command="{Binding EditLinesCommand}"
-                    MinWidth="200" />
+                    Command="{Binding EditLinesCommand}" />
             <Button Content="{loc:Loc Key=Global_Button_Cancel}"
                     Command="{Binding CloseCommand}"
-                    IsCancel="True"
-                    MinWidth="120" />
+                    IsCancel="True" />
         </StackPanel>
     </Grid>
 </UserControl>

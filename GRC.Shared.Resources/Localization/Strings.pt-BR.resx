@@ -858,6 +858,9 @@
   <data name="Global_Button_Cancel" xml:space="preserve">
     <value>Cancelar</value>
   </data>
+  <data name="Global_Button_Close" xml:space="preserve">
+    <value>Fechar</value>
+  </data>
   <data name="Global_Button_Save" xml:space="preserve">
     <value>Salvar</value>
   </data>
@@ -896,6 +899,12 @@
   </data>
   <data name="Global_ItemsRequired" xml:space="preserve">
     <value>Pelo menos uma linha de fatura é obrigatória.</value>
+  </data>
+  <data name="Global_SidebarCollapse" xml:space="preserve">
+    <value>Recolher menu</value>
+  </data>
+  <data name="Global_SidebarExpand" xml:space="preserve">
+    <value>Expandir menu</value>
   </data>
   <data name="Global_Localization_Language_English" xml:space="preserve">
     <value>Inglês</value>
@@ -1232,6 +1241,30 @@
   </data>
   <data name="INV_InvoicePlan_Label_RecipientEmails" xml:space="preserve">
     <value>E-mails de destino</value>
+  </data>
+  <data name="INV_InvoicePlan_Tab_General" xml:space="preserve">
+    <value>Informações Gerais</value>
+  </data>
+  <data name="INV_InvoicePlan_Tab_Items" xml:space="preserve">
+    <value>Linhas de Fatura</value>
+  </data>
+  <data name="INV_InvoicePlan_Tab_Notes" xml:space="preserve">
+    <value>Anotações</value>
+  </data>
+  <data name="INV_InvoicePlan_Button_PreviewDescription" xml:space="preserve">
+    <value>Pré-visualizar descrição</value>
+  </data>
+  <data name="INV_InvoicePlan_Preview_Title" xml:space="preserve">
+    <value>Prévia da descrição da fatura</value>
+  </data>
+  <data name="INV_InvoicePlan_Preview_DialogTitle" xml:space="preserve">
+    <value>Descrição da fatura</value>
+  </data>
+  <data name="INV_InvoicePlan_Preview_LineSummary" xml:space="preserve">
+    <value>Parcela {0} de {1}</value>
+  </data>
+  <data name="INV_InvoicePlan_Preview_DescriptionLabel" xml:space="preserve">
+    <value>Descrição gerada</value>
   </data>
   <data name="INV_InvoicePlan_Placeholder_DeliveryNotes" xml:space="preserve">
     <value>Inclua observações da entrega</value>

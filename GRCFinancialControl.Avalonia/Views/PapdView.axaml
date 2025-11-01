@@ -25,12 +25,15 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="{StaticResource Spacing4}" Margin="{StaticResource MarginTopSmall}">
+        <StackPanel Grid.Row="2"
+                    Classes="ButtonRow"
+                    HorizontalAlignment="Left"
+                    Margin="{StaticResource MarginTopSmall}">
             <Button Content="Add New" Command="{Binding AddCommand}"/>
             <Button Content="Edit" Command="{Binding EditCommand}" CommandParameter="{Binding SelectedPapd}"/>
             <Button Content="View" Command="{Binding ViewCommand}" CommandParameter="{Binding SelectedPapd}"/>
             <Button Content="Delete" Command="{Binding DeleteCommand}" CommandParameter="{Binding SelectedPapd}"/>
-            <Button Content="Delete Data" Command="{Binding DeleteDataCommand}" CommandParameter="{Binding SelectedPapd}" Classes="danger"/>
+            <Button Content="Delete Data" Command="{Binding DeleteDataCommand}" CommandParameter="{Binding SelectedPapd}" Classes="Danger"/>
         </StackPanel>
     </Grid>
 </UserControl>

@@ -11,8 +11,8 @@
     <UserControl.Resources>
         <appConv:CurrencyDisplayConverter x:Key="CurrencyDisplayConverter"/>
     </UserControl.Resources>
-    <Grid RowDefinitions="Auto,*,Auto" Margin="{StaticResource SpaceThickness10}">
-        <TextBlock Text="{loc:Loc Key=FINC_Admin_Engagements_Title_List}" Classes="TitleLarge" Margin="{StaticResource MarginBottomSmall}"/>
+    <Grid RowDefinitions="Auto,*,Auto" Margin="{StaticResource MarginMedium}">
+        <TextBlock Text="{loc:Loc Key=FINC_Admin_Engagements_Title_List}" Classes="TitleLarge" Margin="{StaticResource MarginBottomRegular}"/>
 
         <DataGrid Grid.Row="1"
                   ItemsSource="{Binding Engagements}"
@@ -65,12 +65,15 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="{StaticResource Spacing4}" Margin="{StaticResource MarginTopSmall}">
+        <StackPanel Grid.Row="2"
+                    Classes="ButtonRow"
+                    HorizontalAlignment="Left"
+                    Margin="{StaticResource MarginTopMedium}">
             <Button Content="Add New" Command="{Binding AddCommand}"/>
             <Button Content="View" Command="{Binding ViewCommand}" CommandParameter="{Binding SelectedEngagement}"/>
             <Button Content="Edit" Command="{Binding EditCommand}" CommandParameter="{Binding SelectedEngagement}"/>
             <Button Content="Delete" Command="{Binding DeleteCommand}" CommandParameter="{Binding SelectedEngagement}"/>
-            <Button Content="Delete Data" Command="{Binding DeleteDataCommand}" CommandParameter="{Binding SelectedEngagement}" Classes="danger"/>
+            <Button Content="Delete Data" Command="{Binding DeleteDataCommand}" CommandParameter="{Binding SelectedEngagement}" Classes="Danger"/>
         </StackPanel>
     </Grid>
 </UserControl>

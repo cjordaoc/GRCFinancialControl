@@ -21,12 +21,17 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly ILogger<MainWindowViewModel> _logger;
     private readonly Dictionary<string, NavigationItemViewModel> _navigationIndex = new(StringComparer.Ordinal);
     private string? _lastPersistedMenuKey;
+    private bool? _lastPersistedSidebarExpanded;
+    private bool _suppressSidebarPersistence;
 
     [ObservableProperty]
     private string title = LocalizationRegistry.Get("INV_Shell_Title_InvoicePlanner");
 
     [ObservableProperty]
     private ViewModelBase currentViewModel;
+
+    [ObservableProperty]
+    private bool isSidebarExpanded = true;
 
     public IReadOnlyList<NavigationItemViewModel> MenuItems { get; }
 
@@ -62,6 +67,15 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var settings = _settingsService.GetAll();
+        if (settings.TryGetValue(SettingKeys.InvoicePlannerSidebarExpanded, out var sidebarValue)
+            && bool.TryParse(sidebarValue, out var storedSidebarExpanded))
+        {
+            _suppressSidebarPersistence = true;
+            IsSidebarExpanded = storedSidebarExpanded;
+            _lastPersistedSidebarExpanded = storedSidebarExpanded;
+            _suppressSidebarPersistence = false;
+        }
+
         NavigationItemViewModel? storedSelection = null;
         if (settings.TryGetValue(SettingKeys.LastInvoicePlannerSectionKey, out var storedKey)
             && !string.IsNullOrWhiteSpace(storedKey)
@@ -141,6 +155,26 @@ public partial class MainWindowViewModel : ViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to persist the navigation selection.");
+        }
+    }
+
+    async partial void OnIsSidebarExpandedChanged(bool value)
+    {
+        if (_suppressSidebarPersistence || (_lastPersistedSidebarExpanded.HasValue && _lastPersistedSidebarExpanded.Value == value))
+        {
+            return;
+        }
+
+        try
+        {
+            var settings = await _settingsService.GetAllAsync().ConfigureAwait(false);
+            settings[SettingKeys.InvoicePlannerSidebarExpanded] = value.ToString();
+            await _settingsService.SaveAllAsync(settings).ConfigureAwait(false);
+            _lastPersistedSidebarExpanded = value;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to persist the sidebar expansion preference.");
         }
     }
 

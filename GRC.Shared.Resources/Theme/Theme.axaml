@@ -1,0 +1,12 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceInclude Source="avares://GRC.Shared.Resources/Theme/Colors.axaml" />
+    <ResourceInclude Source="avares://GRC.Shared.Resources/Theme/Spacing.axaml" />
+    <ResourceInclude Source="avares://GRC.Shared.Resources/Theme/Dimensions.axaml" />
+    <ResourceInclude Source="avares://GRC.Shared.Resources/Theme/Shapes.axaml" />
+    <ResourceInclude Source="avares://GRC.Shared.Resources/Theme/Elevation.axaml" />
+    <ResourceInclude Source="avares://GRC.Shared.Resources/Theme/Effects.axaml" />
+    <ResourceInclude Source="avares://GRC.Shared.Resources/Theme/Typography.axaml" />
+  </ResourceDictionary.MergedDictionaries>
+</ResourceDictionary>

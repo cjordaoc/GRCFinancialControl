@@ -13,7 +13,15 @@ public sealed partial class PlanEditorDialogViewModel : ViewModelBase
 
     public PlanEditorViewModel Editor { get; }
 
+    [ObservableProperty]
+    private int selectedTabIndex;
+
     public IRelayCommand EditLinesCommand => Editor.EditLinesCommand;
     public IRelayCommand DeletePlanCommand => Editor.DeletePlanCommand;
     public IRelayCommand CloseCommand => Editor.ClosePlanFormCommand;
+
+    public void NavigateToInvoiceItems()
+    {
+        SelectedTabIndex = 1;
+    }
 }

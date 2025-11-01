@@ -858,6 +858,9 @@
   <data name="Global_Button_Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
+  <data name="Global_Button_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
   <data name="Global_Button_Save" xml:space="preserve">
     <value>Save</value>
   </data>
@@ -896,6 +899,12 @@
   </data>
   <data name="Global_ItemsRequired" xml:space="preserve">
     <value>At least one invoice line is required.</value>
+  </data>
+  <data name="Global_SidebarCollapse" xml:space="preserve">
+    <value>Collapse sidebar</value>
+  </data>
+  <data name="Global_SidebarExpand" xml:space="preserve">
+    <value>Expand sidebar</value>
   </data>
   <data name="Global_Localization_Language_English" xml:space="preserve">
     <value>English</value>
@@ -1217,6 +1226,30 @@
   </data>
   <data name="INV_InvoicePlan_Label_FocalPoint" xml:space="preserve">
     <value>Customer focal point</value>
+  </data>
+  <data name="INV_InvoicePlan_Tab_General" xml:space="preserve">
+    <value>General Info</value>
+  </data>
+  <data name="INV_InvoicePlan_Tab_Items" xml:space="preserve">
+    <value>Invoice Items</value>
+  </data>
+  <data name="INV_InvoicePlan_Tab_Notes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="INV_InvoicePlan_Button_PreviewDescription" xml:space="preserve">
+    <value>Preview Description</value>
+  </data>
+  <data name="INV_InvoicePlan_Preview_Title" xml:space="preserve">
+    <value>Invoice description preview</value>
+  </data>
+  <data name="INV_InvoicePlan_Preview_DialogTitle" xml:space="preserve">
+    <value>Invoice Description</value>
+  </data>
+  <data name="INV_InvoicePlan_Preview_LineSummary" xml:space="preserve">
+    <value>Installment {0} of {1}</value>
+  </data>
+  <data name="INV_InvoicePlan_Preview_DescriptionLabel" xml:space="preserve">
+    <value>Generated description</value>
   </data>
   <data name="INV_InvoicePlan_Label_Instructions" xml:space="preserve">
     <value>Instructions</value>

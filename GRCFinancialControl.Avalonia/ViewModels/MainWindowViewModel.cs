@@ -21,6 +21,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly ISettingsService _settingsService;
         private readonly Dictionary<string, NavigationItem> _navigationIndex;
         private string? _lastPersistedNavigationKey;
+        private bool? _lastPersistedSidebarExpanded;
+        private bool _suppressSidebarPersistence;
 
         public HomeViewModel Home { get; }
         public EngagementsViewModel Engagements { get; }
@@ -40,6 +42,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         [ObservableProperty]
         private ViewModelBase? _activeView;
+
+        [ObservableProperty]
+        private bool _isSidebarExpanded = true;
 
         public MainWindowViewModel(HomeViewModel homeViewModel,
                                    EngagementsViewModel engagementsViewModel,
@@ -89,6 +94,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _navigationIndex = BuildNavigationIndex(NavigationItems);
 
             var settings = _settingsService.GetAll();
+            if (settings.TryGetValue(SettingKeys.FinancialControlSidebarExpanded, out var sidebarValue)
+                && bool.TryParse(sidebarValue, out var storedSidebarExpanded))
+            {
+                _suppressSidebarPersistence = true;
+                IsSidebarExpanded = storedSidebarExpanded;
+                _lastPersistedSidebarExpanded = storedSidebarExpanded;
+                _suppressSidebarPersistence = false;
+            }
             if (settings.TryGetValue(SettingKeys.LastGrcNavigationItemKey, out var storedKey)
                 && !string.IsNullOrWhiteSpace(storedKey))
             {
@@ -186,6 +199,26 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             catch (Exception ex)
             {
                 _loggingService.LogError($"Failed to persist navigation state: {ex.Message}");
+            }
+        }
+
+        async partial void OnIsSidebarExpandedChanged(bool value)
+        {
+            if (_suppressSidebarPersistence || (_lastPersistedSidebarExpanded.HasValue && _lastPersistedSidebarExpanded.Value == value))
+            {
+                return;
+            }
+
+            try
+            {
+                var settings = await _settingsService.GetAllAsync().ConfigureAwait(false);
+                settings[SettingKeys.FinancialControlSidebarExpanded] = value.ToString();
+                await _settingsService.SaveAllAsync(settings).ConfigureAwait(false);
+                _lastPersistedSidebarExpanded = value;
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogError($"Failed to persist sidebar state: {ex.Message}");
             }
         }
 
