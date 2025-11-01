@@ -83,6 +83,9 @@ public partial class App : Application
                 services.AddTransient<ISettingsService, SettingsService>();
                 services.AddSingleton<IConnectionPackageService, ConnectionPackageService>();
 
+                var connectionAvailability = new DatabaseConnectionAvailability(false);
+                services.AddSingleton<IDatabaseConnectionAvailability>(connectionAvailability);
+
                 using (var tempProvider = services.BuildServiceProvider())
                 {
                     using var scope = tempProvider.CreateScope();
@@ -96,15 +99,23 @@ public partial class App : Application
                     CurrencyDisplayHelper.SetDefaultCurrency(defaultCurrency);
                     string? initialConnection;
                     _hasConnectionSettings = TryBuildConnectionString(initialSettings, out initialConnection);
+                    connectionAvailability.Update(_hasConnectionSettings);
                 }
 
                 services.AddDbContextFactory<ApplicationDbContext>((provider, options) =>
                 {
+                    var availability = provider.GetRequiredService<IDatabaseConnectionAvailability>();
+                    if (!availability.IsConfigured)
+                    {
+                        return;
+                    }
+
                     var settingsService = provider.GetRequiredService<ISettingsService>();
                     var settings = settingsService.GetAll();
 
                     if (!TryBuildConnectionString(settings, out var connectionString))
                     {
+                        availability.Update(false);
                         return;
                     }
 
@@ -204,24 +215,27 @@ public partial class App : Application
             _messenger.Register<ConnectionSettingsImportedMessage>(this, (_, _) => RequestRestart());
             _messenger.Register<ApplicationRestartRequestedMessage>(this, (_, _) => RequestRestart());
 
-            using (var scope = Services.CreateScope())
-            {
-                var provider = scope.ServiceProvider;
-                if (_hasConnectionSettings)
+                using (var scope = Services.CreateScope())
                 {
-                    var schemaInitializer = provider.GetRequiredService<IDatabaseSchemaInitializer>();
-                    try
+                    var provider = scope.ServiceProvider;
+                    if (_hasConnectionSettings)
                     {
-                        await schemaInitializer.EnsureSchemaAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        _hasConnectionSettings = false;
-                        var logger = provider.GetRequiredService<ILogger<App>>();
-                        logger.LogError(
-                            ex,
-                            "Failed to initialize the remote database schema. The application will continue without a database connection.");
-                    }
+                        var schemaInitializer = provider.GetRequiredService<IDatabaseSchemaInitializer>();
+                        try
+                        {
+                            await schemaInitializer.EnsureSchemaAsync();
+                        }
+                        catch (Exception ex)
+                        {
+                            _hasConnectionSettings = false;
+                            provider
+                                .GetRequiredService<IDatabaseConnectionAvailability>()
+                                .Update(false, ex.Message);
+                            var logger = provider.GetRequiredService<ILogger<App>>();
+                            logger.LogError(
+                                ex,
+                                "Failed to initialize the remote database schema. The application will continue without a database connection.");
+                        }
                 }
 
                 var settingsDbContext = provider.GetRequiredService<SettingsDbContext>();

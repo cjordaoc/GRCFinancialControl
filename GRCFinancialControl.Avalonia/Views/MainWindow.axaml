@@ -47,7 +47,7 @@
                     <DataTemplate x:DataType="vm:NavigationItem">
                         <StackPanel Spacing="{StaticResource Spacing8}">
                             <ToggleButton Content="{Binding Title}"
-                                          Command="{Binding DataContext.SelectNavigationItemCommand, ElementName=MainWindowRoot}"
+                                          Command="{Binding $parent[Window].DataContext.SelectNavigationItemCommand}"
                                           CommandParameter="{Binding}"
                                           IsChecked="{Binding IsSelected, Mode=TwoWay}"
                                           Classes="NavButton"/>
@@ -62,7 +62,7 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="vm:NavigationItem">
                                         <ToggleButton Content="{Binding Title}"
-                                                      Command="{Binding DataContext.SelectNavigationItemCommand, ElementName=MainWindowRoot}"
+                                                      Command="{Binding $parent[Window].DataContext.SelectNavigationItemCommand}"
                                                       CommandParameter="{Binding}"
                                                       IsChecked="{Binding IsSelected, Mode=TwoWay}"
                                                       Classes="NavButton"

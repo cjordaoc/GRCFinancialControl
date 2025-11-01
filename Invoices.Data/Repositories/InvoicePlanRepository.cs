@@ -19,17 +19,20 @@ public class InvoicePlanRepository : IInvoicePlanRepository
     private readonly ILogger<InvoicePlanRepository> _logger;
     private readonly IPersonDirectory _personDirectory;
     private readonly IInvoiceAccessScope _accessScope;
+    private readonly IDatabaseConnectionAvailability _connectionAvailability;
 
     public InvoicePlanRepository(
         IDbContextFactory<ApplicationDbContext> dbContextFactory,
         ILogger<InvoicePlanRepository> logger,
         IPersonDirectory personDirectory,
-        IInvoiceAccessScope accessScope)
+        IInvoiceAccessScope accessScope,
+        IDatabaseConnectionAvailability connectionAvailability)
     {
         _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _personDirectory = personDirectory ?? throw new ArgumentNullException(nameof(personDirectory));
         _accessScope = accessScope ?? throw new ArgumentNullException(nameof(accessScope));
+        _connectionAvailability = connectionAvailability ?? throw new ArgumentNullException(nameof(connectionAvailability));
     }
 
     public InvoicePlan? GetPlan(int planId)
@@ -41,7 +44,7 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             return null;
         }
 
-        using var context = _dbContextFactory.CreateDbContext();
+        using var context = CreateDbContext();
 
         var plan = context.InvoicePlans
             .Include(plan => plan.Items)
@@ -72,7 +75,7 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             return Array.Empty<InvoicePlan>();
         }
 
-        using var context = _dbContextFactory.CreateDbContext();
+        using var context = CreateDbContext();
 
         return context.InvoicePlans
             .Where(plan => plan.EngagementId == engagementId)
@@ -91,7 +94,7 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             return Array.Empty<EngagementLookup>();
         }
 
-        using var context = _dbContextFactory.CreateDbContext();
+        using var context = CreateDbContext();
 
         var query = context.Engagements
             .AsNoTracking()
@@ -127,7 +130,7 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             return null;
         }
 
-        using var context = _dbContextFactory.CreateDbContext();
+        using var context = CreateDbContext();
 
         return context.Engagements
             .AsNoTracking()
@@ -143,7 +146,7 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             return Array.Empty<InvoicePlanSummary>();
         }
 
-        using var context = _dbContextFactory.CreateDbContext();
+        using var context = CreateDbContext();
 
         var query = context.InvoicePlans.AsQueryable();
 
@@ -165,7 +168,7 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             return Array.Empty<InvoicePlanSummary>();
         }
 
-        using var context = _dbContextFactory.CreateDbContext();
+        using var context = CreateDbContext();
 
         var query = context.InvoicePlans.AsQueryable();
 
@@ -641,7 +644,7 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             return new InvoiceSummaryResult();
         }
 
-        using var context = _dbContextFactory.CreateDbContext();
+        using var context = CreateDbContext();
 
         var statuses = (filter.Statuses ?? Array.Empty<InvoiceItemStatus>())
             .Where(status => Enum.IsDefined(typeof(InvoiceItemStatus), status))
@@ -821,7 +824,7 @@ public class InvoicePlanRepository : IInvoicePlanRepository
             return Array.Empty<InvoiceNotificationPreview>();
         }
 
-        using var context = _dbContextFactory.CreateDbContext();
+        using var context = CreateDbContext();
 
         var targetDate = notificationDate.Date;
 
@@ -958,14 +961,26 @@ public class InvoicePlanRepository : IInvoicePlanRepository
                  && string.IsNullOrWhiteSpace(_accessScope.InitializationError));
     }
 
+    private ApplicationDbContext CreateDbContext()
+    {
+        if (_connectionAvailability.IsConfigured)
+        {
+            return _dbContextFactory.CreateDbContext();
+        }
+
+        var message = _connectionAvailability.ErrorMessage
+            ?? "Connection settings are missing or incomplete.";
+        throw new InvalidOperationException(message);
+    }
+
     private T ExecuteWithStrategy<T>(Func<ApplicationDbContext, T> operation)
     {
-        using var strategyContext = _dbContextFactory.CreateDbContext();
+        using var strategyContext = CreateDbContext();
         var strategy = strategyContext.Database.CreateExecutionStrategy();
 
         return strategy.Execute(() =>
         {
-            using var context = _dbContextFactory.CreateDbContext();
+            using var context = CreateDbContext();
             return operation(context);
         });
     }

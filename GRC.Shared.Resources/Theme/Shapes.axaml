@@ -3,6 +3,6 @@
   <CornerRadius x:Key="CornerRadiusMedium">8</CornerRadius>
   <CornerRadius x:Key="CornerRadiusLarge">16</CornerRadius>
 
-  <x:Double x:Key="BorderThin">1</x:Double>
-  <x:Double x:Key="BorderMedium">2</x:Double>
+  <Thickness x:Key="BorderThin">1</Thickness>
+  <Thickness x:Key="BorderMedium">2</Thickness>
 </ResourceDictionary>
