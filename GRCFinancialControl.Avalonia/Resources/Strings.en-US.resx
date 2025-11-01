@@ -512,61 +512,43 @@
   <data name="ClosingPeriods.Toast.ToggleFailed" xml:space="preserve">
     <value>Unable to update closing period lock state.</value>
   </data>
-  <data name="ClosingPeriods.Toast.Deleted" xml:space="preserve">
-    <value>Closing period {0} deleted.</value>
-  </data>
-  <data name="ClosingPeriods.Toast.DeleteFailed" xml:space="preserve">
-    <value>Unable to delete the closing period.</value>
-  </data>
-  <data name="ClosingPeriods.Toast.DataDeleted" xml:space="preserve">
-    <value>Financial data for {0} deleted.</value>
-  </data>
-  <data name="ClosingPeriods.Toast.DataDeleteFailed" xml:space="preserve">
-    <value>Unable to delete closing period data.</value>
-  </data>
-  <data name="ClosingPeriods.Toast.Saved" xml:space="preserve">
+  <data name="ClosingPeriods.Toast.SaveSuccess" xml:space="preserve">
     <value>Closing period saved.</value>
   </data>
-  <data name="ClosingPeriods.Toast.SaveFailed" xml:space="preserve">
-    <value>Unable to save the closing period.</value>
+  <data name="ClosingPeriods.Toast.DeleteSuccess" xml:space="preserve">
+    <value>Closing period {0} deleted.</value>
+  </data>
+  <data name="ClosingPeriods.Toast.ReverseSuccess" xml:space="preserve">
+    <value>Financial data for {0} reversed.</value>
+  </data>
+  <data name="ClosingPeriods.Toast.OperationFailed" xml:space="preserve">
+    <value>Unable to complete the operation: {0}</value>
   </data>
 
-  <data name="Customers.Toast.Saved" xml:space="preserve">
+  <data name="Customers.Toast.SaveSuccess" xml:space="preserve">
     <value>Customer saved.</value>
   </data>
-  <data name="Customers.Toast.SaveFailed" xml:space="preserve">
-    <value>Unable to save the customer.</value>
-  </data>
-  <data name="Customers.Toast.Deleted" xml:space="preserve">
+  <data name="Customers.Toast.DeleteSuccess" xml:space="preserve">
     <value>Customer {0} deleted.</value>
   </data>
-  <data name="Customers.Toast.DeleteFailed" xml:space="preserve">
-    <value>Unable to delete the customer.</value>
+  <data name="Customers.Toast.ReverseSuccess" xml:space="preserve">
+    <value>Customer data for {0} reversed.</value>
   </data>
-  <data name="Customers.Toast.DataDeleted" xml:space="preserve">
-    <value>Customer data for {0} deleted.</value>
-  </data>
-  <data name="Customers.Toast.DataDeleteFailed" xml:space="preserve">
-    <value>Unable to delete customer data.</value>
+  <data name="Customers.Toast.OperationFailed" xml:space="preserve">
+    <value>Unable to complete the operation: {0}</value>
   </data>
 
-  <data name="Engagements.Toast.Saved" xml:space="preserve">
+  <data name="Engagements.Toast.SaveSuccess" xml:space="preserve">
     <value>Engagement saved.</value>
   </data>
-  <data name="Engagements.Toast.SaveFailed" xml:space="preserve">
-    <value>Unable to save the engagement.</value>
-  </data>
-  <data name="Engagements.Toast.Deleted" xml:space="preserve">
+  <data name="Engagements.Toast.DeleteSuccess" xml:space="preserve">
     <value>Engagement {0} deleted.</value>
   </data>
-  <data name="Engagements.Toast.DeleteFailed" xml:space="preserve">
-    <value>Unable to delete the engagement.</value>
+  <data name="Engagements.Toast.ReverseSuccess" xml:space="preserve">
+    <value>Engagement data for {0} reversed.</value>
   </data>
-  <data name="Engagements.Toast.DataDeleted" xml:space="preserve">
-    <value>Engagement data for {0} deleted.</value>
-  </data>
-  <data name="Engagements.Toast.DataDeleteFailed" xml:space="preserve">
-    <value>Unable to delete engagement data.</value>
+  <data name="Engagements.Toast.OperationFailed" xml:space="preserve">
+    <value>Unable to complete the operation: {0}</value>
   </data>
 
   <data name="Settings.Toast.ConnectionSaved" xml:space="preserve">

@@ -177,18 +177,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 }
 
                 await _closingPeriodService.DeleteAsync(closingPeriod.Id);
-                ToastService.ShowSuccess("ClosingPeriods.Toast.Deleted", closingPeriod.Name);
+                ToastService.ShowSuccess("ClosingPeriods.Toast.DeleteSuccess", closingPeriod.Name);
                 Messenger.Send(new RefreshDataMessage());
             }
             catch (InvalidOperationException ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowWarning("ClosingPeriods.Toast.DeleteFailed");
+                ToastService.ShowWarning("ClosingPeriods.Toast.OperationFailed", ex.Message);
             }
             catch (Exception ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowError("ClosingPeriods.Toast.DeleteFailed");
+                ToastService.ShowError("ClosingPeriods.Toast.OperationFailed", ex.Message);
             }
         }
 
@@ -221,18 +221,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             try
             {
                 await _closingPeriodService.DeleteDataAsync(closingPeriod.Id);
-                ToastService.ShowSuccess("ClosingPeriods.Toast.DataDeleted", closingPeriod.Name);
+                ToastService.ShowSuccess("ClosingPeriods.Toast.ReverseSuccess", closingPeriod.Name);
                 Messenger.Send(new RefreshDataMessage());
             }
             catch (InvalidOperationException ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowWarning("ClosingPeriods.Toast.DataDeleteFailed");
+                ToastService.ShowWarning("ClosingPeriods.Toast.OperationFailed", ex.Message);
             }
             catch (Exception ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowError("ClosingPeriods.Toast.DataDeleteFailed");
+                ToastService.ShowError("ClosingPeriods.Toast.OperationFailed", ex.Message);
             }
         }
 

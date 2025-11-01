@@ -85,16 +85,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             try
             {
                 await _engagementService.DeleteAsync(engagement.Id);
-                ToastService.ShowSuccess("Engagements.Toast.Deleted", engagement.EngagementId);
+                ToastService.ShowSuccess("Engagements.Toast.DeleteSuccess", engagement.EngagementId);
                 Messenger.Send(new RefreshDataMessage());
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException ex)
             {
-                ToastService.ShowWarning("Engagements.Toast.DeleteFailed");
+                ToastService.ShowWarning("Engagements.Toast.OperationFailed", ex.Message);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                ToastService.ShowError("Engagements.Toast.DeleteFailed");
+                ToastService.ShowError("Engagements.Toast.OperationFailed", ex.Message);
             }
         }
 
@@ -111,16 +111,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 try
                 {
                     await _engagementService.DeleteDataAsync(engagement.Id);
-                    ToastService.ShowSuccess("Engagements.Toast.DataDeleted", engagement.EngagementId);
+                    ToastService.ShowSuccess("Engagements.Toast.ReverseSuccess", engagement.EngagementId);
                     Messenger.Send(new RefreshDataMessage());
                 }
-                catch (InvalidOperationException)
+                catch (InvalidOperationException ex)
                 {
-                    ToastService.ShowWarning("Engagements.Toast.DataDeleteFailed");
+                    ToastService.ShowWarning("Engagements.Toast.OperationFailed", ex.Message);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    ToastService.ShowError("Engagements.Toast.DataDeleteFailed");
+                    ToastService.ShowError("Engagements.Toast.OperationFailed", ex.Message);
                 }
             }
         }

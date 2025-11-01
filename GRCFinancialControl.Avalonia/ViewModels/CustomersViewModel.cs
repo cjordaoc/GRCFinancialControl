@@ -68,16 +68,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             try
             {
                 await _customerService.DeleteAsync(customer.Id);
-                ToastService.ShowSuccess("Customers.Toast.Deleted", customer.Name);
+                ToastService.ShowSuccess("Customers.Toast.DeleteSuccess", customer.Name);
                 Messenger.Send(new RefreshDataMessage());
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException ex)
             {
-                ToastService.ShowWarning("Customers.Toast.DeleteFailed");
+                ToastService.ShowWarning("Customers.Toast.OperationFailed", ex.Message);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                ToastService.ShowError("Customers.Toast.DeleteFailed");
+                ToastService.ShowError("Customers.Toast.OperationFailed", ex.Message);
             }
         }
 
@@ -94,16 +94,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 try
                 {
                     await _customerService.DeleteDataAsync(customer.Id);
-                    ToastService.ShowSuccess("Customers.Toast.DataDeleted", customer.Name);
+                    ToastService.ShowSuccess("Customers.Toast.ReverseSuccess", customer.Name);
                     Messenger.Send(new RefreshDataMessage());
                 }
-                catch (InvalidOperationException)
+                catch (InvalidOperationException ex)
                 {
-                    ToastService.ShowWarning("Customers.Toast.DataDeleteFailed");
+                    ToastService.ShowWarning("Customers.Toast.OperationFailed", ex.Message);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    ToastService.ShowError("Customers.Toast.DataDeleteFailed");
+                    ToastService.ShowError("Customers.Toast.OperationFailed", ex.Message);
                 }
             }
         }

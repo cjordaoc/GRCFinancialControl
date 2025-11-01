@@ -79,9 +79,9 @@ This document details the implementation for every functional capability describ
   2. `ClosingPeriodsViewModel.LoadDataAsync` caches all periods in `_allClosingPeriods`, loads fiscal years, and builds filter options through `UpdateFiscalYearFilters`, adding a localized **All fiscal years** entry and selecting persisted preferences when present.
   3. `ApplyFiscalYearFilter` performs client-side filtering, repopulating the observable collection and preserving the previously selected period when possible.
   4. Lock/unlock requests flow through `ToggleLockAsync`, which invokes `ClosingPeriodService.SetLockStateAsync` to toggle `IsLocked`, refreshes the filtered collections, and broadcasts `RefreshDataMessage` so dependent view models reload their cached lists.
-  5. Editor dialogs (`ClosingPeriodEditorViewModel.SaveAsync`) persist changes via `IClosingPeriodService` and emit toasts on success/failure.
+  5. Editor dialogs (`ClosingPeriodEditorViewModel.SaveAsync`) persist changes via `IClosingPeriodService` and emit standardized toast feedback (`ClosingPeriods.Toast.SaveSuccess` or `ClosingPeriods.Toast.OperationFailed`).
 - **UI Feedback:**
-  - Delete, Delete Data, and Lock/Unlock buttons surface success/warning/error toasts through `ToastService` with localized messages.
+  - Save, Delete, and Delete Data commands share localized toast keys (`*.Toast.SaveSuccess`, `*.Toast.DeleteSuccess`, `*.Toast.ReverseSuccess`, `*.Toast.OperationFailed`) while Lock/Unlock retains dedicated lock-state messages.
   - The filter ComboBox binds to `FiscalYearFilters` with `DisplayName` values, while the lock button label reflects `SelectedClosingPeriod.IsLocked` using localized `ClosingPeriods.Button.Lock`/`Unlock` strings.
 
 ---

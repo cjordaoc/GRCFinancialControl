@@ -183,7 +183,7 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 - Manager assignments mirror the PAPD workflow: controllers pick a manager first and then maintain that manager's engagement list, keeping the selection logic consistent across the team workspace.
 - The Home workspace now renders the embedded project README in a scrollable container directly beneath the fiscal-year selector so onboarding guidance travels with the app layout without opening external files.
 - Closing period management includes a fiscal-year filter ComboBox that performs instant client-side filtering and a lock/unlock toggle that persists immediately, broadcasts refresh messages to dependent workspaces, and displays success/failure toasts.
-- Save, Delete, Lock/Unlock, and Reverse actions across both desktop shells emit localized toast notifications (success, warning, error) instead of silent state changes, aligning feedback for controllers and planners.
+- Save, Delete, Lock/Unlock, and Reverse actions across both desktop shells emit localized toast notifications, reusing standardized `SaveSuccess`, `DeleteSuccess`, `ReverseSuccess`, and `OperationFailed` message keys (alongside lock-state variants) so controllers and planners receive consistent feedback.
 
 [See Technical Spec →](readme_specs.md#ui-architecture)
 
