@@ -24,6 +24,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly ISettingsService _settingsService;
         private readonly List<ClosingPeriod> _allClosingPeriods = new();
         private bool _isInitializingFilters;
+        private bool _suppressNextRefresh;
 
         [ObservableProperty]
         private ObservableCollection<ClosingPeriod> _closingPeriods = new();
@@ -243,6 +244,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
+            StatusMessage = null;
             var targetState = !SelectedClosingPeriod.IsLocked;
             var closingPeriodId = SelectedClosingPeriod.Id;
             var filterId = SelectedFiscalYearFilter?.FiscalYearId;
@@ -255,6 +257,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     : "ClosingPeriods.Toast.Unlocked",
                     SelectedClosingPeriod?.Name ?? string.Empty);
                 await ReloadAsync(filterId, closingPeriodId);
+                _suppressNextRefresh = true;
+                Messenger.Send(new RefreshDataMessage());
+            }
+            catch (InvalidOperationException ex)
+            {
+                StatusMessage = ex.Message;
+                ToastService.ShowWarning("ClosingPeriods.Toast.ToggleFailed");
             }
             catch (Exception ex)
             {
@@ -343,6 +352,17 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             EditCommand.NotifyCanExecuteChanged();
             DeleteCommand.NotifyCanExecuteChanged();
             DeleteDataCommand.NotifyCanExecuteChanged();
+        }
+
+        public override void Receive(RefreshDataMessage message)
+        {
+            if (_suppressNextRefresh)
+            {
+                _suppressNextRefresh = false;
+                return;
+            }
+
+            base.Receive(message);
         }
 
         public void Receive(ClosingPeriodsChangedMessage message)

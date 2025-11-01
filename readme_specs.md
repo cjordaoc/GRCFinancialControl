@@ -78,7 +78,7 @@ This document details the implementation for every functional capability describ
   1. `ClosingPeriodService.GetAllAsync` returns periods ordered by `PeriodStart` with fiscal-year navigation properties so the view model can perform in-memory filtering.
   2. `ClosingPeriodsViewModel.LoadDataAsync` caches all periods in `_allClosingPeriods`, loads fiscal years, and builds filter options through `UpdateFiscalYearFilters`, adding a localized **All fiscal years** entry and selecting persisted preferences when present.
   3. `ApplyFiscalYearFilter` performs client-side filtering, repopulating the observable collection and preserving the previously selected period when possible.
-  4. Lock/unlock requests flow through `ToggleLockAsync`, which invokes `ClosingPeriodService.SetLockStateAsync` to toggle `IsLocked` and then refreshes the collections so the UI reflects the persisted state immediately.
+  4. Lock/unlock requests flow through `ToggleLockAsync`, which invokes `ClosingPeriodService.SetLockStateAsync` to toggle `IsLocked`, refreshes the filtered collections, and broadcasts `RefreshDataMessage` so dependent view models reload their cached lists.
   5. Editor dialogs (`ClosingPeriodEditorViewModel.SaveAsync`) persist changes via `IClosingPeriodService` and emit toasts on success/failure.
 - **UI Feedback:**
   - Delete, Delete Data, and Lock/Unlock buttons surface success/warning/error toasts through `ToastService` with localized messages.
