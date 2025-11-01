@@ -3,66 +3,74 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:InvoicePlanner.Avalonia.ViewModels"
+        xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
         xmlns:services="clr-namespace:App.Presentation.Services;assembly=App.Presentation"
+        xmlns:sharedControls="clr-namespace:GRC.Shared.UI.Controls;assembly=GRC.Shared.UI"
         x:Class="InvoicePlanner.Avalonia.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         mc:Ignorable="d"
         MinWidth="960"
         MinHeight="640"
         WindowState="Maximized"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent"
+        ExtendClientAreaToDecorationsHint="True"
+        WindowStartupLocation="CenterScreen"
         Title="{Binding Title}">
-    <Grid Margin="{StaticResource SpaceThickness16}">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="240"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+    <Panel>
+        <ExperimentalAcrylicBorder IsHitTestVisible="False"
+                                   HorizontalAlignment="Stretch"
+                                   VerticalAlignment="Stretch"
+                                   Material="{StaticResource AcrylicModal}"/>
 
-        <Border Grid.Column="0"
-                Margin="{StaticResource SpaceThickness0}"
-                Padding="{StaticResource SpaceThickness16}"
-                CornerRadius="8"
-                Background="{StaticResource BrushSurfaceVariant}">
-            <StackPanel Spacing="{StaticResource Spacing12}">
-                <TextBlock Text="{Binding Title}" Classes="TitleLarge"/>
-                <ItemsControl ItemsSource="{Binding MenuItems}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:NavigationItemViewModel">
-                            <ToggleButton Content="{Binding Title}"
-                                          Command="{Binding SelectCommand}"
-                                          IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                                          HorizontalAlignment="Stretch"
-                                          Classes="NavButton"
-                                          Margin="{StaticResource MarginVerticalXSmall}"/>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
-        </Border>
+        <Grid Margin="{StaticResource MarginMedium}" ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource Spacing16}">
+        <sharedControls:SidebarHost Grid.Column="0"
+                                    Header="{Binding Title}"
+                                    ExpandedLabel="{loc:Loc Key=Global_SidebarCollapse}"
+                                    CollapsedLabel="{loc:Loc Key=Global_SidebarExpand}"
+                                    ItemsSource="{Binding MenuItems}"
+                                    IsExpanded="{Binding IsSidebarExpanded, Mode=TwoWay}">
+            <sharedControls:SidebarHost.HeaderTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding .}" Classes="TitleLarge"/>
+                </DataTemplate>
+            </sharedControls:SidebarHost.HeaderTemplate>
+            <sharedControls:SidebarHost.ItemTemplate>
+                <DataTemplate x:DataType="vm:NavigationItemViewModel">
+                    <ToggleButton Content="{Binding Title}"
+                                  Command="{Binding SelectCommand}"
+                                  IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                  HorizontalAlignment="Stretch"
+                                  Classes="NavButton"/>
+                </DataTemplate>
+            </sharedControls:SidebarHost.ItemTemplate>
+        </sharedControls:SidebarHost>
 
-        <Border Grid.Column="1" Classes="Card" Padding="{StaticResource SpaceThickness0}" Margin="{StaticResource MarginLeftMedium}">
+        <Border Grid.Column="1" Classes="Card" Padding="{StaticResource SpaceThickness16}">
             <ContentControl Content="{Binding CurrentViewModel}" />
         </Border>
 
-        <ItemsControl Grid.ColumnSpan="2"
-                      Margin="{StaticResource MarginCallout}"
-                      HorizontalAlignment="Right"
-                      VerticalAlignment="Top"
-                      ItemsSource="{x:Static services:ToastService.Notifications}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <StackPanel Spacing="{StaticResource Spacing12}"/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate x:DataType="services:ToastNotification">
-                    <Border Classes="ToastControl"
-                            Background="{Binding Type, Converter={StaticResource ToastBrushConverter}}">
-                        <TextBlock Text="{Binding Message}"
-                                   TextWrapping="Wrap"
-                                   Foreground="{StaticResource BrushOnSurface}"/>
-                    </Border>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-    </Grid>
+            <ItemsControl Grid.ColumnSpan="2"
+                          Margin="{StaticResource MarginCallout}"
+                          HorizontalAlignment="Right"
+                          VerticalAlignment="Top"
+                          ItemsSource="{x:Static services:ToastService.Notifications}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Spacing="{StaticResource Spacing12}"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="services:ToastNotification">
+                        <Border Classes="ToastControl"
+                                Background="{Binding Type, Converter={StaticResource ToastBrushConverter}}">
+                            <TextBlock Text="{Binding Message}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{StaticResource BrushOnSurface}"/>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
+    </Panel>
 </Window>

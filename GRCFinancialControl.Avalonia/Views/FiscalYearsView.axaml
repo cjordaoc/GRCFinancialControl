@@ -27,7 +27,8 @@
         </DataGrid>
 
         <StackPanel Grid.Row="2" Orientation="Vertical" Spacing="{StaticResource Spacing8}" Margin="{StaticResource MarginTopSmall}">
-            <StackPanel Orientation="Horizontal" Spacing="{StaticResource Spacing4}">
+            <StackPanel Classes="ButtonRow"
+                        HorizontalAlignment="Left">
                 <Button Content="Add New" Command="{Binding AddCommand}"/>
                 <Button Content="Edit"
                         Command="{Binding EditCommand}"
@@ -41,7 +42,7 @@
                 <Button Content="Delete Data"
                         Command="{Binding DeleteDataCommand}"
                         CommandParameter="{Binding SelectedFiscalYear}"
-                        Classes="danger"/>
+                        Classes="Danger"/>
                 <Button Content="Close Fiscal Year"
                         Command="{Binding CloseCommand}"
                         CommandParameter="{Binding SelectedFiscalYear}"

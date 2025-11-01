@@ -1,0 +1,47 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
+             xmlns:vm="clr-namespace:InvoicePlanner.Avalonia.ViewModels"
+             x:Class="InvoicePlanner.Avalonia.Views.InvoiceDescriptionPreviewView"
+             x:DataType="vm:InvoiceDescriptionPreviewViewModel"
+             mc:Ignorable="d">
+    <Grid Margin="{StaticResource MarginMedium}"
+          RowDefinitions="Auto,Auto,*,Auto"
+          RowSpacing="{StaticResource Spacing16}">
+        <StackPanel Spacing="{StaticResource Spacing8}">
+            <TextBlock Classes="TitleMedium"
+                       Text="{Binding Header}" />
+            <TextBlock Text="{Binding SequenceSummary}" />
+        </StackPanel>
+
+        <TextBlock Grid.Row="1"
+                   Classes="Caption"
+                   Text="{loc:Loc Key=INV_InvoicePlan_Preview_DescriptionLabel}" />
+
+        <Border Grid.Row="2"
+                Padding="{StaticResource SpaceThickness12}"
+                Background="{DynamicResource ThemeSubtleRegionBrush}"
+                CornerRadius="8">
+            <ScrollViewer>
+                <TextBox Text="{Binding Description}"
+                         TextWrapping="Wrap"
+                         AcceptsReturn="True"
+                         IsReadOnly="True"
+                         BorderThickness="0"
+                         Background="Transparent"
+                         MinHeight="200" />
+            </ScrollViewer>
+        </Border>
+
+        <StackPanel Grid.Row="3"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="{StaticResource Spacing16}">
+            <Button Content="{loc:Loc Key=Global_Button_Close}"
+                    Command="{Binding CloseCommand}"
+                    MinWidth="120" />
+        </StackPanel>
+    </Grid>
+</UserControl>

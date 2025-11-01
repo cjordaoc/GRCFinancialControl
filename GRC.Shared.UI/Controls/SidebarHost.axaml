@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="GRC.Shared.UI.Controls.SidebarHost"
+             x:Name="Root">
+  <Border x:Name="SidebarBorder"
+          Width="{Binding EffectiveWidth, ElementName=Root}"
+          Background="{StaticResource BrushSurfaceVariant}"
+          CornerRadius="{StaticResource CornerRadiusMedium}"
+          Padding="{StaticResource MarginMedium}"
+          MinWidth="{Binding CompactWidth, ElementName=Root}"
+          BoxShadow="{StaticResource ShadowLow}">
+    <Border.Transitions>
+      <Transitions>
+        <DoubleTransition Property="Border.Width"
+                          Duration="0:0:0.22" />
+      </Transitions>
+    </Border.Transitions>
+    <Grid RowDefinitions="Auto,*,Auto"
+          RowSpacing="{StaticResource Spacing16}">
+      <ContentPresenter Content="{Binding Header, ElementName=Root}"
+                        ContentTemplate="{Binding HeaderTemplate, ElementName=Root}"
+                        HorizontalAlignment="Stretch" />
+      <ScrollViewer Grid.Row="1"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+        <ItemsControl ItemsSource="{Binding ItemsSource, ElementName=Root}"
+                      ItemTemplate="{Binding ItemTemplate, ElementName=Root}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Spacing="{StaticResource Spacing8}" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+        </ItemsControl>
+      </ScrollViewer>
+      <ToggleButton Grid.Row="2"
+                    Classes="NavButton"
+                    IsChecked="{Binding IsExpanded, ElementName=Root, Mode=TwoWay}"
+                    HorizontalAlignment="Stretch"
+                    Content="{Binding ToggleLabel, ElementName=Root}"/>
+    </Grid>
+  </Border>
+</UserControl>

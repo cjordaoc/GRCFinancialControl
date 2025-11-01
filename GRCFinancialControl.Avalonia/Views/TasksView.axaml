@@ -7,11 +7,11 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.TasksView"
              x:DataType="vm:TasksViewModel">
-    <StackPanel Spacing="{StaticResource Spacing12}" Margin="{StaticResource SpaceThickness20}">
+    <StackPanel Spacing="{StaticResource Spacing16}" Margin="{StaticResource SpaceThickness20}">
         <TextBlock Text="{loc:Loc Key=FINC_Tasks_Title_Primary}" Classes="TitleLarge"/>
         <TextBlock Text="{loc:Loc Key=FINC_Tasks_Description_Primary}" TextWrapping="Wrap"/>
-        <Button Content="{loc:Loc Key=FINC_Tasks_Button_Generate}" Command="{Binding GenerateTasksFileCommand}" Width="220"/>
-        <Button Content="{loc:Loc Key=FINC_Tasks_Button_GenerateRetainTemplate}" Command="{Binding GenerateRetainTemplateCommand}" Width="220"/>
+        <Button Content="{loc:Loc Key=FINC_Tasks_Button_Generate}" Command="{Binding GenerateTasksFileCommand}"/>
+        <Button Content="{loc:Loc Key=FINC_Tasks_Button_GenerateRetainTemplate}" Command="{Binding GenerateRetainTemplateCommand}"/>
         <TextBlock Text="{Binding StatusMessage}"
                    TextWrapping="Wrap"
                    Margin="{StaticResource MarginTopSmall}"/>

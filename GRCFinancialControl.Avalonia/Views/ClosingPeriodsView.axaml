@@ -37,7 +37,10 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="{StaticResource Spacing4}" Margin="{StaticResource MarginTopSmall}">
+        <StackPanel Grid.Row="2"
+                    Classes="ButtonRow"
+                    HorizontalAlignment="Left"
+                    Margin="{StaticResource MarginTopSmall}">
             <Button Content="{loc:Loc Key=FINC_Button_Add}" Command="{Binding AddCommand}" IsEnabled="{Binding HasUnlockedFiscalYears}"/>
             <Button Content="{loc:Loc Key=FINC_Button_Edit}"
                     Command="{Binding EditCommand}"
@@ -51,7 +54,7 @@
             <Button Content="{loc:Loc Key=FINC_Admin_ClosingPeriods_Button_DeleteData}"
                     Command="{Binding DeleteDataCommand}"
                     CommandParameter="{Binding SelectedClosingPeriod}"
-                    Classes="danger"/>
+                    Classes="Danger"/>
             <Button Content="{Binding LockButtonLabel}"
                     Command="{Binding ToggleLockCommand}"
                     IsEnabled="{Binding SelectedClosingPeriod, Converter={x:Static converters:ObjectConverters.IsNotNull}}"/>

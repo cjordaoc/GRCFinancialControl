@@ -431,16 +431,28 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 var customerTicket = item?.CustomerTicket;
                 var planType = plan?.Type;
 
-                var description = BuildInvoiceDescription(
-                    preview,
-                    engagement,
-                    deliveryDescription,
-                    customerEmails,
-                    currency,
-                    amountValue,
-                    item?.CoeResponsible,
-                    planType,
-                    customerTicket);
+                var descriptionContext = new InvoiceDescriptionContext
+                {
+                    EngagementId = preview.EngagementId,
+                    EngagementDescription = engagement?.Description,
+                    Sequence = preview.SeqNo,
+                    TotalInvoices = preview.NumInvoices,
+                    DueDate = preview.ComputedDueDate,
+                    Amount = amountValue,
+                    CurrencyCode = currency,
+                    PlanType = planType,
+                    DeliveryDescription = deliveryDescription,
+                    PoNumber = preview.PoNumber,
+                    FrsNumber = preview.FrsNumber,
+                    CustomerTicket = customerTicket,
+                    CustomerName = preview.CustomerName,
+                    CustomerFocalPointName = preview.CustomerFocalPointName,
+                    CustomerFocalPointEmail = preview.CustomerFocalPointEmail,
+                    CoeResponsible = item?.CoeResponsible,
+                    CustomerEmails = customerEmails
+                };
+
+                var description = InvoiceDescriptionFormatter.Format(descriptionContext);
 
                 var paymentType = PaymentTypeCatalog.GetByCode(item?.PaymentTypeCode);
                 var emailsCsv = customerEmails.Count == 0 ? null : string.Join("; ", customerEmails);
@@ -845,101 +857,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             return bucket.Etcs.Count == 1
                 ? "Há 1 ETC previsto para acompanhamento nesta semana."
                 : $"Há {bucket.Etcs.Count} ETCs previstos para acompanhamento nesta semana.";
-        }
-
-        private static string BuildInvoiceDescription(
-            InvoiceNotificationPreview preview,
-            Engagement? engagement,
-            string? deliveryDescription,
-            IReadOnlyList<string> customerEmails,
-            string currency,
-            decimal invoiceAmount,
-            string? coeResponsible,
-            InvoicePlanType? planType,
-            string? customerTicket)
-        {
-            var builder = new StringBuilder();
-
-            var serviceParts = new List<string>();
-            if (!string.IsNullOrWhiteSpace(engagement?.Description))
-            {
-                serviceParts.Add(engagement.Description.Trim());
-            }
-            else
-            {
-                serviceParts.Add(preview.EngagementId);
-            }
-
-            if (planType == InvoicePlanType.ByDelivery && !string.IsNullOrWhiteSpace(deliveryDescription))
-            {
-                serviceParts.Add(deliveryDescription.Trim());
-            }
-
-            builder.Append("Serviço: ").AppendLine(string.Join(" – ", serviceParts));
-
-            if (!string.IsNullOrWhiteSpace(preview.PoNumber))
-            {
-                builder.Append("PO: ").AppendLine(preview.PoNumber.Trim());
-            }
-
-            if (!string.IsNullOrWhiteSpace(preview.FrsNumber))
-            {
-                builder.Append("FRS: ").AppendLine(preview.FrsNumber.Trim());
-            }
-
-            if (!string.IsNullOrWhiteSpace(customerTicket))
-            {
-                builder.Append("Ticket Cliente: ").AppendLine(customerTicket.Trim());
-            }
-
-            builder.Append("Parcela ")
-                .Append(preview.SeqNo)
-                .Append(" de ")
-                .Append(preview.NumInvoices)
-                .AppendLine();
-
-            builder.Append("Valor da Parcela: ")
-                .AppendLine(FormatCurrency(invoiceAmount, currency));
-
-            builder.Append("Vencimento: ")
-                .AppendLine(preview.ComputedDueDate.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("pt-BR")));
-
-            var contactParts = new List<string>();
-            if (!string.IsNullOrWhiteSpace(preview.CustomerName))
-            {
-                contactParts.Add(preview.CustomerName.Trim());
-            }
-
-            if (!string.IsNullOrWhiteSpace(preview.CustomerFocalPointName))
-            {
-                contactParts.Add(preview.CustomerFocalPointName.Trim());
-            }
-            else if (!string.IsNullOrWhiteSpace(preview.CustomerFocalPointEmail))
-            {
-                contactParts.Add(preview.CustomerFocalPointEmail.Trim());
-            }
-
-            if (!string.IsNullOrWhiteSpace(coeResponsible))
-            {
-                contactParts.Add(coeResponsible.Trim());
-            }
-
-            if (contactParts.Count > 0)
-            {
-                builder.Append("Contato: ").AppendLine(string.Join(" – ", contactParts));
-            }
-
-            if (customerEmails.Count > 0)
-            {
-                builder.Append("E-mails para envio: ").AppendLine(string.Join("; ", customerEmails));
-            }
-
-            return builder.ToString().TrimEnd();
-        }
-
-        private static string FormatCurrency(decimal amount, string currencyCode)
-        {
-            return CurrencyDisplayHelper.Format(amount, string.IsNullOrWhiteSpace(currencyCode) ? null : currencyCode);
         }
 
         private static IReadOnlyList<EtcColumnDefinition> BuildEtcColumns(EtcExport etc)
