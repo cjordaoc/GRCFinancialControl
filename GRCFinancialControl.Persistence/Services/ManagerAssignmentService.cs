@@ -70,6 +70,12 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task AddAsync(EngagementManagerAssignment assignment)
         {
+            if (assignment.Id != 0)
+            {
+                await UpdateAsync(assignment);
+                return;
+            }
+
             await using var context = await _contextFactory.CreateDbContextAsync();
 
             await EngagementMutationGuard.EnsureCanMutateAsync(
