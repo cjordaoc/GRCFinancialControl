@@ -11,6 +11,10 @@
     <Setter Property="MinWidth" Value="{StaticResource ButtonMinWidthStandard}" />
     <Setter Property="Background" Value="{StaticResource BrushPrimary}" />
     <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
+    <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSize14}" />
+    <Setter Property="FontWeight" Value="{StaticResource FontWeightMedium}" />
+    <Setter Property="TextElement.Foreground" Value="{StaticResource BrushOnSurface}" />
     <Setter Property="BorderBrush" Value="{StaticResource BrushPrimary}" />
     <Setter Property="BorderThickness" Value="{StaticResource BorderThin}" />
     <Setter Property="CornerRadius" Value="{StaticResource CornerRadiusMedium}" />
@@ -50,6 +54,7 @@
     <Setter Property="Background" Value="{StaticResource BrushError}" />
     <Setter Property="BorderBrush" Value="{StaticResource BrushError}" />
     <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
+    <Setter Property="TextElement.Foreground" Value="{StaticResource BrushOnSurface}" />
   </Style>
 
   <Style Selector="Button.Danger:pointerover">

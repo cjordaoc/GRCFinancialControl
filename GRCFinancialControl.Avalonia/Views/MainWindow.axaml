@@ -16,6 +16,8 @@
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
         ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="{StaticResource WindowTitleBarHeight}"
+        Padding="{StaticResource WindowClientPadding}"
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen">
 

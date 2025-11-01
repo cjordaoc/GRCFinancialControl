@@ -23,13 +23,13 @@
         <Border Grid.Row="2"
                 Padding="{StaticResource SpaceThickness12}"
                 Background="{DynamicResource ThemeSubtleRegionBrush}"
-                CornerRadius="8">
+                CornerRadius="8,8,8,8">
             <ScrollViewer>
                 <TextBox Text="{Binding Description}"
                          TextWrapping="Wrap"
                          AcceptsReturn="True"
                          IsReadOnly="True"
-                         BorderThickness="0"
+                         BorderThickness="0,0,0,0"
                          Background="Transparent"
                          MinHeight="200" />
             </ScrollViewer>

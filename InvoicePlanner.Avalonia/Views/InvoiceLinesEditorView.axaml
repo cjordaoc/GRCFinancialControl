@@ -110,7 +110,7 @@
                     <Border Grid.Row="2"
                             BorderThickness="{StaticResource BorderThin}"
                             BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                            CornerRadius="4"
+                            CornerRadius="4,4,4,4"
                             Margin="{StaticResource MarginVerticalRegular}"
                             HorizontalAlignment="Stretch">
                         <DataGrid x:Name="InvoiceLinesGrid"

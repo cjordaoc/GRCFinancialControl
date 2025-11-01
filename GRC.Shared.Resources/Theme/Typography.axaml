@@ -1,6 +1,6 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <FontFamily x:Key="FontPrimary">avares://GRC.Shared.Resources/Assets/Fonts/EYINTERSTATE-REGULAR.TTF#EYInterstate</FontFamily>
+  <FontFamily x:Key="FontPrimary">avares://GRC.Shared.Resources/Assets/Fonts/EYINTERSTATE-REGULAR.TTF#EYInterstate, Segoe UI, Arial</FontFamily>
 
   <FontWeight x:Key="FontWeightRegular">Normal</FontWeight>
   <FontWeight x:Key="FontWeightMedium">Medium</FontWeight>
