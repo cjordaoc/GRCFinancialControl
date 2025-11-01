@@ -154,8 +154,19 @@ public partial class PlanEditorViewModel : ViewModelBase
     [ObservableProperty]
     private string? engagementSelectionMessage;
 
-    [ObservableProperty]
-    private InvoicePlanLineViewModel? selectedInvoiceLine;
+    private InvoicePlanLineViewModel? _selectedInvoiceLine;
+
+    public InvoicePlanLineViewModel? SelectedInvoiceLine
+    {
+        get => _selectedInvoiceLine;
+        set
+        {
+            if (SetProperty(ref _selectedInvoiceLine, value))
+            {
+                OnSelectedInvoiceLineChanged(value);
+            }
+        }
+    }
 
     public bool HasSelectedInvoiceLine => SelectedInvoiceLine is not null;
 
@@ -304,7 +315,7 @@ public partial class PlanEditorViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasRecipientEmails));
     }
 
-    partial void OnSelectedInvoiceLineChanged(InvoicePlanLineViewModel? value)
+    private void OnSelectedInvoiceLineChanged(InvoicePlanLineViewModel? value)
     {
         if (_selectedLineSubscription is not null)
         {

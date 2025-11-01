@@ -162,7 +162,7 @@
                     </WrapPanel>
 
                     <Border Grid.Row="1"
-                            BorderThickness="1"
+                            BorderThickness="{StaticResource BorderThin}"
                             BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                             CornerRadius="8"
                             HorizontalAlignment="Stretch"
