@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
 using Avalonia.Threading;
@@ -192,10 +193,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             string? content = null;
             try
             {
-                var path = Path.Combine(AppContext.BaseDirectory, "README.md");
-                if (File.Exists(path))
+                var assembly = typeof(HomeViewModel).Assembly;
+                var resourceName = assembly
+                    .GetManifestResourceNames()
+                    .FirstOrDefault(name => name.EndsWith("README.md", StringComparison.OrdinalIgnoreCase));
+
+                if (!string.IsNullOrWhiteSpace(resourceName))
                 {
-                    content = await File.ReadAllTextAsync(path).ConfigureAwait(false);
+                    await using var stream = assembly.GetManifestResourceStream(resourceName);
+                    if (stream is not null)
+                    {
+                        using var reader = new StreamReader(stream);
+                        content = await reader.ReadToEndAsync().ConfigureAwait(false);
+                    }
                 }
             }
             catch

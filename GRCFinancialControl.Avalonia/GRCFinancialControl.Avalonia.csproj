@@ -34,10 +34,9 @@
       <Link>settings.db</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="..\README.md">
+    <EmbeddedResource Include="..\README.md">
       <Link>README.md</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </EmbeddedResource>
     <None Include="..\Templates\RetainTemplate.xlsx.b64">
       <Link>Templates/RetainTemplate.xlsx.b64</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

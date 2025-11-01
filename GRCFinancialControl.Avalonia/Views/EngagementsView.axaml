@@ -35,13 +35,13 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Customer Name" Width="2*">
+                <DataGridTemplateColumn Header="Customer Name" Width="3*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding CustomerName}"
                                        TextWrapping="Wrap"
                                        TextTrimming="None"
-                                       MaxWidth="420"/>
+                                       MinWidth="180"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

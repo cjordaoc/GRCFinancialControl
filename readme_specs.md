@@ -183,10 +183,10 @@ This document details the implementation for every functional capability describ
   1. `HomeViewModel.LoadDataAsync` retrieves fiscal years and closing periods, orders them chronologically, and stores `_allClosingPeriods` so filtering is performed client-side.
   2. Default selections load from `ISettingsService` (`GetDefaultFiscalYearIdAsync`/`GetDefaultClosingPeriodIdAsync`); lacking persisted values, the first available fiscal year/period is preselected.
   3. `UpdateClosingPeriodsForSelectedFiscalYear` rebuilds the closing-period list whenever a fiscal year changes, while `ConfirmSelectionAsync` persists the defaults and sends `ApplicationParametersChangedMessage` to refresh dependent modules.
-  4. `EnsureReadmeLoadedAsync` executes once per session (`_readmeLoaded` flag), reads `README.md` from `AppContext.BaseDirectory`, and populates `ReadmeContent` (falling back to `Home.Markdown.LoadFailed` when the file cannot be read).
+  4. `EnsureReadmeLoadedAsync` executes once per session (`_readmeLoaded` flag), reads the embedded `README.md` resource through `GetManifestResourceStream`, and populates `ReadmeContent` (falling back to `Home.Markdown.LoadFailed` when the file cannot be read).
 - **UI Details:**
   - `HomeView.axaml` places the fiscal-year ComboBox and Confirm button in a three-column grid alongside an indeterminate `ProgressBar` so alignment stays horizontal on wide displays.
-  - README content renders inside `MarkdownScrollViewer` within a scrollable `Border`, keeping onboarding documentation accessible without leaving the dashboard.
+  - README content renders inside `MarkdownScrollViewer` hosted in a rounded `Border` positioned immediately below the fiscal-year selection stack, capped at `MaxHeight="420"` with auto vertical scrolling to keep onboarding documentation accessible without leaving the dashboard.
 
 ---
 
