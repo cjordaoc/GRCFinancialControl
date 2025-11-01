@@ -108,7 +108,7 @@
                     </StackPanel>
 
                     <Border Grid.Row="2"
-                            BorderThickness="1"
+                            BorderThickness="{StaticResource BorderThin}"
                             BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                             CornerRadius="4"
                             Margin="{StaticResource MarginVerticalRegular}"
