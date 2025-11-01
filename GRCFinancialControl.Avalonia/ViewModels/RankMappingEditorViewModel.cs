@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Core.Models;
@@ -56,6 +57,20 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 await _rankMappingService.UpdateAsync(RankMapping).ConfigureAwait(false);
             }
+        }
+
+        protected override void OnSaveSucceeded()
+        {
+            var displayName = string.IsNullOrWhiteSpace(RankMapping.NormalizedRank)
+                ? RankMapping.RawRank
+                : RankMapping.NormalizedRank;
+
+            ToastService.ShowSuccess("RankMappings.Toast.SaveSuccess", displayName);
+        }
+
+        protected override void OnSaveFailed(Exception exception)
+        {
+            ToastService.ShowError("RankMappings.Toast.OperationFailed", exception.Message);
         }
     }
 }

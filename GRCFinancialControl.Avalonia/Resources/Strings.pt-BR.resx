@@ -551,6 +551,84 @@
     <value>Não foi possível concluir a operação: {0}</value>
   </data>
 
+  <data name="Managers.Toast.SaveSuccess" xml:space="preserve">
+    <value>Gerente {0} salvo com sucesso.</value>
+  </data>
+  <data name="Managers.Toast.DeleteSuccess" xml:space="preserve">
+    <value>Gerente {0} removido com sucesso.</value>
+  </data>
+  <data name="Managers.Toast.OperationFailed" xml:space="preserve">
+    <value>Falha na operação com gerente: {0}.</value>
+  </data>
+
+  <data name="Papds.Toast.SaveSuccess" xml:space="preserve">
+    <value>PAPD {0} salvo com sucesso.</value>
+  </data>
+  <data name="Papds.Toast.DeleteSuccess" xml:space="preserve">
+    <value>PAPD {0} removido com sucesso.</value>
+  </data>
+  <data name="Papds.Toast.DeleteDataSuccess" xml:space="preserve">
+    <value>Dados históricos de {0} excluídos com sucesso.</value>
+  </data>
+  <data name="Papds.Toast.OperationFailed" xml:space="preserve">
+    <value>Falha na operação com PAPD: {0}.</value>
+  </data>
+
+  <data name="RankMappings.Toast.SaveSuccess" xml:space="preserve">
+    <value>Mapeamento de cargo {0} salvo com sucesso.</value>
+  </data>
+  <data name="RankMappings.Toast.DeleteSuccess" xml:space="preserve">
+    <value>Mapeamento de cargo {0} excluído com sucesso.</value>
+  </data>
+  <data name="RankMappings.Toast.OperationFailed" xml:space="preserve">
+    <value>Falha na operação com mapeamento de cargo: {0}.</value>
+  </data>
+
+  <data name="Admin.ManagerAssignments.Toast.SaveSuccess" xml:space="preserve">
+    <value>Atribuição salva: {0} agora gerencia {1}.</value>
+  </data>
+  <data name="Admin.ManagerAssignments.Toast.DeleteSuccess" xml:space="preserve">
+    <value>Atribuição removida: {0} não gerencia mais {1}.</value>
+  </data>
+  <data name="Admin.ManagerAssignments.Toast.OperationFailed" xml:space="preserve">
+    <value>Falha na operação de atribuição de gerente: {0}.</value>
+  </data>
+  <data name="Admin.ManagerAssignments.Error.AssignmentMissing" xml:space="preserve">
+    <value>A atribuição não foi encontrada. Ela pode ter sido removida por outro usuário.</value>
+  </data>
+
+  <data name="Admin.PapdAssignments.Toast.SaveSuccess" xml:space="preserve">
+    <value>Atribuição salva: {0} vinculado a {1}.</value>
+  </data>
+  <data name="Admin.PapdAssignments.Toast.DeleteSuccess" xml:space="preserve">
+    <value>Atribuição removida: {0} desvinculado de {1}.</value>
+  </data>
+  <data name="Admin.PapdAssignments.Toast.OperationFailed" xml:space="preserve">
+    <value>Falha na operação de atribuição de PAPD: {0}.</value>
+  </data>
+  <data name="Admin.PapdAssignments.Toast.Exists" xml:space="preserve">
+    <value>Atribuição já existente para {0} em {1}.</value>
+  </data>
+  <data name="Admin.PapdAssignments.Error.EngagementMissing" xml:space="preserve">
+    <value>O engajamento não foi encontrado. Atualize e tente novamente.</value>
+  </data>
+  <data name="Admin.PapdAssignments.Error.AssignmentMissing" xml:space="preserve">
+    <value>A atribuição não foi encontrada. Atualize e tente novamente.</value>
+  </data>
+
+  <data name="FiscalYears.Toast.SaveSuccess" xml:space="preserve">
+    <value>Ano fiscal {0} salvo com sucesso.</value>
+  </data>
+  <data name="FiscalYears.Toast.DeleteSuccess" xml:space="preserve">
+    <value>Ano fiscal {0} excluído com sucesso.</value>
+  </data>
+  <data name="FiscalYears.Toast.DeleteDataSuccess" xml:space="preserve">
+    <value>Dados do ano fiscal {0} excluídos com sucesso.</value>
+  </data>
+  <data name="FiscalYears.Toast.OperationFailed" xml:space="preserve">
+    <value>Falha na operação com ano fiscal: {0}.</value>
+  </data>
+
   <data name="Settings.Toast.ConnectionSaved" xml:space="preserve">
     <value>Configurações de conexão salvas.</value>
   </data>

@@ -551,6 +551,84 @@
     <value>Unable to complete the operation: {0}</value>
   </data>
 
+  <data name="Managers.Toast.SaveSuccess" xml:space="preserve">
+    <value>Manager {0} saved successfully.</value>
+  </data>
+  <data name="Managers.Toast.DeleteSuccess" xml:space="preserve">
+    <value>Manager {0} removed successfully.</value>
+  </data>
+  <data name="Managers.Toast.OperationFailed" xml:space="preserve">
+    <value>Manager operation failed: {0}.</value>
+  </data>
+
+  <data name="Papds.Toast.SaveSuccess" xml:space="preserve">
+    <value>PAPD {0} saved successfully.</value>
+  </data>
+  <data name="Papds.Toast.DeleteSuccess" xml:space="preserve">
+    <value>PAPD {0} removed successfully.</value>
+  </data>
+  <data name="Papds.Toast.DeleteDataSuccess" xml:space="preserve">
+    <value>Historical data for {0} deleted successfully.</value>
+  </data>
+  <data name="Papds.Toast.OperationFailed" xml:space="preserve">
+    <value>PAPD operation failed: {0}.</value>
+  </data>
+
+  <data name="RankMappings.Toast.SaveSuccess" xml:space="preserve">
+    <value>Rank mapping {0} saved successfully.</value>
+  </data>
+  <data name="RankMappings.Toast.DeleteSuccess" xml:space="preserve">
+    <value>Rank mapping {0} deleted successfully.</value>
+  </data>
+  <data name="RankMappings.Toast.OperationFailed" xml:space="preserve">
+    <value>Rank mapping operation failed: {0}.</value>
+  </data>
+
+  <data name="Admin.ManagerAssignments.Toast.SaveSuccess" xml:space="preserve">
+    <value>Assignment saved: {0} now manages {1}.</value>
+  </data>
+  <data name="Admin.ManagerAssignments.Toast.DeleteSuccess" xml:space="preserve">
+    <value>Assignment removed: {0} no longer manages {1}.</value>
+  </data>
+  <data name="Admin.ManagerAssignments.Toast.OperationFailed" xml:space="preserve">
+    <value>Manager assignment operation failed: {0}.</value>
+  </data>
+  <data name="Admin.ManagerAssignments.Error.AssignmentMissing" xml:space="preserve">
+    <value>The assignment could not be found. It may have been removed by another user.</value>
+  </data>
+
+  <data name="Admin.PapdAssignments.Toast.SaveSuccess" xml:space="preserve">
+    <value>Assignment saved: {0} linked to {1}.</value>
+  </data>
+  <data name="Admin.PapdAssignments.Toast.DeleteSuccess" xml:space="preserve">
+    <value>Assignment removed: {0} unlinked from {1}.</value>
+  </data>
+  <data name="Admin.PapdAssignments.Toast.OperationFailed" xml:space="preserve">
+    <value>PAPD assignment operation failed: {0}.</value>
+  </data>
+  <data name="Admin.PapdAssignments.Toast.Exists" xml:space="preserve">
+    <value>Assignment already exists for {0} on {1}.</value>
+  </data>
+  <data name="Admin.PapdAssignments.Error.EngagementMissing" xml:space="preserve">
+    <value>The engagement could not be found. Please refresh and try again.</value>
+  </data>
+  <data name="Admin.PapdAssignments.Error.AssignmentMissing" xml:space="preserve">
+    <value>The assignment could not be found. Please refresh and try again.</value>
+  </data>
+
+  <data name="FiscalYears.Toast.SaveSuccess" xml:space="preserve">
+    <value>Fiscal year {0} saved successfully.</value>
+  </data>
+  <data name="FiscalYears.Toast.DeleteSuccess" xml:space="preserve">
+    <value>Fiscal year {0} deleted successfully.</value>
+  </data>
+  <data name="FiscalYears.Toast.DeleteDataSuccess" xml:space="preserve">
+    <value>Fiscal year {0} data deleted successfully.</value>
+  </data>
+  <data name="FiscalYears.Toast.OperationFailed" xml:space="preserve">
+    <value>Fiscal year operation failed: {0}.</value>
+  </data>
+
   <data name="Settings.Toast.ConnectionSaved" xml:space="preserve">
     <value>Connection settings saved.</value>
   </data>

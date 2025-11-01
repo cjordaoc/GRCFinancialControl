@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -128,6 +129,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var existingAssignment = await _assignmentService.GetByIdAsync(SelectedAssignment.AssignmentId);
             if (existingAssignment is null)
             {
+                ToastService.ShowWarning(
+                    "Admin.ManagerAssignments.Toast.OperationFailed",
+                    LocalizationRegistry.Get("Admin.ManagerAssignments.Error.AssignmentMissing"));
                 return;
             }
 
@@ -161,6 +165,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var existingAssignment = await _assignmentService.GetByIdAsync(SelectedAssignment.AssignmentId);
             if (existingAssignment is null)
             {
+                ToastService.ShowWarning(
+                    "Admin.ManagerAssignments.Toast.OperationFailed",
+                    LocalizationRegistry.Get("Admin.ManagerAssignments.Error.AssignmentMissing"));
                 return;
             }
 
@@ -201,8 +208,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            await _assignmentService.DeleteAsync(SelectedAssignment.AssignmentId);
-            Messenger.Send(new RefreshDataMessage());
+            try
+            {
+                await _assignmentService.DeleteAsync(SelectedAssignment.AssignmentId);
+                ToastService.ShowSuccess(
+                    "Admin.ManagerAssignments.Toast.DeleteSuccess",
+                    SelectedAssignment.ManagerName,
+                    SelectedAssignment.EngagementDisplay);
+                Messenger.Send(new RefreshDataMessage());
+            }
+            catch (Exception ex)
+            {
+                ToastService.ShowError("Admin.ManagerAssignments.Toast.OperationFailed", ex.Message);
+            }
         }
 
         private bool CanAddAssignment() => SelectedManager is not null && Engagements.Count > 0;

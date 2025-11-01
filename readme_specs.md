@@ -112,6 +112,7 @@ This document details the implementation for every functional capability describ
 - **UI Feedback:**
   - `PlanEditorViewModel.SavePlan` and `DeletePlan` emit success/warning/error toasts (`InvoicePlan.Toast.PlanSaved`, `InvoicePlan.Toast.PlanDeleted`, etc.) via `ToastService` alongside detailed status messages.
   - `RequestConfirmationViewModel` surfaces toasts (`Request.Toast.*`) when inserting or reversing invoice requests, keeping inline actions responsive without modal dialogs.
+  - `EmissionConfirmationViewModel` raises toast notifications (`Emission.Toast.*`) for validation failures, no-op updates, successful emissions, cancellations, and persistence errors so controllers receive immediate feedback without relying solely on status text.
 
 ---
 
@@ -232,6 +233,7 @@ This document details the implementation for every functional capability describ
   - `CustomerEditorViewModel` annotates Name and Customer Code with `[Required]` attributes and exposes `NameError`/`CustomerCodeError` accessors for inline messaging.
   - `DialogEditorViewModel` listens to `ErrorsChanged` and disables the Save command while any validation errors remain, ensuring only complete records are persisted.
   - `CustomersViewModel`, `ManagersViewModel`, `PapdViewModel`, `ClosingPeriodsViewModel`, `FiscalYearsViewModel`, `EngagementsViewModel`, `ManagerAssignmentsViewModel`, and `PapdAssignmentsViewModel` pass `isReadOnlyMode: true` when executing the View command so their dialogs render in read-only state (text boxes bind `IsReadOnlyMode`, combo/date pickers use `AllowEditing`).
+- **UI Feedback:** Master data editors and assignment lists emit standardized toast notifications (`*.Toast.SaveSuccess`, `*.Toast.DeleteSuccess`, `*.Toast.OperationFailed`) for customers, managers, PAPDs, rank mappings, fiscal years, and manager/PAPD assignments, while bulk delete-data commands reuse the same `*.Toast.DeleteDataSuccess` keys.
 
 ---
 

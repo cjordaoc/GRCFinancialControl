@@ -363,6 +363,24 @@
   <data name="InvoicePlan.Status.DeleteFailure" xml:space="preserve">
     <value>Failed to delete plan: {0}</value>
   </data>
+  <data name="Emission.Toast.ValidationFailed" xml:space="preserve">
+    <value>Emission update blocked: {0}.</value>
+  </data>
+  <data name="Emission.Toast.NoEmissions" xml:space="preserve">
+    <value>No emission updates were applied.</value>
+  </data>
+  <data name="Emission.Toast.LineEmitted" xml:space="preserve">
+    <value>Invoice line {0} marked as emitted.</value>
+  </data>
+  <data name="Emission.Toast.OperationFailed" xml:space="preserve">
+    <value>Emission update failed: {0}.</value>
+  </data>
+  <data name="Emission.Toast.NoCancellations" xml:space="preserve">
+    <value>No emission cancellations were applied.</value>
+  </data>
+  <data name="Emission.Toast.LineCanceled" xml:space="preserve">
+    <value>Invoice line {0} cancellation saved.</value>
+  </data>
   <data name="Request.Title.Primary" xml:space="preserve">
     <value>Request confirmation</value>
   </data>

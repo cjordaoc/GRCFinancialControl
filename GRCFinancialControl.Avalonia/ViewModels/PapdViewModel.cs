@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -66,8 +67,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private async Task Delete(Papd papd)
         {
             if (papd == null) return;
-            await _papdService.DeleteAsync(papd.Id);
-            Messenger.Send(new RefreshDataMessage());
+            try
+            {
+                await _papdService.DeleteAsync(papd.Id);
+                ToastService.ShowSuccess("Papds.Toast.DeleteSuccess", papd.Name);
+                Messenger.Send(new RefreshDataMessage());
+            }
+            catch (System.Exception ex)
+            {
+                ToastService.ShowError("Papds.Toast.OperationFailed", ex.Message);
+            }
         }
 
         [RelayCommand(CanExecute = nameof(CanDeleteData))]
@@ -80,8 +89,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 LocalizationRegistry.Format("Common.Dialog.DeleteData.Message", papd.Name));
             if (result)
             {
-                await _papdService.DeleteDataAsync(papd.Id);
-                Messenger.Send(new RefreshDataMessage());
+                try
+                {
+                    await _papdService.DeleteDataAsync(papd.Id);
+                    ToastService.ShowSuccess("Papds.Toast.DeleteDataSuccess", papd.Name);
+                    Messenger.Send(new RefreshDataMessage());
+                }
+                catch (System.Exception ex)
+                {
+                    ToastService.ShowError("Papds.Toast.OperationFailed", ex.Message);
+                }
             }
         }
 

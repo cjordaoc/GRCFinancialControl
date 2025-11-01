@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using App.Presentation.Localization;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -93,12 +95,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var engagement = await EnsureEngagementAsync(SelectedAssignment.EngagementInternalId);
             if (engagement is null)
             {
+                ToastService.ShowError(
+                    "Admin.PapdAssignments.Toast.OperationFailed",
+                    LocalizationRegistry.Get("Admin.PapdAssignments.Error.EngagementMissing"));
                 return;
             }
 
             var assignment = engagement.EngagementPapds.FirstOrDefault(a => a.Id == SelectedAssignment.AssignmentId);
             if (assignment is null)
             {
+                ToastService.ShowWarning(
+                    "Admin.PapdAssignments.Toast.OperationFailed",
+                    LocalizationRegistry.Get("Admin.PapdAssignments.Error.AssignmentMissing"));
                 return;
             }
 
@@ -129,12 +137,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var engagement = await EnsureEngagementAsync(SelectedAssignment.EngagementInternalId);
             if (engagement is null)
             {
+                ToastService.ShowError(
+                    "Admin.PapdAssignments.Toast.OperationFailed",
+                    LocalizationRegistry.Get("Admin.PapdAssignments.Error.EngagementMissing"));
                 return;
             }
 
             var assignment = engagement.EngagementPapds.FirstOrDefault(a => a.Id == SelectedAssignment.AssignmentId);
             if (assignment is null)
             {
+                ToastService.ShowWarning(
+                    "Admin.PapdAssignments.Toast.OperationFailed",
+                    LocalizationRegistry.Get("Admin.PapdAssignments.Error.AssignmentMissing"));
                 return;
             }
 
@@ -160,21 +174,39 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var engagement = await EnsureEngagementAsync(SelectedAssignment.EngagementInternalId);
             if (engagement is null)
             {
+                ToastService.ShowError(
+                    "Admin.PapdAssignments.Toast.OperationFailed",
+                    LocalizationRegistry.Get("Admin.PapdAssignments.Error.EngagementMissing"));
                 return;
             }
 
             var assignment = engagement.EngagementPapds.FirstOrDefault(a => a.Id == SelectedAssignment.AssignmentId);
             if (assignment is null)
             {
+                ToastService.ShowWarning(
+                    "Admin.PapdAssignments.Toast.OperationFailed",
+                    LocalizationRegistry.Get("Admin.PapdAssignments.Error.AssignmentMissing"));
                 return;
             }
 
             engagement.EngagementPapds.Remove(assignment);
-            await _engagementService.UpdateAsync(engagement);
+            try
+            {
+                await _engagementService.UpdateAsync(engagement);
 
-            Messenger.Send(new RefreshDataMessage());
-            await RefreshEngagementCacheAsync();
-            await LoadAssignmentsAsync();
+                ToastService.ShowSuccess(
+                    "Admin.PapdAssignments.Toast.DeleteSuccess",
+                    SelectedPapd.Name,
+                    SelectedAssignment.EngagementDisplay);
+
+                Messenger.Send(new RefreshDataMessage());
+                await RefreshEngagementCacheAsync();
+                await LoadAssignmentsAsync();
+            }
+            catch (Exception ex)
+            {
+                ToastService.ShowError("Admin.PapdAssignments.Toast.OperationFailed", ex.Message);
+            }
         }
 
         private bool CanModifyAssignments() => SelectedPapd is not null;

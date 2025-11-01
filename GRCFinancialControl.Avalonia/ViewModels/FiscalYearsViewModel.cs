@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -86,11 +87,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             try
             {
                 await _fiscalYearService.DeleteAsync(fiscalYear.Id);
+                ToastService.ShowSuccess("FiscalYears.Toast.DeleteSuccess", fiscalYear.Name);
                 Messenger.Send(new RefreshDataMessage());
             }
             catch (InvalidOperationException ex)
             {
                 StatusMessage = ex.Message;
+                ToastService.ShowError("FiscalYears.Toast.OperationFailed", ex.Message);
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = ex.Message;
+                ToastService.ShowError("FiscalYears.Toast.OperationFailed", ex.Message);
             }
         }
 
@@ -109,11 +117,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 try
                 {
                     await _fiscalYearService.DeleteDataAsync(fiscalYear.Id);
+                    ToastService.ShowSuccess("FiscalYears.Toast.DeleteDataSuccess", fiscalYear.Name);
                     Messenger.Send(new RefreshDataMessage());
                 }
                 catch (InvalidOperationException ex)
                 {
                     StatusMessage = ex.Message;
+                    ToastService.ShowError("FiscalYears.Toast.OperationFailed", ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    StatusMessage = ex.Message;
+                    ToastService.ShowError("FiscalYears.Toast.OperationFailed", ex.Message);
                 }
             }
         }
