@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -74,8 +75,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            await _managerService.DeleteAsync(manager.Id);
-            Messenger.Send(new RefreshDataMessage());
+            try
+            {
+                await _managerService.DeleteAsync(manager.Id);
+                ToastService.ShowSuccess("Managers.Toast.DeleteSuccess", manager.Name);
+                Messenger.Send(new RefreshDataMessage());
+            }
+            catch (System.Exception ex)
+            {
+                ToastService.ShowError("Managers.Toast.OperationFailed", ex.Message);
+            }
         }
 
         private bool CanModifySelection(Manager? manager) => manager is not null;

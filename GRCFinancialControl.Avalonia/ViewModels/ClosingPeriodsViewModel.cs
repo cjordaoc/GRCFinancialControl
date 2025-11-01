@@ -21,8 +21,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly IClosingPeriodService _closingPeriodService;
         private readonly IFiscalYearService _fiscalYearService;
         private readonly DialogService _dialogService;
+        private readonly ISettingsService _settingsService;
         private readonly List<ClosingPeriod> _allClosingPeriods = new();
         private bool _isInitializingFilters;
+        private bool _suppressNextRefresh;
 
         [ObservableProperty]
         private ObservableCollection<ClosingPeriod> _closingPeriods = new();
@@ -46,12 +48,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             IClosingPeriodService closingPeriodService,
             IFiscalYearService fiscalYearService,
             DialogService dialogService,
+            ISettingsService settingsService,
             IMessenger messenger)
             : base(messenger)
         {
             _closingPeriodService = closingPeriodService;
             _fiscalYearService = fiscalYearService;
             _dialogService = dialogService;
+            _settingsService = settingsService;
         }
 
         public bool HasUnlockedFiscalYears => FiscalYears.Any(fy => !fy.IsLocked);
@@ -73,6 +77,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             StatusMessage = null;
 
+            var fiscalYearPreferenceId = preferredFiscalYearId
+                ?? await _settingsService.GetDefaultFiscalYearIdAsync();
+
             var periods = await _closingPeriodService.GetAllAsync();
             _allClosingPeriods.Clear();
             _allClosingPeriods.AddRange(periods.OrderBy(cp => cp.PeriodStart));
@@ -81,7 +88,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var orderedFiscalYears = fiscalYears.OrderBy(fy => fy.StartDate).ToList();
             FiscalYears = new ObservableCollection<FiscalYear>(orderedFiscalYears);
 
-            UpdateFiscalYearFilters(orderedFiscalYears, preferredFiscalYearId);
+            UpdateFiscalYearFilters(orderedFiscalYears, fiscalYearPreferenceId);
             ApplyFiscalYearFilter(preferredClosingPeriodId);
         }
 
@@ -170,18 +177,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 }
 
                 await _closingPeriodService.DeleteAsync(closingPeriod.Id);
-                ToastService.ShowSuccess("ClosingPeriods.Toast.Deleted", closingPeriod.Name);
+                ToastService.ShowSuccess("ClosingPeriods.Toast.DeleteSuccess", closingPeriod.Name);
                 Messenger.Send(new RefreshDataMessage());
             }
             catch (InvalidOperationException ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowWarning("ClosingPeriods.Toast.DeleteFailed");
+                ToastService.ShowWarning("ClosingPeriods.Toast.OperationFailed", ex.Message);
             }
             catch (Exception ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowError("ClosingPeriods.Toast.DeleteFailed");
+                ToastService.ShowError("ClosingPeriods.Toast.OperationFailed", ex.Message);
             }
         }
 
@@ -214,18 +221,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             try
             {
                 await _closingPeriodService.DeleteDataAsync(closingPeriod.Id);
-                ToastService.ShowSuccess("ClosingPeriods.Toast.DataDeleted", closingPeriod.Name);
+                ToastService.ShowSuccess("ClosingPeriods.Toast.ReverseSuccess", closingPeriod.Name);
                 Messenger.Send(new RefreshDataMessage());
             }
             catch (InvalidOperationException ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowWarning("ClosingPeriods.Toast.DataDeleteFailed");
+                ToastService.ShowWarning("ClosingPeriods.Toast.OperationFailed", ex.Message);
             }
             catch (Exception ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowError("ClosingPeriods.Toast.DataDeleteFailed");
+                ToastService.ShowError("ClosingPeriods.Toast.OperationFailed", ex.Message);
             }
         }
 
@@ -237,6 +244,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
+            StatusMessage = null;
             var targetState = !SelectedClosingPeriod.IsLocked;
             var closingPeriodId = SelectedClosingPeriod.Id;
             var filterId = SelectedFiscalYearFilter?.FiscalYearId;
@@ -249,6 +257,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     : "ClosingPeriods.Toast.Unlocked",
                     SelectedClosingPeriod?.Name ?? string.Empty);
                 await ReloadAsync(filterId, closingPeriodId);
+                _suppressNextRefresh = true;
+                Messenger.Send(new RefreshDataMessage());
+            }
+            catch (InvalidOperationException ex)
+            {
+                StatusMessage = ex.Message;
+                ToastService.ShowWarning("ClosingPeriods.Toast.ToggleFailed");
             }
             catch (Exception ex)
             {
@@ -306,6 +321,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
 
             ApplyFiscalYearFilter(SelectedClosingPeriod?.Id);
+            _ = PersistSelectedFiscalYearPreferenceAsync(value?.FiscalYearId);
         }
 
         partial void OnClosingPeriodsChanging(ObservableCollection<ClosingPeriod> value)
@@ -336,6 +352,17 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             EditCommand.NotifyCanExecuteChanged();
             DeleteCommand.NotifyCanExecuteChanged();
             DeleteDataCommand.NotifyCanExecuteChanged();
+        }
+
+        public override void Receive(RefreshDataMessage message)
+        {
+            if (_suppressNextRefresh)
+            {
+                _suppressNextRefresh = false;
+                return;
+            }
+
+            base.Receive(message);
         }
 
         public void Receive(ClosingPeriodsChangedMessage message)
@@ -421,6 +448,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public sealed record FiscalYearFilterOption(int? FiscalYearId, string DisplayName)
         {
             public override string ToString() => DisplayName;
+        }
+
+        private async Task PersistSelectedFiscalYearPreferenceAsync(int? fiscalYearId)
+        {
+            try
+            {
+                await _settingsService.SetDefaultFiscalYearIdAsync(fiscalYearId);
+            }
+            catch
+            {
+                // Persistence failures should not block UI interactions.
+            }
         }
     }
 }

@@ -181,9 +181,9 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 - Engagements whose status resolves to **Closed** automatically suppress editing across the detail dialog (including assignment and financial-evolution controls) while leaving the Status selector enabled so controllers can intentionally reopen them.
 - The engagement editor dialog organizes content into tabs (Engagement Data, Financial Data, Financial Evolution, Assignments) to keep related fields together and reduce vertical scrolling.
 - Manager assignments mirror the PAPD workflow: controllers pick a manager first and then maintain that manager's engagement list, keeping the selection logic consistent across the team workspace.
-- The Home workspace now renders the project README beneath the fiscal year selector using a markdown viewer so onboarding guidance travels with the app layout.
-- Closing period management includes a fiscal-year filter ComboBox that performs instant client-side filtering and a lock/unlock toggle that persists immediately while displaying success/failure toasts.
-- Save, Delete, Lock/Unlock, and Reverse actions across both desktop shells emit localized toast notifications (success, warning, error) instead of silent state changes, aligning feedback for controllers and planners.
+- The Home workspace now renders the embedded project README in a scrollable container directly beneath the fiscal-year selector so onboarding guidance travels with the app layout without opening external files.
+- Closing period management includes a fiscal-year filter ComboBox that performs instant client-side filtering and a lock/unlock toggle that persists immediately, broadcasts refresh messages to dependent workspaces, and displays success/failure toasts.
+- Save, delete, lock/unlock, and reverse actions across master data (customers, engagements, managers, PAPDs, rank mappings, fiscal years), assignment editors, and invoice planner workflows (plan editing, request confirmation, emission confirmation) emit localized toast notifications that reuse standardized `SaveSuccess`, `DeleteSuccess`, `ReverseSuccess`, and `OperationFailed` keys (plus module-specific variants) so controllers and planners receive consistent feedback.
 
 [See Technical Spec →](readme_specs.md#ui-architecture)
 

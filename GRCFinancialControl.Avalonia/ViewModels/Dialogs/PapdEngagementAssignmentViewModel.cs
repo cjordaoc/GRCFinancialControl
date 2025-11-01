@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -101,13 +102,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             var engagement = await _engagementService.GetByIdAsync(engagementId);
             if (engagement is null)
             {
+                ToastService.ShowError(
+                    "Admin.PapdAssignments.Toast.OperationFailed",
+                    LocalizationRegistry.Get("Admin.PapdAssignments.Error.EngagementMissing"));
                 return;
             }
 
             var exists = engagement.EngagementPapds.Any(a => a.PapdId == Papd.Id);
             if (exists)
             {
-                Messenger.Send(new CloseDialogMessage(false));
+                ToastService.ShowWarning(
+                    "Admin.PapdAssignments.Toast.Exists",
+                    Papd.Name,
+                    BuildEngagementDisplay(SelectedEngagement, engagement));
                 return;
             }
 
@@ -117,8 +124,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
                 PapdId = Papd.Id
             });
 
-            await _engagementService.UpdateAsync(engagement);
-            Messenger.Send(new CloseDialogMessage(true));
+            try
+            {
+                await _engagementService.UpdateAsync(engagement);
+                ToastService.ShowSuccess(
+                    "Admin.PapdAssignments.Toast.SaveSuccess",
+                    Papd.Name,
+                    BuildEngagementDisplay(SelectedEngagement, engagement));
+                Messenger.Send(new CloseDialogMessage(true));
+            }
+            catch (Exception ex)
+            {
+                ToastService.ShowError("Admin.PapdAssignments.Toast.OperationFailed", ex.Message);
+            }
         }
 
         private async Task UpdateAssignmentAsync(int newEngagementId)
@@ -126,33 +144,56 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             var currentEngagement = await _engagementService.GetByIdAsync(_assignment.EngagementId);
             if (currentEngagement is null)
             {
+                ToastService.ShowError(
+                    "Admin.PapdAssignments.Toast.OperationFailed",
+                    LocalizationRegistry.Get("Admin.PapdAssignments.Error.EngagementMissing"));
                 return;
             }
 
             var existingAssignment = currentEngagement.EngagementPapds.FirstOrDefault(a => a.Id == _assignment.Id);
             if (existingAssignment is null)
             {
+                ToastService.ShowError(
+                    "Admin.PapdAssignments.Toast.OperationFailed",
+                    LocalizationRegistry.Get("Admin.PapdAssignments.Error.AssignmentMissing"));
                 return;
             }
 
             if (currentEngagement.Id == newEngagementId)
             {
-                Messenger.Send(new CloseDialogMessage(true));
+                ToastService.ShowWarning(
+                    "Admin.PapdAssignments.Toast.Exists",
+                    Papd.Name,
+                    BuildEngagementDisplay(SelectedEngagement, currentEngagement));
                 return;
             }
 
             currentEngagement.EngagementPapds.Remove(existingAssignment);
-            await _engagementService.UpdateAsync(currentEngagement);
+            try
+            {
+                await _engagementService.UpdateAsync(currentEngagement);
+            }
+            catch (Exception ex)
+            {
+                ToastService.ShowError("Admin.PapdAssignments.Toast.OperationFailed", ex.Message);
+                return;
+            }
 
             var targetEngagement = await _engagementService.GetByIdAsync(newEngagementId);
             if (targetEngagement is null)
             {
+                ToastService.ShowError(
+                    "Admin.PapdAssignments.Toast.OperationFailed",
+                    LocalizationRegistry.Get("Admin.PapdAssignments.Error.EngagementMissing"));
                 return;
             }
 
             if (targetEngagement.EngagementPapds.Any(a => a.PapdId == Papd.Id))
             {
-                Messenger.Send(new CloseDialogMessage(true));
+                ToastService.ShowWarning(
+                    "Admin.PapdAssignments.Toast.Exists",
+                    Papd.Name,
+                    BuildEngagementDisplay(SelectedEngagement, targetEngagement));
                 return;
             }
 
@@ -162,8 +203,38 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
                 PapdId = Papd.Id
             });
 
-            await _engagementService.UpdateAsync(targetEngagement);
-            Messenger.Send(new CloseDialogMessage(true));
+            try
+            {
+                await _engagementService.UpdateAsync(targetEngagement);
+                ToastService.ShowSuccess(
+                    "Admin.PapdAssignments.Toast.SaveSuccess",
+                    Papd.Name,
+                    BuildEngagementDisplay(SelectedEngagement, targetEngagement));
+                Messenger.Send(new CloseDialogMessage(true));
+            }
+            catch (Exception ex)
+            {
+                ToastService.ShowError("Admin.PapdAssignments.Toast.OperationFailed", ex.Message);
+            }
+        }
+
+        private static string BuildEngagementDisplay(EngagementOption? option, Engagement engagement)
+        {
+            if (option is not null)
+            {
+                return option.ToString();
+            }
+
+            var engagementId = engagement.EngagementId;
+            if (string.IsNullOrWhiteSpace(engagementId))
+            {
+                return engagement.Description;
+            }
+
+            return LocalizationRegistry.Format(
+                "Admin.PapdAssignments.Format.EngagementDisplay",
+                engagementId,
+                engagement.Description);
         }
     }
 

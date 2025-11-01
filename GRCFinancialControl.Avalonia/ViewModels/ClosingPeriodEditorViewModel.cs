@@ -134,19 +134,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     await _closingPeriodService.UpdateAsync(ClosingPeriod);
                 }
 
-                ToastService.ShowSuccess("ClosingPeriods.Toast.Saved", ClosingPeriod.Name);
+                ToastService.ShowSuccess("ClosingPeriods.Toast.SaveSuccess", ClosingPeriod.Name);
                 _messenger.Send(new ClosingPeriodsChangedMessage());
                 _messenger.Send(new CloseDialogMessage(true));
             }
             catch (InvalidOperationException ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowWarning("ClosingPeriods.Toast.SaveFailed");
+                ToastService.ShowWarning("ClosingPeriods.Toast.OperationFailed", ex.Message);
             }
             catch (Exception ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowError("ClosingPeriods.Toast.SaveFailed");
+                ToastService.ShowError("ClosingPeriods.Toast.OperationFailed", ex.Message);
             }
         }
 

@@ -457,16 +457,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     await _engagementService.UpdateAsync(Engagement);
                 }
 
-                ToastService.ShowSuccess("Engagements.Toast.Saved", Engagement.EngagementId);
+                ToastService.ShowSuccess("Engagements.Toast.SaveSuccess", Engagement.EngagementId);
                 _messenger.Send(new CloseDialogMessage(true));
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException ex)
             {
-                ToastService.ShowWarning("Engagements.Toast.SaveFailed");
+                ToastService.ShowWarning("Engagements.Toast.OperationFailed", ex.Message);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                ToastService.ShowError("Engagements.Toast.SaveFailed");
+                ToastService.ShowError("Engagements.Toast.OperationFailed", ex.Message);
             }
         }
 

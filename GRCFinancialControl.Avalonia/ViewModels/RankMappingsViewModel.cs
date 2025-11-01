@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -70,8 +71,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            await _rankMappingService.DeleteAsync(rankMapping.Id).ConfigureAwait(false);
-            Messenger.Send(new RefreshDataMessage());
+            try
+            {
+                await _rankMappingService.DeleteAsync(rankMapping.Id).ConfigureAwait(false);
+                var displayName = string.IsNullOrWhiteSpace(rankMapping.NormalizedRank)
+                    ? rankMapping.RawRank
+                    : rankMapping.NormalizedRank;
+                ToastService.ShowSuccess("RankMappings.Toast.DeleteSuccess", displayName);
+                Messenger.Send(new RefreshDataMessage());
+            }
+            catch (System.Exception ex)
+            {
+                ToastService.ShowError("RankMappings.Toast.OperationFailed", ex.Message);
+            }
         }
 
         private static bool CanModify(RankMapping? rankMapping) => rankMapping is not null;

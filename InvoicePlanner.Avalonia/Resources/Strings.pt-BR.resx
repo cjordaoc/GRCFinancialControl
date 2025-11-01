@@ -354,6 +354,24 @@
   <data name="InvoicePlan.Toast.DeleteFailed" xml:space="preserve">
     <value>Não foi possível excluir o plano de faturamento.</value>
   </data>
+  <data name="Emission.Toast.ValidationFailed" xml:space="preserve">
+    <value>Atualização de emissão bloqueada: {0}.</value>
+  </data>
+  <data name="Emission.Toast.NoEmissions" xml:space="preserve">
+    <value>Nenhuma atualização de emissão foi aplicada.</value>
+  </data>
+  <data name="Emission.Toast.LineEmitted" xml:space="preserve">
+    <value>Linha {0} marcada como emitida.</value>
+  </data>
+  <data name="Emission.Toast.OperationFailed" xml:space="preserve">
+    <value>Falha ao atualizar emissão: {0}.</value>
+  </data>
+  <data name="Emission.Toast.NoCancellations" xml:space="preserve">
+    <value>Nenhum cancelamento de emissão foi aplicado.</value>
+  </data>
+  <data name="Emission.Toast.LineCanceled" xml:space="preserve">
+    <value>Cancelamento da linha {0} registrado.</value>
+  </data>
   <data name="Request.Title.Primary" xml:space="preserve">
     <value>Confirmação de solicitação</value>
   </data>

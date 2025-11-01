@@ -1,8 +1,10 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using App.Presentation.Localization;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -77,16 +79,28 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             _assignment.EngagementId = SelectedEngagement.InternalId;
             _assignment.ManagerId = SelectedManager.Id;
 
-            if (_assignment.Id == 0)
+            try
             {
-                await _assignmentService.AddAsync(_assignment);
-            }
-            else
-            {
-                await _assignmentService.UpdateAsync(_assignment);
-            }
+                if (_assignment.Id == 0)
+                {
+                    await _assignmentService.AddAsync(_assignment);
+                }
+                else
+                {
+                    await _assignmentService.UpdateAsync(_assignment);
+                }
 
-            Messenger.Send(new CloseDialogMessage(true));
+                ToastService.ShowSuccess(
+                    "Admin.ManagerAssignments.Toast.SaveSuccess",
+                    SelectedManager.Name,
+                    SelectedEngagement.ToString());
+
+                Messenger.Send(new CloseDialogMessage(true));
+            }
+            catch (Exception ex)
+            {
+                ToastService.ShowError("Admin.ManagerAssignments.Toast.OperationFailed", ex.Message);
+            }
         }
 
         [RelayCommand]

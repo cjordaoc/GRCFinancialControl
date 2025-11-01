@@ -512,61 +512,121 @@
   <data name="ClosingPeriods.Toast.ToggleFailed" xml:space="preserve">
     <value>Unable to update closing period lock state.</value>
   </data>
-  <data name="ClosingPeriods.Toast.Deleted" xml:space="preserve">
-    <value>Closing period {0} deleted.</value>
-  </data>
-  <data name="ClosingPeriods.Toast.DeleteFailed" xml:space="preserve">
-    <value>Unable to delete the closing period.</value>
-  </data>
-  <data name="ClosingPeriods.Toast.DataDeleted" xml:space="preserve">
-    <value>Financial data for {0} deleted.</value>
-  </data>
-  <data name="ClosingPeriods.Toast.DataDeleteFailed" xml:space="preserve">
-    <value>Unable to delete closing period data.</value>
-  </data>
-  <data name="ClosingPeriods.Toast.Saved" xml:space="preserve">
+  <data name="ClosingPeriods.Toast.SaveSuccess" xml:space="preserve">
     <value>Closing period saved.</value>
   </data>
-  <data name="ClosingPeriods.Toast.SaveFailed" xml:space="preserve">
-    <value>Unable to save the closing period.</value>
+  <data name="ClosingPeriods.Toast.DeleteSuccess" xml:space="preserve">
+    <value>Closing period {0} deleted.</value>
+  </data>
+  <data name="ClosingPeriods.Toast.ReverseSuccess" xml:space="preserve">
+    <value>Financial data for {0} reversed.</value>
+  </data>
+  <data name="ClosingPeriods.Toast.OperationFailed" xml:space="preserve">
+    <value>Unable to complete the operation: {0}</value>
   </data>
 
-  <data name="Customers.Toast.Saved" xml:space="preserve">
+  <data name="Customers.Toast.SaveSuccess" xml:space="preserve">
     <value>Customer saved.</value>
   </data>
-  <data name="Customers.Toast.SaveFailed" xml:space="preserve">
-    <value>Unable to save the customer.</value>
-  </data>
-  <data name="Customers.Toast.Deleted" xml:space="preserve">
+  <data name="Customers.Toast.DeleteSuccess" xml:space="preserve">
     <value>Customer {0} deleted.</value>
   </data>
-  <data name="Customers.Toast.DeleteFailed" xml:space="preserve">
-    <value>Unable to delete the customer.</value>
+  <data name="Customers.Toast.ReverseSuccess" xml:space="preserve">
+    <value>Customer data for {0} reversed.</value>
   </data>
-  <data name="Customers.Toast.DataDeleted" xml:space="preserve">
-    <value>Customer data for {0} deleted.</value>
-  </data>
-  <data name="Customers.Toast.DataDeleteFailed" xml:space="preserve">
-    <value>Unable to delete customer data.</value>
+  <data name="Customers.Toast.OperationFailed" xml:space="preserve">
+    <value>Unable to complete the operation: {0}</value>
   </data>
 
-  <data name="Engagements.Toast.Saved" xml:space="preserve">
+  <data name="Engagements.Toast.SaveSuccess" xml:space="preserve">
     <value>Engagement saved.</value>
   </data>
-  <data name="Engagements.Toast.SaveFailed" xml:space="preserve">
-    <value>Unable to save the engagement.</value>
-  </data>
-  <data name="Engagements.Toast.Deleted" xml:space="preserve">
+  <data name="Engagements.Toast.DeleteSuccess" xml:space="preserve">
     <value>Engagement {0} deleted.</value>
   </data>
-  <data name="Engagements.Toast.DeleteFailed" xml:space="preserve">
-    <value>Unable to delete the engagement.</value>
+  <data name="Engagements.Toast.ReverseSuccess" xml:space="preserve">
+    <value>Engagement data for {0} reversed.</value>
   </data>
-  <data name="Engagements.Toast.DataDeleted" xml:space="preserve">
-    <value>Engagement data for {0} deleted.</value>
+  <data name="Engagements.Toast.OperationFailed" xml:space="preserve">
+    <value>Unable to complete the operation: {0}</value>
   </data>
-  <data name="Engagements.Toast.DataDeleteFailed" xml:space="preserve">
-    <value>Unable to delete engagement data.</value>
+
+  <data name="Managers.Toast.SaveSuccess" xml:space="preserve">
+    <value>Manager {0} saved successfully.</value>
+  </data>
+  <data name="Managers.Toast.DeleteSuccess" xml:space="preserve">
+    <value>Manager {0} removed successfully.</value>
+  </data>
+  <data name="Managers.Toast.OperationFailed" xml:space="preserve">
+    <value>Manager operation failed: {0}.</value>
+  </data>
+
+  <data name="Papds.Toast.SaveSuccess" xml:space="preserve">
+    <value>PAPD {0} saved successfully.</value>
+  </data>
+  <data name="Papds.Toast.DeleteSuccess" xml:space="preserve">
+    <value>PAPD {0} removed successfully.</value>
+  </data>
+  <data name="Papds.Toast.DeleteDataSuccess" xml:space="preserve">
+    <value>Historical data for {0} deleted successfully.</value>
+  </data>
+  <data name="Papds.Toast.OperationFailed" xml:space="preserve">
+    <value>PAPD operation failed: {0}.</value>
+  </data>
+
+  <data name="RankMappings.Toast.SaveSuccess" xml:space="preserve">
+    <value>Rank mapping {0} saved successfully.</value>
+  </data>
+  <data name="RankMappings.Toast.DeleteSuccess" xml:space="preserve">
+    <value>Rank mapping {0} deleted successfully.</value>
+  </data>
+  <data name="RankMappings.Toast.OperationFailed" xml:space="preserve">
+    <value>Rank mapping operation failed: {0}.</value>
+  </data>
+
+  <data name="Admin.ManagerAssignments.Toast.SaveSuccess" xml:space="preserve">
+    <value>Assignment saved: {0} now manages {1}.</value>
+  </data>
+  <data name="Admin.ManagerAssignments.Toast.DeleteSuccess" xml:space="preserve">
+    <value>Assignment removed: {0} no longer manages {1}.</value>
+  </data>
+  <data name="Admin.ManagerAssignments.Toast.OperationFailed" xml:space="preserve">
+    <value>Manager assignment operation failed: {0}.</value>
+  </data>
+  <data name="Admin.ManagerAssignments.Error.AssignmentMissing" xml:space="preserve">
+    <value>The assignment could not be found. It may have been removed by another user.</value>
+  </data>
+
+  <data name="Admin.PapdAssignments.Toast.SaveSuccess" xml:space="preserve">
+    <value>Assignment saved: {0} linked to {1}.</value>
+  </data>
+  <data name="Admin.PapdAssignments.Toast.DeleteSuccess" xml:space="preserve">
+    <value>Assignment removed: {0} unlinked from {1}.</value>
+  </data>
+  <data name="Admin.PapdAssignments.Toast.OperationFailed" xml:space="preserve">
+    <value>PAPD assignment operation failed: {0}.</value>
+  </data>
+  <data name="Admin.PapdAssignments.Toast.Exists" xml:space="preserve">
+    <value>Assignment already exists for {0} on {1}.</value>
+  </data>
+  <data name="Admin.PapdAssignments.Error.EngagementMissing" xml:space="preserve">
+    <value>The engagement could not be found. Please refresh and try again.</value>
+  </data>
+  <data name="Admin.PapdAssignments.Error.AssignmentMissing" xml:space="preserve">
+    <value>The assignment could not be found. Please refresh and try again.</value>
+  </data>
+
+  <data name="FiscalYears.Toast.SaveSuccess" xml:space="preserve">
+    <value>Fiscal year {0} saved successfully.</value>
+  </data>
+  <data name="FiscalYears.Toast.DeleteSuccess" xml:space="preserve">
+    <value>Fiscal year {0} deleted successfully.</value>
+  </data>
+  <data name="FiscalYears.Toast.DeleteDataSuccess" xml:space="preserve">
+    <value>Fiscal year {0} data deleted successfully.</value>
+  </data>
+  <data name="FiscalYears.Toast.OperationFailed" xml:space="preserve">
+    <value>Fiscal year operation failed: {0}.</value>
   </data>
 
   <data name="Settings.Toast.ConnectionSaved" xml:space="preserve">

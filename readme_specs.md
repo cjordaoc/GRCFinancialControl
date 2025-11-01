@@ -78,10 +78,10 @@ This document details the implementation for every functional capability describ
   1. `ClosingPeriodService.GetAllAsync` returns periods ordered by `PeriodStart` with fiscal-year navigation properties so the view model can perform in-memory filtering.
   2. `ClosingPeriodsViewModel.LoadDataAsync` caches all periods in `_allClosingPeriods`, loads fiscal years, and builds filter options through `UpdateFiscalYearFilters`, adding a localized **All fiscal years** entry and selecting persisted preferences when present.
   3. `ApplyFiscalYearFilter` performs client-side filtering, repopulating the observable collection and preserving the previously selected period when possible.
-  4. Lock/unlock requests flow through `ToggleLockAsync`, which invokes `ClosingPeriodService.SetLockStateAsync` to toggle `IsLocked` and then refreshes the collections so the UI reflects the persisted state immediately.
-  5. Editor dialogs (`ClosingPeriodEditorViewModel.SaveAsync`) persist changes via `IClosingPeriodService` and emit toasts on success/failure.
+  4. Lock/unlock requests flow through `ToggleLockAsync`, which invokes `ClosingPeriodService.SetLockStateAsync` to toggle `IsLocked`, refreshes the filtered collections, and broadcasts `RefreshDataMessage` so dependent view models reload their cached lists.
+  5. Editor dialogs (`ClosingPeriodEditorViewModel.SaveAsync`) persist changes via `IClosingPeriodService` and emit standardized toast feedback (`ClosingPeriods.Toast.SaveSuccess` or `ClosingPeriods.Toast.OperationFailed`).
 - **UI Feedback:**
-  - Delete, Delete Data, and Lock/Unlock buttons surface success/warning/error toasts through `ToastService` with localized messages.
+  - Save, Delete, and Delete Data commands share localized toast keys (`*.Toast.SaveSuccess`, `*.Toast.DeleteSuccess`, `*.Toast.ReverseSuccess`, `*.Toast.OperationFailed`) while Lock/Unlock retains dedicated lock-state messages.
   - The filter ComboBox binds to `FiscalYearFilters` with `DisplayName` values, while the lock button label reflects `SelectedClosingPeriod.IsLocked` using localized `ClosingPeriods.Button.Lock`/`Unlock` strings.
 
 ---
@@ -112,6 +112,7 @@ This document details the implementation for every functional capability describ
 - **UI Feedback:**
   - `PlanEditorViewModel.SavePlan` and `DeletePlan` emit success/warning/error toasts (`InvoicePlan.Toast.PlanSaved`, `InvoicePlan.Toast.PlanDeleted`, etc.) via `ToastService` alongside detailed status messages.
   - `RequestConfirmationViewModel` surfaces toasts (`Request.Toast.*`) when inserting or reversing invoice requests, keeping inline actions responsive without modal dialogs.
+  - `EmissionConfirmationViewModel` raises toast notifications (`Emission.Toast.*`) for validation failures, no-op updates, successful emissions, cancellations, and persistence errors so controllers receive immediate feedback without relying solely on status text.
 
 ---
 
@@ -183,10 +184,10 @@ This document details the implementation for every functional capability describ
   1. `HomeViewModel.LoadDataAsync` retrieves fiscal years and closing periods, orders them chronologically, and stores `_allClosingPeriods` so filtering is performed client-side.
   2. Default selections load from `ISettingsService` (`GetDefaultFiscalYearIdAsync`/`GetDefaultClosingPeriodIdAsync`); lacking persisted values, the first available fiscal year/period is preselected.
   3. `UpdateClosingPeriodsForSelectedFiscalYear` rebuilds the closing-period list whenever a fiscal year changes, while `ConfirmSelectionAsync` persists the defaults and sends `ApplicationParametersChangedMessage` to refresh dependent modules.
-  4. `EnsureReadmeLoadedAsync` executes once per session (`_readmeLoaded` flag), reads `README.md` from `AppContext.BaseDirectory`, and populates `ReadmeContent` (falling back to `Home.Markdown.LoadFailed` when the file cannot be read).
+  4. `EnsureReadmeLoadedAsync` executes once per session (`_readmeLoaded` flag), reads the embedded `README.md` resource through `GetManifestResourceStream`, and populates `ReadmeContent` (falling back to `Home.Markdown.LoadFailed` when the file cannot be read).
 - **UI Details:**
   - `HomeView.axaml` places the fiscal-year ComboBox and Confirm button in a three-column grid alongside an indeterminate `ProgressBar` so alignment stays horizontal on wide displays.
-  - README content renders inside `MarkdownScrollViewer` within a scrollable `Border`, keeping onboarding documentation accessible without leaving the dashboard.
+  - README content renders inside `MarkdownScrollViewer` hosted in a rounded `Border` positioned immediately below the fiscal-year selection stack, capped at `MaxHeight="420"` with auto vertical scrolling to keep onboarding documentation accessible without leaving the dashboard.
 
 ---
 
@@ -232,6 +233,7 @@ This document details the implementation for every functional capability describ
   - `CustomerEditorViewModel` annotates Name and Customer Code with `[Required]` attributes and exposes `NameError`/`CustomerCodeError` accessors for inline messaging.
   - `DialogEditorViewModel` listens to `ErrorsChanged` and disables the Save command while any validation errors remain, ensuring only complete records are persisted.
   - `CustomersViewModel`, `ManagersViewModel`, `PapdViewModel`, `ClosingPeriodsViewModel`, `FiscalYearsViewModel`, `EngagementsViewModel`, `ManagerAssignmentsViewModel`, and `PapdAssignmentsViewModel` pass `isReadOnlyMode: true` when executing the View command so their dialogs render in read-only state (text boxes bind `IsReadOnlyMode`, combo/date pickers use `AllowEditing`).
+- **UI Feedback:** Master data editors and assignment lists emit standardized toast notifications (`*.Toast.SaveSuccess`, `*.Toast.DeleteSuccess`, `*.Toast.OperationFailed`) for customers, managers, PAPDs, rank mappings, fiscal years, and manager/PAPD assignments, while bulk delete-data commands reuse the same `*.Toast.DeleteDataSuccess` keys.
 
 ---
 

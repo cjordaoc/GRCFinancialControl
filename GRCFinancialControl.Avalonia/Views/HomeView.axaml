@@ -20,7 +20,7 @@
                        Classes="TitleLarge"/>
             <TextBlock Text="{loc:Loc Key=Home.Welcome}"
                        TextWrapping="Wrap"/>
-            <StackPanel Spacing="{StaticResource Spacing8}" Margin="{StaticResource MarginTopRegular}">
+            <StackPanel Spacing="{StaticResource Spacing8}">
                 <TextBlock Text="{loc:Loc Key=Home.Label.FiscalYear}"
                            FontWeight="{StaticResource FontWeightSemiBold}"/>
                 <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="{StaticResource Spacing12}">
@@ -63,7 +63,19 @@
                            Foreground="{StaticResource BrushWarning}"
                            IsVisible="{Binding HasFiscalYears, Converter={x:Static converters:ObjectConverters.AreEqual}, ConverterParameter=False}"/>
             </StackPanel>
-            <StackPanel Spacing="{StaticResource Spacing8}" Margin="{StaticResource MarginTopRegular}">
+            <Border Background="{StaticResource BrushSurfaceVariant}"
+                    CornerRadius="{StaticResource CornerRadiusSmall}"
+                    Padding="{StaticResource SpaceThickness16}">
+                <StackPanel Spacing="{StaticResource Spacing12}">
+                    <TextBlock Text="{loc:Loc Key=Home.Markdown.Title}"
+                               Classes="TitleMedium"/>
+                    <md:MarkdownScrollViewer Markdown="{Binding ReadmeContent}"
+                                             MaxHeight="420"
+                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                             ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                </StackPanel>
+            </Border>
+            <StackPanel Spacing="{StaticResource Spacing8}">
                 <TextBlock Text="{loc:Loc Key=Home.Label.ClosingPeriod}"
                            FontWeight="{StaticResource FontWeightSemiBold}"/>
                 <ComboBox ItemsSource="{Binding ClosingPeriods}"
@@ -96,23 +108,10 @@
             <Border Background="{StaticResource BrushSurfaceVariant}"
                     CornerRadius="{StaticResource CornerRadiusSmall}"
                     Padding="{StaticResource SpaceThickness12}"
-                    Margin="{StaticResource MarginTopRegular}"
                     IsVisible="{Binding HasStatusMessage}">
                 <TextBlock Text="{Binding StatusMessage}"
                            Foreground="{Binding IsError, Converter={StaticResource StatusBrushConverter}}"
                            TextWrapping="Wrap"/>
-            </Border>
-            <Border Background="{StaticResource BrushSurfaceVariant}"
-                    CornerRadius="{StaticResource CornerRadiusSmall}"
-                    Padding="{StaticResource SpaceThickness16}"
-                    Margin="{StaticResource MarginTopLarge}">
-                <StackPanel Spacing="{StaticResource Spacing12}">
-                    <TextBlock Text="{loc:Loc Key=Home.Markdown.Title}"
-                               Classes="TitleMedium"/>
-                    <md:MarkdownScrollViewer Markdown="{Binding ReadmeContent}"
-                                             MaxHeight="420"
-                                             ScrollViewer.VerticalScrollBarVisibility="Auto"/>
-                </StackPanel>
             </Border>
         </StackPanel>
     </ScrollViewer>
