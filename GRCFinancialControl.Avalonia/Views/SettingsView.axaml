@@ -12,43 +12,47 @@
     <Grid RowDefinitions="*,Auto">
         <TabControl Margin="24">
             <TabItem Header="{loc:Loc Key=Settings.Tab.Localization}">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="16" Spacing="16">
-                        <Border Classes="Card" Padding="24">
-                            <StackPanel Spacing="12">
-                                <TextBlock Text="{loc:Loc Key=Settings.Section.Localization.Title}" Classes="TitleMedium"/>
-                                <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <TextBlock Text="{loc:Loc Key=Settings.Label.Language}" VerticalAlignment="Center"/>
-                                    <ComboBox ItemsSource="{Binding Languages}"
-                                              SelectedItem="{Binding SelectedLanguage}"
-                                              Width="200">
-                                        <ComboBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding DisplayName}"/>
-                                            </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                    </ComboBox>
+                <Grid RowDefinitions="*,Auto">
+                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16" Spacing="16">
+                            <Border Classes="Card" Padding="24">
+                                <StackPanel Spacing="12">
+                                    <TextBlock Text="{loc:Loc Key=Settings.Section.Localization.Title}" Classes="TitleMedium"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                        <TextBlock Text="{loc:Loc Key=Settings.Label.Language}" VerticalAlignment="Center"/>
+                                        <ComboBox ItemsSource="{Binding Languages}"
+                                                  SelectedItem="{Binding SelectedLanguage}"
+                                                  Width="200">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding DisplayName}"/>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                        <TextBlock Text="{loc:Loc Key=Settings.Label.DefaultCurrency}" VerticalAlignment="Center"/>
+                                        <TextBox Width="120"
+                                                 Text="{Binding DefaultCurrency}"
+                                                 Watermark="{loc:Loc Key=Settings.Placeholder.DefaultCurrency}"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{loc:Loc Key=Settings.Help.DefaultCurrency}"
+                                               TextWrapping="Wrap"
+                                               Opacity="0.7"/>
                                 </StackPanel>
-                                <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <TextBlock Text="{loc:Loc Key=Settings.Label.DefaultCurrency}" VerticalAlignment="Center"/>
-                                    <TextBox Width="120"
-                                             Text="{Binding DefaultCurrency}"
-                                             Watermark="{loc:Loc Key=Settings.Placeholder.DefaultCurrency}"/>
-                                </StackPanel>
-                                <TextBlock Text="{loc:Loc Key=Settings.Help.DefaultCurrency}"
-                                           TextWrapping="Wrap"
-                                           Opacity="0.7"/>
-                                <StackPanel Orientation="Horizontal"
-                                            HorizontalAlignment="Right"
-                                            Spacing="12">
-                                    <Button Content="{loc:Loc Key=Settings.Button.Apply}"
-                                            Command="{Binding SaveLocalizationSettingsCommand}"
-                                            MinWidth="140"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                    <StackPanel Grid.Row="1"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                Margin="16,8,16,16"
+                                Spacing="12">
+                        <Button Content="{loc:Loc Key=Settings.Button.Apply}"
+                                Command="{Binding SaveLocalizationSettingsCommand}"
+                                MinWidth="140"/>
                     </StackPanel>
-                </ScrollViewer>
+                </Grid>
             </TabItem>
             <TabItem Header="{loc:Loc Key=Settings.Tab.Connection}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -212,24 +216,28 @@
                 </ScrollViewer>
             </TabItem>
             <TabItem Header="{loc:Loc Key=Settings.Tab.PowerBi}">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="16" Spacing="16">
-                        <Border Classes="Card" Padding="24">
-                            <StackPanel Spacing="12">
-                                <TextBlock Text="{loc:Loc Key=Settings.Section.PowerBi.Title}" Classes="TitleLarge"/>
-                                <TextBlock Text="{loc:Loc Key=Settings.Section.PowerBi.Description}" TextWrapping="Wrap"/>
-                                <TextBox Text="{Binding PowerBiEmbedUrl}" Watermark="{loc:Loc Key=Settings.Label.PowerBiUrl}"/>
-                                <StackPanel Orientation="Horizontal"
-                                            HorizontalAlignment="Right"
-                                            Spacing="12">
-                                    <Button Content="{loc:Loc Key=Settings.Button.Apply}"
-                                            Command="{Binding SavePowerBiSettingsCommand}"
-                                            MinWidth="140"/>
+                <Grid RowDefinitions="*,Auto">
+                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16" Spacing="16">
+                            <Border Classes="Card" Padding="24">
+                                <StackPanel Spacing="12">
+                                    <TextBlock Text="{loc:Loc Key=Settings.Section.PowerBi.Title}" Classes="TitleLarge"/>
+                                    <TextBlock Text="{loc:Loc Key=Settings.Section.PowerBi.Description}" TextWrapping="Wrap"/>
+                                    <TextBox Text="{Binding PowerBiEmbedUrl}" Watermark="{loc:Loc Key=Settings.Label.PowerBiUrl}"/>
                                 </StackPanel>
-                            </StackPanel>
-                        </Border>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                    <StackPanel Grid.Row="1"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                Margin="16,8,16,16"
+                                Spacing="12">
+                        <Button Content="{loc:Loc Key=Settings.Button.Apply}"
+                                Command="{Binding SavePowerBiSettingsCommand}"
+                                MinWidth="140"/>
                     </StackPanel>
-                </ScrollViewer>
+                </Grid>
             </TabItem>
         </TabControl>
 
