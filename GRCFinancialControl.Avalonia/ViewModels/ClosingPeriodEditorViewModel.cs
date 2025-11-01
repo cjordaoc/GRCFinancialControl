@@ -72,7 +72,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             if (SelectedFiscalYear is null)
             {
-                StatusMessage = LocalizationRegistry.Get("ClosingPeriods.Validation.NoFiscalYears");
+                StatusMessage = LocalizationRegistry.Get("FINC_ClosingPeriods_Validation_NoFiscalYears");
             }
 
             IsReadOnlyMode = isReadOnlyMode;
@@ -90,7 +90,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             if (SelectedFiscalYear is null)
             {
-                StatusMessage = LocalizationRegistry.Get("ClosingPeriods.Validation.FiscalYearRequired");
+                StatusMessage = LocalizationRegistry.Get("FINC_ClosingPeriods_Validation_FiscalYearRequired");
                 return;
             }
 
@@ -101,20 +101,20 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     : SelectedFiscalYear.Name;
 
                 StatusMessage = LocalizationRegistry.Format(
-                    "ClosingPeriods.Validation.FiscalYearLocked",
+                    "FINC_ClosingPeriods_Validation_FiscalYearLocked",
                     fiscalYearName);
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(Name))
             {
-                StatusMessage = LocalizationRegistry.Get("ClosingPeriods.Validation.NameRequired");
+                StatusMessage = LocalizationRegistry.Get("FINC_ClosingPeriods_Validation_NameRequired");
                 return;
             }
 
             if (PeriodEnd < PeriodStart)
             {
-                StatusMessage = LocalizationRegistry.Get("ClosingPeriods.Validation.EndDateAfterStart");
+                StatusMessage = LocalizationRegistry.Get("FINC_ClosingPeriods_Validation_EndDateAfterStart");
                 return;
             }
 
@@ -135,19 +135,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     await _closingPeriodService.UpdateAsync(ClosingPeriod);
                 }
 
-                ToastService.ShowSuccess("ClosingPeriods.Toast.SaveSuccess", ClosingPeriod.Name);
+                ToastService.ShowSuccess("FINC_ClosingPeriods_Toast_SaveSuccess", ClosingPeriod.Name);
                 _messenger.Send(new ClosingPeriodsChangedMessage());
                 _messenger.Send(new CloseDialogMessage(true));
             }
             catch (InvalidOperationException ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowWarning("ClosingPeriods.Toast.OperationFailed", ex.Message);
+                ToastService.ShowWarning("FINC_ClosingPeriods_Toast_OperationFailed", ex.Message);
             }
             catch (Exception ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowError("ClosingPeriods.Toast.OperationFailed", ex.Message);
+                ToastService.ShowError("FINC_ClosingPeriods_Toast_OperationFailed", ex.Message);
             }
         }
 

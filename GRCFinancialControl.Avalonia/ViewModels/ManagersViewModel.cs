@@ -78,12 +78,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             try
             {
                 await _managerService.DeleteAsync(manager.Id);
-                ToastService.ShowSuccess("Managers.Toast.DeleteSuccess", manager.Name);
+                ToastService.ShowSuccess("FINC_Managers_Toast_DeleteSuccess", manager.Name);
                 Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (System.Exception ex)
             {
-                ToastService.ShowError("Managers.Toast.OperationFailed", ex.Message);
+                ToastService.ShowError("FINC_Managers_Toast_OperationFailed", ex.Message);
             }
         }
 

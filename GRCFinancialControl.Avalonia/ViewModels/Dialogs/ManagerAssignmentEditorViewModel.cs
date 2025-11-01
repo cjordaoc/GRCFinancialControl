@@ -36,8 +36,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
         private bool _isReadOnlyMode;
 
         public string Title => _assignment.Id == 0
-            ? LocalizationRegistry.Get("Admin.ManagerAssignments.Dialog.Add.Title")
-            : LocalizationRegistry.Get("Admin.ManagerAssignments.Dialog.Edit.Title");
+            ? LocalizationRegistry.Get("FINC_Admin_ManagerAssignments_Dialog_Add_Title")
+            : LocalizationRegistry.Get("FINC_Admin_ManagerAssignments_Dialog_Edit_Title");
 
         public ManagerAssignmentEditorViewModel(
             EngagementManagerAssignment assignment,
@@ -92,7 +92,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
                 }
 
                 ToastService.ShowSuccess(
-                    "Admin.ManagerAssignments.Toast.SaveSuccess",
+                    "FINC_Admin_ManagerAssignments_Toast_SaveSuccess",
                     SelectedManager.Name,
                     SelectedEngagement.ToString());
 
@@ -100,7 +100,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             }
             catch (Exception ex)
             {
-                ToastService.ShowError("Admin.ManagerAssignments.Toast.OperationFailed", ex.Message);
+                ToastService.ShowError("FINC_Admin_ManagerAssignments_Toast_OperationFailed", ex.Message);
             }
         }
 

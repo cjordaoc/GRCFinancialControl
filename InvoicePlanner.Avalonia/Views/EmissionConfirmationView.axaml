@@ -12,10 +12,10 @@
             <StackPanel Spacing="{StaticResource Spacing16}" Margin="{StaticResource SpaceThickness16}">
                 <Border Classes="Card" Padding="{StaticResource SpaceThickness24}">
                     <StackPanel Spacing="{StaticResource Spacing16}">
-                        <TextBlock Classes="TitleMedium" Text="{loc:Loc Key=Emission.Title.Primary}" />
-                        <TextBlock Text="{loc:Loc Key=Emission.Description.Primary}" />
+                        <TextBlock Classes="TitleMedium" Text="{loc:Loc Key=INV_Emission_Title_Primary}" />
+                        <TextBlock Text="{loc:Loc Key=INV_Emission_Description_Primary}" />
                         <StackPanel Spacing="{StaticResource Spacing12}">
-                        <TextBlock Text="{loc:Loc Key=Emission.Section.AvailablePlans.Header}" FontWeight="{StaticResource FontWeightSemiBold}" />
+                        <TextBlock Text="{loc:Loc Key=INV_Emission_Section_AvailablePlans_Header}" FontWeight="{StaticResource FontWeightSemiBold}" />
                             <TextBlock Text="{Binding PlanSelectionMessage}" TextWrapping="Wrap" />
                             <DataGrid ItemsSource="{Binding AvailablePlans}"
                                       SelectedItem="{Binding SelectedPlan, Mode=TwoWay}"
@@ -28,21 +28,21 @@
                                       Margin="{StaticResource MarginTopXSmall}"
                                       IsReadOnly="True">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Column.PlanId}" Binding="{Binding Id}" Width="80"/>
-                                    <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Column.Engagement}" Binding="{Binding EngagementId}" Width="160"/>
-                                    <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Column.Type}" Binding="{Binding TypeName}" Width="120"/>
-                                    <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Column.FirstEmission}" Binding="{Binding FirstEmissionDate, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
-                                    <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Column.Requested}" Binding="{Binding RequestedItemCount}" Width="140"/>
-                                    <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Column.Emitted}" Binding="{Binding EmittedItemCount}" Width="120"/>
-                                    <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Column.Closed}" Binding="{Binding ClosedItemCount}" Width="120"/>
-                                    <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Column.Canceled}" Binding="{Binding CanceledItemCount}" Width="120"/>
+                                    <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_PlanId}" Binding="{Binding Id}" Width="80"/>
+                                    <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Engagement}" Binding="{Binding EngagementId}" Width="160"/>
+                                    <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Type}" Binding="{Binding TypeName}" Width="120"/>
+                                    <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_FirstEmission}" Binding="{Binding FirstEmissionDate, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
+                                    <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Requested}" Binding="{Binding RequestedItemCount}" Width="140"/>
+                                    <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Emitted}" Binding="{Binding EmittedItemCount}" Width="120"/>
+                                    <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Closed}" Binding="{Binding ClosedItemCount}" Width="120"/>
+                                    <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Canceled}" Binding="{Binding CanceledItemCount}" Width="120"/>
                                 </DataGrid.Columns>
                             </DataGrid>
                             <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space12}">
-                                <Button Content="{loc:Loc Key=Common.Button.Refresh}"
+                                <Button Content="{loc:Loc Key=INV_Button_Refresh}"
                                         Command="{Binding RefreshCommand}"
                                         MinWidth="140"/>
-                                <Button Content="{loc:Loc Key=Emission.Button.InsertBzData}"
+                                <Button Content="{loc:Loc Key=INV_Emission_Button_InsertBzData}"
                                         Command="{Binding LoadPlanCommand}"
                                         MinWidth="200"/>
                             </StackPanel>
@@ -52,7 +52,7 @@
 
                 <Border Classes="Card" Padding="{StaticResource SpaceThickness24}" IsVisible="{Binding IsPlanDetailsVisible}">
                     <StackPanel Spacing="{StaticResource Spacing16}">
-                        <TextBlock Classes="TitleMedium" Text="{loc:Loc Key=Emission.Section.InvoiceDetails.Header}" />
+                        <TextBlock Classes="TitleMedium" Text="{loc:Loc Key=INV_Emission_Section_InvoiceDetails_Header}" />
                         <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space16}">
                             <TextBlock Text="{Binding EngagementDisplay}" />
                             <TextBlock Text="{Binding RequestedCountDisplay}" />
@@ -70,21 +70,21 @@
                                   IsReadOnly="True"
                                   MaxHeight="260">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Sequence}" Binding="{Binding Sequence}" Width="80"/>
-                                <DataGridTextColumn Header="{loc:Loc Key=Emission.TableHeader.EmissionDate}" Binding="{Binding EmissionDate, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
-                                <DataGridTextColumn Header="{loc:Loc Key=Emission.TableHeader.DueDate}" Binding="{Binding DueDate, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
-                                <DataGridTemplateColumn Header="{loc:Loc Key=Emission.TableHeader.Amount}" Width="140">
+                                <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_Sequence}" Binding="{Binding Sequence}" Width="80"/>
+                                <DataGridTextColumn Header="{loc:Loc Key=INV_Emission_TableHeader_EmissionDate}" Binding="{Binding EmissionDate, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
+                                <DataGridTextColumn Header="{loc:Loc Key=INV_Emission_TableHeader_DueDate}" Binding="{Binding DueDate, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
+                                <DataGridTemplateColumn Header="{loc:Loc Key=INV_Emission_TableHeader_Amount}" Width="140">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
                                             <TextBlock Text="{Binding AmountDisplay}" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="{loc:Loc Key=Request.TableHeader.Ritm}" Binding="{Binding RitmNumber}" Width="160"/>
-                                <DataGridTextColumn Header="{loc:Loc Key=Request.TableHeader.Status}" Binding="{Binding Status}" Width="120"/>
-                                <DataGridTextColumn Header="{loc:Loc Key=Emission.TableHeader.BzCode}" Binding="{Binding BzCode}" Width="160"/>
-                                <DataGridTextColumn Header="{loc:Loc Key=Emission.TableHeader.EmittedAt}" Binding="{Binding EmittedAt, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
-                                <DataGridTextColumn Header="{loc:Loc Key=Emission.TableHeader.LastCancelReason}" Binding="{Binding LastCancellationReason}" Width="200"/>
+                                <DataGridTextColumn Header="{loc:Loc Key=INV_Request_TableHeader_Ritm}" Binding="{Binding RitmNumber}" Width="160"/>
+                                <DataGridTextColumn Header="{loc:Loc Key=INV_Request_TableHeader_Status}" Binding="{Binding Status}" Width="120"/>
+                                <DataGridTextColumn Header="{loc:Loc Key=INV_Emission_TableHeader_BzCode}" Binding="{Binding BzCode}" Width="160"/>
+                                <DataGridTextColumn Header="{loc:Loc Key=INV_Emission_TableHeader_EmittedAt}" Binding="{Binding EmittedAt, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
+                                <DataGridTextColumn Header="{loc:Loc Key=INV_Emission_TableHeader_LastCancelReason}" Binding="{Binding LastCancellationReason}" Width="200"/>
                             </DataGrid.Columns>
                         </DataGrid>
                         <StackPanel Spacing="{StaticResource Space12}" IsVisible="{Binding HasSelectedLine}">
@@ -98,7 +98,7 @@
                                             <TextBlock Grid.Row="0"
                                                        Grid.Column="0"
                                                        VerticalAlignment="Center"
-                                                       Text="{loc:Loc Key=Emission.TableHeader.BzCode}" />
+                                                       Text="{loc:Loc Key=INV_Emission_TableHeader_BzCode}" />
                                             <TextBox Grid.Row="0"
                                                      Grid.Column="1"
                                                      Text="{Binding BzCode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
@@ -106,7 +106,7 @@
                                             <TextBlock Grid.Row="1"
                                                        Grid.Column="0"
                                                        VerticalAlignment="Center"
-                                                       Text="{loc:Loc Key=Emission.TableHeader.EmittedAt}" />
+                                                       Text="{loc:Loc Key=INV_Emission_TableHeader_EmittedAt}" />
                                             <CalendarDatePicker Grid.Row="1"
                                                                Grid.Column="1"
                                                                SelectedDate="{Binding EmittedAt, Mode=TwoWay, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}" />
@@ -114,17 +114,17 @@
                                             <TextBlock Grid.Row="2"
                                                        Grid.Column="0"
                                                        VerticalAlignment="Center"
-                                                       Text="{loc:Loc Key=Emission.TableHeader.CancelReason}" />
+                                                       Text="{loc:Loc Key=INV_Emission_TableHeader_CancelReason}" />
                                             <TextBox Grid.Row="2"
                                                      Grid.Column="1"
                                                      Text="{Binding CancelReason, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                      IsEnabled="{Binding IsEmitted}"
-                                                     Watermark="{loc:Loc Key=Common.Placeholder.Reason}" />
+                                                     Watermark="{loc:Loc Key=INV_Placeholder_Reason}" />
 
                                             <TextBlock Grid.Row="3"
                                                        Grid.Column="0"
                                                        VerticalAlignment="Center"
-                                                       Text="{loc:Loc Key=Emission.TableHeader.LastCancelReason}" />
+                                                       Text="{loc:Loc Key=INV_Emission_TableHeader_LastCancelReason}" />
                                             <TextBlock Grid.Row="3"
                                                        Grid.Column="1"
                                                        Text="{Binding LastCancellationReason}"
@@ -136,14 +136,14 @@
                             <StackPanel Orientation="Horizontal"
                                         HorizontalAlignment="Right"
                                         Spacing="{StaticResource Space12}">
-                                <Button Content="{loc:Loc Key=Common.Button.Save}"
+                                <Button Content="{loc:Loc Key=Global_Button_Save}"
                                         Command="{Binding SavePlanDetailsCommand}"
                                         MinWidth="120" />
-                                <Button Content="{loc:Loc Key=Emission.Button.CancelEmission}"
+                                <Button Content="{loc:Loc Key=INV_Emission_Button_CancelEmission}"
                                         Command="{Binding CancelSelectedLineCommand}"
                                         IsVisible="{Binding SelectedLine.IsEmitted}"
                                         MinWidth="160" />
-                                <Button Content="{loc:Loc Key=Common.Button.Close}"
+                                <Button Content="{loc:Loc Key=INV_Button_Close}"
                                         Command="{Binding ClosePlanDetailsCommand}"
                                         MinWidth="120" />
                             </StackPanel>

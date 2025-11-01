@@ -10,7 +10,7 @@ namespace InvoicePlanner.Avalonia.ViewModels;
 /// </summary>
 public abstract class ViewModelBase : ObservableViewModelBase
 {
-    private const string UnknownLoginResourceKey = "Access.Message.LoginUnknown";
+    private const string UnknownLoginResourceKey = "INV_Access_Message_LoginUnknown";
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ViewModelBase"/> class.

@@ -74,16 +74,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             NavigationItems = new ObservableCollection<NavigationItem>
             {
-                new(NavigationKeys.Home, LocalizationRegistry.Get("Navigation.Home"), Home),
-                new(NavigationKeys.Import, LocalizationRegistry.Get("Navigation.Import"), Import),
-                new(NavigationKeys.Engagements, LocalizationRegistry.Get("Navigation.Engagements"), Engagements),
-                new(NavigationKeys.GrcTeam, LocalizationRegistry.Get("Navigation.GrcTeam"), GrcTeam),
-                new(NavigationKeys.Allocations, LocalizationRegistry.Get("Navigation.Allocations"), Allocations),
-                new(NavigationKeys.Reports, LocalizationRegistry.Get("Navigation.Reports"), Reports),
-                new(NavigationKeys.Tasks, LocalizationRegistry.Get("Navigation.Tasks"), Tasks),
-                new(NavigationKeys.ControlMasterData, LocalizationRegistry.Get("Navigation.ControlMasterData"), ControlMasterData),
-                new(NavigationKeys.AppMasterData, LocalizationRegistry.Get("Navigation.MasterData"), AppMasterData),
-                new(NavigationKeys.Settings, LocalizationRegistry.Get("Navigation.Settings"), Settings)
+                new(NavigationKeys.Home, LocalizationRegistry.Get("FINC_Navigation_Home"), Home),
+                new(NavigationKeys.Import, LocalizationRegistry.Get("FINC_Navigation_Import"), Import),
+                new(NavigationKeys.Engagements, LocalizationRegistry.Get("FINC_Navigation_Engagements"), Engagements),
+                new(NavigationKeys.GrcTeam, LocalizationRegistry.Get("FINC_Navigation_GrcTeam"), GrcTeam),
+                new(NavigationKeys.Allocations, LocalizationRegistry.Get("FINC_Navigation_Allocations"), Allocations),
+                new(NavigationKeys.Reports, LocalizationRegistry.Get("FINC_Navigation_Reports"), Reports),
+                new(NavigationKeys.Tasks, LocalizationRegistry.Get("FINC_Navigation_Tasks"), Tasks),
+                new(NavigationKeys.ControlMasterData, LocalizationRegistry.Get("FINC_Navigation_ControlMasterData"), ControlMasterData),
+                new(NavigationKeys.AppMasterData, LocalizationRegistry.Get("FINC_Navigation_MasterData"), AppMasterData),
+                new(NavigationKeys.Settings, LocalizationRegistry.Get("FINC_Navigation_Settings"), Settings)
             };
 
             _navigationIndex = BuildNavigationIndex(NavigationItems);

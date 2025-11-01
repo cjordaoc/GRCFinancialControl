@@ -130,8 +130,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (existingAssignment is null)
             {
                 ToastService.ShowWarning(
-                    "Admin.ManagerAssignments.Toast.OperationFailed",
-                    LocalizationRegistry.Get("Admin.ManagerAssignments.Error.AssignmentMissing"));
+                    "FINC_Admin_ManagerAssignments_Toast_OperationFailed",
+                    LocalizationRegistry.Get("FINC_Admin_ManagerAssignments_Error_AssignmentMissing"));
                 return;
             }
 
@@ -166,8 +166,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (existingAssignment is null)
             {
                 ToastService.ShowWarning(
-                    "Admin.ManagerAssignments.Toast.OperationFailed",
-                    LocalizationRegistry.Get("Admin.ManagerAssignments.Error.AssignmentMissing"));
+                    "FINC_Admin_ManagerAssignments_Toast_OperationFailed",
+                    LocalizationRegistry.Get("FINC_Admin_ManagerAssignments_Error_AssignmentMissing"));
                 return;
             }
 
@@ -196,9 +196,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
 
             var confirmed = await _dialogService.ShowConfirmationAsync(
-                LocalizationRegistry.Get("Admin.ManagerAssignments.Dialog.Remove.Title"),
+                LocalizationRegistry.Get("FINC_Admin_ManagerAssignments_Dialog_Remove_Title"),
                 LocalizationRegistry.Format(
-                    "Admin.ManagerAssignments.Dialog.Remove.Message",
+                    "FINC_Admin_ManagerAssignments_Dialog_Remove_Message",
                     SelectedAssignment.ManagerName,
                     SelectedAssignment.EngagementDisplay)
             );
@@ -212,14 +212,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 await _assignmentService.DeleteAsync(SelectedAssignment.AssignmentId);
                 ToastService.ShowSuccess(
-                    "Admin.ManagerAssignments.Toast.DeleteSuccess",
+                    "FINC_Admin_ManagerAssignments_Toast_DeleteSuccess",
                     SelectedAssignment.ManagerName,
                     SelectedAssignment.EngagementDisplay);
                 Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (Exception ex)
             {
-                ToastService.ShowError("Admin.ManagerAssignments.Toast.OperationFailed", ex.Message);
+                ToastService.ShowError("FINC_Admin_ManagerAssignments_Toast_OperationFailed", ex.Message);
             }
         }
 
@@ -278,7 +278,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public string EngagementDisplay => string.IsNullOrWhiteSpace(EngagementId)
             ? EngagementDescription
             : LocalizationRegistry.Format(
-                "Admin.ManagerAssignments.Format.EngagementDisplay",
+                "FINC_Admin_ManagerAssignments_Format_EngagementDisplay",
                 EngagementId,
                 EngagementDescription);
     }

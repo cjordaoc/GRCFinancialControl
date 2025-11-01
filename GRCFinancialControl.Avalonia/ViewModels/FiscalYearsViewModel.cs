@@ -87,18 +87,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             try
             {
                 await _fiscalYearService.DeleteAsync(fiscalYear.Id);
-                ToastService.ShowSuccess("FiscalYears.Toast.DeleteSuccess", fiscalYear.Name);
+                ToastService.ShowSuccess("FINC_FiscalYears_Toast_DeleteSuccess", fiscalYear.Name);
                 Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (InvalidOperationException ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowError("FiscalYears.Toast.OperationFailed", ex.Message);
+                ToastService.ShowError("FINC_FiscalYears_Toast_OperationFailed", ex.Message);
             }
             catch (Exception ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowError("FiscalYears.Toast.OperationFailed", ex.Message);
+                ToastService.ShowError("FINC_FiscalYears_Toast_OperationFailed", ex.Message);
             }
         }
 
@@ -110,25 +110,25 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             StatusMessage = null;
 
             var result = await _dialogService.ShowConfirmationAsync(
-                LocalizationRegistry.Get("Common.Dialog.DeleteData.Title"),
-                LocalizationRegistry.Format("Common.Dialog.DeleteData.Message", fiscalYear.Name));
+                LocalizationRegistry.Get("FINC_Dialog_DeleteData_Title"),
+                LocalizationRegistry.Format("FINC_Dialog_DeleteData_Message", fiscalYear.Name));
             if (result)
             {
                 try
                 {
                     await _fiscalYearService.DeleteDataAsync(fiscalYear.Id);
-                    ToastService.ShowSuccess("FiscalYears.Toast.DeleteDataSuccess", fiscalYear.Name);
+                    ToastService.ShowSuccess("FINC_FiscalYears_Toast_DeleteDataSuccess", fiscalYear.Name);
                     Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
                 }
                 catch (InvalidOperationException ex)
                 {
                     StatusMessage = ex.Message;
-                    ToastService.ShowError("FiscalYears.Toast.OperationFailed", ex.Message);
+                    ToastService.ShowError("FINC_FiscalYears_Toast_OperationFailed", ex.Message);
                 }
                 catch (Exception ex)
                 {
                     StatusMessage = ex.Message;
-                    ToastService.ShowError("FiscalYears.Toast.OperationFailed", ex.Message);
+                    ToastService.ShowError("FINC_FiscalYears_Toast_OperationFailed", ex.Message);
                 }
             }
         }
@@ -148,12 +148,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 if (lockedAtUtc.HasValue)
                 {
                     var lockedAtLocal = DateTime.SpecifyKind(lockedAtUtc.Value, DateTimeKind.Utc).ToLocalTime();
-                    StatusMessage = LocalizationRegistry.Format("FiscalYears.Status.Locked", fiscalYear.Name, user, lockedAtLocal);
+                    StatusMessage = LocalizationRegistry.Format("FINC_FiscalYears_Status_Locked", fiscalYear.Name, user, lockedAtLocal);
                     _loggingService.LogInfo($"Fiscal year '{fiscalYear.Name}' locked at {lockedAtUtc.Value:O} by {user}.");
                 }
                 else
                 {
-                    StatusMessage = LocalizationRegistry.Format("FiscalYears.Status.AlreadyLocked", fiscalYear.Name);
+                    StatusMessage = LocalizationRegistry.Format("FINC_FiscalYears_Status_AlreadyLocked", fiscalYear.Name);
                     _loggingService.LogWarning($"Attempted to lock fiscal year '{fiscalYear.Name}', but it was already locked or could not be found.");
                 }
             }
@@ -177,12 +177,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (unlockedAtUtc.HasValue)
             {
                 var unlockedAtLocal = DateTime.SpecifyKind(unlockedAtUtc.Value, DateTimeKind.Utc).ToLocalTime();
-                StatusMessage = LocalizationRegistry.Format("FiscalYears.Status.Unlocked", fiscalYear.Name, user, unlockedAtLocal);
+                StatusMessage = LocalizationRegistry.Format("FINC_FiscalYears_Status_Unlocked", fiscalYear.Name, user, unlockedAtLocal);
                 _loggingService.LogInfo($"Fiscal year '{fiscalYear.Name}' unlocked at {unlockedAtUtc.Value:O} by {user}.");
             }
             else
             {
-                StatusMessage = LocalizationRegistry.Format("FiscalYears.Status.AlreadyUnlocked", fiscalYear.Name);
+                StatusMessage = LocalizationRegistry.Format("FINC_FiscalYears_Status_AlreadyUnlocked", fiscalYear.Name);
                 _loggingService.LogWarning($"Attempted to unlock fiscal year '{fiscalYear.Name}', but it was already unlocked or could not be found.");
             }
         }
@@ -198,8 +198,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             StatusMessage = null;
 
             var confirm = await _dialogService.ShowConfirmationAsync(
-                LocalizationRegistry.Get("FiscalYears.Dialog.Close.Title"),
-                LocalizationRegistry.Format("FiscalYears.Dialog.Close.Message", fiscalYear.Name));
+                LocalizationRegistry.Get("FINC_FiscalYears_Dialog_Close_Title"),
+                LocalizationRegistry.Format("FINC_FiscalYears_Dialog_Close_Message", fiscalYear.Name));
 
             if (!confirm)
             {
@@ -221,14 +221,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 if (promoted != null)
                 {
                     StatusMessage = LocalizationRegistry.Format(
-                        "FiscalYears.Status.ClosedPromoted",
+                        "FINC_FiscalYears_Status_ClosedPromoted",
                         result.ClosedFiscalYear.Name,
                         promoted.Name);
                 }
                 else
                 {
                     StatusMessage = LocalizationRegistry.Format(
-                        "FiscalYears.Status.ClosedNoPromotion",
+                        "FINC_FiscalYears_Status_ClosedNoPromotion",
                         result.ClosedFiscalYear.Name);
                 }
 

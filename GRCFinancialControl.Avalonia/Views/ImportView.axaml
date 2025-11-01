@@ -12,20 +12,20 @@
         <StackPanel Margin="{StaticResource SpaceThickness24}" Spacing="{StaticResource Spacing16}">
             <Border Classes="Card" Padding="{StaticResource SpaceThickness24}">
                 <StackPanel Spacing="{StaticResource Spacing16}">
-                    <TextBlock Text="{loc:Loc Key=Import.Title.Primary}"
+                    <TextBlock Text="{loc:Loc Key=FINC_Import_Title_Primary}"
                                Classes="TitleLarge"/>
                     <StackPanel Orientation="Horizontal"
                                 Spacing="{StaticResource Spacing12}"
                                 IsEnabled="{Binding IsImporting, Converter={StaticResource InverseBooleanConverter}}">
-                        <Button Content="{loc:Loc Key=Import.Button.Budget}"
+                        <Button Content="{loc:Loc Key=FINC_Import_Button_Budget}"
                                 Command="{Binding SetImportTypeCommand}"
                                 CommandParameter="Budget"
                                 Classes="accent"/>
-                        <Button Content="{loc:Loc Key=Import.Button.AllocationPlanning}"
+                        <Button Content="{loc:Loc Key=FINC_Import_Button_AllocationPlanning}"
                                 Command="{Binding SetImportTypeCommand}"
                                 CommandParameter="AllocationPlanning"
                                 Classes="accent"/>
-                        <Button Content="{loc:Loc Key=Import.Button.FullManagement}"
+                        <Button Content="{loc:Loc Key=FINC_Import_Button_FullManagement}"
                                 Command="{Binding SetImportTypeCommand}"
                                 CommandParameter="FullManagement"
                                 Classes="accent"
@@ -44,7 +44,7 @@
                         <StackPanel Spacing="{StaticResource Spacing12}">
                             <TextBlock Text="{Binding SelectedImportTitle}"
                                        Classes="TitleSmall"/>
-                            <Button Content="{loc:Loc Key=Import.Button.SelectFile}"
+                            <Button Content="{loc:Loc Key=FINC_Import_Button_SelectFile}"
                                     Command="{Binding ImportCommand}"
                                     Classes="accent"/>
                             <ProgressBar IsIndeterminate="True"

@@ -37,16 +37,16 @@ namespace GRCFinancialControl.Avalonia.Services
                 if (Uri.TryCreate(embedUrl, UriKind.Absolute, out var parsedUri))
                 {
                     dashboardUri = parsedUri;
-                    statusMessage = LocalizationRegistry.Get("Reports.Status.DashboardReady");
+                    statusMessage = LocalizationRegistry.Get("FINC_Reports_Status_DashboardReady");
                 }
                 else
                 {
-                    statusMessage = LocalizationRegistry.Get("Reports.Status.InvalidUrl");
+                    statusMessage = LocalizationRegistry.Get("FINC_Reports_Status_InvalidUrl");
                 }
             }
             else
             {
-                statusMessage = LocalizationRegistry.Get("Reports.Status.UrlRequired");
+                statusMessage = LocalizationRegistry.Get("FINC_Reports_Status_UrlRequired");
             }
 
             return new PowerBiEmbedConfiguration

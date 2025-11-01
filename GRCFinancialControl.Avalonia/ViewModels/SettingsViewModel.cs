@@ -192,7 +192,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     .FirstOrDefault(option => string.Equals(option.CultureName, language, StringComparison.OrdinalIgnoreCase))
                     ?? Languages.FirstOrDefault();
                 _initializingLanguage = false;
-                StatusMessage = LocalizationRegistry.Get("Settings.Status.Loaded");
+                StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_Loaded");
             });
         }
 
@@ -217,14 +217,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 var settings = BuildSettingsDictionary();
                 await _settingsService.SaveAllAsync(settings);
                 RunOnUiThread(() =>
-                    StatusMessage = LocalizationRegistry.Get("Settings.Status.Saved"));
-                ToastService.ShowSuccess("Settings.Toast.ConnectionSaved");
+                    StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_Saved"));
+                ToastService.ShowSuccess("FINC_Settings_Toast_ConnectionSaved");
             }
             catch (Exception ex)
             {
                 RunOnUiThread(() =>
-                    StatusMessage = LocalizationRegistry.Format("Settings.Status.SaveError", ex.Message));
-                ToastService.ShowError("Settings.Toast.ConnectionFailed");
+                    StatusMessage = LocalizationRegistry.Format("FINC_Settings_Status_SaveError", ex.Message));
+                ToastService.ShowError("FINC_Settings_Toast_ConnectionFailed");
             }
         }
 
@@ -241,16 +241,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
                 RunOnUiThread(() =>
                 {
-                    StatusMessage = LocalizationRegistry.Get("Settings.Status.LocalizationSaved");
+                    StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_LocalizationSaved");
                 });
 
-                ToastService.ShowSuccess("Settings.Toast.LocalizationSaved");
+                ToastService.ShowSuccess("FINC_Settings_Toast_LocalizationSaved");
             }
             catch (Exception ex)
             {
                 RunOnUiThread(() =>
-                    StatusMessage = LocalizationRegistry.Format("Settings.Status.LocalizationFailed", ex.Message));
-                ToastService.ShowError("Settings.Toast.LocalizationFailed");
+                    StatusMessage = LocalizationRegistry.Format("FINC_Settings_Status_LocalizationFailed", ex.Message));
+                ToastService.ShowError("FINC_Settings_Toast_LocalizationFailed");
             }
         }
 
@@ -264,16 +264,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
                 RunOnUiThread(() =>
                 {
-                    StatusMessage = LocalizationRegistry.Get("Settings.Status.PowerBiSaved");
+                    StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_PowerBiSaved");
                 });
 
-                ToastService.ShowSuccess("Settings.Toast.PowerBiSaved");
+                ToastService.ShowSuccess("FINC_Settings_Toast_PowerBiSaved");
             }
             catch (Exception ex)
             {
                 RunOnUiThread(() =>
-                    StatusMessage = LocalizationRegistry.Format("Settings.Status.PowerBiFailed", ex.Message));
-                ToastService.ShowError("Settings.Toast.PowerBiFailed");
+                    StatusMessage = LocalizationRegistry.Format("FINC_Settings_Status_PowerBiFailed", ex.Message));
+                ToastService.ShowError("FINC_Settings_Toast_PowerBiFailed");
             }
         }
 
@@ -286,7 +286,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private async Task TestConnectionAsync()
         {
-            RunOnUiThread(() => StatusMessage = LocalizationRegistry.Get("Settings.Status.Testing"));
+            RunOnUiThread(() => StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_Testing"));
             var settings = BuildSettingsDictionary();
             var result = await _settingsService.TestConnectionAsync(Server, Database, User, Password);
 
@@ -299,7 +299,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             await _settingsService.SaveAllAsync(settings);
             RunOnUiThread(() =>
             {
-                StatusMessage = LocalizationRegistry.Get("Settings.Status.TestSuccess");
+                StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_TestSuccess");
                 Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             });
         }
@@ -307,17 +307,17 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private async Task ClearAllDataAsync()
         {
             var confirmed = await _dialogService.ShowConfirmationAsync(
-                LocalizationRegistry.Get("Settings.Dialog.ClearAll.Title"),
-                LocalizationRegistry.Get("Settings.Dialog.ClearAll.Message"));
+                LocalizationRegistry.Get("FINC_Settings_Dialog_ClearAll_Title"),
+                LocalizationRegistry.Get("FINC_Settings_Dialog_ClearAll_Message"));
 
             if (!confirmed)
             {
                 return;
             }
 
-            RunOnUiThread(() => StatusMessage = LocalizationRegistry.Get("Settings.Status.Clearing"));
+            RunOnUiThread(() => StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_Clearing"));
             await _schemaInitializer.ClearAllDataAsync();
-            RunOnUiThread(() => StatusMessage = LocalizationRegistry.Get("Settings.Status.Cleared"));
+            RunOnUiThread(() => StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_Cleared"));
         }
 
         private async Task ExportConnectionPackageAsync()
@@ -327,39 +327,39 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (string.IsNullOrWhiteSpace(ExportPassphrase))
             {
                 RunOnUiThread(() =>
-                    StatusMessage = LocalizationRegistry.Get("Settings.Validation.ExportPassphraseRequired"));
+                    StatusMessage = LocalizationRegistry.Get("FINC_Settings_Validation_ExportPassphraseRequired"));
                 return;
             }
 
             if (!string.Equals(ExportPassphrase, ConfirmExportPassphrase, StringComparison.Ordinal))
             {
                 RunOnUiThread(() =>
-                    StatusMessage = LocalizationRegistry.Get("Settings.Validation.ExportPassphraseMismatch"));
+                    StatusMessage = LocalizationRegistry.Get("FINC_Settings_Validation_ExportPassphraseMismatch"));
                 return;
             }
 
             var defaultFileName = $"GRCConnection_{DateTime.Now:yyyyMMdd_HHmm}.grcconfig";
             var filePath = await _filePickerService.SaveFileAsync(
                 defaultFileName,
-                title: LocalizationRegistry.Get("Settings.Dialog.Export.Title"),
+                title: LocalizationRegistry.Get("FINC_Settings_Dialog_Export_Title"),
                 defaultExtension: ".grcconfig",
                 allowedPatterns: new[] { "*.grcconfig" });
 
             if (string.IsNullOrWhiteSpace(filePath))
             {
                 RunOnUiThread(() =>
-                    StatusMessage = LocalizationRegistry.Get("Settings.Status.ExportCancelled"));
+                    StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_ExportCancelled"));
                 return;
             }
 
             try
             {
                 RunOnUiThread(() =>
-                    StatusMessage = LocalizationRegistry.Get("Settings.Status.ExportInProgress"));
+                    StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_ExportInProgress"));
                 await _connectionPackageService.ExportAsync(filePath, ExportPassphrase);
                 RunOnUiThread(() =>
                     StatusMessage = LocalizationRegistry.Format(
-                        "Settings.Status.ExportSuccess",
+                        "FINC_Settings_Status_ExportSuccess",
                         Path.GetFileName(filePath)));
             }
             catch (InvalidOperationException ex)
@@ -369,7 +369,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             catch (Exception ex)
             {
                 RunOnUiThread(() =>
-                    StatusMessage = LocalizationRegistry.Format("Settings.Status.ExportFailure", ex.Message));
+                    StatusMessage = LocalizationRegistry.Format("FINC_Settings_Status_ExportFailure", ex.Message));
             }
             finally
             {
@@ -386,7 +386,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             RunOnUiThread(() => StatusMessage = null);
 
             var filePath = await _filePickerService.OpenFileAsync(
-                title: LocalizationRegistry.Get("Settings.Dialog.Import.Title"),
+                title: LocalizationRegistry.Get("FINC_Settings_Dialog_Import_Title"),
                 defaultExtension: ".grcconfig",
                 allowedPatterns: new[] { "*.grcconfig" });
 
@@ -405,14 +405,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (string.IsNullOrWhiteSpace(ImportPassphrase))
             {
                 RunOnUiThread(() =>
-                    StatusMessage = LocalizationRegistry.Get("Settings.Validation.ImportPassphraseRequired"));
+                    StatusMessage = LocalizationRegistry.Get("FINC_Settings_Validation_ImportPassphraseRequired"));
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(SelectedImportPackagePath))
             {
                 RunOnUiThread(() =>
-                    StatusMessage = LocalizationRegistry.Get("Settings.Validation.ImportPackageRequired"));
+                    StatusMessage = LocalizationRegistry.Get("FINC_Settings_Validation_ImportPackageRequired"));
                 return;
             }
 
@@ -420,7 +420,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 SetIsImporting(true);
                 RunOnUiThread(() =>
-                    StatusMessage = LocalizationRegistry.Get("Settings.Status.ImportInProgress"));
+                    StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_ImportInProgress"));
                 var importedSettings = await _connectionPackageService.ImportAsync(SelectedImportPackagePath, ImportPassphrase);
                 var existingSettings = await _settingsService.GetAllAsync();
 
@@ -448,7 +448,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                         : Password;
 
                     StatusMessage = LocalizationRegistry.Format(
-                        "Settings.Status.ImportSuccess",
+                        "FINC_Settings_Status_ImportSuccess",
                         Path.GetFileName(SelectedImportPackagePath));
                     Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
                     Messenger.Send(ApplicationRestartRequestedMessage.Instance);
@@ -461,7 +461,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             catch (Exception ex)
             {
                 RunOnUiThread(() =>
-                    StatusMessage = LocalizationRegistry.Format("Settings.Status.ImportFailure", ex.Message));
+                    StatusMessage = LocalizationRegistry.Format("FINC_Settings_Status_ImportFailure", ex.Message));
             }
             finally
             {
@@ -477,14 +477,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var defaultFileName = $"GRCData_{DateTime.Now:yyyyMMdd_HHmm}.xml";
             var filePath = await _filePickerService.SaveFileAsync(
                 defaultFileName,
-                title: LocalizationRegistry.Get("Settings.Dialog.DataExport.Title"),
+                title: LocalizationRegistry.Get("FINC_Settings_Dialog_DataExport_Title"),
                 defaultExtension: ".xml",
                 allowedPatterns: new[] { "*.xml" });
 
             if (string.IsNullOrWhiteSpace(filePath))
             {
                 RunOnUiThread(() =>
-                    StatusMessage = LocalizationRegistry.Get("Settings.Status.DataExportCancelled"));
+                    StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_DataExportCancelled"));
                 return;
             }
 
@@ -492,11 +492,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 SetIsApplicationDataOperationRunning(true);
                 RunOnUiThread(() =>
-                    StatusMessage = LocalizationRegistry.Get("Settings.Status.DataExportInProgress"));
+                    StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_DataExportInProgress"));
                 await _applicationDataBackupService.ExportAsync(filePath).ConfigureAwait(false);
                 RunOnUiThread(() =>
                     StatusMessage = LocalizationRegistry.Format(
-                        "Settings.Status.DataExportSuccess",
+                        "FINC_Settings_Status_DataExportSuccess",
                         Path.GetFileName(filePath)));
             }
             catch (InvalidOperationException ex)
@@ -507,7 +507,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 RunOnUiThread(() =>
                     StatusMessage = LocalizationRegistry.Format(
-                        "Settings.Status.DataExportFailure",
+                        "FINC_Settings_Status_DataExportFailure",
                         ex.Message));
             }
             finally
@@ -521,7 +521,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             RunOnUiThread(() => StatusMessage = null);
 
             var filePath = await _filePickerService.OpenFileAsync(
-                title: LocalizationRegistry.Get("Settings.Dialog.DataImport.Title"),
+                title: LocalizationRegistry.Get("FINC_Settings_Dialog_DataImport_Title"),
                 defaultExtension: ".xml",
                 allowedPatterns: new[] { "*.xml" });
 
@@ -531,8 +531,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
 
             var confirmed = await _dialogService.ShowConfirmationAsync(
-                LocalizationRegistry.Get("Settings.Dialog.DataImport.Title"),
-                LocalizationRegistry.Get("Settings.Dialog.DataImport.Message"));
+                LocalizationRegistry.Get("FINC_Settings_Dialog_DataImport_Title"),
+                LocalizationRegistry.Get("FINC_Settings_Dialog_DataImport_Message"));
 
             if (!confirmed)
             {
@@ -543,12 +543,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 SetIsApplicationDataOperationRunning(true);
                 RunOnUiThread(() =>
-                    StatusMessage = LocalizationRegistry.Get("Settings.Status.DataImportInProgress"));
+                    StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_DataImportInProgress"));
                 await _applicationDataBackupService.ImportAsync(filePath).ConfigureAwait(false);
                 RunOnUiThread(() =>
                 {
                     StatusMessage = LocalizationRegistry.Format(
-                        "Settings.Status.DataImportSuccess",
+                        "FINC_Settings_Status_DataImportSuccess",
                         Path.GetFileName(filePath));
                     Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
                     Messenger.Send(ApplicationRestartRequestedMessage.Instance);
@@ -562,7 +562,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 RunOnUiThread(() =>
                     StatusMessage = LocalizationRegistry.Format(
-                        "Settings.Status.DataImportFailure",
+                        "FINC_Settings_Status_DataImportFailure",
                         ex.Message));
             }
             finally
@@ -579,7 +579,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
 
             LocalizationCultureManager.ApplyCulture(value.CultureName);
-            StatusMessage = LocalizationRegistry.Get("Settings.Status.LocalizationPreview");
+            StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_LocalizationPreview");
         }
 
         partial void OnStatusMessageChanged(string? value)

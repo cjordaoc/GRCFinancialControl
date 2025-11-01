@@ -10,14 +10,14 @@
     <Grid RowDefinitions="Auto,Auto,*" RowSpacing="{StaticResource Spacing12}">
         <Border Grid.Row="0" Classes="Card" Padding="{StaticResource SpaceThickness16}" Margin="{StaticResource MarginInset}">
             <StackPanel Spacing="{StaticResource Spacing12}">
-                <TextBlock Classes="TitleMedium" Text="{loc:Loc Key=Notifications.Title.Primary}" />
-                <TextBlock Text="{loc:Loc Key=Notifications.Description.Primary}" />
+                <TextBlock Classes="TitleMedium" Text="{loc:Loc Key=INV_Notifications_Title_Primary}" />
+                <TextBlock Text="{loc:Loc Key=INV_Notifications_Description_Primary}" />
                 <StackPanel Orientation="Horizontal" Spacing="{StaticResource Spacing12}" VerticalAlignment="Center">
                     <StackPanel Spacing="{StaticResource Spacing4}">
-                        <TextBlock Text="{loc:Loc Key=Notifications.Label.NotificationDate}" />
+                        <TextBlock Text="{loc:Loc Key=INV_Notifications_Label_NotificationDate}" />
                         <CalendarDatePicker SelectedDate="{Binding SelectedDate, Mode=TwoWay, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}" />
                     </StackPanel>
-                    <Button Content="{loc:Loc Key=Common.Button.Refresh}" Command="{Binding RefreshCommand}" Margin="{StaticResource MarginLeftSmallTopLarge}" />
+                    <Button Content="{loc:Loc Key=INV_Button_Refresh}" Command="{Binding RefreshCommand}" Margin="{StaticResource MarginLeftSmallTopLarge}" />
                 </StackPanel>
             </StackPanel>
         </Border>
@@ -29,7 +29,7 @@
 
         <ScrollViewer Grid.Row="2" Margin="{StaticResource MarginInsetBottom}" VerticalScrollBarVisibility="Auto">
             <StackPanel>
-                <TextBlock Text="{loc:Loc Key=Notifications.Message.Empty}" HorizontalAlignment="Center" Margin="{StaticResource MarginVerticalCompact}"
+                <TextBlock Text="{loc:Loc Key=INV_Notifications_Message_Empty}" HorizontalAlignment="Center" Margin="{StaticResource MarginVerticalCompact}"
                            IsVisible="{Binding IsEmpty}" />
                 <ItemsControl ItemsSource="{Binding Items}">
                     <ItemsControl.ItemTemplate>

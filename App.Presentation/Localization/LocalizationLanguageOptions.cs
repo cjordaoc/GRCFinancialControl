@@ -32,8 +32,8 @@ public static class LocalizationLanguageOptions
 {
     private static readonly (string CultureName, string DisplayKey)[] Definitions =
     {
-        ("en-US", "Localization.Language.English"),
-        ("pt-BR", "Localization.Language.Portuguese")
+        ("en-US", "Global_Localization_Language_English"),
+        ("pt-BR", "Global_Localization_Language_Portuguese")
     };
 
     public static IReadOnlyList<LanguageOption> Create()

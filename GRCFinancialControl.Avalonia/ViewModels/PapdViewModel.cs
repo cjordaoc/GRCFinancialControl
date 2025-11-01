@@ -70,12 +70,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             try
             {
                 await _papdService.DeleteAsync(papd.Id);
-                ToastService.ShowSuccess("Papds.Toast.DeleteSuccess", papd.Name);
+                ToastService.ShowSuccess("FINC_Papds_Toast_DeleteSuccess", papd.Name);
                 Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (System.Exception ex)
             {
-                ToastService.ShowError("Papds.Toast.OperationFailed", ex.Message);
+                ToastService.ShowError("FINC_Papds_Toast_OperationFailed", ex.Message);
             }
         }
 
@@ -85,19 +85,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (papd is null) return;
 
             var result = await _dialogService.ShowConfirmationAsync(
-                LocalizationRegistry.Get("Common.Dialog.DeleteData.Title"),
-                LocalizationRegistry.Format("Common.Dialog.DeleteData.Message", papd.Name));
+                LocalizationRegistry.Get("FINC_Dialog_DeleteData_Title"),
+                LocalizationRegistry.Format("FINC_Dialog_DeleteData_Message", papd.Name));
             if (result)
             {
                 try
                 {
                     await _papdService.DeleteDataAsync(papd.Id);
-                    ToastService.ShowSuccess("Papds.Toast.DeleteDataSuccess", papd.Name);
+                    ToastService.ShowSuccess("FINC_Papds_Toast_DeleteDataSuccess", papd.Name);
                     Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
                 }
                 catch (System.Exception ex)
                 {
-                    ToastService.ShowError("Papds.Toast.OperationFailed", ex.Message);
+                    ToastService.ShowError("FINC_Papds_Toast_OperationFailed", ex.Message);
                 }
             }
         }

@@ -85,10 +85,10 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
   2. `ClosingPeriodsViewModel.LoadDataAsync` caches all periods in `_allClosingPeriods`, loads fiscal years, and builds filter options through `UpdateFiscalYearFilters`, adding a localized **All fiscal years** entry and selecting persisted preferences when present.
   3. `ApplyFiscalYearFilter` performs client-side filtering, repopulating the observable collection and preserving the previously selected period when possible.
 4. Lock/unlock requests flow through `ToggleLockAsync`, which invokes `ClosingPeriodService.SetLockStateAsync` to toggle `IsLocked`, refreshes the filtered collections, and broadcasts `RefreshViewMessage` so dependent view models reload their cached lists.
-  5. Editor dialogs (`ClosingPeriodEditorViewModel.SaveAsync`) persist changes via `IClosingPeriodService` and emit standardized toast feedback (`ClosingPeriods.Toast.SaveSuccess` or `ClosingPeriods.Toast.OperationFailed`).
+  5. Editor dialogs (`ClosingPeriodEditorViewModel.SaveAsync`) persist changes via `IClosingPeriodService` and emit standardized toast feedback (`FINC_ClosingPeriods_Toast_SaveSuccess` or `FINC_ClosingPeriods_Toast_OperationFailed`).
 - **UI Feedback:**
-  - Save, Delete, and Delete Data commands share localized toast keys (`*.Toast.SaveSuccess`, `*.Toast.DeleteSuccess`, `*.Toast.ReverseSuccess`, `*.Toast.OperationFailed`) while Lock/Unlock retains dedicated lock-state messages.
-  - The filter ComboBox binds to `FiscalYearFilters` with `DisplayName` values, while the lock button label reflects `SelectedClosingPeriod.IsLocked` using localized `ClosingPeriods.Button.Lock`/`Unlock` strings.
+  - Save, Delete, and Delete Data commands share localized toast keys (`FINC_*_Toast_SaveSuccess`, `FINC_*_Toast_DeleteSuccess`, `FINC_*_Toast_ReverseSuccess`, `FINC_*_Toast_OperationFailed`) while Lock/Unlock retains dedicated lock-state messages.
+  - The filter ComboBox binds to `FiscalYearFilters` with `DisplayName` values, while the lock button label reflects `SelectedClosingPeriod.IsLocked` using localized `FINC_ClosingPeriods_Button_Lock`/`Unlock` strings.
 
 ---
 
@@ -116,9 +116,9 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
   - Planner services validate references to engagements and closing periods prior to saving schedules.
 
 - **UI Feedback:**
-  - `PlanEditorViewModel.SavePlan` and `DeletePlan` emit success/warning/error toasts (`InvoicePlan.Toast.PlanSaved`, `InvoicePlan.Toast.PlanDeleted`, etc.) via `ToastService` alongside detailed status messages.
-  - `RequestConfirmationViewModel` surfaces toasts (`Request.Toast.*`) when inserting or reversing invoice requests, keeping inline actions responsive without modal dialogs.
-  - `EmissionConfirmationViewModel` raises toast notifications (`Emission.Toast.*`) for validation failures, no-op updates, successful emissions, cancellations, and persistence errors so controllers receive immediate feedback without relying solely on status text.
+  - `PlanEditorViewModel.SavePlan` and `DeletePlan` emit success/warning/error toasts (`INV_InvoicePlan_Toast_PlanSaved`, `INV_InvoicePlan_Toast_PlanDeleted`, etc.) via `ToastService` alongside detailed status messages.
+  - `RequestConfirmationViewModel` surfaces toasts (`INV_Request_Toast_*`) when inserting or reversing invoice requests, keeping inline actions responsive without modal dialogs.
+  - `EmissionConfirmationViewModel` raises toast notifications (`INV_Emission_Toast_*`) for validation failures, no-op updates, successful emissions, cancellations, and persistence errors so controllers receive immediate feedback without relying solely on status text.
 
 ---
 
@@ -131,7 +131,7 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
   3. `BuildMessageBuckets` groups recipients by email and role (Manager/Senior Manager), deduplicates contacts, and writes `<Message>` nodes that contain `<Recipients>`, `<Body>` text (with counts), `<Invoices>` (each carrying the computed “Texto de Faturamento” description) and optional `<ETCs>` collections.
   4. `LoadEtcEntriesAsync` loads active engagements whose `ProposedNextEtcDate` is on or before the pivot, skips those without manager/senior-manager assignments, and projects rank budgets into dynamic fiscal-year column sets (consumed/remaining) per engagement.
 - **Validation Mechanics:**
-  - Missing timezone data surfaces `Tasks.Status.TimeZoneMissing`; other failures bubble to `Tasks.Status.GenerationFailure` so the UI reports the issue.
+  - Missing timezone data surfaces `FINC_Tasks_Status_TimeZoneMissing`; other failures bubble to `FINC_Tasks_Status_GenerationFailure` so the UI reports the issue.
   - Payment types are constrained to `PaymentTypeCatalog` (`TRANSFERENCIA_BANCARIA`, `BOLETOS`) and default to transfer if the database does not specify a code.
   - Email lists are trimmed and deduplicated prior to serialization so Power Automate connectors receive valid CDATA strings and XPath selectors.
 - Attachments are no longer emitted; Power BI/Power Automate consume the structured XML payload to build per-recipient tables at runtime.
@@ -151,7 +151,7 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
   - Missing required headers or malformed workbooks raise `InvalidDataException` with user-centric instructions (e.g., "clear filters").
   - Decimal parsing sanitizes numeric strings, strips thousand separators, and enforces rounding precision.
   - Status/rank columns are normalized via `NormalizeWhitespace` to maintain consistent storage.
-- Importers call `EngagementImportSkipEvaluator` to ignore rows targeting S/4 Project engagements or engagements with status `Closed`, emitting the warnings `⚠ Values for S/4 Projects must be inserted manually. Data import was skipped for Engagement {EngagementID}.` and `⚠ Engagement {EngagementID} skipped – status is Closed.`; the S/4 pathway now only refreshes metadata (description + customer link), creating missing customers and replacing placeholder codes when the workbook finally includes the official identifier. Whenever at least one S/4 engagement changes, `ImportViewModel` triggers `ToastService.ShowSuccess("Import.Toast.S4MetadataSuccess")` so users receive immediate confirmation.
+- Importers call `EngagementImportSkipEvaluator` to ignore rows targeting S/4 Project engagements or engagements with status `Closed`, emitting the warnings `⚠ Values for S/4 Projects must be inserted manually. Data import was skipped for Engagement {EngagementID}.` and `⚠ Engagement {EngagementID} skipped – status is Closed.`; the S/4 pathway now only refreshes metadata (description + customer link), creating missing customers and replacing placeholder codes when the workbook finally includes the official identifier. Whenever at least one S/4 engagement changes, `ImportViewModel` triggers `ToastService.ShowSuccess("FINC_Import_Toast_S4MetadataSuccess")` so users receive immediate confirmation.
 - `ImportViewModel` listens for `ApplicationParametersChangedMessage` to toggle `HasClosingPeriodSelected`, keeping the Full Management import command disabled until a closing period is selected on the Home dashboard.
 
 ---
@@ -190,7 +190,7 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
   1. `HomeViewModel.LoadDataAsync` retrieves fiscal years and closing periods, orders them chronologically, and stores `_allClosingPeriods` so filtering is performed client-side.
   2. Default selections load from `ISettingsService` (`GetDefaultFiscalYearIdAsync`/`GetDefaultClosingPeriodIdAsync`); lacking persisted values, the first available fiscal year/period is preselected.
   3. `UpdateClosingPeriodsForSelectedFiscalYear` rebuilds the closing-period list whenever a fiscal year changes, while `ConfirmSelectionAsync` persists the defaults and sends `ApplicationParametersChangedMessage` to refresh dependent modules.
-  4. `EnsureReadmeLoadedAsync` executes once per session (`_readmeLoaded` flag), reads the embedded `README.md` resource through `GetManifestResourceStream`, and populates `ReadmeContent` (falling back to `Home.Markdown.LoadFailed` when the file cannot be read).
+  4. `EnsureReadmeLoadedAsync` executes once per session (`_readmeLoaded` flag), reads the embedded `README.md` resource through `GetManifestResourceStream`, and populates `ReadmeContent` (falling back to `FINC_Home_Markdown_LoadFailed` when the file cannot be read).
 - **UI Details:**
   - `HomeView.axaml` places the fiscal-year ComboBox and Confirm button in a three-column grid alongside an indeterminate `ProgressBar` so alignment stays horizontal on wide displays.
   - README content renders inside `MarkdownScrollViewer` hosted in a rounded `Border` positioned immediately below the fiscal-year selection stack, capped at `MaxHeight="420"` with auto vertical scrolling to keep onboarding documentation accessible without leaving the dashboard.
@@ -212,7 +212,7 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
   - XML serialization captures type information (including binary data) using invariant formatting to ensure round-trippable values on restore.
   - Imports roll back on failure, guaranteeing foreign-key checks are re-enabled even when errors occur.
 - **UI Feedback:**
-  - `SaveSettingsAsync`, `SaveLocalizationSettingsAsync`, and `SavePowerBiSettingsAsync` persist updated dictionaries asynchronously and call `ToastService.ShowSuccess`/`ShowError` with `Settings.Toast.*` keys while keeping the tab content active (no forced reloads).
+  - `SaveSettingsAsync`, `SaveLocalizationSettingsAsync`, and `SavePowerBiSettingsAsync` persist updated dictionaries asynchronously and call `ToastService.ShowSuccess`/`ShowError` with `FINC_Settings_Toast_*` keys while keeping the tab content active (no forced reloads).
 
 ---
 
@@ -239,7 +239,7 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
   - `CustomerEditorViewModel` annotates Name and Customer Code with `[Required]` attributes and exposes `NameError`/`CustomerCodeError` accessors for inline messaging.
   - `DialogEditorViewModel` listens to `ErrorsChanged` and disables the Save command while any validation errors remain, ensuring only complete records are persisted.
   - `CustomersViewModel`, `ManagersViewModel`, `PapdViewModel`, `ClosingPeriodsViewModel`, `FiscalYearsViewModel`, `EngagementsViewModel`, `ManagerAssignmentsViewModel`, and `PapdAssignmentsViewModel` pass `isReadOnlyMode: true` when executing the View command so their dialogs render in read-only state (text boxes bind `IsReadOnlyMode`, combo/date pickers use `AllowEditing`).
-- **UI Feedback:** Master data editors and assignment lists emit standardized toast notifications (`*.Toast.SaveSuccess`, `*.Toast.DeleteSuccess`, `*.Toast.OperationFailed`) for customers, managers, PAPDs, rank mappings, fiscal years, and manager/PAPD assignments, while bulk delete-data commands reuse the same `*.Toast.DeleteDataSuccess` keys.
+- **UI Feedback:** Master data editors and assignment lists emit standardized toast notifications (`FINC_*_Toast_SaveSuccess`, `FINC_*_Toast_DeleteSuccess`, `FINC_*_Toast_OperationFailed`) for customers, managers, PAPDs, rank mappings, fiscal years, and manager/PAPD assignments, while bulk delete-data commands reuse the same `FINC_*_Toast_DeleteDataSuccess` keys.
 
 ---
 

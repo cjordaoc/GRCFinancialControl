@@ -33,8 +33,8 @@
 
                 <!-- Header -->
                 <StackPanel Grid.Row="0" Spacing="{StaticResource Space8}">
-                    <TextBlock Classes="TitleLarge" Text="{loc:Loc Key=InvoicePlan.Title.Primary}" />
-                    <TextBlock Text="{loc:Loc Key=InvoicePlan.Description.Primary}" />
+                    <TextBlock Classes="TitleLarge" Text="{loc:Loc Key=INV_InvoicePlan_Title_Primary}" />
+                    <TextBlock Text="{loc:Loc Key=INV_InvoicePlan_Description_Primary}" />
                 </StackPanel>
 
                 <!-- General details -->
@@ -51,25 +51,25 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.Engagement}" Classes="Caption" VerticalAlignment="Center" />
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{loc:Loc Key=INV_InvoicePlan_Label_Engagement}" Classes="Caption" VerticalAlignment="Center" />
                     <Grid Grid.Row="0" Grid.Column="1" ColumnSpacing="{StaticResource Space12}" ColumnDefinitions="180,*" VerticalAlignment="Center">
-                        <TextBox Grid.Column="0" Text="{Binding EngagementId}" Watermark="{loc:Loc Key=Common.Placeholder.Code}" IsReadOnly="True" IsEnabled="False" IsTabStop="False" />
-                        <TextBox Grid.Column="1" Text="{Binding EngagementName}" Watermark="{loc:Loc Key=Common.Placeholder.Name}" IsReadOnly="True" IsEnabled="False" IsTabStop="False" />
+                        <TextBox Grid.Column="0" Text="{Binding EngagementId}" Watermark="{loc:Loc Key=INV_Placeholder_Code}" IsReadOnly="True" IsEnabled="False" IsTabStop="False" />
+                        <TextBox Grid.Column="1" Text="{Binding EngagementName}" Watermark="{loc:Loc Key=INV_Placeholder_Name}" IsReadOnly="True" IsEnabled="False" IsTabStop="False" />
                     </Grid>
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.BaseValue}" Classes="Caption" VerticalAlignment="Center" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{loc:Loc Key=INV_InvoicePlan_Label_BaseValue}" Classes="Caption" VerticalAlignment="Center" />
                     <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource Space4}" VerticalAlignment="Center">
                         <TextBlock Grid.Column="0" Text="{Binding CurrencySymbol}" IsVisible="{Binding HasCurrencySymbol}" VerticalAlignment="Center" />
                         <NumericUpDown Grid.Column="1" Minimum="0" Maximum="100000000" Increment="100" FormatString="F2" Value="{Binding PlanningBaseValue}" HorizontalAlignment="Stretch" MinWidth="200" appBehaviors:NumericInputNullSafety.IsEnabled="True" />
                     </Grid>
 
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.FocalPoint}" Classes="Caption" VerticalAlignment="Center" />
-                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding CustomerFocalPointName}" Watermark="{loc:Loc Key=Common.Placeholder.Name}" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{loc:Loc Key=INV_InvoicePlan_Label_FocalPoint}" Classes="Caption" VerticalAlignment="Center" />
+                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding CustomerFocalPointName}" Watermark="{loc:Loc Key=INV_Placeholder_Name}" />
 
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.Instructions}" Classes="Caption" VerticalAlignment="Top" />
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="{loc:Loc Key=INV_InvoicePlan_Label_Instructions}" Classes="Caption" VerticalAlignment="Top" />
                     <TextBox Grid.Row="3" Grid.Column="1" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="80" Text="{Binding CustomInstructions}" />
 
-                    <TextBlock Grid.Row="4" Grid.Column="0" Text="{loc:Loc Key=InvoicePlan.Label.RecipientEmails}" Classes="Caption" VerticalAlignment="Top" />
-                    <TextBox Grid.Row="4" Grid.Column="1" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="80" Text="{Binding RecipientEmails}" Watermark="{loc:Loc Key=InvoicePlan.Placeholder.Recipients}" />
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="{loc:Loc Key=INV_InvoicePlan_Label_RecipientEmails}" Classes="Caption" VerticalAlignment="Top" />
+                    <TextBox Grid.Row="4" Grid.Column="1" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="80" Text="{Binding RecipientEmails}" Watermark="{loc:Loc Key=INV_InvoicePlan_Placeholder_Recipients}" />
                 </Grid>
 
                 <!-- Messages -->
@@ -89,14 +89,14 @@
                     HorizontalAlignment="Right"
                     Spacing="{StaticResource Space12}"
                     Margin="{StaticResource SpaceThickness24}">
-            <Button Content="{loc:Loc Key=InvoicePlan.Dialog.Button.DeletePlan}"
+            <Button Content="{loc:Loc Key=INV_InvoicePlan_Dialog_Button_DeletePlan}"
                     Command="{Binding DeletePlanCommand}"
                     MinWidth="160"
                     Classes="Danger" />
-            <Button Content="{loc:Loc Key=InvoicePlan.Dialog.Button.EditPlan}"
+            <Button Content="{loc:Loc Key=INV_InvoicePlan_Dialog_Button_EditPlan}"
                     Command="{Binding EditLinesCommand}"
                     MinWidth="200" />
-            <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+            <Button Content="{loc:Loc Key=Global_Button_Cancel}"
                     Command="{Binding CloseCommand}"
                     IsCancel="True"
                     MinWidth="120" />

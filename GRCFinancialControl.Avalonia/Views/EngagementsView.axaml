@@ -12,7 +12,7 @@
         <appConv:CurrencyDisplayConverter x:Key="CurrencyDisplayConverter"/>
     </UserControl.Resources>
     <Grid RowDefinitions="Auto,*,Auto" Margin="{StaticResource SpaceThickness10}">
-        <TextBlock Text="{loc:Loc Key=Admin.Engagements.Title.List}" Classes="TitleLarge" Margin="{StaticResource MarginBottomSmall}"/>
+        <TextBlock Text="{loc:Loc Key=FINC_Admin_Engagements_Title_List}" Classes="TitleLarge" Margin="{StaticResource MarginBottomSmall}"/>
 
         <DataGrid Grid.Row="1"
                   ItemsSource="{Binding Engagements}"

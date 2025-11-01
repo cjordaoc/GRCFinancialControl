@@ -85,16 +85,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             try
             {
                 await _engagementService.DeleteAsync(engagement.Id);
-                ToastService.ShowSuccess("Engagements.Toast.DeleteSuccess", engagement.EngagementId);
+                ToastService.ShowSuccess("FINC_Engagements_Toast_DeleteSuccess", engagement.EngagementId);
                 Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (InvalidOperationException ex)
             {
-                ToastService.ShowWarning("Engagements.Toast.OperationFailed", ex.Message);
+                ToastService.ShowWarning("FINC_Engagements_Toast_OperationFailed", ex.Message);
             }
             catch (Exception ex)
             {
-                ToastService.ShowError("Engagements.Toast.OperationFailed", ex.Message);
+                ToastService.ShowError("FINC_Engagements_Toast_OperationFailed", ex.Message);
             }
         }
 
@@ -104,23 +104,23 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (engagement is null) return;
 
             var result = await _dialogService.ShowConfirmationAsync(
-                LocalizationRegistry.Get("Common.Dialog.DeleteData.Title"),
-                LocalizationRegistry.Format("Common.Dialog.DeleteData.Message", engagement.EngagementId));
+                LocalizationRegistry.Get("FINC_Dialog_DeleteData_Title"),
+                LocalizationRegistry.Format("FINC_Dialog_DeleteData_Message", engagement.EngagementId));
             if (result)
             {
                 try
                 {
                     await _engagementService.DeleteDataAsync(engagement.Id);
-                    ToastService.ShowSuccess("Engagements.Toast.ReverseSuccess", engagement.EngagementId);
+                    ToastService.ShowSuccess("FINC_Engagements_Toast_ReverseSuccess", engagement.EngagementId);
                     Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
                 }
                 catch (InvalidOperationException ex)
                 {
-                    ToastService.ShowWarning("Engagements.Toast.OperationFailed", ex.Message);
+                    ToastService.ShowWarning("FINC_Engagements_Toast_OperationFailed", ex.Message);
                 }
                 catch (Exception ex)
                 {
-                    ToastService.ShowError("Engagements.Toast.OperationFailed", ex.Message);
+                    ToastService.ShowError("FINC_Engagements_Toast_OperationFailed", ex.Message);
                 }
             }
         }

@@ -92,12 +92,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
                 Messenger.Send(new ApplicationParametersChangedMessage(SelectedFiscalYear.Id, SelectedClosingPeriod.Id));
 
-                StatusMessage = LocalizationRegistry.Get("Home.Status.Saved");
+                StatusMessage = LocalizationRegistry.Get("FINC_Home_Status_Saved");
             }
             catch (Exception ex)
             {
                 _loggingService.LogError($"Failed to persist application parameters: {ex.Message}");
-                StatusMessage = LocalizationRegistry.Format("Home.Status.SaveError", ex.Message);
+                StatusMessage = LocalizationRegistry.Format("FINC_Home_Status_SaveError", ex.Message);
                 IsError = true;
             }
             finally
@@ -157,19 +157,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
                 if (!HasFiscalYears)
                 {
-                    StatusMessage = LocalizationRegistry.Get("Home.Status.NoFiscalYears");
+                    StatusMessage = LocalizationRegistry.Get("FINC_Home_Status_NoFiscalYears");
                     IsError = true;
                 }
                 else if (!HasClosingPeriods)
                 {
-                    StatusMessage = LocalizationRegistry.Get("Home.Status.NoClosingPeriods");
+                    StatusMessage = LocalizationRegistry.Get("FINC_Home_Status_NoClosingPeriods");
                     IsError = true;
                 }
             }
             catch (Exception ex)
             {
                 _loggingService.LogError($"Failed to load application parameters: {ex.Message}");
-                StatusMessage = LocalizationRegistry.Format("Home.Status.LoadError", ex.Message);
+                StatusMessage = LocalizationRegistry.Format("FINC_Home_Status_LoadError", ex.Message);
                 IsError = true;
             }
             finally
@@ -214,7 +214,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
 
             var resolved = string.IsNullOrWhiteSpace(content)
-                ? LocalizationRegistry.Get("Home.Markdown.LoadFailed")
+                ? LocalizationRegistry.Get("FINC_Home_Markdown_LoadFailed")
                 : content;
 
             if (Dispatcher.UIThread.CheckAccess())
@@ -263,12 +263,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             if (value is null)
             {
-                StatusMessage = LocalizationRegistry.Get("Home.Status.SelectFiscalYear");
+                StatusMessage = LocalizationRegistry.Get("FINC_Home_Status_SelectFiscalYear");
                 IsError = true;
             }
             else if (!HasClosingPeriods)
             {
-                StatusMessage = LocalizationRegistry.Get("Home.Status.NoClosingPeriods");
+                StatusMessage = LocalizationRegistry.Get("FINC_Home_Status_NoClosingPeriods");
                 IsError = true;
             }
             else

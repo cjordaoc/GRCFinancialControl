@@ -8,13 +8,13 @@
              x:Class="GRCFinancialControl.Avalonia.Views.ControlMasterDataView"
              x:DataType="vm:ControlMasterDataViewModel">
     <TabControl SelectedItem="{Binding SelectedSection}">
-        <TabItem Header="{loc:Loc Key=Navigation.FiscalYears}">
+        <TabItem Header="{loc:Loc Key=FINC_Navigation_FiscalYears}">
             <ContentControl Content="{Binding FiscalYears}"/>
         </TabItem>
-        <TabItem Header="{loc:Loc Key=Navigation.ClosingPeriods}">
+        <TabItem Header="{loc:Loc Key=FINC_Navigation_ClosingPeriods}">
             <ContentControl Content="{Binding ClosingPeriods}"/>
         </TabItem>
-        <TabItem Header="{loc:Loc Key=Navigation.Customers}">
+        <TabItem Header="{loc:Loc Key=FINC_Navigation_Customers}">
             <ContentControl Content="{Binding Customers}"/>
         </TabItem>
     </TabControl>

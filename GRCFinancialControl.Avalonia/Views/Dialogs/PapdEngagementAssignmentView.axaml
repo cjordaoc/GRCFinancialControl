@@ -15,7 +15,7 @@
             <TextBlock Text="{Binding Papd.Name}" Classes="TitleXSmall"/>
 
             <StackPanel Spacing="{StaticResource Space12}">
-                <TextBlock Text="{loc:Loc Key=Admin.PapdAssignments.Label.Engagement}"/>
+                <TextBlock Text="{loc:Loc Key=FINC_Admin_PapdAssignments_Label_Engagement}"/>
                 <ComboBox ItemsSource="{Binding Engagements}"
                           SelectedItem="{Binding SelectedEngagement}"
                           IsEnabled="{Binding AllowEditing}"
@@ -28,12 +28,12 @@
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     Spacing="{StaticResource Space12}">
-            <Button Content="{loc:Loc Key=Common.Button.Save}"
+            <Button Content="{loc:Loc Key=Global_Button_Save}"
                     Command="{Binding SaveCommand}"
                     IsEnabled="{Binding AllowEditing}"
                     IsDefault="{Binding AllowEditing}"
                     MinWidth="120" />
-            <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+            <Button Content="{loc:Loc Key=Global_Button_Cancel}"
                     Command="{Binding CloseCommand}"
                     IsCancel="True"
                     MinWidth="120" />

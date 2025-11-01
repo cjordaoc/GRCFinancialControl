@@ -14,16 +14,16 @@ public partial class ErrorDialogViewModel : ViewModelBase
     public event EventHandler? CloseRequested;
 
     [ObservableProperty]
-    private string title = LocalizationRegistry.Get("Dialogs.Error.Title");
+    private string title = LocalizationRegistry.Get("INV_Dialogs_Error_Title");
 
     [ObservableProperty]
-    private string message = LocalizationRegistry.Get("Dialogs.Error.Message");
+    private string message = LocalizationRegistry.Get("INV_Dialogs_Error_Message");
 
     [ObservableProperty]
     private string details = string.Empty;
 
     [ObservableProperty]
-    private string detailsLabel = LocalizationRegistry.Get("Dialogs.Error.Label.Details");
+    private string detailsLabel = LocalizationRegistry.Get("INV_Dialogs_Error_Label_Details");
 
     internal IClipboard? Clipboard { get; set; }
 

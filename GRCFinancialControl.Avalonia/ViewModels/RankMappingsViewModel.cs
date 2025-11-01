@@ -44,7 +44,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private async Task AddAsync()
         {
             var editor = new RankMappingEditorViewModel(new RankMapping(), _rankMappingService, Messenger);
-            var title = LocalizationRegistry.Get("MasterData.RankMappings.Dialog.AddTitle");
+            var title = LocalizationRegistry.Get("FINC_MasterData_RankMappings_Dialog_AddTitle");
             await _dialogService.ShowDialogAsync(editor, title).ConfigureAwait(false);
             Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
@@ -58,7 +58,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
 
             var editor = new RankMappingEditorViewModel(rankMapping, _rankMappingService, Messenger);
-            var title = LocalizationRegistry.Get("MasterData.RankMappings.Dialog.EditTitle");
+            var title = LocalizationRegistry.Get("FINC_MasterData_RankMappings_Dialog_EditTitle");
             await _dialogService.ShowDialogAsync(editor, title).ConfigureAwait(false);
             Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
@@ -77,12 +77,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 var displayName = string.IsNullOrWhiteSpace(rankMapping.NormalizedRank)
                     ? rankMapping.RawRank
                     : rankMapping.NormalizedRank;
-                ToastService.ShowSuccess("RankMappings.Toast.DeleteSuccess", displayName);
+                ToastService.ShowSuccess("FINC_RankMappings_Toast_DeleteSuccess", displayName);
                 Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (System.Exception ex)
             {
-                ToastService.ShowError("RankMappings.Toast.OperationFailed", ex.Message);
+                ToastService.ShowError("FINC_RankMappings_Toast_OperationFailed", ex.Message);
             }
         }
 

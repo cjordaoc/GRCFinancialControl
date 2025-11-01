@@ -63,14 +63,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             var filePath = await _filePickerService.SaveFileAsync(
                 defaultFileName,
-                title: LocalizationRegistry.Get("Tasks.Dialog.SaveTitle"),
+                title: LocalizationRegistry.Get("FINC_Tasks_Dialog_SaveTitle"),
                 defaultExtension: ".xml",
                 allowedPatterns: new[] { "*.xml" },
                 initialDirectory: initialDirectory).ConfigureAwait(false);
 
             if (string.IsNullOrWhiteSpace(filePath))
             {
-                StatusMessage = LocalizationRegistry.Get("Tasks.Status.Cancelled");
+                StatusMessage = LocalizationRegistry.Get("FINC_Tasks_Status_Cancelled");
                 return;
             }
 
@@ -100,15 +100,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 await WriteXmlAsync(filePath, now, notifyDate, messageBuckets).ConfigureAwait(false);
                 await PersistExportDirectoryAsync(Path.GetDirectoryName(filePath)).ConfigureAwait(false);
 
-                StatusMessage = LocalizationRegistry.Format("Tasks.Status.FileSaved", Path.GetFileName(filePath));
+                StatusMessage = LocalizationRegistry.Format("FINC_Tasks_Status_FileSaved", Path.GetFileName(filePath));
             }
             catch (TimeZoneNotFoundException)
             {
-                StatusMessage = LocalizationRegistry.Format("Tasks.Status.TimeZoneMissing", TimeZoneId);
+                StatusMessage = LocalizationRegistry.Format("FINC_Tasks_Status_TimeZoneMissing", TimeZoneId);
             }
             catch (Exception ex)
             {
-                StatusMessage = LocalizationRegistry.Format("Tasks.Status.GenerationFailure", ex.Message);
+                StatusMessage = LocalizationRegistry.Format("FINC_Tasks_Status_GenerationFailure", ex.Message);
             }
         }
 
@@ -566,26 +566,26 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             StatusMessage = null;
 
             var allocationFilePath = await _filePickerService.OpenFileAsync(
-                title: LocalizationRegistry.Get("Tasks.Dialog.GenerateRetainTemplateTitle"),
+                title: LocalizationRegistry.Get("FINC_Tasks_Dialog_GenerateRetainTemplateTitle"),
                 defaultExtension: ".xlsx",
                 allowedPatterns: new[] { "*.xlsx" }).ConfigureAwait(false);
 
             if (string.IsNullOrWhiteSpace(allocationFilePath))
             {
-                StatusMessage = LocalizationRegistry.Get("Tasks.Status.RetainTemplateCancelled");
+                StatusMessage = LocalizationRegistry.Get("FINC_Tasks_Status_RetainTemplateCancelled");
                 return;
             }
 
             var defaultFileName = $"RetainTemplate_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
             var destinationFilePath = await _filePickerService.SaveFileAsync(
                 defaultFileName,
-                title: LocalizationRegistry.Get("Tasks.Dialog.SaveRetainTemplateTitle"),
+                title: LocalizationRegistry.Get("FINC_Tasks_Dialog_SaveRetainTemplateTitle"),
                 defaultExtension: ".xlsx",
                 allowedPatterns: new[] { "*.xlsx" }).ConfigureAwait(false);
 
             if (string.IsNullOrWhiteSpace(destinationFilePath))
             {
-                StatusMessage = LocalizationRegistry.Get("Tasks.Status.RetainTemplateCancelled");
+                StatusMessage = LocalizationRegistry.Get("FINC_Tasks_Status_RetainTemplateCancelled");
                 return;
             }
 
@@ -594,11 +594,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 var generatedFilePath = await _retainTemplateGenerator.GenerateRetainTemplateAsync(
                     allocationFilePath,
                     destinationFilePath).ConfigureAwait(false);
-                StatusMessage = LocalizationRegistry.Format("Tasks.Status.RetainTemplateSuccess", generatedFilePath);
+                StatusMessage = LocalizationRegistry.Format("FINC_Tasks_Status_RetainTemplateSuccess", generatedFilePath);
             }
             catch (Exception ex)
             {
-                StatusMessage = LocalizationRegistry.Format("Tasks.Status.RetainTemplateFailure", ex.Message);
+                StatusMessage = LocalizationRegistry.Format("FINC_Tasks_Status_RetainTemplateFailure", ex.Message);
             }
         }
 

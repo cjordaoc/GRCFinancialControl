@@ -66,12 +66,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         protected override void OnSaveSucceeded()
         {
-            ToastService.ShowSuccess("Customers.Toast.SaveSuccess", Customer.Name);
+            ToastService.ShowSuccess("FINC_Customers_Toast_SaveSuccess", Customer.Name);
         }
 
         protected override void OnSaveFailed(Exception exception)
         {
-            ToastService.ShowError("Customers.Toast.OperationFailed", exception.Message);
+            ToastService.ShowError("FINC_Customers_Toast_OperationFailed", exception.Message);
         }
 
         public string? NameError => GetErrors(nameof(Name)).FirstOrDefault()?.ErrorMessage;

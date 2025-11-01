@@ -64,8 +64,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public bool AreAllFiscalYearsLocked => !HasUnlockedFiscalYears;
 
         public string LockButtonLabel => SelectedClosingPeriod?.IsLocked == true
-            ? LocalizationRegistry.Get("ClosingPeriods.Button.Unlock")
-            : LocalizationRegistry.Get("ClosingPeriods.Button.Lock");
+            ? LocalizationRegistry.Get("FINC_ClosingPeriods_Button_Unlock")
+            : LocalizationRegistry.Get("FINC_ClosingPeriods_Button_Lock");
 
         public override async Task LoadDataAsync()
         {
@@ -108,7 +108,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var selectableFiscalYears = GetSelectableFiscalYears(newClosingPeriod);
             if (selectableFiscalYears.Count == 0)
             {
-                StatusMessage = LocalizationRegistry.Get("ClosingPeriods.Status.AllLocked");
+                StatusMessage = LocalizationRegistry.Get("FINC_ClosingPeriods_Status_AllLocked");
                 return;
             }
 
@@ -131,7 +131,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (closingPeriod.FiscalYear?.IsLocked ?? false)
             {
                 StatusMessage = LocalizationRegistry.Format(
-                    "ClosingPeriods.Status.FiscalYearLockedEdit",
+                    "FINC_ClosingPeriods_Status_FiscalYearLockedEdit",
                     FormatFiscalYearName(closingPeriod));
                 return;
             }
@@ -172,24 +172,24 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 if (closingPeriod.FiscalYear?.IsLocked ?? false)
                 {
                     StatusMessage = LocalizationRegistry.Format(
-                        "ClosingPeriods.Status.FiscalYearLockedDelete",
+                        "FINC_ClosingPeriods_Status_FiscalYearLockedDelete",
                         FormatFiscalYearName(closingPeriod));
                     return;
                 }
 
                 await _closingPeriodService.DeleteAsync(closingPeriod.Id);
-                ToastService.ShowSuccess("ClosingPeriods.Toast.DeleteSuccess", closingPeriod.Name);
+                ToastService.ShowSuccess("FINC_ClosingPeriods_Toast_DeleteSuccess", closingPeriod.Name);
                 Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (InvalidOperationException ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowWarning("ClosingPeriods.Toast.OperationFailed", ex.Message);
+                ToastService.ShowWarning("FINC_ClosingPeriods_Toast_OperationFailed", ex.Message);
             }
             catch (Exception ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowError("ClosingPeriods.Toast.OperationFailed", ex.Message);
+                ToastService.ShowError("FINC_ClosingPeriods_Toast_OperationFailed", ex.Message);
             }
         }
 
@@ -206,14 +206,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (closingPeriod.FiscalYear?.IsLocked ?? false)
             {
                 StatusMessage = LocalizationRegistry.Format(
-                    "ClosingPeriods.Status.FiscalYearLockedData",
+                    "FINC_ClosingPeriods_Status_FiscalYearLockedData",
                     FormatFiscalYearName(closingPeriod));
                 return;
             }
 
             var result = await _dialogService.ShowConfirmationAsync(
-                LocalizationRegistry.Get("Common.Dialog.DeleteData.Title"),
-                LocalizationRegistry.Format("Common.Dialog.DeleteData.Message", closingPeriod.Name));
+                LocalizationRegistry.Get("FINC_Dialog_DeleteData_Title"),
+                LocalizationRegistry.Format("FINC_Dialog_DeleteData_Message", closingPeriod.Name));
             if (!result)
             {
                 return;
@@ -222,18 +222,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             try
             {
                 await _closingPeriodService.DeleteDataAsync(closingPeriod.Id);
-                ToastService.ShowSuccess("ClosingPeriods.Toast.ReverseSuccess", closingPeriod.Name);
+                ToastService.ShowSuccess("FINC_ClosingPeriods_Toast_ReverseSuccess", closingPeriod.Name);
                 Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (InvalidOperationException ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowWarning("ClosingPeriods.Toast.OperationFailed", ex.Message);
+                ToastService.ShowWarning("FINC_ClosingPeriods_Toast_OperationFailed", ex.Message);
             }
             catch (Exception ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowError("ClosingPeriods.Toast.OperationFailed", ex.Message);
+                ToastService.ShowError("FINC_ClosingPeriods_Toast_OperationFailed", ex.Message);
             }
         }
 
@@ -254,8 +254,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 await _closingPeriodService.SetLockStateAsync(closingPeriodId, targetState);
                 ToastService.ShowSuccess(targetState
-                    ? "ClosingPeriods.Toast.Locked"
-                    : "ClosingPeriods.Toast.Unlocked",
+                    ? "FINC_ClosingPeriods_Toast_Locked"
+                    : "FINC_ClosingPeriods_Toast_Unlocked",
                     SelectedClosingPeriod?.Name ?? string.Empty);
                 await ReloadAsync(filterId, closingPeriodId);
                 _suppressNextRefresh = true;
@@ -264,12 +264,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             catch (InvalidOperationException ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowWarning("ClosingPeriods.Toast.ToggleFailed");
+                ToastService.ShowWarning("FINC_ClosingPeriods_Toast_ToggleFailed");
             }
             catch (Exception ex)
             {
-                StatusMessage = LocalizationRegistry.Format("ClosingPeriods.Status.ToggleFailed", ex.Message);
-                ToastService.ShowError("ClosingPeriods.Toast.ToggleFailed");
+                StatusMessage = LocalizationRegistry.Format("FINC_ClosingPeriods_Status_ToggleFailed", ex.Message);
+                ToastService.ShowError("FINC_ClosingPeriods_Toast_ToggleFailed");
             }
         }
 
@@ -396,7 +396,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private void UpdateFiscalYearFilters(IReadOnlyCollection<FiscalYear> fiscalYears, int? preferredFiscalYearId)
         {
-            var displayAll = LocalizationRegistry.Get("ClosingPeriods.Filter.All");
+            var displayAll = LocalizationRegistry.Get("FINC_ClosingPeriods_Filter_All");
             var options = new List<FiscalYearFilterOption>
             {
                 new FiscalYearFilterOption(null, displayAll)

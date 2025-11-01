@@ -96,8 +96,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (engagement is null)
             {
                 ToastService.ShowError(
-                    "Admin.PapdAssignments.Toast.OperationFailed",
-                    LocalizationRegistry.Get("Admin.PapdAssignments.Error.EngagementMissing"));
+                    "FINC_Admin_PapdAssignments_Toast_OperationFailed",
+                    LocalizationRegistry.Get("FINC_Admin_PapdAssignments_Error_EngagementMissing"));
                 return;
             }
 
@@ -105,8 +105,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (assignment is null)
             {
                 ToastService.ShowWarning(
-                    "Admin.PapdAssignments.Toast.OperationFailed",
-                    LocalizationRegistry.Get("Admin.PapdAssignments.Error.AssignmentMissing"));
+                    "FINC_Admin_PapdAssignments_Toast_OperationFailed",
+                    LocalizationRegistry.Get("FINC_Admin_PapdAssignments_Error_AssignmentMissing"));
                 return;
             }
 
@@ -138,8 +138,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (engagement is null)
             {
                 ToastService.ShowError(
-                    "Admin.PapdAssignments.Toast.OperationFailed",
-                    LocalizationRegistry.Get("Admin.PapdAssignments.Error.EngagementMissing"));
+                    "FINC_Admin_PapdAssignments_Toast_OperationFailed",
+                    LocalizationRegistry.Get("FINC_Admin_PapdAssignments_Error_EngagementMissing"));
                 return;
             }
 
@@ -147,8 +147,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (assignment is null)
             {
                 ToastService.ShowWarning(
-                    "Admin.PapdAssignments.Toast.OperationFailed",
-                    LocalizationRegistry.Get("Admin.PapdAssignments.Error.AssignmentMissing"));
+                    "FINC_Admin_PapdAssignments_Toast_OperationFailed",
+                    LocalizationRegistry.Get("FINC_Admin_PapdAssignments_Error_AssignmentMissing"));
                 return;
             }
 
@@ -175,8 +175,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (engagement is null)
             {
                 ToastService.ShowError(
-                    "Admin.PapdAssignments.Toast.OperationFailed",
-                    LocalizationRegistry.Get("Admin.PapdAssignments.Error.EngagementMissing"));
+                    "FINC_Admin_PapdAssignments_Toast_OperationFailed",
+                    LocalizationRegistry.Get("FINC_Admin_PapdAssignments_Error_EngagementMissing"));
                 return;
             }
 
@@ -184,8 +184,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (assignment is null)
             {
                 ToastService.ShowWarning(
-                    "Admin.PapdAssignments.Toast.OperationFailed",
-                    LocalizationRegistry.Get("Admin.PapdAssignments.Error.AssignmentMissing"));
+                    "FINC_Admin_PapdAssignments_Toast_OperationFailed",
+                    LocalizationRegistry.Get("FINC_Admin_PapdAssignments_Error_AssignmentMissing"));
                 return;
             }
 
@@ -195,7 +195,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 await _engagementService.UpdateAsync(engagement);
 
                 ToastService.ShowSuccess(
-                    "Admin.PapdAssignments.Toast.DeleteSuccess",
+                    "FINC_Admin_PapdAssignments_Toast_DeleteSuccess",
                     SelectedPapd.Name,
                     SelectedAssignment.EngagementDisplay);
 
@@ -205,7 +205,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
             catch (Exception ex)
             {
-                ToastService.ShowError("Admin.PapdAssignments.Toast.OperationFailed", ex.Message);
+                ToastService.ShowError("FINC_Admin_PapdAssignments_Toast_OperationFailed", ex.Message);
             }
         }
 
