@@ -10,7 +10,7 @@
     <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
             <StackPanel Spacing="{StaticResource Space16}">
-                <TextBlock Text="{loc:Loc Key=MasterData.RankMappings.Editor.Title}"
+                <TextBlock Text="{loc:Loc Key=FINC_MasterData_RankMappings_Editor_Title}"
                            Classes="TitleSmall"/>
                 <Grid ColumnDefinitions="Auto,*"
                       RowDefinitions="Auto,Auto,Auto,Auto"
@@ -18,7 +18,7 @@
                       ColumnSpacing="{StaticResource Space16}">
                     <TextBlock Grid.Row="0"
                                Grid.Column="0"
-                               Text="{loc:Loc Key=MasterData.RankMappings.Editor.RawRank}"
+                               Text="{loc:Loc Key=FINC_MasterData_RankMappings_Editor_RawRank}"
                                VerticalAlignment="Center"/>
                     <TextBox Grid.Row="0"
                              Grid.Column="1"
@@ -27,7 +27,7 @@
 
                     <TextBlock Grid.Row="1"
                                Grid.Column="0"
-                               Text="{loc:Loc Key=MasterData.RankMappings.Editor.NormalizedRank}"
+                               Text="{loc:Loc Key=FINC_MasterData_RankMappings_Editor_NormalizedRank}"
                                VerticalAlignment="Center"/>
                     <TextBox Grid.Row="1"
                              Grid.Column="1"
@@ -36,7 +36,7 @@
 
                     <TextBlock Grid.Row="2"
                                Grid.Column="0"
-                               Text="{loc:Loc Key=MasterData.RankMappings.Editor.SpreadsheetRank}"
+                               Text="{loc:Loc Key=FINC_MasterData_RankMappings_Editor_SpreadsheetRank}"
                                VerticalAlignment="Center"/>
                     <TextBox Grid.Row="2"
                              Grid.Column="1"
@@ -45,7 +45,7 @@
 
                     <TextBlock Grid.Row="3"
                                Grid.Column="0"
-                               Text="{loc:Loc Key=MasterData.RankMappings.Editor.IsActive}"
+                               Text="{loc:Loc Key=FINC_MasterData_RankMappings_Editor_IsActive}"
                                VerticalAlignment="Center"/>
                     <ToggleSwitch Grid.Row="3"
                                   Grid.Column="1"
@@ -58,12 +58,12 @@
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     Spacing="{StaticResource Space12}">
-            <Button Content="{loc:Loc Key=Common.Button.Save}"
+            <Button Content="{loc:Loc Key=Global_Button_Save}"
                     Command="{Binding SaveCommand}"
                     IsEnabled="{Binding AllowEditing}"
                     IsDefault="{Binding AllowEditing}"
                     MinWidth="120" />
-            <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+            <Button Content="{loc:Loc Key=Global_Button_Cancel}"
                     Command="{Binding CloseCommand}"
                     IsCancel="True"
                     MinWidth="120" />

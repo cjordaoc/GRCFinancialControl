@@ -11,7 +11,7 @@
         x:Name="MainWindowRoot"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="{loc:Loc Key=Shell.Title.FinancialControl}"
+        Title="{loc:Loc Key=FINC_Shell_Title_FinancialControl}"
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
         ExtendClientAreaToDecorationsHint="True"
@@ -38,7 +38,7 @@
                     Background="{StaticResource BrushSurfaceVariant}"
                     CornerRadius="{StaticResource CornerRadiusMedium}">
                 <StackPanel Spacing="{StaticResource Spacing12}">
-                    <TextBlock Text="{loc:Loc Key=Shell.Brand.Primary}"
+                    <TextBlock Text="{loc:Loc Key=FINC_Shell_Brand_Primary}"
                                Classes="TitleMedium"
                                Foreground="{StaticResource BrushOnSurface}"/>
                     <ItemsControl ItemsSource="{Binding NavigationItems}">

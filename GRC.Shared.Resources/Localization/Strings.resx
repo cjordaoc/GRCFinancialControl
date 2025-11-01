@@ -12,1873 +12,1750 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Access.Message.LoginUnknown" xml:space="preserve">
-    <value>current user</value>
-  </data>
-  <data name="Access.Message.NoAssignments" xml:space="preserve">
-    <value>No assignments were found for login {0}. Contact the support team to request access.</value>
-  </data>
-  <data name="AdditionalEmailBlank" xml:space="preserve">
-    <value>Recipient email entries cannot be blank.</value>
-  </data>
-  <data name="AdditionalEmailInvalid" xml:space="preserve">
-    <value>Recipient email '{0}' is not valid.</value>
-  </data>
-  <data name="Admin.ClosingPeriods.Button.DeleteData" xml:space="preserve">
+  <data name="FINC_Admin_ClosingPeriods_Button_DeleteData" xml:space="preserve">
     <value>Delete Data</value>
   </data>
-  <data name="Admin.ClosingPeriods.Filter.FiscalYear" xml:space="preserve">
+  <data name="FINC_Admin_ClosingPeriods_Filter_FiscalYear" xml:space="preserve">
     <value>Fiscal year</value>
   </data>
-  <data name="Admin.ClosingPeriods.Header.End" xml:space="preserve">
+  <data name="FINC_Admin_ClosingPeriods_Header_End" xml:space="preserve">
     <value>End</value>
   </data>
-  <data name="Admin.ClosingPeriods.Header.FiscalYear" xml:space="preserve">
+  <data name="FINC_Admin_ClosingPeriods_Header_FiscalYear" xml:space="preserve">
     <value>Fiscal Year</value>
   </data>
-  <data name="Admin.ClosingPeriods.Header.Id" xml:space="preserve">
+  <data name="FINC_Admin_ClosingPeriods_Header_Id" xml:space="preserve">
     <value>ID</value>
   </data>
-  <data name="Admin.ClosingPeriods.Header.Locked" xml:space="preserve">
+  <data name="FINC_Admin_ClosingPeriods_Header_Locked" xml:space="preserve">
     <value>Locked</value>
   </data>
-  <data name="Admin.ClosingPeriods.Header.Name" xml:space="preserve">
+  <data name="FINC_Admin_ClosingPeriods_Header_Name" xml:space="preserve">
     <value>Name</value>
   </data>
-  <data name="Admin.ClosingPeriods.Header.Start" xml:space="preserve">
+  <data name="FINC_Admin_ClosingPeriods_Header_Start" xml:space="preserve">
     <value>Start</value>
   </data>
-  <data name="Admin.ClosingPeriods.Label.FiscalYear" xml:space="preserve">
+  <data name="FINC_Admin_ClosingPeriods_Label_FiscalYear" xml:space="preserve">
     <value>Fiscal Year</value>
   </data>
-  <data name="Admin.ClosingPeriods.Label.Locked" xml:space="preserve">
+  <data name="FINC_Admin_ClosingPeriods_Label_Locked" xml:space="preserve">
     <value>(Locked)</value>
   </data>
-  <data name="Admin.ClosingPeriods.Placeholder.Name" xml:space="preserve">
+  <data name="FINC_Admin_ClosingPeriods_Placeholder_Name" xml:space="preserve">
     <value>Name (e.g., P01-2025)</value>
   </data>
-  <data name="Admin.ClosingPeriods.Status.AllLocked" xml:space="preserve">
+  <data name="FINC_Admin_ClosingPeriods_Status_AllLocked" xml:space="preserve">
     <value>All fiscal years are locked. Unlock a fiscal year to manage closing periods.</value>
   </data>
-  <data name="Admin.ClosingPeriods.Title.Editor" xml:space="preserve">
+  <data name="FINC_Admin_ClosingPeriods_Title_Editor" xml:space="preserve">
     <value>Closing Period Details</value>
   </data>
-  <data name="Admin.ClosingPeriods.Title.List" xml:space="preserve">
+  <data name="FINC_Admin_ClosingPeriods_Title_List" xml:space="preserve">
     <value>Closing Periods</value>
   </data>
-  <data name="Admin.Engagements.Title.List" xml:space="preserve">
+  <data name="FINC_Admin_Engagements_Title_List" xml:space="preserve">
     <value>Engagement Management</value>
   </data>
-  <data name="Admin.FiscalYears.Placeholder.AreaRevenueTarget" xml:space="preserve">
+  <data name="FINC_Admin_FiscalYears_Placeholder_AreaRevenueTarget" xml:space="preserve">
     <value>Area revenue target</value>
   </data>
-  <data name="Admin.FiscalYears.Placeholder.AreaSalesTarget" xml:space="preserve">
+  <data name="FINC_Admin_FiscalYears_Placeholder_AreaSalesTarget" xml:space="preserve">
     <value>Area sales target</value>
   </data>
-  <data name="Admin.FiscalYears.Placeholder.Name" xml:space="preserve">
+  <data name="FINC_Admin_FiscalYears_Placeholder_Name" xml:space="preserve">
     <value>Name</value>
   </data>
-  <data name="Admin.ManagerAssignments.Dialog.Add.Title" xml:space="preserve">
+  <data name="FINC_Admin_FiscalYears_Title_Editor" xml:space="preserve">
+    <value>Fiscal Year Details</value>
+  </data>
+  <data name="FINC_Admin_ManagerAssignments_Dialog_Add_Title" xml:space="preserve">
     <value>Assign manager</value>
   </data>
-  <data name="Admin.ManagerAssignments.Dialog.Edit.Title" xml:space="preserve">
+  <data name="FINC_Admin_ManagerAssignments_Dialog_Edit_Title" xml:space="preserve">
     <value>Edit manager assignment</value>
   </data>
-  <data name="Admin.ManagerAssignments.Dialog.Remove.Message" xml:space="preserve">
+  <data name="FINC_Admin_ManagerAssignments_Dialog_Remove_Message" xml:space="preserve">
     <value>Remove {0} from {1}?</value>
   </data>
-  <data name="Admin.ManagerAssignments.Dialog.Remove.Title" xml:space="preserve">
+  <data name="FINC_Admin_ManagerAssignments_Dialog_Remove_Title" xml:space="preserve">
     <value>Remove manager assignment</value>
   </data>
-  <data name="Admin.ManagerAssignments.Error.AssignmentMissing" xml:space="preserve">
+  <data name="FINC_Admin_ManagerAssignments_Error_AssignmentMissing" xml:space="preserve">
     <value>The assignment could not be found. It may have been removed by another user.</value>
   </data>
-  <data name="Admin.ManagerAssignments.Format.EngagementDisplay" xml:space="preserve">
+  <data name="FINC_Admin_ManagerAssignments_Format_EngagementDisplay" xml:space="preserve">
     <value>{0} - {1}</value>
   </data>
-  <data name="Admin.ManagerAssignments.Header.Begin" xml:space="preserve">
-    <value>Begin date</value>
-  </data>
-  <data name="Admin.ManagerAssignments.Header.End" xml:space="preserve">
-    <value>End date</value>
-  </data>
-  <data name="Admin.ManagerAssignments.Header.Manager" xml:space="preserve">
-    <value>Manager</value>
-  </data>
-  <data name="Admin.ManagerAssignments.Header.Position" xml:space="preserve">
-    <value>Position</value>
-  </data>
-  <data name="Admin.ManagerAssignments.Label.Begin" xml:space="preserve">
-    <value>Begin</value>
-  </data>
-  <data name="Admin.ManagerAssignments.Label.End" xml:space="preserve">
-    <value>End</value>
-  </data>
-  <data name="Admin.ManagerAssignments.Label.Engagement" xml:space="preserve">
+  <data name="FINC_Admin_ManagerAssignments_Label_Engagement" xml:space="preserve">
     <value>Engagement</value>
   </data>
-  <data name="Admin.ManagerAssignments.Label.Manager" xml:space="preserve">
+  <data name="FINC_Admin_ManagerAssignments_Label_Manager" xml:space="preserve">
     <value>Manager</value>
   </data>
-  <data name="Admin.ManagerAssignments.Toast.DeleteSuccess" xml:space="preserve">
+  <data name="FINC_Admin_ManagerAssignments_Toast_DeleteSuccess" xml:space="preserve">
     <value>Assignment removed: {0} no longer manages {1}.</value>
   </data>
-  <data name="Admin.ManagerAssignments.Toast.OperationFailed" xml:space="preserve">
+  <data name="FINC_Admin_ManagerAssignments_Toast_OperationFailed" xml:space="preserve">
     <value>Manager assignment operation failed: {0}.</value>
   </data>
-  <data name="Admin.ManagerAssignments.Toast.SaveSuccess" xml:space="preserve">
+  <data name="FINC_Admin_ManagerAssignments_Toast_SaveSuccess" xml:space="preserve">
     <value>Assignment saved: {0} now manages {1}.</value>
   </data>
-  <data name="Admin.Managers.Placeholder.Email" xml:space="preserve">
+  <data name="FINC_Admin_Managers_Placeholder_Email" xml:space="preserve">
     <value>Email</value>
   </data>
-  <data name="Admin.Managers.Placeholder.Name" xml:space="preserve">
+  <data name="FINC_Admin_Managers_Placeholder_Name" xml:space="preserve">
     <value>Name</value>
   </data>
-  <data name="Admin.Managers.Placeholder.Position" xml:space="preserve">
+  <data name="FINC_Admin_Managers_Placeholder_Position" xml:space="preserve">
     <value>Position</value>
   </data>
-  <data name="Admin.Managers.Placeholder.WindowsLogin" xml:space="preserve">
+  <data name="FINC_Admin_Managers_Placeholder_WindowsLogin" xml:space="preserve">
     <value>Windows Login (DOMAIN\user)</value>
   </data>
-  <data name="Admin.Managers.Title.Editor" xml:space="preserve">
+  <data name="FINC_Admin_Managers_Title_Editor" xml:space="preserve">
     <value>Manager Details</value>
   </data>
-  <data name="Admin.PapdAssignments.Button.Assign" xml:space="preserve">
-    <value>Assign</value>
-  </data>
-  <data name="Admin.PapdAssignments.Button.Remove" xml:space="preserve">
-    <value>Remove</value>
-  </data>
-  <data name="Admin.PapdAssignments.Error.AssignmentMissing" xml:space="preserve">
+  <data name="FINC_Admin_PapdAssignments_Error_AssignmentMissing" xml:space="preserve">
     <value>The assignment could not be found. Please refresh and try again.</value>
   </data>
-  <data name="Admin.PapdAssignments.Error.EngagementMissing" xml:space="preserve">
+  <data name="FINC_Admin_PapdAssignments_Error_EngagementMissing" xml:space="preserve">
     <value>The engagement could not be found. Please refresh and try again.</value>
   </data>
-  <data name="Admin.PapdAssignments.Format.EngagementDisplay" xml:space="preserve">
+  <data name="FINC_Admin_PapdAssignments_Format_EngagementDisplay" xml:space="preserve">
     <value>{0} - {1}</value>
   </data>
-  <data name="Admin.PapdAssignments.Header.Description" xml:space="preserve">
-    <value>Description</value>
-  </data>
-  <data name="Admin.PapdAssignments.Header.Engagement" xml:space="preserve">
+  <data name="FINC_Admin_PapdAssignments_Header_Engagement" xml:space="preserve">
     <value>Engagement</value>
   </data>
-  <data name="Admin.PapdAssignments.Label.Engagement" xml:space="preserve">
+  <data name="FINC_Admin_PapdAssignments_Label_Engagement" xml:space="preserve">
     <value>Engagement</value>
   </data>
-  <data name="Admin.PapdAssignments.Title.Editor" xml:space="preserve">
+  <data name="FINC_Admin_PapdAssignments_Title_Editor" xml:space="preserve">
     <value>Manage PAPD assignments</value>
   </data>
-  <data name="Admin.PapdAssignments.Toast.DeleteSuccess" xml:space="preserve">
+  <data name="FINC_Admin_PapdAssignments_Toast_DeleteSuccess" xml:space="preserve">
     <value>Assignment removed: {0} unlinked from {1}.</value>
   </data>
-  <data name="Admin.PapdAssignments.Toast.Exists" xml:space="preserve">
+  <data name="FINC_Admin_PapdAssignments_Toast_Exists" xml:space="preserve">
     <value>Assignment already exists for {0} on {1}.</value>
   </data>
-  <data name="Admin.PapdAssignments.Toast.OperationFailed" xml:space="preserve">
+  <data name="FINC_Admin_PapdAssignments_Toast_OperationFailed" xml:space="preserve">
     <value>PAPD assignment operation failed: {0}.</value>
   </data>
-  <data name="Admin.PapdAssignments.Toast.SaveSuccess" xml:space="preserve">
+  <data name="FINC_Admin_PapdAssignments_Toast_SaveSuccess" xml:space="preserve">
     <value>Assignment saved: {0} linked to {1}.</value>
   </data>
-  <data name="Admin.Papds.Placeholder.Level" xml:space="preserve">
+  <data name="FINC_Admin_Papds_Placeholder_Level" xml:space="preserve">
     <value>Level (e.g., Partner, Director)</value>
   </data>
-  <data name="Admin.Papds.Placeholder.Name" xml:space="preserve">
+  <data name="FINC_Admin_Papds_Placeholder_Name" xml:space="preserve">
     <value>Name</value>
   </data>
-  <data name="Admin.Papds.Placeholder.WindowsLogin" xml:space="preserve">
+  <data name="FINC_Admin_Papds_Placeholder_WindowsLogin" xml:space="preserve">
     <value>Windows Login (DOMAIN\user)</value>
   </data>
-  <data name="Admin.Papds.Title.Editor" xml:space="preserve">
+  <data name="FINC_Admin_Papds_Title_Editor" xml:space="preserve">
     <value>PAPD Details</value>
   </data>
-  <data name="Allocations.Header.PlannedHours" xml:space="preserve">
-    <value>Planned Hours</value>
-  </data>
-  <data name="Allocations.Header.PlannedValue" xml:space="preserve">
-    <value>Planned Value</value>
-  </data>
-  <data name="Allocations.Header.ToDateValue" xml:space="preserve">
+  <data name="FINC_Allocations_Header_ToDateValue" xml:space="preserve">
     <value>To Date Value</value>
   </data>
-  <data name="Allocations.Header.ToGoValue" xml:space="preserve">
+  <data name="FINC_Allocations_Header_ToGoValue" xml:space="preserve">
     <value>To Go Value</value>
   </data>
-  <data name="Allocations.Label.CurrentHours" xml:space="preserve">
-    <value>Current Hours Allocation:</value>
-  </data>
-  <data name="Allocations.Label.CurrentValue" xml:space="preserve">
+  <data name="FINC_Allocations_Label_CurrentValue" xml:space="preserve">
     <value>Current Value Allocation:</value>
   </data>
-  <data name="Allocations.Label.TargetHours" xml:space="preserve">
-    <value>Hours to Allocate:</value>
-  </data>
-  <data name="Allocations.Label.TargetValue" xml:space="preserve">
+  <data name="FINC_Allocations_Label_TargetValue" xml:space="preserve">
     <value>Value to Allocate:</value>
   </data>
-  <data name="Allocations.Tooltip.Variance" xml:space="preserve">
+  <data name="FINC_Allocations_Tooltip_Variance" xml:space="preserve">
     <value>Variance {0}</value>
   </data>
-  <data name="Allocations.Validation.HoursMatchTarget" xml:space="preserve">
-    <value>Allocated hours must match the target hours before saving.</value>
-  </data>
-  <data name="Allocations.Validation.ValueMatchTarget" xml:space="preserve">
+  <data name="FINC_Allocations_Validation_ValueMatchTarget" xml:space="preserve">
     <value>Allocated value must match the target value before saving.</value>
   </data>
-  <data name="ClosingPeriods.Button.Lock" xml:space="preserve">
-    <value>Lock</value>
-  </data>
-  <data name="ClosingPeriods.Button.Unlock" xml:space="preserve">
-    <value>Unlock</value>
-  </data>
-  <data name="ClosingPeriods.Filter.All" xml:space="preserve">
-    <value>All fiscal years</value>
-  </data>
-  <data name="ClosingPeriods.Status.AllLocked" xml:space="preserve">
-    <value>All fiscal years are locked. Unlock a fiscal year before adding closing periods.</value>
-  </data>
-  <data name="ClosingPeriods.Status.FiscalYearLockedData" xml:space="preserve">
-    <value>Fiscal year '{0}' is locked. Unlock it before deleting data.</value>
-  </data>
-  <data name="ClosingPeriods.Status.FiscalYearLockedDelete" xml:space="preserve">
-    <value>Fiscal year '{0}' is locked. Unlock it before deleting closing periods.</value>
-  </data>
-  <data name="ClosingPeriods.Status.FiscalYearLockedEdit" xml:space="preserve">
-    <value>Fiscal year '{0}' is locked. Unlock it before editing closing periods.</value>
-  </data>
-  <data name="ClosingPeriods.Status.ToggleFailed" xml:space="preserve">
-    <value>Unable to change the lock state: {0}</value>
-  </data>
-  <data name="ClosingPeriods.Toast.DeleteSuccess" xml:space="preserve">
-    <value>Closing period {0} deleted.</value>
-  </data>
-  <data name="ClosingPeriods.Toast.Locked" xml:space="preserve">
-    <value>Closing period {0} locked successfully.</value>
-  </data>
-  <data name="ClosingPeriods.Toast.OperationFailed" xml:space="preserve">
-    <value>Unable to complete the operation: {0}</value>
-  </data>
-  <data name="ClosingPeriods.Toast.ReverseSuccess" xml:space="preserve">
-    <value>Financial data for {0} reversed.</value>
-  </data>
-  <data name="ClosingPeriods.Toast.SaveSuccess" xml:space="preserve">
-    <value>Closing period saved.</value>
-  </data>
-  <data name="ClosingPeriods.Toast.ToggleFailed" xml:space="preserve">
-    <value>Unable to update closing period lock state.</value>
-  </data>
-  <data name="ClosingPeriods.Toast.Unlocked" xml:space="preserve">
-    <value>Closing period {0} unlocked successfully.</value>
-  </data>
-  <data name="ClosingPeriods.Validation.EndDateAfterStart" xml:space="preserve">
-    <value>The end date must be on or after the start date.</value>
-  </data>
-  <data name="ClosingPeriods.Validation.FiscalYearLocked" xml:space="preserve">
-    <value>Fiscal year '{0}' is locked. Unlock it before assigning closing periods.</value>
-  </data>
-  <data name="ClosingPeriods.Validation.FiscalYearRequired" xml:space="preserve">
-    <value>Select a fiscal year before saving.</value>
-  </data>
-  <data name="ClosingPeriods.Validation.NameRequired" xml:space="preserve">
-    <value>A descriptive name is required.</value>
-  </data>
-  <data name="ClosingPeriods.Validation.NoFiscalYears" xml:space="preserve">
-    <value>No available fiscal years. Unlock or create a fiscal year before updating closing periods.</value>
-  </data>
-  <data name="Common.Button.Add" xml:space="preserve">
+  <data name="FINC_Button_Add" xml:space="preserve">
     <value>Add</value>
   </data>
-  <data name="Common.Button.AddEmail" xml:space="preserve">
-    <value>Add email</value>
-  </data>
-  <data name="Common.Button.Cancel" xml:space="preserve">
-    <value>Cancel</value>
-  </data>
-  <data name="Common.Button.Close" xml:space="preserve">
-    <value>Close</value>
-  </data>
-  <data name="Common.Button.Confirm" xml:space="preserve">
-    <value>Confirm</value>
-  </data>
-  <data name="Common.Button.CopyDetails" xml:space="preserve">
-    <value>Copy details</value>
-  </data>
-  <data name="Common.Button.Delete" xml:space="preserve">
+  <data name="FINC_Button_Delete" xml:space="preserve">
     <value>Delete</value>
   </data>
-  <data name="Common.Button.Edit" xml:space="preserve">
+  <data name="FINC_Button_Edit" xml:space="preserve">
     <value>Edit</value>
   </data>
-  <data name="Common.Button.ExportExcel" xml:space="preserve">
-    <value>Export Excel</value>
-  </data>
-  <data name="Common.Button.ExportPdf" xml:space="preserve">
-    <value>Export PDF</value>
-  </data>
-  <data name="Common.Button.Refresh" xml:space="preserve">
-    <value>Refresh</value>
-  </data>
-  <data name="Common.Button.Remove" xml:space="preserve">
-    <value>Remove</value>
-  </data>
-  <data name="Common.Button.Save" xml:space="preserve">
-    <value>Save</value>
-  </data>
-  <data name="Common.Button.Undo" xml:space="preserve">
-    <value>Undo</value>
-  </data>
-  <data name="Common.Button.View" xml:space="preserve">
+  <data name="FINC_Button_View" xml:space="preserve">
     <value>View</value>
   </data>
-  <data name="Common.Dialog.DeleteData.Message" xml:space="preserve">
-    <value>Are you sure you want to delete all data for {0}? This action cannot be undone.</value>
+  <data name="FINC_ClosingPeriods_Button_Lock" xml:space="preserve">
+    <value>Lock</value>
   </data>
-  <data name="Common.Dialog.DeleteData.Title" xml:space="preserve">
-    <value>Delete Data</value>
+  <data name="FINC_ClosingPeriods_Button_Unlock" xml:space="preserve">
+    <value>Unlock</value>
   </data>
-  <data name="Common.Placeholder.Code" xml:space="preserve">
-    <value>Code</value>
+  <data name="FINC_ClosingPeriods_Filter_All" xml:space="preserve">
+    <value>All fiscal years</value>
   </data>
-  <data name="Common.Placeholder.Email" xml:space="preserve">
-    <value>Email</value>
+  <data name="FINC_ClosingPeriods_Status_AllLocked" xml:space="preserve">
+    <value>All fiscal years are locked. Unlock a fiscal year before adding closing periods.</value>
   </data>
-  <data name="Common.Placeholder.Name" xml:space="preserve">
-    <value>Name</value>
+  <data name="FINC_ClosingPeriods_Status_FiscalYearLockedData" xml:space="preserve">
+    <value>Fiscal year '{0}' is locked. Unlock it before deleting data.</value>
   </data>
-  <data name="Common.Placeholder.Plan" xml:space="preserve">
-    <value>Plan</value>
+  <data name="FINC_ClosingPeriods_Status_FiscalYearLockedDelete" xml:space="preserve">
+    <value>Fiscal year '{0}' is locked. Unlock it before deleting closing periods.</value>
   </data>
-  <data name="Common.Placeholder.Reason" xml:space="preserve">
-    <value>Reason</value>
+  <data name="FINC_ClosingPeriods_Status_FiscalYearLockedEdit" xml:space="preserve">
+    <value>Fiscal year '{0}' is locked. Unlock it before editing closing periods.</value>
   </data>
-  <data name="Common.Unit.HoursSuffix" xml:space="preserve">
-    <value>h</value>
+  <data name="FINC_ClosingPeriods_Status_ToggleFailed" xml:space="preserve">
+    <value>Unable to change the lock state: {0}</value>
   </data>
-  <data name="Connection.Button.Browse" xml:space="preserve">
-    <value>Browse…</value>
+  <data name="FINC_ClosingPeriods_Toast_DeleteSuccess" xml:space="preserve">
+    <value>Closing period {0} deleted.</value>
   </data>
-  <data name="Connection.Button.Import" xml:space="preserve">
-    <value>Import connection</value>
+  <data name="FINC_ClosingPeriods_Toast_Locked" xml:space="preserve">
+    <value>Closing period {0} locked successfully.</value>
   </data>
-  <data name="Connection.Description.Setup" xml:space="preserve">
-    <value>Import the encrypted package generated in GRC Financial Control to configure the shared database.</value>
-  </data>
-  <data name="Connection.Dialog.BrowseTitle" xml:space="preserve">
-    <value>Open connection package</value>
-  </data>
-  <data name="Connection.Label.Language" xml:space="preserve">
-    <value>Language</value>
-  </data>
-  <data name="Connection.Label.Package" xml:space="preserve">
-    <value>Configuration package</value>
-  </data>
-  <data name="Connection.Label.Passphrase" xml:space="preserve">
-    <value>Package passphrase</value>
-  </data>
-  <data name="Connection.Message.MissingSettings" xml:space="preserve">
-    <value>Connection settings are missing or invalid. Open Connection setup to review the server, database, user, and password.</value>
-  </data>
-  <data name="Connection.Message.SetupPrompt" xml:space="preserve">
-    <value>Import a connection package to start using the Invoice Planner.</value>
-  </data>
-  <data name="Connection.Placeholder.Package" xml:space="preserve">
-    <value>Select the connection package</value>
-  </data>
-  <data name="Connection.Placeholder.Passphrase" xml:space="preserve">
-    <value>Package passphrase</value>
-  </data>
-  <data name="Connection.Section.Language.Title" xml:space="preserve">
-    <value>Language</value>
-  </data>
-  <data name="Connection.Status.ImportFailure" xml:space="preserve">
-    <value>Import failed: {0}</value>
-  </data>
-  <data name="Connection.Status.ImportInProgress" xml:space="preserve">
-    <value>Importing connection settings…</value>
-  </data>
-  <data name="Connection.Status.ImportSuccess" xml:space="preserve">
-    <value>Connection settings imported successfully. The application is ready to use.</value>
-  </data>
-  <data name="Connection.Status.RestoreFailure" xml:space="preserve">
-    <value>Failed to restore the previous connection settings: {0}</value>
-  </data>
-  <data name="Connection.Title.Setup" xml:space="preserve">
-    <value>Database connection</value>
-  </data>
-  <data name="Connection.Validation.PackageRequired" xml:space="preserve">
-    <value>Select a connection package before importing.</value>
-  </data>
-  <data name="Connection.Validation.PassphraseRequired" xml:space="preserve">
-    <value>Enter the package passphrase to continue.</value>
-  </data>
-  <data name="Connection.Validation.SettingsIncomplete" xml:space="preserve">
-    <value>Connection settings are incomplete. Verify the package and try again.</value>
-  </data>
-  <data name="CustomerFocalPointEmailInvalid" xml:space="preserve">
-    <value>Primary recipient email is not in a valid format.</value>
-  </data>
-  <data name="CustomerFocalPointEmailRequired" xml:space="preserve">
-    <value>At least one recipient email is required.</value>
-  </data>
-  <data name="CustomerFocalPointNameRequired" xml:space="preserve">
-    <value>Customer focal point name is required.</value>
-  </data>
-  <data name="CustomerTicketRequired" xml:space="preserve">
-    <value>Customer ticket is required for invoice line #{0}.</value>
-  </data>
-  <data name="Customers.Toast.DeleteSuccess" xml:space="preserve">
-    <value>Customer {0} deleted.</value>
-  </data>
-  <data name="Customers.Toast.OperationFailed" xml:space="preserve">
+  <data name="FINC_ClosingPeriods_Toast_OperationFailed" xml:space="preserve">
     <value>Unable to complete the operation: {0}</value>
   </data>
-  <data name="Customers.Toast.ReverseSuccess" xml:space="preserve">
-    <value>Customer data for {0} reversed.</value>
+  <data name="FINC_ClosingPeriods_Toast_ReverseSuccess" xml:space="preserve">
+    <value>Financial data for {0} reversed.</value>
   </data>
-  <data name="Customers.Toast.SaveSuccess" xml:space="preserve">
-    <value>Customer saved.</value>
+  <data name="FINC_ClosingPeriods_Toast_SaveSuccess" xml:space="preserve">
+    <value>Closing period saved.</value>
   </data>
-  <data name="DeliveryDescriptionRequired" xml:space="preserve">
-    <value>Delivery description is required for invoice line #{0}.</value>
+  <data name="FINC_ClosingPeriods_Toast_ToggleFailed" xml:space="preserve">
+    <value>Unable to update closing period lock state.</value>
   </data>
-  <data name="Dialogs.Error.Label.Details" xml:space="preserve">
-    <value>Technical details</value>
+  <data name="FINC_ClosingPeriods_Toast_Unlocked" xml:space="preserve">
+    <value>Closing period {0} unlocked successfully.</value>
   </data>
-  <data name="Dialogs.Error.Message" xml:space="preserve">
-    <value>Something went wrong. The operation was stopped so you can review the details below.</value>
-  </data>
-  <data name="Dialogs.Error.Title" xml:space="preserve">
-    <value>Unexpected error</value>
-  </data>
-  <data name="DueDateMustMatch" xml:space="preserve">
-    <value>Due date for invoice line #{0} must be emission date + payment terms.</value>
-  </data>
-  <data name="Emission.Button.CancelEmission" xml:space="preserve">
-    <value>Cancel emission</value>
-  </data>
-  <data name="Emission.Button.InsertBzData" xml:space="preserve">
-    <value>Insert BZ data</value>
-  </data>
-  <data name="Emission.Description.Primary" xml:space="preserve">
-    <value>Capture BZ codes to emit requested invoices or cancel an existing emission.</value>
-  </data>
-  <data name="Emission.Message.Empty" xml:space="preserve">
-    <value>No plans are waiting for BZ confirmation.</value>
-  </data>
-  <data name="Emission.Message.SelectHint" xml:space="preserve">
-    <value>Select a plan to emit invoices or cancel previous emissions.</value>
-  </data>
-  <data name="Emission.Section.AvailablePlans.Header" xml:space="preserve">
-    <value>Plans ready for BZ capture</value>
-  </data>
-  <data name="Emission.Section.InvoiceDetails.Header" xml:space="preserve">
-    <value>Invoice details</value>
-  </data>
-  <data name="Emission.Status.CanceledFormat" xml:space="preserve">
-    <value>Canceled: {0}</value>
-  </data>
-  <data name="Emission.Status.EmittedFormat" xml:space="preserve">
-    <value>Emitted: {0}</value>
-  </data>
-  <data name="Emission.Status.EngagementFormat" xml:space="preserve">
-    <value>Engagement: {0}</value>
-  </data>
-  <data name="Emission.Status.LineCanceled" xml:space="preserve">
-    <value>Invoice line {0} canceled and returned to planning.</value>
-  </data>
-  <data name="Emission.Status.LineEmitted" xml:space="preserve">
-    <value>Invoice line {0} emitted.</value>
-  </data>
-  <data name="Emission.Status.LoadFailure" xml:space="preserve">
-    <value>Could not load emission plans: {0}</value>
-  </data>
-  <data name="Emission.Status.LoadFailureDetail" xml:space="preserve">
-    <value>Failed to load plan: {0}</value>
-  </data>
-  <data name="Emission.Status.NoCancellations" xml:space="preserve">
-    <value>No invoice lines were canceled.</value>
-  </data>
-  <data name="Emission.Status.NoEmissions" xml:space="preserve">
-    <value>No invoice lines were emitted.</value>
-  </data>
-  <data name="Emission.Status.PlanLoaded" xml:space="preserve">
-    <value>Loaded plan {0} with {1} line(s).</value>
-  </data>
-  <data name="Emission.Status.RequestedFormat" xml:space="preserve">
-    <value>Requested: {0}</value>
-  </data>
-  <data name="Emission.TableHeader.Actions" xml:space="preserve">
-    <value>Actions</value>
-  </data>
-  <data name="Emission.TableHeader.Amount" xml:space="preserve">
-    <value>Amount</value>
-  </data>
-  <data name="Emission.TableHeader.BzCode" xml:space="preserve">
-    <value>BZ code</value>
-  </data>
-  <data name="Emission.TableHeader.CancelReason" xml:space="preserve">
-    <value>Cancel reason</value>
-  </data>
-  <data name="Emission.TableHeader.DueDate" xml:space="preserve">
-    <value>Due</value>
-  </data>
-  <data name="Emission.TableHeader.EmissionDate" xml:space="preserve">
-    <value>Emission</value>
-  </data>
-  <data name="Emission.TableHeader.EmittedAt" xml:space="preserve">
-    <value>Emitted at</value>
-  </data>
-  <data name="Emission.TableHeader.LastCancelReason" xml:space="preserve">
-    <value>Last cancel reason</value>
-  </data>
-  <data name="Emission.TableHeader.Ritm" xml:space="preserve">
-    <value>RITM</value>
-  </data>
-  <data name="Emission.TableHeader.Status" xml:space="preserve">
-    <value>Status</value>
-  </data>
-  <data name="Emission.Title.Primary" xml:space="preserve">
-    <value>Emission confirmation</value>
-  </data>
-  <data name="Emission.Toast.LineCanceled" xml:space="preserve">
-    <value>Invoice line {0} cancellation saved.</value>
-  </data>
-  <data name="Emission.Toast.LineEmitted" xml:space="preserve">
-    <value>Invoice line {0} marked as emitted.</value>
-  </data>
-  <data name="Emission.Toast.NoCancellations" xml:space="preserve">
-    <value>No emission cancellations were applied.</value>
-  </data>
-  <data name="Emission.Toast.NoEmissions" xml:space="preserve">
-    <value>No emission updates were applied.</value>
-  </data>
-  <data name="Emission.Toast.OperationFailed" xml:space="preserve">
-    <value>Emission update failed: {0}.</value>
-  </data>
-  <data name="Emission.Toast.ValidationFailed" xml:space="preserve">
-    <value>Emission update blocked: {0}.</value>
-  </data>
-  <data name="Emission.Validation.BzCode" xml:space="preserve">
-    <value>Provide the BZ code before closing the invoice.</value>
-  </data>
-  <data name="Emission.Validation.CancelPlanRequired" xml:space="preserve">
-    <value>Load a plan before canceling invoices.</value>
-  </data>
-  <data name="Emission.Validation.CancelReason" xml:space="preserve">
-    <value>Provide a cancel reason before reversing the emission.</value>
-  </data>
-  <data name="Emission.Validation.EmissionDate" xml:space="preserve">
-    <value>Provide an emission date before closing the invoice.</value>
-  </data>
-  <data name="Emission.Validation.PlanNotFound" xml:space="preserve">
-    <value>Invoice plan {0} was not found.</value>
-  </data>
-  <data name="Emission.Validation.PlanRequired" xml:space="preserve">
-    <value>Load a plan before closing invoices.</value>
-  </data>
-  <data name="Emission.Validation.PlanSelection" xml:space="preserve">
-    <value>Select a plan before inserting BZ data.</value>
-  </data>
-  <data name="EmissionDateRequired" xml:space="preserve">
-    <value>Emission date is required for invoice line #{0}.</value>
-  </data>
-  <data name="EngagementIdRequired" xml:space="preserve">
-    <value>Engagement ID is required.</value>
-  </data>
-  <data name="Engagements.Toast.DeleteSuccess" xml:space="preserve">
-    <value>Engagement {0} deleted.</value>
-  </data>
-  <data name="Engagements.Toast.OperationFailed" xml:space="preserve">
-    <value>Unable to complete the operation: {0}</value>
-  </data>
-  <data name="Engagements.Toast.ReverseSuccess" xml:space="preserve">
-    <value>Engagement data for {0} reversed.</value>
-  </data>
-  <data name="Engagements.Toast.SaveSuccess" xml:space="preserve">
-    <value>Engagement saved.</value>
-  </data>
-  <data name="Exports.Header.Value" xml:space="preserve">
-    <value>Value</value>
-  </data>
-  <data name="Exports.InvoiceSummary.Header.Amount" xml:space="preserve">
-    <value>Amount</value>
-  </data>
-  <data name="Exports.InvoiceSummary.Header.BaseValue" xml:space="preserve">
-    <value>Base Value</value>
-  </data>
-  <data name="Exports.InvoiceSummary.Header.BzCode" xml:space="preserve">
-    <value>BZ Code</value>
-  </data>
-  <data name="Exports.InvoiceSummary.Header.CancelReason" xml:space="preserve">
-    <value>Cancel Reason</value>
-  </data>
-  <data name="Exports.InvoiceSummary.Header.CanceledAt" xml:space="preserve">
-    <value>Canceled At</value>
-  </data>
-  <data name="Exports.InvoiceSummary.Header.Customer" xml:space="preserve">
-    <value>Customer</value>
-  </data>
-  <data name="Exports.InvoiceSummary.Header.CustomerCode" xml:space="preserve">
-    <value>Customer Code</value>
-  </data>
-  <data name="Exports.InvoiceSummary.Header.DueDate" xml:space="preserve">
-    <value>Due Date</value>
-  </data>
-  <data name="Exports.InvoiceSummary.Header.EmissionDate" xml:space="preserve">
-    <value>Emission Date</value>
-  </data>
-  <data name="Exports.InvoiceSummary.Header.EmittedAt" xml:space="preserve">
-    <value>Emitted At</value>
-  </data>
-  <data name="Exports.InvoiceSummary.Header.Engagement" xml:space="preserve">
-    <value>Engagement</value>
-  </data>
-  <data name="Exports.InvoiceSummary.Header.Line" xml:space="preserve">
-    <value>Line</value>
-  </data>
-  <data name="Exports.InvoiceSummary.Header.Percentage" xml:space="preserve">
-    <value>Percentage</value>
-  </data>
-  <data name="Exports.InvoiceSummary.Header.PlanId" xml:space="preserve">
-    <value>Plan Id</value>
-  </data>
-  <data name="Exports.InvoiceSummary.Header.PlanType" xml:space="preserve">
-    <value>Plan Type</value>
-  </data>
-  <data name="Exports.InvoiceSummary.Header.RequestDate" xml:space="preserve">
-    <value>Request Date</value>
-  </data>
-  <data name="Exports.InvoiceSummary.Header.Ritm" xml:space="preserve">
-    <value>RITM</value>
-  </data>
-  <data name="Exports.InvoiceSummary.Header.Status" xml:space="preserve">
-    <value>Status</value>
-  </data>
-  <data name="Exports.InvoiceSummary.Header.Totals" xml:space="preserve">
-    <value>Totals</value>
-  </data>
-  <data name="Exports.InvoiceSummary.PdfTitle" xml:space="preserve">
-    <value>Invoice Summary</value>
-  </data>
-  <data name="Exports.InvoiceSummary.WorksheetName" xml:space="preserve">
-    <value>Summary</value>
-  </data>
-  <data name="Exports.Status.NoData" xml:space="preserve">
-    <value>No data available</value>
-  </data>
-  <data name="Exports.Worksheet.Report" xml:space="preserve">
-    <value>Report</value>
-  </data>
-  <data name="FirstEmissionRequired" xml:space="preserve">
-    <value>First emission date is required for ByDate plans.</value>
-  </data>
-  <data name="FiscalYears.Dialog.Close.Message" xml:space="preserve">
-    <value>Closing fiscal year '{0}' will lock it and promote the next fiscal year as the default. Continue?</value>
-  </data>
-  <data name="FiscalYears.Dialog.Close.Title" xml:space="preserve">
-    <value>Close Fiscal Year</value>
-  </data>
-  <data name="FiscalYears.Status.AlreadyLocked" xml:space="preserve">
-    <value>Fiscal year '{0}' was already locked or unavailable.</value>
-  </data>
-  <data name="FiscalYears.Status.AlreadyUnlocked" xml:space="preserve">
-    <value>Fiscal year '{0}' was already unlocked or unavailable.</value>
-  </data>
-  <data name="FiscalYears.Status.ClosedNoPromotion" xml:space="preserve">
-    <value>Fiscal year '{0}' closed. There is no future fiscal year to promote.</value>
-  </data>
-  <data name="FiscalYears.Status.ClosedPromoted" xml:space="preserve">
-    <value>Fiscal year '{0}' closed. '{1}' is now the default fiscal year.</value>
-  </data>
-  <data name="FiscalYears.Status.Locked" xml:space="preserve">
-    <value>Fiscal year '{0}' has been locked by {1} at {2:G}.</value>
-  </data>
-  <data name="FiscalYears.Status.Unlocked" xml:space="preserve">
-    <value>Fiscal year '{0}' has been unlocked by {1} at {2:G}.</value>
-  </data>
-  <data name="FiscalYears.Toast.DeleteDataSuccess" xml:space="preserve">
-    <value>Fiscal year {0} data deleted successfully.</value>
-  </data>
-  <data name="FiscalYears.Toast.DeleteSuccess" xml:space="preserve">
-    <value>Fiscal year {0} deleted successfully.</value>
-  </data>
-  <data name="FiscalYears.Toast.OperationFailed" xml:space="preserve">
-    <value>Fiscal year operation failed: {0}.</value>
-  </data>
-  <data name="FiscalYears.Toast.SaveSuccess" xml:space="preserve">
-    <value>Fiscal year {0} saved successfully.</value>
-  </data>
-  <data name="FiscalYears.Validation.EndDateAfterStart" xml:space="preserve">
+  <data name="FINC_ClosingPeriods_Validation_EndDateAfterStart" xml:space="preserve">
     <value>The end date must be on or after the start date.</value>
   </data>
-  <data name="FiscalYears.Validation.NameRequired" xml:space="preserve">
+  <data name="FINC_ClosingPeriods_Validation_FiscalYearLocked" xml:space="preserve">
+    <value>Fiscal year '{0}' is locked. Unlock it before assigning closing periods.</value>
+  </data>
+  <data name="FINC_ClosingPeriods_Validation_FiscalYearRequired" xml:space="preserve">
+    <value>Select a fiscal year before saving.</value>
+  </data>
+  <data name="FINC_ClosingPeriods_Validation_NameRequired" xml:space="preserve">
+    <value>A descriptive name is required.</value>
+  </data>
+  <data name="FINC_ClosingPeriods_Validation_NoFiscalYears" xml:space="preserve">
+    <value>No available fiscal years. Unlock or create a fiscal year before updating closing periods.</value>
+  </data>
+  <data name="FINC_Customers_Toast_DeleteSuccess" xml:space="preserve">
+    <value>Customer {0} deleted.</value>
+  </data>
+  <data name="FINC_Customers_Toast_OperationFailed" xml:space="preserve">
+    <value>Unable to complete the operation: {0}</value>
+  </data>
+  <data name="FINC_Customers_Toast_ReverseSuccess" xml:space="preserve">
+    <value>Customer data for {0} reversed.</value>
+  </data>
+  <data name="FINC_Customers_Toast_SaveSuccess" xml:space="preserve">
+    <value>Customer saved.</value>
+  </data>
+  <data name="FINC_Dialog_DeleteData_Message" xml:space="preserve">
+    <value>Are you sure you want to delete all data for {0}? This action cannot be undone.</value>
+  </data>
+  <data name="FINC_Dialog_DeleteData_Title" xml:space="preserve">
+    <value>Delete Data</value>
+  </data>
+  <data name="FINC_Engagements_Toast_DeleteSuccess" xml:space="preserve">
+    <value>Engagement {0} deleted.</value>
+  </data>
+  <data name="FINC_Engagements_Toast_OperationFailed" xml:space="preserve">
+    <value>Unable to complete the operation: {0}</value>
+  </data>
+  <data name="FINC_Engagements_Toast_ReverseSuccess" xml:space="preserve">
+    <value>Engagement data for {0} reversed.</value>
+  </data>
+  <data name="FINC_Engagements_Toast_SaveSuccess" xml:space="preserve">
+    <value>Engagement saved.</value>
+  </data>
+  <data name="FINC_FiscalYears_Dialog_Close_Message" xml:space="preserve">
+    <value>Closing fiscal year '{0}' will lock it and promote the next fiscal year as the default. Continue?</value>
+  </data>
+  <data name="FINC_FiscalYears_Dialog_Close_Title" xml:space="preserve">
+    <value>Close Fiscal Year</value>
+  </data>
+  <data name="FINC_FiscalYears_Status_AlreadyLocked" xml:space="preserve">
+    <value>Fiscal year '{0}' was already locked or unavailable.</value>
+  </data>
+  <data name="FINC_FiscalYears_Status_AlreadyUnlocked" xml:space="preserve">
+    <value>Fiscal year '{0}' was already unlocked or unavailable.</value>
+  </data>
+  <data name="FINC_FiscalYears_Status_ClosedNoPromotion" xml:space="preserve">
+    <value>Fiscal year '{0}' closed. There is no future fiscal year to promote.</value>
+  </data>
+  <data name="FINC_FiscalYears_Status_ClosedPromoted" xml:space="preserve">
+    <value>Fiscal year '{0}' closed. '{1}' is now the default fiscal year.</value>
+  </data>
+  <data name="FINC_FiscalYears_Status_Locked" xml:space="preserve">
+    <value>Fiscal year '{0}' has been locked by {1} at {2:G}.</value>
+  </data>
+  <data name="FINC_FiscalYears_Status_Unlocked" xml:space="preserve">
+    <value>Fiscal year '{0}' has been unlocked by {1} at {2:G}.</value>
+  </data>
+  <data name="FINC_FiscalYears_Toast_DeleteDataSuccess" xml:space="preserve">
+    <value>Fiscal year {0} data deleted successfully.</value>
+  </data>
+  <data name="FINC_FiscalYears_Toast_DeleteSuccess" xml:space="preserve">
+    <value>Fiscal year {0} deleted successfully.</value>
+  </data>
+  <data name="FINC_FiscalYears_Toast_OperationFailed" xml:space="preserve">
+    <value>Fiscal year operation failed: {0}.</value>
+  </data>
+  <data name="FINC_FiscalYears_Toast_SaveSuccess" xml:space="preserve">
+    <value>Fiscal year {0} saved successfully.</value>
+  </data>
+  <data name="FINC_FiscalYears_Validation_EndDateAfterStart" xml:space="preserve">
+    <value>The end date must be on or after the start date.</value>
+  </data>
+  <data name="FINC_FiscalYears_Validation_NameRequired" xml:space="preserve">
     <value>A fiscal year name is required.</value>
   </data>
-  <data name="FrsNumberRequired" xml:space="preserve">
-    <value>FRS number is required for invoice line #{0}.</value>
-  </data>
-  <data name="Home.Button.Confirm" xml:space="preserve">
+  <data name="FINC_Home_Button_Confirm" xml:space="preserve">
     <value>Confirm selection</value>
   </data>
-  <data name="Home.Description.Primary" xml:space="preserve">
-    <value>Plan, request, and monitor your engagement invoices.</value>
-  </data>
-  <data name="Home.Label.ClosingPeriod" xml:space="preserve">
+  <data name="FINC_Home_Label_ClosingPeriod" xml:space="preserve">
     <value>Closing period</value>
   </data>
-  <data name="Home.Label.FiscalYear" xml:space="preserve">
+  <data name="FINC_Home_Label_FiscalYear" xml:space="preserve">
     <value>Fiscal year</value>
   </data>
-  <data name="Home.Markdown.LoadFailed" xml:space="preserve">
+  <data name="FINC_Home_Markdown_LoadFailed" xml:space="preserve">
     <value>README content could not be loaded.</value>
   </data>
-  <data name="Home.Markdown.Title" xml:space="preserve">
+  <data name="FINC_Home_Markdown_Title" xml:space="preserve">
     <value>Project overview</value>
   </data>
-  <data name="Home.Message.Welcome" xml:space="preserve">
-    <value>Configure your invoice plan, confirm requests, and close emissions when ready.</value>
-  </data>
-  <data name="Home.Placeholder.ClosingPeriod" xml:space="preserve">
+  <data name="FINC_Home_Placeholder_ClosingPeriod" xml:space="preserve">
     <value>Choose a closing period</value>
   </data>
-  <data name="Home.Placeholder.FiscalYear" xml:space="preserve">
+  <data name="FINC_Home_Placeholder_FiscalYear" xml:space="preserve">
     <value>Choose a fiscal year</value>
   </data>
-  <data name="Home.Status.LoadError" xml:space="preserve">
+  <data name="FINC_Home_Status_LoadError" xml:space="preserve">
     <value>Unable to load application parameters: {0}</value>
   </data>
-  <data name="Home.Status.NoClosingPeriods" xml:space="preserve">
+  <data name="FINC_Home_Status_NoClosingPeriods" xml:space="preserve">
     <value>No closing periods exist for the selected fiscal year.</value>
   </data>
-  <data name="Home.Status.NoFiscalYears" xml:space="preserve">
+  <data name="FINC_Home_Status_NoFiscalYears" xml:space="preserve">
     <value>No fiscal years are available. Create one before continuing.</value>
   </data>
-  <data name="Home.Status.SaveError" xml:space="preserve">
+  <data name="FINC_Home_Status_SaveError" xml:space="preserve">
     <value>Unable to save your selection: {0}</value>
   </data>
-  <data name="Home.Status.Saved" xml:space="preserve">
+  <data name="FINC_Home_Status_Saved" xml:space="preserve">
     <value>Default fiscal year and closing period saved.</value>
   </data>
-  <data name="Home.Status.SelectFiscalYear" xml:space="preserve">
+  <data name="FINC_Home_Status_SelectFiscalYear" xml:space="preserve">
     <value>Select a fiscal year to continue.</value>
   </data>
-  <data name="Home.Title" xml:space="preserve">
+  <data name="FINC_Home_Title" xml:space="preserve">
     <value>Welcome</value>
   </data>
-  <data name="Home.Title.Primary" xml:space="preserve">
-    <value>Invoice Planner</value>
-  </data>
-  <data name="Home.Welcome" xml:space="preserve">
+  <data name="FINC_Home_Welcome" xml:space="preserve">
     <value>Select the fiscal year and closing period to use across the application.</value>
   </data>
-  <data name="Import.Button.AllocationPlanning" xml:space="preserve">
+  <data name="FINC_Import_Button_AllocationPlanning" xml:space="preserve">
     <value>Import allocation planning file</value>
   </data>
-  <data name="Import.Button.Budget" xml:space="preserve">
+  <data name="FINC_Import_Button_Budget" xml:space="preserve">
     <value>Import budget file</value>
   </data>
-  <data name="Import.Button.FullManagement" xml:space="preserve">
+  <data name="FINC_Import_Button_FullManagement" xml:space="preserve">
     <value>Import full management data</value>
   </data>
-  <data name="Import.Button.SelectFile" xml:space="preserve">
+  <data name="FINC_Import_Button_SelectFile" xml:space="preserve">
     <value>Select file and import</value>
   </data>
-  <data name="Import.FileType.AllocationPlanning" xml:space="preserve">
+  <data name="FINC_Import_FileType_AllocationPlanning" xml:space="preserve">
     <value>Allocation planning</value>
   </data>
-  <data name="Import.FileType.Budget" xml:space="preserve">
+  <data name="FINC_Import_FileType_Budget" xml:space="preserve">
     <value>Budget</value>
   </data>
-  <data name="Import.FileType.FullManagement" xml:space="preserve">
+  <data name="FINC_Import_FileType_FullManagement" xml:space="preserve">
     <value>Full management data</value>
   </data>
-  <data name="Import.Section.Selected.TitleFormat" xml:space="preserve">
+  <data name="FINC_Import_Section_Selected_TitleFormat" xml:space="preserve">
     <value>Import {0} data</value>
   </data>
-  <data name="Import.Status.Error" xml:space="preserve">
+  <data name="FINC_Import_Status_Error" xml:space="preserve">
     <value>An error occurred during import: {0}</value>
   </data>
-  <data name="Import.Status.InProgress" xml:space="preserve">
+  <data name="FINC_Import_Status_InProgress" xml:space="preserve">
     <value>Importing {0} data…</value>
   </data>
-  <data name="Import.Status.InvalidType" xml:space="preserve">
+  <data name="FINC_Import_Status_InvalidType" xml:space="preserve">
     <value>Invalid import type selected.</value>
   </data>
-  <data name="Import.Title.Primary" xml:space="preserve">
+  <data name="FINC_Import_Title_Primary" xml:space="preserve">
     <value>File import</value>
   </data>
-  <data name="Import.Toast.S4MetadataSuccess" xml:space="preserve">
+  <data name="FINC_Import_Toast_S4MetadataSuccess" xml:space="preserve">
     <value>S/4HANA project metadata imported successfully.</value>
   </data>
-  <data name="Import.Warning.SelectClosingPeriod" xml:space="preserve">
+  <data name="FINC_Import_Warning_SelectClosingPeriod" xml:space="preserve">
     <value>Select a closing period before importing full management data.</value>
   </data>
-  <data name="Invoice.Status.Canceled" xml:space="preserve">
-    <value>Canceled</value>
-  </data>
-  <data name="Invoice.Status.Closed" xml:space="preserve">
-    <value>Closed</value>
-  </data>
-  <data name="Invoice.Status.Emitted" xml:space="preserve">
-    <value>Emitted</value>
-  </data>
-  <data name="Invoice.Status.Planned" xml:space="preserve">
-    <value>Planned</value>
-  </data>
-  <data name="Invoice.Status.Reissued" xml:space="preserve">
-    <value>Reissued</value>
-  </data>
-  <data name="Invoice.Status.Requested" xml:space="preserve">
-    <value>Requested</value>
-  </data>
-  <data name="InvoicePlan.Button.CloseInvoice" xml:space="preserve">
-    <value>Close invoice</value>
-  </data>
-  <data name="InvoicePlan.Button.SaveDraft" xml:space="preserve">
-    <value>Save draft</value>
-  </data>
-  <data name="InvoicePlan.Description.Primary" xml:space="preserve">
-    <value>Fill out the header details and balance each invoice line.</value>
-  </data>
-  <data name="InvoicePlan.Dialog.Button.DeletePlan" xml:space="preserve">
-    <value>Delete plan</value>
-  </data>
-  <data name="InvoicePlan.Dialog.Button.EditPlan" xml:space="preserve">
-    <value>Add / Edit plan</value>
-  </data>
-  <data name="InvoicePlan.Label.BaseValue" xml:space="preserve">
-    <value>Planning base value</value>
-  </data>
-  <data name="InvoicePlan.Label.Engagement" xml:space="preserve">
-    <value>Engagement</value>
-  </data>
-  <data name="InvoicePlan.Label.ExtraEmails" xml:space="preserve">
-    <value>Extra emails</value>
-  </data>
-  <data name="InvoicePlan.Label.FirstEmission" xml:space="preserve">
-    <value>First emission date</value>
-  </data>
-  <data name="InvoicePlan.Label.FocalPoint" xml:space="preserve">
-    <value>Customer focal point</value>
-  </data>
-  <data name="InvoicePlan.Label.Instructions" xml:space="preserve">
-    <value>Instructions</value>
-  </data>
-  <data name="InvoicePlan.Label.InvoiceCount" xml:space="preserve">
-    <value># invoices</value>
-  </data>
-  <data name="InvoicePlan.Label.PaymentTerms" xml:space="preserve">
-    <value>Payment terms (days)</value>
-  </data>
-  <data name="InvoicePlan.Label.PlanType" xml:space="preserve">
-    <value>Plan type</value>
-  </data>
-  <data name="InvoicePlan.Label.RecipientEmails" xml:space="preserve">
-    <value>Recipient emails</value>
-  </data>
-  <data name="InvoicePlan.Placeholder.DeliveryNotes" xml:space="preserve">
-    <value>Provide delivery notes</value>
-  </data>
-  <data name="InvoicePlan.Placeholder.Recipients" xml:space="preserve">
-    <value>Enter all recipient emails separated by semicolons or new lines.</value>
-  </data>
-  <data name="InvoicePlan.Section.InvoiceLines.Title" xml:space="preserve">
-    <value>Invoice lines</value>
-  </data>
-  <data name="InvoicePlan.Section.Summary.Description" xml:space="preserve">
-    <value>Totals must reach 100% and the base amount. Use Save to apply rounding.</value>
-  </data>
-  <data name="InvoicePlan.Section.Summary.Title" xml:space="preserve">
-    <value>Summary</value>
-  </data>
-  <data name="InvoicePlan.Section.Totals.Amount" xml:space="preserve">
-    <value>Amount:</value>
-  </data>
-  <data name="InvoicePlan.Section.Totals.Label" xml:space="preserve">
-    <value>Totals</value>
-  </data>
-  <data name="InvoicePlan.Section.Totals.Percent" xml:space="preserve">
-    <value>Percent:</value>
-  </data>
-  <data name="InvoicePlan.Selection.Button.AddEdit" xml:space="preserve">
-    <value>Add / Edit invoice details</value>
-  </data>
-  <data name="InvoicePlan.Selection.Button.Create" xml:space="preserve">
-    <value>Create plan</value>
-  </data>
-  <data name="InvoicePlan.Selection.Column.Canceled" xml:space="preserve">
-    <value>Canceled</value>
-  </data>
-  <data name="InvoicePlan.Selection.Column.Closed" xml:space="preserve">
-    <value>Closed</value>
-  </data>
-  <data name="InvoicePlan.Selection.Column.Emitted" xml:space="preserve">
-    <value>Emitted</value>
-  </data>
-  <data name="InvoicePlan.Selection.Column.Engagement" xml:space="preserve">
-    <value>Engagement</value>
-  </data>
-  <data name="InvoicePlan.Selection.Column.FirstEmission" xml:space="preserve">
-    <value>First emission</value>
-  </data>
-  <data name="InvoicePlan.Selection.Column.PendingRequests" xml:space="preserve">
-    <value>Pending requests</value>
-  </data>
-  <data name="InvoicePlan.Selection.Column.PlanId" xml:space="preserve">
-    <value>Plan</value>
-  </data>
-  <data name="InvoicePlan.Selection.Column.Requested" xml:space="preserve">
-    <value>Requested</value>
-  </data>
-  <data name="InvoicePlan.Selection.Column.Type" xml:space="preserve">
-    <value>Type</value>
-  </data>
-  <data name="InvoicePlan.Selection.Description.Primary" xml:space="preserve">
-    <value>Choose an engagement from the list to start a new invoice plan.</value>
-  </data>
-  <data name="InvoicePlan.Selection.Header.Customer" xml:space="preserve">
-    <value>Customer</value>
-  </data>
-  <data name="InvoicePlan.Selection.Header.Engagement" xml:space="preserve">
-    <value>Engagement</value>
-  </data>
-  <data name="InvoicePlan.Selection.Header.Plan" xml:space="preserve">
-    <value>Description</value>
-  </data>
-  <data name="InvoicePlan.Selection.Message.Empty" xml:space="preserve">
-    <value>No engagements are available. Configure the data connection and try again.</value>
-  </data>
-  <data name="InvoicePlan.Selection.Message.SelectHint" xml:space="preserve">
-    <value>Select an engagement and choose Add / Edit invoice details to open or update the invoice schedule.</value>
-  </data>
-  <data name="InvoicePlan.Selection.Status.LoadFailure" xml:space="preserve">
-    <value>Could not load engagements: {0}</value>
-  </data>
-  <data name="InvoicePlan.Selection.Status.PlanDeleted" xml:space="preserve">
-    <value>Invoice plan {0} deleted. Select the engagement again to start a new schedule.</value>
-  </data>
-  <data name="InvoicePlan.Selection.Title.Primary" xml:space="preserve">
-    <value>Select an engagement</value>
-  </data>
-  <data name="InvoicePlan.Status.ActionCreated" xml:space="preserve">
-    <value>created</value>
-  </data>
-  <data name="InvoicePlan.Status.ActionUpdated" xml:space="preserve">
-    <value>updated</value>
-  </data>
-  <data name="InvoicePlan.Status.DeleteFailure" xml:space="preserve">
-    <value>Failed to delete plan: {0}</value>
-  </data>
-  <data name="InvoicePlan.Status.LoadFailure" xml:space="preserve">
-    <value>Failed to load plan: {0}</value>
-  </data>
-  <data name="InvoicePlan.Status.PlanLoaded" xml:space="preserve">
-    <value>Invoice plan {0} loaded with {1} line(s).</value>
-  </data>
-  <data name="InvoicePlan.Status.PlanSaved" xml:space="preserve">
-    <value>Plan {0} {1}. Lines: {2}, affected rows: {3}, deleted: {4}.</value>
-  </data>
-  <data name="InvoicePlan.Status.SaveFailure" xml:space="preserve">
-    <value>Failed to save plan: {0}</value>
-  </data>
-  <data name="InvoicePlan.TableHeader.Amount" xml:space="preserve">
-    <value>Amount</value>
-  </data>
-  <data name="InvoicePlan.TableHeader.Cnpj" xml:space="preserve">
-    <value>Customer CNPJ</value>
-  </data>
-  <data name="InvoicePlan.TableHeader.Delivery" xml:space="preserve">
-    <value>Delivery description</value>
-  </data>
-  <data name="InvoicePlan.TableHeader.EmissionDate" xml:space="preserve">
-    <value>Emission date</value>
-  </data>
-  <data name="InvoicePlan.TableHeader.Frs" xml:space="preserve">
-    <value>FRS</value>
-  </data>
-  <data name="InvoicePlan.TableHeader.PaymentType" xml:space="preserve">
-    <value>Payment type</value>
-  </data>
-  <data name="InvoicePlan.TableHeader.Percent" xml:space="preserve">
-    <value>Percent</value>
-  </data>
-  <data name="InvoicePlan.TableHeader.Po" xml:space="preserve">
-    <value>PO</value>
-  </data>
-  <data name="InvoicePlan.TableHeader.Sequence" xml:space="preserve">
-    <value>#</value>
-  </data>
-  <data name="InvoicePlan.TableHeader.Ticket" xml:space="preserve">
-    <value>Customer ticket</value>
-  </data>
-  <data name="InvoicePlan.Title.Primary" xml:space="preserve">
-    <value>Invoice plan</value>
-  </data>
-  <data name="InvoicePlan.Toast.DeleteFailed" xml:space="preserve">
-    <value>Unable to delete the invoice plan.</value>
-  </data>
-  <data name="InvoicePlan.Toast.DeleteMissing" xml:space="preserve">
-    <value>Invoice plan {0} is no longer available.</value>
-  </data>
-  <data name="InvoicePlan.Toast.PlanDeleted" xml:space="preserve">
-    <value>Invoice plan {0} deleted.</value>
-  </data>
-  <data name="InvoicePlan.Toast.PlanSaved" xml:space="preserve">
-    <value>Invoice plan {0} saved.</value>
-  </data>
-  <data name="InvoicePlan.Toast.SaveFailed" xml:space="preserve">
-    <value>Unable to save the invoice plan.</value>
-  </data>
-  <data name="InvoicePlan.Toast.ValidationFailed" xml:space="preserve">
-    <value>Resolve validation issues before saving.</value>
-  </data>
-  <data name="InvoicePlan.Validation.FirstEmissionRequired" xml:space="preserve">
-    <value>First emission date is required for Type A1 (ByDate) plans.</value>
-  </data>
-  <data name="InvoicePlan.Validation.NoLines" xml:space="preserve">
-    <value>Add at least one invoice line before saving.</value>
-  </data>
-  <data name="InvoicePlan.Validation.PlanNotFound" xml:space="preserve">
-    <value>Invoice plan {0} was not found.</value>
-  </data>
-  <data name="InvoiceSummary.Button.ApplyFilters" xml:space="preserve">
-    <value>Apply filters</value>
-  </data>
-  <data name="InvoiceSummary.Button.ClearFilters" xml:space="preserve">
-    <value>Clear</value>
-  </data>
-  <data name="InvoiceSummary.Filter.AllCustomers" xml:space="preserve">
-    <value>All customers</value>
-  </data>
-  <data name="InvoiceSummary.Filter.AllEngagements" xml:space="preserve">
-    <value>All engagements</value>
-  </data>
-  <data name="InvoiceSummary.Group.AmountFormat" xml:space="preserve">
-    <value>Total: {0:C2}</value>
-  </data>
-  <data name="InvoiceSummary.Group.CanceledCountFormat" xml:space="preserve">
-    <value>Canceled: {0}</value>
-  </data>
-  <data name="InvoiceSummary.Group.ClosedCountFormat" xml:space="preserve">
-    <value>Closed: {0}</value>
-  </data>
-  <data name="InvoiceSummary.Group.EmittedCountFormat" xml:space="preserve">
-    <value>Emitted: {0}</value>
-  </data>
-  <data name="InvoiceSummary.Group.PercentageFormat" xml:space="preserve">
-    <value>Percent: {0:N4}%</value>
-  </data>
-  <data name="InvoiceSummary.Group.PlannedCountFormat" xml:space="preserve">
-    <value>Planned: {0}</value>
-  </data>
-  <data name="InvoiceSummary.Group.ReissuedCountFormat" xml:space="preserve">
-    <value>Reissued: {0}</value>
-  </data>
-  <data name="InvoiceSummary.Group.RequestedCountFormat" xml:space="preserve">
-    <value>Requested: {0}</value>
-  </data>
-  <data name="InvoiceSummary.Label.Customer" xml:space="preserve">
-    <value>Customer</value>
-  </data>
-  <data name="InvoiceSummary.Label.Engagement" xml:space="preserve">
-    <value>Engagement</value>
-  </data>
-  <data name="InvoiceSummary.Label.Statuses" xml:space="preserve">
-    <value>Statuses</value>
-  </data>
-  <data name="InvoiceSummary.Section.Totals.Amount" xml:space="preserve">
-    <value>Total amount</value>
-  </data>
-  <data name="InvoiceSummary.Section.Totals.Percentage" xml:space="preserve">
-    <value>Total percentage</value>
-  </data>
-  <data name="InvoiceSummary.Status.Empty" xml:space="preserve">
-    <value>No invoice lines matched the selected filters.</value>
-  </data>
-  <data name="InvoiceSummary.Status.ExportFailure" xml:space="preserve">
-    <value>Export failed: {0}</value>
-  </data>
-  <data name="InvoiceSummary.Status.ExportSuccess" xml:space="preserve">
-    <value>Exported {0} report to {1}.</value>
-  </data>
-  <data name="InvoiceSummary.Status.LoadFailure" xml:space="preserve">
-    <value>Unable to load invoice summary: {0}</value>
-  </data>
-  <data name="InvoiceSummary.Status.Loaded" xml:space="preserve">
-    <value>Loaded {0} line(s) across {1} engagement(s).</value>
-  </data>
-  <data name="InvoiceSummary.TableHeader.Amount" xml:space="preserve">
-    <value>Amount</value>
-  </data>
-  <data name="InvoiceSummary.TableHeader.BaseValue" xml:space="preserve">
-    <value>Base</value>
-  </data>
-  <data name="InvoiceSummary.TableHeader.BzCode" xml:space="preserve">
-    <value>BZ</value>
-  </data>
-  <data name="InvoiceSummary.TableHeader.CancelReason" xml:space="preserve">
-    <value>Reason</value>
-  </data>
-  <data name="InvoiceSummary.TableHeader.CanceledAt" xml:space="preserve">
-    <value>Canceled</value>
-  </data>
-  <data name="InvoiceSummary.TableHeader.DueDate" xml:space="preserve">
-    <value>Due</value>
-  </data>
-  <data name="InvoiceSummary.TableHeader.EmissionDate" xml:space="preserve">
-    <value>Emission</value>
-  </data>
-  <data name="InvoiceSummary.TableHeader.EmittedAt" xml:space="preserve">
-    <value>Emitted</value>
-  </data>
-  <data name="InvoiceSummary.TableHeader.Percent" xml:space="preserve">
-    <value>%</value>
-  </data>
-  <data name="InvoiceSummary.TableHeader.Plan" xml:space="preserve">
-    <value>Plan</value>
-  </data>
-  <data name="InvoiceSummary.TableHeader.RequestDate" xml:space="preserve">
-    <value>Requested</value>
-  </data>
-  <data name="InvoiceSummary.TableHeader.Ritm" xml:space="preserve">
-    <value>RITM</value>
-  </data>
-  <data name="InvoiceSummary.TableHeader.Sequence" xml:space="preserve">
-    <value>#</value>
-  </data>
-  <data name="InvoiceSummary.TableHeader.Status" xml:space="preserve">
-    <value>Status</value>
-  </data>
-  <data name="InvoiceSummary.TableHeader.Type" xml:space="preserve">
-    <value>Type</value>
-  </data>
-  <data name="InvoiceSummary.Title.Filters" xml:space="preserve">
-    <value>Summary filters</value>
-  </data>
-  <data name="InvoiceSummary.Validation.NoDataToExport" xml:space="preserve">
-    <value>There is no data to export.</value>
-  </data>
-  <data name="InvoiceSummary.Validation.StatusRequired" xml:space="preserve">
-    <value>Select at least one invoice status.</value>
-  </data>
-  <data name="InvoiceSummary.Value.UnknownCustomer" xml:space="preserve">
-    <value>Customer</value>
-  </data>
-  <data name="ItemsCountMismatch" xml:space="preserve">
-    <value>The number of invoice lines must match the header count.</value>
-  </data>
-  <data name="ItemsRequired" xml:space="preserve">
-    <value>At least one invoice line is required.</value>
-  </data>
-  <data name="Localization.Language.English" xml:space="preserve">
-    <value>English</value>
-  </data>
-  <data name="Localization.Language.Portuguese" xml:space="preserve">
-    <value>Portuguese (Brazil)</value>
-  </data>
-  <data name="Localization.Language.PreferenceSaveFailure" xml:space="preserve">
-    <value>Failed to save the language preference: {0}</value>
-  </data>
-  <data name="Localization.Language.PreferenceSaved" xml:space="preserve">
-    <value>Language preference saved. Restart the application to apply changes.</value>
-  </data>
-  <data name="Localization.Language.Spanish" xml:space="preserve">
-    <value>Spanish (Peru)</value>
-  </data>
-  <data name="Managers.Toast.DeleteSuccess" xml:space="preserve">
+  <data name="FINC_Managers_Toast_DeleteSuccess" xml:space="preserve">
     <value>Manager {0} removed successfully.</value>
   </data>
-  <data name="Managers.Toast.OperationFailed" xml:space="preserve">
+  <data name="FINC_Managers_Toast_OperationFailed" xml:space="preserve">
     <value>Manager operation failed: {0}.</value>
   </data>
-  <data name="Managers.Toast.SaveSuccess" xml:space="preserve">
+  <data name="FINC_Managers_Toast_SaveSuccess" xml:space="preserve">
     <value>Manager {0} saved successfully.</value>
   </data>
-  <data name="MasterData.RankMappings.Columns.CreatedAt" xml:space="preserve">
+  <data name="FINC_MasterData_RankMappings_Columns_CreatedAt" xml:space="preserve">
     <value>Created at</value>
   </data>
-  <data name="MasterData.RankMappings.Columns.IsActive" xml:space="preserve">
+  <data name="FINC_MasterData_RankMappings_Columns_IsActive" xml:space="preserve">
     <value>Active</value>
   </data>
-  <data name="MasterData.RankMappings.Columns.LastSeenAt" xml:space="preserve">
+  <data name="FINC_MasterData_RankMappings_Columns_LastSeenAt" xml:space="preserve">
     <value>Last seen at</value>
   </data>
-  <data name="MasterData.RankMappings.Columns.NormalizedRank" xml:space="preserve">
+  <data name="FINC_MasterData_RankMappings_Columns_NormalizedRank" xml:space="preserve">
     <value>Rank name</value>
   </data>
-  <data name="MasterData.RankMappings.Columns.RawRank" xml:space="preserve">
+  <data name="FINC_MasterData_RankMappings_Columns_RawRank" xml:space="preserve">
     <value>Rank code</value>
   </data>
-  <data name="MasterData.RankMappings.Columns.SpreadsheetRank" xml:space="preserve">
+  <data name="FINC_MasterData_RankMappings_Columns_SpreadsheetRank" xml:space="preserve">
     <value>Spreadsheet rank</value>
   </data>
-  <data name="MasterData.RankMappings.Dialog.AddTitle" xml:space="preserve">
+  <data name="FINC_MasterData_RankMappings_Dialog_AddTitle" xml:space="preserve">
     <value>Add rank mapping</value>
   </data>
-  <data name="MasterData.RankMappings.Dialog.EditTitle" xml:space="preserve">
+  <data name="FINC_MasterData_RankMappings_Dialog_EditTitle" xml:space="preserve">
     <value>Edit rank mapping</value>
   </data>
-  <data name="MasterData.RankMappings.Editor.IsActive" xml:space="preserve">
+  <data name="FINC_MasterData_RankMappings_Editor_IsActive" xml:space="preserve">
     <value>Active</value>
   </data>
-  <data name="MasterData.RankMappings.Editor.NormalizedRank" xml:space="preserve">
+  <data name="FINC_MasterData_RankMappings_Editor_NormalizedRank" xml:space="preserve">
     <value>Rank name</value>
   </data>
-  <data name="MasterData.RankMappings.Editor.RawRank" xml:space="preserve">
+  <data name="FINC_MasterData_RankMappings_Editor_RawRank" xml:space="preserve">
     <value>Rank code</value>
   </data>
-  <data name="MasterData.RankMappings.Editor.SpreadsheetRank" xml:space="preserve">
+  <data name="FINC_MasterData_RankMappings_Editor_SpreadsheetRank" xml:space="preserve">
     <value>Spreadsheet rank</value>
   </data>
-  <data name="MasterData.RankMappings.Editor.Title" xml:space="preserve">
+  <data name="FINC_MasterData_RankMappings_Editor_Title" xml:space="preserve">
     <value>Rank mapping details</value>
   </data>
-  <data name="MasterData.RankMappings.Title" xml:space="preserve">
+  <data name="FINC_MasterData_RankMappings_Title" xml:space="preserve">
     <value>Rank mappings</value>
   </data>
-  <data name="Navigation.Allocations" xml:space="preserve">
+  <data name="FINC_Navigation_Allocations" xml:space="preserve">
     <value>Allocations</value>
   </data>
-  <data name="Navigation.ClosingPeriods" xml:space="preserve">
+  <data name="FINC_Navigation_ClosingPeriods" xml:space="preserve">
     <value>Closing periods</value>
   </data>
-  <data name="Navigation.ControlMasterData" xml:space="preserve">
+  <data name="FINC_Navigation_ControlMasterData" xml:space="preserve">
     <value>Control Master Data</value>
   </data>
-  <data name="Navigation.Customers" xml:space="preserve">
+  <data name="FINC_Navigation_Customers" xml:space="preserve">
     <value>Customers</value>
   </data>
-  <data name="Navigation.Engagements" xml:space="preserve">
+  <data name="FINC_Navigation_Engagements" xml:space="preserve">
     <value>Engagements</value>
   </data>
-  <data name="Navigation.FiscalYears" xml:space="preserve">
+  <data name="FINC_Navigation_FiscalYears" xml:space="preserve">
     <value>Fiscal years</value>
   </data>
-  <data name="Navigation.GrcTeam" xml:space="preserve">
+  <data name="FINC_Navigation_GrcTeam" xml:space="preserve">
     <value>GRC team</value>
   </data>
-  <data name="Navigation.Home" xml:space="preserve">
+  <data name="FINC_Navigation_Home" xml:space="preserve">
     <value>Home</value>
   </data>
-  <data name="Navigation.Import" xml:space="preserve">
+  <data name="FINC_Navigation_Import" xml:space="preserve">
     <value>Import</value>
   </data>
-  <data name="Navigation.MasterData" xml:space="preserve">
+  <data name="FINC_Navigation_MasterData" xml:space="preserve">
     <value>App Master Data</value>
   </data>
-  <data name="Navigation.MasterData.RankMappings" xml:space="preserve">
+  <data name="FINC_Navigation_MasterData_RankMappings" xml:space="preserve">
     <value>Rank mappings</value>
   </data>
-  <data name="Navigation.Reports" xml:space="preserve">
+  <data name="FINC_Navigation_Reports" xml:space="preserve">
     <value>Reports</value>
   </data>
-  <data name="Navigation.Settings" xml:space="preserve">
+  <data name="FINC_Navigation_Settings" xml:space="preserve">
     <value>Settings</value>
   </data>
-  <data name="Navigation.Tasks" xml:space="preserve">
+  <data name="FINC_Navigation_Tasks" xml:space="preserve">
     <value>Tasks</value>
   </data>
-  <data name="Notifications.Description.Primary" xml:space="preserve">
-    <value>Review recipients and content generated by the D-7 notification view.</value>
-  </data>
-  <data name="Notifications.Format.Amount" xml:space="preserve">
-    <value>Amount: {0:N2}</value>
-  </data>
-  <data name="Notifications.Format.CcRecipients" xml:space="preserve">
-    <value>CC: {0}</value>
-  </data>
-  <data name="Notifications.Format.Customer" xml:space="preserve">
-    <value>Customer: {0}</value>
-  </data>
-  <data name="Notifications.Format.DueDate" xml:space="preserve">
-    <value>Due: {0:yyyy-MM-dd}</value>
-  </data>
-  <data name="Notifications.Format.EmissionDate" xml:space="preserve">
-    <value>Emission: {0:yyyy-MM-dd}</value>
-  </data>
-  <data name="Notifications.Format.Managers" xml:space="preserve">
-    <value>Managers: {0}</value>
-  </data>
-  <data name="Notifications.Format.NotifyDate" xml:space="preserve">
-    <value>Notify: {0:yyyy-MM-dd}</value>
-  </data>
-  <data name="Notifications.Format.Plan" xml:space="preserve">
-    <value>Plan: {0}</value>
-  </data>
-  <data name="Notifications.Format.Recipients" xml:space="preserve">
-    <value>Recipients: {0}</value>
-  </data>
-  <data name="Notifications.Format.Sequence" xml:space="preserve">
-    <value>Installment {0} of {1}</value>
-  </data>
-  <data name="Notifications.Format.Subject" xml:space="preserve">
-    <value>[D-7] Planned emission on {0:dd/MM/yyyy} – {1} / Installment {2} of {3}</value>
-  </data>
-  <data name="Notifications.Format.ToRecipients" xml:space="preserve">
-    <value>To: {0}</value>
-  </data>
-  <data name="Notifications.Label.NotificationDate" xml:space="preserve">
-    <value>Notification date</value>
-  </data>
-  <data name="Notifications.Message.Empty" xml:space="preserve">
-    <value>No notifications are scheduled for the selected date.</value>
-  </data>
-  <data name="Notifications.Status.Empty" xml:space="preserve">
-    <value>No notifications scheduled for {0:yyyy-MM-dd}.</value>
-  </data>
-  <data name="Notifications.Status.LoadFailure" xml:space="preserve">
-    <value>Unable to load notifications: {0}</value>
-  </data>
-  <data name="Notifications.Status.Loaded" xml:space="preserve">
-    <value>Loaded {0} notification(s) for {1:yyyy-MM-dd}.</value>
-  </data>
-  <data name="Notifications.Template.Amount" xml:space="preserve">
-    <value>Installment amount: {0}</value>
-  </data>
-  <data name="Notifications.Template.Competence" xml:space="preserve">
-    <value>Competence: {0}</value>
-  </data>
-  <data name="Notifications.Template.Contact" xml:space="preserve">
-    <value>Contact {0}: {1}</value>
-  </data>
-  <data name="Notifications.Template.DueDate" xml:space="preserve">
-    <value>Due date: {0}</value>
-  </data>
-  <data name="Notifications.Template.Frs" xml:space="preserve">
-    <value>FRS: {0}</value>
-  </data>
-  <data name="Notifications.Template.Installment" xml:space="preserve">
-    <value>Installment {0} of {1}</value>
-  </data>
-  <data name="Notifications.Template.ManagerEmails" xml:space="preserve">
-    <value>Manager emails: {0}</value>
-  </data>
-  <data name="Notifications.Template.Managers" xml:space="preserve">
-    <value>Managers: {0}</value>
-  </data>
-  <data name="Notifications.Template.Po" xml:space="preserve">
-    <value>PO: {0}</value>
-  </data>
-  <data name="Notifications.Template.Recipients" xml:space="preserve">
-    <value>Delivery emails: {0}</value>
-  </data>
-  <data name="Notifications.Template.Service" xml:space="preserve">
-    <value>Service: Services - Assistance and Consulting</value>
-  </data>
-  <data name="Notifications.Template.Ticket" xml:space="preserve">
-    <value>Ticket: {0}</value>
-  </data>
-  <data name="Notifications.Title.Primary" xml:space="preserve">
-    <value>Notifications preview</value>
-  </data>
-  <data name="NumInvoicesMinimum" xml:space="preserve">
-    <value>Number of invoices must be at least 1.</value>
-  </data>
-  <data name="Papds.Toast.DeleteDataSuccess" xml:space="preserve">
+  <data name="FINC_Papds_Toast_DeleteDataSuccess" xml:space="preserve">
     <value>Historical data for {0} deleted successfully.</value>
   </data>
-  <data name="Papds.Toast.DeleteSuccess" xml:space="preserve">
+  <data name="FINC_Papds_Toast_DeleteSuccess" xml:space="preserve">
     <value>PAPD {0} removed successfully.</value>
   </data>
-  <data name="Papds.Toast.OperationFailed" xml:space="preserve">
+  <data name="FINC_Papds_Toast_OperationFailed" xml:space="preserve">
     <value>PAPD operation failed: {0}.</value>
   </data>
-  <data name="Papds.Toast.SaveSuccess" xml:space="preserve">
+  <data name="FINC_Papds_Toast_SaveSuccess" xml:space="preserve">
     <value>PAPD {0} saved successfully.</value>
   </data>
-  <data name="PayerCnpjRequired" xml:space="preserve">
-    <value>Customer CNPJ is required for invoice line #{0}.</value>
-  </data>
-  <data name="PaymentTermsNegative" xml:space="preserve">
-    <value>Payment terms cannot be negative.</value>
-  </data>
-  <data name="PoNumberRequired" xml:space="preserve">
-    <value>PO number is required for invoice line #{0}.</value>
-  </data>
-  <data name="RankMappings.Toast.DeleteSuccess" xml:space="preserve">
+  <data name="FINC_RankMappings_Toast_DeleteSuccess" xml:space="preserve">
     <value>Rank mapping {0} deleted successfully.</value>
   </data>
-  <data name="RankMappings.Toast.OperationFailed" xml:space="preserve">
+  <data name="FINC_RankMappings_Toast_OperationFailed" xml:space="preserve">
     <value>Rank mapping operation failed: {0}.</value>
   </data>
-  <data name="RankMappings.Toast.SaveSuccess" xml:space="preserve">
+  <data name="FINC_RankMappings_Toast_SaveSuccess" xml:space="preserve">
     <value>Rank mapping {0} saved successfully.</value>
   </data>
-  <data name="Reports.Button.OpenBrowser" xml:space="preserve">
+  <data name="FINC_Reports_Button_OpenBrowser" xml:space="preserve">
     <value>Open in Browser</value>
   </data>
-  <data name="Reports.Button.Refresh" xml:space="preserve">
+  <data name="FINC_Reports_Button_Refresh" xml:space="preserve">
     <value>Refresh</value>
   </data>
-  <data name="Reports.Empty.Description" xml:space="preserve">
+  <data name="FINC_Reports_Empty_Description" xml:space="preserve">
     <value>Add a Publish to Web URL in Settings to load the dashboard.</value>
   </data>
-  <data name="Reports.Empty.Title" xml:space="preserve">
+  <data name="FINC_Reports_Empty_Title" xml:space="preserve">
     <value>Connect Power BI</value>
   </data>
-  <data name="Reports.Label.Status" xml:space="preserve">
+  <data name="FINC_Reports_Label_Status" xml:space="preserve">
     <value>Status:</value>
   </data>
-  <data name="Reports.Status.DashboardReady" xml:space="preserve">
+  <data name="FINC_Reports_Status_DashboardReady" xml:space="preserve">
     <value>Dashboard ready.</value>
   </data>
-  <data name="Reports.Status.InvalidUrl" xml:space="preserve">
+  <data name="FINC_Reports_Status_InvalidUrl" xml:space="preserve">
     <value>The configured Publish to Web URL is invalid.</value>
   </data>
-  <data name="Reports.Status.LoadFailure" xml:space="preserve">
+  <data name="FINC_Reports_Status_LoadFailure" xml:space="preserve">
     <value>Unable to load the Power BI dashboard configuration.</value>
   </data>
-  <data name="Reports.Status.OpenExternalFailure" xml:space="preserve">
+  <data name="FINC_Reports_Status_OpenExternalFailure" xml:space="preserve">
     <value>Unable to launch the external browser for the dashboard: {0}</value>
   </data>
-  <data name="Reports.Status.UrlRequired" xml:space="preserve">
+  <data name="FINC_Reports_Status_UrlRequired" xml:space="preserve">
     <value>Add a Publish to Web URL in Settings to view the dashboard.</value>
   </data>
-  <data name="Request.Button.InsertData" xml:space="preserve">
-    <value>Insert request data</value>
-  </data>
-  <data name="Request.Button.MarkRequested" xml:space="preserve">
-    <value>Mark requested</value>
-  </data>
-  <data name="Request.Button.Reverse" xml:space="preserve">
-    <value>Reverse</value>
-  </data>
-  <data name="Request.Description.Primary" xml:space="preserve">
-    <value>Capture RITM, COE, and request date to move invoices from Planned to Requested.</value>
-  </data>
-  <data name="Request.Message.Empty" xml:space="preserve">
-    <value>No plans currently require request confirmation.</value>
-  </data>
-  <data name="Request.Message.SelectHint" xml:space="preserve">
-    <value>Select a plan with pending invoices to insert request details.</value>
-  </data>
-  <data name="Request.Section.AvailablePlans.Header" xml:space="preserve">
-    <value>Available plans</value>
-  </data>
-  <data name="Request.Section.InvoiceDetails.Header" xml:space="preserve">
-    <value>Invoice details</value>
-  </data>
-  <data name="Request.Status.EngagementFormat" xml:space="preserve">
-    <value>Engagement: {0}</value>
-  </data>
-  <data name="Request.Status.LineRequested" xml:space="preserve">
-    <value>Invoice line {0} marked as requested.</value>
-  </data>
-  <data name="Request.Status.LineUndone" xml:space="preserve">
-    <value>Invoice line {0} returned to Planned.</value>
-  </data>
-  <data name="Request.Status.LoadFailure" xml:space="preserve">
-    <value>Could not load plans: {0}</value>
-  </data>
-  <data name="Request.Status.LoadFailureDetail" xml:space="preserve">
-    <value>Failed to load plan: {0}</value>
-  </data>
-  <data name="Request.Status.NoUndo" xml:space="preserve">
-    <value>No invoice lines were undone.</value>
-  </data>
-  <data name="Request.Status.NoUpdates" xml:space="preserve">
-    <value>No invoice lines required updates.</value>
-  </data>
-  <data name="Request.Status.PlanLoaded" xml:space="preserve">
-    <value>Loaded plan {0} with {1} line(s).</value>
-  </data>
-  <data name="Request.Status.PlannedFormat" xml:space="preserve">
-    <value>Planned: {0}</value>
-  </data>
-  <data name="Request.Status.RequestedFormat" xml:space="preserve">
-    <value>Requested: {0}</value>
-  </data>
-  <data name="Request.TableHeader.Actions" xml:space="preserve">
-    <value>Actions</value>
-  </data>
-  <data name="Request.TableHeader.Amount" xml:space="preserve">
-    <value>Amount</value>
-  </data>
-  <data name="Request.TableHeader.Coe" xml:space="preserve">
-    <value>COE</value>
-  </data>
-  <data name="Request.TableHeader.EmissionDate" xml:space="preserve">
-    <value>Emission</value>
-  </data>
-  <data name="Request.TableHeader.RequestDate" xml:space="preserve">
-    <value>Request date</value>
-  </data>
-  <data name="Request.TableHeader.Ritm" xml:space="preserve">
-    <value>RITM</value>
-  </data>
-  <data name="Request.TableHeader.Status" xml:space="preserve">
-    <value>Status</value>
-  </data>
-  <data name="Request.Title.Primary" xml:space="preserve">
-    <value>Request confirmation</value>
-  </data>
-  <data name="Request.Toast.LineRequested" xml:space="preserve">
-    <value>Invoice line {0} marked as requested.</value>
-  </data>
-  <data name="Request.Toast.LineUndone" xml:space="preserve">
-    <value>Invoice line {0} returned to Planned.</value>
-  </data>
-  <data name="Request.Toast.NoUndo" xml:space="preserve">
-    <value>No invoice lines were undone.</value>
-  </data>
-  <data name="Request.Toast.NoUpdates" xml:space="preserve">
-    <value>No invoice lines were updated.</value>
-  </data>
-  <data name="Request.Toast.RequestFailed" xml:space="preserve">
-    <value>Unable to mark the selected line as requested.</value>
-  </data>
-  <data name="Request.Toast.UndoFailed" xml:space="preserve">
-    <value>Unable to undo the selected line.</value>
-  </data>
-  <data name="Request.Validation.LineSelection" xml:space="preserve">
-    <value>Select an invoice before saving.</value>
-  </data>
-  <data name="Request.Validation.PlanNotFound" xml:space="preserve">
-    <value>Invoice plan {0} was not found.</value>
-  </data>
-  <data name="Request.Validation.PlanRequired" xml:space="preserve">
-    <value>Load a plan before requesting invoices.</value>
-  </data>
-  <data name="Request.Validation.PlanSelection" xml:space="preserve">
-    <value>Select a plan before inserting request data.</value>
-  </data>
-  <data name="Request.Validation.RequestDateRequired" xml:space="preserve">
-    <value>Provide a request date before marking the invoice as requested.</value>
-  </data>
-  <data name="Request.Validation.UndoPlanRequired" xml:space="preserve">
-    <value>Load a plan before undoing requests.</value>
-  </data>
-  <data name="SequenceContiguous" xml:space="preserve">
-    <value>Invoice lines must have contiguous sequence numbers starting from 1.</value>
-  </data>
-  <data name="Settings.Button.Apply" xml:space="preserve">
+  <data name="FINC_Settings_Button_Apply" xml:space="preserve">
     <value>Apply</value>
   </data>
-  <data name="Settings.Button.ClearAll" xml:space="preserve">
+  <data name="FINC_Settings_Button_ClearAll" xml:space="preserve">
     <value>Clear all data</value>
   </data>
-  <data name="Settings.Button.ExportData" xml:space="preserve">
+  <data name="FINC_Settings_Button_ExportData" xml:space="preserve">
     <value>Export data</value>
   </data>
-  <data name="Settings.Button.ExportPackage" xml:space="preserve">
+  <data name="FINC_Settings_Button_ExportPackage" xml:space="preserve">
     <value>Export connection package</value>
   </data>
-  <data name="Settings.Button.ImportData" xml:space="preserve">
+  <data name="FINC_Settings_Button_ImportData" xml:space="preserve">
     <value>Restore data</value>
   </data>
-  <data name="Settings.Button.ImportPackage" xml:space="preserve">
+  <data name="FINC_Settings_Button_ImportPackage" xml:space="preserve">
     <value>Import connection package</value>
   </data>
-  <data name="Settings.Button.Load" xml:space="preserve">
+  <data name="FINC_Settings_Button_Load" xml:space="preserve">
     <value>Load settings</value>
   </data>
-  <data name="Settings.Button.Save" xml:space="preserve">
+  <data name="FINC_Settings_Button_Save" xml:space="preserve">
     <value>Save settings</value>
   </data>
-  <data name="Settings.Button.SelectPackage" xml:space="preserve">
+  <data name="FINC_Settings_Button_SelectPackage" xml:space="preserve">
     <value>Select package</value>
   </data>
-  <data name="Settings.Button.Test" xml:space="preserve">
+  <data name="FINC_Settings_Button_Test" xml:space="preserve">
     <value>Test connection</value>
   </data>
-  <data name="Settings.Dialog.ClearAll.Message" xml:space="preserve">
+  <data name="FINC_Settings_Dialog_ClearAll_Message" xml:space="preserve">
     <value>Are you sure you want to delete all data? This action cannot be undone.</value>
   </data>
-  <data name="Settings.Dialog.ClearAll.Title" xml:space="preserve">
+  <data name="FINC_Settings_Dialog_ClearAll_Title" xml:space="preserve">
     <value>Clear all data</value>
   </data>
-  <data name="Settings.Dialog.DataExport.Title" xml:space="preserve">
+  <data name="FINC_Settings_Dialog_DataExport_Title" xml:space="preserve">
     <value>Export application data</value>
   </data>
-  <data name="Settings.Dialog.DataImport.Message" xml:space="preserve">
+  <data name="FINC_Settings_Dialog_DataImport_Message" xml:space="preserve">
     <value>Restoring the backup will overwrite all existing information in the database. Continue?</value>
   </data>
-  <data name="Settings.Dialog.DataImport.Title" xml:space="preserve">
+  <data name="FINC_Settings_Dialog_DataImport_Title" xml:space="preserve">
     <value>Restore application data</value>
   </data>
-  <data name="Settings.Dialog.Export.Title" xml:space="preserve">
+  <data name="FINC_Settings_Dialog_Export_Title" xml:space="preserve">
     <value>Export connection package</value>
   </data>
-  <data name="Settings.Dialog.Import.Title" xml:space="preserve">
+  <data name="FINC_Settings_Dialog_Import_Title" xml:space="preserve">
     <value>Import connection package</value>
   </data>
-  <data name="Settings.Help.DefaultCurrency" xml:space="preserve">
+  <data name="FINC_Settings_Help_DefaultCurrency" xml:space="preserve">
     <value>Used when engagements do not define a currency. Provide a three-letter ISO code.</value>
   </data>
-  <data name="Settings.Label.ConfirmPassphrase" xml:space="preserve">
+  <data name="FINC_Settings_Label_ConfirmPassphrase" xml:space="preserve">
     <value>Confirm passphrase</value>
   </data>
-  <data name="Settings.Label.Database" xml:space="preserve">
+  <data name="FINC_Settings_Label_Database" xml:space="preserve">
     <value>Database</value>
   </data>
-  <data name="Settings.Label.DefaultCurrency" xml:space="preserve">
+  <data name="FINC_Settings_Label_DefaultCurrency" xml:space="preserve">
     <value>Default currency</value>
   </data>
-  <data name="Settings.Label.ImportPackage" xml:space="preserve">
+  <data name="FINC_Settings_Label_ImportPackage" xml:space="preserve">
     <value>Package file</value>
   </data>
-  <data name="Settings.Label.ImportPassphrase" xml:space="preserve">
+  <data name="FINC_Settings_Label_ImportPassphrase" xml:space="preserve">
     <value>Import passphrase</value>
   </data>
-  <data name="Settings.Label.Language" xml:space="preserve">
+  <data name="FINC_Settings_Label_Language" xml:space="preserve">
     <value>Language</value>
   </data>
-  <data name="Settings.Label.Passphrase" xml:space="preserve">
+  <data name="FINC_Settings_Label_Passphrase" xml:space="preserve">
     <value>Passphrase</value>
   </data>
-  <data name="Settings.Label.Password" xml:space="preserve">
+  <data name="FINC_Settings_Label_Password" xml:space="preserve">
     <value>Password</value>
   </data>
-  <data name="Settings.Label.PowerBiUrl" xml:space="preserve">
+  <data name="FINC_Settings_Label_PowerBiUrl" xml:space="preserve">
     <value>Publish to Web URL</value>
   </data>
-  <data name="Settings.Label.SelectedImportPackagePrefix" xml:space="preserve">
+  <data name="FINC_Settings_Label_SelectedImportPackagePrefix" xml:space="preserve">
     <value>Selected: </value>
   </data>
-  <data name="Settings.Label.Server" xml:space="preserve">
+  <data name="FINC_Settings_Label_Server" xml:space="preserve">
     <value>Server</value>
   </data>
-  <data name="Settings.Label.User" xml:space="preserve">
+  <data name="FINC_Settings_Label_User" xml:space="preserve">
     <value>User</value>
   </data>
-  <data name="Settings.Placeholder.DefaultCurrency" xml:space="preserve">
+  <data name="FINC_Settings_Placeholder_DefaultCurrency" xml:space="preserve">
     <value>e.g. USD</value>
   </data>
-  <data name="Settings.Placeholder.ImportPackage" xml:space="preserve">
+  <data name="FINC_Settings_Placeholder_ImportPackage" xml:space="preserve">
     <value>No package selected</value>
   </data>
-  <data name="Settings.Section.ApplicationData.Description" xml:space="preserve">
+  <data name="FINC_Settings_Section_ApplicationData_Description" xml:space="preserve">
     <value>Create an XML snapshot of the configured database or restore a previous export.</value>
   </data>
-  <data name="Settings.Section.ApplicationData.RestoreNotice" xml:space="preserve">
+  <data name="FINC_Settings_Section_ApplicationData_RestoreNotice" xml:space="preserve">
     <value>Restoring data replaces all existing records in the connected database.</value>
   </data>
-  <data name="Settings.Section.ApplicationData.Title" xml:space="preserve">
+  <data name="FINC_Settings_Section_ApplicationData_Title" xml:space="preserve">
     <value>Application data backup</value>
   </data>
-  <data name="Settings.Section.Database.Title" xml:space="preserve">
+  <data name="FINC_Settings_Section_Database_Title" xml:space="preserve">
     <value>MySQL connection settings</value>
   </data>
-  <data name="Settings.Section.Localization.Title" xml:space="preserve">
+  <data name="FINC_Settings_Section_Localization_Title" xml:space="preserve">
     <value>Localization</value>
   </data>
-  <data name="Settings.Section.Package.Description" xml:space="preserve">
+  <data name="FINC_Settings_Section_Package_Description" xml:space="preserve">
     <value>Generate an encrypted package to configure the Invoice Planner app.</value>
   </data>
-  <data name="Settings.Section.Package.ImportDescription" xml:space="preserve">
+  <data name="FINC_Settings_Section_Package_ImportDescription" xml:space="preserve">
     <value>Apply settings from an existing connection package.</value>
   </data>
-  <data name="Settings.Section.Package.Title" xml:space="preserve">
+  <data name="FINC_Settings_Section_Package_Title" xml:space="preserve">
     <value>Connection package</value>
   </data>
-  <data name="Settings.Section.PowerBi.Description" xml:space="preserve">
+  <data name="FINC_Settings_Section_PowerBi_Description" xml:space="preserve">
     <value>Provide a Publish to Web URL to show the dashboard without Azure AD sign-in.</value>
   </data>
-  <data name="Settings.Section.PowerBi.Title" xml:space="preserve">
+  <data name="FINC_Settings_Section_PowerBi_Title" xml:space="preserve">
     <value>Power BI embedding</value>
   </data>
-  <data name="Settings.Status.Cleared" xml:space="preserve">
+  <data name="FINC_Settings_Status_Cleared" xml:space="preserve">
     <value>All data has been cleared.</value>
   </data>
-  <data name="Settings.Status.Clearing" xml:space="preserve">
+  <data name="FINC_Settings_Status_Clearing" xml:space="preserve">
     <value>Clearing all data…</value>
   </data>
-  <data name="Settings.Status.DataExportCancelled" xml:space="preserve">
+  <data name="FINC_Settings_Status_DataExportCancelled" xml:space="preserve">
     <value>Data export cancelled.</value>
   </data>
-  <data name="Settings.Status.DataExportFailure" xml:space="preserve">
+  <data name="FINC_Settings_Status_DataExportFailure" xml:space="preserve">
     <value>Failed to export application data: {0}</value>
   </data>
-  <data name="Settings.Status.DataExportInProgress" xml:space="preserve">
+  <data name="FINC_Settings_Status_DataExportInProgress" xml:space="preserve">
     <value>Exporting application data…</value>
   </data>
-  <data name="Settings.Status.DataExportSuccess" xml:space="preserve">
+  <data name="FINC_Settings_Status_DataExportSuccess" xml:space="preserve">
     <value>Application data saved as {0}.</value>
   </data>
-  <data name="Settings.Status.DataImportFailure" xml:space="preserve">
+  <data name="FINC_Settings_Status_DataImportFailure" xml:space="preserve">
     <value>Failed to restore application data: {0}</value>
   </data>
-  <data name="Settings.Status.DataImportInProgress" xml:space="preserve">
+  <data name="FINC_Settings_Status_DataImportInProgress" xml:space="preserve">
     <value>Restoring application data…</value>
   </data>
-  <data name="Settings.Status.DataImportSuccess" xml:space="preserve">
+  <data name="FINC_Settings_Status_DataImportSuccess" xml:space="preserve">
     <value>Application data restored from {0}.</value>
   </data>
-  <data name="Settings.Status.ExportCancelled" xml:space="preserve">
+  <data name="FINC_Settings_Status_ExportCancelled" xml:space="preserve">
     <value>Export cancelled.</value>
   </data>
-  <data name="Settings.Status.ExportFailure" xml:space="preserve">
+  <data name="FINC_Settings_Status_ExportFailure" xml:space="preserve">
     <value>Failed to export the connection package: {0}</value>
   </data>
-  <data name="Settings.Status.ExportInProgress" xml:space="preserve">
+  <data name="FINC_Settings_Status_ExportInProgress" xml:space="preserve">
     <value>Exporting connection package…</value>
   </data>
-  <data name="Settings.Status.ExportSuccess" xml:space="preserve">
+  <data name="FINC_Settings_Status_ExportSuccess" xml:space="preserve">
     <value>Connection package saved as {0}.</value>
   </data>
-  <data name="Settings.Status.ImportCancelled" xml:space="preserve">
-    <value>Import cancelled.</value>
-  </data>
-  <data name="Settings.Status.ImportFailure" xml:space="preserve">
+  <data name="FINC_Settings_Status_ImportFailure" xml:space="preserve">
     <value>Failed to import the connection package: {0}</value>
   </data>
-  <data name="Settings.Status.ImportInProgress" xml:space="preserve">
+  <data name="FINC_Settings_Status_ImportInProgress" xml:space="preserve">
     <value>Importing connection package…</value>
   </data>
-  <data name="Settings.Status.ImportSuccess" xml:space="preserve">
+  <data name="FINC_Settings_Status_ImportSuccess" xml:space="preserve">
     <value>Connection settings imported from {0}.</value>
   </data>
-  <data name="Settings.Status.Loaded" xml:space="preserve">
+  <data name="FINC_Settings_Status_Loaded" xml:space="preserve">
     <value>Settings loaded.</value>
   </data>
-  <data name="Settings.Status.LocalizationFailed" xml:space="preserve">
+  <data name="FINC_Settings_Status_LocalizationFailed" xml:space="preserve">
     <value>Failed to save localization settings: {0}</value>
   </data>
-  <data name="Settings.Status.LocalizationPreview" xml:space="preserve">
+  <data name="FINC_Settings_Status_LocalizationPreview" xml:space="preserve">
     <value>Language preview applied. Click Apply to persist.</value>
   </data>
-  <data name="Settings.Status.LocalizationSaved" xml:space="preserve">
+  <data name="FINC_Settings_Status_LocalizationSaved" xml:space="preserve">
     <value>Localization settings saved.</value>
   </data>
-  <data name="Settings.Status.PowerBiFailed" xml:space="preserve">
+  <data name="FINC_Settings_Status_PowerBiFailed" xml:space="preserve">
     <value>Failed to save Power BI settings: {0}</value>
   </data>
-  <data name="Settings.Status.PowerBiSaved" xml:space="preserve">
+  <data name="FINC_Settings_Status_PowerBiSaved" xml:space="preserve">
     <value>Power BI settings saved.</value>
   </data>
-  <data name="Settings.Status.SaveError" xml:space="preserve">
+  <data name="FINC_Settings_Status_SaveError" xml:space="preserve">
     <value>Unable to save settings: {0}</value>
   </data>
-  <data name="Settings.Status.Saved" xml:space="preserve">
+  <data name="FINC_Settings_Status_Saved" xml:space="preserve">
     <value>Settings saved.</value>
   </data>
-  <data name="Settings.Status.TestSuccess" xml:space="preserve">
+  <data name="FINC_Settings_Status_TestSuccess" xml:space="preserve">
     <value>Connection successful. Application data refreshed.</value>
   </data>
-  <data name="Settings.Status.Testing" xml:space="preserve">
+  <data name="FINC_Settings_Status_Testing" xml:space="preserve">
     <value>Testing connection…</value>
   </data>
-  <data name="Settings.Tab.ApplicationData" xml:space="preserve">
+  <data name="FINC_Settings_Tab_ApplicationData" xml:space="preserve">
     <value>Application data</value>
   </data>
-  <data name="Settings.Tab.Connection" xml:space="preserve">
+  <data name="FINC_Settings_Tab_Connection" xml:space="preserve">
     <value>Connection</value>
   </data>
-  <data name="Settings.Tab.ConnectionPackages" xml:space="preserve">
+  <data name="FINC_Settings_Tab_ConnectionPackages" xml:space="preserve">
     <value>Connection packages</value>
   </data>
-  <data name="Settings.Tab.Localization" xml:space="preserve">
+  <data name="FINC_Settings_Tab_Localization" xml:space="preserve">
     <value>Localization</value>
   </data>
-  <data name="Settings.Tab.PowerBi" xml:space="preserve">
+  <data name="FINC_Settings_Tab_PowerBi" xml:space="preserve">
     <value>Power BI</value>
   </data>
-  <data name="Settings.Toast.ConnectionFailed" xml:space="preserve">
+  <data name="FINC_Settings_Toast_ConnectionFailed" xml:space="preserve">
     <value>Unable to save connection settings.</value>
   </data>
-  <data name="Settings.Toast.ConnectionSaved" xml:space="preserve">
+  <data name="FINC_Settings_Toast_ConnectionSaved" xml:space="preserve">
     <value>Connection settings saved.</value>
   </data>
-  <data name="Settings.Toast.LocalizationFailed" xml:space="preserve">
+  <data name="FINC_Settings_Toast_LocalizationFailed" xml:space="preserve">
     <value>Could not save localization settings.</value>
   </data>
-  <data name="Settings.Toast.LocalizationSaved" xml:space="preserve">
+  <data name="FINC_Settings_Toast_LocalizationSaved" xml:space="preserve">
     <value>Localization settings saved successfully.</value>
   </data>
-  <data name="Settings.Toast.PowerBiFailed" xml:space="preserve">
+  <data name="FINC_Settings_Toast_PowerBiFailed" xml:space="preserve">
     <value>Could not save Power BI settings.</value>
   </data>
-  <data name="Settings.Toast.PowerBiSaved" xml:space="preserve">
+  <data name="FINC_Settings_Toast_PowerBiSaved" xml:space="preserve">
     <value>Power BI settings saved successfully.</value>
   </data>
-  <data name="Settings.Validation.ExportPassphraseMismatch" xml:space="preserve">
+  <data name="FINC_Settings_Validation_ExportPassphraseMismatch" xml:space="preserve">
     <value>The confirmation passphrase does not match.</value>
   </data>
-  <data name="Settings.Validation.ExportPassphraseRequired" xml:space="preserve">
+  <data name="FINC_Settings_Validation_ExportPassphraseRequired" xml:space="preserve">
     <value>Enter a passphrase to export the connection package.</value>
   </data>
-  <data name="Settings.Validation.ImportPackageRequired" xml:space="preserve">
+  <data name="FINC_Settings_Validation_ImportPackageRequired" xml:space="preserve">
     <value>Select a connection package file before importing.</value>
   </data>
-  <data name="Settings.Validation.ImportPassphraseRequired" xml:space="preserve">
+  <data name="FINC_Settings_Validation_ImportPassphraseRequired" xml:space="preserve">
     <value>Enter the package passphrase before importing.</value>
   </data>
-  <data name="Shared.Common.Button.Cancel" xml:space="preserve">
-    <value>Cancel</value>
-  </data>
-  <data name="Shared.Common.Button.Save" xml:space="preserve">
-    <value>Save</value>
-  </data>
-  <data name="Shell.Brand.Primary" xml:space="preserve">
+  <data name="FINC_Shell_Brand_Primary" xml:space="preserve">
     <value>GRC Control</value>
   </data>
-  <data name="Shell.Navigation.ConfirmEmission" xml:space="preserve">
-    <value>Confirm emissions</value>
-  </data>
-  <data name="Shell.Navigation.ConfirmRequest" xml:space="preserve">
-    <value>Confirm request</value>
-  </data>
-  <data name="Shell.Navigation.ConnectionSettings" xml:space="preserve">
-    <value>Connection setup</value>
-  </data>
-  <data name="Shell.Navigation.InvoicePlan" xml:space="preserve">
-    <value>Invoice plan</value>
-  </data>
-  <data name="Shell.Title.FinancialControl" xml:space="preserve">
+  <data name="FINC_Shell_Title_FinancialControl" xml:space="preserve">
     <value>GRC Financial Control</value>
   </data>
-  <data name="Shell.Title.InvoicePlanner" xml:space="preserve">
-    <value>Invoice Planner</value>
-  </data>
-  <data name="Tasks.Button.Generate" xml:space="preserve">
+  <data name="FINC_Tasks_Button_Generate" xml:space="preserve">
     <value>Generate tasks file</value>
   </data>
-  <data name="Tasks.Button.GenerateRetainTemplate" xml:space="preserve">
+  <data name="FINC_Tasks_Button_GenerateRetainTemplate" xml:space="preserve">
     <value>Generate Retain template</value>
   </data>
-  <data name="Tasks.Description.Primary" xml:space="preserve">
+  <data name="FINC_Tasks_Description_Primary" xml:space="preserve">
     <value>Generate the weekly administrative tasks file for email delivery.</value>
   </data>
-  <data name="Tasks.Dialog.GenerateRetainTemplateTitle" xml:space="preserve">
+  <data name="FINC_Tasks_Dialog_GenerateRetainTemplateTitle" xml:space="preserve">
     <value>Select allocation planning file</value>
   </data>
-  <data name="Tasks.Dialog.SaveRetainTemplateTitle" xml:space="preserve">
+  <data name="FINC_Tasks_Dialog_SaveRetainTemplateTitle" xml:space="preserve">
     <value>Choose where to save the generated template</value>
   </data>
-  <data name="Tasks.Dialog.SaveTitle" xml:space="preserve">
+  <data name="FINC_Tasks_Dialog_SaveTitle" xml:space="preserve">
     <value>Save tasks file</value>
   </data>
-  <data name="Tasks.Status.Cancelled" xml:space="preserve">
+  <data name="FINC_Tasks_Status_Cancelled" xml:space="preserve">
     <value>Generation cancelled.</value>
   </data>
-  <data name="Tasks.Status.FileSaved" xml:space="preserve">
+  <data name="FINC_Tasks_Status_FileSaved" xml:space="preserve">
     <value>File saved to {0}.</value>
   </data>
-  <data name="Tasks.Status.GenerationFailure" xml:space="preserve">
+  <data name="FINC_Tasks_Status_GenerationFailure" xml:space="preserve">
     <value>Failed to generate tasks: {0}</value>
   </data>
-  <data name="Tasks.Status.RetainTemplateCancelled" xml:space="preserve">
+  <data name="FINC_Tasks_Status_RetainTemplateCancelled" xml:space="preserve">
     <value>Retain template generation cancelled.</value>
   </data>
-  <data name="Tasks.Status.RetainTemplateFailure" xml:space="preserve">
+  <data name="FINC_Tasks_Status_RetainTemplateFailure" xml:space="preserve">
     <value>Failed to generate Retain template: {0}</value>
   </data>
-  <data name="Tasks.Status.RetainTemplateSuccess" xml:space="preserve">
+  <data name="FINC_Tasks_Status_RetainTemplateSuccess" xml:space="preserve">
     <value>Template successfully generated at {0}.</value>
   </data>
-  <data name="Tasks.Status.TimeZoneMissing" xml:space="preserve">
+  <data name="FINC_Tasks_Status_TimeZoneMissing" xml:space="preserve">
     <value>Timezone {0} not found.</value>
   </data>
-  <data name="Tasks.Title.Primary" xml:space="preserve">
+  <data name="FINC_Tasks_Title_Primary" xml:space="preserve">
     <value>Tasks</value>
   </data>
-  <data name="TotalAmountInvalid" xml:space="preserve">
+  <data name="Global_AdditionalEmailBlank" xml:space="preserve">
+    <value>Recipient email entries cannot be blank.</value>
+  </data>
+  <data name="Global_AdditionalEmailInvalid" xml:space="preserve">
+    <value>Recipient email '{0}' is not valid.</value>
+  </data>
+  <data name="Global_Button_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Global_Button_Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Global_CustomerFocalPointEmailInvalid" xml:space="preserve">
+    <value>Primary recipient email is not in a valid format.</value>
+  </data>
+  <data name="Global_CustomerFocalPointEmailRequired" xml:space="preserve">
+    <value>At least one recipient email is required.</value>
+  </data>
+  <data name="Global_CustomerFocalPointNameRequired" xml:space="preserve">
+    <value>Customer focal point name is required.</value>
+  </data>
+  <data name="Global_CustomerTicketRequired" xml:space="preserve">
+    <value>Customer ticket is required for invoice line #{0}.</value>
+  </data>
+  <data name="Global_DeliveryDescriptionRequired" xml:space="preserve">
+    <value>Delivery description is required for invoice line #{0}.</value>
+  </data>
+  <data name="Global_DueDateMustMatch" xml:space="preserve">
+    <value>Due date for invoice line #{0} must be emission date + payment terms.</value>
+  </data>
+  <data name="Global_EmissionDateRequired" xml:space="preserve">
+    <value>Emission date is required for invoice line #{0}.</value>
+  </data>
+  <data name="Global_EngagementIdRequired" xml:space="preserve">
+    <value>Engagement ID is required.</value>
+  </data>
+  <data name="Global_FirstEmissionRequired" xml:space="preserve">
+    <value>First emission date is required for ByDate plans.</value>
+  </data>
+  <data name="Global_FrsNumberRequired" xml:space="preserve">
+    <value>FRS number is required for invoice line #{0}.</value>
+  </data>
+  <data name="Global_ItemsCountMismatch" xml:space="preserve">
+    <value>The number of invoice lines must match the header count.</value>
+  </data>
+  <data name="Global_ItemsRequired" xml:space="preserve">
+    <value>At least one invoice line is required.</value>
+  </data>
+  <data name="Global_Localization_Language_English" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="Global_Localization_Language_Portuguese" xml:space="preserve">
+    <value>Portuguese (Brazil)</value>
+  </data>
+  <data name="Global_NumInvoicesMinimum" xml:space="preserve">
+    <value>Number of invoices must be at least 1.</value>
+  </data>
+  <data name="Global_PayerCnpjRequired" xml:space="preserve">
+    <value>Customer CNPJ is required for invoice line #{0}.</value>
+  </data>
+  <data name="Global_PaymentTermsNegative" xml:space="preserve">
+    <value>Payment terms cannot be negative.</value>
+  </data>
+  <data name="Global_PoNumberRequired" xml:space="preserve">
+    <value>PO number is required for invoice line #{0}.</value>
+  </data>
+  <data name="Global_SequenceContiguous" xml:space="preserve">
+    <value>Invoice lines must have contiguous sequence numbers starting from 1.</value>
+  </data>
+  <data name="Global_TotalAmountInvalid" xml:space="preserve">
     <value>Total amount must equal the planning base value ({0}).</value>
   </data>
-  <data name="TotalPercentageInvalid" xml:space="preserve">
+  <data name="Global_TotalPercentageInvalid" xml:space="preserve">
     <value>Total percentage must be exactly 100.0000 (current {0}).</value>
+  </data>
+  <data name="INV_Access_Message_LoginUnknown" xml:space="preserve">
+    <value>current user</value>
+  </data>
+  <data name="INV_Access_Message_NoAssignments" xml:space="preserve">
+    <value>No assignments were found for login {0}. Contact the support team to request access.</value>
+  </data>
+  <data name="INV_Button_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="INV_Button_CopyDetails" xml:space="preserve">
+    <value>Copy details</value>
+  </data>
+  <data name="INV_Button_ExportExcel" xml:space="preserve">
+    <value>Export Excel</value>
+  </data>
+  <data name="INV_Button_ExportPdf" xml:space="preserve">
+    <value>Export PDF</value>
+  </data>
+  <data name="INV_Button_Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="INV_Connection_Button_Browse" xml:space="preserve">
+    <value>Browse…</value>
+  </data>
+  <data name="INV_Connection_Button_Import" xml:space="preserve">
+    <value>Import connection</value>
+  </data>
+  <data name="INV_Connection_Description_Setup" xml:space="preserve">
+    <value>Import the encrypted package generated in GRC Financial Control to configure the shared database.</value>
+  </data>
+  <data name="INV_Connection_Dialog_BrowseTitle" xml:space="preserve">
+    <value>Open connection package</value>
+  </data>
+  <data name="INV_Connection_Label_Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="INV_Connection_Label_Package" xml:space="preserve">
+    <value>Configuration package</value>
+  </data>
+  <data name="INV_Connection_Label_Passphrase" xml:space="preserve">
+    <value>Package passphrase</value>
+  </data>
+  <data name="INV_Connection_Message_MissingSettings" xml:space="preserve">
+    <value>Connection settings are missing or invalid. Open Connection setup to review the server, database, user, and password.</value>
+  </data>
+  <data name="INV_Connection_Message_SetupPrompt" xml:space="preserve">
+    <value>Import a connection package to start using the Invoice Planner.</value>
+  </data>
+  <data name="INV_Connection_Placeholder_Package" xml:space="preserve">
+    <value>Select the connection package</value>
+  </data>
+  <data name="INV_Connection_Placeholder_Passphrase" xml:space="preserve">
+    <value>Package passphrase</value>
+  </data>
+  <data name="INV_Connection_Section_Language_Title" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="INV_Connection_Status_ImportFailure" xml:space="preserve">
+    <value>Import failed: {0}</value>
+  </data>
+  <data name="INV_Connection_Status_ImportInProgress" xml:space="preserve">
+    <value>Importing connection settings…</value>
+  </data>
+  <data name="INV_Connection_Status_ImportSuccess" xml:space="preserve">
+    <value>Connection settings imported successfully. The application is ready to use.</value>
+  </data>
+  <data name="INV_Connection_Status_RestoreFailure" xml:space="preserve">
+    <value>Failed to restore the previous connection settings: {0}</value>
+  </data>
+  <data name="INV_Connection_Title_Setup" xml:space="preserve">
+    <value>Database connection</value>
+  </data>
+  <data name="INV_Connection_Validation_PackageRequired" xml:space="preserve">
+    <value>Select a connection package before importing.</value>
+  </data>
+  <data name="INV_Connection_Validation_PassphraseRequired" xml:space="preserve">
+    <value>Enter the package passphrase to continue.</value>
+  </data>
+  <data name="INV_Dialogs_Error_Label_Details" xml:space="preserve">
+    <value>Technical details</value>
+  </data>
+  <data name="INV_Dialogs_Error_Message" xml:space="preserve">
+    <value>Something went wrong. The operation was stopped so you can review the details below.</value>
+  </data>
+  <data name="INV_Dialogs_Error_Title" xml:space="preserve">
+    <value>Unexpected error</value>
+  </data>
+  <data name="INV_Emission_Button_CancelEmission" xml:space="preserve">
+    <value>Cancel emission</value>
+  </data>
+  <data name="INV_Emission_Button_InsertBzData" xml:space="preserve">
+    <value>Insert BZ data</value>
+  </data>
+  <data name="INV_Emission_Description_Primary" xml:space="preserve">
+    <value>Capture BZ codes to emit requested invoices or cancel an existing emission.</value>
+  </data>
+  <data name="INV_Emission_Message_Empty" xml:space="preserve">
+    <value>No plans are waiting for BZ confirmation.</value>
+  </data>
+  <data name="INV_Emission_Message_SelectHint" xml:space="preserve">
+    <value>Select a plan to emit invoices or cancel previous emissions.</value>
+  </data>
+  <data name="INV_Emission_Section_AvailablePlans_Header" xml:space="preserve">
+    <value>Plans ready for BZ capture</value>
+  </data>
+  <data name="INV_Emission_Section_InvoiceDetails_Header" xml:space="preserve">
+    <value>Invoice details</value>
+  </data>
+  <data name="INV_Emission_Status_CanceledFormat" xml:space="preserve">
+    <value>Canceled: {0}</value>
+  </data>
+  <data name="INV_Emission_Status_EmittedFormat" xml:space="preserve">
+    <value>Emitted: {0}</value>
+  </data>
+  <data name="INV_Emission_Status_EngagementFormat" xml:space="preserve">
+    <value>Engagement: {0}</value>
+  </data>
+  <data name="INV_Emission_Status_LineCanceled" xml:space="preserve">
+    <value>Invoice line {0} canceled and returned to planning.</value>
+  </data>
+  <data name="INV_Emission_Status_LineEmitted" xml:space="preserve">
+    <value>Invoice line {0} emitted.</value>
+  </data>
+  <data name="INV_Emission_Status_LoadFailure" xml:space="preserve">
+    <value>Could not load emission plans: {0}</value>
+  </data>
+  <data name="INV_Emission_Status_LoadFailureDetail" xml:space="preserve">
+    <value>Failed to load plan: {0}</value>
+  </data>
+  <data name="INV_Emission_Status_NoCancellations" xml:space="preserve">
+    <value>No invoice lines were canceled.</value>
+  </data>
+  <data name="INV_Emission_Status_NoEmissions" xml:space="preserve">
+    <value>No invoice lines were emitted.</value>
+  </data>
+  <data name="INV_Emission_Status_PlanLoaded" xml:space="preserve">
+    <value>Loaded plan {0} with {1} line(s).</value>
+  </data>
+  <data name="INV_Emission_Status_RequestedFormat" xml:space="preserve">
+    <value>Requested: {0}</value>
+  </data>
+  <data name="INV_Emission_TableHeader_Amount" xml:space="preserve">
+    <value>Amount</value>
+  </data>
+  <data name="INV_Emission_TableHeader_BzCode" xml:space="preserve">
+    <value>BZ code</value>
+  </data>
+  <data name="INV_Emission_TableHeader_CancelReason" xml:space="preserve">
+    <value>Cancel reason</value>
+  </data>
+  <data name="INV_Emission_TableHeader_DueDate" xml:space="preserve">
+    <value>Due</value>
+  </data>
+  <data name="INV_Emission_TableHeader_EmissionDate" xml:space="preserve">
+    <value>Emission</value>
+  </data>
+  <data name="INV_Emission_TableHeader_EmittedAt" xml:space="preserve">
+    <value>Emitted at</value>
+  </data>
+  <data name="INV_Emission_TableHeader_LastCancelReason" xml:space="preserve">
+    <value>Last cancel reason</value>
+  </data>
+  <data name="INV_Emission_Title_Primary" xml:space="preserve">
+    <value>Emission confirmation</value>
+  </data>
+  <data name="INV_Emission_Toast_LineCanceled" xml:space="preserve">
+    <value>Invoice line {0} cancellation saved.</value>
+  </data>
+  <data name="INV_Emission_Toast_LineEmitted" xml:space="preserve">
+    <value>Invoice line {0} marked as emitted.</value>
+  </data>
+  <data name="INV_Emission_Toast_NoCancellations" xml:space="preserve">
+    <value>No emission cancellations were applied.</value>
+  </data>
+  <data name="INV_Emission_Toast_NoEmissions" xml:space="preserve">
+    <value>No emission updates were applied.</value>
+  </data>
+  <data name="INV_Emission_Toast_OperationFailed" xml:space="preserve">
+    <value>Emission update failed: {0}.</value>
+  </data>
+  <data name="INV_Emission_Toast_ValidationFailed" xml:space="preserve">
+    <value>Emission update blocked: {0}.</value>
+  </data>
+  <data name="INV_Emission_Validation_BzCode" xml:space="preserve">
+    <value>Provide the BZ code before closing the invoice.</value>
+  </data>
+  <data name="INV_Emission_Validation_CancelPlanRequired" xml:space="preserve">
+    <value>Load a plan before canceling invoices.</value>
+  </data>
+  <data name="INV_Emission_Validation_CancelReason" xml:space="preserve">
+    <value>Provide a cancel reason before reversing the emission.</value>
+  </data>
+  <data name="INV_Emission_Validation_EmissionDate" xml:space="preserve">
+    <value>Provide an emission date before closing the invoice.</value>
+  </data>
+  <data name="INV_Emission_Validation_PlanNotFound" xml:space="preserve">
+    <value>Invoice plan {0} was not found.</value>
+  </data>
+  <data name="INV_Emission_Validation_PlanRequired" xml:space="preserve">
+    <value>Load a plan before closing invoices.</value>
+  </data>
+  <data name="INV_Emission_Validation_PlanSelection" xml:space="preserve">
+    <value>Select a plan before inserting BZ data.</value>
+  </data>
+  <data name="INV_Exports_InvoiceSummary_Header_Amount" xml:space="preserve">
+    <value>Amount</value>
+  </data>
+  <data name="INV_Exports_InvoiceSummary_Header_BaseValue" xml:space="preserve">
+    <value>Base Value</value>
+  </data>
+  <data name="INV_Exports_InvoiceSummary_Header_BzCode" xml:space="preserve">
+    <value>BZ Code</value>
+  </data>
+  <data name="INV_Exports_InvoiceSummary_Header_CancelReason" xml:space="preserve">
+    <value>Cancel Reason</value>
+  </data>
+  <data name="INV_Exports_InvoiceSummary_Header_CanceledAt" xml:space="preserve">
+    <value>Canceled At</value>
+  </data>
+  <data name="INV_Exports_InvoiceSummary_Header_Customer" xml:space="preserve">
+    <value>Customer</value>
+  </data>
+  <data name="INV_Exports_InvoiceSummary_Header_CustomerCode" xml:space="preserve">
+    <value>Customer Code</value>
+  </data>
+  <data name="INV_Exports_InvoiceSummary_Header_DueDate" xml:space="preserve">
+    <value>Due Date</value>
+  </data>
+  <data name="INV_Exports_InvoiceSummary_Header_EmissionDate" xml:space="preserve">
+    <value>Emission Date</value>
+  </data>
+  <data name="INV_Exports_InvoiceSummary_Header_EmittedAt" xml:space="preserve">
+    <value>Emitted At</value>
+  </data>
+  <data name="INV_Exports_InvoiceSummary_Header_Engagement" xml:space="preserve">
+    <value>Engagement</value>
+  </data>
+  <data name="INV_Exports_InvoiceSummary_Header_Line" xml:space="preserve">
+    <value>Line</value>
+  </data>
+  <data name="INV_Exports_InvoiceSummary_Header_Percentage" xml:space="preserve">
+    <value>Percentage</value>
+  </data>
+  <data name="INV_Exports_InvoiceSummary_Header_PlanId" xml:space="preserve">
+    <value>Plan Id</value>
+  </data>
+  <data name="INV_Exports_InvoiceSummary_Header_PlanType" xml:space="preserve">
+    <value>Plan Type</value>
+  </data>
+  <data name="INV_Exports_InvoiceSummary_Header_RequestDate" xml:space="preserve">
+    <value>Request Date</value>
+  </data>
+  <data name="INV_Exports_InvoiceSummary_Header_Ritm" xml:space="preserve">
+    <value>RITM</value>
+  </data>
+  <data name="INV_Exports_InvoiceSummary_Header_Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="INV_Exports_InvoiceSummary_Header_Totals" xml:space="preserve">
+    <value>Totals</value>
+  </data>
+  <data name="INV_Exports_InvoiceSummary_PdfTitle" xml:space="preserve">
+    <value>Invoice Summary</value>
+  </data>
+  <data name="INV_Exports_InvoiceSummary_WorksheetName" xml:space="preserve">
+    <value>Summary</value>
+  </data>
+  <data name="INV_Home_Description_Primary" xml:space="preserve">
+    <value>Plan, request, and monitor your engagement invoices.</value>
+  </data>
+  <data name="INV_Home_Message_Welcome" xml:space="preserve">
+    <value>Configure your invoice plan, confirm requests, and close emissions when ready.</value>
+  </data>
+  <data name="INV_InvoicePlan_Description_Primary" xml:space="preserve">
+    <value>Fill out the header details and balance each invoice line.</value>
+  </data>
+  <data name="INV_InvoicePlan_Dialog_Button_DeletePlan" xml:space="preserve">
+    <value>Delete plan</value>
+  </data>
+  <data name="INV_InvoicePlan_Dialog_Button_EditPlan" xml:space="preserve">
+    <value>Add / Edit plan</value>
+  </data>
+  <data name="INV_InvoicePlan_Label_BaseValue" xml:space="preserve">
+    <value>Planning base value</value>
+  </data>
+  <data name="INV_InvoicePlan_Label_Engagement" xml:space="preserve">
+    <value>Engagement</value>
+  </data>
+  <data name="INV_InvoicePlan_Label_FirstEmission" xml:space="preserve">
+    <value>First emission date</value>
+  </data>
+  <data name="INV_InvoicePlan_Label_FocalPoint" xml:space="preserve">
+    <value>Customer focal point</value>
+  </data>
+  <data name="INV_InvoicePlan_Label_Instructions" xml:space="preserve">
+    <value>Instructions</value>
+  </data>
+  <data name="INV_InvoicePlan_Label_InvoiceCount" xml:space="preserve">
+    <value># invoices</value>
+  </data>
+  <data name="INV_InvoicePlan_Label_PaymentTerms" xml:space="preserve">
+    <value>Payment terms (days)</value>
+  </data>
+  <data name="INV_InvoicePlan_Label_PlanType" xml:space="preserve">
+    <value>Plan type</value>
+  </data>
+  <data name="INV_InvoicePlan_Label_RecipientEmails" xml:space="preserve">
+    <value>Recipient emails</value>
+  </data>
+  <data name="INV_InvoicePlan_Placeholder_DeliveryNotes" xml:space="preserve">
+    <value>Provide delivery notes</value>
+  </data>
+  <data name="INV_InvoicePlan_Placeholder_Recipients" xml:space="preserve">
+    <value>Enter all recipient emails separated by semicolons or new lines.</value>
+  </data>
+  <data name="INV_InvoicePlan_Section_InvoiceLines_Title" xml:space="preserve">
+    <value>Invoice lines</value>
+  </data>
+  <data name="INV_InvoicePlan_Section_Totals_Amount" xml:space="preserve">
+    <value>Amount:</value>
+  </data>
+  <data name="INV_InvoicePlan_Section_Totals_Label" xml:space="preserve">
+    <value>Totals</value>
+  </data>
+  <data name="INV_InvoicePlan_Section_Totals_Percent" xml:space="preserve">
+    <value>Percent:</value>
+  </data>
+  <data name="INV_InvoicePlan_Selection_Button_AddEdit" xml:space="preserve">
+    <value>Add / Edit invoice details</value>
+  </data>
+  <data name="INV_InvoicePlan_Selection_Column_Canceled" xml:space="preserve">
+    <value>Canceled</value>
+  </data>
+  <data name="INV_InvoicePlan_Selection_Column_Closed" xml:space="preserve">
+    <value>Closed</value>
+  </data>
+  <data name="INV_InvoicePlan_Selection_Column_Emitted" xml:space="preserve">
+    <value>Emitted</value>
+  </data>
+  <data name="INV_InvoicePlan_Selection_Column_Engagement" xml:space="preserve">
+    <value>Engagement</value>
+  </data>
+  <data name="INV_InvoicePlan_Selection_Column_FirstEmission" xml:space="preserve">
+    <value>First emission</value>
+  </data>
+  <data name="INV_InvoicePlan_Selection_Column_PendingRequests" xml:space="preserve">
+    <value>Pending requests</value>
+  </data>
+  <data name="INV_InvoicePlan_Selection_Column_PlanId" xml:space="preserve">
+    <value>Plan</value>
+  </data>
+  <data name="INV_InvoicePlan_Selection_Column_Requested" xml:space="preserve">
+    <value>Requested</value>
+  </data>
+  <data name="INV_InvoicePlan_Selection_Column_Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="INV_InvoicePlan_Selection_Description_Primary" xml:space="preserve">
+    <value>Choose an engagement from the list to start a new invoice plan.</value>
+  </data>
+  <data name="INV_InvoicePlan_Selection_Header_Customer" xml:space="preserve">
+    <value>Customer</value>
+  </data>
+  <data name="INV_InvoicePlan_Selection_Header_Engagement" xml:space="preserve">
+    <value>Engagement</value>
+  </data>
+  <data name="INV_InvoicePlan_Selection_Header_Plan" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="INV_InvoicePlan_Selection_Message_Empty" xml:space="preserve">
+    <value>No engagements are available. Configure the data connection and try again.</value>
+  </data>
+  <data name="INV_InvoicePlan_Selection_Message_SelectHint" xml:space="preserve">
+    <value>Select an engagement and choose Add / Edit invoice details to open or update the invoice schedule.</value>
+  </data>
+  <data name="INV_InvoicePlan_Selection_Status_LoadFailure" xml:space="preserve">
+    <value>Could not load engagements: {0}</value>
+  </data>
+  <data name="INV_InvoicePlan_Selection_Status_PlanDeleted" xml:space="preserve">
+    <value>Invoice plan {0} deleted. Select the engagement again to start a new schedule.</value>
+  </data>
+  <data name="INV_InvoicePlan_Selection_Title_Primary" xml:space="preserve">
+    <value>Select an engagement</value>
+  </data>
+  <data name="INV_InvoicePlan_Status_ActionCreated" xml:space="preserve">
+    <value>created</value>
+  </data>
+  <data name="INV_InvoicePlan_Status_ActionUpdated" xml:space="preserve">
+    <value>updated</value>
+  </data>
+  <data name="INV_InvoicePlan_Status_DeleteFailure" xml:space="preserve">
+    <value>Failed to delete plan: {0}</value>
+  </data>
+  <data name="INV_InvoicePlan_Status_LoadFailure" xml:space="preserve">
+    <value>Failed to load plan: {0}</value>
+  </data>
+  <data name="INV_InvoicePlan_Status_PlanLoaded" xml:space="preserve">
+    <value>Invoice plan {0} loaded with {1} line(s).</value>
+  </data>
+  <data name="INV_InvoicePlan_Status_PlanSaved" xml:space="preserve">
+    <value>Plan {0} {1}. Lines: {2}, affected rows: {3}, deleted: {4}.</value>
+  </data>
+  <data name="INV_InvoicePlan_Status_SaveFailure" xml:space="preserve">
+    <value>Failed to save plan: {0}</value>
+  </data>
+  <data name="INV_InvoicePlan_TableHeader_Amount" xml:space="preserve">
+    <value>Amount</value>
+  </data>
+  <data name="INV_InvoicePlan_TableHeader_Cnpj" xml:space="preserve">
+    <value>Customer CNPJ</value>
+  </data>
+  <data name="INV_InvoicePlan_TableHeader_Delivery" xml:space="preserve">
+    <value>Delivery description</value>
+  </data>
+  <data name="INV_InvoicePlan_TableHeader_EmissionDate" xml:space="preserve">
+    <value>Emission date</value>
+  </data>
+  <data name="INV_InvoicePlan_TableHeader_Frs" xml:space="preserve">
+    <value>FRS</value>
+  </data>
+  <data name="INV_InvoicePlan_TableHeader_PaymentType" xml:space="preserve">
+    <value>Payment type</value>
+  </data>
+  <data name="INV_InvoicePlan_TableHeader_Percent" xml:space="preserve">
+    <value>Percent</value>
+  </data>
+  <data name="INV_InvoicePlan_TableHeader_Po" xml:space="preserve">
+    <value>PO</value>
+  </data>
+  <data name="INV_InvoicePlan_TableHeader_Sequence" xml:space="preserve">
+    <value>#</value>
+  </data>
+  <data name="INV_InvoicePlan_TableHeader_Ticket" xml:space="preserve">
+    <value>Customer ticket</value>
+  </data>
+  <data name="INV_InvoicePlan_Title_Primary" xml:space="preserve">
+    <value>Invoice plan</value>
+  </data>
+  <data name="INV_InvoicePlan_Toast_DeleteFailed" xml:space="preserve">
+    <value>Unable to delete the invoice plan.</value>
+  </data>
+  <data name="INV_InvoicePlan_Toast_DeleteMissing" xml:space="preserve">
+    <value>Invoice plan {0} is no longer available.</value>
+  </data>
+  <data name="INV_InvoicePlan_Toast_PlanDeleted" xml:space="preserve">
+    <value>Invoice plan {0} deleted.</value>
+  </data>
+  <data name="INV_InvoicePlan_Toast_PlanSaved" xml:space="preserve">
+    <value>Invoice plan {0} saved.</value>
+  </data>
+  <data name="INV_InvoicePlan_Toast_SaveFailed" xml:space="preserve">
+    <value>Unable to save the invoice plan.</value>
+  </data>
+  <data name="INV_InvoicePlan_Toast_ValidationFailed" xml:space="preserve">
+    <value>Resolve validation issues before saving.</value>
+  </data>
+  <data name="INV_InvoicePlan_Validation_NoLines" xml:space="preserve">
+    <value>Add at least one invoice line before saving.</value>
+  </data>
+  <data name="INV_InvoicePlan_Validation_PlanNotFound" xml:space="preserve">
+    <value>Invoice plan {0} was not found.</value>
+  </data>
+  <data name="INV_InvoiceSummary_Button_ApplyFilters" xml:space="preserve">
+    <value>Apply filters</value>
+  </data>
+  <data name="INV_InvoiceSummary_Button_ClearFilters" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="INV_InvoiceSummary_Filter_AllCustomers" xml:space="preserve">
+    <value>All customers</value>
+  </data>
+  <data name="INV_InvoiceSummary_Filter_AllEngagements" xml:space="preserve">
+    <value>All engagements</value>
+  </data>
+  <data name="INV_InvoiceSummary_Group_AmountFormat" xml:space="preserve">
+    <value>Total: {0:C2}</value>
+  </data>
+  <data name="INV_InvoiceSummary_Group_CanceledCountFormat" xml:space="preserve">
+    <value>Canceled: {0}</value>
+  </data>
+  <data name="INV_InvoiceSummary_Group_ClosedCountFormat" xml:space="preserve">
+    <value>Closed: {0}</value>
+  </data>
+  <data name="INV_InvoiceSummary_Group_EmittedCountFormat" xml:space="preserve">
+    <value>Emitted: {0}</value>
+  </data>
+  <data name="INV_InvoiceSummary_Group_PercentageFormat" xml:space="preserve">
+    <value>Percent: {0:N4}%</value>
+  </data>
+  <data name="INV_InvoiceSummary_Group_PlannedCountFormat" xml:space="preserve">
+    <value>Planned: {0}</value>
+  </data>
+  <data name="INV_InvoiceSummary_Group_ReissuedCountFormat" xml:space="preserve">
+    <value>Reissued: {0}</value>
+  </data>
+  <data name="INV_InvoiceSummary_Group_RequestedCountFormat" xml:space="preserve">
+    <value>Requested: {0}</value>
+  </data>
+  <data name="INV_InvoiceSummary_Label_Customer" xml:space="preserve">
+    <value>Customer</value>
+  </data>
+  <data name="INV_InvoiceSummary_Label_Engagement" xml:space="preserve">
+    <value>Engagement</value>
+  </data>
+  <data name="INV_InvoiceSummary_Label_Statuses" xml:space="preserve">
+    <value>Statuses</value>
+  </data>
+  <data name="INV_InvoiceSummary_Section_Totals_Amount" xml:space="preserve">
+    <value>Total amount</value>
+  </data>
+  <data name="INV_InvoiceSummary_Section_Totals_Percentage" xml:space="preserve">
+    <value>Total percentage</value>
+  </data>
+  <data name="INV_InvoiceSummary_Status_Empty" xml:space="preserve">
+    <value>No invoice lines matched the selected filters.</value>
+  </data>
+  <data name="INV_InvoiceSummary_Status_ExportFailure" xml:space="preserve">
+    <value>Export failed: {0}</value>
+  </data>
+  <data name="INV_InvoiceSummary_Status_ExportSuccess" xml:space="preserve">
+    <value>Exported {0} report to {1}.</value>
+  </data>
+  <data name="INV_InvoiceSummary_Status_LoadFailure" xml:space="preserve">
+    <value>Unable to load invoice summary: {0}</value>
+  </data>
+  <data name="INV_InvoiceSummary_Status_Loaded" xml:space="preserve">
+    <value>Loaded {0} line(s) across {1} engagement(s).</value>
+  </data>
+  <data name="INV_InvoiceSummary_TableHeader_Amount" xml:space="preserve">
+    <value>Amount</value>
+  </data>
+  <data name="INV_InvoiceSummary_TableHeader_BaseValue" xml:space="preserve">
+    <value>Base</value>
+  </data>
+  <data name="INV_InvoiceSummary_TableHeader_BzCode" xml:space="preserve">
+    <value>BZ</value>
+  </data>
+  <data name="INV_InvoiceSummary_TableHeader_CancelReason" xml:space="preserve">
+    <value>Reason</value>
+  </data>
+  <data name="INV_InvoiceSummary_TableHeader_CanceledAt" xml:space="preserve">
+    <value>Canceled</value>
+  </data>
+  <data name="INV_InvoiceSummary_TableHeader_DueDate" xml:space="preserve">
+    <value>Due</value>
+  </data>
+  <data name="INV_InvoiceSummary_TableHeader_EmissionDate" xml:space="preserve">
+    <value>Emission</value>
+  </data>
+  <data name="INV_InvoiceSummary_TableHeader_EmittedAt" xml:space="preserve">
+    <value>Emitted</value>
+  </data>
+  <data name="INV_InvoiceSummary_TableHeader_Percent" xml:space="preserve">
+    <value>%</value>
+  </data>
+  <data name="INV_InvoiceSummary_TableHeader_Plan" xml:space="preserve">
+    <value>Plan</value>
+  </data>
+  <data name="INV_InvoiceSummary_TableHeader_RequestDate" xml:space="preserve">
+    <value>Requested</value>
+  </data>
+  <data name="INV_InvoiceSummary_TableHeader_Ritm" xml:space="preserve">
+    <value>RITM</value>
+  </data>
+  <data name="INV_InvoiceSummary_TableHeader_Sequence" xml:space="preserve">
+    <value>#</value>
+  </data>
+  <data name="INV_InvoiceSummary_TableHeader_Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="INV_InvoiceSummary_TableHeader_Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="INV_InvoiceSummary_Title_Filters" xml:space="preserve">
+    <value>Summary filters</value>
+  </data>
+  <data name="INV_InvoiceSummary_Validation_NoDataToExport" xml:space="preserve">
+    <value>There is no data to export.</value>
+  </data>
+  <data name="INV_InvoiceSummary_Validation_StatusRequired" xml:space="preserve">
+    <value>Select at least one invoice status.</value>
+  </data>
+  <data name="INV_InvoiceSummary_Value_UnknownCustomer" xml:space="preserve">
+    <value>Customer</value>
+  </data>
+  <data name="INV_Invoice_Status_Canceled" xml:space="preserve">
+    <value>Canceled</value>
+  </data>
+  <data name="INV_Invoice_Status_Closed" xml:space="preserve">
+    <value>Closed</value>
+  </data>
+  <data name="INV_Invoice_Status_Emitted" xml:space="preserve">
+    <value>Emitted</value>
+  </data>
+  <data name="INV_Invoice_Status_Planned" xml:space="preserve">
+    <value>Planned</value>
+  </data>
+  <data name="INV_Invoice_Status_Reissued" xml:space="preserve">
+    <value>Reissued</value>
+  </data>
+  <data name="INV_Invoice_Status_Requested" xml:space="preserve">
+    <value>Requested</value>
+  </data>
+  <data name="INV_Localization_Language_PreferenceSaveFailure" xml:space="preserve">
+    <value>Failed to save the language preference: {0}</value>
+  </data>
+  <data name="INV_Localization_Language_PreferenceSaved" xml:space="preserve">
+    <value>Language preference saved. Restart the application to apply changes.</value>
+  </data>
+  <data name="INV_Notifications_Description_Primary" xml:space="preserve">
+    <value>Review recipients and content generated by the D-7 notification view.</value>
+  </data>
+  <data name="INV_Notifications_Format_Amount" xml:space="preserve">
+    <value>Amount: {0:N2}</value>
+  </data>
+  <data name="INV_Notifications_Format_CcRecipients" xml:space="preserve">
+    <value>CC: {0}</value>
+  </data>
+  <data name="INV_Notifications_Format_Customer" xml:space="preserve">
+    <value>Customer: {0}</value>
+  </data>
+  <data name="INV_Notifications_Format_DueDate" xml:space="preserve">
+    <value>Due: {0:yyyy-MM-dd}</value>
+  </data>
+  <data name="INV_Notifications_Format_EmissionDate" xml:space="preserve">
+    <value>Emission: {0:yyyy-MM-dd}</value>
+  </data>
+  <data name="INV_Notifications_Format_Managers" xml:space="preserve">
+    <value>Managers: {0}</value>
+  </data>
+  <data name="INV_Notifications_Format_NotifyDate" xml:space="preserve">
+    <value>Notify: {0:yyyy-MM-dd}</value>
+  </data>
+  <data name="INV_Notifications_Format_Plan" xml:space="preserve">
+    <value>Plan: {0}</value>
+  </data>
+  <data name="INV_Notifications_Format_Recipients" xml:space="preserve">
+    <value>Recipients: {0}</value>
+  </data>
+  <data name="INV_Notifications_Format_Sequence" xml:space="preserve">
+    <value>Installment {0} of {1}</value>
+  </data>
+  <data name="INV_Notifications_Format_Subject" xml:space="preserve">
+    <value>[D-7] Planned emission on {0:dd/MM/yyyy} – {1} / Installment {2} of {3}</value>
+  </data>
+  <data name="INV_Notifications_Format_ToRecipients" xml:space="preserve">
+    <value>To: {0}</value>
+  </data>
+  <data name="INV_Notifications_Label_NotificationDate" xml:space="preserve">
+    <value>Notification date</value>
+  </data>
+  <data name="INV_Notifications_Message_Empty" xml:space="preserve">
+    <value>No notifications are scheduled for the selected date.</value>
+  </data>
+  <data name="INV_Notifications_Status_Empty" xml:space="preserve">
+    <value>No notifications scheduled for {0:yyyy-MM-dd}.</value>
+  </data>
+  <data name="INV_Notifications_Status_LoadFailure" xml:space="preserve">
+    <value>Unable to load notifications: {0}</value>
+  </data>
+  <data name="INV_Notifications_Status_Loaded" xml:space="preserve">
+    <value>Loaded {0} notification(s) for {1:yyyy-MM-dd}.</value>
+  </data>
+  <data name="INV_Notifications_Template_Amount" xml:space="preserve">
+    <value>Installment amount: {0}</value>
+  </data>
+  <data name="INV_Notifications_Template_Competence" xml:space="preserve">
+    <value>Competence: {0}</value>
+  </data>
+  <data name="INV_Notifications_Template_Contact" xml:space="preserve">
+    <value>Contact {0}: {1}</value>
+  </data>
+  <data name="INV_Notifications_Template_DueDate" xml:space="preserve">
+    <value>Due date: {0}</value>
+  </data>
+  <data name="INV_Notifications_Template_Frs" xml:space="preserve">
+    <value>FRS: {0}</value>
+  </data>
+  <data name="INV_Notifications_Template_Installment" xml:space="preserve">
+    <value>Installment {0} of {1}</value>
+  </data>
+  <data name="INV_Notifications_Template_ManagerEmails" xml:space="preserve">
+    <value>Manager emails: {0}</value>
+  </data>
+  <data name="INV_Notifications_Template_Managers" xml:space="preserve">
+    <value>Managers: {0}</value>
+  </data>
+  <data name="INV_Notifications_Template_Po" xml:space="preserve">
+    <value>PO: {0}</value>
+  </data>
+  <data name="INV_Notifications_Template_Recipients" xml:space="preserve">
+    <value>Delivery emails: {0}</value>
+  </data>
+  <data name="INV_Notifications_Template_Service" xml:space="preserve">
+    <value>Service: Services - Assistance and Consulting</value>
+  </data>
+  <data name="INV_Notifications_Template_Ticket" xml:space="preserve">
+    <value>Ticket: {0}</value>
+  </data>
+  <data name="INV_Notifications_Title_Primary" xml:space="preserve">
+    <value>Notifications preview</value>
+  </data>
+  <data name="INV_Placeholder_Code" xml:space="preserve">
+    <value>Code</value>
+  </data>
+  <data name="INV_Placeholder_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="INV_Placeholder_Reason" xml:space="preserve">
+    <value>Reason</value>
+  </data>
+  <data name="INV_Request_Button_InsertData" xml:space="preserve">
+    <value>Insert request data</value>
+  </data>
+  <data name="INV_Request_Button_Reverse" xml:space="preserve">
+    <value>Reverse</value>
+  </data>
+  <data name="INV_Request_Description_Primary" xml:space="preserve">
+    <value>Capture RITM, COE, and request date to move invoices from Planned to Requested.</value>
+  </data>
+  <data name="INV_Request_Message_Empty" xml:space="preserve">
+    <value>No plans currently require request confirmation.</value>
+  </data>
+  <data name="INV_Request_Message_SelectHint" xml:space="preserve">
+    <value>Select a plan with pending invoices to insert request details.</value>
+  </data>
+  <data name="INV_Request_Section_AvailablePlans_Header" xml:space="preserve">
+    <value>Available plans</value>
+  </data>
+  <data name="INV_Request_Section_InvoiceDetails_Header" xml:space="preserve">
+    <value>Invoice details</value>
+  </data>
+  <data name="INV_Request_Status_EngagementFormat" xml:space="preserve">
+    <value>Engagement: {0}</value>
+  </data>
+  <data name="INV_Request_Status_LineRequested" xml:space="preserve">
+    <value>Invoice line {0} marked as requested.</value>
+  </data>
+  <data name="INV_Request_Status_LineUndone" xml:space="preserve">
+    <value>Invoice line {0} returned to Planned.</value>
+  </data>
+  <data name="INV_Request_Status_LoadFailure" xml:space="preserve">
+    <value>Could not load plans: {0}</value>
+  </data>
+  <data name="INV_Request_Status_LoadFailureDetail" xml:space="preserve">
+    <value>Failed to load plan: {0}</value>
+  </data>
+  <data name="INV_Request_Status_NoUndo" xml:space="preserve">
+    <value>No invoice lines were undone.</value>
+  </data>
+  <data name="INV_Request_Status_NoUpdates" xml:space="preserve">
+    <value>No invoice lines required updates.</value>
+  </data>
+  <data name="INV_Request_Status_PlanLoaded" xml:space="preserve">
+    <value>Loaded plan {0} with {1} line(s).</value>
+  </data>
+  <data name="INV_Request_Status_PlannedFormat" xml:space="preserve">
+    <value>Planned: {0}</value>
+  </data>
+  <data name="INV_Request_Status_RequestedFormat" xml:space="preserve">
+    <value>Requested: {0}</value>
+  </data>
+  <data name="INV_Request_TableHeader_Amount" xml:space="preserve">
+    <value>Amount</value>
+  </data>
+  <data name="INV_Request_TableHeader_Coe" xml:space="preserve">
+    <value>COE</value>
+  </data>
+  <data name="INV_Request_TableHeader_EmissionDate" xml:space="preserve">
+    <value>Emission</value>
+  </data>
+  <data name="INV_Request_TableHeader_RequestDate" xml:space="preserve">
+    <value>Request date</value>
+  </data>
+  <data name="INV_Request_TableHeader_Ritm" xml:space="preserve">
+    <value>RITM</value>
+  </data>
+  <data name="INV_Request_TableHeader_Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="INV_Request_Title_Primary" xml:space="preserve">
+    <value>Request confirmation</value>
+  </data>
+  <data name="INV_Request_Toast_LineRequested" xml:space="preserve">
+    <value>Invoice line {0} marked as requested.</value>
+  </data>
+  <data name="INV_Request_Toast_LineUndone" xml:space="preserve">
+    <value>Invoice line {0} returned to Planned.</value>
+  </data>
+  <data name="INV_Request_Toast_NoUndo" xml:space="preserve">
+    <value>No invoice lines were undone.</value>
+  </data>
+  <data name="INV_Request_Toast_NoUpdates" xml:space="preserve">
+    <value>No invoice lines were updated.</value>
+  </data>
+  <data name="INV_Request_Toast_RequestFailed" xml:space="preserve">
+    <value>Unable to mark the selected line as requested.</value>
+  </data>
+  <data name="INV_Request_Toast_UndoFailed" xml:space="preserve">
+    <value>Unable to undo the selected line.</value>
+  </data>
+  <data name="INV_Request_Validation_LineSelection" xml:space="preserve">
+    <value>Select an invoice before saving.</value>
+  </data>
+  <data name="INV_Request_Validation_PlanNotFound" xml:space="preserve">
+    <value>Invoice plan {0} was not found.</value>
+  </data>
+  <data name="INV_Request_Validation_PlanRequired" xml:space="preserve">
+    <value>Load a plan before requesting invoices.</value>
+  </data>
+  <data name="INV_Request_Validation_PlanSelection" xml:space="preserve">
+    <value>Select a plan before inserting request data.</value>
+  </data>
+  <data name="INV_Request_Validation_RequestDateRequired" xml:space="preserve">
+    <value>Provide a request date before marking the invoice as requested.</value>
+  </data>
+  <data name="INV_Request_Validation_UndoPlanRequired" xml:space="preserve">
+    <value>Load a plan before undoing requests.</value>
+  </data>
+  <data name="INV_Shell_Navigation_ConfirmEmission" xml:space="preserve">
+    <value>Confirm emissions</value>
+  </data>
+  <data name="INV_Shell_Navigation_ConfirmRequest" xml:space="preserve">
+    <value>Confirm request</value>
+  </data>
+  <data name="INV_Shell_Navigation_ConnectionSettings" xml:space="preserve">
+    <value>Connection setup</value>
+  </data>
+  <data name="INV_Shell_Navigation_InvoicePlan" xml:space="preserve">
+    <value>Invoice plan</value>
+  </data>
+  <data name="INV_Shell_Title_InvoicePlanner" xml:space="preserve">
+    <value>Invoice Planner</value>
   </data>
 </root>

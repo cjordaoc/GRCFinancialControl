@@ -72,7 +72,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             if (string.IsNullOrWhiteSpace(Name))
             {
-                const string validationKey = "FiscalYears.Validation.NameRequired";
+                const string validationKey = "FINC_FiscalYears_Validation_NameRequired";
                 StatusMessage = LocalizationRegistry.Get(validationKey);
                 ToastService.ShowWarning(validationKey);
                 return;
@@ -80,7 +80,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             if (EndDate < StartDate)
             {
-                const string validationKey = "FiscalYears.Validation.EndDateAfterStart";
+                const string validationKey = "FINC_FiscalYears_Validation_EndDateAfterStart";
                 StatusMessage = LocalizationRegistry.Get(validationKey);
                 ToastService.ShowWarning(validationKey);
                 return;
@@ -103,13 +103,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     await _fiscalYearService.UpdateAsync(FiscalYear);
                 }
 
-                ToastService.ShowSuccess("FiscalYears.Toast.SaveSuccess", FiscalYear.Name);
+                ToastService.ShowSuccess("FINC_FiscalYears_Toast_SaveSuccess", FiscalYear.Name);
                 _messenger.Send(new CloseDialogMessage(true));
             }
             catch (Exception ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowError("FiscalYears.Toast.OperationFailed", ex.Message);
+                ToastService.ShowError("FINC_FiscalYears_Toast_OperationFailed", ex.Message);
             }
         }
 

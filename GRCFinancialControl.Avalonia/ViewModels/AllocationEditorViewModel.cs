@@ -98,15 +98,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             IsReadOnlyMode = isReadOnlyMode;
         }
 
-        public string TargetLabel => LocalizationRegistry.Get("Allocations.Label.TargetValue");
+        public string TargetLabel => LocalizationRegistry.Get("FINC_Allocations_Label_TargetValue");
 
-        public string CurrentAllocationLabel => LocalizationRegistry.Get("Allocations.Label.CurrentValue");
+        public string CurrentAllocationLabel => LocalizationRegistry.Get("FINC_Allocations_Label_CurrentValue");
 
-        public string ToDateColumnHeader => LocalizationRegistry.Get("Allocations.Header.ToDateValue");
+        public string ToDateColumnHeader => LocalizationRegistry.Get("FINC_Allocations_Header_ToDateValue");
 
-        public string ToGoColumnHeader => LocalizationRegistry.Get("Allocations.Header.ToGoValue");
+        public string ToGoColumnHeader => LocalizationRegistry.Get("FINC_Allocations_Header_ToGoValue");
 
-        public string ValidationErrorMessage => LocalizationRegistry.Get("Allocations.Validation.ValueMatchTarget");
+        public string ValidationErrorMessage => LocalizationRegistry.Get("FINC_Allocations_Validation_ValueMatchTarget");
 
         public bool AllowEditing => !IsReadOnlyMode;
 
@@ -170,13 +170,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (Math.Abs(value) < 0.005m)
             {
                 AllocationVarianceDisplay = string.Empty;
-                AllocationVarianceTooltip = LocalizationRegistry.Format("Allocations.Tooltip.Variance", CurrencyDisplayHelper.Format(0m, Engagement.Currency));
+                AllocationVarianceTooltip = LocalizationRegistry.Format("FINC_Allocations_Tooltip_Variance", CurrencyDisplayHelper.Format(0m, Engagement.Currency));
                 return;
             }
 
             var formatted = CurrencyDisplayHelper.Format(Math.Abs(value), Engagement.Currency);
             AllocationVarianceDisplay = value > 0 ? string.Concat("+", formatted) : string.Concat("-", formatted);
-            AllocationVarianceTooltip = LocalizationRegistry.Format("Allocations.Tooltip.Variance", AllocationVarianceDisplay);
+            AllocationVarianceTooltip = LocalizationRegistry.Format("FINC_Allocations_Tooltip_Variance", AllocationVarianceDisplay);
         }
 
         private void UpdateVariance()

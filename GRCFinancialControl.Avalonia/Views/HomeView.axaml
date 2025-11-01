@@ -16,18 +16,18 @@
     </UserControl.Resources>
     <ScrollViewer>
         <StackPanel Margin="{StaticResource MarginLarge}" Spacing="{StaticResource Spacing16}">
-            <TextBlock Text="{loc:Loc Key=Home.Title}"
+            <TextBlock Text="{loc:Loc Key=FINC_Home_Title}"
                        Classes="TitleLarge"/>
-            <TextBlock Text="{loc:Loc Key=Home.Welcome}"
+            <TextBlock Text="{loc:Loc Key=FINC_Home_Welcome}"
                        TextWrapping="Wrap"/>
             <StackPanel Spacing="{StaticResource Spacing8}">
-                <TextBlock Text="{loc:Loc Key=Home.Label.FiscalYear}"
+                <TextBlock Text="{loc:Loc Key=FINC_Home_Label_FiscalYear}"
                            FontWeight="{StaticResource FontWeightSemiBold}"/>
                 <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="{StaticResource Spacing12}">
                     <ComboBox Grid.Column="0"
                               ItemsSource="{Binding FiscalYears}"
                               SelectedItem="{Binding SelectedFiscalYear}"
-                              PlaceholderText="{loc:Loc Key=Home.Placeholder.FiscalYear}"
+                              PlaceholderText="{loc:Loc Key=FINC_Home_Placeholder_FiscalYear}"
                               HorizontalAlignment="Stretch"
                               MinWidth="280"
                               IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}">
@@ -48,7 +48,7 @@
                         </ComboBox.ItemTemplate>
                     </ComboBox>
                     <Button Grid.Column="1"
-                            Content="{loc:Loc Key=Home.Button.Confirm}"
+                            Content="{loc:Loc Key=FINC_Home_Button_Confirm}"
                             Command="{Binding ConfirmSelectionCommand}"
                             Classes="accent"
                             MinWidth="160"
@@ -59,7 +59,7 @@
                                  IsIndeterminate="True"
                                  IsVisible="{Binding IsBusy}"/>
                 </Grid>
-                <TextBlock Text="{loc:Loc Key=Home.Status.NoFiscalYears}"
+                <TextBlock Text="{loc:Loc Key=FINC_Home_Status_NoFiscalYears}"
                            Foreground="{StaticResource BrushWarning}"
                            IsVisible="{Binding HasFiscalYears, Converter={x:Static converters:ObjectConverters.AreEqual}, ConverterParameter=False}"/>
             </StackPanel>
@@ -67,7 +67,7 @@
                     CornerRadius="{StaticResource CornerRadiusSmall}"
                     Padding="{StaticResource SpaceThickness16}">
                 <StackPanel Spacing="{StaticResource Spacing12}">
-                    <TextBlock Text="{loc:Loc Key=Home.Markdown.Title}"
+                    <TextBlock Text="{loc:Loc Key=FINC_Home_Markdown_Title}"
                                Classes="TitleMedium"/>
                     <md:MarkdownScrollViewer Markdown="{Binding ReadmeContent}"
                                              MaxHeight="420"
@@ -76,11 +76,11 @@
                 </StackPanel>
             </Border>
             <StackPanel Spacing="{StaticResource Spacing8}">
-                <TextBlock Text="{loc:Loc Key=Home.Label.ClosingPeriod}"
+                <TextBlock Text="{loc:Loc Key=FINC_Home_Label_ClosingPeriod}"
                            FontWeight="{StaticResource FontWeightSemiBold}"/>
                 <ComboBox ItemsSource="{Binding ClosingPeriods}"
                           SelectedItem="{Binding SelectedClosingPeriod}"
-                          PlaceholderText="{loc:Loc Key=Home.Placeholder.ClosingPeriod}"
+                          PlaceholderText="{loc:Loc Key=FINC_Home_Placeholder_ClosingPeriod}"
                           Width="320"
                           IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}">
                     <ComboBox.ItemTemplate>
@@ -101,7 +101,7 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                <TextBlock Text="{loc:Loc Key=Home.Status.NoClosingPeriods}"
+                <TextBlock Text="{loc:Loc Key=FINC_Home_Status_NoClosingPeriods}"
                            Foreground="{StaticResource BrushWarning}"
                            IsVisible="{Binding HasClosingPeriods, Converter={x:Static converters:ObjectConverters.AreEqual}, ConverterParameter=False}"/>
             </StackPanel>

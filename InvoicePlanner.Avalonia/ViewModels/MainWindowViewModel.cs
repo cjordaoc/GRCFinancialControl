@@ -23,7 +23,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private string? _lastPersistedMenuKey;
 
     [ObservableProperty]
-    private string title = LocalizationRegistry.Get("Shell.Title.InvoicePlanner");
+    private string title = LocalizationRegistry.Get("INV_Shell_Title_InvoicePlanner");
 
     [ObservableProperty]
     private ViewModelBase currentViewModel;
@@ -49,10 +49,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var items = new List<NavigationItemViewModel>
         {
-            CreateNavigationItem(NavigationKeys.PlanEditor, LocalizationRegistry.Get("Shell.Navigation.InvoicePlan"), _planEditor),
-            CreateNavigationItem(NavigationKeys.RequestConfirmation, LocalizationRegistry.Get("Shell.Navigation.ConfirmRequest"), _requestConfirmation),
-            CreateNavigationItem(NavigationKeys.EmissionConfirmation, LocalizationRegistry.Get("Shell.Navigation.ConfirmEmission"), _emissionConfirmation),
-            CreateNavigationItem(NavigationKeys.ConnectionSettings, LocalizationRegistry.Get("Shell.Navigation.ConnectionSettings"), _connectionSettings)
+            CreateNavigationItem(NavigationKeys.PlanEditor, LocalizationRegistry.Get("INV_Shell_Navigation_InvoicePlan"), _planEditor),
+            CreateNavigationItem(NavigationKeys.RequestConfirmation, LocalizationRegistry.Get("INV_Shell_Navigation_ConfirmRequest"), _requestConfirmation),
+            CreateNavigationItem(NavigationKeys.EmissionConfirmation, LocalizationRegistry.Get("INV_Shell_Navigation_ConfirmEmission"), _emissionConfirmation),
+            CreateNavigationItem(NavigationKeys.ConnectionSettings, LocalizationRegistry.Get("INV_Shell_Navigation_ConnectionSettings"), _connectionSettings)
         };
 
         MenuItems = items;
@@ -85,7 +85,7 @@ public partial class MainWindowViewModel : ViewModelBase
         else
         {
             currentViewModel = _connectionSettings;
-            _connectionSettings.StatusMessage = LocalizationRegistry.Get("Connection.Message.SetupPrompt");
+            _connectionSettings.StatusMessage = LocalizationRegistry.Get("INV_Connection_Message_SetupPrompt");
             Activate(_navigationIndex[NavigationKeys.ConnectionSettings]);
         }
     }

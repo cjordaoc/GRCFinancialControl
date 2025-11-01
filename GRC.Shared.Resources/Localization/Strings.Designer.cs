@@ -22,1250 +22,1168 @@ public static class Strings
         set => resourceCulture = value;
     }
 
-    public static string Access_Message_LoginUnknown => ResourceManager.GetString("Access.Message.LoginUnknown", resourceCulture) ?? "Access.Message.LoginUnknown";
+    public static string FINC_Admin_ClosingPeriods_Button_DeleteData => ResourceManager.GetString("FINC_Admin_ClosingPeriods_Button_DeleteData", resourceCulture) ?? "FINC_Admin_ClosingPeriods_Button_DeleteData";
 
-    public static string Access_Message_NoAssignments => ResourceManager.GetString("Access.Message.NoAssignments", resourceCulture) ?? "Access.Message.NoAssignments";
+    public static string FINC_Admin_ClosingPeriods_Filter_FiscalYear => ResourceManager.GetString("FINC_Admin_ClosingPeriods_Filter_FiscalYear", resourceCulture) ?? "FINC_Admin_ClosingPeriods_Filter_FiscalYear";
 
-    public static string AdditionalEmailBlank => ResourceManager.GetString("AdditionalEmailBlank", resourceCulture) ?? "AdditionalEmailBlank";
+    public static string FINC_Admin_ClosingPeriods_Header_End => ResourceManager.GetString("FINC_Admin_ClosingPeriods_Header_End", resourceCulture) ?? "FINC_Admin_ClosingPeriods_Header_End";
 
-    public static string AdditionalEmailInvalid => ResourceManager.GetString("AdditionalEmailInvalid", resourceCulture) ?? "AdditionalEmailInvalid";
+    public static string FINC_Admin_ClosingPeriods_Header_FiscalYear => ResourceManager.GetString("FINC_Admin_ClosingPeriods_Header_FiscalYear", resourceCulture) ?? "FINC_Admin_ClosingPeriods_Header_FiscalYear";
 
-    public static string Admin_ClosingPeriods_Button_DeleteData => ResourceManager.GetString("Admin.ClosingPeriods.Button.DeleteData", resourceCulture) ?? "Admin.ClosingPeriods.Button.DeleteData";
+    public static string FINC_Admin_ClosingPeriods_Header_Id => ResourceManager.GetString("FINC_Admin_ClosingPeriods_Header_Id", resourceCulture) ?? "FINC_Admin_ClosingPeriods_Header_Id";
 
-    public static string Admin_ClosingPeriods_Filter_FiscalYear => ResourceManager.GetString("Admin.ClosingPeriods.Filter.FiscalYear", resourceCulture) ?? "Admin.ClosingPeriods.Filter.FiscalYear";
+    public static string FINC_Admin_ClosingPeriods_Header_Locked => ResourceManager.GetString("FINC_Admin_ClosingPeriods_Header_Locked", resourceCulture) ?? "FINC_Admin_ClosingPeriods_Header_Locked";
 
-    public static string Admin_ClosingPeriods_Header_End => ResourceManager.GetString("Admin.ClosingPeriods.Header.End", resourceCulture) ?? "Admin.ClosingPeriods.Header.End";
+    public static string FINC_Admin_ClosingPeriods_Header_Name => ResourceManager.GetString("FINC_Admin_ClosingPeriods_Header_Name", resourceCulture) ?? "FINC_Admin_ClosingPeriods_Header_Name";
 
-    public static string Admin_ClosingPeriods_Header_FiscalYear => ResourceManager.GetString("Admin.ClosingPeriods.Header.FiscalYear", resourceCulture) ?? "Admin.ClosingPeriods.Header.FiscalYear";
+    public static string FINC_Admin_ClosingPeriods_Header_Start => ResourceManager.GetString("FINC_Admin_ClosingPeriods_Header_Start", resourceCulture) ?? "FINC_Admin_ClosingPeriods_Header_Start";
 
-    public static string Admin_ClosingPeriods_Header_Id => ResourceManager.GetString("Admin.ClosingPeriods.Header.Id", resourceCulture) ?? "Admin.ClosingPeriods.Header.Id";
+    public static string FINC_Admin_ClosingPeriods_Label_FiscalYear => ResourceManager.GetString("FINC_Admin_ClosingPeriods_Label_FiscalYear", resourceCulture) ?? "FINC_Admin_ClosingPeriods_Label_FiscalYear";
 
-    public static string Admin_ClosingPeriods_Header_Locked => ResourceManager.GetString("Admin.ClosingPeriods.Header.Locked", resourceCulture) ?? "Admin.ClosingPeriods.Header.Locked";
+    public static string FINC_Admin_ClosingPeriods_Label_Locked => ResourceManager.GetString("FINC_Admin_ClosingPeriods_Label_Locked", resourceCulture) ?? "FINC_Admin_ClosingPeriods_Label_Locked";
 
-    public static string Admin_ClosingPeriods_Header_Name => ResourceManager.GetString("Admin.ClosingPeriods.Header.Name", resourceCulture) ?? "Admin.ClosingPeriods.Header.Name";
+    public static string FINC_Admin_ClosingPeriods_Placeholder_Name => ResourceManager.GetString("FINC_Admin_ClosingPeriods_Placeholder_Name", resourceCulture) ?? "FINC_Admin_ClosingPeriods_Placeholder_Name";
 
-    public static string Admin_ClosingPeriods_Header_Start => ResourceManager.GetString("Admin.ClosingPeriods.Header.Start", resourceCulture) ?? "Admin.ClosingPeriods.Header.Start";
+    public static string FINC_Admin_ClosingPeriods_Status_AllLocked => ResourceManager.GetString("FINC_Admin_ClosingPeriods_Status_AllLocked", resourceCulture) ?? "FINC_Admin_ClosingPeriods_Status_AllLocked";
 
-    public static string Admin_ClosingPeriods_Label_FiscalYear => ResourceManager.GetString("Admin.ClosingPeriods.Label.FiscalYear", resourceCulture) ?? "Admin.ClosingPeriods.Label.FiscalYear";
+    public static string FINC_Admin_ClosingPeriods_Title_Editor => ResourceManager.GetString("FINC_Admin_ClosingPeriods_Title_Editor", resourceCulture) ?? "FINC_Admin_ClosingPeriods_Title_Editor";
 
-    public static string Admin_ClosingPeriods_Label_Locked => ResourceManager.GetString("Admin.ClosingPeriods.Label.Locked", resourceCulture) ?? "Admin.ClosingPeriods.Label.Locked";
+    public static string FINC_Admin_ClosingPeriods_Title_List => ResourceManager.GetString("FINC_Admin_ClosingPeriods_Title_List", resourceCulture) ?? "FINC_Admin_ClosingPeriods_Title_List";
 
-    public static string Admin_ClosingPeriods_Placeholder_Name => ResourceManager.GetString("Admin.ClosingPeriods.Placeholder.Name", resourceCulture) ?? "Admin.ClosingPeriods.Placeholder.Name";
+    public static string FINC_Admin_Engagements_Title_List => ResourceManager.GetString("FINC_Admin_Engagements_Title_List", resourceCulture) ?? "FINC_Admin_Engagements_Title_List";
 
-    public static string Admin_ClosingPeriods_Status_AllLocked => ResourceManager.GetString("Admin.ClosingPeriods.Status.AllLocked", resourceCulture) ?? "Admin.ClosingPeriods.Status.AllLocked";
+    public static string FINC_Admin_FiscalYears_Placeholder_AreaRevenueTarget => ResourceManager.GetString("FINC_Admin_FiscalYears_Placeholder_AreaRevenueTarget", resourceCulture) ?? "FINC_Admin_FiscalYears_Placeholder_AreaRevenueTarget";
 
-    public static string Admin_ClosingPeriods_Title_Editor => ResourceManager.GetString("Admin.ClosingPeriods.Title.Editor", resourceCulture) ?? "Admin.ClosingPeriods.Title.Editor";
+    public static string FINC_Admin_FiscalYears_Placeholder_AreaSalesTarget => ResourceManager.GetString("FINC_Admin_FiscalYears_Placeholder_AreaSalesTarget", resourceCulture) ?? "FINC_Admin_FiscalYears_Placeholder_AreaSalesTarget";
 
-    public static string Admin_ClosingPeriods_Title_List => ResourceManager.GetString("Admin.ClosingPeriods.Title.List", resourceCulture) ?? "Admin.ClosingPeriods.Title.List";
+    public static string FINC_Admin_FiscalYears_Placeholder_Name => ResourceManager.GetString("FINC_Admin_FiscalYears_Placeholder_Name", resourceCulture) ?? "FINC_Admin_FiscalYears_Placeholder_Name";
 
-    public static string Admin_Engagements_Title_List => ResourceManager.GetString("Admin.Engagements.Title.List", resourceCulture) ?? "Admin.Engagements.Title.List";
+    public static string FINC_Admin_FiscalYears_Title_Editor => ResourceManager.GetString("FINC_Admin_FiscalYears_Title_Editor", resourceCulture) ?? "FINC_Admin_FiscalYears_Title_Editor";
 
-    public static string Admin_FiscalYears_Placeholder_AreaRevenueTarget => ResourceManager.GetString("Admin.FiscalYears.Placeholder.AreaRevenueTarget", resourceCulture) ?? "Admin.FiscalYears.Placeholder.AreaRevenueTarget";
+    public static string FINC_Admin_ManagerAssignments_Dialog_Add_Title => ResourceManager.GetString("FINC_Admin_ManagerAssignments_Dialog_Add_Title", resourceCulture) ?? "FINC_Admin_ManagerAssignments_Dialog_Add_Title";
 
-    public static string Admin_FiscalYears_Placeholder_AreaSalesTarget => ResourceManager.GetString("Admin.FiscalYears.Placeholder.AreaSalesTarget", resourceCulture) ?? "Admin.FiscalYears.Placeholder.AreaSalesTarget";
+    public static string FINC_Admin_ManagerAssignments_Dialog_Edit_Title => ResourceManager.GetString("FINC_Admin_ManagerAssignments_Dialog_Edit_Title", resourceCulture) ?? "FINC_Admin_ManagerAssignments_Dialog_Edit_Title";
 
-    public static string Admin_FiscalYears_Placeholder_Name => ResourceManager.GetString("Admin.FiscalYears.Placeholder.Name", resourceCulture) ?? "Admin.FiscalYears.Placeholder.Name";
+    public static string FINC_Admin_ManagerAssignments_Dialog_Remove_Message => ResourceManager.GetString("FINC_Admin_ManagerAssignments_Dialog_Remove_Message", resourceCulture) ?? "FINC_Admin_ManagerAssignments_Dialog_Remove_Message";
 
-    public static string Admin_ManagerAssignments_Dialog_Add_Title => ResourceManager.GetString("Admin.ManagerAssignments.Dialog.Add.Title", resourceCulture) ?? "Admin.ManagerAssignments.Dialog.Add.Title";
+    public static string FINC_Admin_ManagerAssignments_Dialog_Remove_Title => ResourceManager.GetString("FINC_Admin_ManagerAssignments_Dialog_Remove_Title", resourceCulture) ?? "FINC_Admin_ManagerAssignments_Dialog_Remove_Title";
 
-    public static string Admin_ManagerAssignments_Dialog_Edit_Title => ResourceManager.GetString("Admin.ManagerAssignments.Dialog.Edit.Title", resourceCulture) ?? "Admin.ManagerAssignments.Dialog.Edit.Title";
+    public static string FINC_Admin_ManagerAssignments_Error_AssignmentMissing => ResourceManager.GetString("FINC_Admin_ManagerAssignments_Error_AssignmentMissing", resourceCulture) ?? "FINC_Admin_ManagerAssignments_Error_AssignmentMissing";
 
-    public static string Admin_ManagerAssignments_Dialog_Remove_Message => ResourceManager.GetString("Admin.ManagerAssignments.Dialog.Remove.Message", resourceCulture) ?? "Admin.ManagerAssignments.Dialog.Remove.Message";
+    public static string FINC_Admin_ManagerAssignments_Format_EngagementDisplay => ResourceManager.GetString("FINC_Admin_ManagerAssignments_Format_EngagementDisplay", resourceCulture) ?? "FINC_Admin_ManagerAssignments_Format_EngagementDisplay";
 
-    public static string Admin_ManagerAssignments_Dialog_Remove_Title => ResourceManager.GetString("Admin.ManagerAssignments.Dialog.Remove.Title", resourceCulture) ?? "Admin.ManagerAssignments.Dialog.Remove.Title";
+    public static string FINC_Admin_ManagerAssignments_Label_Engagement => ResourceManager.GetString("FINC_Admin_ManagerAssignments_Label_Engagement", resourceCulture) ?? "FINC_Admin_ManagerAssignments_Label_Engagement";
 
-    public static string Admin_ManagerAssignments_Error_AssignmentMissing => ResourceManager.GetString("Admin.ManagerAssignments.Error.AssignmentMissing", resourceCulture) ?? "Admin.ManagerAssignments.Error.AssignmentMissing";
+    public static string FINC_Admin_ManagerAssignments_Label_Manager => ResourceManager.GetString("FINC_Admin_ManagerAssignments_Label_Manager", resourceCulture) ?? "FINC_Admin_ManagerAssignments_Label_Manager";
 
-    public static string Admin_ManagerAssignments_Format_EngagementDisplay => ResourceManager.GetString("Admin.ManagerAssignments.Format.EngagementDisplay", resourceCulture) ?? "Admin.ManagerAssignments.Format.EngagementDisplay";
+    public static string FINC_Admin_ManagerAssignments_Toast_DeleteSuccess => ResourceManager.GetString("FINC_Admin_ManagerAssignments_Toast_DeleteSuccess", resourceCulture) ?? "FINC_Admin_ManagerAssignments_Toast_DeleteSuccess";
 
-    public static string Admin_ManagerAssignments_Header_Begin => ResourceManager.GetString("Admin.ManagerAssignments.Header.Begin", resourceCulture) ?? "Admin.ManagerAssignments.Header.Begin";
+    public static string FINC_Admin_ManagerAssignments_Toast_OperationFailed => ResourceManager.GetString("FINC_Admin_ManagerAssignments_Toast_OperationFailed", resourceCulture) ?? "FINC_Admin_ManagerAssignments_Toast_OperationFailed";
 
-    public static string Admin_ManagerAssignments_Header_End => ResourceManager.GetString("Admin.ManagerAssignments.Header.End", resourceCulture) ?? "Admin.ManagerAssignments.Header.End";
+    public static string FINC_Admin_ManagerAssignments_Toast_SaveSuccess => ResourceManager.GetString("FINC_Admin_ManagerAssignments_Toast_SaveSuccess", resourceCulture) ?? "FINC_Admin_ManagerAssignments_Toast_SaveSuccess";
 
-    public static string Admin_ManagerAssignments_Header_Manager => ResourceManager.GetString("Admin.ManagerAssignments.Header.Manager", resourceCulture) ?? "Admin.ManagerAssignments.Header.Manager";
+    public static string FINC_Admin_Managers_Placeholder_Email => ResourceManager.GetString("FINC_Admin_Managers_Placeholder_Email", resourceCulture) ?? "FINC_Admin_Managers_Placeholder_Email";
 
-    public static string Admin_ManagerAssignments_Header_Position => ResourceManager.GetString("Admin.ManagerAssignments.Header.Position", resourceCulture) ?? "Admin.ManagerAssignments.Header.Position";
+    public static string FINC_Admin_Managers_Placeholder_Name => ResourceManager.GetString("FINC_Admin_Managers_Placeholder_Name", resourceCulture) ?? "FINC_Admin_Managers_Placeholder_Name";
 
-    public static string Admin_ManagerAssignments_Label_Begin => ResourceManager.GetString("Admin.ManagerAssignments.Label.Begin", resourceCulture) ?? "Admin.ManagerAssignments.Label.Begin";
+    public static string FINC_Admin_Managers_Placeholder_Position => ResourceManager.GetString("FINC_Admin_Managers_Placeholder_Position", resourceCulture) ?? "FINC_Admin_Managers_Placeholder_Position";
 
-    public static string Admin_ManagerAssignments_Label_End => ResourceManager.GetString("Admin.ManagerAssignments.Label.End", resourceCulture) ?? "Admin.ManagerAssignments.Label.End";
+    public static string FINC_Admin_Managers_Placeholder_WindowsLogin => ResourceManager.GetString("FINC_Admin_Managers_Placeholder_WindowsLogin", resourceCulture) ?? "FINC_Admin_Managers_Placeholder_WindowsLogin";
 
-    public static string Admin_ManagerAssignments_Label_Engagement => ResourceManager.GetString("Admin.ManagerAssignments.Label.Engagement", resourceCulture) ?? "Admin.ManagerAssignments.Label.Engagement";
+    public static string FINC_Admin_Managers_Title_Editor => ResourceManager.GetString("FINC_Admin_Managers_Title_Editor", resourceCulture) ?? "FINC_Admin_Managers_Title_Editor";
 
-    public static string Admin_ManagerAssignments_Label_Manager => ResourceManager.GetString("Admin.ManagerAssignments.Label.Manager", resourceCulture) ?? "Admin.ManagerAssignments.Label.Manager";
+    public static string FINC_Admin_PapdAssignments_Error_AssignmentMissing => ResourceManager.GetString("FINC_Admin_PapdAssignments_Error_AssignmentMissing", resourceCulture) ?? "FINC_Admin_PapdAssignments_Error_AssignmentMissing";
 
-    public static string Admin_ManagerAssignments_Toast_DeleteSuccess => ResourceManager.GetString("Admin.ManagerAssignments.Toast.DeleteSuccess", resourceCulture) ?? "Admin.ManagerAssignments.Toast.DeleteSuccess";
+    public static string FINC_Admin_PapdAssignments_Error_EngagementMissing => ResourceManager.GetString("FINC_Admin_PapdAssignments_Error_EngagementMissing", resourceCulture) ?? "FINC_Admin_PapdAssignments_Error_EngagementMissing";
 
-    public static string Admin_ManagerAssignments_Toast_OperationFailed => ResourceManager.GetString("Admin.ManagerAssignments.Toast.OperationFailed", resourceCulture) ?? "Admin.ManagerAssignments.Toast.OperationFailed";
+    public static string FINC_Admin_PapdAssignments_Format_EngagementDisplay => ResourceManager.GetString("FINC_Admin_PapdAssignments_Format_EngagementDisplay", resourceCulture) ?? "FINC_Admin_PapdAssignments_Format_EngagementDisplay";
 
-    public static string Admin_ManagerAssignments_Toast_SaveSuccess => ResourceManager.GetString("Admin.ManagerAssignments.Toast.SaveSuccess", resourceCulture) ?? "Admin.ManagerAssignments.Toast.SaveSuccess";
+    public static string FINC_Admin_PapdAssignments_Header_Engagement => ResourceManager.GetString("FINC_Admin_PapdAssignments_Header_Engagement", resourceCulture) ?? "FINC_Admin_PapdAssignments_Header_Engagement";
 
-    public static string Admin_Managers_Placeholder_Email => ResourceManager.GetString("Admin.Managers.Placeholder.Email", resourceCulture) ?? "Admin.Managers.Placeholder.Email";
+    public static string FINC_Admin_PapdAssignments_Label_Engagement => ResourceManager.GetString("FINC_Admin_PapdAssignments_Label_Engagement", resourceCulture) ?? "FINC_Admin_PapdAssignments_Label_Engagement";
 
-    public static string Admin_Managers_Placeholder_Name => ResourceManager.GetString("Admin.Managers.Placeholder.Name", resourceCulture) ?? "Admin.Managers.Placeholder.Name";
+    public static string FINC_Admin_PapdAssignments_Title_Editor => ResourceManager.GetString("FINC_Admin_PapdAssignments_Title_Editor", resourceCulture) ?? "FINC_Admin_PapdAssignments_Title_Editor";
 
-    public static string Admin_Managers_Placeholder_Position => ResourceManager.GetString("Admin.Managers.Placeholder.Position", resourceCulture) ?? "Admin.Managers.Placeholder.Position";
+    public static string FINC_Admin_PapdAssignments_Toast_DeleteSuccess => ResourceManager.GetString("FINC_Admin_PapdAssignments_Toast_DeleteSuccess", resourceCulture) ?? "FINC_Admin_PapdAssignments_Toast_DeleteSuccess";
 
-    public static string Admin_Managers_Placeholder_WindowsLogin => ResourceManager.GetString("Admin.Managers.Placeholder.WindowsLogin", resourceCulture) ?? "Admin.Managers.Placeholder.WindowsLogin";
+    public static string FINC_Admin_PapdAssignments_Toast_Exists => ResourceManager.GetString("FINC_Admin_PapdAssignments_Toast_Exists", resourceCulture) ?? "FINC_Admin_PapdAssignments_Toast_Exists";
 
-    public static string Admin_Managers_Title_Editor => ResourceManager.GetString("Admin.Managers.Title.Editor", resourceCulture) ?? "Admin.Managers.Title.Editor";
+    public static string FINC_Admin_PapdAssignments_Toast_OperationFailed => ResourceManager.GetString("FINC_Admin_PapdAssignments_Toast_OperationFailed", resourceCulture) ?? "FINC_Admin_PapdAssignments_Toast_OperationFailed";
 
-    public static string Admin_PapdAssignments_Button_Assign => ResourceManager.GetString("Admin.PapdAssignments.Button.Assign", resourceCulture) ?? "Admin.PapdAssignments.Button.Assign";
+    public static string FINC_Admin_PapdAssignments_Toast_SaveSuccess => ResourceManager.GetString("FINC_Admin_PapdAssignments_Toast_SaveSuccess", resourceCulture) ?? "FINC_Admin_PapdAssignments_Toast_SaveSuccess";
 
-    public static string Admin_PapdAssignments_Button_Remove => ResourceManager.GetString("Admin.PapdAssignments.Button.Remove", resourceCulture) ?? "Admin.PapdAssignments.Button.Remove";
+    public static string FINC_Admin_Papds_Placeholder_Level => ResourceManager.GetString("FINC_Admin_Papds_Placeholder_Level", resourceCulture) ?? "FINC_Admin_Papds_Placeholder_Level";
 
-    public static string Admin_PapdAssignments_Error_AssignmentMissing => ResourceManager.GetString("Admin.PapdAssignments.Error.AssignmentMissing", resourceCulture) ?? "Admin.PapdAssignments.Error.AssignmentMissing";
+    public static string FINC_Admin_Papds_Placeholder_Name => ResourceManager.GetString("FINC_Admin_Papds_Placeholder_Name", resourceCulture) ?? "FINC_Admin_Papds_Placeholder_Name";
 
-    public static string Admin_PapdAssignments_Error_EngagementMissing => ResourceManager.GetString("Admin.PapdAssignments.Error.EngagementMissing", resourceCulture) ?? "Admin.PapdAssignments.Error.EngagementMissing";
+    public static string FINC_Admin_Papds_Placeholder_WindowsLogin => ResourceManager.GetString("FINC_Admin_Papds_Placeholder_WindowsLogin", resourceCulture) ?? "FINC_Admin_Papds_Placeholder_WindowsLogin";
 
-    public static string Admin_PapdAssignments_Format_EngagementDisplay => ResourceManager.GetString("Admin.PapdAssignments.Format.EngagementDisplay", resourceCulture) ?? "Admin.PapdAssignments.Format.EngagementDisplay";
+    public static string FINC_Admin_Papds_Title_Editor => ResourceManager.GetString("FINC_Admin_Papds_Title_Editor", resourceCulture) ?? "FINC_Admin_Papds_Title_Editor";
 
-    public static string Admin_PapdAssignments_Header_Description => ResourceManager.GetString("Admin.PapdAssignments.Header.Description", resourceCulture) ?? "Admin.PapdAssignments.Header.Description";
+    public static string FINC_Allocations_Header_ToDateValue => ResourceManager.GetString("FINC_Allocations_Header_ToDateValue", resourceCulture) ?? "FINC_Allocations_Header_ToDateValue";
 
-    public static string Admin_PapdAssignments_Header_Engagement => ResourceManager.GetString("Admin.PapdAssignments.Header.Engagement", resourceCulture) ?? "Admin.PapdAssignments.Header.Engagement";
+    public static string FINC_Allocations_Header_ToGoValue => ResourceManager.GetString("FINC_Allocations_Header_ToGoValue", resourceCulture) ?? "FINC_Allocations_Header_ToGoValue";
 
-    public static string Admin_PapdAssignments_Label_Engagement => ResourceManager.GetString("Admin.PapdAssignments.Label.Engagement", resourceCulture) ?? "Admin.PapdAssignments.Label.Engagement";
+    public static string FINC_Allocations_Label_CurrentValue => ResourceManager.GetString("FINC_Allocations_Label_CurrentValue", resourceCulture) ?? "FINC_Allocations_Label_CurrentValue";
 
-    public static string Admin_PapdAssignments_Title_Editor => ResourceManager.GetString("Admin.PapdAssignments.Title.Editor", resourceCulture) ?? "Admin.PapdAssignments.Title.Editor";
+    public static string FINC_Allocations_Label_TargetValue => ResourceManager.GetString("FINC_Allocations_Label_TargetValue", resourceCulture) ?? "FINC_Allocations_Label_TargetValue";
 
-    public static string Admin_PapdAssignments_Toast_DeleteSuccess => ResourceManager.GetString("Admin.PapdAssignments.Toast.DeleteSuccess", resourceCulture) ?? "Admin.PapdAssignments.Toast.DeleteSuccess";
+    public static string FINC_Allocations_Tooltip_Variance => ResourceManager.GetString("FINC_Allocations_Tooltip_Variance", resourceCulture) ?? "FINC_Allocations_Tooltip_Variance";
 
-    public static string Admin_PapdAssignments_Toast_Exists => ResourceManager.GetString("Admin.PapdAssignments.Toast.Exists", resourceCulture) ?? "Admin.PapdAssignments.Toast.Exists";
+    public static string FINC_Allocations_Validation_ValueMatchTarget => ResourceManager.GetString("FINC_Allocations_Validation_ValueMatchTarget", resourceCulture) ?? "FINC_Allocations_Validation_ValueMatchTarget";
 
-    public static string Admin_PapdAssignments_Toast_OperationFailed => ResourceManager.GetString("Admin.PapdAssignments.Toast.OperationFailed", resourceCulture) ?? "Admin.PapdAssignments.Toast.OperationFailed";
+    public static string FINC_Button_Add => ResourceManager.GetString("FINC_Button_Add", resourceCulture) ?? "FINC_Button_Add";
 
-    public static string Admin_PapdAssignments_Toast_SaveSuccess => ResourceManager.GetString("Admin.PapdAssignments.Toast.SaveSuccess", resourceCulture) ?? "Admin.PapdAssignments.Toast.SaveSuccess";
+    public static string FINC_Button_Delete => ResourceManager.GetString("FINC_Button_Delete", resourceCulture) ?? "FINC_Button_Delete";
 
-    public static string Admin_Papds_Placeholder_Level => ResourceManager.GetString("Admin.Papds.Placeholder.Level", resourceCulture) ?? "Admin.Papds.Placeholder.Level";
+    public static string FINC_Button_Edit => ResourceManager.GetString("FINC_Button_Edit", resourceCulture) ?? "FINC_Button_Edit";
 
-    public static string Admin_Papds_Placeholder_Name => ResourceManager.GetString("Admin.Papds.Placeholder.Name", resourceCulture) ?? "Admin.Papds.Placeholder.Name";
+    public static string FINC_Button_View => ResourceManager.GetString("FINC_Button_View", resourceCulture) ?? "FINC_Button_View";
 
-    public static string Admin_Papds_Placeholder_WindowsLogin => ResourceManager.GetString("Admin.Papds.Placeholder.WindowsLogin", resourceCulture) ?? "Admin.Papds.Placeholder.WindowsLogin";
+    public static string FINC_ClosingPeriods_Button_Lock => ResourceManager.GetString("FINC_ClosingPeriods_Button_Lock", resourceCulture) ?? "FINC_ClosingPeriods_Button_Lock";
 
-    public static string Admin_Papds_Title_Editor => ResourceManager.GetString("Admin.Papds.Title.Editor", resourceCulture) ?? "Admin.Papds.Title.Editor";
+    public static string FINC_ClosingPeriods_Button_Unlock => ResourceManager.GetString("FINC_ClosingPeriods_Button_Unlock", resourceCulture) ?? "FINC_ClosingPeriods_Button_Unlock";
 
-    public static string Allocations_Header_PlannedHours => ResourceManager.GetString("Allocations.Header.PlannedHours", resourceCulture) ?? "Allocations.Header.PlannedHours";
+    public static string FINC_ClosingPeriods_Filter_All => ResourceManager.GetString("FINC_ClosingPeriods_Filter_All", resourceCulture) ?? "FINC_ClosingPeriods_Filter_All";
 
-    public static string Allocations_Header_PlannedValue => ResourceManager.GetString("Allocations.Header.PlannedValue", resourceCulture) ?? "Allocations.Header.PlannedValue";
+    public static string FINC_ClosingPeriods_Status_AllLocked => ResourceManager.GetString("FINC_ClosingPeriods_Status_AllLocked", resourceCulture) ?? "FINC_ClosingPeriods_Status_AllLocked";
 
-    public static string Allocations_Header_ToDateValue => ResourceManager.GetString("Allocations.Header.ToDateValue", resourceCulture) ?? "Allocations.Header.ToDateValue";
+    public static string FINC_ClosingPeriods_Status_FiscalYearLockedData => ResourceManager.GetString("FINC_ClosingPeriods_Status_FiscalYearLockedData", resourceCulture) ?? "FINC_ClosingPeriods_Status_FiscalYearLockedData";
 
-    public static string Allocations_Header_ToGoValue => ResourceManager.GetString("Allocations.Header.ToGoValue", resourceCulture) ?? "Allocations.Header.ToGoValue";
+    public static string FINC_ClosingPeriods_Status_FiscalYearLockedDelete => ResourceManager.GetString("FINC_ClosingPeriods_Status_FiscalYearLockedDelete", resourceCulture) ?? "FINC_ClosingPeriods_Status_FiscalYearLockedDelete";
 
-    public static string Allocations_Label_CurrentHours => ResourceManager.GetString("Allocations.Label.CurrentHours", resourceCulture) ?? "Allocations.Label.CurrentHours";
+    public static string FINC_ClosingPeriods_Status_FiscalYearLockedEdit => ResourceManager.GetString("FINC_ClosingPeriods_Status_FiscalYearLockedEdit", resourceCulture) ?? "FINC_ClosingPeriods_Status_FiscalYearLockedEdit";
 
-    public static string Allocations_Label_CurrentValue => ResourceManager.GetString("Allocations.Label.CurrentValue", resourceCulture) ?? "Allocations.Label.CurrentValue";
+    public static string FINC_ClosingPeriods_Status_ToggleFailed => ResourceManager.GetString("FINC_ClosingPeriods_Status_ToggleFailed", resourceCulture) ?? "FINC_ClosingPeriods_Status_ToggleFailed";
 
-    public static string Allocations_Label_TargetHours => ResourceManager.GetString("Allocations.Label.TargetHours", resourceCulture) ?? "Allocations.Label.TargetHours";
+    public static string FINC_ClosingPeriods_Toast_DeleteSuccess => ResourceManager.GetString("FINC_ClosingPeriods_Toast_DeleteSuccess", resourceCulture) ?? "FINC_ClosingPeriods_Toast_DeleteSuccess";
 
-    public static string Allocations_Label_TargetValue => ResourceManager.GetString("Allocations.Label.TargetValue", resourceCulture) ?? "Allocations.Label.TargetValue";
+    public static string FINC_ClosingPeriods_Toast_Locked => ResourceManager.GetString("FINC_ClosingPeriods_Toast_Locked", resourceCulture) ?? "FINC_ClosingPeriods_Toast_Locked";
 
-    public static string Allocations_Tooltip_Variance => ResourceManager.GetString("Allocations.Tooltip.Variance", resourceCulture) ?? "Allocations.Tooltip.Variance";
+    public static string FINC_ClosingPeriods_Toast_OperationFailed => ResourceManager.GetString("FINC_ClosingPeriods_Toast_OperationFailed", resourceCulture) ?? "FINC_ClosingPeriods_Toast_OperationFailed";
 
-    public static string Allocations_Validation_HoursMatchTarget => ResourceManager.GetString("Allocations.Validation.HoursMatchTarget", resourceCulture) ?? "Allocations.Validation.HoursMatchTarget";
+    public static string FINC_ClosingPeriods_Toast_ReverseSuccess => ResourceManager.GetString("FINC_ClosingPeriods_Toast_ReverseSuccess", resourceCulture) ?? "FINC_ClosingPeriods_Toast_ReverseSuccess";
 
-    public static string Allocations_Validation_ValueMatchTarget => ResourceManager.GetString("Allocations.Validation.ValueMatchTarget", resourceCulture) ?? "Allocations.Validation.ValueMatchTarget";
+    public static string FINC_ClosingPeriods_Toast_SaveSuccess => ResourceManager.GetString("FINC_ClosingPeriods_Toast_SaveSuccess", resourceCulture) ?? "FINC_ClosingPeriods_Toast_SaveSuccess";
 
-    public static string ClosingPeriods_Button_Lock => ResourceManager.GetString("ClosingPeriods.Button.Lock", resourceCulture) ?? "ClosingPeriods.Button.Lock";
+    public static string FINC_ClosingPeriods_Toast_ToggleFailed => ResourceManager.GetString("FINC_ClosingPeriods_Toast_ToggleFailed", resourceCulture) ?? "FINC_ClosingPeriods_Toast_ToggleFailed";
 
-    public static string ClosingPeriods_Button_Unlock => ResourceManager.GetString("ClosingPeriods.Button.Unlock", resourceCulture) ?? "ClosingPeriods.Button.Unlock";
+    public static string FINC_ClosingPeriods_Toast_Unlocked => ResourceManager.GetString("FINC_ClosingPeriods_Toast_Unlocked", resourceCulture) ?? "FINC_ClosingPeriods_Toast_Unlocked";
 
-    public static string ClosingPeriods_Filter_All => ResourceManager.GetString("ClosingPeriods.Filter.All", resourceCulture) ?? "ClosingPeriods.Filter.All";
+    public static string FINC_ClosingPeriods_Validation_EndDateAfterStart => ResourceManager.GetString("FINC_ClosingPeriods_Validation_EndDateAfterStart", resourceCulture) ?? "FINC_ClosingPeriods_Validation_EndDateAfterStart";
 
-    public static string ClosingPeriods_Status_AllLocked => ResourceManager.GetString("ClosingPeriods.Status.AllLocked", resourceCulture) ?? "ClosingPeriods.Status.AllLocked";
+    public static string FINC_ClosingPeriods_Validation_FiscalYearLocked => ResourceManager.GetString("FINC_ClosingPeriods_Validation_FiscalYearLocked", resourceCulture) ?? "FINC_ClosingPeriods_Validation_FiscalYearLocked";
 
-    public static string ClosingPeriods_Status_FiscalYearLockedData => ResourceManager.GetString("ClosingPeriods.Status.FiscalYearLockedData", resourceCulture) ?? "ClosingPeriods.Status.FiscalYearLockedData";
+    public static string FINC_ClosingPeriods_Validation_FiscalYearRequired => ResourceManager.GetString("FINC_ClosingPeriods_Validation_FiscalYearRequired", resourceCulture) ?? "FINC_ClosingPeriods_Validation_FiscalYearRequired";
 
-    public static string ClosingPeriods_Status_FiscalYearLockedDelete => ResourceManager.GetString("ClosingPeriods.Status.FiscalYearLockedDelete", resourceCulture) ?? "ClosingPeriods.Status.FiscalYearLockedDelete";
+    public static string FINC_ClosingPeriods_Validation_NameRequired => ResourceManager.GetString("FINC_ClosingPeriods_Validation_NameRequired", resourceCulture) ?? "FINC_ClosingPeriods_Validation_NameRequired";
 
-    public static string ClosingPeriods_Status_FiscalYearLockedEdit => ResourceManager.GetString("ClosingPeriods.Status.FiscalYearLockedEdit", resourceCulture) ?? "ClosingPeriods.Status.FiscalYearLockedEdit";
+    public static string FINC_ClosingPeriods_Validation_NoFiscalYears => ResourceManager.GetString("FINC_ClosingPeriods_Validation_NoFiscalYears", resourceCulture) ?? "FINC_ClosingPeriods_Validation_NoFiscalYears";
 
-    public static string ClosingPeriods_Status_ToggleFailed => ResourceManager.GetString("ClosingPeriods.Status.ToggleFailed", resourceCulture) ?? "ClosingPeriods.Status.ToggleFailed";
+    public static string FINC_Customers_Toast_DeleteSuccess => ResourceManager.GetString("FINC_Customers_Toast_DeleteSuccess", resourceCulture) ?? "FINC_Customers_Toast_DeleteSuccess";
 
-    public static string ClosingPeriods_Toast_DeleteSuccess => ResourceManager.GetString("ClosingPeriods.Toast.DeleteSuccess", resourceCulture) ?? "ClosingPeriods.Toast.DeleteSuccess";
+    public static string FINC_Customers_Toast_OperationFailed => ResourceManager.GetString("FINC_Customers_Toast_OperationFailed", resourceCulture) ?? "FINC_Customers_Toast_OperationFailed";
 
-    public static string ClosingPeriods_Toast_Locked => ResourceManager.GetString("ClosingPeriods.Toast.Locked", resourceCulture) ?? "ClosingPeriods.Toast.Locked";
+    public static string FINC_Customers_Toast_ReverseSuccess => ResourceManager.GetString("FINC_Customers_Toast_ReverseSuccess", resourceCulture) ?? "FINC_Customers_Toast_ReverseSuccess";
 
-    public static string ClosingPeriods_Toast_OperationFailed => ResourceManager.GetString("ClosingPeriods.Toast.OperationFailed", resourceCulture) ?? "ClosingPeriods.Toast.OperationFailed";
+    public static string FINC_Customers_Toast_SaveSuccess => ResourceManager.GetString("FINC_Customers_Toast_SaveSuccess", resourceCulture) ?? "FINC_Customers_Toast_SaveSuccess";
 
-    public static string ClosingPeriods_Toast_ReverseSuccess => ResourceManager.GetString("ClosingPeriods.Toast.ReverseSuccess", resourceCulture) ?? "ClosingPeriods.Toast.ReverseSuccess";
+    public static string FINC_Dialog_DeleteData_Message => ResourceManager.GetString("FINC_Dialog_DeleteData_Message", resourceCulture) ?? "FINC_Dialog_DeleteData_Message";
 
-    public static string ClosingPeriods_Toast_SaveSuccess => ResourceManager.GetString("ClosingPeriods.Toast.SaveSuccess", resourceCulture) ?? "ClosingPeriods.Toast.SaveSuccess";
+    public static string FINC_Dialog_DeleteData_Title => ResourceManager.GetString("FINC_Dialog_DeleteData_Title", resourceCulture) ?? "FINC_Dialog_DeleteData_Title";
 
-    public static string ClosingPeriods_Toast_ToggleFailed => ResourceManager.GetString("ClosingPeriods.Toast.ToggleFailed", resourceCulture) ?? "ClosingPeriods.Toast.ToggleFailed";
+    public static string FINC_Engagements_Toast_DeleteSuccess => ResourceManager.GetString("FINC_Engagements_Toast_DeleteSuccess", resourceCulture) ?? "FINC_Engagements_Toast_DeleteSuccess";
 
-    public static string ClosingPeriods_Toast_Unlocked => ResourceManager.GetString("ClosingPeriods.Toast.Unlocked", resourceCulture) ?? "ClosingPeriods.Toast.Unlocked";
+    public static string FINC_Engagements_Toast_OperationFailed => ResourceManager.GetString("FINC_Engagements_Toast_OperationFailed", resourceCulture) ?? "FINC_Engagements_Toast_OperationFailed";
 
-    public static string ClosingPeriods_Validation_EndDateAfterStart => ResourceManager.GetString("ClosingPeriods.Validation.EndDateAfterStart", resourceCulture) ?? "ClosingPeriods.Validation.EndDateAfterStart";
+    public static string FINC_Engagements_Toast_ReverseSuccess => ResourceManager.GetString("FINC_Engagements_Toast_ReverseSuccess", resourceCulture) ?? "FINC_Engagements_Toast_ReverseSuccess";
 
-    public static string ClosingPeriods_Validation_FiscalYearLocked => ResourceManager.GetString("ClosingPeriods.Validation.FiscalYearLocked", resourceCulture) ?? "ClosingPeriods.Validation.FiscalYearLocked";
+    public static string FINC_Engagements_Toast_SaveSuccess => ResourceManager.GetString("FINC_Engagements_Toast_SaveSuccess", resourceCulture) ?? "FINC_Engagements_Toast_SaveSuccess";
 
-    public static string ClosingPeriods_Validation_FiscalYearRequired => ResourceManager.GetString("ClosingPeriods.Validation.FiscalYearRequired", resourceCulture) ?? "ClosingPeriods.Validation.FiscalYearRequired";
+    public static string FINC_FiscalYears_Dialog_Close_Message => ResourceManager.GetString("FINC_FiscalYears_Dialog_Close_Message", resourceCulture) ?? "FINC_FiscalYears_Dialog_Close_Message";
 
-    public static string ClosingPeriods_Validation_NameRequired => ResourceManager.GetString("ClosingPeriods.Validation.NameRequired", resourceCulture) ?? "ClosingPeriods.Validation.NameRequired";
+    public static string FINC_FiscalYears_Dialog_Close_Title => ResourceManager.GetString("FINC_FiscalYears_Dialog_Close_Title", resourceCulture) ?? "FINC_FiscalYears_Dialog_Close_Title";
 
-    public static string ClosingPeriods_Validation_NoFiscalYears => ResourceManager.GetString("ClosingPeriods.Validation.NoFiscalYears", resourceCulture) ?? "ClosingPeriods.Validation.NoFiscalYears";
+    public static string FINC_FiscalYears_Status_AlreadyLocked => ResourceManager.GetString("FINC_FiscalYears_Status_AlreadyLocked", resourceCulture) ?? "FINC_FiscalYears_Status_AlreadyLocked";
 
-    public static string Common_Button_Add => ResourceManager.GetString("Common.Button.Add", resourceCulture) ?? "Common.Button.Add";
+    public static string FINC_FiscalYears_Status_AlreadyUnlocked => ResourceManager.GetString("FINC_FiscalYears_Status_AlreadyUnlocked", resourceCulture) ?? "FINC_FiscalYears_Status_AlreadyUnlocked";
 
-    public static string Common_Button_AddEmail => ResourceManager.GetString("Common.Button.AddEmail", resourceCulture) ?? "Common.Button.AddEmail";
+    public static string FINC_FiscalYears_Status_ClosedNoPromotion => ResourceManager.GetString("FINC_FiscalYears_Status_ClosedNoPromotion", resourceCulture) ?? "FINC_FiscalYears_Status_ClosedNoPromotion";
 
-    public static string Common_Button_Cancel => ResourceManager.GetString("Common.Button.Cancel", resourceCulture) ?? "Common.Button.Cancel";
+    public static string FINC_FiscalYears_Status_ClosedPromoted => ResourceManager.GetString("FINC_FiscalYears_Status_ClosedPromoted", resourceCulture) ?? "FINC_FiscalYears_Status_ClosedPromoted";
 
-    public static string Common_Button_Close => ResourceManager.GetString("Common.Button.Close", resourceCulture) ?? "Common.Button.Close";
+    public static string FINC_FiscalYears_Status_Locked => ResourceManager.GetString("FINC_FiscalYears_Status_Locked", resourceCulture) ?? "FINC_FiscalYears_Status_Locked";
 
-    public static string Common_Button_Confirm => ResourceManager.GetString("Common.Button.Confirm", resourceCulture) ?? "Common.Button.Confirm";
+    public static string FINC_FiscalYears_Status_Unlocked => ResourceManager.GetString("FINC_FiscalYears_Status_Unlocked", resourceCulture) ?? "FINC_FiscalYears_Status_Unlocked";
 
-    public static string Common_Button_CopyDetails => ResourceManager.GetString("Common.Button.CopyDetails", resourceCulture) ?? "Common.Button.CopyDetails";
+    public static string FINC_FiscalYears_Toast_DeleteDataSuccess => ResourceManager.GetString("FINC_FiscalYears_Toast_DeleteDataSuccess", resourceCulture) ?? "FINC_FiscalYears_Toast_DeleteDataSuccess";
 
-    public static string Common_Button_Delete => ResourceManager.GetString("Common.Button.Delete", resourceCulture) ?? "Common.Button.Delete";
+    public static string FINC_FiscalYears_Toast_DeleteSuccess => ResourceManager.GetString("FINC_FiscalYears_Toast_DeleteSuccess", resourceCulture) ?? "FINC_FiscalYears_Toast_DeleteSuccess";
 
-    public static string Common_Button_Edit => ResourceManager.GetString("Common.Button.Edit", resourceCulture) ?? "Common.Button.Edit";
+    public static string FINC_FiscalYears_Toast_OperationFailed => ResourceManager.GetString("FINC_FiscalYears_Toast_OperationFailed", resourceCulture) ?? "FINC_FiscalYears_Toast_OperationFailed";
 
-    public static string Common_Button_ExportExcel => ResourceManager.GetString("Common.Button.ExportExcel", resourceCulture) ?? "Common.Button.ExportExcel";
+    public static string FINC_FiscalYears_Toast_SaveSuccess => ResourceManager.GetString("FINC_FiscalYears_Toast_SaveSuccess", resourceCulture) ?? "FINC_FiscalYears_Toast_SaveSuccess";
 
-    public static string Common_Button_ExportPdf => ResourceManager.GetString("Common.Button.ExportPdf", resourceCulture) ?? "Common.Button.ExportPdf";
+    public static string FINC_FiscalYears_Validation_EndDateAfterStart => ResourceManager.GetString("FINC_FiscalYears_Validation_EndDateAfterStart", resourceCulture) ?? "FINC_FiscalYears_Validation_EndDateAfterStart";
 
-    public static string Common_Button_Refresh => ResourceManager.GetString("Common.Button.Refresh", resourceCulture) ?? "Common.Button.Refresh";
+    public static string FINC_FiscalYears_Validation_NameRequired => ResourceManager.GetString("FINC_FiscalYears_Validation_NameRequired", resourceCulture) ?? "FINC_FiscalYears_Validation_NameRequired";
 
-    public static string Common_Button_Remove => ResourceManager.GetString("Common.Button.Remove", resourceCulture) ?? "Common.Button.Remove";
+    public static string FINC_Home_Button_Confirm => ResourceManager.GetString("FINC_Home_Button_Confirm", resourceCulture) ?? "FINC_Home_Button_Confirm";
 
-    public static string Common_Button_Save => ResourceManager.GetString("Common.Button.Save", resourceCulture) ?? "Common.Button.Save";
+    public static string FINC_Home_Label_ClosingPeriod => ResourceManager.GetString("FINC_Home_Label_ClosingPeriod", resourceCulture) ?? "FINC_Home_Label_ClosingPeriod";
 
-    public static string Common_Button_Undo => ResourceManager.GetString("Common.Button.Undo", resourceCulture) ?? "Common.Button.Undo";
+    public static string FINC_Home_Label_FiscalYear => ResourceManager.GetString("FINC_Home_Label_FiscalYear", resourceCulture) ?? "FINC_Home_Label_FiscalYear";
 
-    public static string Common_Button_View => ResourceManager.GetString("Common.Button.View", resourceCulture) ?? "Common.Button.View";
+    public static string FINC_Home_Markdown_LoadFailed => ResourceManager.GetString("FINC_Home_Markdown_LoadFailed", resourceCulture) ?? "FINC_Home_Markdown_LoadFailed";
 
-    public static string Common_Dialog_DeleteData_Message => ResourceManager.GetString("Common.Dialog.DeleteData.Message", resourceCulture) ?? "Common.Dialog.DeleteData.Message";
+    public static string FINC_Home_Markdown_Title => ResourceManager.GetString("FINC_Home_Markdown_Title", resourceCulture) ?? "FINC_Home_Markdown_Title";
 
-    public static string Common_Dialog_DeleteData_Title => ResourceManager.GetString("Common.Dialog.DeleteData.Title", resourceCulture) ?? "Common.Dialog.DeleteData.Title";
+    public static string FINC_Home_Placeholder_ClosingPeriod => ResourceManager.GetString("FINC_Home_Placeholder_ClosingPeriod", resourceCulture) ?? "FINC_Home_Placeholder_ClosingPeriod";
 
-    public static string Common_Placeholder_Code => ResourceManager.GetString("Common.Placeholder.Code", resourceCulture) ?? "Common.Placeholder.Code";
+    public static string FINC_Home_Placeholder_FiscalYear => ResourceManager.GetString("FINC_Home_Placeholder_FiscalYear", resourceCulture) ?? "FINC_Home_Placeholder_FiscalYear";
 
-    public static string Common_Placeholder_Email => ResourceManager.GetString("Common.Placeholder.Email", resourceCulture) ?? "Common.Placeholder.Email";
+    public static string FINC_Home_Status_LoadError => ResourceManager.GetString("FINC_Home_Status_LoadError", resourceCulture) ?? "FINC_Home_Status_LoadError";
 
-    public static string Common_Placeholder_Name => ResourceManager.GetString("Common.Placeholder.Name", resourceCulture) ?? "Common.Placeholder.Name";
+    public static string FINC_Home_Status_NoClosingPeriods => ResourceManager.GetString("FINC_Home_Status_NoClosingPeriods", resourceCulture) ?? "FINC_Home_Status_NoClosingPeriods";
 
-    public static string Common_Placeholder_Plan => ResourceManager.GetString("Common.Placeholder.Plan", resourceCulture) ?? "Common.Placeholder.Plan";
+    public static string FINC_Home_Status_NoFiscalYears => ResourceManager.GetString("FINC_Home_Status_NoFiscalYears", resourceCulture) ?? "FINC_Home_Status_NoFiscalYears";
 
-    public static string Common_Placeholder_Reason => ResourceManager.GetString("Common.Placeholder.Reason", resourceCulture) ?? "Common.Placeholder.Reason";
+    public static string FINC_Home_Status_SaveError => ResourceManager.GetString("FINC_Home_Status_SaveError", resourceCulture) ?? "FINC_Home_Status_SaveError";
 
-    public static string Common_Unit_HoursSuffix => ResourceManager.GetString("Common.Unit.HoursSuffix", resourceCulture) ?? "Common.Unit.HoursSuffix";
+    public static string FINC_Home_Status_Saved => ResourceManager.GetString("FINC_Home_Status_Saved", resourceCulture) ?? "FINC_Home_Status_Saved";
 
-    public static string Connection_Button_Browse => ResourceManager.GetString("Connection.Button.Browse", resourceCulture) ?? "Connection.Button.Browse";
+    public static string FINC_Home_Status_SelectFiscalYear => ResourceManager.GetString("FINC_Home_Status_SelectFiscalYear", resourceCulture) ?? "FINC_Home_Status_SelectFiscalYear";
 
-    public static string Connection_Button_Import => ResourceManager.GetString("Connection.Button.Import", resourceCulture) ?? "Connection.Button.Import";
+    public static string FINC_Home_Title => ResourceManager.GetString("FINC_Home_Title", resourceCulture) ?? "FINC_Home_Title";
 
-    public static string Connection_Description_Setup => ResourceManager.GetString("Connection.Description.Setup", resourceCulture) ?? "Connection.Description.Setup";
+    public static string FINC_Home_Welcome => ResourceManager.GetString("FINC_Home_Welcome", resourceCulture) ?? "FINC_Home_Welcome";
 
-    public static string Connection_Dialog_BrowseTitle => ResourceManager.GetString("Connection.Dialog.BrowseTitle", resourceCulture) ?? "Connection.Dialog.BrowseTitle";
+    public static string FINC_Import_Button_AllocationPlanning => ResourceManager.GetString("FINC_Import_Button_AllocationPlanning", resourceCulture) ?? "FINC_Import_Button_AllocationPlanning";
 
-    public static string Connection_Label_Language => ResourceManager.GetString("Connection.Label.Language", resourceCulture) ?? "Connection.Label.Language";
+    public static string FINC_Import_Button_Budget => ResourceManager.GetString("FINC_Import_Button_Budget", resourceCulture) ?? "FINC_Import_Button_Budget";
 
-    public static string Connection_Label_Package => ResourceManager.GetString("Connection.Label.Package", resourceCulture) ?? "Connection.Label.Package";
+    public static string FINC_Import_Button_FullManagement => ResourceManager.GetString("FINC_Import_Button_FullManagement", resourceCulture) ?? "FINC_Import_Button_FullManagement";
 
-    public static string Connection_Label_Passphrase => ResourceManager.GetString("Connection.Label.Passphrase", resourceCulture) ?? "Connection.Label.Passphrase";
+    public static string FINC_Import_Button_SelectFile => ResourceManager.GetString("FINC_Import_Button_SelectFile", resourceCulture) ?? "FINC_Import_Button_SelectFile";
 
-    public static string Connection_Message_MissingSettings => ResourceManager.GetString("Connection.Message.MissingSettings", resourceCulture) ?? "Connection.Message.MissingSettings";
+    public static string FINC_Import_FileType_AllocationPlanning => ResourceManager.GetString("FINC_Import_FileType_AllocationPlanning", resourceCulture) ?? "FINC_Import_FileType_AllocationPlanning";
 
-    public static string Connection_Message_SetupPrompt => ResourceManager.GetString("Connection.Message.SetupPrompt", resourceCulture) ?? "Connection.Message.SetupPrompt";
+    public static string FINC_Import_FileType_Budget => ResourceManager.GetString("FINC_Import_FileType_Budget", resourceCulture) ?? "FINC_Import_FileType_Budget";
 
-    public static string Connection_Placeholder_Package => ResourceManager.GetString("Connection.Placeholder.Package", resourceCulture) ?? "Connection.Placeholder.Package";
+    public static string FINC_Import_FileType_FullManagement => ResourceManager.GetString("FINC_Import_FileType_FullManagement", resourceCulture) ?? "FINC_Import_FileType_FullManagement";
 
-    public static string Connection_Placeholder_Passphrase => ResourceManager.GetString("Connection.Placeholder.Passphrase", resourceCulture) ?? "Connection.Placeholder.Passphrase";
+    public static string FINC_Import_Section_Selected_TitleFormat => ResourceManager.GetString("FINC_Import_Section_Selected_TitleFormat", resourceCulture) ?? "FINC_Import_Section_Selected_TitleFormat";
 
-    public static string Connection_Section_Language_Title => ResourceManager.GetString("Connection.Section.Language.Title", resourceCulture) ?? "Connection.Section.Language.Title";
+    public static string FINC_Import_Status_Error => ResourceManager.GetString("FINC_Import_Status_Error", resourceCulture) ?? "FINC_Import_Status_Error";
 
-    public static string Connection_Status_ImportFailure => ResourceManager.GetString("Connection.Status.ImportFailure", resourceCulture) ?? "Connection.Status.ImportFailure";
+    public static string FINC_Import_Status_InProgress => ResourceManager.GetString("FINC_Import_Status_InProgress", resourceCulture) ?? "FINC_Import_Status_InProgress";
 
-    public static string Connection_Status_ImportInProgress => ResourceManager.GetString("Connection.Status.ImportInProgress", resourceCulture) ?? "Connection.Status.ImportInProgress";
+    public static string FINC_Import_Status_InvalidType => ResourceManager.GetString("FINC_Import_Status_InvalidType", resourceCulture) ?? "FINC_Import_Status_InvalidType";
 
-    public static string Connection_Status_ImportSuccess => ResourceManager.GetString("Connection.Status.ImportSuccess", resourceCulture) ?? "Connection.Status.ImportSuccess";
+    public static string FINC_Import_Title_Primary => ResourceManager.GetString("FINC_Import_Title_Primary", resourceCulture) ?? "FINC_Import_Title_Primary";
 
-    public static string Connection_Status_RestoreFailure => ResourceManager.GetString("Connection.Status.RestoreFailure", resourceCulture) ?? "Connection.Status.RestoreFailure";
+    public static string FINC_Import_Toast_S4MetadataSuccess => ResourceManager.GetString("FINC_Import_Toast_S4MetadataSuccess", resourceCulture) ?? "FINC_Import_Toast_S4MetadataSuccess";
 
-    public static string Connection_Title_Setup => ResourceManager.GetString("Connection.Title.Setup", resourceCulture) ?? "Connection.Title.Setup";
+    public static string FINC_Import_Warning_SelectClosingPeriod => ResourceManager.GetString("FINC_Import_Warning_SelectClosingPeriod", resourceCulture) ?? "FINC_Import_Warning_SelectClosingPeriod";
 
-    public static string Connection_Validation_PackageRequired => ResourceManager.GetString("Connection.Validation.PackageRequired", resourceCulture) ?? "Connection.Validation.PackageRequired";
+    public static string FINC_Managers_Toast_DeleteSuccess => ResourceManager.GetString("FINC_Managers_Toast_DeleteSuccess", resourceCulture) ?? "FINC_Managers_Toast_DeleteSuccess";
 
-    public static string Connection_Validation_PassphraseRequired => ResourceManager.GetString("Connection.Validation.PassphraseRequired", resourceCulture) ?? "Connection.Validation.PassphraseRequired";
+    public static string FINC_Managers_Toast_OperationFailed => ResourceManager.GetString("FINC_Managers_Toast_OperationFailed", resourceCulture) ?? "FINC_Managers_Toast_OperationFailed";
 
-    public static string Connection_Validation_SettingsIncomplete => ResourceManager.GetString("Connection.Validation.SettingsIncomplete", resourceCulture) ?? "Connection.Validation.SettingsIncomplete";
+    public static string FINC_Managers_Toast_SaveSuccess => ResourceManager.GetString("FINC_Managers_Toast_SaveSuccess", resourceCulture) ?? "FINC_Managers_Toast_SaveSuccess";
 
-    public static string CustomerFocalPointEmailInvalid => ResourceManager.GetString("CustomerFocalPointEmailInvalid", resourceCulture) ?? "CustomerFocalPointEmailInvalid";
+    public static string FINC_MasterData_RankMappings_Columns_CreatedAt => ResourceManager.GetString("FINC_MasterData_RankMappings_Columns_CreatedAt", resourceCulture) ?? "FINC_MasterData_RankMappings_Columns_CreatedAt";
 
-    public static string CustomerFocalPointEmailRequired => ResourceManager.GetString("CustomerFocalPointEmailRequired", resourceCulture) ?? "CustomerFocalPointEmailRequired";
+    public static string FINC_MasterData_RankMappings_Columns_IsActive => ResourceManager.GetString("FINC_MasterData_RankMappings_Columns_IsActive", resourceCulture) ?? "FINC_MasterData_RankMappings_Columns_IsActive";
 
-    public static string CustomerFocalPointNameRequired => ResourceManager.GetString("CustomerFocalPointNameRequired", resourceCulture) ?? "CustomerFocalPointNameRequired";
+    public static string FINC_MasterData_RankMappings_Columns_LastSeenAt => ResourceManager.GetString("FINC_MasterData_RankMappings_Columns_LastSeenAt", resourceCulture) ?? "FINC_MasterData_RankMappings_Columns_LastSeenAt";
 
-    public static string CustomerTicketRequired => ResourceManager.GetString("CustomerTicketRequired", resourceCulture) ?? "CustomerTicketRequired";
+    public static string FINC_MasterData_RankMappings_Columns_NormalizedRank => ResourceManager.GetString("FINC_MasterData_RankMappings_Columns_NormalizedRank", resourceCulture) ?? "FINC_MasterData_RankMappings_Columns_NormalizedRank";
 
-    public static string Customers_Toast_DeleteSuccess => ResourceManager.GetString("Customers.Toast.DeleteSuccess", resourceCulture) ?? "Customers.Toast.DeleteSuccess";
+    public static string FINC_MasterData_RankMappings_Columns_RawRank => ResourceManager.GetString("FINC_MasterData_RankMappings_Columns_RawRank", resourceCulture) ?? "FINC_MasterData_RankMappings_Columns_RawRank";
 
-    public static string Customers_Toast_OperationFailed => ResourceManager.GetString("Customers.Toast.OperationFailed", resourceCulture) ?? "Customers.Toast.OperationFailed";
+    public static string FINC_MasterData_RankMappings_Columns_SpreadsheetRank => ResourceManager.GetString("FINC_MasterData_RankMappings_Columns_SpreadsheetRank", resourceCulture) ?? "FINC_MasterData_RankMappings_Columns_SpreadsheetRank";
 
-    public static string Customers_Toast_ReverseSuccess => ResourceManager.GetString("Customers.Toast.ReverseSuccess", resourceCulture) ?? "Customers.Toast.ReverseSuccess";
+    public static string FINC_MasterData_RankMappings_Dialog_AddTitle => ResourceManager.GetString("FINC_MasterData_RankMappings_Dialog_AddTitle", resourceCulture) ?? "FINC_MasterData_RankMappings_Dialog_AddTitle";
 
-    public static string Customers_Toast_SaveSuccess => ResourceManager.GetString("Customers.Toast.SaveSuccess", resourceCulture) ?? "Customers.Toast.SaveSuccess";
+    public static string FINC_MasterData_RankMappings_Dialog_EditTitle => ResourceManager.GetString("FINC_MasterData_RankMappings_Dialog_EditTitle", resourceCulture) ?? "FINC_MasterData_RankMappings_Dialog_EditTitle";
 
-    public static string DeliveryDescriptionRequired => ResourceManager.GetString("DeliveryDescriptionRequired", resourceCulture) ?? "DeliveryDescriptionRequired";
+    public static string FINC_MasterData_RankMappings_Editor_IsActive => ResourceManager.GetString("FINC_MasterData_RankMappings_Editor_IsActive", resourceCulture) ?? "FINC_MasterData_RankMappings_Editor_IsActive";
 
-    public static string Dialogs_Error_Label_Details => ResourceManager.GetString("Dialogs.Error.Label.Details", resourceCulture) ?? "Dialogs.Error.Label.Details";
+    public static string FINC_MasterData_RankMappings_Editor_NormalizedRank => ResourceManager.GetString("FINC_MasterData_RankMappings_Editor_NormalizedRank", resourceCulture) ?? "FINC_MasterData_RankMappings_Editor_NormalizedRank";
 
-    public static string Dialogs_Error_Message => ResourceManager.GetString("Dialogs.Error.Message", resourceCulture) ?? "Dialogs.Error.Message";
+    public static string FINC_MasterData_RankMappings_Editor_RawRank => ResourceManager.GetString("FINC_MasterData_RankMappings_Editor_RawRank", resourceCulture) ?? "FINC_MasterData_RankMappings_Editor_RawRank";
 
-    public static string Dialogs_Error_Title => ResourceManager.GetString("Dialogs.Error.Title", resourceCulture) ?? "Dialogs.Error.Title";
+    public static string FINC_MasterData_RankMappings_Editor_SpreadsheetRank => ResourceManager.GetString("FINC_MasterData_RankMappings_Editor_SpreadsheetRank", resourceCulture) ?? "FINC_MasterData_RankMappings_Editor_SpreadsheetRank";
 
-    public static string DueDateMustMatch => ResourceManager.GetString("DueDateMustMatch", resourceCulture) ?? "DueDateMustMatch";
+    public static string FINC_MasterData_RankMappings_Editor_Title => ResourceManager.GetString("FINC_MasterData_RankMappings_Editor_Title", resourceCulture) ?? "FINC_MasterData_RankMappings_Editor_Title";
 
-    public static string Emission_Button_CancelEmission => ResourceManager.GetString("Emission.Button.CancelEmission", resourceCulture) ?? "Emission.Button.CancelEmission";
+    public static string FINC_MasterData_RankMappings_Title => ResourceManager.GetString("FINC_MasterData_RankMappings_Title", resourceCulture) ?? "FINC_MasterData_RankMappings_Title";
 
-    public static string Emission_Button_InsertBzData => ResourceManager.GetString("Emission.Button.InsertBzData", resourceCulture) ?? "Emission.Button.InsertBzData";
+    public static string FINC_Navigation_Allocations => ResourceManager.GetString("FINC_Navigation_Allocations", resourceCulture) ?? "FINC_Navigation_Allocations";
 
-    public static string Emission_Description_Primary => ResourceManager.GetString("Emission.Description.Primary", resourceCulture) ?? "Emission.Description.Primary";
+    public static string FINC_Navigation_ClosingPeriods => ResourceManager.GetString("FINC_Navigation_ClosingPeriods", resourceCulture) ?? "FINC_Navigation_ClosingPeriods";
 
-    public static string Emission_Message_Empty => ResourceManager.GetString("Emission.Message.Empty", resourceCulture) ?? "Emission.Message.Empty";
+    public static string FINC_Navigation_ControlMasterData => ResourceManager.GetString("FINC_Navigation_ControlMasterData", resourceCulture) ?? "FINC_Navigation_ControlMasterData";
 
-    public static string Emission_Message_SelectHint => ResourceManager.GetString("Emission.Message.SelectHint", resourceCulture) ?? "Emission.Message.SelectHint";
+    public static string FINC_Navigation_Customers => ResourceManager.GetString("FINC_Navigation_Customers", resourceCulture) ?? "FINC_Navigation_Customers";
 
-    public static string Emission_Section_AvailablePlans_Header => ResourceManager.GetString("Emission.Section.AvailablePlans.Header", resourceCulture) ?? "Emission.Section.AvailablePlans.Header";
+    public static string FINC_Navigation_Engagements => ResourceManager.GetString("FINC_Navigation_Engagements", resourceCulture) ?? "FINC_Navigation_Engagements";
 
-    public static string Emission_Section_InvoiceDetails_Header => ResourceManager.GetString("Emission.Section.InvoiceDetails.Header", resourceCulture) ?? "Emission.Section.InvoiceDetails.Header";
+    public static string FINC_Navigation_FiscalYears => ResourceManager.GetString("FINC_Navigation_FiscalYears", resourceCulture) ?? "FINC_Navigation_FiscalYears";
 
-    public static string Emission_Status_CanceledFormat => ResourceManager.GetString("Emission.Status.CanceledFormat", resourceCulture) ?? "Emission.Status.CanceledFormat";
+    public static string FINC_Navigation_GrcTeam => ResourceManager.GetString("FINC_Navigation_GrcTeam", resourceCulture) ?? "FINC_Navigation_GrcTeam";
 
-    public static string Emission_Status_EmittedFormat => ResourceManager.GetString("Emission.Status.EmittedFormat", resourceCulture) ?? "Emission.Status.EmittedFormat";
+    public static string FINC_Navigation_Home => ResourceManager.GetString("FINC_Navigation_Home", resourceCulture) ?? "FINC_Navigation_Home";
 
-    public static string Emission_Status_EngagementFormat => ResourceManager.GetString("Emission.Status.EngagementFormat", resourceCulture) ?? "Emission.Status.EngagementFormat";
+    public static string FINC_Navigation_Import => ResourceManager.GetString("FINC_Navigation_Import", resourceCulture) ?? "FINC_Navigation_Import";
 
-    public static string Emission_Status_LineCanceled => ResourceManager.GetString("Emission.Status.LineCanceled", resourceCulture) ?? "Emission.Status.LineCanceled";
+    public static string FINC_Navigation_MasterData => ResourceManager.GetString("FINC_Navigation_MasterData", resourceCulture) ?? "FINC_Navigation_MasterData";
 
-    public static string Emission_Status_LineEmitted => ResourceManager.GetString("Emission.Status.LineEmitted", resourceCulture) ?? "Emission.Status.LineEmitted";
+    public static string FINC_Navigation_MasterData_RankMappings => ResourceManager.GetString("FINC_Navigation_MasterData_RankMappings", resourceCulture) ?? "FINC_Navigation_MasterData_RankMappings";
 
-    public static string Emission_Status_LoadFailure => ResourceManager.GetString("Emission.Status.LoadFailure", resourceCulture) ?? "Emission.Status.LoadFailure";
+    public static string FINC_Navigation_Reports => ResourceManager.GetString("FINC_Navigation_Reports", resourceCulture) ?? "FINC_Navigation_Reports";
 
-    public static string Emission_Status_LoadFailureDetail => ResourceManager.GetString("Emission.Status.LoadFailureDetail", resourceCulture) ?? "Emission.Status.LoadFailureDetail";
+    public static string FINC_Navigation_Settings => ResourceManager.GetString("FINC_Navigation_Settings", resourceCulture) ?? "FINC_Navigation_Settings";
 
-    public static string Emission_Status_NoCancellations => ResourceManager.GetString("Emission.Status.NoCancellations", resourceCulture) ?? "Emission.Status.NoCancellations";
+    public static string FINC_Navigation_Tasks => ResourceManager.GetString("FINC_Navigation_Tasks", resourceCulture) ?? "FINC_Navigation_Tasks";
 
-    public static string Emission_Status_NoEmissions => ResourceManager.GetString("Emission.Status.NoEmissions", resourceCulture) ?? "Emission.Status.NoEmissions";
+    public static string FINC_Papds_Toast_DeleteDataSuccess => ResourceManager.GetString("FINC_Papds_Toast_DeleteDataSuccess", resourceCulture) ?? "FINC_Papds_Toast_DeleteDataSuccess";
 
-    public static string Emission_Status_PlanLoaded => ResourceManager.GetString("Emission.Status.PlanLoaded", resourceCulture) ?? "Emission.Status.PlanLoaded";
+    public static string FINC_Papds_Toast_DeleteSuccess => ResourceManager.GetString("FINC_Papds_Toast_DeleteSuccess", resourceCulture) ?? "FINC_Papds_Toast_DeleteSuccess";
 
-    public static string Emission_Status_RequestedFormat => ResourceManager.GetString("Emission.Status.RequestedFormat", resourceCulture) ?? "Emission.Status.RequestedFormat";
+    public static string FINC_Papds_Toast_OperationFailed => ResourceManager.GetString("FINC_Papds_Toast_OperationFailed", resourceCulture) ?? "FINC_Papds_Toast_OperationFailed";
 
-    public static string Emission_TableHeader_Actions => ResourceManager.GetString("Emission.TableHeader.Actions", resourceCulture) ?? "Emission.TableHeader.Actions";
+    public static string FINC_Papds_Toast_SaveSuccess => ResourceManager.GetString("FINC_Papds_Toast_SaveSuccess", resourceCulture) ?? "FINC_Papds_Toast_SaveSuccess";
 
-    public static string Emission_TableHeader_Amount => ResourceManager.GetString("Emission.TableHeader.Amount", resourceCulture) ?? "Emission.TableHeader.Amount";
+    public static string FINC_RankMappings_Toast_DeleteSuccess => ResourceManager.GetString("FINC_RankMappings_Toast_DeleteSuccess", resourceCulture) ?? "FINC_RankMappings_Toast_DeleteSuccess";
 
-    public static string Emission_TableHeader_BzCode => ResourceManager.GetString("Emission.TableHeader.BzCode", resourceCulture) ?? "Emission.TableHeader.BzCode";
+    public static string FINC_RankMappings_Toast_OperationFailed => ResourceManager.GetString("FINC_RankMappings_Toast_OperationFailed", resourceCulture) ?? "FINC_RankMappings_Toast_OperationFailed";
 
-    public static string Emission_TableHeader_CancelReason => ResourceManager.GetString("Emission.TableHeader.CancelReason", resourceCulture) ?? "Emission.TableHeader.CancelReason";
+    public static string FINC_RankMappings_Toast_SaveSuccess => ResourceManager.GetString("FINC_RankMappings_Toast_SaveSuccess", resourceCulture) ?? "FINC_RankMappings_Toast_SaveSuccess";
 
-    public static string Emission_TableHeader_DueDate => ResourceManager.GetString("Emission.TableHeader.DueDate", resourceCulture) ?? "Emission.TableHeader.DueDate";
+    public static string FINC_Reports_Button_OpenBrowser => ResourceManager.GetString("FINC_Reports_Button_OpenBrowser", resourceCulture) ?? "FINC_Reports_Button_OpenBrowser";
 
-    public static string Emission_TableHeader_EmissionDate => ResourceManager.GetString("Emission.TableHeader.EmissionDate", resourceCulture) ?? "Emission.TableHeader.EmissionDate";
+    public static string FINC_Reports_Button_Refresh => ResourceManager.GetString("FINC_Reports_Button_Refresh", resourceCulture) ?? "FINC_Reports_Button_Refresh";
 
-    public static string Emission_TableHeader_EmittedAt => ResourceManager.GetString("Emission.TableHeader.EmittedAt", resourceCulture) ?? "Emission.TableHeader.EmittedAt";
+    public static string FINC_Reports_Empty_Description => ResourceManager.GetString("FINC_Reports_Empty_Description", resourceCulture) ?? "FINC_Reports_Empty_Description";
 
-    public static string Emission_TableHeader_LastCancelReason => ResourceManager.GetString("Emission.TableHeader.LastCancelReason", resourceCulture) ?? "Emission.TableHeader.LastCancelReason";
+    public static string FINC_Reports_Empty_Title => ResourceManager.GetString("FINC_Reports_Empty_Title", resourceCulture) ?? "FINC_Reports_Empty_Title";
 
-    public static string Emission_TableHeader_Ritm => ResourceManager.GetString("Emission.TableHeader.Ritm", resourceCulture) ?? "Emission.TableHeader.Ritm";
+    public static string FINC_Reports_Label_Status => ResourceManager.GetString("FINC_Reports_Label_Status", resourceCulture) ?? "FINC_Reports_Label_Status";
 
-    public static string Emission_TableHeader_Status => ResourceManager.GetString("Emission.TableHeader.Status", resourceCulture) ?? "Emission.TableHeader.Status";
+    public static string FINC_Reports_Status_DashboardReady => ResourceManager.GetString("FINC_Reports_Status_DashboardReady", resourceCulture) ?? "FINC_Reports_Status_DashboardReady";
 
-    public static string Emission_Title_Primary => ResourceManager.GetString("Emission.Title.Primary", resourceCulture) ?? "Emission.Title.Primary";
+    public static string FINC_Reports_Status_InvalidUrl => ResourceManager.GetString("FINC_Reports_Status_InvalidUrl", resourceCulture) ?? "FINC_Reports_Status_InvalidUrl";
 
-    public static string Emission_Toast_LineCanceled => ResourceManager.GetString("Emission.Toast.LineCanceled", resourceCulture) ?? "Emission.Toast.LineCanceled";
+    public static string FINC_Reports_Status_LoadFailure => ResourceManager.GetString("FINC_Reports_Status_LoadFailure", resourceCulture) ?? "FINC_Reports_Status_LoadFailure";
 
-    public static string Emission_Toast_LineEmitted => ResourceManager.GetString("Emission.Toast.LineEmitted", resourceCulture) ?? "Emission.Toast.LineEmitted";
+    public static string FINC_Reports_Status_OpenExternalFailure => ResourceManager.GetString("FINC_Reports_Status_OpenExternalFailure", resourceCulture) ?? "FINC_Reports_Status_OpenExternalFailure";
 
-    public static string Emission_Toast_NoCancellations => ResourceManager.GetString("Emission.Toast.NoCancellations", resourceCulture) ?? "Emission.Toast.NoCancellations";
+    public static string FINC_Reports_Status_UrlRequired => ResourceManager.GetString("FINC_Reports_Status_UrlRequired", resourceCulture) ?? "FINC_Reports_Status_UrlRequired";
 
-    public static string Emission_Toast_NoEmissions => ResourceManager.GetString("Emission.Toast.NoEmissions", resourceCulture) ?? "Emission.Toast.NoEmissions";
+    public static string FINC_Settings_Button_Apply => ResourceManager.GetString("FINC_Settings_Button_Apply", resourceCulture) ?? "FINC_Settings_Button_Apply";
 
-    public static string Emission_Toast_OperationFailed => ResourceManager.GetString("Emission.Toast.OperationFailed", resourceCulture) ?? "Emission.Toast.OperationFailed";
+    public static string FINC_Settings_Button_ClearAll => ResourceManager.GetString("FINC_Settings_Button_ClearAll", resourceCulture) ?? "FINC_Settings_Button_ClearAll";
 
-    public static string Emission_Toast_ValidationFailed => ResourceManager.GetString("Emission.Toast.ValidationFailed", resourceCulture) ?? "Emission.Toast.ValidationFailed";
+    public static string FINC_Settings_Button_ExportData => ResourceManager.GetString("FINC_Settings_Button_ExportData", resourceCulture) ?? "FINC_Settings_Button_ExportData";
 
-    public static string Emission_Validation_BzCode => ResourceManager.GetString("Emission.Validation.BzCode", resourceCulture) ?? "Emission.Validation.BzCode";
+    public static string FINC_Settings_Button_ExportPackage => ResourceManager.GetString("FINC_Settings_Button_ExportPackage", resourceCulture) ?? "FINC_Settings_Button_ExportPackage";
 
-    public static string Emission_Validation_CancelPlanRequired => ResourceManager.GetString("Emission.Validation.CancelPlanRequired", resourceCulture) ?? "Emission.Validation.CancelPlanRequired";
+    public static string FINC_Settings_Button_ImportData => ResourceManager.GetString("FINC_Settings_Button_ImportData", resourceCulture) ?? "FINC_Settings_Button_ImportData";
 
-    public static string Emission_Validation_CancelReason => ResourceManager.GetString("Emission.Validation.CancelReason", resourceCulture) ?? "Emission.Validation.CancelReason";
+    public static string FINC_Settings_Button_ImportPackage => ResourceManager.GetString("FINC_Settings_Button_ImportPackage", resourceCulture) ?? "FINC_Settings_Button_ImportPackage";
 
-    public static string Emission_Validation_EmissionDate => ResourceManager.GetString("Emission.Validation.EmissionDate", resourceCulture) ?? "Emission.Validation.EmissionDate";
+    public static string FINC_Settings_Button_Load => ResourceManager.GetString("FINC_Settings_Button_Load", resourceCulture) ?? "FINC_Settings_Button_Load";
 
-    public static string Emission_Validation_PlanNotFound => ResourceManager.GetString("Emission.Validation.PlanNotFound", resourceCulture) ?? "Emission.Validation.PlanNotFound";
+    public static string FINC_Settings_Button_Save => ResourceManager.GetString("FINC_Settings_Button_Save", resourceCulture) ?? "FINC_Settings_Button_Save";
 
-    public static string Emission_Validation_PlanRequired => ResourceManager.GetString("Emission.Validation.PlanRequired", resourceCulture) ?? "Emission.Validation.PlanRequired";
+    public static string FINC_Settings_Button_SelectPackage => ResourceManager.GetString("FINC_Settings_Button_SelectPackage", resourceCulture) ?? "FINC_Settings_Button_SelectPackage";
 
-    public static string Emission_Validation_PlanSelection => ResourceManager.GetString("Emission.Validation.PlanSelection", resourceCulture) ?? "Emission.Validation.PlanSelection";
+    public static string FINC_Settings_Button_Test => ResourceManager.GetString("FINC_Settings_Button_Test", resourceCulture) ?? "FINC_Settings_Button_Test";
 
-    public static string EmissionDateRequired => ResourceManager.GetString("EmissionDateRequired", resourceCulture) ?? "EmissionDateRequired";
+    public static string FINC_Settings_Dialog_ClearAll_Message => ResourceManager.GetString("FINC_Settings_Dialog_ClearAll_Message", resourceCulture) ?? "FINC_Settings_Dialog_ClearAll_Message";
 
-    public static string EngagementIdRequired => ResourceManager.GetString("EngagementIdRequired", resourceCulture) ?? "EngagementIdRequired";
+    public static string FINC_Settings_Dialog_ClearAll_Title => ResourceManager.GetString("FINC_Settings_Dialog_ClearAll_Title", resourceCulture) ?? "FINC_Settings_Dialog_ClearAll_Title";
 
-    public static string Engagements_Toast_DeleteSuccess => ResourceManager.GetString("Engagements.Toast.DeleteSuccess", resourceCulture) ?? "Engagements.Toast.DeleteSuccess";
+    public static string FINC_Settings_Dialog_DataExport_Title => ResourceManager.GetString("FINC_Settings_Dialog_DataExport_Title", resourceCulture) ?? "FINC_Settings_Dialog_DataExport_Title";
 
-    public static string Engagements_Toast_OperationFailed => ResourceManager.GetString("Engagements.Toast.OperationFailed", resourceCulture) ?? "Engagements.Toast.OperationFailed";
+    public static string FINC_Settings_Dialog_DataImport_Message => ResourceManager.GetString("FINC_Settings_Dialog_DataImport_Message", resourceCulture) ?? "FINC_Settings_Dialog_DataImport_Message";
 
-    public static string Engagements_Toast_ReverseSuccess => ResourceManager.GetString("Engagements.Toast.ReverseSuccess", resourceCulture) ?? "Engagements.Toast.ReverseSuccess";
+    public static string FINC_Settings_Dialog_DataImport_Title => ResourceManager.GetString("FINC_Settings_Dialog_DataImport_Title", resourceCulture) ?? "FINC_Settings_Dialog_DataImport_Title";
 
-    public static string Engagements_Toast_SaveSuccess => ResourceManager.GetString("Engagements.Toast.SaveSuccess", resourceCulture) ?? "Engagements.Toast.SaveSuccess";
+    public static string FINC_Settings_Dialog_Export_Title => ResourceManager.GetString("FINC_Settings_Dialog_Export_Title", resourceCulture) ?? "FINC_Settings_Dialog_Export_Title";
 
-    public static string Exports_Header_Value => ResourceManager.GetString("Exports.Header.Value", resourceCulture) ?? "Exports.Header.Value";
+    public static string FINC_Settings_Dialog_Import_Title => ResourceManager.GetString("FINC_Settings_Dialog_Import_Title", resourceCulture) ?? "FINC_Settings_Dialog_Import_Title";
 
-    public static string Exports_InvoiceSummary_Header_Amount => ResourceManager.GetString("Exports.InvoiceSummary.Header.Amount", resourceCulture) ?? "Exports.InvoiceSummary.Header.Amount";
+    public static string FINC_Settings_Help_DefaultCurrency => ResourceManager.GetString("FINC_Settings_Help_DefaultCurrency", resourceCulture) ?? "FINC_Settings_Help_DefaultCurrency";
 
-    public static string Exports_InvoiceSummary_Header_BaseValue => ResourceManager.GetString("Exports.InvoiceSummary.Header.BaseValue", resourceCulture) ?? "Exports.InvoiceSummary.Header.BaseValue";
+    public static string FINC_Settings_Label_ConfirmPassphrase => ResourceManager.GetString("FINC_Settings_Label_ConfirmPassphrase", resourceCulture) ?? "FINC_Settings_Label_ConfirmPassphrase";
 
-    public static string Exports_InvoiceSummary_Header_BzCode => ResourceManager.GetString("Exports.InvoiceSummary.Header.BzCode", resourceCulture) ?? "Exports.InvoiceSummary.Header.BzCode";
+    public static string FINC_Settings_Label_Database => ResourceManager.GetString("FINC_Settings_Label_Database", resourceCulture) ?? "FINC_Settings_Label_Database";
 
-    public static string Exports_InvoiceSummary_Header_CancelReason => ResourceManager.GetString("Exports.InvoiceSummary.Header.CancelReason", resourceCulture) ?? "Exports.InvoiceSummary.Header.CancelReason";
+    public static string FINC_Settings_Label_DefaultCurrency => ResourceManager.GetString("FINC_Settings_Label_DefaultCurrency", resourceCulture) ?? "FINC_Settings_Label_DefaultCurrency";
 
-    public static string Exports_InvoiceSummary_Header_CanceledAt => ResourceManager.GetString("Exports.InvoiceSummary.Header.CanceledAt", resourceCulture) ?? "Exports.InvoiceSummary.Header.CanceledAt";
+    public static string FINC_Settings_Label_ImportPackage => ResourceManager.GetString("FINC_Settings_Label_ImportPackage", resourceCulture) ?? "FINC_Settings_Label_ImportPackage";
 
-    public static string Exports_InvoiceSummary_Header_Customer => ResourceManager.GetString("Exports.InvoiceSummary.Header.Customer", resourceCulture) ?? "Exports.InvoiceSummary.Header.Customer";
+    public static string FINC_Settings_Label_ImportPassphrase => ResourceManager.GetString("FINC_Settings_Label_ImportPassphrase", resourceCulture) ?? "FINC_Settings_Label_ImportPassphrase";
 
-    public static string Exports_InvoiceSummary_Header_CustomerCode => ResourceManager.GetString("Exports.InvoiceSummary.Header.CustomerCode", resourceCulture) ?? "Exports.InvoiceSummary.Header.CustomerCode";
+    public static string FINC_Settings_Label_Language => ResourceManager.GetString("FINC_Settings_Label_Language", resourceCulture) ?? "FINC_Settings_Label_Language";
 
-    public static string Exports_InvoiceSummary_Header_DueDate => ResourceManager.GetString("Exports.InvoiceSummary.Header.DueDate", resourceCulture) ?? "Exports.InvoiceSummary.Header.DueDate";
+    public static string FINC_Settings_Label_Passphrase => ResourceManager.GetString("FINC_Settings_Label_Passphrase", resourceCulture) ?? "FINC_Settings_Label_Passphrase";
 
-    public static string Exports_InvoiceSummary_Header_EmissionDate => ResourceManager.GetString("Exports.InvoiceSummary.Header.EmissionDate", resourceCulture) ?? "Exports.InvoiceSummary.Header.EmissionDate";
+    public static string FINC_Settings_Label_Password => ResourceManager.GetString("FINC_Settings_Label_Password", resourceCulture) ?? "FINC_Settings_Label_Password";
 
-    public static string Exports_InvoiceSummary_Header_EmittedAt => ResourceManager.GetString("Exports.InvoiceSummary.Header.EmittedAt", resourceCulture) ?? "Exports.InvoiceSummary.Header.EmittedAt";
+    public static string FINC_Settings_Label_PowerBiUrl => ResourceManager.GetString("FINC_Settings_Label_PowerBiUrl", resourceCulture) ?? "FINC_Settings_Label_PowerBiUrl";
 
-    public static string Exports_InvoiceSummary_Header_Engagement => ResourceManager.GetString("Exports.InvoiceSummary.Header.Engagement", resourceCulture) ?? "Exports.InvoiceSummary.Header.Engagement";
+    public static string FINC_Settings_Label_SelectedImportPackagePrefix => ResourceManager.GetString("FINC_Settings_Label_SelectedImportPackagePrefix", resourceCulture) ?? "FINC_Settings_Label_SelectedImportPackagePrefix";
 
-    public static string Exports_InvoiceSummary_Header_Line => ResourceManager.GetString("Exports.InvoiceSummary.Header.Line", resourceCulture) ?? "Exports.InvoiceSummary.Header.Line";
+    public static string FINC_Settings_Label_Server => ResourceManager.GetString("FINC_Settings_Label_Server", resourceCulture) ?? "FINC_Settings_Label_Server";
 
-    public static string Exports_InvoiceSummary_Header_Percentage => ResourceManager.GetString("Exports.InvoiceSummary.Header.Percentage", resourceCulture) ?? "Exports.InvoiceSummary.Header.Percentage";
+    public static string FINC_Settings_Label_User => ResourceManager.GetString("FINC_Settings_Label_User", resourceCulture) ?? "FINC_Settings_Label_User";
 
-    public static string Exports_InvoiceSummary_Header_PlanId => ResourceManager.GetString("Exports.InvoiceSummary.Header.PlanId", resourceCulture) ?? "Exports.InvoiceSummary.Header.PlanId";
+    public static string FINC_Settings_Placeholder_DefaultCurrency => ResourceManager.GetString("FINC_Settings_Placeholder_DefaultCurrency", resourceCulture) ?? "FINC_Settings_Placeholder_DefaultCurrency";
 
-    public static string Exports_InvoiceSummary_Header_PlanType => ResourceManager.GetString("Exports.InvoiceSummary.Header.PlanType", resourceCulture) ?? "Exports.InvoiceSummary.Header.PlanType";
+    public static string FINC_Settings_Placeholder_ImportPackage => ResourceManager.GetString("FINC_Settings_Placeholder_ImportPackage", resourceCulture) ?? "FINC_Settings_Placeholder_ImportPackage";
 
-    public static string Exports_InvoiceSummary_Header_RequestDate => ResourceManager.GetString("Exports.InvoiceSummary.Header.RequestDate", resourceCulture) ?? "Exports.InvoiceSummary.Header.RequestDate";
+    public static string FINC_Settings_Section_ApplicationData_Description => ResourceManager.GetString("FINC_Settings_Section_ApplicationData_Description", resourceCulture) ?? "FINC_Settings_Section_ApplicationData_Description";
 
-    public static string Exports_InvoiceSummary_Header_Ritm => ResourceManager.GetString("Exports.InvoiceSummary.Header.Ritm", resourceCulture) ?? "Exports.InvoiceSummary.Header.Ritm";
+    public static string FINC_Settings_Section_ApplicationData_RestoreNotice => ResourceManager.GetString("FINC_Settings_Section_ApplicationData_RestoreNotice", resourceCulture) ?? "FINC_Settings_Section_ApplicationData_RestoreNotice";
 
-    public static string Exports_InvoiceSummary_Header_Status => ResourceManager.GetString("Exports.InvoiceSummary.Header.Status", resourceCulture) ?? "Exports.InvoiceSummary.Header.Status";
+    public static string FINC_Settings_Section_ApplicationData_Title => ResourceManager.GetString("FINC_Settings_Section_ApplicationData_Title", resourceCulture) ?? "FINC_Settings_Section_ApplicationData_Title";
 
-    public static string Exports_InvoiceSummary_Header_Totals => ResourceManager.GetString("Exports.InvoiceSummary.Header.Totals", resourceCulture) ?? "Exports.InvoiceSummary.Header.Totals";
+    public static string FINC_Settings_Section_Database_Title => ResourceManager.GetString("FINC_Settings_Section_Database_Title", resourceCulture) ?? "FINC_Settings_Section_Database_Title";
 
-    public static string Exports_InvoiceSummary_PdfTitle => ResourceManager.GetString("Exports.InvoiceSummary.PdfTitle", resourceCulture) ?? "Exports.InvoiceSummary.PdfTitle";
+    public static string FINC_Settings_Section_Localization_Title => ResourceManager.GetString("FINC_Settings_Section_Localization_Title", resourceCulture) ?? "FINC_Settings_Section_Localization_Title";
 
-    public static string Exports_InvoiceSummary_WorksheetName => ResourceManager.GetString("Exports.InvoiceSummary.WorksheetName", resourceCulture) ?? "Exports.InvoiceSummary.WorksheetName";
+    public static string FINC_Settings_Section_Package_Description => ResourceManager.GetString("FINC_Settings_Section_Package_Description", resourceCulture) ?? "FINC_Settings_Section_Package_Description";
 
-    public static string Exports_Status_NoData => ResourceManager.GetString("Exports.Status.NoData", resourceCulture) ?? "Exports.Status.NoData";
+    public static string FINC_Settings_Section_Package_ImportDescription => ResourceManager.GetString("FINC_Settings_Section_Package_ImportDescription", resourceCulture) ?? "FINC_Settings_Section_Package_ImportDescription";
 
-    public static string Exports_Worksheet_Report => ResourceManager.GetString("Exports.Worksheet.Report", resourceCulture) ?? "Exports.Worksheet.Report";
+    public static string FINC_Settings_Section_Package_Title => ResourceManager.GetString("FINC_Settings_Section_Package_Title", resourceCulture) ?? "FINC_Settings_Section_Package_Title";
 
-    public static string FirstEmissionRequired => ResourceManager.GetString("FirstEmissionRequired", resourceCulture) ?? "FirstEmissionRequired";
+    public static string FINC_Settings_Section_PowerBi_Description => ResourceManager.GetString("FINC_Settings_Section_PowerBi_Description", resourceCulture) ?? "FINC_Settings_Section_PowerBi_Description";
 
-    public static string FiscalYears_Dialog_Close_Message => ResourceManager.GetString("FiscalYears.Dialog.Close.Message", resourceCulture) ?? "FiscalYears.Dialog.Close.Message";
+    public static string FINC_Settings_Section_PowerBi_Title => ResourceManager.GetString("FINC_Settings_Section_PowerBi_Title", resourceCulture) ?? "FINC_Settings_Section_PowerBi_Title";
 
-    public static string FiscalYears_Dialog_Close_Title => ResourceManager.GetString("FiscalYears.Dialog.Close.Title", resourceCulture) ?? "FiscalYears.Dialog.Close.Title";
+    public static string FINC_Settings_Status_Cleared => ResourceManager.GetString("FINC_Settings_Status_Cleared", resourceCulture) ?? "FINC_Settings_Status_Cleared";
 
-    public static string FiscalYears_Status_AlreadyLocked => ResourceManager.GetString("FiscalYears.Status.AlreadyLocked", resourceCulture) ?? "FiscalYears.Status.AlreadyLocked";
+    public static string FINC_Settings_Status_Clearing => ResourceManager.GetString("FINC_Settings_Status_Clearing", resourceCulture) ?? "FINC_Settings_Status_Clearing";
 
-    public static string FiscalYears_Status_AlreadyUnlocked => ResourceManager.GetString("FiscalYears.Status.AlreadyUnlocked", resourceCulture) ?? "FiscalYears.Status.AlreadyUnlocked";
+    public static string FINC_Settings_Status_DataExportCancelled => ResourceManager.GetString("FINC_Settings_Status_DataExportCancelled", resourceCulture) ?? "FINC_Settings_Status_DataExportCancelled";
 
-    public static string FiscalYears_Status_ClosedNoPromotion => ResourceManager.GetString("FiscalYears.Status.ClosedNoPromotion", resourceCulture) ?? "FiscalYears.Status.ClosedNoPromotion";
+    public static string FINC_Settings_Status_DataExportFailure => ResourceManager.GetString("FINC_Settings_Status_DataExportFailure", resourceCulture) ?? "FINC_Settings_Status_DataExportFailure";
 
-    public static string FiscalYears_Status_ClosedPromoted => ResourceManager.GetString("FiscalYears.Status.ClosedPromoted", resourceCulture) ?? "FiscalYears.Status.ClosedPromoted";
+    public static string FINC_Settings_Status_DataExportInProgress => ResourceManager.GetString("FINC_Settings_Status_DataExportInProgress", resourceCulture) ?? "FINC_Settings_Status_DataExportInProgress";
 
-    public static string FiscalYears_Status_Locked => ResourceManager.GetString("FiscalYears.Status.Locked", resourceCulture) ?? "FiscalYears.Status.Locked";
+    public static string FINC_Settings_Status_DataExportSuccess => ResourceManager.GetString("FINC_Settings_Status_DataExportSuccess", resourceCulture) ?? "FINC_Settings_Status_DataExportSuccess";
 
-    public static string FiscalYears_Status_Unlocked => ResourceManager.GetString("FiscalYears.Status.Unlocked", resourceCulture) ?? "FiscalYears.Status.Unlocked";
+    public static string FINC_Settings_Status_DataImportFailure => ResourceManager.GetString("FINC_Settings_Status_DataImportFailure", resourceCulture) ?? "FINC_Settings_Status_DataImportFailure";
 
-    public static string FiscalYears_Toast_DeleteDataSuccess => ResourceManager.GetString("FiscalYears.Toast.DeleteDataSuccess", resourceCulture) ?? "FiscalYears.Toast.DeleteDataSuccess";
+    public static string FINC_Settings_Status_DataImportInProgress => ResourceManager.GetString("FINC_Settings_Status_DataImportInProgress", resourceCulture) ?? "FINC_Settings_Status_DataImportInProgress";
 
-    public static string FiscalYears_Toast_DeleteSuccess => ResourceManager.GetString("FiscalYears.Toast.DeleteSuccess", resourceCulture) ?? "FiscalYears.Toast.DeleteSuccess";
+    public static string FINC_Settings_Status_DataImportSuccess => ResourceManager.GetString("FINC_Settings_Status_DataImportSuccess", resourceCulture) ?? "FINC_Settings_Status_DataImportSuccess";
 
-    public static string FiscalYears_Toast_OperationFailed => ResourceManager.GetString("FiscalYears.Toast.OperationFailed", resourceCulture) ?? "FiscalYears.Toast.OperationFailed";
+    public static string FINC_Settings_Status_ExportCancelled => ResourceManager.GetString("FINC_Settings_Status_ExportCancelled", resourceCulture) ?? "FINC_Settings_Status_ExportCancelled";
 
-    public static string FiscalYears_Toast_SaveSuccess => ResourceManager.GetString("FiscalYears.Toast.SaveSuccess", resourceCulture) ?? "FiscalYears.Toast.SaveSuccess";
+    public static string FINC_Settings_Status_ExportFailure => ResourceManager.GetString("FINC_Settings_Status_ExportFailure", resourceCulture) ?? "FINC_Settings_Status_ExportFailure";
 
-    public static string FiscalYears_Validation_EndDateAfterStart => ResourceManager.GetString("FiscalYears.Validation.EndDateAfterStart", resourceCulture) ?? "FiscalYears.Validation.EndDateAfterStart";
+    public static string FINC_Settings_Status_ExportInProgress => ResourceManager.GetString("FINC_Settings_Status_ExportInProgress", resourceCulture) ?? "FINC_Settings_Status_ExportInProgress";
 
-    public static string FiscalYears_Validation_NameRequired => ResourceManager.GetString("FiscalYears.Validation.NameRequired", resourceCulture) ?? "FiscalYears.Validation.NameRequired";
+    public static string FINC_Settings_Status_ExportSuccess => ResourceManager.GetString("FINC_Settings_Status_ExportSuccess", resourceCulture) ?? "FINC_Settings_Status_ExportSuccess";
 
-    public static string FrsNumberRequired => ResourceManager.GetString("FrsNumberRequired", resourceCulture) ?? "FrsNumberRequired";
+    public static string FINC_Settings_Status_ImportFailure => ResourceManager.GetString("FINC_Settings_Status_ImportFailure", resourceCulture) ?? "FINC_Settings_Status_ImportFailure";
 
-    public static string Home_Button_Confirm => ResourceManager.GetString("Home.Button.Confirm", resourceCulture) ?? "Home.Button.Confirm";
+    public static string FINC_Settings_Status_ImportInProgress => ResourceManager.GetString("FINC_Settings_Status_ImportInProgress", resourceCulture) ?? "FINC_Settings_Status_ImportInProgress";
 
-    public static string Home_Description_Primary => ResourceManager.GetString("Home.Description.Primary", resourceCulture) ?? "Home.Description.Primary";
+    public static string FINC_Settings_Status_ImportSuccess => ResourceManager.GetString("FINC_Settings_Status_ImportSuccess", resourceCulture) ?? "FINC_Settings_Status_ImportSuccess";
 
-    public static string Home_Label_ClosingPeriod => ResourceManager.GetString("Home.Label.ClosingPeriod", resourceCulture) ?? "Home.Label.ClosingPeriod";
+    public static string FINC_Settings_Status_Loaded => ResourceManager.GetString("FINC_Settings_Status_Loaded", resourceCulture) ?? "FINC_Settings_Status_Loaded";
 
-    public static string Home_Label_FiscalYear => ResourceManager.GetString("Home.Label.FiscalYear", resourceCulture) ?? "Home.Label.FiscalYear";
+    public static string FINC_Settings_Status_LocalizationFailed => ResourceManager.GetString("FINC_Settings_Status_LocalizationFailed", resourceCulture) ?? "FINC_Settings_Status_LocalizationFailed";
 
-    public static string Home_Markdown_LoadFailed => ResourceManager.GetString("Home.Markdown.LoadFailed", resourceCulture) ?? "Home.Markdown.LoadFailed";
+    public static string FINC_Settings_Status_LocalizationPreview => ResourceManager.GetString("FINC_Settings_Status_LocalizationPreview", resourceCulture) ?? "FINC_Settings_Status_LocalizationPreview";
 
-    public static string Home_Markdown_Title => ResourceManager.GetString("Home.Markdown.Title", resourceCulture) ?? "Home.Markdown.Title";
+    public static string FINC_Settings_Status_LocalizationSaved => ResourceManager.GetString("FINC_Settings_Status_LocalizationSaved", resourceCulture) ?? "FINC_Settings_Status_LocalizationSaved";
 
-    public static string Home_Message_Welcome => ResourceManager.GetString("Home.Message.Welcome", resourceCulture) ?? "Home.Message.Welcome";
+    public static string FINC_Settings_Status_PowerBiFailed => ResourceManager.GetString("FINC_Settings_Status_PowerBiFailed", resourceCulture) ?? "FINC_Settings_Status_PowerBiFailed";
 
-    public static string Home_Placeholder_ClosingPeriod => ResourceManager.GetString("Home.Placeholder.ClosingPeriod", resourceCulture) ?? "Home.Placeholder.ClosingPeriod";
+    public static string FINC_Settings_Status_PowerBiSaved => ResourceManager.GetString("FINC_Settings_Status_PowerBiSaved", resourceCulture) ?? "FINC_Settings_Status_PowerBiSaved";
 
-    public static string Home_Placeholder_FiscalYear => ResourceManager.GetString("Home.Placeholder.FiscalYear", resourceCulture) ?? "Home.Placeholder.FiscalYear";
+    public static string FINC_Settings_Status_SaveError => ResourceManager.GetString("FINC_Settings_Status_SaveError", resourceCulture) ?? "FINC_Settings_Status_SaveError";
 
-    public static string Home_Status_LoadError => ResourceManager.GetString("Home.Status.LoadError", resourceCulture) ?? "Home.Status.LoadError";
+    public static string FINC_Settings_Status_Saved => ResourceManager.GetString("FINC_Settings_Status_Saved", resourceCulture) ?? "FINC_Settings_Status_Saved";
 
-    public static string Home_Status_NoClosingPeriods => ResourceManager.GetString("Home.Status.NoClosingPeriods", resourceCulture) ?? "Home.Status.NoClosingPeriods";
+    public static string FINC_Settings_Status_TestSuccess => ResourceManager.GetString("FINC_Settings_Status_TestSuccess", resourceCulture) ?? "FINC_Settings_Status_TestSuccess";
 
-    public static string Home_Status_NoFiscalYears => ResourceManager.GetString("Home.Status.NoFiscalYears", resourceCulture) ?? "Home.Status.NoFiscalYears";
+    public static string FINC_Settings_Status_Testing => ResourceManager.GetString("FINC_Settings_Status_Testing", resourceCulture) ?? "FINC_Settings_Status_Testing";
 
-    public static string Home_Status_SaveError => ResourceManager.GetString("Home.Status.SaveError", resourceCulture) ?? "Home.Status.SaveError";
+    public static string FINC_Settings_Tab_ApplicationData => ResourceManager.GetString("FINC_Settings_Tab_ApplicationData", resourceCulture) ?? "FINC_Settings_Tab_ApplicationData";
 
-    public static string Home_Status_Saved => ResourceManager.GetString("Home.Status.Saved", resourceCulture) ?? "Home.Status.Saved";
+    public static string FINC_Settings_Tab_Connection => ResourceManager.GetString("FINC_Settings_Tab_Connection", resourceCulture) ?? "FINC_Settings_Tab_Connection";
 
-    public static string Home_Status_SelectFiscalYear => ResourceManager.GetString("Home.Status.SelectFiscalYear", resourceCulture) ?? "Home.Status.SelectFiscalYear";
+    public static string FINC_Settings_Tab_ConnectionPackages => ResourceManager.GetString("FINC_Settings_Tab_ConnectionPackages", resourceCulture) ?? "FINC_Settings_Tab_ConnectionPackages";
 
-    public static string Home_Title => ResourceManager.GetString("Home.Title", resourceCulture) ?? "Home.Title";
+    public static string FINC_Settings_Tab_Localization => ResourceManager.GetString("FINC_Settings_Tab_Localization", resourceCulture) ?? "FINC_Settings_Tab_Localization";
 
-    public static string Home_Title_Primary => ResourceManager.GetString("Home.Title.Primary", resourceCulture) ?? "Home.Title.Primary";
+    public static string FINC_Settings_Tab_PowerBi => ResourceManager.GetString("FINC_Settings_Tab_PowerBi", resourceCulture) ?? "FINC_Settings_Tab_PowerBi";
 
-    public static string Home_Welcome => ResourceManager.GetString("Home.Welcome", resourceCulture) ?? "Home.Welcome";
+    public static string FINC_Settings_Toast_ConnectionFailed => ResourceManager.GetString("FINC_Settings_Toast_ConnectionFailed", resourceCulture) ?? "FINC_Settings_Toast_ConnectionFailed";
 
-    public static string Import_Button_AllocationPlanning => ResourceManager.GetString("Import.Button.AllocationPlanning", resourceCulture) ?? "Import.Button.AllocationPlanning";
+    public static string FINC_Settings_Toast_ConnectionSaved => ResourceManager.GetString("FINC_Settings_Toast_ConnectionSaved", resourceCulture) ?? "FINC_Settings_Toast_ConnectionSaved";
 
-    public static string Import_Button_Budget => ResourceManager.GetString("Import.Button.Budget", resourceCulture) ?? "Import.Button.Budget";
+    public static string FINC_Settings_Toast_LocalizationFailed => ResourceManager.GetString("FINC_Settings_Toast_LocalizationFailed", resourceCulture) ?? "FINC_Settings_Toast_LocalizationFailed";
 
-    public static string Import_Button_FullManagement => ResourceManager.GetString("Import.Button.FullManagement", resourceCulture) ?? "Import.Button.FullManagement";
+    public static string FINC_Settings_Toast_LocalizationSaved => ResourceManager.GetString("FINC_Settings_Toast_LocalizationSaved", resourceCulture) ?? "FINC_Settings_Toast_LocalizationSaved";
 
-    public static string Import_Button_SelectFile => ResourceManager.GetString("Import.Button.SelectFile", resourceCulture) ?? "Import.Button.SelectFile";
+    public static string FINC_Settings_Toast_PowerBiFailed => ResourceManager.GetString("FINC_Settings_Toast_PowerBiFailed", resourceCulture) ?? "FINC_Settings_Toast_PowerBiFailed";
 
-    public static string Import_FileType_AllocationPlanning => ResourceManager.GetString("Import.FileType.AllocationPlanning", resourceCulture) ?? "Import.FileType.AllocationPlanning";
+    public static string FINC_Settings_Toast_PowerBiSaved => ResourceManager.GetString("FINC_Settings_Toast_PowerBiSaved", resourceCulture) ?? "FINC_Settings_Toast_PowerBiSaved";
 
-    public static string Import_FileType_Budget => ResourceManager.GetString("Import.FileType.Budget", resourceCulture) ?? "Import.FileType.Budget";
+    public static string FINC_Settings_Validation_ExportPassphraseMismatch => ResourceManager.GetString("FINC_Settings_Validation_ExportPassphraseMismatch", resourceCulture) ?? "FINC_Settings_Validation_ExportPassphraseMismatch";
 
-    public static string Import_FileType_FullManagement => ResourceManager.GetString("Import.FileType.FullManagement", resourceCulture) ?? "Import.FileType.FullManagement";
+    public static string FINC_Settings_Validation_ExportPassphraseRequired => ResourceManager.GetString("FINC_Settings_Validation_ExportPassphraseRequired", resourceCulture) ?? "FINC_Settings_Validation_ExportPassphraseRequired";
 
-    public static string Import_Section_Selected_TitleFormat => ResourceManager.GetString("Import.Section.Selected.TitleFormat", resourceCulture) ?? "Import.Section.Selected.TitleFormat";
+    public static string FINC_Settings_Validation_ImportPackageRequired => ResourceManager.GetString("FINC_Settings_Validation_ImportPackageRequired", resourceCulture) ?? "FINC_Settings_Validation_ImportPackageRequired";
 
-    public static string Import_Status_Error => ResourceManager.GetString("Import.Status.Error", resourceCulture) ?? "Import.Status.Error";
+    public static string FINC_Settings_Validation_ImportPassphraseRequired => ResourceManager.GetString("FINC_Settings_Validation_ImportPassphraseRequired", resourceCulture) ?? "FINC_Settings_Validation_ImportPassphraseRequired";
 
-    public static string Import_Status_InProgress => ResourceManager.GetString("Import.Status.InProgress", resourceCulture) ?? "Import.Status.InProgress";
+    public static string FINC_Shell_Brand_Primary => ResourceManager.GetString("FINC_Shell_Brand_Primary", resourceCulture) ?? "FINC_Shell_Brand_Primary";
 
-    public static string Import_Status_InvalidType => ResourceManager.GetString("Import.Status.InvalidType", resourceCulture) ?? "Import.Status.InvalidType";
+    public static string FINC_Shell_Title_FinancialControl => ResourceManager.GetString("FINC_Shell_Title_FinancialControl", resourceCulture) ?? "FINC_Shell_Title_FinancialControl";
 
-    public static string Import_Title_Primary => ResourceManager.GetString("Import.Title.Primary", resourceCulture) ?? "Import.Title.Primary";
+    public static string FINC_Tasks_Button_Generate => ResourceManager.GetString("FINC_Tasks_Button_Generate", resourceCulture) ?? "FINC_Tasks_Button_Generate";
 
-    public static string Import_Toast_S4MetadataSuccess => ResourceManager.GetString("Import.Toast.S4MetadataSuccess", resourceCulture) ?? "Import.Toast.S4MetadataSuccess";
+    public static string FINC_Tasks_Button_GenerateRetainTemplate => ResourceManager.GetString("FINC_Tasks_Button_GenerateRetainTemplate", resourceCulture) ?? "FINC_Tasks_Button_GenerateRetainTemplate";
 
-    public static string Import_Warning_SelectClosingPeriod => ResourceManager.GetString("Import.Warning.SelectClosingPeriod", resourceCulture) ?? "Import.Warning.SelectClosingPeriod";
+    public static string FINC_Tasks_Description_Primary => ResourceManager.GetString("FINC_Tasks_Description_Primary", resourceCulture) ?? "FINC_Tasks_Description_Primary";
 
-    public static string Invoice_Status_Canceled => ResourceManager.GetString("Invoice.Status.Canceled", resourceCulture) ?? "Invoice.Status.Canceled";
+    public static string FINC_Tasks_Dialog_GenerateRetainTemplateTitle => ResourceManager.GetString("FINC_Tasks_Dialog_GenerateRetainTemplateTitle", resourceCulture) ?? "FINC_Tasks_Dialog_GenerateRetainTemplateTitle";
 
-    public static string Invoice_Status_Closed => ResourceManager.GetString("Invoice.Status.Closed", resourceCulture) ?? "Invoice.Status.Closed";
+    public static string FINC_Tasks_Dialog_SaveRetainTemplateTitle => ResourceManager.GetString("FINC_Tasks_Dialog_SaveRetainTemplateTitle", resourceCulture) ?? "FINC_Tasks_Dialog_SaveRetainTemplateTitle";
 
-    public static string Invoice_Status_Emitted => ResourceManager.GetString("Invoice.Status.Emitted", resourceCulture) ?? "Invoice.Status.Emitted";
+    public static string FINC_Tasks_Dialog_SaveTitle => ResourceManager.GetString("FINC_Tasks_Dialog_SaveTitle", resourceCulture) ?? "FINC_Tasks_Dialog_SaveTitle";
 
-    public static string Invoice_Status_Planned => ResourceManager.GetString("Invoice.Status.Planned", resourceCulture) ?? "Invoice.Status.Planned";
+    public static string FINC_Tasks_Status_Cancelled => ResourceManager.GetString("FINC_Tasks_Status_Cancelled", resourceCulture) ?? "FINC_Tasks_Status_Cancelled";
 
-    public static string Invoice_Status_Reissued => ResourceManager.GetString("Invoice.Status.Reissued", resourceCulture) ?? "Invoice.Status.Reissued";
+    public static string FINC_Tasks_Status_FileSaved => ResourceManager.GetString("FINC_Tasks_Status_FileSaved", resourceCulture) ?? "FINC_Tasks_Status_FileSaved";
 
-    public static string Invoice_Status_Requested => ResourceManager.GetString("Invoice.Status.Requested", resourceCulture) ?? "Invoice.Status.Requested";
+    public static string FINC_Tasks_Status_GenerationFailure => ResourceManager.GetString("FINC_Tasks_Status_GenerationFailure", resourceCulture) ?? "FINC_Tasks_Status_GenerationFailure";
 
-    public static string InvoicePlan_Button_CloseInvoice => ResourceManager.GetString("InvoicePlan.Button.CloseInvoice", resourceCulture) ?? "InvoicePlan.Button.CloseInvoice";
+    public static string FINC_Tasks_Status_RetainTemplateCancelled => ResourceManager.GetString("FINC_Tasks_Status_RetainTemplateCancelled", resourceCulture) ?? "FINC_Tasks_Status_RetainTemplateCancelled";
 
-    public static string InvoicePlan_Button_SaveDraft => ResourceManager.GetString("InvoicePlan.Button.SaveDraft", resourceCulture) ?? "InvoicePlan.Button.SaveDraft";
+    public static string FINC_Tasks_Status_RetainTemplateFailure => ResourceManager.GetString("FINC_Tasks_Status_RetainTemplateFailure", resourceCulture) ?? "FINC_Tasks_Status_RetainTemplateFailure";
 
-    public static string InvoicePlan_Description_Primary => ResourceManager.GetString("InvoicePlan.Description.Primary", resourceCulture) ?? "InvoicePlan.Description.Primary";
+    public static string FINC_Tasks_Status_RetainTemplateSuccess => ResourceManager.GetString("FINC_Tasks_Status_RetainTemplateSuccess", resourceCulture) ?? "FINC_Tasks_Status_RetainTemplateSuccess";
 
-    public static string InvoicePlan_Dialog_Button_DeletePlan => ResourceManager.GetString("InvoicePlan.Dialog.Button.DeletePlan", resourceCulture) ?? "InvoicePlan.Dialog.Button.DeletePlan";
+    public static string FINC_Tasks_Status_TimeZoneMissing => ResourceManager.GetString("FINC_Tasks_Status_TimeZoneMissing", resourceCulture) ?? "FINC_Tasks_Status_TimeZoneMissing";
 
-    public static string InvoicePlan_Dialog_Button_EditPlan => ResourceManager.GetString("InvoicePlan.Dialog.Button.EditPlan", resourceCulture) ?? "InvoicePlan.Dialog.Button.EditPlan";
+    public static string FINC_Tasks_Title_Primary => ResourceManager.GetString("FINC_Tasks_Title_Primary", resourceCulture) ?? "FINC_Tasks_Title_Primary";
 
-    public static string InvoicePlan_Label_BaseValue => ResourceManager.GetString("InvoicePlan.Label.BaseValue", resourceCulture) ?? "InvoicePlan.Label.BaseValue";
+    public static string Global_AdditionalEmailBlank => ResourceManager.GetString("Global_AdditionalEmailBlank", resourceCulture) ?? "Global_AdditionalEmailBlank";
 
-    public static string InvoicePlan_Label_Engagement => ResourceManager.GetString("InvoicePlan.Label.Engagement", resourceCulture) ?? "InvoicePlan.Label.Engagement";
+    public static string Global_AdditionalEmailInvalid => ResourceManager.GetString("Global_AdditionalEmailInvalid", resourceCulture) ?? "Global_AdditionalEmailInvalid";
 
-    public static string InvoicePlan_Label_ExtraEmails => ResourceManager.GetString("InvoicePlan.Label.ExtraEmails", resourceCulture) ?? "InvoicePlan.Label.ExtraEmails";
+    public static string Global_Button_Cancel => ResourceManager.GetString("Global_Button_Cancel", resourceCulture) ?? "Global_Button_Cancel";
 
-    public static string InvoicePlan_Label_FirstEmission => ResourceManager.GetString("InvoicePlan.Label.FirstEmission", resourceCulture) ?? "InvoicePlan.Label.FirstEmission";
+    public static string Global_Button_Save => ResourceManager.GetString("Global_Button_Save", resourceCulture) ?? "Global_Button_Save";
 
-    public static string InvoicePlan_Label_FocalPoint => ResourceManager.GetString("InvoicePlan.Label.FocalPoint", resourceCulture) ?? "InvoicePlan.Label.FocalPoint";
+    public static string Global_CustomerFocalPointEmailInvalid => ResourceManager.GetString("Global_CustomerFocalPointEmailInvalid", resourceCulture) ?? "Global_CustomerFocalPointEmailInvalid";
 
-    public static string InvoicePlan_Label_Instructions => ResourceManager.GetString("InvoicePlan.Label.Instructions", resourceCulture) ?? "InvoicePlan.Label.Instructions";
+    public static string Global_CustomerFocalPointEmailRequired => ResourceManager.GetString("Global_CustomerFocalPointEmailRequired", resourceCulture) ?? "Global_CustomerFocalPointEmailRequired";
 
-    public static string InvoicePlan_Label_InvoiceCount => ResourceManager.GetString("InvoicePlan.Label.InvoiceCount", resourceCulture) ?? "InvoicePlan.Label.InvoiceCount";
+    public static string Global_CustomerFocalPointNameRequired => ResourceManager.GetString("Global_CustomerFocalPointNameRequired", resourceCulture) ?? "Global_CustomerFocalPointNameRequired";
 
-    public static string InvoicePlan_Label_PaymentTerms => ResourceManager.GetString("InvoicePlan.Label.PaymentTerms", resourceCulture) ?? "InvoicePlan.Label.PaymentTerms";
+    public static string Global_CustomerTicketRequired => ResourceManager.GetString("Global_CustomerTicketRequired", resourceCulture) ?? "Global_CustomerTicketRequired";
 
-    public static string InvoicePlan_Label_PlanType => ResourceManager.GetString("InvoicePlan.Label.PlanType", resourceCulture) ?? "InvoicePlan.Label.PlanType";
+    public static string Global_DeliveryDescriptionRequired => ResourceManager.GetString("Global_DeliveryDescriptionRequired", resourceCulture) ?? "Global_DeliveryDescriptionRequired";
 
-    public static string InvoicePlan_Label_RecipientEmails => ResourceManager.GetString("InvoicePlan.Label.RecipientEmails", resourceCulture) ?? "InvoicePlan.Label.RecipientEmails";
+    public static string Global_DueDateMustMatch => ResourceManager.GetString("Global_DueDateMustMatch", resourceCulture) ?? "Global_DueDateMustMatch";
 
-    public static string InvoicePlan_Placeholder_DeliveryNotes => ResourceManager.GetString("InvoicePlan.Placeholder.DeliveryNotes", resourceCulture) ?? "InvoicePlan.Placeholder.DeliveryNotes";
+    public static string Global_EmissionDateRequired => ResourceManager.GetString("Global_EmissionDateRequired", resourceCulture) ?? "Global_EmissionDateRequired";
 
-    public static string InvoicePlan_Placeholder_Recipients => ResourceManager.GetString("InvoicePlan.Placeholder.Recipients", resourceCulture) ?? "InvoicePlan.Placeholder.Recipients";
+    public static string Global_EngagementIdRequired => ResourceManager.GetString("Global_EngagementIdRequired", resourceCulture) ?? "Global_EngagementIdRequired";
 
-    public static string InvoicePlan_Section_InvoiceLines_Title => ResourceManager.GetString("InvoicePlan.Section.InvoiceLines.Title", resourceCulture) ?? "InvoicePlan.Section.InvoiceLines.Title";
+    public static string Global_FirstEmissionRequired => ResourceManager.GetString("Global_FirstEmissionRequired", resourceCulture) ?? "Global_FirstEmissionRequired";
 
-    public static string InvoicePlan_Section_Summary_Description => ResourceManager.GetString("InvoicePlan.Section.Summary.Description", resourceCulture) ?? "InvoicePlan.Section.Summary.Description";
+    public static string Global_FrsNumberRequired => ResourceManager.GetString("Global_FrsNumberRequired", resourceCulture) ?? "Global_FrsNumberRequired";
 
-    public static string InvoicePlan_Section_Summary_Title => ResourceManager.GetString("InvoicePlan.Section.Summary.Title", resourceCulture) ?? "InvoicePlan.Section.Summary.Title";
+    public static string Global_ItemsCountMismatch => ResourceManager.GetString("Global_ItemsCountMismatch", resourceCulture) ?? "Global_ItemsCountMismatch";
 
-    public static string InvoicePlan_Section_Totals_Amount => ResourceManager.GetString("InvoicePlan.Section.Totals.Amount", resourceCulture) ?? "InvoicePlan.Section.Totals.Amount";
+    public static string Global_ItemsRequired => ResourceManager.GetString("Global_ItemsRequired", resourceCulture) ?? "Global_ItemsRequired";
 
-    public static string InvoicePlan_Section_Totals_Label => ResourceManager.GetString("InvoicePlan.Section.Totals.Label", resourceCulture) ?? "InvoicePlan.Section.Totals.Label";
+    public static string Global_Localization_Language_English => ResourceManager.GetString("Global_Localization_Language_English", resourceCulture) ?? "Global_Localization_Language_English";
 
-    public static string InvoicePlan_Section_Totals_Percent => ResourceManager.GetString("InvoicePlan.Section.Totals.Percent", resourceCulture) ?? "InvoicePlan.Section.Totals.Percent";
+    public static string Global_Localization_Language_Portuguese => ResourceManager.GetString("Global_Localization_Language_Portuguese", resourceCulture) ?? "Global_Localization_Language_Portuguese";
 
-    public static string InvoicePlan_Selection_Button_AddEdit => ResourceManager.GetString("InvoicePlan.Selection.Button.AddEdit", resourceCulture) ?? "InvoicePlan.Selection.Button.AddEdit";
+    public static string Global_NumInvoicesMinimum => ResourceManager.GetString("Global_NumInvoicesMinimum", resourceCulture) ?? "Global_NumInvoicesMinimum";
 
-    public static string InvoicePlan_Selection_Button_Create => ResourceManager.GetString("InvoicePlan.Selection.Button.Create", resourceCulture) ?? "InvoicePlan.Selection.Button.Create";
+    public static string Global_PayerCnpjRequired => ResourceManager.GetString("Global_PayerCnpjRequired", resourceCulture) ?? "Global_PayerCnpjRequired";
 
-    public static string InvoicePlan_Selection_Column_Canceled => ResourceManager.GetString("InvoicePlan.Selection.Column.Canceled", resourceCulture) ?? "InvoicePlan.Selection.Column.Canceled";
+    public static string Global_PaymentTermsNegative => ResourceManager.GetString("Global_PaymentTermsNegative", resourceCulture) ?? "Global_PaymentTermsNegative";
 
-    public static string InvoicePlan_Selection_Column_Closed => ResourceManager.GetString("InvoicePlan.Selection.Column.Closed", resourceCulture) ?? "InvoicePlan.Selection.Column.Closed";
+    public static string Global_PoNumberRequired => ResourceManager.GetString("Global_PoNumberRequired", resourceCulture) ?? "Global_PoNumberRequired";
 
-    public static string InvoicePlan_Selection_Column_Emitted => ResourceManager.GetString("InvoicePlan.Selection.Column.Emitted", resourceCulture) ?? "InvoicePlan.Selection.Column.Emitted";
+    public static string Global_SequenceContiguous => ResourceManager.GetString("Global_SequenceContiguous", resourceCulture) ?? "Global_SequenceContiguous";
 
-    public static string InvoicePlan_Selection_Column_Engagement => ResourceManager.GetString("InvoicePlan.Selection.Column.Engagement", resourceCulture) ?? "InvoicePlan.Selection.Column.Engagement";
+    public static string Global_TotalAmountInvalid => ResourceManager.GetString("Global_TotalAmountInvalid", resourceCulture) ?? "Global_TotalAmountInvalid";
 
-    public static string InvoicePlan_Selection_Column_FirstEmission => ResourceManager.GetString("InvoicePlan.Selection.Column.FirstEmission", resourceCulture) ?? "InvoicePlan.Selection.Column.FirstEmission";
+    public static string Global_TotalPercentageInvalid => ResourceManager.GetString("Global_TotalPercentageInvalid", resourceCulture) ?? "Global_TotalPercentageInvalid";
 
-    public static string InvoicePlan_Selection_Column_PendingRequests => ResourceManager.GetString("InvoicePlan.Selection.Column.PendingRequests", resourceCulture) ?? "InvoicePlan.Selection.Column.PendingRequests";
+    public static string INV_Access_Message_LoginUnknown => ResourceManager.GetString("INV_Access_Message_LoginUnknown", resourceCulture) ?? "INV_Access_Message_LoginUnknown";
 
-    public static string InvoicePlan_Selection_Column_PlanId => ResourceManager.GetString("InvoicePlan.Selection.Column.PlanId", resourceCulture) ?? "InvoicePlan.Selection.Column.PlanId";
+    public static string INV_Access_Message_NoAssignments => ResourceManager.GetString("INV_Access_Message_NoAssignments", resourceCulture) ?? "INV_Access_Message_NoAssignments";
 
-    public static string InvoicePlan_Selection_Column_Requested => ResourceManager.GetString("InvoicePlan.Selection.Column.Requested", resourceCulture) ?? "InvoicePlan.Selection.Column.Requested";
+    public static string INV_Button_Close => ResourceManager.GetString("INV_Button_Close", resourceCulture) ?? "INV_Button_Close";
 
-    public static string InvoicePlan_Selection_Column_Type => ResourceManager.GetString("InvoicePlan.Selection.Column.Type", resourceCulture) ?? "InvoicePlan.Selection.Column.Type";
+    public static string INV_Button_CopyDetails => ResourceManager.GetString("INV_Button_CopyDetails", resourceCulture) ?? "INV_Button_CopyDetails";
 
-    public static string InvoicePlan_Selection_Description_Primary => ResourceManager.GetString("InvoicePlan.Selection.Description.Primary", resourceCulture) ?? "InvoicePlan.Selection.Description.Primary";
+    public static string INV_Button_ExportExcel => ResourceManager.GetString("INV_Button_ExportExcel", resourceCulture) ?? "INV_Button_ExportExcel";
 
-    public static string InvoicePlan_Selection_Header_Customer => ResourceManager.GetString("InvoicePlan.Selection.Header.Customer", resourceCulture) ?? "InvoicePlan.Selection.Header.Customer";
+    public static string INV_Button_ExportPdf => ResourceManager.GetString("INV_Button_ExportPdf", resourceCulture) ?? "INV_Button_ExportPdf";
 
-    public static string InvoicePlan_Selection_Header_Engagement => ResourceManager.GetString("InvoicePlan.Selection.Header.Engagement", resourceCulture) ?? "InvoicePlan.Selection.Header.Engagement";
+    public static string INV_Button_Refresh => ResourceManager.GetString("INV_Button_Refresh", resourceCulture) ?? "INV_Button_Refresh";
 
-    public static string InvoicePlan_Selection_Header_Plan => ResourceManager.GetString("InvoicePlan.Selection.Header.Plan", resourceCulture) ?? "InvoicePlan.Selection.Header.Plan";
+    public static string INV_Connection_Button_Browse => ResourceManager.GetString("INV_Connection_Button_Browse", resourceCulture) ?? "INV_Connection_Button_Browse";
 
-    public static string InvoicePlan_Selection_Message_Empty => ResourceManager.GetString("InvoicePlan.Selection.Message.Empty", resourceCulture) ?? "InvoicePlan.Selection.Message.Empty";
+    public static string INV_Connection_Button_Import => ResourceManager.GetString("INV_Connection_Button_Import", resourceCulture) ?? "INV_Connection_Button_Import";
 
-    public static string InvoicePlan_Selection_Message_SelectHint => ResourceManager.GetString("InvoicePlan.Selection.Message.SelectHint", resourceCulture) ?? "InvoicePlan.Selection.Message.SelectHint";
+    public static string INV_Connection_Description_Setup => ResourceManager.GetString("INV_Connection_Description_Setup", resourceCulture) ?? "INV_Connection_Description_Setup";
 
-    public static string InvoicePlan_Selection_Status_LoadFailure => ResourceManager.GetString("InvoicePlan.Selection.Status.LoadFailure", resourceCulture) ?? "InvoicePlan.Selection.Status.LoadFailure";
+    public static string INV_Connection_Dialog_BrowseTitle => ResourceManager.GetString("INV_Connection_Dialog_BrowseTitle", resourceCulture) ?? "INV_Connection_Dialog_BrowseTitle";
 
-    public static string InvoicePlan_Selection_Status_PlanDeleted => ResourceManager.GetString("InvoicePlan.Selection.Status.PlanDeleted", resourceCulture) ?? "InvoicePlan.Selection.Status.PlanDeleted";
+    public static string INV_Connection_Label_Language => ResourceManager.GetString("INV_Connection_Label_Language", resourceCulture) ?? "INV_Connection_Label_Language";
 
-    public static string InvoicePlan_Selection_Title_Primary => ResourceManager.GetString("InvoicePlan.Selection.Title.Primary", resourceCulture) ?? "InvoicePlan.Selection.Title.Primary";
+    public static string INV_Connection_Label_Package => ResourceManager.GetString("INV_Connection_Label_Package", resourceCulture) ?? "INV_Connection_Label_Package";
 
-    public static string InvoicePlan_Status_ActionCreated => ResourceManager.GetString("InvoicePlan.Status.ActionCreated", resourceCulture) ?? "InvoicePlan.Status.ActionCreated";
+    public static string INV_Connection_Label_Passphrase => ResourceManager.GetString("INV_Connection_Label_Passphrase", resourceCulture) ?? "INV_Connection_Label_Passphrase";
 
-    public static string InvoicePlan_Status_ActionUpdated => ResourceManager.GetString("InvoicePlan.Status.ActionUpdated", resourceCulture) ?? "InvoicePlan.Status.ActionUpdated";
+    public static string INV_Connection_Message_MissingSettings => ResourceManager.GetString("INV_Connection_Message_MissingSettings", resourceCulture) ?? "INV_Connection_Message_MissingSettings";
 
-    public static string InvoicePlan_Status_DeleteFailure => ResourceManager.GetString("InvoicePlan.Status.DeleteFailure", resourceCulture) ?? "InvoicePlan.Status.DeleteFailure";
+    public static string INV_Connection_Message_SetupPrompt => ResourceManager.GetString("INV_Connection_Message_SetupPrompt", resourceCulture) ?? "INV_Connection_Message_SetupPrompt";
 
-    public static string InvoicePlan_Status_LoadFailure => ResourceManager.GetString("InvoicePlan.Status.LoadFailure", resourceCulture) ?? "InvoicePlan.Status.LoadFailure";
+    public static string INV_Connection_Placeholder_Package => ResourceManager.GetString("INV_Connection_Placeholder_Package", resourceCulture) ?? "INV_Connection_Placeholder_Package";
 
-    public static string InvoicePlan_Status_PlanLoaded => ResourceManager.GetString("InvoicePlan.Status.PlanLoaded", resourceCulture) ?? "InvoicePlan.Status.PlanLoaded";
+    public static string INV_Connection_Placeholder_Passphrase => ResourceManager.GetString("INV_Connection_Placeholder_Passphrase", resourceCulture) ?? "INV_Connection_Placeholder_Passphrase";
 
-    public static string InvoicePlan_Status_PlanSaved => ResourceManager.GetString("InvoicePlan.Status.PlanSaved", resourceCulture) ?? "InvoicePlan.Status.PlanSaved";
+    public static string INV_Connection_Section_Language_Title => ResourceManager.GetString("INV_Connection_Section_Language_Title", resourceCulture) ?? "INV_Connection_Section_Language_Title";
 
-    public static string InvoicePlan_Status_SaveFailure => ResourceManager.GetString("InvoicePlan.Status.SaveFailure", resourceCulture) ?? "InvoicePlan.Status.SaveFailure";
+    public static string INV_Connection_Status_ImportFailure => ResourceManager.GetString("INV_Connection_Status_ImportFailure", resourceCulture) ?? "INV_Connection_Status_ImportFailure";
 
-    public static string InvoicePlan_TableHeader_Amount => ResourceManager.GetString("InvoicePlan.TableHeader.Amount", resourceCulture) ?? "InvoicePlan.TableHeader.Amount";
+    public static string INV_Connection_Status_ImportInProgress => ResourceManager.GetString("INV_Connection_Status_ImportInProgress", resourceCulture) ?? "INV_Connection_Status_ImportInProgress";
 
-    public static string InvoicePlan_TableHeader_Cnpj => ResourceManager.GetString("InvoicePlan.TableHeader.Cnpj", resourceCulture) ?? "InvoicePlan.TableHeader.Cnpj";
+    public static string INV_Connection_Status_ImportSuccess => ResourceManager.GetString("INV_Connection_Status_ImportSuccess", resourceCulture) ?? "INV_Connection_Status_ImportSuccess";
 
-    public static string InvoicePlan_TableHeader_Delivery => ResourceManager.GetString("InvoicePlan.TableHeader.Delivery", resourceCulture) ?? "InvoicePlan.TableHeader.Delivery";
+    public static string INV_Connection_Status_RestoreFailure => ResourceManager.GetString("INV_Connection_Status_RestoreFailure", resourceCulture) ?? "INV_Connection_Status_RestoreFailure";
 
-    public static string InvoicePlan_TableHeader_EmissionDate => ResourceManager.GetString("InvoicePlan.TableHeader.EmissionDate", resourceCulture) ?? "InvoicePlan.TableHeader.EmissionDate";
+    public static string INV_Connection_Title_Setup => ResourceManager.GetString("INV_Connection_Title_Setup", resourceCulture) ?? "INV_Connection_Title_Setup";
 
-    public static string InvoicePlan_TableHeader_Frs => ResourceManager.GetString("InvoicePlan.TableHeader.Frs", resourceCulture) ?? "InvoicePlan.TableHeader.Frs";
+    public static string INV_Connection_Validation_PackageRequired => ResourceManager.GetString("INV_Connection_Validation_PackageRequired", resourceCulture) ?? "INV_Connection_Validation_PackageRequired";
 
-    public static string InvoicePlan_TableHeader_PaymentType => ResourceManager.GetString("InvoicePlan.TableHeader.PaymentType", resourceCulture) ?? "InvoicePlan.TableHeader.PaymentType";
+    public static string INV_Connection_Validation_PassphraseRequired => ResourceManager.GetString("INV_Connection_Validation_PassphraseRequired", resourceCulture) ?? "INV_Connection_Validation_PassphraseRequired";
 
-    public static string InvoicePlan_TableHeader_Percent => ResourceManager.GetString("InvoicePlan.TableHeader.Percent", resourceCulture) ?? "InvoicePlan.TableHeader.Percent";
+    public static string INV_Dialogs_Error_Label_Details => ResourceManager.GetString("INV_Dialogs_Error_Label_Details", resourceCulture) ?? "INV_Dialogs_Error_Label_Details";
 
-    public static string InvoicePlan_TableHeader_Po => ResourceManager.GetString("InvoicePlan.TableHeader.Po", resourceCulture) ?? "InvoicePlan.TableHeader.Po";
+    public static string INV_Dialogs_Error_Message => ResourceManager.GetString("INV_Dialogs_Error_Message", resourceCulture) ?? "INV_Dialogs_Error_Message";
 
-    public static string InvoicePlan_TableHeader_Sequence => ResourceManager.GetString("InvoicePlan.TableHeader.Sequence", resourceCulture) ?? "InvoicePlan.TableHeader.Sequence";
+    public static string INV_Dialogs_Error_Title => ResourceManager.GetString("INV_Dialogs_Error_Title", resourceCulture) ?? "INV_Dialogs_Error_Title";
 
-    public static string InvoicePlan_TableHeader_Ticket => ResourceManager.GetString("InvoicePlan.TableHeader.Ticket", resourceCulture) ?? "InvoicePlan.TableHeader.Ticket";
+    public static string INV_Emission_Button_CancelEmission => ResourceManager.GetString("INV_Emission_Button_CancelEmission", resourceCulture) ?? "INV_Emission_Button_CancelEmission";
 
-    public static string InvoicePlan_Title_Primary => ResourceManager.GetString("InvoicePlan.Title.Primary", resourceCulture) ?? "InvoicePlan.Title.Primary";
+    public static string INV_Emission_Button_InsertBzData => ResourceManager.GetString("INV_Emission_Button_InsertBzData", resourceCulture) ?? "INV_Emission_Button_InsertBzData";
 
-    public static string InvoicePlan_Toast_DeleteFailed => ResourceManager.GetString("InvoicePlan.Toast.DeleteFailed", resourceCulture) ?? "InvoicePlan.Toast.DeleteFailed";
+    public static string INV_Emission_Description_Primary => ResourceManager.GetString("INV_Emission_Description_Primary", resourceCulture) ?? "INV_Emission_Description_Primary";
 
-    public static string InvoicePlan_Toast_DeleteMissing => ResourceManager.GetString("InvoicePlan.Toast.DeleteMissing", resourceCulture) ?? "InvoicePlan.Toast.DeleteMissing";
+    public static string INV_Emission_Message_Empty => ResourceManager.GetString("INV_Emission_Message_Empty", resourceCulture) ?? "INV_Emission_Message_Empty";
 
-    public static string InvoicePlan_Toast_PlanDeleted => ResourceManager.GetString("InvoicePlan.Toast.PlanDeleted", resourceCulture) ?? "InvoicePlan.Toast.PlanDeleted";
+    public static string INV_Emission_Message_SelectHint => ResourceManager.GetString("INV_Emission_Message_SelectHint", resourceCulture) ?? "INV_Emission_Message_SelectHint";
 
-    public static string InvoicePlan_Toast_PlanSaved => ResourceManager.GetString("InvoicePlan.Toast.PlanSaved", resourceCulture) ?? "InvoicePlan.Toast.PlanSaved";
+    public static string INV_Emission_Section_AvailablePlans_Header => ResourceManager.GetString("INV_Emission_Section_AvailablePlans_Header", resourceCulture) ?? "INV_Emission_Section_AvailablePlans_Header";
 
-    public static string InvoicePlan_Toast_SaveFailed => ResourceManager.GetString("InvoicePlan.Toast.SaveFailed", resourceCulture) ?? "InvoicePlan.Toast.SaveFailed";
+    public static string INV_Emission_Section_InvoiceDetails_Header => ResourceManager.GetString("INV_Emission_Section_InvoiceDetails_Header", resourceCulture) ?? "INV_Emission_Section_InvoiceDetails_Header";
 
-    public static string InvoicePlan_Toast_ValidationFailed => ResourceManager.GetString("InvoicePlan.Toast.ValidationFailed", resourceCulture) ?? "InvoicePlan.Toast.ValidationFailed";
+    public static string INV_Emission_Status_CanceledFormat => ResourceManager.GetString("INV_Emission_Status_CanceledFormat", resourceCulture) ?? "INV_Emission_Status_CanceledFormat";
 
-    public static string InvoicePlan_Validation_FirstEmissionRequired => ResourceManager.GetString("InvoicePlan.Validation.FirstEmissionRequired", resourceCulture) ?? "InvoicePlan.Validation.FirstEmissionRequired";
+    public static string INV_Emission_Status_EmittedFormat => ResourceManager.GetString("INV_Emission_Status_EmittedFormat", resourceCulture) ?? "INV_Emission_Status_EmittedFormat";
 
-    public static string InvoicePlan_Validation_NoLines => ResourceManager.GetString("InvoicePlan.Validation.NoLines", resourceCulture) ?? "InvoicePlan.Validation.NoLines";
+    public static string INV_Emission_Status_EngagementFormat => ResourceManager.GetString("INV_Emission_Status_EngagementFormat", resourceCulture) ?? "INV_Emission_Status_EngagementFormat";
 
-    public static string InvoicePlan_Validation_PlanNotFound => ResourceManager.GetString("InvoicePlan.Validation.PlanNotFound", resourceCulture) ?? "InvoicePlan.Validation.PlanNotFound";
+    public static string INV_Emission_Status_LineCanceled => ResourceManager.GetString("INV_Emission_Status_LineCanceled", resourceCulture) ?? "INV_Emission_Status_LineCanceled";
 
-    public static string InvoiceSummary_Button_ApplyFilters => ResourceManager.GetString("InvoiceSummary.Button.ApplyFilters", resourceCulture) ?? "InvoiceSummary.Button.ApplyFilters";
+    public static string INV_Emission_Status_LineEmitted => ResourceManager.GetString("INV_Emission_Status_LineEmitted", resourceCulture) ?? "INV_Emission_Status_LineEmitted";
 
-    public static string InvoiceSummary_Button_ClearFilters => ResourceManager.GetString("InvoiceSummary.Button.ClearFilters", resourceCulture) ?? "InvoiceSummary.Button.ClearFilters";
+    public static string INV_Emission_Status_LoadFailure => ResourceManager.GetString("INV_Emission_Status_LoadFailure", resourceCulture) ?? "INV_Emission_Status_LoadFailure";
 
-    public static string InvoiceSummary_Filter_AllCustomers => ResourceManager.GetString("InvoiceSummary.Filter.AllCustomers", resourceCulture) ?? "InvoiceSummary.Filter.AllCustomers";
+    public static string INV_Emission_Status_LoadFailureDetail => ResourceManager.GetString("INV_Emission_Status_LoadFailureDetail", resourceCulture) ?? "INV_Emission_Status_LoadFailureDetail";
 
-    public static string InvoiceSummary_Filter_AllEngagements => ResourceManager.GetString("InvoiceSummary.Filter.AllEngagements", resourceCulture) ?? "InvoiceSummary.Filter.AllEngagements";
+    public static string INV_Emission_Status_NoCancellations => ResourceManager.GetString("INV_Emission_Status_NoCancellations", resourceCulture) ?? "INV_Emission_Status_NoCancellations";
 
-    public static string InvoiceSummary_Group_AmountFormat => ResourceManager.GetString("InvoiceSummary.Group.AmountFormat", resourceCulture) ?? "InvoiceSummary.Group.AmountFormat";
+    public static string INV_Emission_Status_NoEmissions => ResourceManager.GetString("INV_Emission_Status_NoEmissions", resourceCulture) ?? "INV_Emission_Status_NoEmissions";
 
-    public static string InvoiceSummary_Group_CanceledCountFormat => ResourceManager.GetString("InvoiceSummary.Group.CanceledCountFormat", resourceCulture) ?? "InvoiceSummary.Group.CanceledCountFormat";
+    public static string INV_Emission_Status_PlanLoaded => ResourceManager.GetString("INV_Emission_Status_PlanLoaded", resourceCulture) ?? "INV_Emission_Status_PlanLoaded";
 
-    public static string InvoiceSummary_Group_ClosedCountFormat => ResourceManager.GetString("InvoiceSummary.Group.ClosedCountFormat", resourceCulture) ?? "InvoiceSummary.Group.ClosedCountFormat";
+    public static string INV_Emission_Status_RequestedFormat => ResourceManager.GetString("INV_Emission_Status_RequestedFormat", resourceCulture) ?? "INV_Emission_Status_RequestedFormat";
 
-    public static string InvoiceSummary_Group_EmittedCountFormat => ResourceManager.GetString("InvoiceSummary.Group.EmittedCountFormat", resourceCulture) ?? "InvoiceSummary.Group.EmittedCountFormat";
+    public static string INV_Emission_TableHeader_Amount => ResourceManager.GetString("INV_Emission_TableHeader_Amount", resourceCulture) ?? "INV_Emission_TableHeader_Amount";
 
-    public static string InvoiceSummary_Group_PercentageFormat => ResourceManager.GetString("InvoiceSummary.Group.PercentageFormat", resourceCulture) ?? "InvoiceSummary.Group.PercentageFormat";
+    public static string INV_Emission_TableHeader_BzCode => ResourceManager.GetString("INV_Emission_TableHeader_BzCode", resourceCulture) ?? "INV_Emission_TableHeader_BzCode";
 
-    public static string InvoiceSummary_Group_PlannedCountFormat => ResourceManager.GetString("InvoiceSummary.Group.PlannedCountFormat", resourceCulture) ?? "InvoiceSummary.Group.PlannedCountFormat";
+    public static string INV_Emission_TableHeader_CancelReason => ResourceManager.GetString("INV_Emission_TableHeader_CancelReason", resourceCulture) ?? "INV_Emission_TableHeader_CancelReason";
 
-    public static string InvoiceSummary_Group_ReissuedCountFormat => ResourceManager.GetString("InvoiceSummary.Group.ReissuedCountFormat", resourceCulture) ?? "InvoiceSummary.Group.ReissuedCountFormat";
+    public static string INV_Emission_TableHeader_DueDate => ResourceManager.GetString("INV_Emission_TableHeader_DueDate", resourceCulture) ?? "INV_Emission_TableHeader_DueDate";
 
-    public static string InvoiceSummary_Group_RequestedCountFormat => ResourceManager.GetString("InvoiceSummary.Group.RequestedCountFormat", resourceCulture) ?? "InvoiceSummary.Group.RequestedCountFormat";
+    public static string INV_Emission_TableHeader_EmissionDate => ResourceManager.GetString("INV_Emission_TableHeader_EmissionDate", resourceCulture) ?? "INV_Emission_TableHeader_EmissionDate";
 
-    public static string InvoiceSummary_Label_Customer => ResourceManager.GetString("InvoiceSummary.Label.Customer", resourceCulture) ?? "InvoiceSummary.Label.Customer";
+    public static string INV_Emission_TableHeader_EmittedAt => ResourceManager.GetString("INV_Emission_TableHeader_EmittedAt", resourceCulture) ?? "INV_Emission_TableHeader_EmittedAt";
 
-    public static string InvoiceSummary_Label_Engagement => ResourceManager.GetString("InvoiceSummary.Label.Engagement", resourceCulture) ?? "InvoiceSummary.Label.Engagement";
+    public static string INV_Emission_TableHeader_LastCancelReason => ResourceManager.GetString("INV_Emission_TableHeader_LastCancelReason", resourceCulture) ?? "INV_Emission_TableHeader_LastCancelReason";
 
-    public static string InvoiceSummary_Label_Statuses => ResourceManager.GetString("InvoiceSummary.Label.Statuses", resourceCulture) ?? "InvoiceSummary.Label.Statuses";
+    public static string INV_Emission_Title_Primary => ResourceManager.GetString("INV_Emission_Title_Primary", resourceCulture) ?? "INV_Emission_Title_Primary";
 
-    public static string InvoiceSummary_Section_Totals_Amount => ResourceManager.GetString("InvoiceSummary.Section.Totals.Amount", resourceCulture) ?? "InvoiceSummary.Section.Totals.Amount";
+    public static string INV_Emission_Toast_LineCanceled => ResourceManager.GetString("INV_Emission_Toast_LineCanceled", resourceCulture) ?? "INV_Emission_Toast_LineCanceled";
 
-    public static string InvoiceSummary_Section_Totals_Percentage => ResourceManager.GetString("InvoiceSummary.Section.Totals.Percentage", resourceCulture) ?? "InvoiceSummary.Section.Totals.Percentage";
+    public static string INV_Emission_Toast_LineEmitted => ResourceManager.GetString("INV_Emission_Toast_LineEmitted", resourceCulture) ?? "INV_Emission_Toast_LineEmitted";
 
-    public static string InvoiceSummary_Status_Empty => ResourceManager.GetString("InvoiceSummary.Status.Empty", resourceCulture) ?? "InvoiceSummary.Status.Empty";
+    public static string INV_Emission_Toast_NoCancellations => ResourceManager.GetString("INV_Emission_Toast_NoCancellations", resourceCulture) ?? "INV_Emission_Toast_NoCancellations";
 
-    public static string InvoiceSummary_Status_ExportFailure => ResourceManager.GetString("InvoiceSummary.Status.ExportFailure", resourceCulture) ?? "InvoiceSummary.Status.ExportFailure";
+    public static string INV_Emission_Toast_NoEmissions => ResourceManager.GetString("INV_Emission_Toast_NoEmissions", resourceCulture) ?? "INV_Emission_Toast_NoEmissions";
 
-    public static string InvoiceSummary_Status_ExportSuccess => ResourceManager.GetString("InvoiceSummary.Status.ExportSuccess", resourceCulture) ?? "InvoiceSummary.Status.ExportSuccess";
+    public static string INV_Emission_Toast_OperationFailed => ResourceManager.GetString("INV_Emission_Toast_OperationFailed", resourceCulture) ?? "INV_Emission_Toast_OperationFailed";
 
-    public static string InvoiceSummary_Status_LoadFailure => ResourceManager.GetString("InvoiceSummary.Status.LoadFailure", resourceCulture) ?? "InvoiceSummary.Status.LoadFailure";
+    public static string INV_Emission_Toast_ValidationFailed => ResourceManager.GetString("INV_Emission_Toast_ValidationFailed", resourceCulture) ?? "INV_Emission_Toast_ValidationFailed";
 
-    public static string InvoiceSummary_Status_Loaded => ResourceManager.GetString("InvoiceSummary.Status.Loaded", resourceCulture) ?? "InvoiceSummary.Status.Loaded";
+    public static string INV_Emission_Validation_BzCode => ResourceManager.GetString("INV_Emission_Validation_BzCode", resourceCulture) ?? "INV_Emission_Validation_BzCode";
 
-    public static string InvoiceSummary_TableHeader_Amount => ResourceManager.GetString("InvoiceSummary.TableHeader.Amount", resourceCulture) ?? "InvoiceSummary.TableHeader.Amount";
+    public static string INV_Emission_Validation_CancelPlanRequired => ResourceManager.GetString("INV_Emission_Validation_CancelPlanRequired", resourceCulture) ?? "INV_Emission_Validation_CancelPlanRequired";
 
-    public static string InvoiceSummary_TableHeader_BaseValue => ResourceManager.GetString("InvoiceSummary.TableHeader.BaseValue", resourceCulture) ?? "InvoiceSummary.TableHeader.BaseValue";
+    public static string INV_Emission_Validation_CancelReason => ResourceManager.GetString("INV_Emission_Validation_CancelReason", resourceCulture) ?? "INV_Emission_Validation_CancelReason";
 
-    public static string InvoiceSummary_TableHeader_BzCode => ResourceManager.GetString("InvoiceSummary.TableHeader.BzCode", resourceCulture) ?? "InvoiceSummary.TableHeader.BzCode";
+    public static string INV_Emission_Validation_EmissionDate => ResourceManager.GetString("INV_Emission_Validation_EmissionDate", resourceCulture) ?? "INV_Emission_Validation_EmissionDate";
 
-    public static string InvoiceSummary_TableHeader_CancelReason => ResourceManager.GetString("InvoiceSummary.TableHeader.CancelReason", resourceCulture) ?? "InvoiceSummary.TableHeader.CancelReason";
+    public static string INV_Emission_Validation_PlanNotFound => ResourceManager.GetString("INV_Emission_Validation_PlanNotFound", resourceCulture) ?? "INV_Emission_Validation_PlanNotFound";
 
-    public static string InvoiceSummary_TableHeader_CanceledAt => ResourceManager.GetString("InvoiceSummary.TableHeader.CanceledAt", resourceCulture) ?? "InvoiceSummary.TableHeader.CanceledAt";
+    public static string INV_Emission_Validation_PlanRequired => ResourceManager.GetString("INV_Emission_Validation_PlanRequired", resourceCulture) ?? "INV_Emission_Validation_PlanRequired";
 
-    public static string InvoiceSummary_TableHeader_DueDate => ResourceManager.GetString("InvoiceSummary.TableHeader.DueDate", resourceCulture) ?? "InvoiceSummary.TableHeader.DueDate";
+    public static string INV_Emission_Validation_PlanSelection => ResourceManager.GetString("INV_Emission_Validation_PlanSelection", resourceCulture) ?? "INV_Emission_Validation_PlanSelection";
 
-    public static string InvoiceSummary_TableHeader_EmissionDate => ResourceManager.GetString("InvoiceSummary.TableHeader.EmissionDate", resourceCulture) ?? "InvoiceSummary.TableHeader.EmissionDate";
+    public static string INV_Exports_InvoiceSummary_Header_Amount => ResourceManager.GetString("INV_Exports_InvoiceSummary_Header_Amount", resourceCulture) ?? "INV_Exports_InvoiceSummary_Header_Amount";
 
-    public static string InvoiceSummary_TableHeader_EmittedAt => ResourceManager.GetString("InvoiceSummary.TableHeader.EmittedAt", resourceCulture) ?? "InvoiceSummary.TableHeader.EmittedAt";
+    public static string INV_Exports_InvoiceSummary_Header_BaseValue => ResourceManager.GetString("INV_Exports_InvoiceSummary_Header_BaseValue", resourceCulture) ?? "INV_Exports_InvoiceSummary_Header_BaseValue";
 
-    public static string InvoiceSummary_TableHeader_Percent => ResourceManager.GetString("InvoiceSummary.TableHeader.Percent", resourceCulture) ?? "InvoiceSummary.TableHeader.Percent";
+    public static string INV_Exports_InvoiceSummary_Header_BzCode => ResourceManager.GetString("INV_Exports_InvoiceSummary_Header_BzCode", resourceCulture) ?? "INV_Exports_InvoiceSummary_Header_BzCode";
 
-    public static string InvoiceSummary_TableHeader_Plan => ResourceManager.GetString("InvoiceSummary.TableHeader.Plan", resourceCulture) ?? "InvoiceSummary.TableHeader.Plan";
+    public static string INV_Exports_InvoiceSummary_Header_CancelReason => ResourceManager.GetString("INV_Exports_InvoiceSummary_Header_CancelReason", resourceCulture) ?? "INV_Exports_InvoiceSummary_Header_CancelReason";
 
-    public static string InvoiceSummary_TableHeader_RequestDate => ResourceManager.GetString("InvoiceSummary.TableHeader.RequestDate", resourceCulture) ?? "InvoiceSummary.TableHeader.RequestDate";
+    public static string INV_Exports_InvoiceSummary_Header_CanceledAt => ResourceManager.GetString("INV_Exports_InvoiceSummary_Header_CanceledAt", resourceCulture) ?? "INV_Exports_InvoiceSummary_Header_CanceledAt";
 
-    public static string InvoiceSummary_TableHeader_Ritm => ResourceManager.GetString("InvoiceSummary.TableHeader.Ritm", resourceCulture) ?? "InvoiceSummary.TableHeader.Ritm";
+    public static string INV_Exports_InvoiceSummary_Header_Customer => ResourceManager.GetString("INV_Exports_InvoiceSummary_Header_Customer", resourceCulture) ?? "INV_Exports_InvoiceSummary_Header_Customer";
 
-    public static string InvoiceSummary_TableHeader_Sequence => ResourceManager.GetString("InvoiceSummary.TableHeader.Sequence", resourceCulture) ?? "InvoiceSummary.TableHeader.Sequence";
+    public static string INV_Exports_InvoiceSummary_Header_CustomerCode => ResourceManager.GetString("INV_Exports_InvoiceSummary_Header_CustomerCode", resourceCulture) ?? "INV_Exports_InvoiceSummary_Header_CustomerCode";
 
-    public static string InvoiceSummary_TableHeader_Status => ResourceManager.GetString("InvoiceSummary.TableHeader.Status", resourceCulture) ?? "InvoiceSummary.TableHeader.Status";
+    public static string INV_Exports_InvoiceSummary_Header_DueDate => ResourceManager.GetString("INV_Exports_InvoiceSummary_Header_DueDate", resourceCulture) ?? "INV_Exports_InvoiceSummary_Header_DueDate";
 
-    public static string InvoiceSummary_TableHeader_Type => ResourceManager.GetString("InvoiceSummary.TableHeader.Type", resourceCulture) ?? "InvoiceSummary.TableHeader.Type";
+    public static string INV_Exports_InvoiceSummary_Header_EmissionDate => ResourceManager.GetString("INV_Exports_InvoiceSummary_Header_EmissionDate", resourceCulture) ?? "INV_Exports_InvoiceSummary_Header_EmissionDate";
 
-    public static string InvoiceSummary_Title_Filters => ResourceManager.GetString("InvoiceSummary.Title.Filters", resourceCulture) ?? "InvoiceSummary.Title.Filters";
+    public static string INV_Exports_InvoiceSummary_Header_EmittedAt => ResourceManager.GetString("INV_Exports_InvoiceSummary_Header_EmittedAt", resourceCulture) ?? "INV_Exports_InvoiceSummary_Header_EmittedAt";
 
-    public static string InvoiceSummary_Validation_NoDataToExport => ResourceManager.GetString("InvoiceSummary.Validation.NoDataToExport", resourceCulture) ?? "InvoiceSummary.Validation.NoDataToExport";
+    public static string INV_Exports_InvoiceSummary_Header_Engagement => ResourceManager.GetString("INV_Exports_InvoiceSummary_Header_Engagement", resourceCulture) ?? "INV_Exports_InvoiceSummary_Header_Engagement";
 
-    public static string InvoiceSummary_Validation_StatusRequired => ResourceManager.GetString("InvoiceSummary.Validation.StatusRequired", resourceCulture) ?? "InvoiceSummary.Validation.StatusRequired";
+    public static string INV_Exports_InvoiceSummary_Header_Line => ResourceManager.GetString("INV_Exports_InvoiceSummary_Header_Line", resourceCulture) ?? "INV_Exports_InvoiceSummary_Header_Line";
 
-    public static string InvoiceSummary_Value_UnknownCustomer => ResourceManager.GetString("InvoiceSummary.Value.UnknownCustomer", resourceCulture) ?? "InvoiceSummary.Value.UnknownCustomer";
+    public static string INV_Exports_InvoiceSummary_Header_Percentage => ResourceManager.GetString("INV_Exports_InvoiceSummary_Header_Percentage", resourceCulture) ?? "INV_Exports_InvoiceSummary_Header_Percentage";
 
-    public static string ItemsCountMismatch => ResourceManager.GetString("ItemsCountMismatch", resourceCulture) ?? "ItemsCountMismatch";
+    public static string INV_Exports_InvoiceSummary_Header_PlanId => ResourceManager.GetString("INV_Exports_InvoiceSummary_Header_PlanId", resourceCulture) ?? "INV_Exports_InvoiceSummary_Header_PlanId";
 
-    public static string ItemsRequired => ResourceManager.GetString("ItemsRequired", resourceCulture) ?? "ItemsRequired";
+    public static string INV_Exports_InvoiceSummary_Header_PlanType => ResourceManager.GetString("INV_Exports_InvoiceSummary_Header_PlanType", resourceCulture) ?? "INV_Exports_InvoiceSummary_Header_PlanType";
 
-    public static string Localization_Language_English => ResourceManager.GetString("Localization.Language.English", resourceCulture) ?? "Localization.Language.English";
+    public static string INV_Exports_InvoiceSummary_Header_RequestDate => ResourceManager.GetString("INV_Exports_InvoiceSummary_Header_RequestDate", resourceCulture) ?? "INV_Exports_InvoiceSummary_Header_RequestDate";
 
-    public static string Localization_Language_Portuguese => ResourceManager.GetString("Localization.Language.Portuguese", resourceCulture) ?? "Localization.Language.Portuguese";
+    public static string INV_Exports_InvoiceSummary_Header_Ritm => ResourceManager.GetString("INV_Exports_InvoiceSummary_Header_Ritm", resourceCulture) ?? "INV_Exports_InvoiceSummary_Header_Ritm";
 
-    public static string Localization_Language_PreferenceSaveFailure => ResourceManager.GetString("Localization.Language.PreferenceSaveFailure", resourceCulture) ?? "Localization.Language.PreferenceSaveFailure";
+    public static string INV_Exports_InvoiceSummary_Header_Status => ResourceManager.GetString("INV_Exports_InvoiceSummary_Header_Status", resourceCulture) ?? "INV_Exports_InvoiceSummary_Header_Status";
 
-    public static string Localization_Language_PreferenceSaved => ResourceManager.GetString("Localization.Language.PreferenceSaved", resourceCulture) ?? "Localization.Language.PreferenceSaved";
+    public static string INV_Exports_InvoiceSummary_Header_Totals => ResourceManager.GetString("INV_Exports_InvoiceSummary_Header_Totals", resourceCulture) ?? "INV_Exports_InvoiceSummary_Header_Totals";
 
-    public static string Localization_Language_Spanish => ResourceManager.GetString("Localization.Language.Spanish", resourceCulture) ?? "Localization.Language.Spanish";
+    public static string INV_Exports_InvoiceSummary_PdfTitle => ResourceManager.GetString("INV_Exports_InvoiceSummary_PdfTitle", resourceCulture) ?? "INV_Exports_InvoiceSummary_PdfTitle";
 
-    public static string Managers_Toast_DeleteSuccess => ResourceManager.GetString("Managers.Toast.DeleteSuccess", resourceCulture) ?? "Managers.Toast.DeleteSuccess";
+    public static string INV_Exports_InvoiceSummary_WorksheetName => ResourceManager.GetString("INV_Exports_InvoiceSummary_WorksheetName", resourceCulture) ?? "INV_Exports_InvoiceSummary_WorksheetName";
 
-    public static string Managers_Toast_OperationFailed => ResourceManager.GetString("Managers.Toast.OperationFailed", resourceCulture) ?? "Managers.Toast.OperationFailed";
+    public static string INV_Home_Description_Primary => ResourceManager.GetString("INV_Home_Description_Primary", resourceCulture) ?? "INV_Home_Description_Primary";
 
-    public static string Managers_Toast_SaveSuccess => ResourceManager.GetString("Managers.Toast.SaveSuccess", resourceCulture) ?? "Managers.Toast.SaveSuccess";
+    public static string INV_Home_Message_Welcome => ResourceManager.GetString("INV_Home_Message_Welcome", resourceCulture) ?? "INV_Home_Message_Welcome";
 
-    public static string MasterData_RankMappings_Columns_CreatedAt => ResourceManager.GetString("MasterData.RankMappings.Columns.CreatedAt", resourceCulture) ?? "MasterData.RankMappings.Columns.CreatedAt";
+    public static string INV_InvoicePlan_Description_Primary => ResourceManager.GetString("INV_InvoicePlan_Description_Primary", resourceCulture) ?? "INV_InvoicePlan_Description_Primary";
 
-    public static string MasterData_RankMappings_Columns_IsActive => ResourceManager.GetString("MasterData.RankMappings.Columns.IsActive", resourceCulture) ?? "MasterData.RankMappings.Columns.IsActive";
+    public static string INV_InvoicePlan_Dialog_Button_DeletePlan => ResourceManager.GetString("INV_InvoicePlan_Dialog_Button_DeletePlan", resourceCulture) ?? "INV_InvoicePlan_Dialog_Button_DeletePlan";
 
-    public static string MasterData_RankMappings_Columns_LastSeenAt => ResourceManager.GetString("MasterData.RankMappings.Columns.LastSeenAt", resourceCulture) ?? "MasterData.RankMappings.Columns.LastSeenAt";
+    public static string INV_InvoicePlan_Dialog_Button_EditPlan => ResourceManager.GetString("INV_InvoicePlan_Dialog_Button_EditPlan", resourceCulture) ?? "INV_InvoicePlan_Dialog_Button_EditPlan";
 
-    public static string MasterData_RankMappings_Columns_NormalizedRank => ResourceManager.GetString("MasterData.RankMappings.Columns.NormalizedRank", resourceCulture) ?? "MasterData.RankMappings.Columns.NormalizedRank";
+    public static string INV_InvoicePlan_Label_BaseValue => ResourceManager.GetString("INV_InvoicePlan_Label_BaseValue", resourceCulture) ?? "INV_InvoicePlan_Label_BaseValue";
 
-    public static string MasterData_RankMappings_Columns_RawRank => ResourceManager.GetString("MasterData.RankMappings.Columns.RawRank", resourceCulture) ?? "MasterData.RankMappings.Columns.RawRank";
+    public static string INV_InvoicePlan_Label_Engagement => ResourceManager.GetString("INV_InvoicePlan_Label_Engagement", resourceCulture) ?? "INV_InvoicePlan_Label_Engagement";
 
-    public static string MasterData_RankMappings_Columns_SpreadsheetRank => ResourceManager.GetString("MasterData.RankMappings.Columns.SpreadsheetRank", resourceCulture) ?? "MasterData.RankMappings.Columns.SpreadsheetRank";
+    public static string INV_InvoicePlan_Label_FirstEmission => ResourceManager.GetString("INV_InvoicePlan_Label_FirstEmission", resourceCulture) ?? "INV_InvoicePlan_Label_FirstEmission";
 
-    public static string MasterData_RankMappings_Dialog_AddTitle => ResourceManager.GetString("MasterData.RankMappings.Dialog.AddTitle", resourceCulture) ?? "MasterData.RankMappings.Dialog.AddTitle";
+    public static string INV_InvoicePlan_Label_FocalPoint => ResourceManager.GetString("INV_InvoicePlan_Label_FocalPoint", resourceCulture) ?? "INV_InvoicePlan_Label_FocalPoint";
 
-    public static string MasterData_RankMappings_Dialog_EditTitle => ResourceManager.GetString("MasterData.RankMappings.Dialog.EditTitle", resourceCulture) ?? "MasterData.RankMappings.Dialog.EditTitle";
+    public static string INV_InvoicePlan_Label_Instructions => ResourceManager.GetString("INV_InvoicePlan_Label_Instructions", resourceCulture) ?? "INV_InvoicePlan_Label_Instructions";
 
-    public static string MasterData_RankMappings_Editor_IsActive => ResourceManager.GetString("MasterData.RankMappings.Editor.IsActive", resourceCulture) ?? "MasterData.RankMappings.Editor.IsActive";
+    public static string INV_InvoicePlan_Label_InvoiceCount => ResourceManager.GetString("INV_InvoicePlan_Label_InvoiceCount", resourceCulture) ?? "INV_InvoicePlan_Label_InvoiceCount";
 
-    public static string MasterData_RankMappings_Editor_NormalizedRank => ResourceManager.GetString("MasterData.RankMappings.Editor.NormalizedRank", resourceCulture) ?? "MasterData.RankMappings.Editor.NormalizedRank";
+    public static string INV_InvoicePlan_Label_PaymentTerms => ResourceManager.GetString("INV_InvoicePlan_Label_PaymentTerms", resourceCulture) ?? "INV_InvoicePlan_Label_PaymentTerms";
 
-    public static string MasterData_RankMappings_Editor_RawRank => ResourceManager.GetString("MasterData.RankMappings.Editor.RawRank", resourceCulture) ?? "MasterData.RankMappings.Editor.RawRank";
+    public static string INV_InvoicePlan_Label_PlanType => ResourceManager.GetString("INV_InvoicePlan_Label_PlanType", resourceCulture) ?? "INV_InvoicePlan_Label_PlanType";
 
-    public static string MasterData_RankMappings_Editor_SpreadsheetRank => ResourceManager.GetString("MasterData.RankMappings.Editor.SpreadsheetRank", resourceCulture) ?? "MasterData.RankMappings.Editor.SpreadsheetRank";
+    public static string INV_InvoicePlan_Label_RecipientEmails => ResourceManager.GetString("INV_InvoicePlan_Label_RecipientEmails", resourceCulture) ?? "INV_InvoicePlan_Label_RecipientEmails";
 
-    public static string MasterData_RankMappings_Editor_Title => ResourceManager.GetString("MasterData.RankMappings.Editor.Title", resourceCulture) ?? "MasterData.RankMappings.Editor.Title";
+    public static string INV_InvoicePlan_Placeholder_DeliveryNotes => ResourceManager.GetString("INV_InvoicePlan_Placeholder_DeliveryNotes", resourceCulture) ?? "INV_InvoicePlan_Placeholder_DeliveryNotes";
 
-    public static string MasterData_RankMappings_Title => ResourceManager.GetString("MasterData.RankMappings.Title", resourceCulture) ?? "MasterData.RankMappings.Title";
+    public static string INV_InvoicePlan_Placeholder_Recipients => ResourceManager.GetString("INV_InvoicePlan_Placeholder_Recipients", resourceCulture) ?? "INV_InvoicePlan_Placeholder_Recipients";
 
-    public static string Navigation_Allocations => ResourceManager.GetString("Navigation.Allocations", resourceCulture) ?? "Navigation.Allocations";
+    public static string INV_InvoicePlan_Section_InvoiceLines_Title => ResourceManager.GetString("INV_InvoicePlan_Section_InvoiceLines_Title", resourceCulture) ?? "INV_InvoicePlan_Section_InvoiceLines_Title";
 
-    public static string Navigation_ClosingPeriods => ResourceManager.GetString("Navigation.ClosingPeriods", resourceCulture) ?? "Navigation.ClosingPeriods";
+    public static string INV_InvoicePlan_Section_Totals_Amount => ResourceManager.GetString("INV_InvoicePlan_Section_Totals_Amount", resourceCulture) ?? "INV_InvoicePlan_Section_Totals_Amount";
 
-    public static string Navigation_ControlMasterData => ResourceManager.GetString("Navigation.ControlMasterData", resourceCulture) ?? "Navigation.ControlMasterData";
+    public static string INV_InvoicePlan_Section_Totals_Label => ResourceManager.GetString("INV_InvoicePlan_Section_Totals_Label", resourceCulture) ?? "INV_InvoicePlan_Section_Totals_Label";
 
-    public static string Navigation_Customers => ResourceManager.GetString("Navigation.Customers", resourceCulture) ?? "Navigation.Customers";
+    public static string INV_InvoicePlan_Section_Totals_Percent => ResourceManager.GetString("INV_InvoicePlan_Section_Totals_Percent", resourceCulture) ?? "INV_InvoicePlan_Section_Totals_Percent";
 
-    public static string Navigation_Engagements => ResourceManager.GetString("Navigation.Engagements", resourceCulture) ?? "Navigation.Engagements";
+    public static string INV_InvoicePlan_Selection_Button_AddEdit => ResourceManager.GetString("INV_InvoicePlan_Selection_Button_AddEdit", resourceCulture) ?? "INV_InvoicePlan_Selection_Button_AddEdit";
 
-    public static string Navigation_FiscalYears => ResourceManager.GetString("Navigation.FiscalYears", resourceCulture) ?? "Navigation.FiscalYears";
+    public static string INV_InvoicePlan_Selection_Column_Canceled => ResourceManager.GetString("INV_InvoicePlan_Selection_Column_Canceled", resourceCulture) ?? "INV_InvoicePlan_Selection_Column_Canceled";
 
-    public static string Navigation_GrcTeam => ResourceManager.GetString("Navigation.GrcTeam", resourceCulture) ?? "Navigation.GrcTeam";
+    public static string INV_InvoicePlan_Selection_Column_Closed => ResourceManager.GetString("INV_InvoicePlan_Selection_Column_Closed", resourceCulture) ?? "INV_InvoicePlan_Selection_Column_Closed";
 
-    public static string Navigation_Home => ResourceManager.GetString("Navigation.Home", resourceCulture) ?? "Navigation.Home";
+    public static string INV_InvoicePlan_Selection_Column_Emitted => ResourceManager.GetString("INV_InvoicePlan_Selection_Column_Emitted", resourceCulture) ?? "INV_InvoicePlan_Selection_Column_Emitted";
 
-    public static string Navigation_Import => ResourceManager.GetString("Navigation.Import", resourceCulture) ?? "Navigation.Import";
+    public static string INV_InvoicePlan_Selection_Column_Engagement => ResourceManager.GetString("INV_InvoicePlan_Selection_Column_Engagement", resourceCulture) ?? "INV_InvoicePlan_Selection_Column_Engagement";
 
-    public static string Navigation_MasterData => ResourceManager.GetString("Navigation.MasterData", resourceCulture) ?? "Navigation.MasterData";
+    public static string INV_InvoicePlan_Selection_Column_FirstEmission => ResourceManager.GetString("INV_InvoicePlan_Selection_Column_FirstEmission", resourceCulture) ?? "INV_InvoicePlan_Selection_Column_FirstEmission";
 
-    public static string Navigation_MasterData_RankMappings => ResourceManager.GetString("Navigation.MasterData.RankMappings", resourceCulture) ?? "Navigation.MasterData.RankMappings";
+    public static string INV_InvoicePlan_Selection_Column_PendingRequests => ResourceManager.GetString("INV_InvoicePlan_Selection_Column_PendingRequests", resourceCulture) ?? "INV_InvoicePlan_Selection_Column_PendingRequests";
 
-    public static string Navigation_Reports => ResourceManager.GetString("Navigation.Reports", resourceCulture) ?? "Navigation.Reports";
+    public static string INV_InvoicePlan_Selection_Column_PlanId => ResourceManager.GetString("INV_InvoicePlan_Selection_Column_PlanId", resourceCulture) ?? "INV_InvoicePlan_Selection_Column_PlanId";
 
-    public static string Navigation_Settings => ResourceManager.GetString("Navigation.Settings", resourceCulture) ?? "Navigation.Settings";
+    public static string INV_InvoicePlan_Selection_Column_Requested => ResourceManager.GetString("INV_InvoicePlan_Selection_Column_Requested", resourceCulture) ?? "INV_InvoicePlan_Selection_Column_Requested";
 
-    public static string Navigation_Tasks => ResourceManager.GetString("Navigation.Tasks", resourceCulture) ?? "Navigation.Tasks";
+    public static string INV_InvoicePlan_Selection_Column_Type => ResourceManager.GetString("INV_InvoicePlan_Selection_Column_Type", resourceCulture) ?? "INV_InvoicePlan_Selection_Column_Type";
 
-    public static string Notifications_Description_Primary => ResourceManager.GetString("Notifications.Description.Primary", resourceCulture) ?? "Notifications.Description.Primary";
+    public static string INV_InvoicePlan_Selection_Description_Primary => ResourceManager.GetString("INV_InvoicePlan_Selection_Description_Primary", resourceCulture) ?? "INV_InvoicePlan_Selection_Description_Primary";
 
-    public static string Notifications_Format_Amount => ResourceManager.GetString("Notifications.Format.Amount", resourceCulture) ?? "Notifications.Format.Amount";
+    public static string INV_InvoicePlan_Selection_Header_Customer => ResourceManager.GetString("INV_InvoicePlan_Selection_Header_Customer", resourceCulture) ?? "INV_InvoicePlan_Selection_Header_Customer";
 
-    public static string Notifications_Format_CcRecipients => ResourceManager.GetString("Notifications.Format.CcRecipients", resourceCulture) ?? "Notifications.Format.CcRecipients";
+    public static string INV_InvoicePlan_Selection_Header_Engagement => ResourceManager.GetString("INV_InvoicePlan_Selection_Header_Engagement", resourceCulture) ?? "INV_InvoicePlan_Selection_Header_Engagement";
 
-    public static string Notifications_Format_Customer => ResourceManager.GetString("Notifications.Format.Customer", resourceCulture) ?? "Notifications.Format.Customer";
+    public static string INV_InvoicePlan_Selection_Header_Plan => ResourceManager.GetString("INV_InvoicePlan_Selection_Header_Plan", resourceCulture) ?? "INV_InvoicePlan_Selection_Header_Plan";
 
-    public static string Notifications_Format_DueDate => ResourceManager.GetString("Notifications.Format.DueDate", resourceCulture) ?? "Notifications.Format.DueDate";
+    public static string INV_InvoicePlan_Selection_Message_Empty => ResourceManager.GetString("INV_InvoicePlan_Selection_Message_Empty", resourceCulture) ?? "INV_InvoicePlan_Selection_Message_Empty";
 
-    public static string Notifications_Format_EmissionDate => ResourceManager.GetString("Notifications.Format.EmissionDate", resourceCulture) ?? "Notifications.Format.EmissionDate";
+    public static string INV_InvoicePlan_Selection_Message_SelectHint => ResourceManager.GetString("INV_InvoicePlan_Selection_Message_SelectHint", resourceCulture) ?? "INV_InvoicePlan_Selection_Message_SelectHint";
 
-    public static string Notifications_Format_Managers => ResourceManager.GetString("Notifications.Format.Managers", resourceCulture) ?? "Notifications.Format.Managers";
+    public static string INV_InvoicePlan_Selection_Status_LoadFailure => ResourceManager.GetString("INV_InvoicePlan_Selection_Status_LoadFailure", resourceCulture) ?? "INV_InvoicePlan_Selection_Status_LoadFailure";
 
-    public static string Notifications_Format_NotifyDate => ResourceManager.GetString("Notifications.Format.NotifyDate", resourceCulture) ?? "Notifications.Format.NotifyDate";
+    public static string INV_InvoicePlan_Selection_Status_PlanDeleted => ResourceManager.GetString("INV_InvoicePlan_Selection_Status_PlanDeleted", resourceCulture) ?? "INV_InvoicePlan_Selection_Status_PlanDeleted";
 
-    public static string Notifications_Format_Plan => ResourceManager.GetString("Notifications.Format.Plan", resourceCulture) ?? "Notifications.Format.Plan";
+    public static string INV_InvoicePlan_Selection_Title_Primary => ResourceManager.GetString("INV_InvoicePlan_Selection_Title_Primary", resourceCulture) ?? "INV_InvoicePlan_Selection_Title_Primary";
 
-    public static string Notifications_Format_Recipients => ResourceManager.GetString("Notifications.Format.Recipients", resourceCulture) ?? "Notifications.Format.Recipients";
+    public static string INV_InvoicePlan_Status_ActionCreated => ResourceManager.GetString("INV_InvoicePlan_Status_ActionCreated", resourceCulture) ?? "INV_InvoicePlan_Status_ActionCreated";
 
-    public static string Notifications_Format_Sequence => ResourceManager.GetString("Notifications.Format.Sequence", resourceCulture) ?? "Notifications.Format.Sequence";
+    public static string INV_InvoicePlan_Status_ActionUpdated => ResourceManager.GetString("INV_InvoicePlan_Status_ActionUpdated", resourceCulture) ?? "INV_InvoicePlan_Status_ActionUpdated";
 
-    public static string Notifications_Format_Subject => ResourceManager.GetString("Notifications.Format.Subject", resourceCulture) ?? "Notifications.Format.Subject";
+    public static string INV_InvoicePlan_Status_DeleteFailure => ResourceManager.GetString("INV_InvoicePlan_Status_DeleteFailure", resourceCulture) ?? "INV_InvoicePlan_Status_DeleteFailure";
 
-    public static string Notifications_Format_ToRecipients => ResourceManager.GetString("Notifications.Format.ToRecipients", resourceCulture) ?? "Notifications.Format.ToRecipients";
+    public static string INV_InvoicePlan_Status_LoadFailure => ResourceManager.GetString("INV_InvoicePlan_Status_LoadFailure", resourceCulture) ?? "INV_InvoicePlan_Status_LoadFailure";
 
-    public static string Notifications_Label_NotificationDate => ResourceManager.GetString("Notifications.Label.NotificationDate", resourceCulture) ?? "Notifications.Label.NotificationDate";
+    public static string INV_InvoicePlan_Status_PlanLoaded => ResourceManager.GetString("INV_InvoicePlan_Status_PlanLoaded", resourceCulture) ?? "INV_InvoicePlan_Status_PlanLoaded";
 
-    public static string Notifications_Message_Empty => ResourceManager.GetString("Notifications.Message.Empty", resourceCulture) ?? "Notifications.Message.Empty";
+    public static string INV_InvoicePlan_Status_PlanSaved => ResourceManager.GetString("INV_InvoicePlan_Status_PlanSaved", resourceCulture) ?? "INV_InvoicePlan_Status_PlanSaved";
 
-    public static string Notifications_Status_Empty => ResourceManager.GetString("Notifications.Status.Empty", resourceCulture) ?? "Notifications.Status.Empty";
+    public static string INV_InvoicePlan_Status_SaveFailure => ResourceManager.GetString("INV_InvoicePlan_Status_SaveFailure", resourceCulture) ?? "INV_InvoicePlan_Status_SaveFailure";
 
-    public static string Notifications_Status_LoadFailure => ResourceManager.GetString("Notifications.Status.LoadFailure", resourceCulture) ?? "Notifications.Status.LoadFailure";
+    public static string INV_InvoicePlan_TableHeader_Amount => ResourceManager.GetString("INV_InvoicePlan_TableHeader_Amount", resourceCulture) ?? "INV_InvoicePlan_TableHeader_Amount";
 
-    public static string Notifications_Status_Loaded => ResourceManager.GetString("Notifications.Status.Loaded", resourceCulture) ?? "Notifications.Status.Loaded";
+    public static string INV_InvoicePlan_TableHeader_Cnpj => ResourceManager.GetString("INV_InvoicePlan_TableHeader_Cnpj", resourceCulture) ?? "INV_InvoicePlan_TableHeader_Cnpj";
 
-    public static string Notifications_Template_Amount => ResourceManager.GetString("Notifications.Template.Amount", resourceCulture) ?? "Notifications.Template.Amount";
+    public static string INV_InvoicePlan_TableHeader_Delivery => ResourceManager.GetString("INV_InvoicePlan_TableHeader_Delivery", resourceCulture) ?? "INV_InvoicePlan_TableHeader_Delivery";
 
-    public static string Notifications_Template_Competence => ResourceManager.GetString("Notifications.Template.Competence", resourceCulture) ?? "Notifications.Template.Competence";
+    public static string INV_InvoicePlan_TableHeader_EmissionDate => ResourceManager.GetString("INV_InvoicePlan_TableHeader_EmissionDate", resourceCulture) ?? "INV_InvoicePlan_TableHeader_EmissionDate";
 
-    public static string Notifications_Template_Contact => ResourceManager.GetString("Notifications.Template.Contact", resourceCulture) ?? "Notifications.Template.Contact";
+    public static string INV_InvoicePlan_TableHeader_Frs => ResourceManager.GetString("INV_InvoicePlan_TableHeader_Frs", resourceCulture) ?? "INV_InvoicePlan_TableHeader_Frs";
 
-    public static string Notifications_Template_DueDate => ResourceManager.GetString("Notifications.Template.DueDate", resourceCulture) ?? "Notifications.Template.DueDate";
+    public static string INV_InvoicePlan_TableHeader_PaymentType => ResourceManager.GetString("INV_InvoicePlan_TableHeader_PaymentType", resourceCulture) ?? "INV_InvoicePlan_TableHeader_PaymentType";
 
-    public static string Notifications_Template_Frs => ResourceManager.GetString("Notifications.Template.Frs", resourceCulture) ?? "Notifications.Template.Frs";
+    public static string INV_InvoicePlan_TableHeader_Percent => ResourceManager.GetString("INV_InvoicePlan_TableHeader_Percent", resourceCulture) ?? "INV_InvoicePlan_TableHeader_Percent";
 
-    public static string Notifications_Template_Installment => ResourceManager.GetString("Notifications.Template.Installment", resourceCulture) ?? "Notifications.Template.Installment";
+    public static string INV_InvoicePlan_TableHeader_Po => ResourceManager.GetString("INV_InvoicePlan_TableHeader_Po", resourceCulture) ?? "INV_InvoicePlan_TableHeader_Po";
 
-    public static string Notifications_Template_ManagerEmails => ResourceManager.GetString("Notifications.Template.ManagerEmails", resourceCulture) ?? "Notifications.Template.ManagerEmails";
+    public static string INV_InvoicePlan_TableHeader_Sequence => ResourceManager.GetString("INV_InvoicePlan_TableHeader_Sequence", resourceCulture) ?? "INV_InvoicePlan_TableHeader_Sequence";
 
-    public static string Notifications_Template_Managers => ResourceManager.GetString("Notifications.Template.Managers", resourceCulture) ?? "Notifications.Template.Managers";
+    public static string INV_InvoicePlan_TableHeader_Ticket => ResourceManager.GetString("INV_InvoicePlan_TableHeader_Ticket", resourceCulture) ?? "INV_InvoicePlan_TableHeader_Ticket";
 
-    public static string Notifications_Template_Po => ResourceManager.GetString("Notifications.Template.Po", resourceCulture) ?? "Notifications.Template.Po";
+    public static string INV_InvoicePlan_Title_Primary => ResourceManager.GetString("INV_InvoicePlan_Title_Primary", resourceCulture) ?? "INV_InvoicePlan_Title_Primary";
 
-    public static string Notifications_Template_Recipients => ResourceManager.GetString("Notifications.Template.Recipients", resourceCulture) ?? "Notifications.Template.Recipients";
+    public static string INV_InvoicePlan_Toast_DeleteFailed => ResourceManager.GetString("INV_InvoicePlan_Toast_DeleteFailed", resourceCulture) ?? "INV_InvoicePlan_Toast_DeleteFailed";
 
-    public static string Notifications_Template_Service => ResourceManager.GetString("Notifications.Template.Service", resourceCulture) ?? "Notifications.Template.Service";
+    public static string INV_InvoicePlan_Toast_DeleteMissing => ResourceManager.GetString("INV_InvoicePlan_Toast_DeleteMissing", resourceCulture) ?? "INV_InvoicePlan_Toast_DeleteMissing";
 
-    public static string Notifications_Template_Ticket => ResourceManager.GetString("Notifications.Template.Ticket", resourceCulture) ?? "Notifications.Template.Ticket";
+    public static string INV_InvoicePlan_Toast_PlanDeleted => ResourceManager.GetString("INV_InvoicePlan_Toast_PlanDeleted", resourceCulture) ?? "INV_InvoicePlan_Toast_PlanDeleted";
 
-    public static string Notifications_Title_Primary => ResourceManager.GetString("Notifications.Title.Primary", resourceCulture) ?? "Notifications.Title.Primary";
+    public static string INV_InvoicePlan_Toast_PlanSaved => ResourceManager.GetString("INV_InvoicePlan_Toast_PlanSaved", resourceCulture) ?? "INV_InvoicePlan_Toast_PlanSaved";
 
-    public static string NumInvoicesMinimum => ResourceManager.GetString("NumInvoicesMinimum", resourceCulture) ?? "NumInvoicesMinimum";
+    public static string INV_InvoicePlan_Toast_SaveFailed => ResourceManager.GetString("INV_InvoicePlan_Toast_SaveFailed", resourceCulture) ?? "INV_InvoicePlan_Toast_SaveFailed";
 
-    public static string Papds_Toast_DeleteDataSuccess => ResourceManager.GetString("Papds.Toast.DeleteDataSuccess", resourceCulture) ?? "Papds.Toast.DeleteDataSuccess";
+    public static string INV_InvoicePlan_Toast_ValidationFailed => ResourceManager.GetString("INV_InvoicePlan_Toast_ValidationFailed", resourceCulture) ?? "INV_InvoicePlan_Toast_ValidationFailed";
 
-    public static string Papds_Toast_DeleteSuccess => ResourceManager.GetString("Papds.Toast.DeleteSuccess", resourceCulture) ?? "Papds.Toast.DeleteSuccess";
+    public static string INV_InvoicePlan_Validation_NoLines => ResourceManager.GetString("INV_InvoicePlan_Validation_NoLines", resourceCulture) ?? "INV_InvoicePlan_Validation_NoLines";
 
-    public static string Papds_Toast_OperationFailed => ResourceManager.GetString("Papds.Toast.OperationFailed", resourceCulture) ?? "Papds.Toast.OperationFailed";
+    public static string INV_InvoicePlan_Validation_PlanNotFound => ResourceManager.GetString("INV_InvoicePlan_Validation_PlanNotFound", resourceCulture) ?? "INV_InvoicePlan_Validation_PlanNotFound";
 
-    public static string Papds_Toast_SaveSuccess => ResourceManager.GetString("Papds.Toast.SaveSuccess", resourceCulture) ?? "Papds.Toast.SaveSuccess";
+    public static string INV_InvoiceSummary_Button_ApplyFilters => ResourceManager.GetString("INV_InvoiceSummary_Button_ApplyFilters", resourceCulture) ?? "INV_InvoiceSummary_Button_ApplyFilters";
 
-    public static string PayerCnpjRequired => ResourceManager.GetString("PayerCnpjRequired", resourceCulture) ?? "PayerCnpjRequired";
+    public static string INV_InvoiceSummary_Button_ClearFilters => ResourceManager.GetString("INV_InvoiceSummary_Button_ClearFilters", resourceCulture) ?? "INV_InvoiceSummary_Button_ClearFilters";
 
-    public static string PaymentTermsNegative => ResourceManager.GetString("PaymentTermsNegative", resourceCulture) ?? "PaymentTermsNegative";
+    public static string INV_InvoiceSummary_Filter_AllCustomers => ResourceManager.GetString("INV_InvoiceSummary_Filter_AllCustomers", resourceCulture) ?? "INV_InvoiceSummary_Filter_AllCustomers";
 
-    public static string PoNumberRequired => ResourceManager.GetString("PoNumberRequired", resourceCulture) ?? "PoNumberRequired";
+    public static string INV_InvoiceSummary_Filter_AllEngagements => ResourceManager.GetString("INV_InvoiceSummary_Filter_AllEngagements", resourceCulture) ?? "INV_InvoiceSummary_Filter_AllEngagements";
 
-    public static string RankMappings_Toast_DeleteSuccess => ResourceManager.GetString("RankMappings.Toast.DeleteSuccess", resourceCulture) ?? "RankMappings.Toast.DeleteSuccess";
+    public static string INV_InvoiceSummary_Group_AmountFormat => ResourceManager.GetString("INV_InvoiceSummary_Group_AmountFormat", resourceCulture) ?? "INV_InvoiceSummary_Group_AmountFormat";
 
-    public static string RankMappings_Toast_OperationFailed => ResourceManager.GetString("RankMappings.Toast.OperationFailed", resourceCulture) ?? "RankMappings.Toast.OperationFailed";
+    public static string INV_InvoiceSummary_Group_CanceledCountFormat => ResourceManager.GetString("INV_InvoiceSummary_Group_CanceledCountFormat", resourceCulture) ?? "INV_InvoiceSummary_Group_CanceledCountFormat";
 
-    public static string RankMappings_Toast_SaveSuccess => ResourceManager.GetString("RankMappings.Toast.SaveSuccess", resourceCulture) ?? "RankMappings.Toast.SaveSuccess";
+    public static string INV_InvoiceSummary_Group_ClosedCountFormat => ResourceManager.GetString("INV_InvoiceSummary_Group_ClosedCountFormat", resourceCulture) ?? "INV_InvoiceSummary_Group_ClosedCountFormat";
 
-    public static string Reports_Button_OpenBrowser => ResourceManager.GetString("Reports.Button.OpenBrowser", resourceCulture) ?? "Reports.Button.OpenBrowser";
+    public static string INV_InvoiceSummary_Group_EmittedCountFormat => ResourceManager.GetString("INV_InvoiceSummary_Group_EmittedCountFormat", resourceCulture) ?? "INV_InvoiceSummary_Group_EmittedCountFormat";
 
-    public static string Reports_Button_Refresh => ResourceManager.GetString("Reports.Button.Refresh", resourceCulture) ?? "Reports.Button.Refresh";
+    public static string INV_InvoiceSummary_Group_PercentageFormat => ResourceManager.GetString("INV_InvoiceSummary_Group_PercentageFormat", resourceCulture) ?? "INV_InvoiceSummary_Group_PercentageFormat";
 
-    public static string Reports_Empty_Description => ResourceManager.GetString("Reports.Empty.Description", resourceCulture) ?? "Reports.Empty.Description";
+    public static string INV_InvoiceSummary_Group_PlannedCountFormat => ResourceManager.GetString("INV_InvoiceSummary_Group_PlannedCountFormat", resourceCulture) ?? "INV_InvoiceSummary_Group_PlannedCountFormat";
 
-    public static string Reports_Empty_Title => ResourceManager.GetString("Reports.Empty.Title", resourceCulture) ?? "Reports.Empty.Title";
+    public static string INV_InvoiceSummary_Group_ReissuedCountFormat => ResourceManager.GetString("INV_InvoiceSummary_Group_ReissuedCountFormat", resourceCulture) ?? "INV_InvoiceSummary_Group_ReissuedCountFormat";
 
-    public static string Reports_Label_Status => ResourceManager.GetString("Reports.Label.Status", resourceCulture) ?? "Reports.Label.Status";
+    public static string INV_InvoiceSummary_Group_RequestedCountFormat => ResourceManager.GetString("INV_InvoiceSummary_Group_RequestedCountFormat", resourceCulture) ?? "INV_InvoiceSummary_Group_RequestedCountFormat";
 
-    public static string Reports_Status_DashboardReady => ResourceManager.GetString("Reports.Status.DashboardReady", resourceCulture) ?? "Reports.Status.DashboardReady";
+    public static string INV_InvoiceSummary_Label_Customer => ResourceManager.GetString("INV_InvoiceSummary_Label_Customer", resourceCulture) ?? "INV_InvoiceSummary_Label_Customer";
 
-    public static string Reports_Status_InvalidUrl => ResourceManager.GetString("Reports.Status.InvalidUrl", resourceCulture) ?? "Reports.Status.InvalidUrl";
+    public static string INV_InvoiceSummary_Label_Engagement => ResourceManager.GetString("INV_InvoiceSummary_Label_Engagement", resourceCulture) ?? "INV_InvoiceSummary_Label_Engagement";
 
-    public static string Reports_Status_LoadFailure => ResourceManager.GetString("Reports.Status.LoadFailure", resourceCulture) ?? "Reports.Status.LoadFailure";
+    public static string INV_InvoiceSummary_Label_Statuses => ResourceManager.GetString("INV_InvoiceSummary_Label_Statuses", resourceCulture) ?? "INV_InvoiceSummary_Label_Statuses";
 
-    public static string Reports_Status_OpenExternalFailure => ResourceManager.GetString("Reports.Status.OpenExternalFailure", resourceCulture) ?? "Reports.Status.OpenExternalFailure";
+    public static string INV_InvoiceSummary_Section_Totals_Amount => ResourceManager.GetString("INV_InvoiceSummary_Section_Totals_Amount", resourceCulture) ?? "INV_InvoiceSummary_Section_Totals_Amount";
 
-    public static string Reports_Status_UrlRequired => ResourceManager.GetString("Reports.Status.UrlRequired", resourceCulture) ?? "Reports.Status.UrlRequired";
+    public static string INV_InvoiceSummary_Section_Totals_Percentage => ResourceManager.GetString("INV_InvoiceSummary_Section_Totals_Percentage", resourceCulture) ?? "INV_InvoiceSummary_Section_Totals_Percentage";
 
-    public static string Request_Button_InsertData => ResourceManager.GetString("Request.Button.InsertData", resourceCulture) ?? "Request.Button.InsertData";
+    public static string INV_InvoiceSummary_Status_Empty => ResourceManager.GetString("INV_InvoiceSummary_Status_Empty", resourceCulture) ?? "INV_InvoiceSummary_Status_Empty";
 
-    public static string Request_Button_MarkRequested => ResourceManager.GetString("Request.Button.MarkRequested", resourceCulture) ?? "Request.Button.MarkRequested";
+    public static string INV_InvoiceSummary_Status_ExportFailure => ResourceManager.GetString("INV_InvoiceSummary_Status_ExportFailure", resourceCulture) ?? "INV_InvoiceSummary_Status_ExportFailure";
 
-    public static string Request_Button_Reverse => ResourceManager.GetString("Request.Button.Reverse", resourceCulture) ?? "Request.Button.Reverse";
+    public static string INV_InvoiceSummary_Status_ExportSuccess => ResourceManager.GetString("INV_InvoiceSummary_Status_ExportSuccess", resourceCulture) ?? "INV_InvoiceSummary_Status_ExportSuccess";
 
-    public static string Request_Description_Primary => ResourceManager.GetString("Request.Description.Primary", resourceCulture) ?? "Request.Description.Primary";
+    public static string INV_InvoiceSummary_Status_LoadFailure => ResourceManager.GetString("INV_InvoiceSummary_Status_LoadFailure", resourceCulture) ?? "INV_InvoiceSummary_Status_LoadFailure";
 
-    public static string Request_Message_Empty => ResourceManager.GetString("Request.Message.Empty", resourceCulture) ?? "Request.Message.Empty";
+    public static string INV_InvoiceSummary_Status_Loaded => ResourceManager.GetString("INV_InvoiceSummary_Status_Loaded", resourceCulture) ?? "INV_InvoiceSummary_Status_Loaded";
 
-    public static string Request_Message_SelectHint => ResourceManager.GetString("Request.Message.SelectHint", resourceCulture) ?? "Request.Message.SelectHint";
+    public static string INV_InvoiceSummary_TableHeader_Amount => ResourceManager.GetString("INV_InvoiceSummary_TableHeader_Amount", resourceCulture) ?? "INV_InvoiceSummary_TableHeader_Amount";
 
-    public static string Request_Section_AvailablePlans_Header => ResourceManager.GetString("Request.Section.AvailablePlans.Header", resourceCulture) ?? "Request.Section.AvailablePlans.Header";
+    public static string INV_InvoiceSummary_TableHeader_BaseValue => ResourceManager.GetString("INV_InvoiceSummary_TableHeader_BaseValue", resourceCulture) ?? "INV_InvoiceSummary_TableHeader_BaseValue";
 
-    public static string Request_Section_InvoiceDetails_Header => ResourceManager.GetString("Request.Section.InvoiceDetails.Header", resourceCulture) ?? "Request.Section.InvoiceDetails.Header";
+    public static string INV_InvoiceSummary_TableHeader_BzCode => ResourceManager.GetString("INV_InvoiceSummary_TableHeader_BzCode", resourceCulture) ?? "INV_InvoiceSummary_TableHeader_BzCode";
 
-    public static string Request_Status_EngagementFormat => ResourceManager.GetString("Request.Status.EngagementFormat", resourceCulture) ?? "Request.Status.EngagementFormat";
+    public static string INV_InvoiceSummary_TableHeader_CancelReason => ResourceManager.GetString("INV_InvoiceSummary_TableHeader_CancelReason", resourceCulture) ?? "INV_InvoiceSummary_TableHeader_CancelReason";
 
-    public static string Request_Status_LineRequested => ResourceManager.GetString("Request.Status.LineRequested", resourceCulture) ?? "Request.Status.LineRequested";
+    public static string INV_InvoiceSummary_TableHeader_CanceledAt => ResourceManager.GetString("INV_InvoiceSummary_TableHeader_CanceledAt", resourceCulture) ?? "INV_InvoiceSummary_TableHeader_CanceledAt";
 
-    public static string Request_Status_LineUndone => ResourceManager.GetString("Request.Status.LineUndone", resourceCulture) ?? "Request.Status.LineUndone";
+    public static string INV_InvoiceSummary_TableHeader_DueDate => ResourceManager.GetString("INV_InvoiceSummary_TableHeader_DueDate", resourceCulture) ?? "INV_InvoiceSummary_TableHeader_DueDate";
 
-    public static string Request_Status_LoadFailure => ResourceManager.GetString("Request.Status.LoadFailure", resourceCulture) ?? "Request.Status.LoadFailure";
+    public static string INV_InvoiceSummary_TableHeader_EmissionDate => ResourceManager.GetString("INV_InvoiceSummary_TableHeader_EmissionDate", resourceCulture) ?? "INV_InvoiceSummary_TableHeader_EmissionDate";
 
-    public static string Request_Status_LoadFailureDetail => ResourceManager.GetString("Request.Status.LoadFailureDetail", resourceCulture) ?? "Request.Status.LoadFailureDetail";
+    public static string INV_InvoiceSummary_TableHeader_EmittedAt => ResourceManager.GetString("INV_InvoiceSummary_TableHeader_EmittedAt", resourceCulture) ?? "INV_InvoiceSummary_TableHeader_EmittedAt";
 
-    public static string Request_Status_NoUndo => ResourceManager.GetString("Request.Status.NoUndo", resourceCulture) ?? "Request.Status.NoUndo";
+    public static string INV_InvoiceSummary_TableHeader_Percent => ResourceManager.GetString("INV_InvoiceSummary_TableHeader_Percent", resourceCulture) ?? "INV_InvoiceSummary_TableHeader_Percent";
 
-    public static string Request_Status_NoUpdates => ResourceManager.GetString("Request.Status.NoUpdates", resourceCulture) ?? "Request.Status.NoUpdates";
+    public static string INV_InvoiceSummary_TableHeader_Plan => ResourceManager.GetString("INV_InvoiceSummary_TableHeader_Plan", resourceCulture) ?? "INV_InvoiceSummary_TableHeader_Plan";
 
-    public static string Request_Status_PlanLoaded => ResourceManager.GetString("Request.Status.PlanLoaded", resourceCulture) ?? "Request.Status.PlanLoaded";
+    public static string INV_InvoiceSummary_TableHeader_RequestDate => ResourceManager.GetString("INV_InvoiceSummary_TableHeader_RequestDate", resourceCulture) ?? "INV_InvoiceSummary_TableHeader_RequestDate";
 
-    public static string Request_Status_PlannedFormat => ResourceManager.GetString("Request.Status.PlannedFormat", resourceCulture) ?? "Request.Status.PlannedFormat";
+    public static string INV_InvoiceSummary_TableHeader_Ritm => ResourceManager.GetString("INV_InvoiceSummary_TableHeader_Ritm", resourceCulture) ?? "INV_InvoiceSummary_TableHeader_Ritm";
 
-    public static string Request_Status_RequestedFormat => ResourceManager.GetString("Request.Status.RequestedFormat", resourceCulture) ?? "Request.Status.RequestedFormat";
+    public static string INV_InvoiceSummary_TableHeader_Sequence => ResourceManager.GetString("INV_InvoiceSummary_TableHeader_Sequence", resourceCulture) ?? "INV_InvoiceSummary_TableHeader_Sequence";
 
-    public static string Request_TableHeader_Actions => ResourceManager.GetString("Request.TableHeader.Actions", resourceCulture) ?? "Request.TableHeader.Actions";
+    public static string INV_InvoiceSummary_TableHeader_Status => ResourceManager.GetString("INV_InvoiceSummary_TableHeader_Status", resourceCulture) ?? "INV_InvoiceSummary_TableHeader_Status";
 
-    public static string Request_TableHeader_Amount => ResourceManager.GetString("Request.TableHeader.Amount", resourceCulture) ?? "Request.TableHeader.Amount";
+    public static string INV_InvoiceSummary_TableHeader_Type => ResourceManager.GetString("INV_InvoiceSummary_TableHeader_Type", resourceCulture) ?? "INV_InvoiceSummary_TableHeader_Type";
 
-    public static string Request_TableHeader_Coe => ResourceManager.GetString("Request.TableHeader.Coe", resourceCulture) ?? "Request.TableHeader.Coe";
+    public static string INV_InvoiceSummary_Title_Filters => ResourceManager.GetString("INV_InvoiceSummary_Title_Filters", resourceCulture) ?? "INV_InvoiceSummary_Title_Filters";
 
-    public static string Request_TableHeader_EmissionDate => ResourceManager.GetString("Request.TableHeader.EmissionDate", resourceCulture) ?? "Request.TableHeader.EmissionDate";
+    public static string INV_InvoiceSummary_Validation_NoDataToExport => ResourceManager.GetString("INV_InvoiceSummary_Validation_NoDataToExport", resourceCulture) ?? "INV_InvoiceSummary_Validation_NoDataToExport";
 
-    public static string Request_TableHeader_RequestDate => ResourceManager.GetString("Request.TableHeader.RequestDate", resourceCulture) ?? "Request.TableHeader.RequestDate";
+    public static string INV_InvoiceSummary_Validation_StatusRequired => ResourceManager.GetString("INV_InvoiceSummary_Validation_StatusRequired", resourceCulture) ?? "INV_InvoiceSummary_Validation_StatusRequired";
 
-    public static string Request_TableHeader_Ritm => ResourceManager.GetString("Request.TableHeader.Ritm", resourceCulture) ?? "Request.TableHeader.Ritm";
+    public static string INV_InvoiceSummary_Value_UnknownCustomer => ResourceManager.GetString("INV_InvoiceSummary_Value_UnknownCustomer", resourceCulture) ?? "INV_InvoiceSummary_Value_UnknownCustomer";
 
-    public static string Request_TableHeader_Status => ResourceManager.GetString("Request.TableHeader.Status", resourceCulture) ?? "Request.TableHeader.Status";
+    public static string INV_Invoice_Status_Canceled => ResourceManager.GetString("INV_Invoice_Status_Canceled", resourceCulture) ?? "INV_Invoice_Status_Canceled";
 
-    public static string Request_Title_Primary => ResourceManager.GetString("Request.Title.Primary", resourceCulture) ?? "Request.Title.Primary";
+    public static string INV_Invoice_Status_Closed => ResourceManager.GetString("INV_Invoice_Status_Closed", resourceCulture) ?? "INV_Invoice_Status_Closed";
 
-    public static string Request_Toast_LineRequested => ResourceManager.GetString("Request.Toast.LineRequested", resourceCulture) ?? "Request.Toast.LineRequested";
+    public static string INV_Invoice_Status_Emitted => ResourceManager.GetString("INV_Invoice_Status_Emitted", resourceCulture) ?? "INV_Invoice_Status_Emitted";
 
-    public static string Request_Toast_LineUndone => ResourceManager.GetString("Request.Toast.LineUndone", resourceCulture) ?? "Request.Toast.LineUndone";
+    public static string INV_Invoice_Status_Planned => ResourceManager.GetString("INV_Invoice_Status_Planned", resourceCulture) ?? "INV_Invoice_Status_Planned";
 
-    public static string Request_Toast_NoUndo => ResourceManager.GetString("Request.Toast.NoUndo", resourceCulture) ?? "Request.Toast.NoUndo";
+    public static string INV_Invoice_Status_Reissued => ResourceManager.GetString("INV_Invoice_Status_Reissued", resourceCulture) ?? "INV_Invoice_Status_Reissued";
 
-    public static string Request_Toast_NoUpdates => ResourceManager.GetString("Request.Toast.NoUpdates", resourceCulture) ?? "Request.Toast.NoUpdates";
+    public static string INV_Invoice_Status_Requested => ResourceManager.GetString("INV_Invoice_Status_Requested", resourceCulture) ?? "INV_Invoice_Status_Requested";
 
-    public static string Request_Toast_RequestFailed => ResourceManager.GetString("Request.Toast.RequestFailed", resourceCulture) ?? "Request.Toast.RequestFailed";
+    public static string INV_Localization_Language_PreferenceSaveFailure => ResourceManager.GetString("INV_Localization_Language_PreferenceSaveFailure", resourceCulture) ?? "INV_Localization_Language_PreferenceSaveFailure";
 
-    public static string Request_Toast_UndoFailed => ResourceManager.GetString("Request.Toast.UndoFailed", resourceCulture) ?? "Request.Toast.UndoFailed";
+    public static string INV_Localization_Language_PreferenceSaved => ResourceManager.GetString("INV_Localization_Language_PreferenceSaved", resourceCulture) ?? "INV_Localization_Language_PreferenceSaved";
 
-    public static string Request_Validation_LineSelection => ResourceManager.GetString("Request.Validation.LineSelection", resourceCulture) ?? "Request.Validation.LineSelection";
+    public static string INV_Notifications_Description_Primary => ResourceManager.GetString("INV_Notifications_Description_Primary", resourceCulture) ?? "INV_Notifications_Description_Primary";
 
-    public static string Request_Validation_PlanNotFound => ResourceManager.GetString("Request.Validation.PlanNotFound", resourceCulture) ?? "Request.Validation.PlanNotFound";
+    public static string INV_Notifications_Format_Amount => ResourceManager.GetString("INV_Notifications_Format_Amount", resourceCulture) ?? "INV_Notifications_Format_Amount";
 
-    public static string Request_Validation_PlanRequired => ResourceManager.GetString("Request.Validation.PlanRequired", resourceCulture) ?? "Request.Validation.PlanRequired";
+    public static string INV_Notifications_Format_CcRecipients => ResourceManager.GetString("INV_Notifications_Format_CcRecipients", resourceCulture) ?? "INV_Notifications_Format_CcRecipients";
 
-    public static string Request_Validation_PlanSelection => ResourceManager.GetString("Request.Validation.PlanSelection", resourceCulture) ?? "Request.Validation.PlanSelection";
+    public static string INV_Notifications_Format_Customer => ResourceManager.GetString("INV_Notifications_Format_Customer", resourceCulture) ?? "INV_Notifications_Format_Customer";
 
-    public static string Request_Validation_RequestDateRequired => ResourceManager.GetString("Request.Validation.RequestDateRequired", resourceCulture) ?? "Request.Validation.RequestDateRequired";
+    public static string INV_Notifications_Format_DueDate => ResourceManager.GetString("INV_Notifications_Format_DueDate", resourceCulture) ?? "INV_Notifications_Format_DueDate";
 
-    public static string Request_Validation_UndoPlanRequired => ResourceManager.GetString("Request.Validation.UndoPlanRequired", resourceCulture) ?? "Request.Validation.UndoPlanRequired";
+    public static string INV_Notifications_Format_EmissionDate => ResourceManager.GetString("INV_Notifications_Format_EmissionDate", resourceCulture) ?? "INV_Notifications_Format_EmissionDate";
 
-    public static string SequenceContiguous => ResourceManager.GetString("SequenceContiguous", resourceCulture) ?? "SequenceContiguous";
+    public static string INV_Notifications_Format_Managers => ResourceManager.GetString("INV_Notifications_Format_Managers", resourceCulture) ?? "INV_Notifications_Format_Managers";
 
-    public static string Settings_Button_Apply => ResourceManager.GetString("Settings.Button.Apply", resourceCulture) ?? "Settings.Button.Apply";
+    public static string INV_Notifications_Format_NotifyDate => ResourceManager.GetString("INV_Notifications_Format_NotifyDate", resourceCulture) ?? "INV_Notifications_Format_NotifyDate";
 
-    public static string Settings_Button_ClearAll => ResourceManager.GetString("Settings.Button.ClearAll", resourceCulture) ?? "Settings.Button.ClearAll";
+    public static string INV_Notifications_Format_Plan => ResourceManager.GetString("INV_Notifications_Format_Plan", resourceCulture) ?? "INV_Notifications_Format_Plan";
 
-    public static string Settings_Button_ExportData => ResourceManager.GetString("Settings.Button.ExportData", resourceCulture) ?? "Settings.Button.ExportData";
+    public static string INV_Notifications_Format_Recipients => ResourceManager.GetString("INV_Notifications_Format_Recipients", resourceCulture) ?? "INV_Notifications_Format_Recipients";
 
-    public static string Settings_Button_ExportPackage => ResourceManager.GetString("Settings.Button.ExportPackage", resourceCulture) ?? "Settings.Button.ExportPackage";
+    public static string INV_Notifications_Format_Sequence => ResourceManager.GetString("INV_Notifications_Format_Sequence", resourceCulture) ?? "INV_Notifications_Format_Sequence";
 
-    public static string Settings_Button_ImportData => ResourceManager.GetString("Settings.Button.ImportData", resourceCulture) ?? "Settings.Button.ImportData";
+    public static string INV_Notifications_Format_Subject => ResourceManager.GetString("INV_Notifications_Format_Subject", resourceCulture) ?? "INV_Notifications_Format_Subject";
 
-    public static string Settings_Button_ImportPackage => ResourceManager.GetString("Settings.Button.ImportPackage", resourceCulture) ?? "Settings.Button.ImportPackage";
+    public static string INV_Notifications_Format_ToRecipients => ResourceManager.GetString("INV_Notifications_Format_ToRecipients", resourceCulture) ?? "INV_Notifications_Format_ToRecipients";
 
-    public static string Settings_Button_Load => ResourceManager.GetString("Settings.Button.Load", resourceCulture) ?? "Settings.Button.Load";
+    public static string INV_Notifications_Label_NotificationDate => ResourceManager.GetString("INV_Notifications_Label_NotificationDate", resourceCulture) ?? "INV_Notifications_Label_NotificationDate";
 
-    public static string Settings_Button_Save => ResourceManager.GetString("Settings.Button.Save", resourceCulture) ?? "Settings.Button.Save";
+    public static string INV_Notifications_Message_Empty => ResourceManager.GetString("INV_Notifications_Message_Empty", resourceCulture) ?? "INV_Notifications_Message_Empty";
 
-    public static string Settings_Button_SelectPackage => ResourceManager.GetString("Settings.Button.SelectPackage", resourceCulture) ?? "Settings.Button.SelectPackage";
+    public static string INV_Notifications_Status_Empty => ResourceManager.GetString("INV_Notifications_Status_Empty", resourceCulture) ?? "INV_Notifications_Status_Empty";
 
-    public static string Settings_Button_Test => ResourceManager.GetString("Settings.Button.Test", resourceCulture) ?? "Settings.Button.Test";
+    public static string INV_Notifications_Status_LoadFailure => ResourceManager.GetString("INV_Notifications_Status_LoadFailure", resourceCulture) ?? "INV_Notifications_Status_LoadFailure";
 
-    public static string Settings_Dialog_ClearAll_Message => ResourceManager.GetString("Settings.Dialog.ClearAll.Message", resourceCulture) ?? "Settings.Dialog.ClearAll.Message";
+    public static string INV_Notifications_Status_Loaded => ResourceManager.GetString("INV_Notifications_Status_Loaded", resourceCulture) ?? "INV_Notifications_Status_Loaded";
 
-    public static string Settings_Dialog_ClearAll_Title => ResourceManager.GetString("Settings.Dialog.ClearAll.Title", resourceCulture) ?? "Settings.Dialog.ClearAll.Title";
+    public static string INV_Notifications_Template_Amount => ResourceManager.GetString("INV_Notifications_Template_Amount", resourceCulture) ?? "INV_Notifications_Template_Amount";
 
-    public static string Settings_Dialog_DataExport_Title => ResourceManager.GetString("Settings.Dialog.DataExport.Title", resourceCulture) ?? "Settings.Dialog.DataExport.Title";
+    public static string INV_Notifications_Template_Competence => ResourceManager.GetString("INV_Notifications_Template_Competence", resourceCulture) ?? "INV_Notifications_Template_Competence";
 
-    public static string Settings_Dialog_DataImport_Message => ResourceManager.GetString("Settings.Dialog.DataImport.Message", resourceCulture) ?? "Settings.Dialog.DataImport.Message";
+    public static string INV_Notifications_Template_Contact => ResourceManager.GetString("INV_Notifications_Template_Contact", resourceCulture) ?? "INV_Notifications_Template_Contact";
 
-    public static string Settings_Dialog_DataImport_Title => ResourceManager.GetString("Settings.Dialog.DataImport.Title", resourceCulture) ?? "Settings.Dialog.DataImport.Title";
+    public static string INV_Notifications_Template_DueDate => ResourceManager.GetString("INV_Notifications_Template_DueDate", resourceCulture) ?? "INV_Notifications_Template_DueDate";
 
-    public static string Settings_Dialog_Export_Title => ResourceManager.GetString("Settings.Dialog.Export.Title", resourceCulture) ?? "Settings.Dialog.Export.Title";
+    public static string INV_Notifications_Template_Frs => ResourceManager.GetString("INV_Notifications_Template_Frs", resourceCulture) ?? "INV_Notifications_Template_Frs";
 
-    public static string Settings_Dialog_Import_Title => ResourceManager.GetString("Settings.Dialog.Import.Title", resourceCulture) ?? "Settings.Dialog.Import.Title";
+    public static string INV_Notifications_Template_Installment => ResourceManager.GetString("INV_Notifications_Template_Installment", resourceCulture) ?? "INV_Notifications_Template_Installment";
 
-    public static string Settings_Help_DefaultCurrency => ResourceManager.GetString("Settings.Help.DefaultCurrency", resourceCulture) ?? "Settings.Help.DefaultCurrency";
+    public static string INV_Notifications_Template_ManagerEmails => ResourceManager.GetString("INV_Notifications_Template_ManagerEmails", resourceCulture) ?? "INV_Notifications_Template_ManagerEmails";
 
-    public static string Settings_Label_ConfirmPassphrase => ResourceManager.GetString("Settings.Label.ConfirmPassphrase", resourceCulture) ?? "Settings.Label.ConfirmPassphrase";
+    public static string INV_Notifications_Template_Managers => ResourceManager.GetString("INV_Notifications_Template_Managers", resourceCulture) ?? "INV_Notifications_Template_Managers";
 
-    public static string Settings_Label_Database => ResourceManager.GetString("Settings.Label.Database", resourceCulture) ?? "Settings.Label.Database";
+    public static string INV_Notifications_Template_Po => ResourceManager.GetString("INV_Notifications_Template_Po", resourceCulture) ?? "INV_Notifications_Template_Po";
 
-    public static string Settings_Label_DefaultCurrency => ResourceManager.GetString("Settings.Label.DefaultCurrency", resourceCulture) ?? "Settings.Label.DefaultCurrency";
+    public static string INV_Notifications_Template_Recipients => ResourceManager.GetString("INV_Notifications_Template_Recipients", resourceCulture) ?? "INV_Notifications_Template_Recipients";
 
-    public static string Settings_Label_ImportPackage => ResourceManager.GetString("Settings.Label.ImportPackage", resourceCulture) ?? "Settings.Label.ImportPackage";
+    public static string INV_Notifications_Template_Service => ResourceManager.GetString("INV_Notifications_Template_Service", resourceCulture) ?? "INV_Notifications_Template_Service";
 
-    public static string Settings_Label_ImportPassphrase => ResourceManager.GetString("Settings.Label.ImportPassphrase", resourceCulture) ?? "Settings.Label.ImportPassphrase";
+    public static string INV_Notifications_Template_Ticket => ResourceManager.GetString("INV_Notifications_Template_Ticket", resourceCulture) ?? "INV_Notifications_Template_Ticket";
 
-    public static string Settings_Label_Language => ResourceManager.GetString("Settings.Label.Language", resourceCulture) ?? "Settings.Label.Language";
+    public static string INV_Notifications_Title_Primary => ResourceManager.GetString("INV_Notifications_Title_Primary", resourceCulture) ?? "INV_Notifications_Title_Primary";
 
-    public static string Settings_Label_Passphrase => ResourceManager.GetString("Settings.Label.Passphrase", resourceCulture) ?? "Settings.Label.Passphrase";
+    public static string INV_Placeholder_Code => ResourceManager.GetString("INV_Placeholder_Code", resourceCulture) ?? "INV_Placeholder_Code";
 
-    public static string Settings_Label_Password => ResourceManager.GetString("Settings.Label.Password", resourceCulture) ?? "Settings.Label.Password";
+    public static string INV_Placeholder_Name => ResourceManager.GetString("INV_Placeholder_Name", resourceCulture) ?? "INV_Placeholder_Name";
 
-    public static string Settings_Label_PowerBiUrl => ResourceManager.GetString("Settings.Label.PowerBiUrl", resourceCulture) ?? "Settings.Label.PowerBiUrl";
+    public static string INV_Placeholder_Reason => ResourceManager.GetString("INV_Placeholder_Reason", resourceCulture) ?? "INV_Placeholder_Reason";
 
-    public static string Settings_Label_SelectedImportPackagePrefix => ResourceManager.GetString("Settings.Label.SelectedImportPackagePrefix", resourceCulture) ?? "Settings.Label.SelectedImportPackagePrefix";
+    public static string INV_Request_Button_InsertData => ResourceManager.GetString("INV_Request_Button_InsertData", resourceCulture) ?? "INV_Request_Button_InsertData";
 
-    public static string Settings_Label_Server => ResourceManager.GetString("Settings.Label.Server", resourceCulture) ?? "Settings.Label.Server";
+    public static string INV_Request_Button_Reverse => ResourceManager.GetString("INV_Request_Button_Reverse", resourceCulture) ?? "INV_Request_Button_Reverse";
 
-    public static string Settings_Label_User => ResourceManager.GetString("Settings.Label.User", resourceCulture) ?? "Settings.Label.User";
+    public static string INV_Request_Description_Primary => ResourceManager.GetString("INV_Request_Description_Primary", resourceCulture) ?? "INV_Request_Description_Primary";
 
-    public static string Settings_Placeholder_DefaultCurrency => ResourceManager.GetString("Settings.Placeholder.DefaultCurrency", resourceCulture) ?? "Settings.Placeholder.DefaultCurrency";
+    public static string INV_Request_Message_Empty => ResourceManager.GetString("INV_Request_Message_Empty", resourceCulture) ?? "INV_Request_Message_Empty";
 
-    public static string Settings_Placeholder_ImportPackage => ResourceManager.GetString("Settings.Placeholder.ImportPackage", resourceCulture) ?? "Settings.Placeholder.ImportPackage";
+    public static string INV_Request_Message_SelectHint => ResourceManager.GetString("INV_Request_Message_SelectHint", resourceCulture) ?? "INV_Request_Message_SelectHint";
 
-    public static string Settings_Section_ApplicationData_Description => ResourceManager.GetString("Settings.Section.ApplicationData.Description", resourceCulture) ?? "Settings.Section.ApplicationData.Description";
+    public static string INV_Request_Section_AvailablePlans_Header => ResourceManager.GetString("INV_Request_Section_AvailablePlans_Header", resourceCulture) ?? "INV_Request_Section_AvailablePlans_Header";
 
-    public static string Settings_Section_ApplicationData_RestoreNotice => ResourceManager.GetString("Settings.Section.ApplicationData.RestoreNotice", resourceCulture) ?? "Settings.Section.ApplicationData.RestoreNotice";
+    public static string INV_Request_Section_InvoiceDetails_Header => ResourceManager.GetString("INV_Request_Section_InvoiceDetails_Header", resourceCulture) ?? "INV_Request_Section_InvoiceDetails_Header";
 
-    public static string Settings_Section_ApplicationData_Title => ResourceManager.GetString("Settings.Section.ApplicationData.Title", resourceCulture) ?? "Settings.Section.ApplicationData.Title";
+    public static string INV_Request_Status_EngagementFormat => ResourceManager.GetString("INV_Request_Status_EngagementFormat", resourceCulture) ?? "INV_Request_Status_EngagementFormat";
 
-    public static string Settings_Section_Database_Title => ResourceManager.GetString("Settings.Section.Database.Title", resourceCulture) ?? "Settings.Section.Database.Title";
+    public static string INV_Request_Status_LineRequested => ResourceManager.GetString("INV_Request_Status_LineRequested", resourceCulture) ?? "INV_Request_Status_LineRequested";
 
-    public static string Settings_Section_Localization_Title => ResourceManager.GetString("Settings.Section.Localization.Title", resourceCulture) ?? "Settings.Section.Localization.Title";
+    public static string INV_Request_Status_LineUndone => ResourceManager.GetString("INV_Request_Status_LineUndone", resourceCulture) ?? "INV_Request_Status_LineUndone";
 
-    public static string Settings_Section_Package_Description => ResourceManager.GetString("Settings.Section.Package.Description", resourceCulture) ?? "Settings.Section.Package.Description";
+    public static string INV_Request_Status_LoadFailure => ResourceManager.GetString("INV_Request_Status_LoadFailure", resourceCulture) ?? "INV_Request_Status_LoadFailure";
 
-    public static string Settings_Section_Package_ImportDescription => ResourceManager.GetString("Settings.Section.Package.ImportDescription", resourceCulture) ?? "Settings.Section.Package.ImportDescription";
+    public static string INV_Request_Status_LoadFailureDetail => ResourceManager.GetString("INV_Request_Status_LoadFailureDetail", resourceCulture) ?? "INV_Request_Status_LoadFailureDetail";
 
-    public static string Settings_Section_Package_Title => ResourceManager.GetString("Settings.Section.Package.Title", resourceCulture) ?? "Settings.Section.Package.Title";
+    public static string INV_Request_Status_NoUndo => ResourceManager.GetString("INV_Request_Status_NoUndo", resourceCulture) ?? "INV_Request_Status_NoUndo";
 
-    public static string Settings_Section_PowerBi_Description => ResourceManager.GetString("Settings.Section.PowerBi.Description", resourceCulture) ?? "Settings.Section.PowerBi.Description";
+    public static string INV_Request_Status_NoUpdates => ResourceManager.GetString("INV_Request_Status_NoUpdates", resourceCulture) ?? "INV_Request_Status_NoUpdates";
 
-    public static string Settings_Section_PowerBi_Title => ResourceManager.GetString("Settings.Section.PowerBi.Title", resourceCulture) ?? "Settings.Section.PowerBi.Title";
+    public static string INV_Request_Status_PlanLoaded => ResourceManager.GetString("INV_Request_Status_PlanLoaded", resourceCulture) ?? "INV_Request_Status_PlanLoaded";
 
-    public static string Settings_Status_Cleared => ResourceManager.GetString("Settings.Status.Cleared", resourceCulture) ?? "Settings.Status.Cleared";
+    public static string INV_Request_Status_PlannedFormat => ResourceManager.GetString("INV_Request_Status_PlannedFormat", resourceCulture) ?? "INV_Request_Status_PlannedFormat";
 
-    public static string Settings_Status_Clearing => ResourceManager.GetString("Settings.Status.Clearing", resourceCulture) ?? "Settings.Status.Clearing";
+    public static string INV_Request_Status_RequestedFormat => ResourceManager.GetString("INV_Request_Status_RequestedFormat", resourceCulture) ?? "INV_Request_Status_RequestedFormat";
 
-    public static string Settings_Status_DataExportCancelled => ResourceManager.GetString("Settings.Status.DataExportCancelled", resourceCulture) ?? "Settings.Status.DataExportCancelled";
+    public static string INV_Request_TableHeader_Amount => ResourceManager.GetString("INV_Request_TableHeader_Amount", resourceCulture) ?? "INV_Request_TableHeader_Amount";
 
-    public static string Settings_Status_DataExportFailure => ResourceManager.GetString("Settings.Status.DataExportFailure", resourceCulture) ?? "Settings.Status.DataExportFailure";
+    public static string INV_Request_TableHeader_Coe => ResourceManager.GetString("INV_Request_TableHeader_Coe", resourceCulture) ?? "INV_Request_TableHeader_Coe";
 
-    public static string Settings_Status_DataExportInProgress => ResourceManager.GetString("Settings.Status.DataExportInProgress", resourceCulture) ?? "Settings.Status.DataExportInProgress";
+    public static string INV_Request_TableHeader_EmissionDate => ResourceManager.GetString("INV_Request_TableHeader_EmissionDate", resourceCulture) ?? "INV_Request_TableHeader_EmissionDate";
 
-    public static string Settings_Status_DataExportSuccess => ResourceManager.GetString("Settings.Status.DataExportSuccess", resourceCulture) ?? "Settings.Status.DataExportSuccess";
+    public static string INV_Request_TableHeader_RequestDate => ResourceManager.GetString("INV_Request_TableHeader_RequestDate", resourceCulture) ?? "INV_Request_TableHeader_RequestDate";
 
-    public static string Settings_Status_DataImportFailure => ResourceManager.GetString("Settings.Status.DataImportFailure", resourceCulture) ?? "Settings.Status.DataImportFailure";
+    public static string INV_Request_TableHeader_Ritm => ResourceManager.GetString("INV_Request_TableHeader_Ritm", resourceCulture) ?? "INV_Request_TableHeader_Ritm";
 
-    public static string Settings_Status_DataImportInProgress => ResourceManager.GetString("Settings.Status.DataImportInProgress", resourceCulture) ?? "Settings.Status.DataImportInProgress";
+    public static string INV_Request_TableHeader_Status => ResourceManager.GetString("INV_Request_TableHeader_Status", resourceCulture) ?? "INV_Request_TableHeader_Status";
 
-    public static string Settings_Status_DataImportSuccess => ResourceManager.GetString("Settings.Status.DataImportSuccess", resourceCulture) ?? "Settings.Status.DataImportSuccess";
+    public static string INV_Request_Title_Primary => ResourceManager.GetString("INV_Request_Title_Primary", resourceCulture) ?? "INV_Request_Title_Primary";
 
-    public static string Settings_Status_ExportCancelled => ResourceManager.GetString("Settings.Status.ExportCancelled", resourceCulture) ?? "Settings.Status.ExportCancelled";
+    public static string INV_Request_Toast_LineRequested => ResourceManager.GetString("INV_Request_Toast_LineRequested", resourceCulture) ?? "INV_Request_Toast_LineRequested";
 
-    public static string Settings_Status_ExportFailure => ResourceManager.GetString("Settings.Status.ExportFailure", resourceCulture) ?? "Settings.Status.ExportFailure";
+    public static string INV_Request_Toast_LineUndone => ResourceManager.GetString("INV_Request_Toast_LineUndone", resourceCulture) ?? "INV_Request_Toast_LineUndone";
 
-    public static string Settings_Status_ExportInProgress => ResourceManager.GetString("Settings.Status.ExportInProgress", resourceCulture) ?? "Settings.Status.ExportInProgress";
+    public static string INV_Request_Toast_NoUndo => ResourceManager.GetString("INV_Request_Toast_NoUndo", resourceCulture) ?? "INV_Request_Toast_NoUndo";
 
-    public static string Settings_Status_ExportSuccess => ResourceManager.GetString("Settings.Status.ExportSuccess", resourceCulture) ?? "Settings.Status.ExportSuccess";
+    public static string INV_Request_Toast_NoUpdates => ResourceManager.GetString("INV_Request_Toast_NoUpdates", resourceCulture) ?? "INV_Request_Toast_NoUpdates";
 
-    public static string Settings_Status_ImportCancelled => ResourceManager.GetString("Settings.Status.ImportCancelled", resourceCulture) ?? "Settings.Status.ImportCancelled";
+    public static string INV_Request_Toast_RequestFailed => ResourceManager.GetString("INV_Request_Toast_RequestFailed", resourceCulture) ?? "INV_Request_Toast_RequestFailed";
 
-    public static string Settings_Status_ImportFailure => ResourceManager.GetString("Settings.Status.ImportFailure", resourceCulture) ?? "Settings.Status.ImportFailure";
+    public static string INV_Request_Toast_UndoFailed => ResourceManager.GetString("INV_Request_Toast_UndoFailed", resourceCulture) ?? "INV_Request_Toast_UndoFailed";
 
-    public static string Settings_Status_ImportInProgress => ResourceManager.GetString("Settings.Status.ImportInProgress", resourceCulture) ?? "Settings.Status.ImportInProgress";
+    public static string INV_Request_Validation_LineSelection => ResourceManager.GetString("INV_Request_Validation_LineSelection", resourceCulture) ?? "INV_Request_Validation_LineSelection";
 
-    public static string Settings_Status_ImportSuccess => ResourceManager.GetString("Settings.Status.ImportSuccess", resourceCulture) ?? "Settings.Status.ImportSuccess";
+    public static string INV_Request_Validation_PlanNotFound => ResourceManager.GetString("INV_Request_Validation_PlanNotFound", resourceCulture) ?? "INV_Request_Validation_PlanNotFound";
 
-    public static string Settings_Status_Loaded => ResourceManager.GetString("Settings.Status.Loaded", resourceCulture) ?? "Settings.Status.Loaded";
+    public static string INV_Request_Validation_PlanRequired => ResourceManager.GetString("INV_Request_Validation_PlanRequired", resourceCulture) ?? "INV_Request_Validation_PlanRequired";
 
-    public static string Settings_Status_LocalizationFailed => ResourceManager.GetString("Settings.Status.LocalizationFailed", resourceCulture) ?? "Settings.Status.LocalizationFailed";
+    public static string INV_Request_Validation_PlanSelection => ResourceManager.GetString("INV_Request_Validation_PlanSelection", resourceCulture) ?? "INV_Request_Validation_PlanSelection";
 
-    public static string Settings_Status_LocalizationPreview => ResourceManager.GetString("Settings.Status.LocalizationPreview", resourceCulture) ?? "Settings.Status.LocalizationPreview";
+    public static string INV_Request_Validation_RequestDateRequired => ResourceManager.GetString("INV_Request_Validation_RequestDateRequired", resourceCulture) ?? "INV_Request_Validation_RequestDateRequired";
 
-    public static string Settings_Status_LocalizationSaved => ResourceManager.GetString("Settings.Status.LocalizationSaved", resourceCulture) ?? "Settings.Status.LocalizationSaved";
+    public static string INV_Request_Validation_UndoPlanRequired => ResourceManager.GetString("INV_Request_Validation_UndoPlanRequired", resourceCulture) ?? "INV_Request_Validation_UndoPlanRequired";
 
-    public static string Settings_Status_PowerBiFailed => ResourceManager.GetString("Settings.Status.PowerBiFailed", resourceCulture) ?? "Settings.Status.PowerBiFailed";
+    public static string INV_Shell_Navigation_ConfirmEmission => ResourceManager.GetString("INV_Shell_Navigation_ConfirmEmission", resourceCulture) ?? "INV_Shell_Navigation_ConfirmEmission";
 
-    public static string Settings_Status_PowerBiSaved => ResourceManager.GetString("Settings.Status.PowerBiSaved", resourceCulture) ?? "Settings.Status.PowerBiSaved";
+    public static string INV_Shell_Navigation_ConfirmRequest => ResourceManager.GetString("INV_Shell_Navigation_ConfirmRequest", resourceCulture) ?? "INV_Shell_Navigation_ConfirmRequest";
 
-    public static string Settings_Status_SaveError => ResourceManager.GetString("Settings.Status.SaveError", resourceCulture) ?? "Settings.Status.SaveError";
+    public static string INV_Shell_Navigation_ConnectionSettings => ResourceManager.GetString("INV_Shell_Navigation_ConnectionSettings", resourceCulture) ?? "INV_Shell_Navigation_ConnectionSettings";
 
-    public static string Settings_Status_Saved => ResourceManager.GetString("Settings.Status.Saved", resourceCulture) ?? "Settings.Status.Saved";
+    public static string INV_Shell_Navigation_InvoicePlan => ResourceManager.GetString("INV_Shell_Navigation_InvoicePlan", resourceCulture) ?? "INV_Shell_Navigation_InvoicePlan";
 
-    public static string Settings_Status_TestSuccess => ResourceManager.GetString("Settings.Status.TestSuccess", resourceCulture) ?? "Settings.Status.TestSuccess";
-
-    public static string Settings_Status_Testing => ResourceManager.GetString("Settings.Status.Testing", resourceCulture) ?? "Settings.Status.Testing";
-
-    public static string Settings_Tab_ApplicationData => ResourceManager.GetString("Settings.Tab.ApplicationData", resourceCulture) ?? "Settings.Tab.ApplicationData";
-
-    public static string Settings_Tab_Connection => ResourceManager.GetString("Settings.Tab.Connection", resourceCulture) ?? "Settings.Tab.Connection";
-
-    public static string Settings_Tab_ConnectionPackages => ResourceManager.GetString("Settings.Tab.ConnectionPackages", resourceCulture) ?? "Settings.Tab.ConnectionPackages";
-
-    public static string Settings_Tab_Localization => ResourceManager.GetString("Settings.Tab.Localization", resourceCulture) ?? "Settings.Tab.Localization";
-
-    public static string Settings_Tab_PowerBi => ResourceManager.GetString("Settings.Tab.PowerBi", resourceCulture) ?? "Settings.Tab.PowerBi";
-
-    public static string Settings_Toast_ConnectionFailed => ResourceManager.GetString("Settings.Toast.ConnectionFailed", resourceCulture) ?? "Settings.Toast.ConnectionFailed";
-
-    public static string Settings_Toast_ConnectionSaved => ResourceManager.GetString("Settings.Toast.ConnectionSaved", resourceCulture) ?? "Settings.Toast.ConnectionSaved";
-
-    public static string Settings_Toast_LocalizationFailed => ResourceManager.GetString("Settings.Toast.LocalizationFailed", resourceCulture) ?? "Settings.Toast.LocalizationFailed";
-
-    public static string Settings_Toast_LocalizationSaved => ResourceManager.GetString("Settings.Toast.LocalizationSaved", resourceCulture) ?? "Settings.Toast.LocalizationSaved";
-
-    public static string Settings_Toast_PowerBiFailed => ResourceManager.GetString("Settings.Toast.PowerBiFailed", resourceCulture) ?? "Settings.Toast.PowerBiFailed";
-
-    public static string Settings_Toast_PowerBiSaved => ResourceManager.GetString("Settings.Toast.PowerBiSaved", resourceCulture) ?? "Settings.Toast.PowerBiSaved";
-
-    public static string Settings_Validation_ExportPassphraseMismatch => ResourceManager.GetString("Settings.Validation.ExportPassphraseMismatch", resourceCulture) ?? "Settings.Validation.ExportPassphraseMismatch";
-
-    public static string Settings_Validation_ExportPassphraseRequired => ResourceManager.GetString("Settings.Validation.ExportPassphraseRequired", resourceCulture) ?? "Settings.Validation.ExportPassphraseRequired";
-
-    public static string Settings_Validation_ImportPackageRequired => ResourceManager.GetString("Settings.Validation.ImportPackageRequired", resourceCulture) ?? "Settings.Validation.ImportPackageRequired";
-
-    public static string Settings_Validation_ImportPassphraseRequired => ResourceManager.GetString("Settings.Validation.ImportPassphraseRequired", resourceCulture) ?? "Settings.Validation.ImportPassphraseRequired";
-
-    public static string Shared_Common_Button_Cancel => ResourceManager.GetString("Shared.Common.Button.Cancel", resourceCulture) ?? "Shared.Common.Button.Cancel";
-
-    public static string Shared_Common_Button_Save => ResourceManager.GetString("Shared.Common.Button.Save", resourceCulture) ?? "Shared.Common.Button.Save";
-
-    public static string Shell_Brand_Primary => ResourceManager.GetString("Shell.Brand.Primary", resourceCulture) ?? "Shell.Brand.Primary";
-
-    public static string Shell_Navigation_ConfirmEmission => ResourceManager.GetString("Shell.Navigation.ConfirmEmission", resourceCulture) ?? "Shell.Navigation.ConfirmEmission";
-
-    public static string Shell_Navigation_ConfirmRequest => ResourceManager.GetString("Shell.Navigation.ConfirmRequest", resourceCulture) ?? "Shell.Navigation.ConfirmRequest";
-
-    public static string Shell_Navigation_ConnectionSettings => ResourceManager.GetString("Shell.Navigation.ConnectionSettings", resourceCulture) ?? "Shell.Navigation.ConnectionSettings";
-
-    public static string Shell_Navigation_InvoicePlan => ResourceManager.GetString("Shell.Navigation.InvoicePlan", resourceCulture) ?? "Shell.Navigation.InvoicePlan";
-
-    public static string Shell_Title_FinancialControl => ResourceManager.GetString("Shell.Title.FinancialControl", resourceCulture) ?? "Shell.Title.FinancialControl";
-
-    public static string Shell_Title_InvoicePlanner => ResourceManager.GetString("Shell.Title.InvoicePlanner", resourceCulture) ?? "Shell.Title.InvoicePlanner";
-
-    public static string Tasks_Button_Generate => ResourceManager.GetString("Tasks.Button.Generate", resourceCulture) ?? "Tasks.Button.Generate";
-
-    public static string Tasks_Button_GenerateRetainTemplate => ResourceManager.GetString("Tasks.Button.GenerateRetainTemplate", resourceCulture) ?? "Tasks.Button.GenerateRetainTemplate";
-
-    public static string Tasks_Description_Primary => ResourceManager.GetString("Tasks.Description.Primary", resourceCulture) ?? "Tasks.Description.Primary";
-
-    public static string Tasks_Dialog_GenerateRetainTemplateTitle => ResourceManager.GetString("Tasks.Dialog.GenerateRetainTemplateTitle", resourceCulture) ?? "Tasks.Dialog.GenerateRetainTemplateTitle";
-
-    public static string Tasks_Dialog_SaveRetainTemplateTitle => ResourceManager.GetString("Tasks.Dialog.SaveRetainTemplateTitle", resourceCulture) ?? "Tasks.Dialog.SaveRetainTemplateTitle";
-
-    public static string Tasks_Dialog_SaveTitle => ResourceManager.GetString("Tasks.Dialog.SaveTitle", resourceCulture) ?? "Tasks.Dialog.SaveTitle";
-
-    public static string Tasks_Status_Cancelled => ResourceManager.GetString("Tasks.Status.Cancelled", resourceCulture) ?? "Tasks.Status.Cancelled";
-
-    public static string Tasks_Status_FileSaved => ResourceManager.GetString("Tasks.Status.FileSaved", resourceCulture) ?? "Tasks.Status.FileSaved";
-
-    public static string Tasks_Status_GenerationFailure => ResourceManager.GetString("Tasks.Status.GenerationFailure", resourceCulture) ?? "Tasks.Status.GenerationFailure";
-
-    public static string Tasks_Status_RetainTemplateCancelled => ResourceManager.GetString("Tasks.Status.RetainTemplateCancelled", resourceCulture) ?? "Tasks.Status.RetainTemplateCancelled";
-
-    public static string Tasks_Status_RetainTemplateFailure => ResourceManager.GetString("Tasks.Status.RetainTemplateFailure", resourceCulture) ?? "Tasks.Status.RetainTemplateFailure";
-
-    public static string Tasks_Status_RetainTemplateSuccess => ResourceManager.GetString("Tasks.Status.RetainTemplateSuccess", resourceCulture) ?? "Tasks.Status.RetainTemplateSuccess";
-
-    public static string Tasks_Status_TimeZoneMissing => ResourceManager.GetString("Tasks.Status.TimeZoneMissing", resourceCulture) ?? "Tasks.Status.TimeZoneMissing";
-
-    public static string Tasks_Title_Primary => ResourceManager.GetString("Tasks.Title.Primary", resourceCulture) ?? "Tasks.Title.Primary";
-
-    public static string TotalAmountInvalid => ResourceManager.GetString("TotalAmountInvalid", resourceCulture) ?? "TotalAmountInvalid";
-
-    public static string TotalPercentageInvalid => ResourceManager.GetString("TotalPercentageInvalid", resourceCulture) ?? "TotalPercentageInvalid";
+    public static string INV_Shell_Title_InvoicePlanner => ResourceManager.GetString("INV_Shell_Title_InvoicePlanner", resourceCulture) ?? "INV_Shell_Title_InvoicePlanner";
 
 }

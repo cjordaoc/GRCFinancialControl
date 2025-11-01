@@ -12,7 +12,7 @@ public static class ConnectionErrorMessageFormatter
         if (exception is InvalidOperationException invalidOperation &&
             invalidOperation.Message.Contains(MissingProviderFragment, StringComparison.OrdinalIgnoreCase))
         {
-            return LocalizationRegistry.Get("Connection.Message.MissingSettings");
+            return LocalizationRegistry.Get("INV_Connection_Message_MissingSettings");
         }
 
         if (exception.InnerException is not null)

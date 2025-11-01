@@ -42,7 +42,7 @@ When special spacing is required, add it to the shared resource dictionaries rat
 ## 6. Localization Usage
 - Use `xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"` and `Text="{loc:Loc Key=...}"`.
 - Keys must map to centralized resource files (`Strings.resx`, `Strings.pt-BR.resx`, `Strings.en-US.resx`) once consolidated in Stage 3.
-- Simplify keys to descriptive nouns or verbs (e.g., `Common.Button.Save`). Avoid suffixes like `_Text` or `_Label` unless contextually necessary.
+- Simplify keys to descriptive nouns or verbs (e.g., `Global_Button_Save`). Avoid suffixes like `_Text` or `_Label` unless contextually necessary.
 - For formatted strings, rely on `LocalizationRegistry.Format("Key", args...)` in ViewModels.
 - When formatting numbers, currencies, or dates, read culture info from `CultureInfo.CurrentUICulture` so pt-BR and en-US remain accurate.
 
@@ -64,7 +64,7 @@ When special spacing is required, add it to the shared resource dictionaries rat
 - Use `MinWidth` tokens from shared resources for ComboBox and DatePicker controls.
 
 ### Tabs & Navigation
-- Tab headers follow the `TabItem` style defined in `App.Presentation/Styles/Styles.xaml`. Use shared localization keys for tab text (e.g., `Common.Tab.General`).
+- Tab headers follow the `TabItem` style defined in `App.Presentation/Styles/Styles.xaml`. Use shared localization keys for tab text, defaulting to the `Global_` prefix when reused across applications and app-prefixed keys such as `FINC_Settings_Tab_Localization` only when the copy is finance-specific.
 - Sidebars use `ToggleButton` with `NavButton` style and share spacing tokens for icon/text alignment.
 
 #### Sidebar Collapse Behavior

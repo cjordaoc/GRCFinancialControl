@@ -18,7 +18,7 @@
                       ColumnSpacing="{StaticResource Space16}">
                     <TextBlock Grid.Row="0"
                                Grid.Column="0"
-                               Text="{loc:Loc Key=Admin.ManagerAssignments.Label.Engagement}"/>
+                               Text="{loc:Loc Key=FINC_Admin_ManagerAssignments_Label_Engagement}"/>
                     <ComboBox Grid.Row="0"
                               Grid.Column="1"
                               ItemsSource="{Binding Engagements}"
@@ -29,7 +29,7 @@
 
                     <TextBlock Grid.Row="1"
                                Grid.Column="0"
-                               Text="{loc:Loc Key=Admin.ManagerAssignments.Label.Manager}"/>
+                               Text="{loc:Loc Key=FINC_Admin_ManagerAssignments_Label_Manager}"/>
                     <ComboBox Grid.Row="1"
                               Grid.Column="1"
                               ItemsSource="{Binding Managers}"
@@ -51,12 +51,12 @@
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     Spacing="{StaticResource Space12}">
-            <Button Content="{loc:Loc Key=Common.Button.Save}"
+            <Button Content="{loc:Loc Key=Global_Button_Save}"
                     Command="{Binding SaveCommand}"
                     IsEnabled="{Binding AllowEditing}"
                     IsDefault="{Binding AllowEditing}"
                     MinWidth="120" />
-            <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+            <Button Content="{loc:Loc Key=Global_Button_Cancel}"
                     Command="{Binding CloseCommand}"
                     IsCancel="True"
                     MinWidth="120" />

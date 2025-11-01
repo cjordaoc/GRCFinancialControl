@@ -10,41 +10,41 @@
     <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
             <StackPanel Spacing="{StaticResource Space16}">
-                <TextBlock Text="{loc:Loc Key=Admin.Papds.Title.Editor}" Classes="TitleSmall"/>
+                <TextBlock Text="{loc:Loc Key=FINC_Admin_Papds_Title_Editor}" Classes="TitleSmall"/>
                 <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="{StaticResource Space12}" ColumnSpacing="{StaticResource Space16}">
                     <TextBlock Grid.Row="0"
                                Grid.Column="0"
-                               Text="{loc:Loc Key=Admin.Papds.Placeholder.Name}"
+                               Text="{loc:Loc Key=FINC_Admin_Papds_Placeholder_Name}"
                                VerticalAlignment="Center"/>
                     <TextBox Grid.Row="0"
                              Grid.Column="1"
                              Text="{Binding Name}"
-                             Watermark="{loc:Loc Key=Admin.Papds.Placeholder.Name}"
+                             Watermark="{loc:Loc Key=FINC_Admin_Papds_Placeholder_Name}"
                              IsReadOnly="{Binding IsReadOnlyMode}"
                              HorizontalAlignment="Stretch"
                              MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
 
                     <TextBlock Grid.Row="1"
                                Grid.Column="0"
-                               Text="{loc:Loc Key=Admin.Papds.Placeholder.Level}"
+                               Text="{loc:Loc Key=FINC_Admin_Papds_Placeholder_Level}"
                                VerticalAlignment="Center"/>
                     <ComboBox Grid.Row="1"
                               Grid.Column="1"
                               ItemsSource="{Binding LevelOptions}"
                               SelectedItem="{Binding Level}"
-                              PlaceholderText="{loc:Loc Key=Admin.Papds.Placeholder.Level}"
+                              PlaceholderText="{loc:Loc Key=FINC_Admin_Papds_Placeholder_Level}"
                               IsEnabled="{Binding AllowEditing}"
                               HorizontalAlignment="Stretch"
                               MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
 
                     <TextBlock Grid.Row="2"
                                Grid.Column="0"
-                               Text="{loc:Loc Key=Admin.Papds.Placeholder.WindowsLogin}"
+                               Text="{loc:Loc Key=FINC_Admin_Papds_Placeholder_WindowsLogin}"
                                VerticalAlignment="Center"/>
                     <TextBox Grid.Row="2"
                              Grid.Column="1"
                              Text="{Binding WindowsLogin}"
-                             Watermark="{loc:Loc Key=Admin.Papds.Placeholder.WindowsLogin}"
+                             Watermark="{loc:Loc Key=FINC_Admin_Papds_Placeholder_WindowsLogin}"
                              IsReadOnly="{Binding IsReadOnlyMode}"
                              HorizontalAlignment="Stretch"
                              MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
@@ -55,12 +55,12 @@
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     Spacing="{StaticResource Space12}">
-            <Button Content="{loc:Loc Key=Common.Button.Save}"
+            <Button Content="{loc:Loc Key=Global_Button_Save}"
                     Command="{Binding SaveCommand}"
                     IsEnabled="{Binding AllowEditing}"
                     IsDefault="{Binding AllowEditing}"
                     MinWidth="120" />
-            <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+            <Button Content="{loc:Loc Key=Global_Button_Cancel}"
                     Command="{Binding CloseCommand}"
                     IsCancel="True"
                     MinWidth="120" />

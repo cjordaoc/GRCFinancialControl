@@ -11,8 +11,8 @@
     <Grid RowDefinitions="Auto,*,Auto,Auto,Auto" RowSpacing="{StaticResource Spacing16}">
         <Border Grid.Row="0" Classes="Card" Padding="{StaticResource SpaceThickness24}" Margin="{StaticResource MarginInsetTop}">
             <StackPanel Spacing="{StaticResource Spacing8}">
-                <TextBlock Classes="TitleLarge" Text="{loc:Loc Key=Home.Title.Primary}" />
-                <TextBlock Text="{loc:Loc Key=Home.Description.Primary}" />
+                <TextBlock Classes="TitleLarge" Text="{loc:Loc Key=FINC_Home_Title.Primary}" />
+                <TextBlock Text="{loc:Loc Key=INV_Home_Description_Primary}" />
                 <TextBlock Text="{Binding WelcomeMessage}" />
             </StackPanel>
         </Border>

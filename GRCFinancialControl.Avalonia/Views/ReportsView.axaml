@@ -17,10 +17,10 @@
                         HorizontalAlignment="Right"
                         Spacing="{StaticResource Space8}"
                         IsEnabled="{Binding IsRefreshing, Converter={StaticResource InverseBooleanConverter}}">
-                <Button Content="{loc:Loc Key=Reports.Button.OpenBrowser}"
+                <Button Content="{loc:Loc Key=FINC_Reports_Button_OpenBrowser}"
                         Command="{Binding OpenInBrowserCommand}"
                         IsEnabled="{Binding HasDashboard}"/>
-                <Button Content="{loc:Loc Key=Reports.Button.Refresh}"
+                <Button Content="{loc:Loc Key=FINC_Reports_Button_Refresh}"
                         Command="{Binding RefreshCommand}"
                         IsEnabled="{Binding IsRefreshing, Converter={StaticResource InverseBooleanConverter}}"/>
             </StackPanel>
@@ -37,9 +37,9 @@
                 CornerRadius="{StaticResource CornerRadiusSmall}"
                 IsVisible="{Binding DashboardUri, Converter={x:Static converters:ObjectConverters.IsNull}}">
             <StackPanel Spacing="{StaticResource Space6}">
-                <TextBlock Text="{loc:Loc Key=Reports.Empty.Title}" Classes="TitleMedium"/>
-                <TextBlock Text="{loc:Loc Key=Reports.Empty.Description}" TextWrapping="Wrap"/>
-                <TextBlock Text="{loc:Loc Key=Reports.Label.Status}" FontWeight="{StaticResource FontWeightSemiBold}"/>
+                <TextBlock Text="{loc:Loc Key=FINC_Reports_Empty_Title}" Classes="TitleMedium"/>
+                <TextBlock Text="{loc:Loc Key=FINC_Reports_Empty_Description}" TextWrapping="Wrap"/>
+                <TextBlock Text="{loc:Loc Key=FINC_Reports_Label_Status}" FontWeight="{StaticResource FontWeightSemiBold}"/>
                 <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
             </StackPanel>
         </Border>

@@ -22,10 +22,10 @@
         </StackPanel>
 
         <StackPanel Orientation="Horizontal" Spacing="{StaticResource Spacing8}">
-            <Button Content="{loc:Loc Key=Common.Button.Add}" Command="{Binding AddCommand}"/>
-            <Button Content="{loc:Loc Key=Common.Button.Edit}" Command="{Binding EditCommand}"/>
-            <Button Content="{loc:Loc Key=Common.Button.View}" Command="{Binding ViewCommand}"/>
-            <Button Content="{loc:Loc Key=Common.Button.Delete}" Command="{Binding DeleteCommand}"/>
+            <Button Content="{loc:Loc Key=FINC_Button_Add}" Command="{Binding AddCommand}"/>
+            <Button Content="{loc:Loc Key=FINC_Button_Edit}" Command="{Binding EditCommand}"/>
+            <Button Content="{loc:Loc Key=FINC_Button_View}" Command="{Binding ViewCommand}"/>
+            <Button Content="{loc:Loc Key=FINC_Button_Delete}" Command="{Binding DeleteCommand}"/>
         </StackPanel>
 
         <DataGrid ItemsSource="{Binding Assignments}"
@@ -36,7 +36,7 @@
                   GridLinesVisibility="All"
                   Height="300">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="{loc:Loc Key=Admin.PapdAssignments.Header.Engagement}" Binding="{Binding EngagementDisplay}" Width="2*"/>
+                <DataGridTextColumn Header="{loc:Loc Key=FINC_Admin_PapdAssignments_Header_Engagement}" Binding="{Binding EngagementDisplay}" Width="2*"/>
             </DataGrid.Columns>
         </DataGrid>
     </StackPanel>

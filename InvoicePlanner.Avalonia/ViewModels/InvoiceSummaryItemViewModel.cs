@@ -80,12 +80,12 @@ public class InvoiceSummaryItemViewModel : ObservableObject
     {
         return status switch
         {
-            InvoiceItemStatus.Planned => LocalizationRegistry.Get("Invoice.Status.Planned"),
-            InvoiceItemStatus.Requested => LocalizationRegistry.Get("Invoice.Status.Requested"),
-            InvoiceItemStatus.Emitted => LocalizationRegistry.Get("Invoice.Status.Emitted"),
-            InvoiceItemStatus.Closed => LocalizationRegistry.Get("Invoice.Status.Closed"),
-            InvoiceItemStatus.Canceled => LocalizationRegistry.Get("Invoice.Status.Canceled"),
-            InvoiceItemStatus.Reissued => LocalizationRegistry.Get("Invoice.Status.Reissued"),
+            InvoiceItemStatus.Planned => LocalizationRegistry.Get("INV_Invoice_Status_Planned"),
+            InvoiceItemStatus.Requested => LocalizationRegistry.Get("INV_Invoice_Status_Requested"),
+            InvoiceItemStatus.Emitted => LocalizationRegistry.Get("INV_Invoice_Status_Emitted"),
+            InvoiceItemStatus.Closed => LocalizationRegistry.Get("INV_Invoice_Status_Closed"),
+            InvoiceItemStatus.Canceled => LocalizationRegistry.Get("INV_Invoice_Status_Canceled"),
+            InvoiceItemStatus.Reissued => LocalizationRegistry.Get("INV_Invoice_Status_Reissued"),
             _ => status.ToString(),
         };
     }

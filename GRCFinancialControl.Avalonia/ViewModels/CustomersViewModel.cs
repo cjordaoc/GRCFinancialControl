@@ -68,16 +68,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             try
             {
                 await _customerService.DeleteAsync(customer.Id);
-                ToastService.ShowSuccess("Customers.Toast.DeleteSuccess", customer.Name);
+                ToastService.ShowSuccess("FINC_Customers_Toast_DeleteSuccess", customer.Name);
                 Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (InvalidOperationException ex)
             {
-                ToastService.ShowWarning("Customers.Toast.OperationFailed", ex.Message);
+                ToastService.ShowWarning("FINC_Customers_Toast_OperationFailed", ex.Message);
             }
             catch (Exception ex)
             {
-                ToastService.ShowError("Customers.Toast.OperationFailed", ex.Message);
+                ToastService.ShowError("FINC_Customers_Toast_OperationFailed", ex.Message);
             }
         }
 
@@ -87,23 +87,23 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (customer is null) return;
 
             var result = await _dialogService.ShowConfirmationAsync(
-                LocalizationRegistry.Get("Common.Dialog.DeleteData.Title"),
-                LocalizationRegistry.Format("Common.Dialog.DeleteData.Message", customer.Name));
+                LocalizationRegistry.Get("FINC_Dialog_DeleteData_Title"),
+                LocalizationRegistry.Format("FINC_Dialog_DeleteData_Message", customer.Name));
             if (result)
             {
                 try
                 {
                     await _customerService.DeleteDataAsync(customer.Id);
-                    ToastService.ShowSuccess("Customers.Toast.ReverseSuccess", customer.Name);
+                    ToastService.ShowSuccess("FINC_Customers_Toast_ReverseSuccess", customer.Name);
                     Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
                 }
                 catch (InvalidOperationException ex)
                 {
-                    ToastService.ShowWarning("Customers.Toast.OperationFailed", ex.Message);
+                    ToastService.ShowWarning("FINC_Customers_Toast_OperationFailed", ex.Message);
                 }
                 catch (Exception ex)
                 {
-                    ToastService.ShowError("Customers.Toast.OperationFailed", ex.Message);
+                    ToastService.ShowError("FINC_Customers_Toast_OperationFailed", ex.Message);
                 }
             }
         }

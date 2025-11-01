@@ -41,19 +41,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public string? ClosingPeriodSelectionWarning => HasClosingPeriodSelected
             ? null
-            : LocalizationRegistry.Get("Import.Warning.SelectClosingPeriod");
+            : LocalizationRegistry.Get("FINC_Import_Warning_SelectClosingPeriod");
 
         public string? FileTypeDisplayName => FileType switch
         {
-            BudgetType => LocalizationRegistry.Get("Import.FileType.Budget"),
-            FullManagementType => LocalizationRegistry.Get("Import.FileType.FullManagement"),
-            AllocationPlanningType => LocalizationRegistry.Get("Import.FileType.AllocationPlanning"),
+            BudgetType => LocalizationRegistry.Get("FINC_Import_FileType_Budget"),
+            FullManagementType => LocalizationRegistry.Get("FINC_Import_FileType_FullManagement"),
+            AllocationPlanningType => LocalizationRegistry.Get("FINC_Import_FileType_AllocationPlanning"),
             _ => FileType
         };
 
         public string? SelectedImportTitle => string.IsNullOrWhiteSpace(FileTypeDisplayName)
             ? null
-            : LocalizationRegistry.Format("Import.Section.Selected.TitleFormat", FileTypeDisplayName);
+            : LocalizationRegistry.Format("FINC_Import_Section_Selected_TitleFormat", FileTypeDisplayName);
 
         public ImportViewModel(FilePickerService filePickerService,
                                IImportService importService,
@@ -93,7 +93,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             if (string.Equals(fileType, FullManagementType, StringComparison.Ordinal) && !HasClosingPeriodSelected)
             {
-                StatusMessage = LocalizationRegistry.Get("Import.Warning.SelectClosingPeriod");
+                StatusMessage = LocalizationRegistry.Get("FINC_Import_Warning_SelectClosingPeriod");
                 return;
             }
 
@@ -121,7 +121,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
 
             var displayName = FileTypeDisplayName ?? FileType ?? string.Empty;
-            _loggingService.LogInfo(LocalizationRegistry.Format("Import.Status.InProgress", displayName));
+            _loggingService.LogInfo(LocalizationRegistry.Format("FINC_Import_Status_InProgress", displayName));
 
             string? resultSummary = null;
             FullManagementDataImportResult? managementResult = null;
@@ -143,7 +143,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                         resultSummary = await Task.Run(() => _importService.ImportAllocationPlanningAsync(filePath));
                         break;
                     default:
-                        resultSummary = LocalizationRegistry.Get("Import.Status.InvalidType");
+                        resultSummary = LocalizationRegistry.Get("FINC_Import_Status_InvalidType");
                         break;
                 }
 
@@ -154,7 +154,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
                 if (managementResult?.S4MetadataRefreshes > 0)
                 {
-                    ToastService.ShowSuccess("Import.Toast.S4MetadataSuccess");
+                    ToastService.ShowSuccess("FINC_Import_Toast_S4MetadataSuccess");
                 }
             }
             catch (ImportWarningException warning)
@@ -163,7 +163,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
             catch (Exception ex)
             {
-                _loggingService.LogError(LocalizationRegistry.Format("Import.Status.Error", ex.Message));
+                _loggingService.LogError(LocalizationRegistry.Format("FINC_Import_Status_Error", ex.Message));
             }
             finally
             {
