@@ -5,7 +5,7 @@ using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using InvoicePlanner.Avalonia.Messages;
+using GRC.Shared.UI.Messages;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
@@ -89,7 +89,7 @@ public partial class InvoiceLinesEditorViewModel : ViewModelBase
     private void RefreshGrid()
     {
         OnPropertyChanged(nameof(Items));
-        Messenger.Send(new RefreshInvoiceLinesGridMessage());
+        Messenger.Send(new RefreshViewMessage(RefreshTargets.InvoiceLinesGrid));
     }
 
     private void OnParentPropertyChanged(object? sender, PropertyChangedEventArgs e)

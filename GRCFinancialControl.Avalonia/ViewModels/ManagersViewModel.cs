@@ -4,7 +4,7 @@ using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using GRCFinancialControl.Avalonia.Messages;
+using GRC.Shared.UI.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
@@ -39,7 +39,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             var editorViewModel = new ManagerEditorViewModel(new Manager(), _managerService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
-            Messenger.Send(new RefreshDataMessage());
+            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanModifySelection))]
@@ -52,7 +52,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             var editorViewModel = new ManagerEditorViewModel(manager, _managerService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
-            Messenger.Send(new RefreshDataMessage());
+            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanModifySelection))]
@@ -79,7 +79,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 await _managerService.DeleteAsync(manager.Id);
                 ToastService.ShowSuccess("Managers.Toast.DeleteSuccess", manager.Name);
-                Messenger.Send(new RefreshDataMessage());
+                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (System.Exception ex)
             {

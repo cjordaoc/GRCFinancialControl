@@ -6,7 +6,7 @@ using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using GRCFinancialControl.Avalonia.Messages;
+using GRC.Shared.UI.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
@@ -46,7 +46,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var editor = new RankMappingEditorViewModel(new RankMapping(), _rankMappingService, Messenger);
             var title = LocalizationRegistry.Get("MasterData.RankMappings.Dialog.AddTitle");
             await _dialogService.ShowDialogAsync(editor, title).ConfigureAwait(false);
-            Messenger.Send(new RefreshDataMessage());
+            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanModify))]
@@ -60,7 +60,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var editor = new RankMappingEditorViewModel(rankMapping, _rankMappingService, Messenger);
             var title = LocalizationRegistry.Get("MasterData.RankMappings.Dialog.EditTitle");
             await _dialogService.ShowDialogAsync(editor, title).ConfigureAwait(false);
-            Messenger.Send(new RefreshDataMessage());
+            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanModify))]
@@ -78,7 +78,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     ? rankMapping.RawRank
                     : rankMapping.NormalizedRank;
                 ToastService.ShowSuccess("RankMappings.Toast.DeleteSuccess", displayName);
-                Messenger.Send(new RefreshDataMessage());
+                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (System.Exception ex)
             {

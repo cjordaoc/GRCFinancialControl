@@ -5,7 +5,7 @@ using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using InvoicePlanner.Avalonia.Messages;
+using GRC.Shared.UI.Messages;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 

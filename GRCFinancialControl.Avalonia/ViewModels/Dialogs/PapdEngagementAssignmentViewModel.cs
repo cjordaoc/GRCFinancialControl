@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
+using GRC.Shared.UI.Messages;
 
 namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
 {

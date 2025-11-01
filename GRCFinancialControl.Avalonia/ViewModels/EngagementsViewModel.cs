@@ -6,7 +6,7 @@ using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using GRCFinancialControl.Avalonia.Messages;
+using GRC.Shared.UI.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
@@ -45,7 +45,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             var editorViewModel = new EngagementEditorViewModel(new Engagement(), _engagementService, _customerService, _closingPeriodService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
-            Messenger.Send(new RefreshDataMessage());
+            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanEdit))]
@@ -60,7 +60,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             var editorViewModel = new EngagementEditorViewModel(fullEngagement, _engagementService, _customerService, _closingPeriodService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
-            Messenger.Send(new RefreshDataMessage());
+            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanView))]
@@ -86,7 +86,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 await _engagementService.DeleteAsync(engagement.Id);
                 ToastService.ShowSuccess("Engagements.Toast.DeleteSuccess", engagement.EngagementId);
-                Messenger.Send(new RefreshDataMessage());
+                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (InvalidOperationException ex)
             {
@@ -112,7 +112,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 {
                     await _engagementService.DeleteDataAsync(engagement.Id);
                     ToastService.ShowSuccess("Engagements.Toast.ReverseSuccess", engagement.EngagementId);
-                    Messenger.Send(new RefreshDataMessage());
+                    Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
                 }
                 catch (InvalidOperationException ex)
                 {

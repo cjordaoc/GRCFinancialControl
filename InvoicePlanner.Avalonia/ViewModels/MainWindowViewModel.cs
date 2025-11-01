@@ -7,7 +7,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Core.Configuration;
 using GRCFinancialControl.Persistence.Services.Interfaces;
-using InvoicePlanner.Avalonia.Messages;
 using Microsoft.Extensions.Logging;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
@@ -24,7 +23,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private string? _lastPersistedMenuKey;
 
     [ObservableProperty]
-    private string title = LocalizationRegistry.Get("Shell.Title.Application");
+    private string title = LocalizationRegistry.Get("Shell.Title.InvoicePlanner");
 
     [ObservableProperty]
     private ViewModelBase currentViewModel;

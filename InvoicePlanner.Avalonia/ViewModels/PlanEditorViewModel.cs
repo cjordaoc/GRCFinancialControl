@@ -9,7 +9,6 @@ using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using InvoicePlanner.Avalonia.Messages;
 using InvoicePlanner.Avalonia.Services;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
@@ -18,6 +17,7 @@ using Invoices.Core.Validation;
 using Invoices.Data.Repositories;
 using Invoices.Core.Utilities;
 using Microsoft.Extensions.Logging;
+using GRC.Shared.UI.Messages;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
