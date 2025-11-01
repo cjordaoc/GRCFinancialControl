@@ -1,0 +1,17 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <x:Double x:Key="RowHeightCompact">32</x:Double>
+  <x:Double x:Key="RowHeightStandard">40</x:Double>
+  <x:Double x:Key="RowHeightLarge">48</x:Double>
+
+  <x:Double x:Key="IconSizeSmall">16</x:Double>
+  <x:Double x:Key="IconSizeMedium">24</x:Double>
+  <x:Double x:Key="IconSizeLarge">32</x:Double>
+
+  <x:Double x:Key="InputHeightCompact">28</x:Double>
+  <x:Double x:Key="InputHeightStandard">36</x:Double>
+  <x:Double x:Key="InputHeightLarge">44</x:Double>
+
+  <x:Int32 x:Key="AnimFast">100</x:Int32>
+  <x:Int32 x:Key="AnimMedium">250</x:Int32>
+  <x:Int32 x:Key="AnimSlow">500</x:Int32>
+</ResourceDictionary>

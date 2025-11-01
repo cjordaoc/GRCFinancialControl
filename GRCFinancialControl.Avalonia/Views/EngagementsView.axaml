@@ -11,8 +11,8 @@
     <UserControl.Resources>
         <appConv:CurrencyDisplayConverter x:Key="CurrencyDisplayConverter"/>
     </UserControl.Resources>
-    <Grid RowDefinitions="Auto,*,Auto" Margin="10">
-        <TextBlock Text="{loc:Loc Key=Admin.Engagements.Title.List}" FontSize="24" FontWeight="Bold" Margin="0,0,0,10"/>
+    <Grid RowDefinitions="Auto,*,Auto" Margin="{StaticResource SpaceThickness10}">
+        <TextBlock Text="{loc:Loc Key=Admin.Engagements.Title.List}" Classes="TitleLarge" Margin="{StaticResource MarginBottomSmall}"/>
 
         <DataGrid Grid.Row="1"
                   ItemsSource="{Binding Engagements}"
@@ -65,7 +65,7 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="5" Margin="0,10,0,0">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="{StaticResource Spacing4}" Margin="{StaticResource MarginTopSmall}">
             <Button Content="Add New" Command="{Binding AddCommand}"/>
             <Button Content="View" Command="{Binding ViewCommand}" CommandParameter="{Binding SelectedEngagement}"/>
             <Button Content="Edit" Command="{Binding EditCommand}" CommandParameter="{Binding SelectedEngagement}"/>

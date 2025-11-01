@@ -11,8 +11,7 @@
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
             <StackPanel Spacing="{StaticResource Space16}">
                 <TextBlock Text="{loc:Loc Key=MasterData.RankMappings.Editor.Title}"
-                           FontSize="18"
-                           FontWeight="Bold"/>
+                           Classes="TitleSmall"/>
                 <Grid ColumnDefinitions="Auto,*"
                       RowDefinitions="Auto,Auto,Auto,Auto"
                       RowSpacing="{StaticResource Space12}"

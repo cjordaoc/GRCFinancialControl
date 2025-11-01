@@ -32,27 +32,26 @@
             </ExperimentalAcrylicBorder.Material>
         </ExperimentalAcrylicBorder>
 
-        <Grid ColumnDefinitions="240,*" Margin="16">
+        <Grid ColumnDefinitions="240,*" Margin="{StaticResource SpaceThickness16}">
             <Border Grid.Column="0"
-                    Padding="16"
+                    Padding="{StaticResource SpaceThickness16}"
                     Background="{StaticResource BrushSurfaceVariant}"
-                    CornerRadius="{StaticResource CornerRadiusMD}">
-                <StackPanel Spacing="12">
+                    CornerRadius="{StaticResource CornerRadiusMedium}">
+                <StackPanel Spacing="{StaticResource Spacing12}">
                     <TextBlock Text="{loc:Loc Key=Shell.Brand.Primary}"
-                               FontSize="{StaticResource FontSizeXL}"
-                               FontWeight="Bold"
+                               Classes="TitleMedium"
                                Foreground="{StaticResource BrushOnSurface}"/>
                     <ItemsControl ItemsSource="{Binding NavigationItems}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:NavigationItem">
-                                <StackPanel Spacing="4">
+                                <StackPanel Spacing="{StaticResource Spacing4}">
                                     <ToggleButton Content="{Binding Title}"
                                                   Command="{Binding DataContext.SelectNavigationItemCommand, ElementName=MainWindowRoot}"
                                                   CommandParameter="{Binding}"
                                                   IsChecked="{Binding IsSelected, Mode=TwoWay}"
                                                   Classes="NavButton"/>
                                     <ItemsControl ItemsSource="{Binding Children}"
-                                                  Margin="16,0,0,0"
+                                                  Margin="{StaticResource MarginLeftMedium}"
                                                   IsVisible="{Binding HasChildren}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:NavigationItem">
@@ -61,7 +60,7 @@
                                                               CommandParameter="{Binding}"
                                                               IsChecked="{Binding IsSelected, Mode=TwoWay}"
                                                               Classes="NavButton"
-                                                              Margin="0,4,0,0"/>
+                                                              Margin="{StaticResource MarginTopXSmall}"/>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
@@ -74,20 +73,20 @@
 
             <Border Grid.Column="1"
                     Classes="Card"
-                    Padding="0"
-                    Margin="16,0,0,0">
+                    Padding="{StaticResource SpaceThickness0}"
+                    Margin="{StaticResource MarginLeftMedium}">
                 <ContentControl Content="{Binding ActiveView}"
                                 IsVisible="{Binding ActiveView, Converter={x:Static converters:ObjectConverters.IsNotNull}}"/>
             </Border>
         </Grid>
 
-        <ItemsControl Margin="0,32,32,0"
+        <ItemsControl Margin="{StaticResource MarginCallout}"
                       HorizontalAlignment="Right"
                       VerticalAlignment="Top"
                       ItemsSource="{x:Static services:ToastService.Notifications}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <StackPanel Spacing="12"/>
+                    <StackPanel Spacing="{StaticResource Spacing12}"/>
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>

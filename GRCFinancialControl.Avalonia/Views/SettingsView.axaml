@@ -10,15 +10,15 @@
              x:Class="GRCFinancialControl.Avalonia.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
     <Grid RowDefinitions="*,Auto">
-        <TabControl Margin="24">
+        <TabControl Margin="{StaticResource SpaceThickness24}">
             <TabItem Header="{loc:Loc Key=Settings.Tab.Localization}">
                 <Grid RowDefinitions="*,Auto">
                     <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-                        <StackPanel Margin="16" Spacing="16">
-                            <Border Classes="Card" Padding="24">
-                                <StackPanel Spacing="12">
+                        <StackPanel Margin="{StaticResource SpaceThickness16}" Spacing="{StaticResource Spacing16}">
+                            <Border Classes="Card" Padding="{StaticResource SpaceThickness24}">
+                                <StackPanel Spacing="{StaticResource Spacing12}">
                                     <TextBlock Text="{loc:Loc Key=Settings.Section.Localization.Title}" Classes="TitleMedium"/>
-                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <StackPanel Orientation="Horizontal" Spacing="{StaticResource Spacing12}">
                                         <TextBlock Text="{loc:Loc Key=Settings.Label.Language}" VerticalAlignment="Center"/>
                                         <ComboBox ItemsSource="{Binding Languages}"
                                                   SelectedItem="{Binding SelectedLanguage}"
@@ -30,7 +30,7 @@
                                             </ComboBox.ItemTemplate>
                                         </ComboBox>
                                     </StackPanel>
-                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <StackPanel Orientation="Horizontal" Spacing="{StaticResource Spacing12}">
                                         <TextBlock Text="{loc:Loc Key=Settings.Label.DefaultCurrency}" VerticalAlignment="Center"/>
                                         <TextBox Width="120"
                                                  Text="{Binding DefaultCurrency}"
@@ -46,8 +46,8 @@
                     <StackPanel Grid.Row="1"
                                 Orientation="Horizontal"
                                 HorizontalAlignment="Right"
-                                Margin="16,8,16,16"
-                                Spacing="12">
+                                Margin="{StaticResource MarginSection}"
+                                Spacing="{StaticResource Spacing12}">
                         <Button Content="{loc:Loc Key=Settings.Button.Apply}"
                                 Command="{Binding SaveLocalizationSettingsCommand}"
                                 MinWidth="140"/>
@@ -56,9 +56,9 @@
             </TabItem>
             <TabItem Header="{loc:Loc Key=Settings.Tab.Connection}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="16" Spacing="16">
-                        <Border Classes="Card" Padding="24">
-                            <StackPanel Spacing="12">
+                    <StackPanel Margin="{StaticResource SpaceThickness16}" Spacing="{StaticResource Spacing16}">
+                        <Border Classes="Card" Padding="{StaticResource SpaceThickness24}">
+                            <StackPanel Spacing="{StaticResource Spacing12}">
                                 <TextBlock Text="{loc:Loc Key=Settings.Section.Database.Title}" Classes="TitleLarge"/>
                                 <TextBox Text="{Binding Server}" Watermark="{loc:Loc Key=Settings.Label.Server}"/>
                                 <TextBox Text="{Binding Database}" Watermark="{loc:Loc Key=Settings.Label.Database}"/>
@@ -72,10 +72,10 @@
                                                   Width="36"
                                                   Content="{Binding DatabasePasswordToggleIcon}"
                                                   IsChecked="{Binding IsDatabasePasswordVisible}"
-                                                  Margin="8,0,0,0"
+                                                  Margin="{StaticResource MarginLeftSmall}"
                                                   VerticalAlignment="Center"/>
                                 </Grid>
-                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="{StaticResource Spacing12}">
                                     <Button Content="{loc:Loc Key=Settings.Button.Load}" Command="{Binding LoadSettingsCommand}" MinWidth="120"/>
                                     <Button Content="{loc:Loc Key=Settings.Button.Save}" Command="{Binding SaveSettingsCommand}" MinWidth="120"/>
                                     <Button Content="{loc:Loc Key=Settings.Button.Test}" Command="{Binding TestConnectionCommand}" MinWidth="140"/>
@@ -88,12 +88,12 @@
             </TabItem>
             <TabItem Header="{loc:Loc Key=Settings.Tab.ConnectionPackages}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="16" Spacing="16">
-                        <Border Classes="Card" Padding="24">
-                            <StackPanel Spacing="12">
+                    <StackPanel Margin="{StaticResource SpaceThickness16}" Spacing="{StaticResource Spacing16}">
+                        <Border Classes="Card" Padding="{StaticResource SpaceThickness24}">
+                            <StackPanel Spacing="{StaticResource Spacing12}">
                                 <TextBlock Text="{loc:Loc Key=Settings.Section.Package.Title}" Classes="TitleLarge"/>
                                 <TextBlock Text="{loc:Loc Key=Settings.Section.Package.Description}" TextWrapping="Wrap"/>
-                                <StackPanel Spacing="8">
+                                <StackPanel Spacing="{StaticResource Spacing8}">
                                     <TextBlock Text="{loc:Loc Key=Settings.Label.Passphrase}"/>
                                     <Grid ColumnDefinitions="*,Auto">
                                         <TextBox Grid.Column="0"
@@ -103,7 +103,7 @@
                                                       Width="36"
                                                       Content="{Binding ExportPassphraseToggleIcon}"
                                                       IsChecked="{Binding IsExportPassphraseVisible}"
-                                                      Margin="8,0,0,0"
+                                                      Margin="{StaticResource MarginLeftSmall}"
                                                       VerticalAlignment="Center"/>
                                     </Grid>
                                     <TextBlock Text="{loc:Loc Key=Settings.Label.ConfirmPassphrase}"/>
@@ -115,7 +115,7 @@
                                                       Width="36"
                                                       Content="{Binding ConfirmExportPassphraseToggleIcon}"
                                                       IsChecked="{Binding IsConfirmExportPassphraseVisible}"
-                                                      Margin="8,0,0,0"
+                                                      Margin="{StaticResource MarginLeftSmall}"
                                                       VerticalAlignment="Center"/>
                                     </Grid>
                                     <Button Content="{loc:Loc Key=Settings.Button.ExportPackage}"
@@ -125,7 +125,7 @@
                                 </StackPanel>
                                 <Separator/>
                                 <TextBlock Text="{loc:Loc Key=Settings.Section.Package.ImportDescription}" TextWrapping="Wrap"/>
-                                <StackPanel Spacing="12">
+                                <StackPanel Spacing="{StaticResource Spacing12}">
                                     <Grid ColumnDefinitions="Auto,16,*"
                                           RowDefinitions="Auto,Auto"
                                           RowSpacing="{StaticResource Space8}">
@@ -144,7 +144,7 @@
                                                           Width="36"
                                                           Content="{Binding ImportPassphraseToggleIcon}"
                                                           IsChecked="{Binding IsImportPassphraseVisible}"
-                                                          Margin="8,0,0,0"
+                                                          Margin="{StaticResource MarginLeftSmall}"
                                                           VerticalAlignment="Center"/>
                                         </Grid>
                                         <TextBlock Grid.Row="1"
@@ -154,7 +154,7 @@
                                         <StackPanel Grid.Row="1"
                                                     Grid.Column="2"
                                                     Orientation="Horizontal"
-                                                    Spacing="8">
+                                                    Spacing="{StaticResource Spacing8}">
                                             <TextBox Width="320"
                                                      Text="{Binding SelectedImportPackagePath}"
                                                      Watermark="{loc:Loc Key=Settings.Placeholder.ImportPackage}"
@@ -191,12 +191,12 @@
             </TabItem>
             <TabItem Header="{loc:Loc Key=Settings.Tab.ApplicationData}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="16" Spacing="16">
-                        <Border Classes="Card" Padding="24">
-                            <StackPanel Spacing="12">
+                    <StackPanel Margin="{StaticResource SpaceThickness16}" Spacing="{StaticResource Spacing16}">
+                        <Border Classes="Card" Padding="{StaticResource SpaceThickness24}">
+                            <StackPanel Spacing="{StaticResource Spacing12}">
                                 <TextBlock Text="{loc:Loc Key=Settings.Section.ApplicationData.Title}" Classes="TitleLarge"/>
                                 <TextBlock Text="{loc:Loc Key=Settings.Section.ApplicationData.Description}" TextWrapping="Wrap"/>
-                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="{StaticResource Spacing12}">
                                     <Button Content="{loc:Loc Key=Settings.Button.ExportData}"
                                             Command="{Binding ExportApplicationDataCommand}"
                                             MinWidth="160"
@@ -218,9 +218,9 @@
             <TabItem Header="{loc:Loc Key=Settings.Tab.PowerBi}">
                 <Grid RowDefinitions="*,Auto">
                     <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-                        <StackPanel Margin="16" Spacing="16">
-                            <Border Classes="Card" Padding="24">
-                                <StackPanel Spacing="12">
+                        <StackPanel Margin="{StaticResource SpaceThickness16}" Spacing="{StaticResource Spacing16}">
+                            <Border Classes="Card" Padding="{StaticResource SpaceThickness24}">
+                                <StackPanel Spacing="{StaticResource Spacing12}">
                                     <TextBlock Text="{loc:Loc Key=Settings.Section.PowerBi.Title}" Classes="TitleLarge"/>
                                     <TextBlock Text="{loc:Loc Key=Settings.Section.PowerBi.Description}" TextWrapping="Wrap"/>
                                     <TextBox Text="{Binding PowerBiEmbedUrl}" Watermark="{loc:Loc Key=Settings.Label.PowerBiUrl}"/>
@@ -231,8 +231,8 @@
                     <StackPanel Grid.Row="1"
                                 Orientation="Horizontal"
                                 HorizontalAlignment="Right"
-                                Margin="16,8,16,16"
-                                Spacing="12">
+                                Margin="{StaticResource MarginSection}"
+                                Spacing="{StaticResource Spacing12}">
                         <Button Content="{loc:Loc Key=Settings.Button.Apply}"
                                 Command="{Binding SavePowerBiSettingsCommand}"
                                 MinWidth="140"/>
@@ -243,9 +243,9 @@
 
         <Border Grid.Row="1"
                 Background="{StaticResource BrushSurfaceVariant}"
-                Padding="12"
-                CornerRadius="{StaticResource CornerRadiusMD}"
-                Margin="24,0,24,24"
+                Padding="{StaticResource SpaceThickness12}"
+                CornerRadius="{StaticResource CornerRadiusMedium}"
+                Margin="{StaticResource MarginPage}"
                 IsVisible="{Binding HasStatusMessage}">
             <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
         </Border>

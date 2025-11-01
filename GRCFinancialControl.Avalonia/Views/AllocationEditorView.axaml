@@ -21,10 +21,10 @@
     <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
             <StackPanel Spacing="{StaticResource Space16}">
-                <TextBlock Text="{Binding Engagement.Description}" FontSize="{StaticResource FontSizeXL}" FontWeight="Bold"/>
+                <TextBlock Text="{Binding Engagement.Description}" Classes="TitleMedium"/>
 
                 <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space12}" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding TargetLabel}" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding TargetLabel}" FontWeight="{StaticResource FontWeightSemiBold}"/>
                     <TextBlock Text="{Binding TargetAmountDisplay}"/>
                     <Ellipse Width="14" Height="14" StrokeThickness="1" ToolTip.Tip="{Binding AllocationVarianceTooltip}"
                              Fill="{Binding HasAllocationVariance, Converter={StaticResource AllocationFillBrush}}"
@@ -41,7 +41,7 @@
 
                 <TextBlock Text="{Binding ValidationMessage}"
                            Foreground="{StaticResource BrushWarning}"
-                           FontWeight="SemiBold"
+                           FontWeight="{StaticResource FontWeightSemiBold}"
                            IsVisible="{Binding HasAllocationVariance}"/>
 
                 <DataGrid ItemsSource="{Binding Allocations}"

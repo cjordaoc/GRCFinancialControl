@@ -12,7 +12,7 @@
             <StackPanel Grid.Row="0" Spacing="{StaticResource Space16}">
                 <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Classes="TitleMedium" />
                 <StackPanel Spacing="{StaticResource Space12}">
-                    <TextBlock Text="{Binding DetailsLabel}" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding DetailsLabel}" FontWeight="{StaticResource FontWeightSemiBold}" />
                     <TextBox Text="{Binding Details}"
                              AcceptsReturn="True"
                              IsReadOnly="True"

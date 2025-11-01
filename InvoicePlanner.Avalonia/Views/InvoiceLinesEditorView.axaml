@@ -38,13 +38,13 @@
                                Text="{loc:Loc Key=InvoicePlan.Section.InvoiceLines.Title}" />
 
                     <StackPanel Grid.Row="1"
-                                Margin="0,12,0,0"
+                                Margin="{StaticResource MarginTopRegular}"
                                 Spacing="{StaticResource Space12}">
                         <WrapPanel>
                             <StackPanel Orientation="Horizontal"
                                         Spacing="{StaticResource Space12}"
                                         VerticalAlignment="Center"
-                                        Margin="0,0,24,0">
+                                        Margin="{StaticResource MarginRightLarge}">
                                 <TextBlock Classes="Caption"
                                            VerticalAlignment="Center"
                                            Text="{loc:Loc Key=InvoicePlan.Label.PlanType}" />
@@ -58,7 +58,7 @@
                             <StackPanel Orientation="Horizontal"
                                         Spacing="{StaticResource Space12}"
                                         VerticalAlignment="Center"
-                                        Margin="0,0,24,0">
+                                        Margin="{StaticResource MarginRightLarge}">
                                 <TextBlock Classes="Caption"
                                            VerticalAlignment="Center"
                                            Text="{loc:Loc Key=InvoicePlan.Label.InvoiceCount}" />
@@ -76,14 +76,14 @@
                                     Command="{Binding RefreshCommand}"
                                     MinWidth="120"
                                     HorizontalAlignment="Stretch"
-                                    Margin="0,0,24,0" />
+                                    Margin="{StaticResource MarginRightLarge}" />
                         </WrapPanel>
 
                         <WrapPanel>
                             <StackPanel Orientation="Horizontal"
                                         Spacing="{StaticResource Space12}"
                                         VerticalAlignment="Center"
-                                        Margin="0,0,24,0">
+                                        Margin="{StaticResource MarginRightLarge}">
                                 <TextBlock Classes="Caption"
                                            VerticalAlignment="Center"
                                            Text="{loc:Loc Key=InvoicePlan.Label.PaymentTerms}" />
@@ -101,7 +101,7 @@
                                         Spacing="{StaticResource Space12}"
                                         VerticalAlignment="Center"
                                         IsVisible="{Binding Editor.RequiresFirstEmissionDate}"
-                                        Margin="0,0,24,0">
+                                        Margin="{StaticResource MarginRightLarge}">
                                 <TextBlock Classes="Caption"
                                            VerticalAlignment="Center"
                                            Text="{loc:Loc Key=InvoicePlan.Label.FirstEmission}" />
@@ -118,7 +118,7 @@
                             BorderThickness="1"
                             BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                             CornerRadius="4"
-                            Margin="0,12,0,12"
+                            Margin="{StaticResource MarginVerticalRegular}"
                             HorizontalAlignment="Stretch">
                         <DataGrid x:Name="InvoiceLinesGrid"
                                   ItemsSource="{Binding Items}"
@@ -278,10 +278,10 @@
                                 Spacing="{StaticResource Space4}"
                                 VerticalAlignment="Center">
                         <TextBlock Text="{Binding TotalPercentage, StringFormat={}{0:F2}}"
-                                   FontWeight="Bold"
+                                   FontWeight="{StaticResource FontWeightSemiBold}"
                                    Foreground="{Binding HasTotalsMismatch, Converter={StaticResource TotalsBrushConverter}}" />
                         <TextBlock Text="%"
-                                   FontWeight="Bold"
+                                   FontWeight="{StaticResource FontWeightSemiBold}"
                                    Foreground="{Binding HasTotalsMismatch, Converter={StaticResource TotalsBrushConverter}}"
                                    VerticalAlignment="Center" />
                     </StackPanel>
@@ -294,7 +294,7 @@
                                 Spacing="{StaticResource Space4}"
                                 VerticalAlignment="Center">
                         <TextBlock Text="{Binding TotalAmountDisplay}"
-                                   FontWeight="Bold"
+                                   FontWeight="{StaticResource FontWeightSemiBold}"
                                    Foreground="{Binding HasTotalsMismatch, Converter={StaticResource TotalsBrushConverter}}" />
                     </StackPanel>
                 </Grid>

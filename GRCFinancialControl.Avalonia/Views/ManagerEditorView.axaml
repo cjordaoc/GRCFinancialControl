@@ -10,7 +10,7 @@
     <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
             <StackPanel Spacing="{StaticResource Space16}">
-                <TextBlock Text="{loc:Loc Key=Admin.Managers.Title.Editor}" FontSize="18" FontWeight="Bold"/>
+                <TextBlock Text="{loc:Loc Key=Admin.Managers.Title.Editor}" Classes="TitleSmall"/>
                 <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="{StaticResource Space12}" ColumnSpacing="{StaticResource Space16}">
                     <TextBlock Grid.Row="0"
                                Grid.Column="0"
