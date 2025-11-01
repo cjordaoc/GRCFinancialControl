@@ -5,7 +5,7 @@ using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using GRCFinancialControl.Avalonia.Messages;
+using GRC.Shared.UI.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRCFinancialControl.Core.Models;
@@ -43,7 +43,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             var editorViewModel = new PapdEditorViewModel(new Papd(), _papdService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
-            Messenger.Send(new RefreshDataMessage());
+            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanEdit))]
@@ -52,7 +52,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (papd == null) return;
             var editorViewModel = new PapdEditorViewModel(papd, _papdService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
-            Messenger.Send(new RefreshDataMessage());
+            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanEdit))]
@@ -71,7 +71,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 await _papdService.DeleteAsync(papd.Id);
                 ToastService.ShowSuccess("Papds.Toast.DeleteSuccess", papd.Name);
-                Messenger.Send(new RefreshDataMessage());
+                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (System.Exception ex)
             {
@@ -93,7 +93,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 {
                     await _papdService.DeleteDataAsync(papd.Id);
                     ToastService.ShowSuccess("Papds.Toast.DeleteDataSuccess", papd.Name);
-                    Messenger.Send(new RefreshDataMessage());
+                    Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
                 }
                 catch (System.Exception ex)
                 {

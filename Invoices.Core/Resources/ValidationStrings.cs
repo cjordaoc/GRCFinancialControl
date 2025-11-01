@@ -1,12 +1,13 @@
 using System;
 using System.Globalization;
 using System.Resources;
+using GRC.Shared.Resources.Localization;
 
 namespace Invoices.Core.Resources;
 
 public static class ValidationStrings
 {
-    private static readonly ResourceManager ResourceManager = new("Invoices.Core.Resources.ValidationStrings", typeof(ValidationStrings).Assembly);
+    private static readonly ResourceManager ResourceManager = Strings.ResourceManager;
 
     public static string Get(string key)
     {

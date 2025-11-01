@@ -7,6 +7,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using AvaloniaWebView;
 using CommunityToolkit.Mvvm.Messaging;
+using GRC.Shared.UI.Dialogs;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Avalonia.ViewModels;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
@@ -19,8 +20,7 @@ using GRCFinancialControl.Persistence.Services.Exporters;
 using GRCFinancialControl.Persistence.Services.Importers;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using GRCFinancialControl.Persistence.Services.People;
-using ImportResources = GRCFinancialControl.Resources.Features.Import.Import;
-using SharedResources = GRCFinancialControl.Resources.Shared.Resources;
+using GRC.Shared.Resources.Localization;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using Microsoft.EntityFrameworkCore;
@@ -63,12 +63,7 @@ namespace GRCFinancialControl.Avalonia
 
         private async Task InitializeAsync()
         {
-            LocalizationRegistry.Configure(new CompositeLocalizationProvider(
-                new ResourceManagerLocalizationProvider(ImportResources.ResourceManager),
-                new ResourceManagerLocalizationProvider(
-                    "GRCFinancialControl.Avalonia.Resources.Strings",
-                    typeof(App).Assembly),
-                new ResourceManagerLocalizationProvider(SharedResources.ResourceManager)));
+            LocalizationRegistry.Configure(new ResourceManagerLocalizationProvider(Strings.ResourceManager));
 
             LiveCharts.Configure(config =>
                 config
@@ -144,6 +139,7 @@ namespace GRCFinancialControl.Avalonia
             services.AddSingleton<LoggingService>();
             services.AddLogging(builder => builder.AddConsole());
             services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
+            services.AddSingleton<IModalDialogService, ModalDialogService>();
             services.AddSingleton<DialogService>();
             services.AddTransient<IRetainTemplateGenerator, RetainTemplateGenerator>();
             services.AddSingleton<IConnectionPackageService, ConnectionPackageService>();

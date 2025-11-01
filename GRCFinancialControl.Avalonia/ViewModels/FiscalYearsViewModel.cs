@@ -7,7 +7,7 @@ using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using GRCFinancialControl.Avalonia.Messages;
+using GRC.Shared.UI.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
@@ -58,7 +58,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             var editorViewModel = new FiscalYearEditorViewModel(new FiscalYear(), _fiscalYearService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
-            Messenger.Send(new RefreshDataMessage());
+            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanEdit))]
@@ -67,7 +67,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (fiscalYear == null) return;
             var editorViewModel = new FiscalYearEditorViewModel(fiscalYear, _fiscalYearService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
-            Messenger.Send(new RefreshDataMessage());
+            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanView))]
@@ -88,7 +88,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 await _fiscalYearService.DeleteAsync(fiscalYear.Id);
                 ToastService.ShowSuccess("FiscalYears.Toast.DeleteSuccess", fiscalYear.Name);
-                Messenger.Send(new RefreshDataMessage());
+                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (InvalidOperationException ex)
             {
@@ -118,7 +118,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 {
                     await _fiscalYearService.DeleteDataAsync(fiscalYear.Id);
                     ToastService.ShowSuccess("FiscalYears.Toast.DeleteDataSuccess", fiscalYear.Name);
-                    Messenger.Send(new RefreshDataMessage());
+                    Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
                 }
                 catch (InvalidOperationException ex)
                 {
@@ -144,7 +144,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 var user = ResolveCurrentUser();
                 var lockedAtUtc = await _fiscalYearService.LockAsync(fiscalYear.Id, user);
-                Messenger.Send(new RefreshDataMessage());
+                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
                 if (lockedAtUtc.HasValue)
                 {
                     var lockedAtLocal = DateTime.SpecifyKind(lockedAtUtc.Value, DateTimeKind.Utc).ToLocalTime();
@@ -172,7 +172,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             var user = ResolveCurrentUser();
             var unlockedAtUtc = await _fiscalYearService.UnlockAsync(fiscalYear.Id, user);
-            Messenger.Send(new RefreshDataMessage());
+            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
 
             if (unlockedAtUtc.HasValue)
             {
@@ -216,7 +216,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 await _settingsService.SetDefaultFiscalYearIdAsync(promoted?.Id);
 
                 await LoadDataAsync();
-                Messenger.Send(new RefreshDataMessage());
+                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
 
                 if (promoted != null)
                 {

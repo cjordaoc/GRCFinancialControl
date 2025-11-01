@@ -7,6 +7,7 @@ using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using GRC.Shared.UI.Messages;
 using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Enums;
@@ -414,7 +415,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
                 _loggingService.LogInfo(summary);
                 StatusMessage = summary;
-                Messenger.Send(new RefreshDataMessage());
+                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
                 updateCompleted = true;
             }
             catch (Exception ex)
@@ -465,7 +466,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     .ConfigureAwait(false);
                 ApplySnapshot(snapshot);
                 StatusMessage = "Changes saved successfully.";
-                Messenger.Send(new RefreshDataMessage());
+                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (Exception ex)
             {

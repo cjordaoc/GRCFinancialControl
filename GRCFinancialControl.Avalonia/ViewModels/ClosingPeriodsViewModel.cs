@@ -9,6 +9,7 @@ using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using GRC.Shared.UI.Messages;
 using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Models;
@@ -114,7 +115,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var editor = new ClosingPeriodEditorViewModel(newClosingPeriod, selectableFiscalYears, _closingPeriodService, Messenger);
 
             await _dialogService.ShowDialogAsync(editor);
-            Messenger.Send(new RefreshDataMessage());
+            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanEdit))]
@@ -137,7 +138,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             var editor = new ClosingPeriodEditorViewModel(closingPeriod, GetSelectableFiscalYears(closingPeriod), _closingPeriodService, Messenger);
             await _dialogService.ShowDialogAsync(editor);
-            Messenger.Send(new RefreshDataMessage());
+            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanView))]
@@ -178,7 +179,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
                 await _closingPeriodService.DeleteAsync(closingPeriod.Id);
                 ToastService.ShowSuccess("ClosingPeriods.Toast.DeleteSuccess", closingPeriod.Name);
-                Messenger.Send(new RefreshDataMessage());
+                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (InvalidOperationException ex)
             {
@@ -222,7 +223,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 await _closingPeriodService.DeleteDataAsync(closingPeriod.Id);
                 ToastService.ShowSuccess("ClosingPeriods.Toast.ReverseSuccess", closingPeriod.Name);
-                Messenger.Send(new RefreshDataMessage());
+                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (InvalidOperationException ex)
             {
@@ -258,7 +259,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     SelectedClosingPeriod?.Name ?? string.Empty);
                 await ReloadAsync(filterId, closingPeriodId);
                 _suppressNextRefresh = true;
-                Messenger.Send(new RefreshDataMessage());
+                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (InvalidOperationException ex)
             {
@@ -354,8 +355,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             DeleteDataCommand.NotifyCanExecuteChanged();
         }
 
-        public override void Receive(RefreshDataMessage message)
+        public override void Receive(RefreshViewMessage message)
         {
+            if (!message.Matches(RefreshTargets.FinancialData))
+            {
+                return;
+            }
+
             if (_suppressNextRefresh)
             {
                 _suppressNextRefresh = false;

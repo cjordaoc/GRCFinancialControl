@@ -11,7 +11,7 @@
         x:Name="MainWindowRoot"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="{loc:Loc Key=Shell.Title.Application}"
+        Title="{loc:Loc Key=Shell.Title.FinancialControl}"
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
         ExtendClientAreaToDecorationsHint="True"

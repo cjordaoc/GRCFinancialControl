@@ -4,6 +4,12 @@ This document details the implementation for every functional capability describ
 
 ---
 
+### Localization Infrastructure
+
+Shared localization resources live under `GRC.Shared.Resources/Localization/Strings.resx` (with `pt-BR` and `en-US` variants). UI layers resolve strings through `LocalizationRegistry`, while domain helpers can access `GRC.Shared.Resources.Localization.Strings.ResourceManager` directly for culture-aware formatting.
+
+---
+
 ## Budget Allocation Management
 - **Primary Services:** `FullManagementDataImporter`, `ImportService`, `HoursAllocationService`
 - **Domain Models:** `Engagement`, `EngagementRankBudget`, `EngagementRankBudgetHistory`, `FiscalYear`, `TrafficLightStatus`
@@ -78,7 +84,7 @@ This document details the implementation for every functional capability describ
   1. `ClosingPeriodService.GetAllAsync` returns periods ordered by `PeriodStart` with fiscal-year navigation properties so the view model can perform in-memory filtering.
   2. `ClosingPeriodsViewModel.LoadDataAsync` caches all periods in `_allClosingPeriods`, loads fiscal years, and builds filter options through `UpdateFiscalYearFilters`, adding a localized **All fiscal years** entry and selecting persisted preferences when present.
   3. `ApplyFiscalYearFilter` performs client-side filtering, repopulating the observable collection and preserving the previously selected period when possible.
-  4. Lock/unlock requests flow through `ToggleLockAsync`, which invokes `ClosingPeriodService.SetLockStateAsync` to toggle `IsLocked`, refreshes the filtered collections, and broadcasts `RefreshDataMessage` so dependent view models reload their cached lists.
+4. Lock/unlock requests flow through `ToggleLockAsync`, which invokes `ClosingPeriodService.SetLockStateAsync` to toggle `IsLocked`, refreshes the filtered collections, and broadcasts `RefreshViewMessage` so dependent view models reload their cached lists.
   5. Editor dialogs (`ClosingPeriodEditorViewModel.SaveAsync`) persist changes via `IClosingPeriodService` and emit standardized toast feedback (`ClosingPeriods.Toast.SaveSuccess` or `ClosingPeriods.Toast.OperationFailed`).
 - **UI Feedback:**
   - Save, Delete, and Delete Data commands share localized toast keys (`*.Toast.SaveSuccess`, `*.Toast.DeleteSuccess`, `*.Toast.ReverseSuccess`, `*.Toast.OperationFailed`) while Lock/Unlock retains dedicated lock-state messages.

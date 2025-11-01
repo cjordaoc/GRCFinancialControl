@@ -4,6 +4,12 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 
 ---
 
+### Localization
+
+All UI strings for both desktop applications are centralized under `GRC.Shared.Resources/Localization/` (`Strings.resx`, `Strings.pt-BR.resx`, `Strings.en-US.resx`). Always resolve labels through `LocalizationRegistry` (views) or `Strings.ResourceManager` (non-UI helpers) so both apps stay in sync across cultures.
+
+---
+
 ## 1 · Budget & Allocation Management
 **Happy Path**
 1. A portfolio manager imports the budget workbook produced by Finance.
@@ -173,6 +179,7 @@ The GRC Financial Control solution orchestrates budgeting, revenue allocation, i
 
 ## 10 · UI Architecture
 - Avalonia + MVVM pattern with one View ↔ one ViewModel.
+- All view work must align with the shared [Unified GUI Design Guidelines](GRC.Shared.UI/Documentation/GuiDesignGuidelines.md); consult the document before creating or modifying layouts in either desktop app.
 - Commands leverage `RelayCommand`/`AsyncRelayCommand` to encapsulate interactions.
 - Modal dialogs use a centralized overlay with an opaque background to maintain focus.
 - Validation summaries surface inline errors from importers and planners to reduce back-and-forth.

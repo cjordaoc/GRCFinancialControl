@@ -32,7 +32,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Resources\GRCFinancialControl.Resources.csproj" />
     <ProjectReference Include="..\GRC.Shared.Resources\GRC.Shared.Resources.csproj" />
   </ItemGroup>
 </Project>

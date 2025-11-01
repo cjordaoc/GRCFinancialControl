@@ -7,7 +7,7 @@ using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using GRCFinancialControl.Avalonia.Messages;
+using GRC.Shared.UI.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRCFinancialControl.Core.Enums;
@@ -114,7 +114,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var result = await _dialogService.ShowDialogAsync(editorViewModel);
             if (result)
             {
-                Messenger.Send(new RefreshDataMessage());
+                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
         }
 
@@ -150,7 +150,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var result = await _dialogService.ShowDialogAsync(editorViewModel);
             if (result)
             {
-                Messenger.Send(new RefreshDataMessage());
+                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
         }
 
@@ -215,7 +215,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     "Admin.ManagerAssignments.Toast.DeleteSuccess",
                     SelectedAssignment.ManagerName,
                     SelectedAssignment.EngagementDisplay);
-                Messenger.Send(new RefreshDataMessage());
+                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (Exception ex)
             {

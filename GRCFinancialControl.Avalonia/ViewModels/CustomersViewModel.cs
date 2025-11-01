@@ -6,7 +6,7 @@ using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using GRCFinancialControl.Avalonia.Messages;
+using GRC.Shared.UI.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
@@ -41,7 +41,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             var editorViewModel = new CustomerEditorViewModel(new Customer(), _customerService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
-            Messenger.Send(new RefreshDataMessage());
+            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanEdit))]
@@ -50,7 +50,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (customer == null) return;
             var editorViewModel = new CustomerEditorViewModel(customer, _customerService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
-            Messenger.Send(new RefreshDataMessage());
+            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanEdit))]
@@ -69,7 +69,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 await _customerService.DeleteAsync(customer.Id);
                 ToastService.ShowSuccess("Customers.Toast.DeleteSuccess", customer.Name);
-                Messenger.Send(new RefreshDataMessage());
+                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (InvalidOperationException ex)
             {
@@ -95,7 +95,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 {
                     await _customerService.DeleteDataAsync(customer.Id);
                     ToastService.ShowSuccess("Customers.Toast.ReverseSuccess", customer.Name);
-                    Messenger.Send(new RefreshDataMessage());
+                    Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
                 }
                 catch (InvalidOperationException ex)
                 {

@@ -13,6 +13,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Messaging;
+using GRC.Shared.UI.Dialogs;
 using GRCFinancialControl.Persistence;
 using GRCFinancialControl.Persistence.Configuration;
 using GRCFinancialControl.Persistence.Services;
@@ -31,8 +32,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
-using ImportResources = GRCFinancialControl.Resources.Features.Import.Import;
-using SharedResources = GRCFinancialControl.Resources.Shared.Resources;
+using GRC.Shared.Resources.Localization;
 
 namespace InvoicePlanner.Avalonia;
 
@@ -64,12 +64,7 @@ public partial class App : Application
     private async Task InitializeAsync()
     {
         ApplyLanguageFromSettings();
-        LocalizationRegistry.Configure(new CompositeLocalizationProvider(
-            new ResourceManagerLocalizationProvider(ImportResources.ResourceManager),
-            new ResourceManagerLocalizationProvider(
-                "InvoicePlanner.Avalonia.Resources.Strings",
-                typeof(App).Assembly),
-            new ResourceManagerLocalizationProvider(SharedResources.ResourceManager)));
+        LocalizationRegistry.Configure(new ResourceManagerLocalizationProvider(Strings.ResourceManager));
 
         _host = Host.CreateDefaultBuilder()
             .ConfigureAppConfiguration((context, config) =>
@@ -130,7 +125,8 @@ public partial class App : Application
                 services.AddSingleton<GlobalErrorHandler>();
                 services.AddTransient<ErrorDialogViewModel>();
                 services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
-                services.AddSingleton<DialogService>(provider => new DialogService(provider.GetRequiredService<IMessenger>()));
+                services.AddSingleton<IModalDialogService, ModalDialogService>();
+                services.AddSingleton<DialogService>();
                 services.AddSingleton(provider => new PlanEditorViewModel(
                     provider.GetRequiredService<IInvoicePlanRepository>(),
                     provider.GetRequiredService<IInvoicePlanValidator>(),
