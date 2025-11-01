@@ -741,7 +741,9 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             var lastActiveEtcPDateIndex = GetOptionalColumnIndex(headerMap, LastActiveEtcPDateHeaders);
             var nextEtcDateIndex = GetOptionalColumnIndex(headerMap, NextEtcDateHeaders);
 
-            if (!closingPeriodIndex.HasValue && string.IsNullOrWhiteSpace(defaultClosingPeriodName))
+            var isS4MetadataWorkbook = IsS4MetadataWorkbook(headerMap);
+
+            if (!closingPeriodIndex.HasValue && string.IsNullOrWhiteSpace(defaultClosingPeriodName) && !isS4MetadataWorkbook)
             {
                 throw new InvalidDataException("The Full Management Data workbook is missing the Closing Period column and cell A4 did not specify a closing period.");
             }
@@ -881,7 +883,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             {
                 foreach (var kvp in headerMap)
                 {
-                    if (string.Equals(kvp.Value, candidate, StringComparison.Ordinal))
+                    if (string.Equals(kvp.Value, candidate, StringComparison.OrdinalIgnoreCase))
                     {
                         return kvp.Key;
                     }
@@ -898,18 +900,18 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         continue;
                     }
 
-                    if (!header.Contains(candidate, StringComparison.Ordinal))
+                    if (!header.Contains(candidate, StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
                     }
 
-                    if (candidate.Contains("engagement", StringComparison.Ordinal) && header.Contains("id", StringComparison.Ordinal))
+                    if (candidate.Contains("engagement", StringComparison.OrdinalIgnoreCase) && header.Contains("id", StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
                     }
 
-                    if (string.Equals(candidate, "description", StringComparison.Ordinal) &&
-                        (header.Contains("customer", StringComparison.Ordinal) || header.Contains("client", StringComparison.Ordinal)))
+                    if (string.Equals(candidate, "description", StringComparison.OrdinalIgnoreCase) &&
+                        (header.Contains("customer", StringComparison.OrdinalIgnoreCase) || header.Contains("client", StringComparison.OrdinalIgnoreCase)))
                     {
                         continue;
                     }
@@ -919,6 +921,28 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             }
 
             return null;
+        }
+
+        private static bool IsS4MetadataWorkbook(Dictionary<int, string> headerMap)
+        {
+            var hasEngagement = ContainsAnyHeader(headerMap, EngagementIdHeaders);
+            var hasClientDetails = ContainsAnyHeader(headerMap, CustomerIdHeaders) || ContainsAnyHeader(headerMap, CustomerNameHeaders);
+            var hasStatus = ContainsAnyHeader(headerMap, StatusHeaders);
+            var lacksFinancialColumns = !ContainsAnyHeader(headerMap, OriginalBudgetHoursHeaders)
+                                        && !ContainsAnyHeader(headerMap, OriginalBudgetTerHeaders)
+                                        && !ContainsAnyHeader(headerMap, OriginalBudgetMarginPercentHeaders)
+                                        && !ContainsAnyHeader(headerMap, OriginalBudgetExpensesHeaders)
+                                        && !ContainsAnyHeader(headerMap, ChargedHoursMercuryProjectedHeaders)
+                                        && !ContainsAnyHeader(headerMap, TermMercuryProjectedHeaders)
+                                        && !ContainsAnyHeader(headerMap, MarginPercentMercuryProjectedHeaders)
+                                        && !ContainsAnyHeader(headerMap, ExpensesMercuryProjectedHeaders)
+                                        && !ContainsAnyHeader(headerMap, EtcAgeDaysHeaders)
+                                        && !ContainsAnyHeader(headerMap, UnbilledRevenueDaysHeaders)
+                                        && !ContainsAnyHeader(headerMap, LastActiveEtcPDateHeaders)
+                                        && !ContainsAnyHeader(headerMap, NextEtcDateHeaders);
+            var missingClosingPeriod = !ContainsAnyHeader(headerMap, ClosingPeriodHeaders);
+
+            return hasEngagement && hasClientDetails && hasStatus && lacksFinancialColumns && missingClosingPeriod;
         }
 
         private static bool ContainsAnyHeader(Dictionary<int, string> headerMap, IEnumerable<string> candidates)
