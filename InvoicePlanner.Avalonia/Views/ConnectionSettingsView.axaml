@@ -68,7 +68,7 @@
                                    IsVisible="{Binding HasSelectedFile}"/>
                     </StackPanel>
                     <Border Background="{StaticResource BrushSurfaceVariant}"
-                            CornerRadius="6"
+                            CornerRadius="6,6,6,6"
                             Padding="{StaticResource SpaceThickness12}"
                             IsVisible="{Binding HasStatusMessage}">
                         <TextBlock Text="{Binding StatusMessage}"

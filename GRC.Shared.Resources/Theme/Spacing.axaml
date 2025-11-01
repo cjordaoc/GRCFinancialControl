@@ -61,4 +61,5 @@
   <Thickness x:Key="SpaceThickness16">16</Thickness>
   <Thickness x:Key="SpaceThickness20">20</Thickness>
   <Thickness x:Key="SpaceThickness24">24</Thickness>
+  <Thickness x:Key="WindowClientPadding">0,48,0,0</Thickness>
 </ResourceDictionary>
