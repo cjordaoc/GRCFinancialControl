@@ -55,7 +55,7 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="services:ToastNotification">
-                    <Border Classes="ToastNotification"
+                    <Border Classes="ToastControl"
                             Background="{Binding Type, Converter={StaticResource ToastBrushConverter}}">
                         <TextBlock Text="{Binding Message}"
                                    TextWrapping="Wrap"

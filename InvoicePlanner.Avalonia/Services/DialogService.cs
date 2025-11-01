@@ -65,28 +65,18 @@ namespace InvoicePlanner.Avalonia.Services
                     FallbackColor = overlayBrush.Color
                 });
             overlayMaterial.FallbackColor = overlayBrush.Color;
-            var surfaceBrush = GetResource("ModalDialogBackgroundBrush", GetResource("BrushSurfaceVariant", new SolidColorBrush(Color.FromArgb(0xFF, 0x2E, 0x2E, 0x2E))));
-            var borderBrush = GetResource("BrushBorder", new SolidColorBrush(Color.FromArgb(0xFF, 0x4C, 0x4C, 0x4C)));
-            var contentPadding = GetResource("ModalDialogPadding", new Thickness(24));
-            var cornerRadius = GetResource("ModalDialogCornerRadius", new CornerRadius(12));
-            var boxShadow = GetResource("ModalDialogShadow", BoxShadows.Parse("0 8 16 0 #66000000"));
-            var containerMargin = GetResource("SpaceThickness24", new Thickness(24));
+            var containerMargin = GetResource("MarginLarge", new Thickness(24));
 
             var container = new Border
             {
-                Background = surfaceBrush,
-                BorderBrush = borderBrush,
-                BorderThickness = new Thickness(1),
-                CornerRadius = cornerRadius,
-                Padding = contentPadding,
                 Margin = containerMargin,
-                BoxShadow = boxShadow,
                 MinWidth = 360,
                 MinHeight = 320,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
                 Child = view
             };
+            container.Classes.Add("ModalDialog");
 
             KeyboardNavigation.SetTabNavigation(container, KeyboardNavigationMode.Cycle);
 

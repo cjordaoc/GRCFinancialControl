@@ -30,6 +30,7 @@
 
     <Application.Styles>
         <FluentTheme/>
+        <StyleInclude Source="avares://GRC.Shared.Resources/Theme/Controls.axaml"/>
         <StyleInclude Source="avares://App.Presentation/Styles/Styles.xaml"/>
     </Application.Styles>
 </Application>
