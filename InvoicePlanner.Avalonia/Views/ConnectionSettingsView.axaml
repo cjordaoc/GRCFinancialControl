@@ -10,12 +10,12 @@
              d:DesignWidth="800"
              d:DesignHeight="450">
     <ScrollViewer>
-        <StackPanel Margin="24" Spacing="16">
-            <Border Classes="Card" Padding="24">
-                <StackPanel Spacing="18">
-                    <StackPanel Spacing="8">
+        <StackPanel Margin="{StaticResource SpaceThickness24}" Spacing="{StaticResource Spacing16}">
+            <Border Classes="Card" Padding="{StaticResource SpaceThickness24}">
+                <StackPanel Spacing="{StaticResource Spacing16}">
+                    <StackPanel Spacing="{StaticResource Spacing8}">
                         <TextBlock Text="{loc:Loc Key=Connection.Section.Language.Title}" Classes="TitleMedium"/>
-                        <StackPanel Orientation="Horizontal" Spacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="{StaticResource Spacing12}">
                             <TextBlock Text="{loc:Loc Key=Connection.Label.Language}" VerticalAlignment="Center"/>
                             <ComboBox ItemsSource="{Binding Languages}"
                                       SelectedItem="{Binding SelectedLanguage}"
@@ -28,7 +28,7 @@
                             </ComboBox>
                         </StackPanel>
                     </StackPanel>
-                    <StackPanel Spacing="8">
+                    <StackPanel Spacing="{StaticResource Spacing8}">
                         <TextBlock Text="{loc:Loc Key=Connection.Title.Setup}" Classes="TitleLarge"/>
                         <TextBlock Text="{loc:Loc Key=Connection.Description.Setup}" TextWrapping="Wrap"/>
                     </StackPanel>
@@ -36,8 +36,8 @@
                         <TextBlock Grid.Row="0"
                                    Text="{loc:Loc Key=Connection.Label.Package}"
                                    VerticalAlignment="Center"
-                                   Margin="0,0,8,0"/>
-                        <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                                   Margin="{StaticResource MarginRightCompact}"/>
+                        <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Spacing="{StaticResource Spacing8}">
                             <TextBox Width="320"
                                      Text="{Binding SelectedPackagePath}"
                                      Watermark="{loc:Loc Key=Connection.Placeholder.Package}"
@@ -49,16 +49,16 @@
                         <TextBlock Grid.Row="1"
                                    Text="{loc:Loc Key=Connection.Label.Passphrase}"
                                    VerticalAlignment="Center"
-                                   Margin="0,8,8,0"/>
+                                   Margin="{StaticResource MarginTopCompactRightCompact}"/>
                         <TextBox Grid.Row="1"
                                  Grid.Column="2"
-                                 Margin="0,8,0,0"
+                                 Margin="{StaticResource MarginTopCompact}"
                                  Text="{Binding Passphrase}"
                                  Watermark="{loc:Loc Key=Connection.Placeholder.Passphrase}"
                                  PasswordChar="*"
                                  MinWidth="240"/>
                     </Grid>
-                    <StackPanel Orientation="Horizontal" Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="{StaticResource Spacing12}">
                         <Button Content="{loc:Loc Key=Connection.Button.Import}"
                                 Command="{Binding ImportCommand}"
                                 MinWidth="160"/>
@@ -69,7 +69,7 @@
                     </StackPanel>
                     <Border Background="{StaticResource BrushSurfaceVariant}"
                             CornerRadius="6"
-                            Padding="12"
+                            Padding="{StaticResource SpaceThickness12}"
                             IsVisible="{Binding HasStatusMessage}">
                         <TextBlock Text="{Binding StatusMessage}"
                                    TextWrapping="Wrap"/>

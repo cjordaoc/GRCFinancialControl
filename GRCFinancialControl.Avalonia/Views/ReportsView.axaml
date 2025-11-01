@@ -25,7 +25,7 @@
                         IsEnabled="{Binding IsRefreshing, Converter={StaticResource InverseBooleanConverter}}"/>
             </StackPanel>
             <ProgressBar Grid.Row="1"
-                         Margin="0,4,0,0"
+                         Margin="{StaticResource MarginTopXSmall}"
                          IsIndeterminate="True"
                          Height="6"
                          IsVisible="{Binding IsRefreshing}"/>
@@ -34,12 +34,12 @@
         <Border Grid.Row="1"
                 Background="{DynamicResource ThemeBackgroundBrush}"
                 Padding="{StaticResource SpaceThickness12}"
-                CornerRadius="{StaticResource CornerRadiusSM}"
+                CornerRadius="{StaticResource CornerRadiusSmall}"
                 IsVisible="{Binding DashboardUri, Converter={x:Static converters:ObjectConverters.IsNull}}">
             <StackPanel Spacing="{StaticResource Space6}">
-                <TextBlock Text="{loc:Loc Key=Reports.Empty.Title}" FontSize="{StaticResource FontSizeXL}" FontWeight="SemiBold"/>
+                <TextBlock Text="{loc:Loc Key=Reports.Empty.Title}" Classes="TitleMedium"/>
                 <TextBlock Text="{loc:Loc Key=Reports.Empty.Description}" TextWrapping="Wrap"/>
-                <TextBlock Text="{loc:Loc Key=Reports.Label.Status}" FontWeight="SemiBold"/>
+                <TextBlock Text="{loc:Loc Key=Reports.Label.Status}" FontWeight="{StaticResource FontWeightSemiBold}"/>
                 <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
             </StackPanel>
         </Border>

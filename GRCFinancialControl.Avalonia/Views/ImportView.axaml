@@ -9,13 +9,13 @@
              x:Class="GRCFinancialControl.Avalonia.Views.ImportView"
              x:DataType="vm:ImportViewModel">
     <ScrollViewer>
-        <StackPanel Margin="24" Spacing="16">
-            <Border Classes="Card" Padding="24">
-                <StackPanel Spacing="18">
+        <StackPanel Margin="{StaticResource SpaceThickness24}" Spacing="{StaticResource Spacing16}">
+            <Border Classes="Card" Padding="{StaticResource SpaceThickness24}">
+                <StackPanel Spacing="{StaticResource Spacing16}">
                     <TextBlock Text="{loc:Loc Key=Import.Title.Primary}"
                                Classes="TitleLarge"/>
                     <StackPanel Orientation="Horizontal"
-                                Spacing="12"
+                                Spacing="{StaticResource Spacing12}"
                                 IsEnabled="{Binding IsImporting, Converter={StaticResource InverseBooleanConverter}}">
                         <Button Content="{loc:Loc Key=Import.Button.Budget}"
                                 Command="{Binding SetImportTypeCommand}"
@@ -32,19 +32,18 @@
                                 IsEnabled="{Binding CanSelectFullManagement}"/>
                     </StackPanel>
                     <Border Background="{StaticResource BrushSurfaceMuted}"
-                            CornerRadius="{StaticResource CornerRadiusSM}"
-                            Padding="12"
+                            CornerRadius="{StaticResource CornerRadiusSmall}"
+                            Padding="{StaticResource SpaceThickness12}"
                             IsVisible="{Binding ClosingPeriodSelectionWarning, Converter={x:Static converters:ObjectConverters.IsNotNull}}">
                         <TextBlock Text="{Binding ClosingPeriodSelectionWarning}" TextWrapping="Wrap"/>
                     </Border>
                     <Border Background="{StaticResource BrushSurfaceVariant}"
-                            CornerRadius="{StaticResource CornerRadiusSM}"
-                            Padding="16"
+                            CornerRadius="{StaticResource CornerRadiusSmall}"
+                            Padding="{StaticResource SpaceThickness16}"
                             IsVisible="{Binding FileType, Converter={x:Static converters:ObjectConverters.IsNotNull}}">
-                        <StackPanel Spacing="12">
+                        <StackPanel Spacing="{StaticResource Spacing12}">
                             <TextBlock Text="{Binding SelectedImportTitle}"
-                                       FontSize="{StaticResource FontSizeLG}"
-                                       FontWeight="SemiBold"/>
+                                       Classes="TitleSmall"/>
                             <Button Content="{loc:Loc Key=Import.Button.SelectFile}"
                                     Command="{Binding ImportCommand}"
                                     Classes="accent"/>
@@ -52,8 +51,8 @@
                                          Height="6"
                                          IsVisible="{Binding IsImporting}"/>
                             <Border Background="{StaticResource BrushSurfaceMuted}"
-                                    CornerRadius="{StaticResource CornerRadiusSM}"
-                                    Padding="12"
+                                    CornerRadius="{StaticResource CornerRadiusSmall}"
+                                    Padding="{StaticResource SpaceThickness12}"
                                     IsVisible="{Binding StatusMessage, Converter={x:Static converters:ObjectConverters.IsNotNull}}">
                                 <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
                             </Border>

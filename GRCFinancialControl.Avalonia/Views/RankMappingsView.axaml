@@ -7,11 +7,10 @@
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="500"
              x:Class="GRCFinancialControl.Avalonia.Views.RankMappingsView"
              x:DataType="vm:RankMappingsViewModel">
-    <Grid RowDefinitions="Auto,*,Auto" Margin="20">
+    <Grid RowDefinitions="Auto,*,Auto" Margin="{StaticResource SpaceThickness20}">
         <TextBlock Grid.Row="0"
                    Text="{loc:Loc Key=MasterData.RankMappings.Title}"
-                   FontSize="24"
-                   FontWeight="Bold"/>
+                   Classes="TitleLarge"/>
 
         <DataGrid Grid.Row="1"
                   ItemsSource="{Binding RankMappings}"
@@ -19,7 +18,7 @@
                   SelectionMode="Single"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
-                  Margin="0,10,0,0"
+                  Margin="{StaticResource MarginTopSmall}"
                   ScrollViewer.HorizontalScrollBarVisibility="Auto"
                   ScrollViewer.VerticalScrollBarVisibility="Auto">
             <DataGrid.Columns>
@@ -45,8 +44,8 @@
 
         <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
-                    Spacing="12"
-                    Margin="0,10,0,0">
+                    Spacing="{StaticResource Spacing12}"
+                    Margin="{StaticResource MarginTopSmall}">
             <Button Content="{loc:Loc Key=Common.Button.Add}"
                     Command="{Binding AddCommand}"
                     MinWidth="120"/>

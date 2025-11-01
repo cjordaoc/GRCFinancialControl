@@ -7,9 +7,9 @@
   <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
     <Border Padding="{StaticResource SpaceThickness24}"
             Background="{StaticResource BrushSurfaceMuted}"
-            CornerRadius="{StaticResource CornerRadiusMD}">
+            CornerRadius="{StaticResource CornerRadiusMedium}">
       <StackPanel Spacing="{StaticResource Space16}">
-        <TextBlock Text="{Binding Title}" FontSize="{StaticResource FontSizeLG}" FontWeight="Bold"/>
+        <TextBlock Text="{Binding Title}" Classes="TitleSmall"/>
         <TextBlock Text="{Binding Message}" TextWrapping="Wrap"/>
       </StackPanel>
     </Border>

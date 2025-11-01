@@ -8,12 +8,12 @@
              x:Class="InvoicePlanner.Avalonia.Views.InvoiceSummaryView"
              x:DataType="vm:InvoiceSummaryViewModel"
              mc:Ignorable="d">
-    <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="12">
-        <Border Grid.Row="0" Classes="Card" Padding="16" Margin="16,0,16,0">
-            <StackPanel Spacing="12">
+    <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="{StaticResource Spacing12}">
+        <Border Grid.Row="0" Classes="Card" Padding="{StaticResource SpaceThickness16}" Margin="{StaticResource MarginInset}">
+            <StackPanel Spacing="{StaticResource Spacing12}">
                 <TextBlock Classes="TitleMedium" Text="{loc:Loc Key=InvoiceSummary.Title.Filters}" />
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                    <StackPanel Spacing="4">
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource Spacing12}">
+                    <StackPanel Spacing="{StaticResource Spacing4}">
                         <TextBlock Text="{loc:Loc Key=InvoiceSummary.Label.Engagement}" />
                         <ComboBox ItemsSource="{Binding Engagements}"
                                   SelectedItem="{Binding SelectedEngagement, Mode=TwoWay}">
@@ -24,7 +24,7 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Spacing="4">
+                    <StackPanel Grid.Column="1" Spacing="{StaticResource Spacing4}">
                         <TextBlock Text="{loc:Loc Key=InvoiceSummary.Label.Customer}" />
                         <ComboBox ItemsSource="{Binding Customers}"
                                   SelectedItem="{Binding SelectedCustomer, Mode=TwoWay}">
@@ -36,7 +36,7 @@
                         </ComboBox>
                     </StackPanel>
                 </Grid>
-                <StackPanel Spacing="4">
+                <StackPanel Spacing="{StaticResource Spacing4}">
                     <TextBlock Text="{loc:Loc Key=InvoiceSummary.Label.Statuses}" />
                     <ItemsControl ItemsSource="{Binding StatusFilters}">
                         <ItemsControl.ItemsPanel>
@@ -47,13 +47,13 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <CheckBox Content="{Binding DisplayName}"
-                                          Margin="0,0,8,8"
+                                          Margin="{StaticResource MarginRightCompactBottomSmall}"
                                           IsChecked="{Binding IsSelected, Mode=TwoWay}" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Spacing="8">
+                <StackPanel Orientation="Horizontal" Spacing="{StaticResource Spacing8}">
                     <Button Content="{loc:Loc Key=InvoiceSummary.Button.ApplyFilters}" Command="{Binding RefreshCommand}" />
                     <Button Content="{loc:Loc Key=InvoiceSummary.Button.ClearFilters}" Command="{Binding ClearFiltersCommand}" />
                     <Button Content="{loc:Loc Key=Common.Button.ExportExcel}" Command="{Binding ExportExcelCommand}" />
@@ -62,36 +62,36 @@
             </StackPanel>
         </Border>
 
-        <Border Grid.Row="1" Classes="Card" Padding="16" Margin="16,0,16,0">
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                <StackPanel Spacing="4">
+        <Border Grid.Row="1" Classes="Card" Padding="{StaticResource SpaceThickness16}" Margin="{StaticResource MarginInset}">
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource Spacing12}">
+                <StackPanel Spacing="{StaticResource Spacing4}">
                     <TextBlock Text="{loc:Loc Key=InvoiceSummary.Section.Totals.Amount}" />
                     <TextBlock Classes="TitleMedium" Text="{Binding TotalAmountDisplay}" />
                 </StackPanel>
-                <StackPanel Grid.Column="1" Spacing="4">
+                <StackPanel Grid.Column="1" Spacing="{StaticResource Spacing4}">
                     <TextBlock Text="{loc:Loc Key=InvoiceSummary.Section.Totals.Percentage}" />
                     <TextBlock Classes="TitleMedium" Text="{Binding TotalPercentage, StringFormat={}{0:N4}%}" />
                 </StackPanel>
             </Grid>
         </Border>
 
-        <StackPanel Grid.Row="2" Margin="16,0" Spacing="4">
+        <StackPanel Grid.Row="2" Margin="{StaticResource MarginHorizontalMedium}" Spacing="{StaticResource Spacing4}">
             <TextBlock Classes="StatusSuccess" Text="{Binding StatusMessage}" IsVisible="{Binding HasStatusMessage}" />
             <TextBlock Classes="StatusError" Text="{Binding ValidationMessage}" IsVisible="{Binding HasValidationMessage}" />
         </StackPanel>
 
-        <ScrollViewer Grid.Row="3" Margin="16" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="3" Margin="{StaticResource SpaceThickness16}" VerticalScrollBarVisibility="Auto">
             <ItemsControl ItemsSource="{Binding Groups}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:InvoiceSummaryGroupViewModel">
-                        <Border Classes="Card" Padding="16" Margin="0,0,0,12">
-                            <StackPanel Spacing="12">
-                                <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                        <Border Classes="Card" Padding="{StaticResource SpaceThickness16}" Margin="{StaticResource MarginBottomRegular}">
+                            <StackPanel Spacing="{StaticResource Spacing12}">
+                                <StackPanel Orientation="Horizontal" Spacing="{StaticResource Spacing16}" VerticalAlignment="Center">
                                     <TextBlock Classes="TitleMedium" Text="{Binding EngagementName}" />
                                     <TextBlock Text="{Binding CustomerName}" />
                                     <TextBlock Text="{Binding CustomerCode}" />
                                 </StackPanel>
-                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="{StaticResource Spacing12}">
                                     <TextBlock Text="{Binding TotalAmountDisplay}" />
                                     <TextBlock Text="{Binding TotalPercentageDisplay}" />
                                     <TextBlock Text="{Binding PlannedCountDisplay}" />

@@ -55,43 +55,38 @@ namespace GRCFinancialControl.Avalonia.Services
             var owner = desktop.MainWindow;
 
             var overlayBrush = GetResource("ModalOverlayBrush", new SolidColorBrush(Color.FromArgb(0x8C, 0x00, 0x00, 0x00)));
-            var surfaceBrush = GetResource(
-                "ModalDialogBackgroundBrush",
-                GetResource("BrushSurfaceVariant", new SolidColorBrush(Color.FromArgb(0xFF, 0x2E, 0x2E, 0x2E))));
-            var borderBrush = GetResource("BrushBorder", new SolidColorBrush(Color.FromArgb(0xFF, 0x4C, 0x4C, 0x4C)));
-            var contentPadding = GetResource("ModalDialogPadding", new Thickness(24));
-            var cornerRadius = GetResource("ModalDialogCornerRadius", new CornerRadius(12));
-            var boxShadowResource = GetResource<object>("ModalDialogShadow", "0 4 24 0 #66000000");
-            var boxShadow = boxShadowResource switch
-            {
-                string shadowString => BoxShadows.Parse(shadowString),
-                BoxShadows shadows => shadows,
-                _ => BoxShadows.Parse("0 4 24 0 #66000000")
-            };
-            var containerMargin = GetResource("SpaceThickness24", new Thickness(24));
+            var overlayMaterial = GetResource(
+                "ModalOverlayMaterial",
+                new ExperimentalAcrylicMaterial
+                {
+                    BackgroundSource = AcrylicBackgroundSource.Digger,
+                    TintColor = Color.FromArgb(0xAA, 0x00, 0x00, 0x00),
+                    TintOpacity = 0.4,
+                    MaterialOpacity = 1,
+                    FallbackColor = overlayBrush.Color
+                });
+            overlayMaterial.FallbackColor = overlayBrush.Color;
+            var containerMargin = GetResource("MarginLarge", new Thickness(24));
 
             var container = new Border
             {
-                Background = surfaceBrush,
-                BorderBrush = borderBrush,
-                BorderThickness = new Thickness(1),
-                CornerRadius = cornerRadius,
-                Padding = contentPadding,
                 Margin = containerMargin,
-                BoxShadow = boxShadow,
                 MinWidth = 360,
                 MinHeight = 320,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
                 Child = view
             };
+            container.Classes.Add("ModalDialog");
 
             KeyboardNavigation.SetTabNavigation(container, KeyboardNavigationMode.Cycle);
 
-            var overlay = new Grid
+            var overlay = new ExperimentalAcrylicBorder
             {
-                Background = overlayBrush,
-                Children = { container }
+                Material = overlayMaterial,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch,
+                Child = container
             };
 
             _currentDialog = new Window

@@ -9,13 +9,13 @@
              mc:Ignorable="d">
     <Grid>
         <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="16" Margin="16">
-                <Border Classes="Card" Padding="24">
-                    <StackPanel Spacing="16">
+            <StackPanel Spacing="{StaticResource Spacing16}" Margin="{StaticResource SpaceThickness16}">
+                <Border Classes="Card" Padding="{StaticResource SpaceThickness24}">
+                    <StackPanel Spacing="{StaticResource Spacing16}">
                         <TextBlock Classes="TitleMedium" Text="{loc:Loc Key=Request.Title.Primary}" />
                         <TextBlock Text="{loc:Loc Key=Request.Description.Primary}" />
-                        <StackPanel Spacing="12">
-                            <TextBlock Text="{loc:Loc Key=Request.Section.AvailablePlans.Header}" FontWeight="SemiBold" />
+                        <StackPanel Spacing="{StaticResource Spacing12}">
+                        <TextBlock Text="{loc:Loc Key=Request.Section.AvailablePlans.Header}" FontWeight="{StaticResource FontWeightSemiBold}" />
                             <TextBlock Text="{Binding PlanSelectionMessage}" TextWrapping="Wrap" />
                             <DataGrid ItemsSource="{Binding AvailablePlans}"
                                       SelectedItem="{Binding SelectedPlan, Mode=TwoWay}"
@@ -25,7 +25,7 @@
                                       HorizontalScrollBarVisibility="Auto"
                                       IsVisible="{Binding HasAvailablePlans}"
                                       MaxHeight="220"
-                                      Margin="0,4,0,0"
+                                      Margin="{StaticResource MarginTopXSmall}"
                                       IsReadOnly="True">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Column.PlanId}" Binding="{Binding Id}" Width="80"/>
@@ -50,8 +50,8 @@
                     </StackPanel>
                 </Border>
 
-                <Border Classes="Card" Padding="24" IsVisible="{Binding IsPlanDetailsVisible}">
-                    <StackPanel Spacing="16">
+                <Border Classes="Card" Padding="{StaticResource SpaceThickness24}" IsVisible="{Binding IsPlanDetailsVisible}">
+                    <StackPanel Spacing="{StaticResource Spacing16}">
                         <TextBlock Classes="TitleMedium" Text="{loc:Loc Key=Request.Section.InvoiceDetails.Header}" />
                         <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space16}">
                             <TextBlock Text="{Binding EngagementDisplay}" />
@@ -134,7 +134,7 @@
                     </StackPanel>
                 </Border>
 
-                <StackPanel Spacing="4">
+                <StackPanel Spacing="{StaticResource Spacing4}">
                     <TextBlock Text="{Binding ValidationMessage}"
                                Classes="StatusError"
                                IsVisible="{Binding HasValidationMessage}" />

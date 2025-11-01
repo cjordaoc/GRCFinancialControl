@@ -16,8 +16,7 @@
           Margin="{StaticResource SpaceThickness10}">
         <TextBlock Grid.Row="0"
                    Text="{Binding Header}"
-                   FontSize="{StaticResource FontSizeXL}"
-                   FontWeight="Bold"/>
+                   Classes="TitleMedium"/>
 
         <StackPanel Grid.Row="1"
                     Orientation="Horizontal"
@@ -30,10 +29,10 @@
         <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
                     Spacing="{StaticResource Space12}">
-            <TextBlock Text="Resource:" FontWeight="SemiBold"/>
+            <TextBlock Text="Resource:" FontWeight="{StaticResource FontWeightSemiBold}"/>
             <TextBlock Text="{Binding SelectedRow.RankName}"/>
             <TextBlock Text="{Binding SelectedRow.TrafficLightSymbol}"
-                       FontSize="{StaticResource FontSizeL}"
+                       FontSize="{StaticResource FontSize18}"
                        Foreground="{Binding SelectedRow.Status, Converter={StaticResource TrafficLightStatusToBrushConverter}}"/>
         </StackPanel>
 

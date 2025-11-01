@@ -27,7 +27,7 @@
                                             Path=Bounds.Width,
                                             Converter={StaticResource PercentageOfSizeConverter},
                                             ConverterParameter=0.85}">
-                <TextBlock Text="Engagement Details" FontSize="18" FontWeight="Bold"/>
+                <TextBlock Text="Engagement Details" Classes="TitleSmall"/>
 
                 <TabControl HorizontalAlignment="Stretch">
                     <TabItem Header="Engagement Data">
@@ -211,7 +211,7 @@
 
                     <TabItem Header="Financial Evolution">
                         <StackPanel Spacing="{StaticResource Space16}">
-                            <TextBlock Text="Financial Evolution Data" FontSize="16" FontWeight="Bold"/>
+                            <TextBlock Text="Financial Evolution Data" Classes="TitleXSmall"/>
                             <DataGrid ItemsSource="{Binding FinancialEvolutionEntries}"
                                       SelectedItem="{Binding SelectedFinancialEvolutionEntry}"
                                       AutoGenerateColumns="False"
@@ -250,7 +250,7 @@
                     <TabItem Header="Assignments">
                         <StackPanel Spacing="{StaticResource Space16}">
                             <StackPanel Spacing="{StaticResource Space16}">
-                                <TextBlock Text="PAPD Assignments" FontSize="16" FontWeight="Bold"/>
+                                <TextBlock Text="PAPD Assignments" Classes="TitleXSmall"/>
                                 <DataGrid ItemsSource="{Binding PapdAssignments}"
                                           AutoGenerateColumns="False"
                                           IsReadOnly="True"
@@ -264,7 +264,7 @@
                             </StackPanel>
 
                             <StackPanel Spacing="{StaticResource Space16}">
-                                <TextBlock Text="Manager Assignments" FontSize="16" FontWeight="Bold"/>
+                                <TextBlock Text="Manager Assignments" Classes="TitleXSmall"/>
                                 <DataGrid ItemsSource="{Binding ManagerAssignments}"
                                           AutoGenerateColumns="False"
                                           IsReadOnly="True"

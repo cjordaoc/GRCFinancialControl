@@ -10,7 +10,7 @@
     <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
             <StackPanel Spacing="{StaticResource Space16}">
-                <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="Bold"/>
+                <TextBlock Text="{Binding Title}" Classes="TitleSmall"/>
 
                 <Grid RowDefinitions="Auto,Auto"
                       ColumnDefinitions="Auto,*"

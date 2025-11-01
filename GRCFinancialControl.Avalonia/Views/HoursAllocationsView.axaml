@@ -16,8 +16,7 @@
           Margin="{StaticResource SpaceThickness0}">
         <TextBlock Grid.Row="0"
                    Text="{Binding Header}"
-                   FontSize="{StaticResource FontSizeXL}"
-                   FontWeight="Bold"
+                   Classes="TitleMedium"
                    Margin="{StaticResource SpaceThickness10}"/>
 
         <StackPanel Grid.Row="1"
@@ -64,7 +63,7 @@
         <TextBlock Grid.Row="4"
                    Text="{Binding StatusMessage}"
                    Foreground="{StaticResource BrushWarning}"
-                   FontWeight="SemiBold"
+                   FontWeight="{StaticResource FontWeightSemiBold}"
                    Margin="{StaticResource SpaceThickness10}"/>
 
         <DataGrid x:Name="HoursAllocationsGrid"
@@ -80,7 +79,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding TrafficLightSymbol}"
-                                       FontSize="{StaticResource FontSizeL}"
+                                       FontSize="{StaticResource FontSize18}"
                                        HorizontalAlignment="Center"
                                        Foreground="{Binding Status, Converter={StaticResource TrafficLightStatusToBrushConverter}}"/>
                         </DataTemplate>

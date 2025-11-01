@@ -21,8 +21,7 @@
     </UserControl.Resources>
     <Grid RowDefinitions="Auto,*">
         <TextBlock Text="{Binding Header}"
-                   FontSize="{StaticResource FontSizeXL}"
-                   FontWeight="Bold"
+                   Classes="TitleMedium"
                    Margin="{StaticResource SpaceThickness10}"/>
         <DataGrid Grid.Row="1" ItemsSource="{Binding Engagements}" AutoGenerateColumns="False" IsReadOnly="True" CanUserSortColumns="True">
             <DataGrid.Columns>
