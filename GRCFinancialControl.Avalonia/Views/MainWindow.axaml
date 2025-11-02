@@ -21,6 +21,15 @@
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen">
 
+    <Window.Styles>
+        <Style Selector="sharedControls|SidebarHost[IsExpanded=true] TextBlock.SidebarTitle">
+            <Setter Property="IsVisible" Value="True"/>
+        </Style>
+        <Style Selector="sharedControls|SidebarHost[IsExpanded=false] TextBlock.SidebarTitle">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+    </Window.Styles>
+
     <Panel>
         <ExperimentalAcrylicBorder IsHitTestVisible="False"
                                    HorizontalAlignment="Stretch"
@@ -60,7 +69,7 @@
                                                    VerticalAlignment="Center"/>
                                         <TextBlock Text="{Binding Title}"
                                                    VerticalAlignment="Center"
-                                                   IsVisible="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=sharedControls:SidebarHost}}"/>
+                                                   Classes="SidebarTitle"/>
                                     </StackPanel>
                                 </ToggleButton.Content>
                             </ToggleButton>
@@ -89,7 +98,7 @@
                                                                VerticalAlignment="Center"/>
                                                     <TextBlock Text="{Binding Title}"
                                                                VerticalAlignment="Center"
-                                                               IsVisible="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=sharedControls:SidebarHost}}"/>
+                                                               Classes="SidebarTitle"/>
                                                 </StackPanel>
                                             </ToggleButton.Content>
                                         </ToggleButton>
