@@ -6,17 +6,17 @@
 
   <!-- Shared control templates to keep both desktop shells aligned. -->
   <Style Selector="Button">
-    <Setter Property="Height" Value="{StaticResource InputHeightStandard}" />
-    <Setter Property="Padding" Value="{StaticResource MarginMedium}" />
-    <Setter Property="MinWidth" Value="{StaticResource ButtonMinWidthStandard}" />
+    <Setter Property="Height" Value="{StaticResource ButtonHeightStandard}" />
+    <Setter Property="Padding" Value="{StaticResource ControlPaddingStandard}" />
+    <Setter Property="MinWidth" Value="{StaticResource ButtonMinWidthBaseline}" />
     <Setter Property="Background" Value="{StaticResource BrushPrimary}" />
-    <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
+    <Setter Property="Foreground" Value="{StaticResource BrushSecondary}" />
     <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
-    <Setter Property="FontSize" Value="{StaticResource FontSize14}" />
-    <Setter Property="FontWeight" Value="{StaticResource FontWeightMedium}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeBody}" />
+    <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}" />
     <Setter Property="BorderBrush" Value="{StaticResource BrushPrimary}" />
-    <Setter Property="BorderThickness" Value="{StaticResource BorderThin}" />
-    <Setter Property="CornerRadius" Value="{StaticResource CornerRadiusMedium}" />
+    <Setter Property="BorderThickness" Value="{StaticResource ControlBorderThickness}" />
+    <Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}" />
     <Setter Property="HorizontalContentAlignment" Value="Center" />
     <Setter Property="VerticalContentAlignment" Value="Center" />
   </Style>
@@ -24,28 +24,29 @@
   <Style Selector="Button:pointerover">
     <Setter Property="Background" Value="{StaticResource BrushSecondary}" />
     <Setter Property="BorderBrush" Value="{StaticResource BrushSecondary}" />
+    <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
   </Style>
 
   <Style Selector="Button:disabled">
     <Setter Property="Opacity" Value="0.6" />
   </Style>
 
-  <Style Selector="DataGrid">
+    <Style Selector="DataGrid">
     <Setter Property="Background" Value="{StaticResource BrushSurface}" />
     <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
     <Setter Property="BorderBrush" Value="{StaticResource BrushBorder}" />
     <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource BrushGridLines}" />
     <Setter Property="VerticalGridLinesBrush" Value="{StaticResource BrushGridLines}" />
     <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
-    <Setter Property="FontSize" Value="{StaticResource FontSize14}" />
+      <Setter Property="FontSize" Value="{StaticResource FontSizeBody}" />
     <Setter Property="RowHeight" Value="{StaticResource RowHeightStandard}" />
-    <Setter Property="Margin" Value="{StaticResource MarginMedium}" />
+    <Setter Property="Margin" Value="{StaticResource LayoutMarginStandard}" />
     <Setter Property="GridLinesVisibility" Value="All" />
   </Style>
 
   <Style Selector="StackPanel.ButtonRow">
     <Setter Property="Orientation" Value="Horizontal" />
-    <Setter Property="Spacing" Value="{StaticResource Spacing16}" />
+    <Setter Property="Spacing" Value="{StaticResource ControlSpacing}" />
     <Setter Property="HorizontalAlignment" Value="Stretch" />
   </Style>
 
@@ -63,14 +64,14 @@
 
   <Style Selector="DataGridCell">
     <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-    <Setter Property="Padding" Value="{StaticResource SpaceThickness12}" />
+    <Setter Property="Padding" Value="{StaticResource ControlPaddingStandard}" />
   </Style>
 
   <Style Selector="Border.ToastControl">
     <Setter Property="Background" Value="{StaticResource BrushSecondary}" />
-    <Setter Property="CornerRadius" Value="{StaticResource CornerRadiusMedium}" />
-    <Setter Property="Padding" Value="{StaticResource MarginMedium}" />
-    <Setter Property="Margin" Value="{StaticResource MarginSmall}" />
+    <Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}" />
+    <Setter Property="Padding" Value="{StaticResource LayoutPaddingStandard}" />
+    <Setter Property="Margin" Value="{StaticResource LayoutMarginStandard}" />
     <Setter Property="HorizontalAlignment" Value="Right" />
     <Setter Property="MaxWidth" Value="{StaticResource ToastMaxWidth}" />
     <Setter Property="Opacity" Value="0.95" />
@@ -81,8 +82,8 @@
     <Setter Property="Background" Value="{StaticResource BrushSecondary}" />
     <Setter Property="BorderBrush" Value="{StaticResource BrushBorder}" />
     <Setter Property="BorderThickness" Value="{StaticResource BorderThin}" />
-    <Setter Property="CornerRadius" Value="{StaticResource CornerRadiusLarge}" />
-    <Setter Property="Padding" Value="{StaticResource MarginLarge}" />
+    <Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}" />
+    <Setter Property="Padding" Value="{StaticResource LayoutPaddingStandard}" />
     <Setter Property="BoxShadow" Value="{StaticResource ShadowHigh}" />
   </Style>
 </Styles>

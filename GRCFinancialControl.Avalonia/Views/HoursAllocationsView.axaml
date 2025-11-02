@@ -17,12 +17,12 @@
         <TextBlock Grid.Row="0"
                    Text="{Binding Header}"
                    Classes="TitleMedium"
-                   Margin="{StaticResource SpaceThickness10}"/>
+                   Margin="{StaticResource LayoutPaddingStandard}"/>
 
         <StackPanel Grid.Row="1"
                     Orientation="Horizontal"
-                    Spacing="{StaticResource Space16}"
-                    Margin="{StaticResource SpaceThickness10}">
+                    Spacing="{StaticResource SectionSpacing}"
+                    Margin="{StaticResource LayoutPaddingStandard}">
             <ComboBox Width="280"
                       ItemsSource="{Binding Engagements}"
                       SelectedItem="{Binding SelectedEngagement}"/>
@@ -32,8 +32,8 @@
 
         <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
-                    Spacing="{StaticResource Space12}"
-                    Margin="{StaticResource SpaceThickness10}">
+                    Spacing="{StaticResource ControlSpacing}"
+                    Margin="{StaticResource LayoutPaddingStandard}">
             <SplitButton Content="Add Resource"
                          Command="{Binding AddResourceCommand}"
                          CommandParameter="{Binding SelectedRankOption}">
@@ -53,8 +53,8 @@
 
         <StackPanel Grid.Row="3"
                     Orientation="Horizontal"
-                    Spacing="{StaticResource Space24}"
-                    Margin="{StaticResource SpaceThickness10}">
+                    Spacing="{StaticResource SectionSpacing}"
+                    Margin="{StaticResource LayoutPaddingStandard}">
             <TextBlock Text="{Binding TotalBudgetHours, StringFormat='Budget Hours: {0:N2} h'}"/>
             <TextBlock Text="{Binding ActualHours, StringFormat='Actual Hours: {0:N2} h'}"/>
             <TextBlock Text="{Binding ToBeConsumedHours, StringFormat='Remaining Hours: {0:N2} h'}"/>
@@ -64,7 +64,7 @@
                    Text="{Binding StatusMessage}"
                    Foreground="{StaticResource BrushWarning}"
                    FontWeight="{StaticResource FontWeightSemiBold}"
-                   Margin="{StaticResource SpaceThickness10}"/>
+                   Margin="{StaticResource LayoutPaddingStandard}"/>
 
         <DataGrid x:Name="HoursAllocationsGrid"
                   Grid.Row="5"
@@ -73,13 +73,13 @@
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
                   CanUserSortColumns="True"
-                  Margin="{StaticResource SpaceThickness10}">
+                  Margin="{StaticResource LayoutPaddingStandard}">
             <DataGrid.Columns>
                 <DataGridTemplateColumn Header="" Width="Auto">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding TrafficLightSymbol}"
-                                       FontSize="{StaticResource FontSize18}"
+                                       FontSize="{StaticResource FontSizeSubtitle}"
                                        HorizontalAlignment="Center"
                                        Foreground="{Binding Status, Converter={StaticResource TrafficLightStatusToBrushConverter}}"/>
                         </DataTemplate>
@@ -101,7 +101,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal"
-                                        Spacing="{StaticResource Space6}">
+                                        Spacing="{StaticResource SpacingUnit}">
                                 <Button Content="Edit"
                                         Command="{Binding DataContext.EditRowCommand, ElementName=HoursAllocationsViewRoot}"
                                         CommandParameter="{Binding}"/>

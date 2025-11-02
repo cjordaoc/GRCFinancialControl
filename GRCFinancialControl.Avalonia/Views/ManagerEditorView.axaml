@@ -7,11 +7,11 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="250"
              x:Class="GRCFinancialControl.Avalonia.Views.ManagerEditorView"
              x:DataType="vm:ManagerEditorViewModel">
-    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridSpacing}">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="{StaticResource Space16}">
+            <StackPanel Spacing="{StaticResource SectionSpacing}">
                 <TextBlock Text="{loc:Loc Key=FINC_Admin_Managers_Title_Editor}" Classes="TitleSmall"/>
-                <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="{StaticResource Space12}" ColumnSpacing="{StaticResource Space16}">
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="{StaticResource GridSpacing}" ColumnSpacing="{StaticResource GridSpacing}">
                     <TextBlock Grid.Row="0"
                                Grid.Column="0"
                                Text="{loc:Loc Key=FINC_Admin_Managers_Placeholder_Name}"
@@ -66,16 +66,16 @@
         <StackPanel Grid.Row="1"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Spacing="{StaticResource Space12}">
+                    Spacing="{StaticResource ControlSpacing}">
             <Button Content="{loc:Loc Key=Global_Button_Save}"
                     Command="{Binding SaveCommand}"
                     IsEnabled="{Binding AllowEditing}"
                     IsDefault="{Binding AllowEditing}"
-                    MinWidth="120" />
+                    MinWidth="{StaticResource InputMinWidthStandard}" />
             <Button Content="{loc:Loc Key=Global_Button_Cancel}"
                     Command="{Binding CloseCommand}"
                     IsCancel="True"
-                    MinWidth="120" />
+                    MinWidth="{StaticResource InputMinWidthStandard}" />
         </StackPanel>
     </Grid>
 </UserControl>

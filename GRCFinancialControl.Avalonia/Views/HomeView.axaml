@@ -15,15 +15,15 @@
                                              FalseBrush="{StaticResource BrushSuccess}"/>
     </UserControl.Resources>
     <ScrollViewer>
-        <StackPanel Margin="{StaticResource MarginLarge}" Spacing="{StaticResource Spacing16}">
+        <StackPanel Margin="{StaticResource LayoutMarginStandard}" Spacing="{StaticResource SectionSpacing}">
             <TextBlock Text="{loc:Loc Key=FINC_Home_Title}"
                        Classes="TitleLarge"/>
             <TextBlock Text="{loc:Loc Key=FINC_Home_Welcome}"
                        TextWrapping="Wrap"/>
-            <StackPanel Spacing="{StaticResource Spacing8}">
+            <StackPanel Spacing="{StaticResource SpacingUnit}">
                 <TextBlock Text="{loc:Loc Key=FINC_Home_Label_FiscalYear}"
                            FontWeight="{StaticResource FontWeightSemiBold}"/>
-                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="{StaticResource Spacing12}">
+                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="{StaticResource GridSpacing}">
                     <ComboBox Grid.Column="0"
                               ItemsSource="{Binding FiscalYears}"
                               SelectedItem="{Binding SelectedFiscalYear}"
@@ -51,7 +51,7 @@
                             Content="{loc:Loc Key=FINC_Home_Button_Confirm}"
                             Command="{Binding ConfirmSelectionCommand}"
                             Classes="accent"
-                            MinWidth="160"
+                            MinWidth="{StaticResource InputMinWidthWide}"
                             HorizontalAlignment="Stretch"
                             IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}"/>
                     <ProgressBar Grid.Column="2"
@@ -64,9 +64,9 @@
                            IsVisible="{Binding HasFiscalYears, Converter={x:Static converters:ObjectConverters.AreEqual}, ConverterParameter=False}"/>
             </StackPanel>
             <Border Background="{StaticResource BrushSurfaceVariant}"
-                    CornerRadius="{StaticResource CornerRadiusSmall}"
-                    Padding="{StaticResource SpaceThickness16}">
-                <StackPanel Spacing="{StaticResource Spacing12}">
+                    CornerRadius="{StaticResource ControlCornerRadius}"
+                    Padding="{StaticResource LayoutPaddingStandard}">
+                <StackPanel Spacing="{StaticResource ControlSpacing}">
                     <TextBlock Text="{loc:Loc Key=FINC_Home_Markdown_Title}"
                                Classes="TitleMedium"/>
                     <md:MarkdownScrollViewer Markdown="{Binding ReadmeContent}"
@@ -75,7 +75,7 @@
                                              ScrollViewer.VerticalScrollBarVisibility="Auto"/>
                 </StackPanel>
             </Border>
-            <StackPanel Spacing="{StaticResource Spacing8}">
+            <StackPanel Spacing="{StaticResource SpacingUnit}">
                 <TextBlock Text="{loc:Loc Key=FINC_Home_Label_ClosingPeriod}"
                            FontWeight="{StaticResource FontWeightSemiBold}"/>
                 <ComboBox ItemsSource="{Binding ClosingPeriods}"
@@ -85,7 +85,7 @@
                           IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal" Spacing="{StaticResource Spacing8}">
+                            <StackPanel Orientation="Horizontal" Spacing="{StaticResource SpacingUnit}">
                                 <TextBlock Text="{Binding Name}"
                                            FontWeight="{StaticResource FontWeightSemiBold}"/>
                                 <TextBlock>
@@ -106,8 +106,8 @@
                            IsVisible="{Binding HasClosingPeriods, Converter={x:Static converters:ObjectConverters.AreEqual}, ConverterParameter=False}"/>
             </StackPanel>
             <Border Background="{StaticResource BrushSurfaceVariant}"
-                    CornerRadius="{StaticResource CornerRadiusSmall}"
-                    Padding="{StaticResource SpaceThickness12}"
+                    CornerRadius="{StaticResource ControlCornerRadius}"
+                    Padding="{StaticResource LayoutPaddingStandard}"
                     IsVisible="{Binding HasStatusMessage}">
                 <TextBlock Text="{Binding StatusMessage}"
                            Foreground="{Binding IsError, Converter={StaticResource StatusBrushConverter}}"

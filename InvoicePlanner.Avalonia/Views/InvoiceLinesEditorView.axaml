@@ -18,17 +18,17 @@
                                     FalseResourceKey="BrushOnSurface" />
     </UserControl.Resources>
 
-    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridSpacing}">
 
         <!-- MAIN SCROLLABLE CONTENT -->
         <ScrollViewer Grid.Row="0"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Auto"
                       HorizontalContentAlignment="Stretch"
-                      Padding="{StaticResource SpaceThickness24}">
+                      Padding="{StaticResource LayoutPaddingStandard}">
 
             <Grid RowDefinitions="Auto,*"
-                  RowSpacing="{StaticResource Space24}"
+                  RowSpacing="{StaticResource GridSpacing}"
                   HorizontalAlignment="Stretch">
 
                 <!-- Invoice lines grid -->
@@ -39,10 +39,10 @@
 
                     <StackPanel Grid.Row="1"
                                 Margin="{StaticResource MarginTopRegular}"
-                                Spacing="{StaticResource Spacing16}">
-                        <WrapPanel ItemSpacing="{StaticResource Spacing16}">
+                                Spacing="{StaticResource SectionSpacing}">
+                        <WrapPanel ItemSpacing="{StaticResource SectionSpacing}">
                             <StackPanel Orientation="Horizontal"
-                                        Spacing="{StaticResource Spacing16}"
+                                        Spacing="{StaticResource SectionSpacing}"
                                         VerticalAlignment="Center">
                                 <TextBlock Classes="Caption"
                                            VerticalAlignment="Center"
@@ -55,7 +55,7 @@
                             </StackPanel>
 
                             <StackPanel Orientation="Horizontal"
-                                        Spacing="{StaticResource Spacing16}"
+                                        Spacing="{StaticResource SectionSpacing}"
                                         VerticalAlignment="Center">
                                 <TextBlock Classes="Caption"
                                            VerticalAlignment="Center"
@@ -64,7 +64,7 @@
                                                Maximum="48"
                                                Increment="1"
                                                Value="{Binding Editor.NumInvoices}"
-                                               MinWidth="120"
+                                               MinWidth="{StaticResource InputMinWidthStandard}"
                                                Width="160"
                                                HorizontalAlignment="Left"
                                                appBehaviors:NumericInputNullSafety.IsEnabled="True" />
@@ -74,9 +74,9 @@
                                     Command="{Binding RefreshCommand}" />
                         </WrapPanel>
 
-                        <WrapPanel ItemSpacing="{StaticResource Spacing16}">
+                        <WrapPanel ItemSpacing="{StaticResource SectionSpacing}">
                             <StackPanel Orientation="Horizontal"
-                                        Spacing="{StaticResource Spacing16}"
+                                        Spacing="{StaticResource SectionSpacing}"
                                         VerticalAlignment="Center">
                                 <TextBlock Classes="Caption"
                                            VerticalAlignment="Center"
@@ -85,14 +85,14 @@
                                                Maximum="120"
                                                Increment="1"
                                                Value="{Binding Editor.PaymentTermDays}"
-                                               MinWidth="120"
+                                               MinWidth="{StaticResource InputMinWidthStandard}"
                                                Width="160"
                                                HorizontalAlignment="Left"
                                                appBehaviors:NumericInputNullSafety.IsEnabled="True" />
                             </StackPanel>
 
                             <StackPanel Orientation="Horizontal"
-                                        Spacing="{StaticResource Spacing16}"
+                                        Spacing="{StaticResource SectionSpacing}"
                                         VerticalAlignment="Center"
                                         IsVisible="{Binding Editor.RequiresFirstEmissionDate}">
                                 <TextBlock Classes="Caption"
@@ -108,9 +108,9 @@
                     </StackPanel>
 
                     <Border Grid.Row="2"
-                            BorderThickness="{StaticResource BorderThin}"
+                            BorderThickness="{StaticResource ControlBorderThickness}"
                             BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                            CornerRadius="4,4,4,4"
+                            CornerRadius="{StaticResource ControlCornerRadius}"
                             Margin="{StaticResource MarginVerticalRegular}"
                             HorizontalAlignment="Stretch">
                         <DataGrid x:Name="InvoiceLinesGrid"
@@ -210,7 +210,7 @@
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
                                             <StackPanel Orientation="Horizontal"
-                                                        Spacing="{StaticResource Spacing8}"
+                                                        Spacing="{StaticResource SpacingUnit}"
                                                         VerticalAlignment="Center">
                                                 <NumericUpDown Value="{Binding Percentage}"
                                                                Minimum="0"
@@ -229,7 +229,7 @@
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
                                             <StackPanel Orientation="Horizontal"
-                                                        Spacing="{StaticResource Spacing8}"
+                                                        Spacing="{StaticResource SpacingUnit}"
                                                         VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding CurrencySymbol}"
                                                            IsVisible="{Binding IsEditable}"
@@ -257,7 +257,7 @@
                 <!-- Totals -->
                 <Grid Grid.Row="1"
                       ColumnDefinitions="Auto,Auto,Auto,Auto,Auto"
-                      ColumnSpacing="{StaticResource Spacing16}"
+                      ColumnSpacing="{StaticResource GridSpacing}"
                       x:Name="TotalsRow">
                     <TextBlock Grid.Column="0"
                                Text="{loc:Loc Key=INV_InvoicePlan_Section_Totals_Label}"
@@ -270,7 +270,7 @@
                                VerticalAlignment="Center" />
                     <StackPanel Grid.Column="2"
                                 Orientation="Horizontal"
-                                Spacing="{StaticResource Spacing8}"
+                                Spacing="{StaticResource SpacingUnit}"
                                 VerticalAlignment="Center">
                         <TextBlock Text="{Binding TotalPercentage, StringFormat={}{0:F2}}"
                                    FontWeight="{StaticResource FontWeightSemiBold}"
@@ -286,7 +286,7 @@
                                VerticalAlignment="Center" />
                     <StackPanel Grid.Column="4"
                                 Orientation="Horizontal"
-                                Spacing="{StaticResource Spacing8}"
+                                Spacing="{StaticResource SpacingUnit}"
                                 VerticalAlignment="Center">
                         <TextBlock Text="{Binding TotalAmountDisplay}"
                                    FontWeight="{StaticResource FontWeightSemiBold}"
@@ -296,7 +296,7 @@
 
                 <!-- Messages -->
                 <StackPanel Grid.Row="2"
-                            Spacing="{StaticResource Spacing16}">
+                            Spacing="{StaticResource SectionSpacing}">
                     <TextBlock Text="{Binding ValidationMessage}"
                                Classes="StatusError"
                                IsVisible="{Binding HasValidationMessage}" />
@@ -311,7 +311,7 @@
         <StackPanel Grid.Row="1"
                     Classes="ButtonRow"
                     HorizontalAlignment="Right"
-                    Margin="{StaticResource SpaceThickness24}">
+                    Margin="{StaticResource LayoutMarginStandard}">
             <Button Content="{loc:Loc Key=Global_Button_Save}"
                     Command="{Binding SaveCommand}"
                     IsDefault="True" />

@@ -8,9 +8,9 @@
              x:Class="InvoicePlanner.Avalonia.Views.HomeView"
              x:DataType="vm:HomeViewModel"
              mc:Ignorable="d">
-    <Grid RowDefinitions="Auto,*,Auto,Auto,Auto" RowSpacing="{StaticResource Spacing16}">
-        <Border Grid.Row="0" Classes="Card" Padding="{StaticResource SpaceThickness24}" Margin="{StaticResource MarginInsetTop}">
-            <StackPanel Spacing="{StaticResource Spacing8}">
+    <Grid RowDefinitions="Auto,*,Auto,Auto,Auto" RowSpacing="{StaticResource GridSpacing}">
+        <Border Grid.Row="0" Classes="Card" Padding="{StaticResource LayoutPaddingStandard}" Margin="{StaticResource MarginInsetTop}">
+            <StackPanel Spacing="{StaticResource SpacingUnit}">
                 <TextBlock Classes="TitleLarge" Text="{loc:Loc Key=FINC_Home_Title.Primary}" />
                 <TextBlock Text="{loc:Loc Key=INV_Home_Description_Primary}" />
                 <TextBlock Text="{Binding WelcomeMessage}" />

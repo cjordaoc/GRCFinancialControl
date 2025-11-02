@@ -10,12 +10,12 @@
              d:DesignWidth="800"
              d:DesignHeight="450">
     <ScrollViewer>
-        <StackPanel Margin="{StaticResource SpaceThickness24}" Spacing="{StaticResource Spacing16}">
-            <Border Classes="Card" Padding="{StaticResource SpaceThickness24}">
-                <StackPanel Spacing="{StaticResource Spacing16}">
-                    <StackPanel Spacing="{StaticResource Spacing8}">
+        <StackPanel Margin="{StaticResource LayoutMarginStandard}" Spacing="{StaticResource SectionSpacing}">
+            <Border Classes="Card" Padding="{StaticResource LayoutPaddingStandard}">
+                <StackPanel Spacing="{StaticResource SectionSpacing}">
+                    <StackPanel Spacing="{StaticResource SpacingUnit}">
                         <TextBlock Text="{loc:Loc Key=INV_Connection_Section_Language_Title}" Classes="TitleMedium"/>
-                        <StackPanel Orientation="Horizontal" Spacing="{StaticResource Spacing12}">
+                        <StackPanel Orientation="Horizontal" Spacing="{StaticResource ControlSpacing}">
                             <TextBlock Text="{loc:Loc Key=INV_Connection_Label_Language}" VerticalAlignment="Center"/>
                             <ComboBox ItemsSource="{Binding Languages}"
                                       SelectedItem="{Binding SelectedLanguage}"
@@ -28,48 +28,50 @@
                             </ComboBox>
                         </StackPanel>
                     </StackPanel>
-                    <StackPanel Spacing="{StaticResource Spacing8}">
+                    <StackPanel Spacing="{StaticResource SpacingUnit}">
                         <TextBlock Text="{loc:Loc Key=INV_Connection_Title_Setup}" Classes="TitleLarge"/>
                         <TextBlock Text="{loc:Loc Key=INV_Connection_Description_Setup}" TextWrapping="Wrap"/>
                     </StackPanel>
-                    <Grid ColumnDefinitions="Auto,16,*" RowDefinitions="Auto,Auto">
+                    <Grid ColumnDefinitions="Auto,Auto,*"
+                          ColumnSpacing="{StaticResource GridSpacing}"
+                          RowSpacing="{StaticResource GridSpacing}">
                         <TextBlock Grid.Row="0"
                                    Text="{loc:Loc Key=INV_Connection_Label_Package}"
-                                   VerticalAlignment="Center"
-                                   Margin="{StaticResource MarginRightCompact}"/>
-                        <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Spacing="{StaticResource Spacing8}">
+                                   VerticalAlignment="Center"/>
+                        <StackPanel Grid.Row="0"
+                                    Grid.Column="2"
+                                    Orientation="Horizontal"
+                                    Spacing="{StaticResource ControlSpacing}">
                             <TextBox Width="320"
                                      Text="{Binding SelectedPackagePath}"
                                      Watermark="{loc:Loc Key=INV_Connection_Placeholder_Package}"
                                      IsReadOnly="True"/>
                             <Button Content="{loc:Loc Key=INV_Connection_Button_Browse}"
                                     Command="{Binding BrowseCommand}"
-                                    MinWidth="120"/>
+                                    MinWidth="{StaticResource ButtonMinWidthBaseline}"/>
                         </StackPanel>
                         <TextBlock Grid.Row="1"
                                    Text="{loc:Loc Key=INV_Connection_Label_Passphrase}"
-                                   VerticalAlignment="Center"
-                                   Margin="{StaticResource MarginTopCompactRightCompact}"/>
+                                   VerticalAlignment="Center"/>
                         <TextBox Grid.Row="1"
                                  Grid.Column="2"
-                                 Margin="{StaticResource MarginTopCompact}"
                                  Text="{Binding Passphrase}"
                                  Watermark="{loc:Loc Key=INV_Connection_Placeholder_Passphrase}"
                                  PasswordChar="*"
                                  MinWidth="240"/>
                     </Grid>
-                    <StackPanel Orientation="Horizontal" Spacing="{StaticResource Spacing12}">
+                    <StackPanel Orientation="Horizontal" Spacing="{StaticResource ControlSpacing}">
                         <Button Content="{loc:Loc Key=INV_Connection_Button_Import}"
                                 Command="{Binding ImportCommand}"
-                                MinWidth="160"/>
+                                MinWidth="{StaticResource ButtonMinWidthStandard}"/>
                         <TextBlock Text="{Binding SelectedFileName}"
                                    VerticalAlignment="Center"
                                    Opacity="0.7"
                                    IsVisible="{Binding HasSelectedFile}"/>
                     </StackPanel>
                     <Border Background="{StaticResource BrushSurfaceVariant}"
-                            CornerRadius="6,6,6,6"
-                            Padding="{StaticResource SpaceThickness12}"
+                            CornerRadius="{StaticResource ControlCornerRadius}"
+                            Padding="{StaticResource LayoutPaddingStandard}"
                             IsVisible="{Binding HasStatusMessage}">
                         <TextBlock Text="{Binding StatusMessage}"
                                    TextWrapping="Wrap"/>

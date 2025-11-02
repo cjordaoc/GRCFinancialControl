@@ -9,13 +9,13 @@
              x:Class="GRCFinancialControl.Avalonia.Views.ReportsView"
              x:DataType="vm:ReportsViewModel">
     <Grid RowDefinitions="Auto,Auto,*"
-          Margin="{StaticResource SpaceThickness12}"
-          RowSpacing="{StaticResource Space8}">
+          Margin="{StaticResource LayoutMarginStandard}"
+          RowSpacing="{StaticResource SpacingUnit}">
         <Grid Grid.Row="0" RowDefinitions="Auto,Auto">
             <StackPanel Grid.Row="0"
                         Orientation="Horizontal"
                         HorizontalAlignment="Right"
-                        Spacing="{StaticResource Space8}"
+                        Spacing="{StaticResource SpacingUnit}"
                         IsEnabled="{Binding IsRefreshing, Converter={StaticResource InverseBooleanConverter}}">
                 <Button Content="{loc:Loc Key=FINC_Reports_Button_OpenBrowser}"
                         Command="{Binding OpenInBrowserCommand}"
@@ -33,10 +33,10 @@
 
         <Border Grid.Row="1"
                 Background="{DynamicResource ThemeBackgroundBrush}"
-                Padding="{StaticResource SpaceThickness12}"
-                CornerRadius="{StaticResource CornerRadiusSmall}"
+                Padding="{StaticResource LayoutPaddingStandard}"
+                CornerRadius="{StaticResource ControlCornerRadius}"
                 IsVisible="{Binding DashboardUri, Converter={x:Static converters:ObjectConverters.IsNull}}">
-            <StackPanel Spacing="{StaticResource Space6}">
+            <StackPanel Spacing="{StaticResource SpacingUnit}">
                 <TextBlock Text="{loc:Loc Key=FINC_Reports_Empty_Title}" Classes="TitleMedium"/>
                 <TextBlock Text="{loc:Loc Key=FINC_Reports_Empty_Description}" TextWrapping="Wrap"/>
                 <TextBlock Text="{loc:Loc Key=FINC_Reports_Label_Status}" FontWeight="{StaticResource FontWeightSemiBold}"/>

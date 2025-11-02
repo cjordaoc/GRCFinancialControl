@@ -5,8 +5,8 @@
   <Border x:Name="SidebarBorder"
           Width="{Binding EffectiveWidth, ElementName=Root}"
           Background="{StaticResource BrushSurfaceVariant}"
-          CornerRadius="{StaticResource CornerRadiusMedium}"
-          Padding="{StaticResource MarginMedium}"
+          CornerRadius="{StaticResource ControlCornerRadius}"
+          Padding="{StaticResource LayoutPaddingStandard}"
           MinWidth="{Binding CompactWidth, ElementName=Root}"
           BoxShadow="{StaticResource ShadowLow}">
     <Border.Transitions>
@@ -16,7 +16,7 @@
       </Transitions>
     </Border.Transitions>
     <Grid RowDefinitions="Auto,*,Auto"
-          RowSpacing="{StaticResource Spacing16}">
+          RowSpacing="{StaticResource GridSpacing}">
       <ContentPresenter Content="{Binding Header, ElementName=Root}"
                         ContentTemplate="{Binding HeaderTemplate, ElementName=Root}"
                         HorizontalAlignment="Stretch" />
@@ -27,7 +27,7 @@
                       ItemTemplate="{Binding ItemTemplate, ElementName=Root}">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
-              <StackPanel Spacing="{StaticResource Spacing8}" />
+              <StackPanel Spacing="{StaticResource ControlSpacing}" />
             </ItemsPanelTemplate>
           </ItemsControl.ItemsPanel>
         </ItemsControl>

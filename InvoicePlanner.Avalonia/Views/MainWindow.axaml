@@ -25,12 +25,14 @@
                                    VerticalAlignment="Stretch"
                                    Material="{StaticResource AcrylicModal}"/>
 
-        <Grid Margin="{StaticResource MarginMedium}" ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource Spacing16}">
+        <Grid Margin="{StaticResource LayoutMarginStandard}" ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource GridSpacing}">
         <sharedControls:SidebarHost Grid.Column="0"
                                     Header="{Binding Title}"
                                     ExpandedLabel="{loc:Loc Key=Global_SidebarCollapse}"
                                     CollapsedLabel="{loc:Loc Key=Global_SidebarExpand}"
                                     ItemsSource="{Binding MenuItems}"
+                                    CompactWidth="{StaticResource SidebarCompactWidth}"
+                                    ExpandedWidth="{StaticResource SidebarExpandedWidth}"
                                     IsExpanded="{Binding IsSidebarExpanded, Mode=TwoWay}">
             <sharedControls:SidebarHost.HeaderTemplate>
                 <DataTemplate>
@@ -39,16 +41,29 @@
             </sharedControls:SidebarHost.HeaderTemplate>
             <sharedControls:SidebarHost.ItemTemplate>
                 <DataTemplate x:DataType="vm:NavigationItemViewModel">
-                    <ToggleButton Content="{Binding Title}"
-                                  Command="{Binding SelectCommand}"
+                    <ToggleButton Command="{Binding SelectCommand}"
                                   IsChecked="{Binding IsSelected, Mode=TwoWay}"
                                   HorizontalAlignment="Stretch"
-                                  Classes="NavButton"/>
+                                  Classes="NavButton"
+                                  ToolTip.Tip="{Binding Title}">
+                        <ToggleButton.Content>
+                            <StackPanel Orientation="Horizontal"
+                                        Spacing="{StaticResource SpacingUnit}"
+                                        VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Icon}"
+                                           FontSize="{StaticResource FontSizeSubtitle}"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding Title}"
+                                           VerticalAlignment="Center"
+                                           IsVisible="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=sharedControls:SidebarHost}}"/>
+                            </StackPanel>
+                        </ToggleButton.Content>
+                    </ToggleButton>
                 </DataTemplate>
             </sharedControls:SidebarHost.ItemTemplate>
         </sharedControls:SidebarHost>
 
-        <Border Grid.Column="1" Classes="Card" Padding="{StaticResource SpaceThickness16}">
+        <Border Grid.Column="1" Classes="Card" Padding="{StaticResource LayoutPaddingStandard}">
             <ContentControl Content="{Binding CurrentViewModel}" />
         </Border>
 
@@ -59,7 +74,7 @@
                           ItemsSource="{x:Static services:ToastService.Notifications}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <StackPanel Spacing="{StaticResource Spacing12}"/>
+                        <StackPanel Spacing="{StaticResource ControlSpacing}"/>
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>

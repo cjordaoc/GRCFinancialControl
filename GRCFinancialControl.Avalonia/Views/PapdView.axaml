@@ -6,7 +6,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.PapdView"
              x:DataType="vm:PapdViewModel">
-    <Grid RowDefinitions="Auto,*,Auto" Margin="{StaticResource SpaceThickness10}">
+    <Grid RowDefinitions="Auto,*,Auto" Margin="{StaticResource LayoutPaddingStandard}">
         <TextBlock Text="PAPD Management" Classes="TitleLarge" Margin="{StaticResource MarginBottomSmall}"/>
 
         <DataGrid Grid.Row="1"

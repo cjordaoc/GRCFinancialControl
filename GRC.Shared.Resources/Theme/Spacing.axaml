@@ -1,4 +1,19 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <x:Double x:Key="SpacingUnit">8</x:Double>
+  <x:Double x:Key="SectionSpacing">20</x:Double>
+  <x:Double x:Key="ControlSpacing">12</x:Double>
+  <x:Double x:Key="GridSpacing">8</x:Double>
+
+  <Thickness x:Key="LayoutMarginStandard">24</Thickness>
+  <Thickness x:Key="LayoutPaddingStandard">16</Thickness>
+  <Thickness x:Key="SectionMargin">0,0,0,20</Thickness>
+  <Thickness x:Key="LayoutMarginSection">20</Thickness>
+  <Thickness x:Key="SidebarItemPadding">10,16</Thickness>
+  <Thickness x:Key="ControlPaddingStandard">10,16</Thickness>
+  <Thickness x:Key="ControlMarginTop">0,12,0,0</Thickness>
+  <Thickness x:Key="ControlMarginRight">0,0,12,0</Thickness>
+  <Thickness x:Key="ControlMarginTopCompact">0,8,0,0</Thickness>
+
   <x:Double x:Key="Spacing4">4</x:Double>
   <x:Double x:Key="Spacing8">8</x:Double>
   <x:Double x:Key="Spacing12">12</x:Double>

@@ -7,13 +7,13 @@
              x:Class="InvoicePlanner.Avalonia.Views.NotificationPreviewView"
              x:DataType="vm:NotificationPreviewViewModel"
              mc:Ignorable="d">
-    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="{StaticResource Spacing12}">
-        <Border Grid.Row="0" Classes="Card" Padding="{StaticResource SpaceThickness16}" Margin="{StaticResource MarginInset}">
-            <StackPanel Spacing="{StaticResource Spacing12}">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="{StaticResource GridSpacing}">
+        <Border Grid.Row="0" Classes="Card" Padding="{StaticResource LayoutPaddingStandard}" Margin="{StaticResource MarginInset}">
+            <StackPanel Spacing="{StaticResource ControlSpacing}">
                 <TextBlock Classes="TitleMedium" Text="{loc:Loc Key=INV_Notifications_Title_Primary}" />
                 <TextBlock Text="{loc:Loc Key=INV_Notifications_Description_Primary}" />
-                <StackPanel Orientation="Horizontal" Spacing="{StaticResource Spacing12}" VerticalAlignment="Center">
-                    <StackPanel Spacing="{StaticResource Spacing4}">
+                <StackPanel Orientation="Horizontal" Spacing="{StaticResource ControlSpacing}" VerticalAlignment="Center">
+                    <StackPanel Spacing="{StaticResource SpacingUnit}">
                         <TextBlock Text="{loc:Loc Key=INV_Notifications_Label_NotificationDate}" />
                         <CalendarDatePicker SelectedDate="{Binding SelectedDate, Mode=TwoWay, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}" />
                     </StackPanel>
@@ -22,7 +22,7 @@
             </StackPanel>
         </Border>
 
-        <StackPanel Grid.Row="1" Margin="{StaticResource MarginHorizontalMedium}" Spacing="{StaticResource Spacing4}">
+        <StackPanel Grid.Row="1" Margin="{StaticResource MarginHorizontalMedium}" Spacing="{StaticResource SpacingUnit}">
             <TextBlock Classes="StatusSuccess" Text="{Binding StatusMessage}" IsVisible="{Binding HasStatusMessage}" />
             <TextBlock Classes="StatusError" Text="{Binding ValidationMessage}" IsVisible="{Binding HasValidationMessage}" />
         </StackPanel>
@@ -34,9 +34,9 @@
                 <ItemsControl ItemsSource="{Binding Items}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:NotificationPreviewItemViewModel">
-                            <Border Classes="Card" Padding="{StaticResource SpaceThickness16}" Margin="{StaticResource MarginBottomRegular}">
-                                <StackPanel Spacing="{StaticResource Spacing12}">
-                                    <StackPanel Spacing="{StaticResource Space4}">
+                            <Border Classes="Card" Padding="{StaticResource LayoutPaddingStandard}" Margin="{StaticResource MarginBottomRegular}">
+                                <StackPanel Spacing="{StaticResource ControlSpacing}">
+                                    <StackPanel Spacing="{StaticResource SpacingUnit}">
                                         <TextBlock Classes="TitleMedium" Text="{Binding EngagementDisplay}" />
                                         <TextBlock Text="{Binding CustomerDisplay}" IsVisible="{Binding HasCustomerName}" />
                                     </StackPanel>
@@ -48,7 +48,7 @@
                                         <TextBlock Text="{Binding DueDisplay}" Margin="{StaticResource MarginRightRegular}" />
                                         <TextBlock Text="{Binding AmountDisplay}" />
                                     </WrapPanel>
-                                    <StackPanel Spacing="{StaticResource Spacing4}">
+                                    <StackPanel Spacing="{StaticResource SpacingUnit}">
                                         <TextBlock Text="{Binding ToDisplay}" />
                                         <TextBlock Text="{Binding CcDisplay}" IsVisible="{Binding HasCc}" />
                                         <TextBlock Text="{Binding RecipientsDisplay}" />
@@ -56,8 +56,8 @@
                                     </StackPanel>
                                     <TextBlock FontWeight="{StaticResource FontWeightSemiBold}" Text="{Binding Subject}" TextWrapping="Wrap" />
                                     <Border Background="{StaticResource BrushSurfaceLight}"
-                                            Padding="{StaticResource SpaceThickness12}"
-                                            CornerRadius="{StaticResource CornerRadiusMedium}">
+                                            Padding="{StaticResource LayoutPaddingStandard}"
+                                            CornerRadius="{StaticResource ControlCornerRadius}">
                                         <TextBlock Text="{Binding Body}" TextWrapping="Wrap" />
                                     </Border>
                                 </StackPanel>
