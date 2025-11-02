@@ -13,14 +13,14 @@
         <converters:TrafficLightStatusToBrushConverter x:Key="TrafficLightStatusToBrushConverter" />
     </UserControl.Resources>
     <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto" ColumnDefinitions="*"
-          Margin="{StaticResource SpaceThickness10}">
+          Margin="{StaticResource LayoutPaddingStandard}">
         <TextBlock Grid.Row="0"
                    Text="{Binding Header}"
                    Classes="TitleMedium"/>
 
         <StackPanel Grid.Row="1"
                     Orientation="Horizontal"
-                    Spacing="{StaticResource Space24}">
+                    Spacing="{StaticResource SectionSpacing}">
             <TextBlock Text="{Binding TotalBudgetHours, StringFormat='Budget Hours: {0:N2} h'}"/>
             <TextBlock Text="{Binding ActualHours, StringFormat='Actual Hours: {0:N2} h'}"/>
             <TextBlock Text="{Binding RemainingHours, StringFormat='Remaining Hours: {0:N2} h'}"/>
@@ -28,11 +28,11 @@
 
         <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
-                    Spacing="{StaticResource Space12}">
+                    Spacing="{StaticResource ControlSpacing}">
             <TextBlock Text="Resource:" FontWeight="{StaticResource FontWeightSemiBold}"/>
             <TextBlock Text="{Binding SelectedRow.RankName}"/>
             <TextBlock Text="{Binding SelectedRow.TrafficLightSymbol}"
-                       FontSize="{StaticResource FontSize18}"
+                       FontSize="{StaticResource FontSizeSubtitle}"
                        Foreground="{Binding SelectedRow.Status, Converter={StaticResource TrafficLightStatusToBrushConverter}}"/>
         </StackPanel>
 
@@ -44,7 +44,7 @@
                   ItemsSource="{Binding FiscalYearRows}"
                   AutoGenerateColumns="False"
                   CanUserSortColumns="False"
-                  Margin="{StaticResource SpaceThickness10}">
+                  Margin="{StaticResource LayoutPaddingStandard}">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Fiscal Year"
                                     Binding="{Binding FiscalYearName}"
@@ -59,7 +59,7 @@
                             <TextBox Text="{Binding IncurredHours, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                      IsEnabled="{Binding IsEditable}"
                                      HorizontalContentAlignment="Right"
-                                     MinWidth="100"
+                                     MinWidth="{StaticResource InputMinWidthCompact}"
                                      behaviors:NumericInputNullSafety.IsEnabled="True"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -69,7 +69,7 @@
                         <DataTemplate>
                             <TextBox Text="{Binding AdditionalHours, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                      HorizontalContentAlignment="Right"
-                                     MinWidth="100"
+                                     MinWidth="{StaticResource InputMinWidthCompact}"
                                      behaviors:NumericInputNullSafety.IsEnabled="True"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -84,15 +84,15 @@
         <StackPanel Grid.Row="5"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Spacing="{StaticResource Space12}">
+                    Spacing="{StaticResource ControlSpacing}">
             <Button Content="Save"
                     Command="{Binding SaveCommand}"
                     IsDefault="True"
-                    MinWidth="120"/>
+                    MinWidth="{StaticResource InputMinWidthStandard}"/>
             <Button Content="Cancel"
                     Command="{Binding CloseCommand}"
                     IsCancel="True"
-                    MinWidth="120"/>
+                    MinWidth="{StaticResource InputMinWidthStandard}"/>
         </StackPanel>
     </Grid>
 </UserControl>

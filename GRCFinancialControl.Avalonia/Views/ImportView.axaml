@@ -9,13 +9,13 @@
              x:Class="GRCFinancialControl.Avalonia.Views.ImportView"
              x:DataType="vm:ImportViewModel">
     <ScrollViewer>
-        <StackPanel Margin="{StaticResource SpaceThickness24}" Spacing="{StaticResource Spacing16}">
-            <Border Classes="Card" Padding="{StaticResource SpaceThickness24}">
-                <StackPanel Spacing="{StaticResource Spacing16}">
+        <StackPanel Margin="{StaticResource LayoutMarginStandard}" Spacing="{StaticResource SectionSpacing}">
+            <Border Classes="Card" Padding="{StaticResource LayoutPaddingStandard}">
+                <StackPanel Spacing="{StaticResource SectionSpacing}">
                     <TextBlock Text="{loc:Loc Key=FINC_Import_Title_Primary}"
                                Classes="TitleLarge"/>
                     <StackPanel Orientation="Horizontal"
-                                Spacing="{StaticResource Spacing12}"
+                                Spacing="{StaticResource ControlSpacing}"
                                 IsEnabled="{Binding IsImporting, Converter={StaticResource InverseBooleanConverter}}">
                         <Button Content="{loc:Loc Key=FINC_Import_Button_Budget}"
                                 Command="{Binding SetImportTypeCommand}"
@@ -32,16 +32,16 @@
                                 IsEnabled="{Binding CanSelectFullManagement}"/>
                     </StackPanel>
                     <Border Background="{StaticResource BrushSurfaceMuted}"
-                            CornerRadius="{StaticResource CornerRadiusSmall}"
-                            Padding="{StaticResource SpaceThickness12}"
+                            CornerRadius="{StaticResource ControlCornerRadius}"
+                            Padding="{StaticResource LayoutPaddingStandard}"
                             IsVisible="{Binding ClosingPeriodSelectionWarning, Converter={x:Static converters:ObjectConverters.IsNotNull}}">
                         <TextBlock Text="{Binding ClosingPeriodSelectionWarning}" TextWrapping="Wrap"/>
                     </Border>
                     <Border Background="{StaticResource BrushSurfaceVariant}"
-                            CornerRadius="{StaticResource CornerRadiusSmall}"
-                            Padding="{StaticResource SpaceThickness16}"
+                            CornerRadius="{StaticResource ControlCornerRadius}"
+                            Padding="{StaticResource LayoutPaddingStandard}"
                             IsVisible="{Binding FileType, Converter={x:Static converters:ObjectConverters.IsNotNull}}">
-                        <StackPanel Spacing="{StaticResource Spacing12}">
+                        <StackPanel Spacing="{StaticResource ControlSpacing}">
                             <TextBlock Text="{Binding SelectedImportTitle}"
                                        Classes="TitleSmall"/>
                             <Button Content="{loc:Loc Key=FINC_Import_Button_SelectFile}"
@@ -51,8 +51,8 @@
                                          Height="6"
                                          IsVisible="{Binding IsImporting}"/>
                             <Border Background="{StaticResource BrushSurfaceMuted}"
-                                    CornerRadius="{StaticResource CornerRadiusSmall}"
-                                    Padding="{StaticResource SpaceThickness12}"
+                                    CornerRadius="{StaticResource ControlCornerRadius}"
+                                    Padding="{StaticResource LayoutPaddingStandard}"
                                     IsVisible="{Binding StatusMessage, Converter={x:Static converters:ObjectConverters.IsNotNull}}">
                                 <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
                             </Border>

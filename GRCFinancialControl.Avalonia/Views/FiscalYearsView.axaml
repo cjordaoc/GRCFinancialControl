@@ -6,7 +6,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.FiscalYearsView"
              x:DataType="vm:FiscalYearsViewModel">
-    <Grid RowDefinitions="Auto,*,Auto" Margin="{StaticResource SpaceThickness10}">
+    <Grid RowDefinitions="Auto,*,Auto" Margin="{StaticResource LayoutPaddingStandard}">
         <TextBlock Text="Fiscal Year Management" Classes="TitleLarge" Margin="{StaticResource MarginBottomSmall}"/>
 
         <DataGrid Grid.Row="1"
@@ -26,7 +26,7 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <StackPanel Grid.Row="2" Orientation="Vertical" Spacing="{StaticResource Spacing8}" Margin="{StaticResource MarginTopSmall}">
+        <StackPanel Grid.Row="2" Orientation="Vertical" Spacing="{StaticResource SpacingUnit}" Margin="{StaticResource MarginTopSmall}">
             <StackPanel Classes="ButtonRow"
                         HorizontalAlignment="Left">
                 <Button Content="Add New" Command="{Binding AddCommand}"/>

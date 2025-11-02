@@ -7,10 +7,10 @@
              x:Class="InvoicePlanner.Avalonia.Views.InvoiceDescriptionPreviewView"
              x:DataType="vm:InvoiceDescriptionPreviewViewModel"
              mc:Ignorable="d">
-    <Grid Margin="{StaticResource MarginMedium}"
+    <Grid Margin="{StaticResource LayoutPaddingStandard}"
           RowDefinitions="Auto,Auto,*,Auto"
-          RowSpacing="{StaticResource Spacing16}">
-        <StackPanel Spacing="{StaticResource Spacing8}">
+          RowSpacing="{StaticResource GridSpacing}">
+        <StackPanel Spacing="{StaticResource SpacingUnit}">
             <TextBlock Classes="TitleMedium"
                        Text="{Binding Header}" />
             <TextBlock Text="{Binding SequenceSummary}" />
@@ -21,15 +21,15 @@
                    Text="{loc:Loc Key=INV_InvoicePlan_Preview_DescriptionLabel}" />
 
         <Border Grid.Row="2"
-                Padding="{StaticResource SpaceThickness12}"
+                Padding="{StaticResource LayoutPaddingStandard}"
                 Background="{DynamicResource ThemeSubtleRegionBrush}"
-                CornerRadius="8,8,8,8">
+                CornerRadius="{StaticResource ControlCornerRadius}">
             <ScrollViewer>
                 <TextBox Text="{Binding Description}"
                          TextWrapping="Wrap"
                          AcceptsReturn="True"
                          IsReadOnly="True"
-                         BorderThickness="0,0,0,0"
+                         BorderThickness="0"
                          Background="Transparent"
                          MinHeight="200" />
             </ScrollViewer>
@@ -38,10 +38,10 @@
         <StackPanel Grid.Row="3"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Spacing="{StaticResource Spacing16}">
+                    Spacing="{StaticResource SectionSpacing}">
             <Button Content="{loc:Loc Key=Global_Button_Close}"
                     Command="{Binding CloseCommand}"
-                    MinWidth="120" />
+                    MinWidth="{StaticResource ButtonMinWidthBaseline}" />
         </StackPanel>
     </Grid>
 </UserControl>

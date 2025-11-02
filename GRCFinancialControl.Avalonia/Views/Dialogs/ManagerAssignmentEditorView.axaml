@@ -7,15 +7,15 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="300"
              x:Class="GRCFinancialControl.Avalonia.Views.Dialogs.ManagerAssignmentEditorView"
              x:DataType="vm:ManagerAssignmentEditorViewModel">
-    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridSpacing}">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="{StaticResource Space16}">
+            <StackPanel Spacing="{StaticResource SectionSpacing}">
                 <TextBlock Text="{Binding Title}" Classes="TitleSmall"/>
 
                 <Grid RowDefinitions="Auto,Auto"
                       ColumnDefinitions="Auto,*"
-                      RowSpacing="{StaticResource Space12}"
-                      ColumnSpacing="{StaticResource Space16}">
+                      RowSpacing="{StaticResource GridSpacing}"
+                      ColumnSpacing="{StaticResource GridSpacing}">
                     <TextBlock Grid.Row="0"
                                Grid.Column="0"
                                Text="{loc:Loc Key=FINC_Admin_ManagerAssignments_Label_Engagement}"/>
@@ -50,16 +50,16 @@
         <StackPanel Grid.Row="1"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Spacing="{StaticResource Space12}">
+                    Spacing="{StaticResource ControlSpacing}">
             <Button Content="{loc:Loc Key=Global_Button_Save}"
                     Command="{Binding SaveCommand}"
                     IsEnabled="{Binding AllowEditing}"
                     IsDefault="{Binding AllowEditing}"
-                    MinWidth="120" />
+                    MinWidth="{StaticResource InputMinWidthStandard}" />
             <Button Content="{loc:Loc Key=Global_Button_Cancel}"
                     Command="{Binding CloseCommand}"
                     IsCancel="True"
-                    MinWidth="120" />
+                    MinWidth="{StaticResource InputMinWidthStandard}" />
         </StackPanel>
     </Grid>
 </UserControl>

@@ -79,16 +79,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             NavigationItems = new ObservableCollection<NavigationItem>
             {
-                new(NavigationKeys.Home, LocalizationRegistry.Get("FINC_Navigation_Home"), Home),
-                new(NavigationKeys.Import, LocalizationRegistry.Get("FINC_Navigation_Import"), Import),
-                new(NavigationKeys.Engagements, LocalizationRegistry.Get("FINC_Navigation_Engagements"), Engagements),
-                new(NavigationKeys.GrcTeam, LocalizationRegistry.Get("FINC_Navigation_GrcTeam"), GrcTeam),
-                new(NavigationKeys.Allocations, LocalizationRegistry.Get("FINC_Navigation_Allocations"), Allocations),
-                new(NavigationKeys.Reports, LocalizationRegistry.Get("FINC_Navigation_Reports"), Reports),
-                new(NavigationKeys.Tasks, LocalizationRegistry.Get("FINC_Navigation_Tasks"), Tasks),
-                new(NavigationKeys.ControlMasterData, LocalizationRegistry.Get("FINC_Navigation_ControlMasterData"), ControlMasterData),
-                new(NavigationKeys.AppMasterData, LocalizationRegistry.Get("FINC_Navigation_MasterData"), AppMasterData),
-                new(NavigationKeys.Settings, LocalizationRegistry.Get("FINC_Navigation_Settings"), Settings)
+                new(NavigationKeys.Home, LocalizationRegistry.Get("FINC_Navigation_Home"), Home) { Icon = "🏠" },
+                new(NavigationKeys.Import, LocalizationRegistry.Get("FINC_Navigation_Import"), Import) { Icon = "📥" },
+                new(NavigationKeys.Engagements, LocalizationRegistry.Get("FINC_Navigation_Engagements"), Engagements) { Icon = "🤝" },
+                new(NavigationKeys.GrcTeam, LocalizationRegistry.Get("FINC_Navigation_GrcTeam"), GrcTeam) { Icon = "👥" },
+                new(NavigationKeys.Allocations, LocalizationRegistry.Get("FINC_Navigation_Allocations"), Allocations) { Icon = "📊" },
+                new(NavigationKeys.Reports, LocalizationRegistry.Get("FINC_Navigation_Reports"), Reports) { Icon = "📈" },
+                new(NavigationKeys.Tasks, LocalizationRegistry.Get("FINC_Navigation_Tasks"), Tasks) { Icon = "✅" },
+                new(NavigationKeys.ControlMasterData, LocalizationRegistry.Get("FINC_Navigation_ControlMasterData"), ControlMasterData) { Icon = "🛠" },
+                new(NavigationKeys.AppMasterData, LocalizationRegistry.Get("FINC_Navigation_MasterData"), AppMasterData) { Icon = "🗃" },
+                new(NavigationKeys.Settings, LocalizationRegistry.Get("FINC_Navigation_Settings"), Settings) { Icon = "⚙" }
             };
 
             _navigationIndex = BuildNavigationIndex(NavigationItems);
@@ -270,6 +270,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Title = title ?? throw new ArgumentNullException(nameof(title));
             ViewModel = viewModel;
             Children = new ObservableCollection<NavigationItem>();
+            _icon = BuildDefaultIcon(title);
         }
 
         public NavigationItem(string key, string title, ViewModelBase? viewModel, ObservableCollection<NavigationItem> children)
@@ -278,6 +279,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Title = title ?? throw new ArgumentNullException(nameof(title));
             ViewModel = viewModel;
             Children = children ?? throw new ArgumentNullException(nameof(children));
+            _icon = BuildDefaultIcon(title);
         }
 
         public string Key { get; }
@@ -293,6 +295,52 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             get => _isSelected;
             set => SetProperty(ref _isSelected, value);
+        }
+
+        private string _icon = string.Empty;
+
+        public string Icon
+        {
+            get => _icon;
+            set => SetProperty(ref _icon, string.IsNullOrWhiteSpace(value) ? BuildDefaultIcon(Title) : value);
+        }
+
+        private static string BuildDefaultIcon(string title)
+        {
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                return string.Empty;
+            }
+
+            var parts = title.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var first = FindLeadingCharacter(parts.FirstOrDefault());
+            if (first is null)
+            {
+                return string.Empty;
+            }
+
+            var second = parts.Skip(1).Select(FindLeadingCharacter).FirstOrDefault(c => c is not null);
+            return second is null
+                ? char.ToUpperInvariant(first.Value).ToString()
+                : string.Concat(char.ToUpperInvariant(first.Value), char.ToUpperInvariant(second.Value));
+        }
+
+        private static char? FindLeadingCharacter(string? segment)
+        {
+            if (string.IsNullOrWhiteSpace(segment))
+            {
+                return null;
+            }
+
+            foreach (var character in segment)
+            {
+                if (char.IsLetterOrDigit(character))
+                {
+                    return character;
+                }
+            }
+
+            return null;
         }
     }
 }

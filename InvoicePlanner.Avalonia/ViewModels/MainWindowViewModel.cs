@@ -54,10 +54,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var items = new List<NavigationItemViewModel>
         {
-            CreateNavigationItem(NavigationKeys.PlanEditor, LocalizationRegistry.Get("INV_Shell_Navigation_InvoicePlan"), _planEditor),
-            CreateNavigationItem(NavigationKeys.RequestConfirmation, LocalizationRegistry.Get("INV_Shell_Navigation_ConfirmRequest"), _requestConfirmation),
-            CreateNavigationItem(NavigationKeys.EmissionConfirmation, LocalizationRegistry.Get("INV_Shell_Navigation_ConfirmEmission"), _emissionConfirmation),
-            CreateNavigationItem(NavigationKeys.ConnectionSettings, LocalizationRegistry.Get("INV_Shell_Navigation_ConnectionSettings"), _connectionSettings)
+            CreateNavigationItem(NavigationKeys.PlanEditor, LocalizationRegistry.Get("INV_Shell_Navigation_InvoicePlan"), _planEditor, "🗓"),
+            CreateNavigationItem(NavigationKeys.RequestConfirmation, LocalizationRegistry.Get("INV_Shell_Navigation_ConfirmRequest"), _requestConfirmation, "📬"),
+            CreateNavigationItem(NavigationKeys.EmissionConfirmation, LocalizationRegistry.Get("INV_Shell_Navigation_ConfirmEmission"), _emissionConfirmation, "📤"),
+            CreateNavigationItem(NavigationKeys.ConnectionSettings, LocalizationRegistry.Get("INV_Shell_Navigation_ConnectionSettings"), _connectionSettings, "🔌")
         };
 
         MenuItems = items;
@@ -104,9 +104,9 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    private NavigationItemViewModel CreateNavigationItem(string key, string title, ViewModelBase viewModel)
+    private NavigationItemViewModel CreateNavigationItem(string key, string title, ViewModelBase viewModel, string? icon = null)
     {
-        return new NavigationItemViewModel(key, title, viewModel, Activate);
+        return new NavigationItemViewModel(key, title, viewModel, Activate, icon);
     }
 
     private void Activate(NavigationItemViewModel selectedItem)

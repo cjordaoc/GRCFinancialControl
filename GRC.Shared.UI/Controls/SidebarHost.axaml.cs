@@ -26,10 +26,10 @@ public partial class SidebarHost : UserControl
         AvaloniaProperty.Register<SidebarHost, bool>(nameof(IsExpanded), true, defaultBindingMode: BindingMode.TwoWay);
 
     public static readonly StyledProperty<double> ExpandedWidthProperty =
-        AvaloniaProperty.Register<SidebarHost, double>(nameof(ExpandedWidth), 260);
+        AvaloniaProperty.Register<SidebarHost, double>(nameof(ExpandedWidth), 220);
 
     public static readonly StyledProperty<double> CompactWidthProperty =
-        AvaloniaProperty.Register<SidebarHost, double>(nameof(CompactWidth), 80);
+        AvaloniaProperty.Register<SidebarHost, double>(nameof(CompactWidth), 56);
 
     public static readonly StyledProperty<string?> ExpandedLabelProperty =
         AvaloniaProperty.Register<SidebarHost, string?>(nameof(ExpandedLabel));

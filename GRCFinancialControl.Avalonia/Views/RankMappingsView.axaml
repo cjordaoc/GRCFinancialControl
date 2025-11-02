@@ -7,7 +7,7 @@
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="500"
              x:Class="GRCFinancialControl.Avalonia.Views.RankMappingsView"
              x:DataType="vm:RankMappingsViewModel">
-    <Grid RowDefinitions="Auto,*,Auto" Margin="{StaticResource SpaceThickness20}">
+    <Grid RowDefinitions="Auto,*,Auto" Margin="{StaticResource LayoutMarginSection}">
         <TextBlock Grid.Row="0"
                    Text="{loc:Loc Key=FINC_MasterData_RankMappings_Title}"
                    Classes="TitleLarge"/>

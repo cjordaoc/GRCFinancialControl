@@ -10,15 +10,15 @@
              x:Class="GRCFinancialControl.Avalonia.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
     <Grid RowDefinitions="*,Auto">
-        <TabControl Margin="{StaticResource SpaceThickness24}">
+        <TabControl Margin="{StaticResource LayoutMarginStandard}">
             <TabItem Header="{loc:Loc Key=FINC_Settings_Tab_Localization}">
                 <Grid RowDefinitions="*,Auto">
                     <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-                        <StackPanel Margin="{StaticResource SpaceThickness16}" Spacing="{StaticResource Spacing16}">
-                            <Border Classes="Card" Padding="{StaticResource SpaceThickness24}">
-                                <StackPanel Spacing="{StaticResource Spacing12}">
+                        <StackPanel Margin="{StaticResource LayoutPaddingStandard}" Spacing="{StaticResource SectionSpacing}">
+                            <Border Classes="Card" Padding="{StaticResource LayoutPaddingStandard}">
+                                <StackPanel Spacing="{StaticResource ControlSpacing}">
                                     <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_Localization_Title}" Classes="TitleMedium"/>
-                                    <StackPanel Orientation="Horizontal" Spacing="{StaticResource Spacing12}">
+                                    <StackPanel Orientation="Horizontal" Spacing="{StaticResource ControlSpacing}">
                                         <TextBlock Text="{loc:Loc Key=FINC_Settings_Label_Language}" VerticalAlignment="Center"/>
                                         <ComboBox ItemsSource="{Binding Languages}"
                                                   SelectedItem="{Binding SelectedLanguage}"
@@ -30,7 +30,7 @@
                                             </ComboBox.ItemTemplate>
                                         </ComboBox>
                                     </StackPanel>
-                                    <StackPanel Orientation="Horizontal" Spacing="{StaticResource Spacing12}">
+                                    <StackPanel Orientation="Horizontal" Spacing="{StaticResource ControlSpacing}">
                                         <TextBlock Text="{loc:Loc Key=FINC_Settings_Label_DefaultCurrency}" VerticalAlignment="Center"/>
                                         <TextBox Width="120"
                                                  Text="{Binding DefaultCurrency}"
@@ -47,7 +47,7 @@
                                 Orientation="Horizontal"
                                 HorizontalAlignment="Right"
                                 Margin="{StaticResource MarginSection}"
-                                Spacing="{StaticResource Spacing12}">
+                                Spacing="{StaticResource ControlSpacing}">
                         <Button Content="{loc:Loc Key=FINC_Settings_Button_Apply}"
                                 Command="{Binding SaveLocalizationSettingsCommand}"
                                 MinWidth="140"/>
@@ -56,9 +56,9 @@
             </TabItem>
             <TabItem Header="{loc:Loc Key=FINC_Settings_Tab_Connection}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="{StaticResource SpaceThickness16}" Spacing="{StaticResource Spacing16}">
-                        <Border Classes="Card" Padding="{StaticResource SpaceThickness24}">
-                            <StackPanel Spacing="{StaticResource Spacing12}">
+                    <StackPanel Margin="{StaticResource LayoutPaddingStandard}" Spacing="{StaticResource SectionSpacing}">
+                        <Border Classes="Card" Padding="{StaticResource LayoutPaddingStandard}">
+                            <StackPanel Spacing="{StaticResource ControlSpacing}">
                                 <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_Database_Title}" Classes="TitleLarge"/>
                                 <TextBox Text="{Binding Server}" Watermark="{loc:Loc Key=FINC_Settings_Label_Server}"/>
                                 <TextBox Text="{Binding Database}" Watermark="{loc:Loc Key=FINC_Settings_Label_Database}"/>
@@ -89,12 +89,12 @@
             </TabItem>
             <TabItem Header="{loc:Loc Key=FINC_Settings_Tab_ConnectionPackages}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="{StaticResource SpaceThickness16}" Spacing="{StaticResource Spacing16}">
-                        <Border Classes="Card" Padding="{StaticResource SpaceThickness24}">
-                            <StackPanel Spacing="{StaticResource Spacing12}">
+                    <StackPanel Margin="{StaticResource LayoutPaddingStandard}" Spacing="{StaticResource SectionSpacing}">
+                        <Border Classes="Card" Padding="{StaticResource LayoutPaddingStandard}">
+                            <StackPanel Spacing="{StaticResource ControlSpacing}">
                                 <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_Package_Title}" Classes="TitleLarge"/>
                                 <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_Package_Description}" TextWrapping="Wrap"/>
-                                <StackPanel Spacing="{StaticResource Spacing8}">
+                                <StackPanel Spacing="{StaticResource SpacingUnit}">
                                     <TextBlock Text="{loc:Loc Key=FINC_Settings_Label_Passphrase}"/>
                                     <Grid ColumnDefinitions="*,Auto">
                                         <TextBox Grid.Column="0"
@@ -126,10 +126,10 @@
                                 </StackPanel>
                                 <Separator/>
                                 <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_Package_ImportDescription}" TextWrapping="Wrap"/>
-                                <StackPanel Spacing="{StaticResource Spacing12}">
+                                <StackPanel Spacing="{StaticResource ControlSpacing}">
                                     <Grid ColumnDefinitions="Auto,16,*"
                                           RowDefinitions="Auto,Auto"
-                                          RowSpacing="{StaticResource Space8}">
+                                          RowSpacing="{StaticResource SpacingUnit}">
                                         <TextBlock Grid.Row="0"
                                                    Grid.Column="0"
                                                    Text="{loc:Loc Key=FINC_Settings_Label_ImportPassphrase}"
@@ -155,7 +155,7 @@
                                         <StackPanel Grid.Row="1"
                                                     Grid.Column="2"
                                                     Orientation="Horizontal"
-                                                    Spacing="{StaticResource Spacing8}">
+                                                    Spacing="{StaticResource SpacingUnit}">
                                             <TextBox Width="320"
                                                      Text="{Binding SelectedImportPackagePath}"
                                                      Watermark="{loc:Loc Key=FINC_Settings_Placeholder_ImportPackage}"
@@ -167,7 +167,7 @@
                                         </StackPanel>
                                     </Grid>
                                     <StackPanel Orientation="Horizontal"
-                                                Spacing="{StaticResource Space12}">
+                                                Spacing="{StaticResource ControlSpacing}">
                                         <Button Content="{loc:Loc Key=FINC_Settings_Button_ImportPackage}"
                                                 Command="{Binding ImportConnectionPackageCommand}"
                                                 MinWidth="180"
@@ -192,19 +192,19 @@
             </TabItem>
             <TabItem Header="{loc:Loc Key=FINC_Settings_Tab_ApplicationData}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="{StaticResource SpaceThickness16}" Spacing="{StaticResource Spacing16}">
-                        <Border Classes="Card" Padding="{StaticResource SpaceThickness24}">
-                            <StackPanel Spacing="{StaticResource Spacing12}">
+                    <StackPanel Margin="{StaticResource LayoutPaddingStandard}" Spacing="{StaticResource SectionSpacing}">
+                        <Border Classes="Card" Padding="{StaticResource LayoutPaddingStandard}">
+                            <StackPanel Spacing="{StaticResource ControlSpacing}">
                                 <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_ApplicationData_Title}" Classes="TitleLarge"/>
                                 <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_ApplicationData_Description}" TextWrapping="Wrap"/>
-                                <StackPanel Orientation="Horizontal" Spacing="{StaticResource Spacing12}">
+                                <StackPanel Orientation="Horizontal" Spacing="{StaticResource ControlSpacing}">
                                     <Button Content="{loc:Loc Key=FINC_Settings_Button_ExportData}"
                                             Command="{Binding ExportApplicationDataCommand}"
-                                            MinWidth="160"
+                                            MinWidth="{StaticResource InputMinWidthWide}"
                                             IsEnabled="{Binding IsApplicationDataOperationRunning, Converter={StaticResource InverseBooleanConverter}}"/>
                                     <Button Content="{loc:Loc Key=FINC_Settings_Button_ImportData}"
                                             Command="{Binding ImportApplicationDataCommand}"
-                                            MinWidth="160"
+                                            MinWidth="{StaticResource InputMinWidthWide}"
                                             IsEnabled="{Binding IsApplicationDataOperationRunning, Converter={StaticResource InverseBooleanConverter}}"/>
                                     <ProgressBar Width="120"
                                                  IsIndeterminate="True"
@@ -219,9 +219,9 @@
             <TabItem Header="{loc:Loc Key=FINC_Settings_Tab_PowerBi}">
                 <Grid RowDefinitions="*,Auto">
                     <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-                        <StackPanel Margin="{StaticResource SpaceThickness16}" Spacing="{StaticResource Spacing16}">
-                            <Border Classes="Card" Padding="{StaticResource SpaceThickness24}">
-                                <StackPanel Spacing="{StaticResource Spacing12}">
+                        <StackPanel Margin="{StaticResource LayoutPaddingStandard}" Spacing="{StaticResource SectionSpacing}">
+                            <Border Classes="Card" Padding="{StaticResource LayoutPaddingStandard}">
+                                <StackPanel Spacing="{StaticResource ControlSpacing}">
                                     <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_PowerBi_Title}" Classes="TitleLarge"/>
                                     <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_PowerBi_Description}" TextWrapping="Wrap"/>
                                     <TextBox Text="{Binding PowerBiEmbedUrl}" Watermark="{loc:Loc Key=FINC_Settings_Label_PowerBiUrl}"/>
@@ -233,7 +233,7 @@
                                 Orientation="Horizontal"
                                 HorizontalAlignment="Right"
                                 Margin="{StaticResource MarginSection}"
-                                Spacing="{StaticResource Spacing12}">
+                                Spacing="{StaticResource ControlSpacing}">
                         <Button Content="{loc:Loc Key=FINC_Settings_Button_Apply}"
                                 Command="{Binding SavePowerBiSettingsCommand}"
                                 MinWidth="140"/>
@@ -244,8 +244,8 @@
 
         <Border Grid.Row="1"
                 Background="{StaticResource BrushSurfaceVariant}"
-                Padding="{StaticResource SpaceThickness12}"
-                CornerRadius="{StaticResource CornerRadiusMedium}"
+                Padding="{StaticResource LayoutPaddingStandard}"
+                CornerRadius="{StaticResource ControlCornerRadius}"
                 Margin="{StaticResource MarginPage}"
                 IsVisible="{Binding HasStatusMessage}">
             <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
