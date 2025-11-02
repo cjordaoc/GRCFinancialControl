@@ -10,11 +10,11 @@
              x:Class="GRCFinancialControl.Avalonia.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
     <Grid RowDefinitions="*,Auto">
-        <TabControl Margin="{StaticResource LayoutMarginStandard}">
+        <TabControl>
             <TabItem Header="{loc:Loc Key=FINC_Settings_Tab_Localization}">
                 <Grid RowDefinitions="*,Auto">
                     <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-                        <StackPanel Margin="{StaticResource LayoutPaddingStandard}" Spacing="{StaticResource SectionSpacing}">
+                        <StackPanel Margin="{StaticResource LayoutMarginStandard}" Spacing="{StaticResource SectionSpacing}">
                             <Border Classes="Card" Padding="{StaticResource LayoutPaddingStandard}">
                                 <StackPanel Spacing="{StaticResource ControlSpacing}">
                                     <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_Localization_Title}" Classes="TitleMedium"/>
@@ -56,7 +56,7 @@
             </TabItem>
             <TabItem Header="{loc:Loc Key=FINC_Settings_Tab_Connection}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="{StaticResource LayoutPaddingStandard}" Spacing="{StaticResource SectionSpacing}">
+                    <StackPanel Margin="{StaticResource LayoutMarginStandard}" Spacing="{StaticResource SectionSpacing}">
                         <Border Classes="Card" Padding="{StaticResource LayoutPaddingStandard}">
                             <StackPanel Spacing="{StaticResource ControlSpacing}">
                                 <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_Database_Title}" Classes="TitleLarge"/>
@@ -89,7 +89,7 @@
             </TabItem>
             <TabItem Header="{loc:Loc Key=FINC_Settings_Tab_ConnectionPackages}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="{StaticResource LayoutPaddingStandard}" Spacing="{StaticResource SectionSpacing}">
+                    <StackPanel Margin="{StaticResource LayoutMarginStandard}" Spacing="{StaticResource SectionSpacing}">
                         <Border Classes="Card" Padding="{StaticResource LayoutPaddingStandard}">
                             <StackPanel Spacing="{StaticResource ControlSpacing}">
                                 <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_Package_Title}" Classes="TitleLarge"/>
@@ -192,7 +192,7 @@
             </TabItem>
             <TabItem Header="{loc:Loc Key=FINC_Settings_Tab_ApplicationData}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="{StaticResource LayoutPaddingStandard}" Spacing="{StaticResource SectionSpacing}">
+                    <StackPanel Margin="{StaticResource LayoutMarginStandard}" Spacing="{StaticResource SectionSpacing}">
                         <Border Classes="Card" Padding="{StaticResource LayoutPaddingStandard}">
                             <StackPanel Spacing="{StaticResource ControlSpacing}">
                                 <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_ApplicationData_Title}" Classes="TitleLarge"/>
@@ -219,7 +219,7 @@
             <TabItem Header="{loc:Loc Key=FINC_Settings_Tab_PowerBi}">
                 <Grid RowDefinitions="*,Auto">
                     <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-                        <StackPanel Margin="{StaticResource LayoutPaddingStandard}" Spacing="{StaticResource SectionSpacing}">
+                        <StackPanel Margin="{StaticResource LayoutMarginStandard}" Spacing="{StaticResource SectionSpacing}">
                             <Border Classes="Card" Padding="{StaticResource LayoutPaddingStandard}">
                                 <StackPanel Spacing="{StaticResource ControlSpacing}">
                                     <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_PowerBi_Title}" Classes="TitleLarge"/>
