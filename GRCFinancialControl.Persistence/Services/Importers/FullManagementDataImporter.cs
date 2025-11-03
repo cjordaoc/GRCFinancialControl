@@ -53,7 +53,9 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             "client name",
             "client name (id)",
             "client description",
-            "customer description"
+            "customer description",
+            "customer",
+            "client"
         };
 
         private static readonly string[] CustomerIdHeaders =

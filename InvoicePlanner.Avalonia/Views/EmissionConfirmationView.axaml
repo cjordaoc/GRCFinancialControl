@@ -26,7 +26,8 @@
                                       IsVisible="{Binding HasAvailablePlans}"
                                       MaxHeight="220"
                                       Margin="{StaticResource MarginTopXSmall}"
-                                      IsReadOnly="True">
+                                      IsReadOnly="True"
+                                      SelectionMode="Single">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_PlanId}" Binding="{Binding Id}" Width="80"/>
                                     <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Engagement}" Binding="{Binding EngagementId}" Width="160"/>

@@ -176,7 +176,8 @@
                                   CanUserResizeColumns="True"
                                   behaviors:DataGridRowResizeBehavior.IsEnabled="True"
                                   HorizontalScrollBarVisibility="Auto"
-                                  VerticalScrollBarVisibility="Auto">
+                                  VerticalScrollBarVisibility="Auto"
+                                  SelectionMode="Single">
                             <DataGrid.Columns>
                                 <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_Sequence}" Width="60">
                                     <DataGridTemplateColumn.CellTemplate>

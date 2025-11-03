@@ -2,11 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using App.Presentation.Services;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -190,40 +189,34 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             _readmeLoaded = true;
 
-            string? content = null;
             try
             {
-                var assembly = typeof(HomeViewModel).Assembly;
-                var resourceName = assembly
-                    .GetManifestResourceNames()
-                    .FirstOrDefault(name => name.EndsWith("README.md", StringComparison.OrdinalIgnoreCase));
+                var content = await ReadmeContentProvider.GetAsync(typeof(HomeViewModel).Assembly).ConfigureAwait(false);
+                var resolved = string.IsNullOrWhiteSpace(content)
+                    ? LocalizationRegistry.Get("FINC_Home_Markdown_LoadFailed")
+                    : content!;
 
-                if (!string.IsNullOrWhiteSpace(resourceName))
+                if (Dispatcher.UIThread.CheckAccess())
                 {
-                    await using var stream = assembly.GetManifestResourceStream(resourceName);
-                    if (stream is not null)
-                    {
-                        using var reader = new StreamReader(stream);
-                        content = await reader.ReadToEndAsync().ConfigureAwait(false);
-                    }
+                    ReadmeContent = resolved;
+                }
+                else
+                {
+                    Dispatcher.UIThread.Post(() => ReadmeContent = resolved);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                content = null;
-            }
-
-            var resolved = string.IsNullOrWhiteSpace(content)
-                ? LocalizationRegistry.Get("FINC_Home_Markdown_LoadFailed")
-                : content;
-
-            if (Dispatcher.UIThread.CheckAccess())
-            {
-                ReadmeContent = resolved;
-            }
-            else
-            {
-                Dispatcher.UIThread.Post(() => ReadmeContent = resolved);
+                _loggingService.LogError($"Failed to load README content: {ex.Message}");
+                var fallback = LocalizationRegistry.Get("FINC_Home_Markdown_LoadFailed");
+                if (Dispatcher.UIThread.CheckAccess())
+                {
+                    ReadmeContent = fallback;
+                }
+                else
+                {
+                    Dispatcher.UIThread.Post(() => ReadmeContent = fallback);
+                }
             }
         }
 

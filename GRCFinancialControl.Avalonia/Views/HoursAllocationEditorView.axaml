@@ -44,7 +44,8 @@
                   ItemsSource="{Binding FiscalYearRows}"
                   AutoGenerateColumns="False"
                   CanUserSortColumns="False"
-                  Margin="{StaticResource CardPaddingThickness}">
+                  Margin="{StaticResource CardPaddingThickness}"
+                  SelectionMode="Single">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Fiscal Year"
                                     Binding="{Binding FiscalYearName}"

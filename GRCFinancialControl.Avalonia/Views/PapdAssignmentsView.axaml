@@ -34,7 +34,8 @@
                   IsReadOnly="True"
                   HeadersVisibility="Column"
                   GridLinesVisibility="All"
-                  Height="300">
+                  Height="300"
+                  SelectionMode="Single">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="{loc:Loc Key=FINC_Admin_PapdAssignments_Header_Engagement}" Binding="{Binding EngagementDisplay}" Width="2*"/>
             </DataGrid.Columns>

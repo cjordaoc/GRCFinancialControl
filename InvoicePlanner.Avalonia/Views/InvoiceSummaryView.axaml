@@ -104,6 +104,7 @@
                                           HeadersVisibility="All"
                                           GridLinesVisibility="Horizontal"
                                           IsReadOnly="True"
+                                          SelectionMode="Single"
                                           x:CompileBindings="False">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="{loc:Loc Key=INV_InvoiceSummary_TableHeader_Sequence}" Binding="{Binding Sequence}" Width="40" />

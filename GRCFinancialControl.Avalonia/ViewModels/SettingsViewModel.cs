@@ -25,6 +25,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     private readonly IConnectionPackageService _connectionPackageService;
     private readonly IApplicationDataBackupService _applicationDataBackupService;
     private readonly FilePickerService _filePickerService;
+    private readonly LoggingService _loggingService;
     private bool _initializingLanguage;
     private string _defaultCurrency = string.Empty;
 
@@ -83,6 +84,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private bool _isApplicationDataOperationRunning;
 
+        [ObservableProperty]
+        private string? _readmeContent;
+
         public IReadOnlyList<LanguageOption> Languages { get; }
 
         [ObservableProperty]
@@ -107,7 +111,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             DialogService dialogService,
             IConnectionPackageService connectionPackageService,
             IApplicationDataBackupService applicationDataBackupService,
-            FilePickerService filePickerService)
+            FilePickerService filePickerService,
+            LoggingService loggingService)
         {
             _settingsService = settingsService;
             _schemaInitializer = schemaInitializer;
@@ -115,6 +120,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _connectionPackageService = connectionPackageService;
             _applicationDataBackupService = applicationDataBackupService;
             _filePickerService = filePickerService;
+            _loggingService = loggingService;
 
             LoadSettingsCommand = new AsyncRelayCommand(LoadSettingsAsync);
             SaveSettingsCommand = new AsyncRelayCommand(SaveSettingsAsync);
@@ -166,6 +172,23 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public override async Task LoadDataAsync()
         {
             await LoadSettingsAsync();
+            await LoadReadmeAsync();
+        }
+
+        private async Task LoadReadmeAsync()
+        {
+            try
+            {
+                var content = await ReadmeContentProvider.GetAsync(typeof(SettingsViewModel).Assembly).ConfigureAwait(false);
+                ReadmeContent = string.IsNullOrWhiteSpace(content)
+                    ? LocalizationRegistry.Get("FINC_Home_Markdown_LoadFailed")
+                    : content;
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogError($"Failed to load README content: {ex.Message}");
+                ReadmeContent = LocalizationRegistry.Get("FINC_Home_Markdown_LoadFailed");
+            }
         }
 
         private async Task LoadSettingsAsync()
