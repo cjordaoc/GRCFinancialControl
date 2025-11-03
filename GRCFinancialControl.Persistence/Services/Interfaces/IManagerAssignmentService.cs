@@ -13,5 +13,6 @@ namespace GRCFinancialControl.Persistence.Services.Interfaces
         Task AddAsync(EngagementManagerAssignment assignment);
         Task UpdateAsync(EngagementManagerAssignment assignment);
         Task DeleteAsync(int id);
+        Task UpdateAssignmentsForEngagementAsync(int engagementId, IEnumerable<int> managerIds);
     }
 }

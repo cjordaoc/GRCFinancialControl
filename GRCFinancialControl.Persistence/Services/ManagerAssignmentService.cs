@@ -136,5 +136,51 @@ namespace GRCFinancialControl.Persistence.Services
             context.EngagementManagerAssignments.Remove(existingAssignment);
             await context.SaveChangesAsync();
         }
+
+        public async Task UpdateAssignmentsForEngagementAsync(int engagementId, IEnumerable<int> managerIds)
+        {
+            await using var context = await _contextFactory.CreateDbContextAsync();
+
+            await EngagementMutationGuard.EnsureCanMutateAsync(
+                context,
+                engagementId,
+                "Updating manager assignments",
+                allowManualSources: true);
+
+            var existingAssignments = await context.EngagementManagerAssignments
+                .Where(a => a.EngagementId == engagementId)
+                .ToListAsync();
+
+            var existingManagerIds = existingAssignments.Select(a => a.ManagerId).ToHashSet();
+            var incomingManagerIds = managerIds.ToHashSet();
+
+            var assignmentsToRemove = existingAssignments
+                .Where(a => !incomingManagerIds.Contains(a.ManagerId))
+                .ToList();
+
+            var managerIdsToAdd = incomingManagerIds
+                .Where(id => !existingManagerIds.Contains(id))
+                .ToList();
+
+            if (assignmentsToRemove.Any())
+            {
+                context.EngagementManagerAssignments.RemoveRange(assignmentsToRemove);
+            }
+
+            if (managerIdsToAdd.Any())
+            {
+                var newAssignments = managerIdsToAdd.Select(managerId => new EngagementManagerAssignment
+                {
+                    EngagementId = engagementId,
+                    ManagerId = managerId
+                });
+                await context.EngagementManagerAssignments.AddRangeAsync(newAssignments);
+            }
+
+            if (assignmentsToRemove.Any() || managerIdsToAdd.Any())
+            {
+                await context.SaveChangesAsync();
+            }
+        }
     }
 }

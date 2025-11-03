@@ -1,44 +1,34 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="820" d:DesignHeight="450"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.PapdAssignmentsView"
              x:DataType="vm:PapdAssignmentsViewModel">
     <StackPanel Margin="{StaticResource CardPaddingThickness}" Spacing="{StaticResource SectionSpacing}">
         <StackPanel Spacing="{StaticResource SpacingUnit}">
-            <TextBlock Text="PAPD" Classes="TitleSmall"/>
-            <ComboBox ItemsSource="{Binding Papds}"
-                      SelectedItem="{Binding SelectedPapd}"
-                      MinWidth="280">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding Name}"/>
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
+            <TextBlock Text="Engagement" Classes="TitleSmall"/>
+            <ComboBox ItemsSource="{Binding Engagements}"
+                      SelectedItem="{Binding SelectedEngagement}"
+                      MinWidth="320"/>
         </StackPanel>
+
+        <ScrollViewer Height="280" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding AvailablePapds}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <CheckBox Content="{Binding Papd.Name}"
+                                  IsChecked="{Binding IsSelected}"
+                                  Margin="2"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
 
         <StackPanel Orientation="Horizontal" Spacing="{StaticResource SpacingUnit}">
-            <Button Content="{loc:Loc Key=FINC_Button_Add}" Command="{Binding AddCommand}"/>
-            <Button Content="{loc:Loc Key=FINC_Button_Edit}" Command="{Binding EditCommand}"/>
-            <Button Content="{loc:Loc Key=FINC_Button_View}" Command="{Binding ViewCommand}"/>
-            <Button Content="{loc:Loc Key=FINC_Button_Delete}" Command="{Binding DeleteCommand}"/>
+            <Button Content="{loc:Loc Key=FINC_Button_Save}" Command="{Binding SaveCommand}"/>
         </StackPanel>
-
-        <DataGrid ItemsSource="{Binding Assignments}"
-                  SelectedItem="{Binding SelectedAssignment}"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  HeadersVisibility="Column"
-                  GridLinesVisibility="All"
-                  Height="300"
-                  SelectionMode="Single">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="{loc:Loc Key=FINC_Admin_PapdAssignments_Header_Engagement}" Binding="{Binding EngagementDisplay}" Width="2*"/>
-            </DataGrid.Columns>
-        </DataGrid>
     </StackPanel>
 </UserControl>

@@ -1,16 +1,12 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using App.Presentation.Localization;
 using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRC.Shared.UI.Messages;
-using GRCFinancialControl.Avalonia.Services;
-using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -18,291 +14,129 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 {
     public partial class PapdAssignmentsViewModel : ViewModelBase
     {
-        private readonly IPapdService _papdService;
+        private readonly IPapdAssignmentService _assignmentService;
         private readonly IEngagementService _engagementService;
-        private readonly DialogService _dialogService;
-        private List<Engagement> _engagementCache = new();
+        private readonly IPapdService _papdService;
 
         [ObservableProperty]
-        private ObservableCollection<Papd> _papds = new();
+        private ObservableCollection<EngagementOption> _engagements = new();
 
         [ObservableProperty]
-        private Papd? _selectedPapd;
+        private EngagementOption? _selectedEngagement;
 
         [ObservableProperty]
-        private ObservableCollection<PapdAssignmentItem> _assignments = new();
-
-        [ObservableProperty]
-        private PapdAssignmentItem? _selectedAssignment;
+        private ObservableCollection<SelectablePapd> _availablePapds = new();
 
         public PapdAssignmentsViewModel(
-            IPapdService papdService,
+            IPapdAssignmentService assignmentService,
             IEngagementService engagementService,
-            DialogService dialogService,
+            IPapdService papdService,
             IMessenger messenger)
             : base(messenger)
         {
-            _papdService = papdService;
+            _assignmentService = assignmentService;
             _engagementService = engagementService;
-            _dialogService = dialogService;
+            _papdService = papdService;
         }
 
         public override async Task LoadDataAsync()
         {
-            await LoadPapdsAsync();
-            await RefreshEngagementCacheAsync();
-            await LoadAssignmentsAsync();
+            var engagements = await _engagementService.GetAllAsync();
+            var engagementOptions = engagements
+                .OrderBy(e => e.Description, StringComparer.OrdinalIgnoreCase)
+                .Select(e => new EngagementOption(e.Id, e.EngagementId, e.Description))
+                .ToList();
+
+            Engagements = new ObservableCollection<EngagementOption>(engagementOptions);
+
+            var papds = await _papdService.GetAllAsync();
+            var orderedPapds = papds
+                .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
+                .Select(p => new SelectablePapd(p))
+                .ToList();
+
+            AvailablePapds = new ObservableCollection<SelectablePapd>(orderedPapds);
+
+            if (SelectedEngagement is null && Engagements.Any())
+            {
+                SelectedEngagement = Engagements.First();
+            }
+            else
+            {
+                await LoadAssignmentsForSelectedEngagementAsync();
+            }
+
+            SaveCommand.NotifyCanExecuteChanged();
         }
 
-        [RelayCommand(CanExecute = nameof(CanModifyAssignments))]
-        private async Task AddAsync()
+        [RelayCommand(CanExecute = nameof(CanSave))]
+        private async Task SaveAsync()
         {
-            if (SelectedPapd is null)
+            if (SelectedEngagement is null)
             {
                 return;
             }
 
-            var assignment = new EngagementPapd
-            {
-                PapdId = SelectedPapd.Id,
-                Papd = SelectedPapd
-            };
+            var selectedPapdIds = AvailablePapds
+                .Where(p => p.IsSelected)
+                .Select(p => p.Papd.Id)
+                .ToList();
 
-            var editorViewModel = new PapdEngagementAssignmentViewModel(
-                SelectedPapd,
-                assignment,
-                _engagementService,
-                Messenger);
-
-            await editorViewModel.LoadDataAsync();
-            var result = await _dialogService.ShowDialogAsync(editorViewModel);
-            if (result)
-            {
-                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
-                await RefreshEngagementCacheAsync();
-                await LoadAssignmentsAsync();
-            }
-        }
-
-        [RelayCommand(CanExecute = nameof(CanModifySelection))]
-        private async Task EditAsync()
-        {
-            if (SelectedPapd is null || SelectedAssignment is null)
-            {
-                return;
-            }
-
-            var engagement = await EnsureEngagementAsync(SelectedAssignment.EngagementInternalId);
-            if (engagement is null)
-            {
-                ToastService.ShowError(
-                    "FINC_Admin_PapdAssignments_Toast_OperationFailed",
-                    LocalizationRegistry.Get("FINC_Admin_PapdAssignments_Error_EngagementMissing"));
-                return;
-            }
-
-            var assignment = engagement.EngagementPapds.FirstOrDefault(a => a.Id == SelectedAssignment.AssignmentId);
-            if (assignment is null)
-            {
-                ToastService.ShowWarning(
-                    "FINC_Admin_PapdAssignments_Toast_OperationFailed",
-                    LocalizationRegistry.Get("FINC_Admin_PapdAssignments_Error_AssignmentMissing"));
-                return;
-            }
-
-            var editorViewModel = new PapdEngagementAssignmentViewModel(
-                SelectedPapd,
-                assignment,
-                _engagementService,
-                Messenger);
-
-            await editorViewModel.LoadDataAsync();
-            var result = await _dialogService.ShowDialogAsync(editorViewModel);
-            if (result)
-            {
-                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
-                await RefreshEngagementCacheAsync();
-                await LoadAssignmentsAsync();
-            }
-        }
-
-        [RelayCommand(CanExecute = nameof(CanModifySelection))]
-        private async Task ViewAsync()
-        {
-            if (SelectedPapd is null || SelectedAssignment is null)
-            {
-                return;
-            }
-
-            var engagement = await EnsureEngagementAsync(SelectedAssignment.EngagementInternalId);
-            if (engagement is null)
-            {
-                ToastService.ShowError(
-                    "FINC_Admin_PapdAssignments_Toast_OperationFailed",
-                    LocalizationRegistry.Get("FINC_Admin_PapdAssignments_Error_EngagementMissing"));
-                return;
-            }
-
-            var assignment = engagement.EngagementPapds.FirstOrDefault(a => a.Id == SelectedAssignment.AssignmentId);
-            if (assignment is null)
-            {
-                ToastService.ShowWarning(
-                    "FINC_Admin_PapdAssignments_Toast_OperationFailed",
-                    LocalizationRegistry.Get("FINC_Admin_PapdAssignments_Error_AssignmentMissing"));
-                return;
-            }
-
-            var editorViewModel = new PapdEngagementAssignmentViewModel(
-                SelectedPapd,
-                assignment,
-                _engagementService,
-                Messenger,
-                isReadOnlyMode: true);
-
-            await editorViewModel.LoadDataAsync();
-            await _dialogService.ShowDialogAsync(editorViewModel);
-        }
-
-        [RelayCommand(CanExecute = nameof(CanModifySelection))]
-        private async Task DeleteAsync()
-        {
-            if (SelectedPapd is null || SelectedAssignment is null)
-            {
-                return;
-            }
-
-            var engagement = await EnsureEngagementAsync(SelectedAssignment.EngagementInternalId);
-            if (engagement is null)
-            {
-                ToastService.ShowError(
-                    "FINC_Admin_PapdAssignments_Toast_OperationFailed",
-                    LocalizationRegistry.Get("FINC_Admin_PapdAssignments_Error_EngagementMissing"));
-                return;
-            }
-
-            var assignment = engagement.EngagementPapds.FirstOrDefault(a => a.Id == SelectedAssignment.AssignmentId);
-            if (assignment is null)
-            {
-                ToastService.ShowWarning(
-                    "FINC_Admin_PapdAssignments_Toast_OperationFailed",
-                    LocalizationRegistry.Get("FINC_Admin_PapdAssignments_Error_AssignmentMissing"));
-                return;
-            }
-
-            engagement.EngagementPapds.Remove(assignment);
             try
             {
-                await _engagementService.UpdateAsync(engagement);
-
-                ToastService.ShowSuccess(
-                    "FINC_Admin_PapdAssignments_Toast_DeleteSuccess",
-                    SelectedPapd.Name,
-                    SelectedAssignment.EngagementDisplay);
-
+                await _assignmentService.UpdateAssignmentsForEngagementAsync(SelectedEngagement.InternalId, selectedPapdIds);
+                ToastService.ShowSuccess("Assignments updated successfully.");
                 Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
-                await RefreshEngagementCacheAsync();
-                await LoadAssignmentsAsync();
             }
             catch (Exception ex)
             {
-                ToastService.ShowError("FINC_Admin_PapdAssignments_Toast_OperationFailed", ex.Message);
+                ToastService.ShowError("Failed to update assignments.", ex.Message);
             }
         }
 
-        private bool CanModifyAssignments() => SelectedPapd is not null;
+        private bool CanSave() => SelectedEngagement is not null;
 
-        private bool CanModifySelection() => SelectedPapd is not null && SelectedAssignment is not null;
-
-        partial void OnSelectedPapdChanged(Papd? value)
+        partial void OnSelectedEngagementChanged(EngagementOption? value)
         {
-            _ = LoadAssignmentsAsync();
-            AddCommand.NotifyCanExecuteChanged();
-            EditCommand.NotifyCanExecuteChanged();
-            ViewCommand.NotifyCanExecuteChanged();
-            DeleteCommand.NotifyCanExecuteChanged();
+            SaveCommand.NotifyCanExecuteChanged();
+            _ = LoadAssignmentsForSelectedEngagementAsync();
         }
 
-        partial void OnSelectedAssignmentChanged(PapdAssignmentItem? value)
+        private async Task LoadAssignmentsForSelectedEngagementAsync()
         {
-            EditCommand.NotifyCanExecuteChanged();
-            ViewCommand.NotifyCanExecuteChanged();
-            DeleteCommand.NotifyCanExecuteChanged();
-        }
-
-        private async Task LoadPapdsAsync()
-        {
-            var papds = await _papdService.GetAllAsync();
-            var ordered = papds
-                .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            var previousId = SelectedPapd?.Id;
-            Papds = new ObservableCollection<Papd>(ordered);
-            SelectedPapd = previousId.HasValue
-                ? Papds.FirstOrDefault(p => p.Id == previousId.Value) ?? Papds.FirstOrDefault()
-                : Papds.FirstOrDefault();
-        }
-
-        private async Task RefreshEngagementCacheAsync()
-        {
-            _engagementCache = await _engagementService.GetAllAsync();
-        }
-
-        private async Task LoadAssignmentsAsync()
-        {
-            if (SelectedPapd is null)
+            foreach (var papd in AvailablePapds)
             {
-                Assignments = new ObservableCollection<PapdAssignmentItem>();
-                SelectedAssignment = null;
+                papd.IsSelected = false;
+            }
+
+            if (SelectedEngagement is null)
+            {
                 return;
             }
 
-            if (_engagementCache.Count == 0)
+            var assignments = await _assignmentService.GetByEngagementIdAsync(SelectedEngagement.InternalId);
+            var assignedPapdIds = assignments.Select(a => a.PapdId).ToHashSet();
+
+            foreach (var papd in AvailablePapds)
             {
-                await RefreshEngagementCacheAsync();
+                if (assignedPapdIds.Contains(papd.Papd.Id))
+                {
+                    papd.IsSelected = true;
+                }
             }
-
-            var items = _engagementCache
-                .SelectMany(e => e.EngagementPapds.Select(a => (Engagement: e, Assignment: a)))
-                .Where(pair => pair.Assignment.PapdId == SelectedPapd.Id)
-                .Select(pair => new PapdAssignmentItem(
-                    pair.Assignment.Id,
-                    pair.Engagement.Id,
-                    pair.Engagement.EngagementId,
-                    pair.Engagement.Description))
-                .OrderBy(item => item.EngagementDisplay, StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            Assignments = new ObservableCollection<PapdAssignmentItem>(items);
-            SelectedAssignment = Assignments.FirstOrDefault();
-        }
-
-        private async Task<Engagement?> EnsureEngagementAsync(int engagementId)
-        {
-            var engagement = _engagementCache.FirstOrDefault(e => e.Id == engagementId);
-            if (engagement is not null)
-            {
-                return engagement;
-            }
-
-            engagement = await _engagementService.GetByIdAsync(engagementId);
-            if (engagement is not null)
-            {
-                _engagementCache.Add(engagement);
-            }
-
-            return engagement;
         }
     }
 
-    public record PapdAssignmentItem(
-        int AssignmentId,
-        int EngagementInternalId,
-        string EngagementId,
-        string EngagementDescription)
+    public partial class SelectablePapd : ObservableObject
     {
-        public string EngagementDisplay => string.IsNullOrWhiteSpace(EngagementId)
-            ? EngagementDescription
-            : $"{EngagementId} - {EngagementDescription}";
+        [ObservableProperty]
+        private bool _isSelected;
+
+        public Papd Papd { get; }
+
+        public SelectablePapd(Papd papd)
+        {
+            Papd = papd;
+        }
     }
 }
