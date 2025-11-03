@@ -14,11 +14,16 @@
   <x:Double x:Key="InputMinWidthWide">160</x:Double>
   <x:Double x:Key="InputMinWidthCompact">100</x:Double>
 
+  <x:Double x:Key="ButtonMinHeight">40</x:Double>
   <x:Double x:Key="ButtonHeightStandard">40</x:Double>
+  <x:Double x:Key="ButtonMinWidth">100</x:Double>
   <x:Double x:Key="ButtonMinWidthCompact">120</x:Double>
   <x:Double x:Key="ButtonMinWidthStandard">160</x:Double>
   <x:Double x:Key="ButtonMinWidthWide">200</x:Double>
   <x:Double x:Key="ButtonMinWidthBaseline">100</x:Double>
+
+  <x:Double x:Key="DataGridRowHeight">34</x:Double>
+  <x:Double x:Key="DataGridHeaderHeight">36</x:Double>
 
   <x:Double x:Key="SidebarCompactWidth">56</x:Double>
   <x:Double x:Key="SidebarExpandedWidth">220</x:Double>

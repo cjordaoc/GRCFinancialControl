@@ -8,12 +8,12 @@
              x:Class="InvoicePlanner.Avalonia.Views.InvoiceSummaryView"
              x:DataType="vm:InvoiceSummaryViewModel"
              mc:Ignorable="d">
-    <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="{StaticResource GridSpacing}">
-        <Border Grid.Row="0" Classes="Card" Padding="{StaticResource LayoutPaddingStandard}" Margin="{StaticResource MarginInset}">
-            <StackPanel Spacing="{StaticResource ControlSpacing}">
+    <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="{DynamicResource GridGap}">
+        <Border Grid.Row="0" Classes="Card" Padding="{DynamicResource CardPaddingThickness}" Margin="{DynamicResource MarginInset}">
+            <StackPanel Spacing="{DynamicResource ControlSpacing}">
                 <TextBlock Classes="TitleMedium" Text="{loc:Loc Key=INV_InvoiceSummary_Title_Filters}" />
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource GridSpacing}">
-                    <StackPanel Spacing="{StaticResource SpacingUnit}">
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="{DynamicResource GridGap}">
+                    <StackPanel Spacing="{DynamicResource SpacingUnit}">
                         <TextBlock Text="{loc:Loc Key=INV_InvoiceSummary_Label_Engagement}" />
                         <ComboBox ItemsSource="{Binding Engagements}"
                                   SelectedItem="{Binding SelectedEngagement, Mode=TwoWay}">
@@ -24,7 +24,7 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Spacing="{StaticResource SpacingUnit}">
+                    <StackPanel Grid.Column="1" Spacing="{DynamicResource SpacingUnit}">
                         <TextBlock Text="{loc:Loc Key=INV_InvoiceSummary_Label_Customer}" />
                         <ComboBox ItemsSource="{Binding Customers}"
                                   SelectedItem="{Binding SelectedCustomer, Mode=TwoWay}">
@@ -36,7 +36,7 @@
                         </ComboBox>
                     </StackPanel>
                 </Grid>
-                <StackPanel Spacing="{StaticResource SpacingUnit}">
+                <StackPanel Spacing="{DynamicResource SpacingUnit}">
                     <TextBlock Text="{loc:Loc Key=INV_InvoiceSummary_Label_Statuses}" />
                     <ItemsControl ItemsSource="{Binding StatusFilters}">
                         <ItemsControl.ItemsPanel>
@@ -53,7 +53,7 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Spacing="{StaticResource SpacingUnit}">
+                <StackPanel Orientation="Horizontal" Spacing="{DynamicResource SpacingUnit}">
                     <Button Content="{loc:Loc Key=INV_InvoiceSummary_Button_ApplyFilters}" Command="{Binding RefreshCommand}" />
                     <Button Content="{loc:Loc Key=INV_InvoiceSummary_Button_ClearFilters}" Command="{Binding ClearFiltersCommand}" />
                     <Button Content="{loc:Loc Key=INV_Button_ExportExcel}" Command="{Binding ExportExcelCommand}" />
@@ -62,36 +62,36 @@
             </StackPanel>
         </Border>
 
-        <Border Grid.Row="1" Classes="Card" Padding="{StaticResource LayoutPaddingStandard}" Margin="{StaticResource MarginInset}">
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource GridSpacing}">
-                <StackPanel Spacing="{StaticResource SpacingUnit}">
+        <Border Grid.Row="1" Classes="Card" Padding="{DynamicResource CardPaddingThickness}" Margin="{DynamicResource MarginInset}">
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="{DynamicResource GridGap}">
+                <StackPanel Spacing="{DynamicResource SpacingUnit}">
                     <TextBlock Text="{loc:Loc Key=INV_InvoiceSummary_Section_Totals_Amount}" />
                     <TextBlock Classes="TitleMedium" Text="{Binding TotalAmountDisplay}" />
                 </StackPanel>
-                <StackPanel Grid.Column="1" Spacing="{StaticResource SpacingUnit}">
+                <StackPanel Grid.Column="1" Spacing="{DynamicResource SpacingUnit}">
                     <TextBlock Text="{loc:Loc Key=INV_InvoiceSummary_Section_Totals_Percentage}" />
                     <TextBlock Classes="TitleMedium" Text="{Binding TotalPercentage, StringFormat={}{0:N4}%}" />
                 </StackPanel>
             </Grid>
         </Border>
 
-        <StackPanel Grid.Row="2" Margin="{StaticResource MarginHorizontalMedium}" Spacing="{StaticResource SpacingUnit}">
+        <StackPanel Grid.Row="2" Margin="{DynamicResource MarginHorizontalMedium}" Spacing="{DynamicResource SpacingUnit}">
             <TextBlock Classes="StatusSuccess" Text="{Binding StatusMessage}" IsVisible="{Binding HasStatusMessage}" />
             <TextBlock Classes="StatusError" Text="{Binding ValidationMessage}" IsVisible="{Binding HasValidationMessage}" />
         </StackPanel>
 
-        <ScrollViewer Grid.Row="3" Margin="{StaticResource LayoutPaddingStandard}" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="3" Margin="{DynamicResource CardPaddingThickness}" VerticalScrollBarVisibility="Auto">
             <ItemsControl ItemsSource="{Binding Groups}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:InvoiceSummaryGroupViewModel">
-                        <Border Classes="Card" Padding="{StaticResource LayoutPaddingStandard}" Margin="{StaticResource MarginBottomRegular}">
-                            <StackPanel Spacing="{StaticResource ControlSpacing}">
-                                <StackPanel Orientation="Horizontal" Spacing="{StaticResource SectionSpacing}" VerticalAlignment="Center">
+                        <Border Classes="Card" Padding="{DynamicResource CardPaddingThickness}" Margin="{DynamicResource MarginBottomRegular}">
+                            <StackPanel Spacing="{DynamicResource ControlSpacing}">
+                                <StackPanel Orientation="Horizontal" Spacing="{DynamicResource SectionSpacing}" VerticalAlignment="Center">
                                     <TextBlock Classes="TitleMedium" Text="{Binding EngagementName}" />
                                     <TextBlock Text="{Binding CustomerName}" />
                                     <TextBlock Text="{Binding CustomerCode}" />
                                 </StackPanel>
-                                <StackPanel Orientation="Horizontal" Spacing="{StaticResource ControlSpacing}">
+                                <StackPanel Orientation="Horizontal" Spacing="{DynamicResource ControlSpacing}">
                                     <TextBlock Text="{Binding TotalAmountDisplay}" />
                                     <TextBlock Text="{Binding TotalPercentageDisplay}" />
                                     <TextBlock Text="{Binding PlannedCountDisplay}" />

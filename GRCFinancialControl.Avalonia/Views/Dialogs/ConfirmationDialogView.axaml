@@ -4,11 +4,11 @@
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              x:Class="GRCFinancialControl.Avalonia.Views.Dialogs.ConfirmationDialogView"
              x:DataType="vm:ConfirmationDialogViewModel">
-  <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridSpacing}">
-    <Border Padding="{StaticResource LayoutPaddingStandard}"
+  <Grid RowDefinitions="*,Auto" RowSpacing="{DynamicResource GridGap}">
+    <Border Padding="{DynamicResource CardPaddingThickness}"
             Background="{StaticResource BrushSurfaceMuted}"
             CornerRadius="{StaticResource ControlCornerRadius}">
-      <StackPanel Spacing="{StaticResource SectionSpacing}">
+      <StackPanel Spacing="{DynamicResource SectionSpacing}">
         <TextBlock Text="{Binding Title}" Classes="TitleSmall"/>
         <TextBlock Text="{Binding Message}" TextWrapping="Wrap"/>
       </StackPanel>
@@ -16,7 +16,7 @@
     <StackPanel Grid.Row="1"
                 Orientation="Horizontal"
                 HorizontalAlignment="Right"
-                Spacing="{StaticResource ControlSpacing}">
+                Spacing="{DynamicResource ControlSpacing}">
       <Button Content="{loc:Loc Key=Global_Button_Save}"
               Command="{Binding SaveCommand}"
               IsDefault="True"

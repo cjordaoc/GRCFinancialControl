@@ -25,7 +25,7 @@
                                    VerticalAlignment="Stretch"
                                    Material="{StaticResource AcrylicModal}"/>
 
-        <Grid Margin="{StaticResource LayoutMarginStandard}" ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource GridSpacing}">
+        <Grid Margin="{DynamicResource PageMarginThickness}" ColumnDefinitions="Auto,*" ColumnSpacing="{DynamicResource GridGap}">
         <sharedControls:SidebarHost Grid.Column="0"
                                     Header="{Binding Title}"
                                     ExpandedLabel="{loc:Loc Key=Global_SidebarCollapse}"
@@ -48,7 +48,7 @@
                                   ToolTip.Tip="{Binding Title}">
                         <ToggleButton.Content>
                             <StackPanel Orientation="Horizontal"
-                                        Spacing="{StaticResource SpacingUnit}"
+                                        Spacing="{DynamicResource SpacingUnit}"
                                         VerticalAlignment="Center">
                                 <Path Data="{Binding Icon}"
                                       Width="20"
@@ -67,18 +67,18 @@
             </sharedControls:SidebarHost.ItemTemplate>
         </sharedControls:SidebarHost>
 
-        <Border Grid.Column="1" Classes="Card" Padding="{StaticResource LayoutPaddingStandard}">
+        <Border Grid.Column="1" Classes="Card" Padding="{DynamicResource CardPaddingThickness}">
             <ContentControl Content="{Binding CurrentViewModel}" />
         </Border>
 
             <ItemsControl Grid.ColumnSpan="2"
-                          Margin="{StaticResource MarginCallout}"
+                          Margin="{DynamicResource MarginCallout}"
                           HorizontalAlignment="Right"
                           VerticalAlignment="Top"
                           ItemsSource="{x:Static services:ToastService.Notifications}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <StackPanel Spacing="{StaticResource ControlSpacing}"/>
+                        <StackPanel Spacing="{DynamicResource ControlSpacing}"/>
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>

@@ -37,7 +37,7 @@
 
   <Style Selector="TextBlock">
     <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
-    <Setter Property="FontSize" Value="{StaticResource FontSize14}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeBody}" />
     <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
   </Style>
 
@@ -47,47 +47,47 @@
 
   <Style Selector="TextBox">
     <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
-    <Setter Property="FontSize" Value="{StaticResource FontSize14}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeBody}" />
     <Setter Property="MinHeight" Value="{StaticResource InputHeightStandard}" />
   </Style>
 
   <Style Selector="ComboBox">
     <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
-    <Setter Property="FontSize" Value="{StaticResource FontSize14}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeBody}" />
     <Setter Property="MinHeight" Value="{StaticResource InputHeightStandard}" />
   </Style>
 
   <Style Selector="TextBlock.TitleLarge">
     <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
-    <Setter Property="FontSize" Value="{StaticResource FontSize24}" />
-    <Setter Property="FontWeight" Value="{StaticResource FontWeightBold}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeTitle}" />
+    <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}" />
     <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
   </Style>
 
   <Style Selector="TextBlock.TitleMedium">
     <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
-    <Setter Property="FontSize" Value="{StaticResource FontSize20}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeSection}" />
     <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}" />
     <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
   </Style>
 
   <Style Selector="TextBlock.TitleSmall">
     <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
-    <Setter Property="FontSize" Value="{StaticResource FontSize18}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeBody}" />
     <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}" />
     <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
   </Style>
 
   <Style Selector="TextBlock.TitleXSmall">
     <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
-    <Setter Property="FontSize" Value="{StaticResource FontSize16}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeCaption}" />
     <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}" />
     <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
   </Style>
 
   <Style Selector="TextBlock.Caption">
     <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
-    <Setter Property="FontSize" Value="{StaticResource FontSize12}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeCaption}" />
     <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
     <Setter Property="Opacity" Value="0.8" />
   </Style>
@@ -124,7 +124,7 @@
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderBrush" Value="Transparent" />
     <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
-    <Setter Property="FontSize" Value="{StaticResource FontSize14}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeButton}" />
     <Setter Property="FontWeight" Value="{StaticResource FontWeightMedium}" />
     <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
   </Style>
@@ -146,8 +146,9 @@
     <Setter Property="Background" Value="{StaticResource BrushSurfaceVariant}" />
     <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
     <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeSection}" />
     <Setter Property="HorizontalContentAlignment" Value="Left" />
-    <Setter Property="Padding" Value="{StaticResource SpaceThickness12}" />
+    <Setter Property="Padding" Value="{StaticResource DataGridHeaderPadding}" />
   </Style>
 
   <Style Selector="TabItem">

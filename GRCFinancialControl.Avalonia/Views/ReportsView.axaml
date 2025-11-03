@@ -9,13 +9,13 @@
              x:Class="GRCFinancialControl.Avalonia.Views.ReportsView"
              x:DataType="vm:ReportsViewModel">
     <Grid RowDefinitions="Auto,Auto,*"
-          Margin="{StaticResource LayoutMarginStandard}"
-          RowSpacing="{StaticResource SpacingUnit}">
+          Margin="{DynamicResource PageMarginThickness}"
+          RowSpacing="{DynamicResource SpacingUnit}">
         <Grid Grid.Row="0" RowDefinitions="Auto,Auto">
             <StackPanel Grid.Row="0"
                         Orientation="Horizontal"
                         HorizontalAlignment="Right"
-                        Spacing="{StaticResource SpacingUnit}"
+                        Spacing="{DynamicResource SpacingUnit}"
                         IsEnabled="{Binding IsRefreshing, Converter={StaticResource InverseBooleanConverter}}">
                 <Button Content="{loc:Loc Key=FINC_Reports_Button_OpenBrowser}"
                         Command="{Binding OpenInBrowserCommand}"
@@ -25,7 +25,7 @@
                         IsEnabled="{Binding IsRefreshing, Converter={StaticResource InverseBooleanConverter}}"/>
             </StackPanel>
             <ProgressBar Grid.Row="1"
-                         Margin="{StaticResource MarginTopXSmall}"
+                         Margin="{DynamicResource MarginTopXSmall}"
                          IsIndeterminate="True"
                          Height="6"
                          IsVisible="{Binding IsRefreshing}"/>
@@ -33,10 +33,10 @@
 
         <Border Grid.Row="1"
                 Background="{DynamicResource ThemeBackgroundBrush}"
-                Padding="{StaticResource LayoutPaddingStandard}"
+                Padding="{DynamicResource CardPaddingThickness}"
                 CornerRadius="{StaticResource ControlCornerRadius}"
                 IsVisible="{Binding DashboardUri, Converter={x:Static converters:ObjectConverters.IsNull}}">
-            <StackPanel Spacing="{StaticResource SpacingUnit}">
+            <StackPanel Spacing="{DynamicResource SpacingUnit}">
                 <TextBlock Text="{loc:Loc Key=FINC_Reports_Empty_Title}" Classes="TitleMedium"/>
                 <TextBlock Text="{loc:Loc Key=FINC_Reports_Empty_Description}" TextWrapping="Wrap"/>
                 <TextBlock Text="{loc:Loc Key=FINC_Reports_Label_Status}" FontWeight="{StaticResource FontWeightSemiBold}"/>

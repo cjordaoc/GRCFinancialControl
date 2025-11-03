@@ -7,11 +7,11 @@
              x:Class="InvoicePlanner.Avalonia.Views.ErrorDialogView"
              x:DataType="vm:ErrorDialogViewModel"
              mc:Ignorable="d">
-    <Border Padding="{StaticResource LayoutPaddingStandard}" Classes="Card">
-        <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridSpacing}">
-            <StackPanel Grid.Row="0" Spacing="{StaticResource SectionSpacing}">
+    <Border Padding="{DynamicResource CardPaddingThickness}" Classes="Card">
+        <Grid RowDefinitions="*,Auto" RowSpacing="{DynamicResource GridGap}">
+            <StackPanel Grid.Row="0" Spacing="{DynamicResource SectionSpacing}">
                 <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Classes="TitleMedium" />
-                <StackPanel Spacing="{StaticResource ControlSpacing}">
+                <StackPanel Spacing="{DynamicResource ControlSpacing}">
                     <TextBlock Text="{Binding DetailsLabel}" FontWeight="{StaticResource FontWeightSemiBold}" />
                     <TextBox Text="{Binding Details}"
                              AcceptsReturn="True"
@@ -25,7 +25,7 @@
             <StackPanel Grid.Row="1"
                         Orientation="Horizontal"
                         HorizontalAlignment="Right"
-                        Spacing="{StaticResource ControlSpacing}">
+                        Spacing="{DynamicResource ControlSpacing}">
                 <Button Content="{loc:Loc Key=Global_Button_Save}"
                         Command="{Binding SaveCommand}"
                         IsDefault="True"

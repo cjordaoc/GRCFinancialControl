@@ -10,12 +10,12 @@
              d:DesignWidth="800"
              d:DesignHeight="450">
     <ScrollViewer>
-        <StackPanel Margin="{StaticResource LayoutMarginStandard}" Spacing="{StaticResource SectionSpacing}">
-            <Border Classes="Card" Padding="{StaticResource LayoutPaddingStandard}">
-                <StackPanel Spacing="{StaticResource SectionSpacing}">
-                    <StackPanel Spacing="{StaticResource SpacingUnit}">
+        <StackPanel Margin="{DynamicResource PageMarginThickness}" Spacing="{DynamicResource SectionSpacing}">
+            <Border Classes="Card" Padding="{DynamicResource CardPaddingThickness}">
+                <StackPanel Spacing="{DynamicResource SectionSpacing}">
+                    <StackPanel Spacing="{DynamicResource SpacingUnit}">
                         <TextBlock Text="{loc:Loc Key=INV_Connection_Section_Language_Title}" Classes="TitleMedium"/>
-                        <StackPanel Orientation="Horizontal" Spacing="{StaticResource ControlSpacing}">
+                        <StackPanel Orientation="Horizontal" Spacing="{DynamicResource ControlSpacing}">
                             <TextBlock Text="{loc:Loc Key=INV_Connection_Label_Language}" VerticalAlignment="Center"/>
                             <ComboBox ItemsSource="{Binding Languages}"
                                       SelectedItem="{Binding SelectedLanguage}"
@@ -28,20 +28,20 @@
                             </ComboBox>
                         </StackPanel>
                     </StackPanel>
-                    <StackPanel Spacing="{StaticResource SpacingUnit}">
+                    <StackPanel Spacing="{DynamicResource SpacingUnit}">
                         <TextBlock Text="{loc:Loc Key=INV_Connection_Title_Setup}" Classes="TitleLarge"/>
                         <TextBlock Text="{loc:Loc Key=INV_Connection_Description_Setup}" TextWrapping="Wrap"/>
                     </StackPanel>
                     <Grid ColumnDefinitions="Auto,Auto,*"
-                          ColumnSpacing="{StaticResource GridSpacing}"
-                          RowSpacing="{StaticResource GridSpacing}">
+                          ColumnSpacing="{DynamicResource GridGap}"
+                          RowSpacing="{DynamicResource GridGap}">
                         <TextBlock Grid.Row="0"
                                    Text="{loc:Loc Key=INV_Connection_Label_Package}"
                                    VerticalAlignment="Center"/>
                         <StackPanel Grid.Row="0"
                                     Grid.Column="2"
                                     Orientation="Horizontal"
-                                    Spacing="{StaticResource ControlSpacing}">
+                                    Spacing="{DynamicResource ControlSpacing}">
                             <TextBox Width="320"
                                      Text="{Binding SelectedPackagePath}"
                                      Watermark="{loc:Loc Key=INV_Connection_Placeholder_Package}"
@@ -60,7 +60,7 @@
                                  PasswordChar="*"
                                  MinWidth="240"/>
                     </Grid>
-                    <StackPanel Orientation="Horizontal" Spacing="{StaticResource ControlSpacing}">
+                    <StackPanel Orientation="Horizontal" Spacing="{DynamicResource ControlSpacing}">
                         <Button Content="{loc:Loc Key=INV_Connection_Button_Import}"
                                 Command="{Binding ImportCommand}"
                                 MinWidth="{StaticResource ButtonMinWidthStandard}"/>
@@ -71,7 +71,7 @@
                     </StackPanel>
                     <Border Background="{StaticResource BrushSurfaceVariant}"
                             CornerRadius="{StaticResource ControlCornerRadius}"
-                            Padding="{StaticResource LayoutPaddingStandard}"
+                            Padding="{DynamicResource CardPaddingThickness}"
                             IsVisible="{Binding HasStatusMessage}">
                         <TextBlock Text="{Binding StatusMessage}"
                                    TextWrapping="Wrap"/>

@@ -15,15 +15,15 @@
                                              FalseBrush="{StaticResource BrushSuccess}"/>
     </UserControl.Resources>
     <ScrollViewer>
-        <StackPanel Margin="{StaticResource LayoutMarginStandard}" Spacing="{StaticResource SectionSpacing}">
+        <StackPanel Margin="{DynamicResource PageMarginThickness}" Spacing="{DynamicResource SectionSpacing}">
             <TextBlock Text="{loc:Loc Key=FINC_Home_Title}"
                        Classes="TitleLarge"/>
             <TextBlock Text="{loc:Loc Key=FINC_Home_Welcome}"
                        TextWrapping="Wrap"/>
-            <StackPanel Spacing="{StaticResource SpacingUnit}">
+            <StackPanel Spacing="{DynamicResource SpacingUnit}">
                 <TextBlock Text="{loc:Loc Key=FINC_Home_Label_FiscalYear}"
                            FontWeight="{StaticResource FontWeightSemiBold}"/>
-                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="{StaticResource GridSpacing}">
+                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="{DynamicResource GridGap}">
                     <ComboBox Grid.Column="0"
                               ItemsSource="{Binding FiscalYears}"
                               SelectedItem="{Binding SelectedFiscalYear}"
@@ -65,8 +65,8 @@
             </StackPanel>
             <Border Background="{StaticResource BrushSurfaceVariant}"
                     CornerRadius="{StaticResource ControlCornerRadius}"
-                    Padding="{StaticResource LayoutPaddingStandard}">
-                <StackPanel Spacing="{StaticResource ControlSpacing}">
+                    Padding="{DynamicResource CardPaddingThickness}">
+                <StackPanel Spacing="{DynamicResource ControlSpacing}">
                     <TextBlock Text="{loc:Loc Key=FINC_Home_Markdown_Title}"
                                Classes="TitleMedium"/>
                     <md:MarkdownScrollViewer Markdown="{Binding ReadmeContent}"
@@ -75,7 +75,7 @@
                                              ScrollViewer.VerticalScrollBarVisibility="Auto"/>
                 </StackPanel>
             </Border>
-            <StackPanel Spacing="{StaticResource SpacingUnit}">
+            <StackPanel Spacing="{DynamicResource SpacingUnit}">
                 <TextBlock Text="{loc:Loc Key=FINC_Home_Label_ClosingPeriod}"
                            FontWeight="{StaticResource FontWeightSemiBold}"/>
                 <ComboBox ItemsSource="{Binding ClosingPeriods}"
@@ -85,7 +85,7 @@
                           IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal" Spacing="{StaticResource SpacingUnit}">
+                            <StackPanel Orientation="Horizontal" Spacing="{DynamicResource SpacingUnit}">
                                 <TextBlock Text="{Binding Name}"
                                            FontWeight="{StaticResource FontWeightSemiBold}"/>
                                 <TextBlock>
@@ -107,7 +107,7 @@
             </StackPanel>
             <Border Background="{StaticResource BrushSurfaceVariant}"
                     CornerRadius="{StaticResource ControlCornerRadius}"
-                    Padding="{StaticResource LayoutPaddingStandard}"
+                    Padding="{DynamicResource CardPaddingThickness}"
                     IsVisible="{Binding HasStatusMessage}">
                 <TextBlock Text="{Binding StatusMessage}"
                            Foreground="{Binding IsError, Converter={StaticResource StatusBrushConverter}}"

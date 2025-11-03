@@ -1,18 +1,26 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <x:Double x:Key="SpacingUnit">8</x:Double>
+  <x:Double x:Key="PageMargin">24</x:Double>
+  <x:Double x:Key="CardPadding">16</x:Double>
   <x:Double x:Key="SectionSpacing">20</x:Double>
   <x:Double x:Key="ControlSpacing">12</x:Double>
+  <x:Double x:Key="GridGap">8</x:Double>
   <x:Double x:Key="GridSpacing">8</x:Double>
 
+  <Thickness x:Key="PageMarginThickness">24</Thickness>
+  <Thickness x:Key="CardPaddingThickness">16</Thickness>
+  <Thickness x:Key="SectionMargin">0,0,0,20</Thickness>
   <Thickness x:Key="LayoutMarginStandard">24</Thickness>
   <Thickness x:Key="LayoutPaddingStandard">16</Thickness>
-  <Thickness x:Key="SectionMargin">0,0,0,20</Thickness>
   <Thickness x:Key="LayoutMarginSection">20</Thickness>
-  <Thickness x:Key="SidebarItemPadding">10,16</Thickness>
-  <Thickness x:Key="ControlPaddingStandard">10,16</Thickness>
+  <Thickness x:Key="SidebarItemPadding">8,4</Thickness>
+  <Thickness x:Key="ControlPaddingStandard">8,4</Thickness>
   <Thickness x:Key="ControlMarginTop">0,12,0,0</Thickness>
   <Thickness x:Key="ControlMarginRight">0,0,12,0</Thickness>
   <Thickness x:Key="ControlMarginTopCompact">0,8,0,0</Thickness>
+
+  <Thickness x:Key="DataGridHeaderPadding">12,6</Thickness>
+  <Thickness x:Key="DataGridCellPadding">8,4</Thickness>
 
   <x:Double x:Key="Spacing4">4</x:Double>
   <x:Double x:Key="Spacing8">8</x:Double>
@@ -42,7 +50,7 @@
   <Thickness x:Key="MarginTopXSmall">0,4,0,0</Thickness>
   <Thickness x:Key="MarginTopMini">0,5,0,0</Thickness>
   <Thickness x:Key="MarginTopCompact">0,8,0,0</Thickness>
-  <Thickness x:Key="MarginTopSmall">0,10,0,0</Thickness>
+  <Thickness x:Key="MarginTopSmall">0,12,0,0</Thickness>
   <Thickness x:Key="MarginTopRegular">0,12,0,0</Thickness>
   <Thickness x:Key="MarginTopMedium">0,16,0,0</Thickness>
   <Thickness x:Key="MarginTopLarge">0,24,0,0</Thickness>
@@ -51,9 +59,9 @@
   <Thickness x:Key="MarginLeftSmall">8,0,0,0</Thickness>
   <Thickness x:Key="MarginLeftMedium">16,0,0,0</Thickness>
   <Thickness x:Key="MarginSection">16,8,16,16</Thickness>
-  <Thickness x:Key="MarginPage">24,0,24,24</Thickness>
+  <Thickness x:Key="MarginPage">24,24,24,24</Thickness>
   <Thickness x:Key="MarginCallout">0,32,32,0</Thickness>
-  <Thickness x:Key="MarginBottomSmall">0,0,0,10</Thickness>
+  <Thickness x:Key="MarginBottomSmall">0,0,0,12</Thickness>
   <Thickness x:Key="MarginBottomRegular">0,0,0,12</Thickness>
   <Thickness x:Key="MarginRightCompact">0,0,8,0</Thickness>
   <Thickness x:Key="MarginRightRegular">0,0,12,0</Thickness>
