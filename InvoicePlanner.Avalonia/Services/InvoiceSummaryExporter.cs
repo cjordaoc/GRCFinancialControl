@@ -22,28 +22,28 @@ public class InvoiceSummaryExporter
         }
 
         using var workbook = new XLWorkbook();
-        var worksheet = workbook.AddWorksheet(LocalizationRegistry.Get("Exports.InvoiceSummary.WorksheetName"));
+        var worksheet = workbook.AddWorksheet(LocalizationRegistry.Get("INV_Exports_InvoiceSummary_WorksheetName"));
 
         var headers = new[]
         {
-            LocalizationRegistry.Get("Exports.InvoiceSummary.Header.Customer"),
-            LocalizationRegistry.Get("Exports.InvoiceSummary.Header.CustomerCode"),
-            LocalizationRegistry.Get("Exports.InvoiceSummary.Header.Engagement"),
-            LocalizationRegistry.Get("Exports.InvoiceSummary.Header.PlanId"),
-            LocalizationRegistry.Get("Exports.InvoiceSummary.Header.Line"),
-            LocalizationRegistry.Get("Exports.InvoiceSummary.Header.Status"),
-            LocalizationRegistry.Get("Exports.InvoiceSummary.Header.PlanType"),
-            LocalizationRegistry.Get("Exports.InvoiceSummary.Header.Percentage"),
-            LocalizationRegistry.Get("Exports.InvoiceSummary.Header.Amount"),
-            LocalizationRegistry.Get("Exports.InvoiceSummary.Header.BaseValue"),
-            LocalizationRegistry.Get("Exports.InvoiceSummary.Header.EmissionDate"),
-            LocalizationRegistry.Get("Exports.InvoiceSummary.Header.DueDate"),
-            LocalizationRegistry.Get("Exports.InvoiceSummary.Header.RequestDate"),
-            LocalizationRegistry.Get("Exports.InvoiceSummary.Header.EmittedAt"),
-            LocalizationRegistry.Get("Exports.InvoiceSummary.Header.BzCode"),
-            LocalizationRegistry.Get("Exports.InvoiceSummary.Header.Ritm"),
-            LocalizationRegistry.Get("Exports.InvoiceSummary.Header.CanceledAt"),
-            LocalizationRegistry.Get("Exports.InvoiceSummary.Header.CancelReason"),
+            LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_Customer"),
+            LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_CustomerCode"),
+            LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_Engagement"),
+            LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_PlanId"),
+            LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_Line"),
+            LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_Status"),
+            LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_PlanType"),
+            LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_Percentage"),
+            LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_Amount"),
+            LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_BaseValue"),
+            LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_EmissionDate"),
+            LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_DueDate"),
+            LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_RequestDate"),
+            LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_EmittedAt"),
+            LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_BzCode"),
+            LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_Ritm"),
+            LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_CanceledAt"),
+            LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_CancelReason"),
         };
 
         for (var index = 0; index < headers.Length; index++)
@@ -93,7 +93,7 @@ public class InvoiceSummaryExporter
         }
 
         var totalsRow = worksheet.Row(rowNumber);
-        totalsRow.Cell(1).Value = LocalizationRegistry.Get("Exports.InvoiceSummary.Header.Totals");
+        totalsRow.Cell(1).Value = LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_Totals");
         totalsRow.Cell(1).Style.Font.Bold = true;
         totalsRow.Cell(9).FormulaA1 = $"=SUM(I2:I{rowNumber - 1})";
         totalsRow.Cell(9).Style.NumberFormat.Format = "#,##0.00";
@@ -149,7 +149,7 @@ public class InvoiceSummaryExporter
     {
         container.Row(row =>
         {
-            row.RelativeItem().Text(LocalizationRegistry.Get("Exports.InvoiceSummary.PdfTitle")).FontSize(18).Bold().FontColor("#00338D");
+            row.RelativeItem().Text(LocalizationRegistry.Get("INV_Exports_InvoiceSummary_PdfTitle")).FontSize(18).Bold().FontColor("#00338D");
             row.ConstantItem(80).AlignRight().Text(DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
         });
     }
@@ -160,20 +160,20 @@ public class InvoiceSummaryExporter
         {
             var headers = new[]
             {
-                LocalizationRegistry.Get("Exports.InvoiceSummary.Header.Customer"),
-                LocalizationRegistry.Get("Exports.InvoiceSummary.Header.Engagement"),
-                LocalizationRegistry.Get("Exports.InvoiceSummary.Header.PlanId"),
-                LocalizationRegistry.Get("Exports.InvoiceSummary.Header.Line"),
-                LocalizationRegistry.Get("Exports.InvoiceSummary.Header.Status"),
-                LocalizationRegistry.Get("Exports.InvoiceSummary.Header.PlanType"),
-                LocalizationRegistry.Get("InvoiceSummary.TableHeader.Percent"),
-                LocalizationRegistry.Get("Exports.InvoiceSummary.Header.Amount"),
-                LocalizationRegistry.Get("Exports.InvoiceSummary.Header.EmissionDate"),
-                LocalizationRegistry.Get("Exports.InvoiceSummary.Header.DueDate"),
-                LocalizationRegistry.Get("Exports.InvoiceSummary.Header.RequestDate"),
-                LocalizationRegistry.Get("Exports.InvoiceSummary.Header.EmittedAt"),
-                LocalizationRegistry.Get("Exports.InvoiceSummary.Header.BzCode"),
-                LocalizationRegistry.Get("Exports.InvoiceSummary.Header.Ritm"),
+                LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_Customer"),
+                LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_Engagement"),
+                LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_PlanId"),
+                LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_Line"),
+                LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_Status"),
+                LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_PlanType"),
+                LocalizationRegistry.Get("INV_InvoiceSummary_TableHeader_Percent"),
+                LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_Amount"),
+                LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_EmissionDate"),
+                LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_DueDate"),
+                LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_RequestDate"),
+                LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_EmittedAt"),
+                LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_BzCode"),
+                LocalizationRegistry.Get("INV_Exports_InvoiceSummary_Header_Ritm"),
             };
 
             table.ColumnsDefinition(columns =>
@@ -251,12 +251,12 @@ public class InvoiceSummaryExporter
     {
         return status switch
         {
-            InvoiceItemStatus.Planned => LocalizationRegistry.Get("Invoice.Status.Planned"),
-            InvoiceItemStatus.Requested => LocalizationRegistry.Get("Invoice.Status.Requested"),
-            InvoiceItemStatus.Emitted => LocalizationRegistry.Get("Invoice.Status.Emitted"),
-            InvoiceItemStatus.Closed => LocalizationRegistry.Get("Invoice.Status.Closed"),
-            InvoiceItemStatus.Canceled => LocalizationRegistry.Get("Invoice.Status.Canceled"),
-            InvoiceItemStatus.Reissued => LocalizationRegistry.Get("Invoice.Status.Reissued"),
+            InvoiceItemStatus.Planned => LocalizationRegistry.Get("INV_Invoice_Status_Planned"),
+            InvoiceItemStatus.Requested => LocalizationRegistry.Get("INV_Invoice_Status_Requested"),
+            InvoiceItemStatus.Emitted => LocalizationRegistry.Get("INV_Invoice_Status_Emitted"),
+            InvoiceItemStatus.Closed => LocalizationRegistry.Get("INV_Invoice_Status_Closed"),
+            InvoiceItemStatus.Canceled => LocalizationRegistry.Get("INV_Invoice_Status_Canceled"),
+            InvoiceItemStatus.Reissued => LocalizationRegistry.Get("INV_Invoice_Status_Reissued"),
             _ => status.ToString(),
         };
     }

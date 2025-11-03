@@ -4,6 +4,12 @@ This document details the implementation for every functional capability describ
 
 ---
 
+### Localization Infrastructure
+
+Shared localization resources live under `GRC.Shared.Resources/Localization/Strings.resx` (with `pt-BR` and `en-US` variants). UI layers resolve strings through `LocalizationRegistry`, while domain helpers can access `GRC.Shared.Resources.Localization.Strings.ResourceManager` directly for culture-aware formatting.
+
+---
+
 ## Budget Allocation Management
 - **Primary Services:** `FullManagementDataImporter`, `ImportService`, `HoursAllocationService`
 - **Domain Models:** `Engagement`, `EngagementRankBudget`, `EngagementRankBudgetHistory`, `FiscalYear`, `TrafficLightStatus`
@@ -21,6 +27,7 @@ This document details the implementation for every functional capability describ
   - Only existing engagements are updated; unknown IDs are skipped with "Engagement not found" warnings in the import summary.
   - Import result aggregates processed/skipped counts and exposes warnings for unresolved engagements.
   - Rows that reach the importer without a closing period still update opening budget columns but skip ETC metrics; these rows are listed in the `MissingClosingPeriodSkips` summary collection.
+  - `ImportViewModel` keeps the Full Management Data import disabled until `HasClosingPeriodSelected` resolves `true`, which only happens after `ApplicationParametersChangedMessage` persists a closing period from the Home dashboard.
 
 ---
 
@@ -69,6 +76,22 @@ This document details the implementation for every functional capability describ
 
 ---
 
+## Closing Period Management
+- **Primary Components:** `ClosingPeriodService`, `ClosingPeriodsViewModel`, `ClosingPeriodEditorViewModel`
+- **Domain Models:** `ClosingPeriod`, `FiscalYear`
+- **Persistence:** Table `ClosingPeriods` (column `IsLocked` defaults to `0`)
+- **Workflow:**
+  1. `ClosingPeriodService.GetAllAsync` returns periods ordered by `PeriodStart` with fiscal-year navigation properties so the view model can perform in-memory filtering.
+  2. `ClosingPeriodsViewModel.LoadDataAsync` caches all periods in `_allClosingPeriods`, loads fiscal years, and builds filter options through `UpdateFiscalYearFilters`, adding a localized **All fiscal years** entry and selecting persisted preferences when present.
+  3. `ApplyFiscalYearFilter` performs client-side filtering, repopulating the observable collection and preserving the previously selected period when possible.
+4. Lock/unlock requests flow through `ToggleLockAsync`, which invokes `ClosingPeriodService.SetLockStateAsync` to toggle `IsLocked`, refreshes the filtered collections, and broadcasts `RefreshViewMessage` so dependent view models reload their cached lists.
+  5. Editor dialogs (`ClosingPeriodEditorViewModel.SaveAsync`) persist changes via `IClosingPeriodService` and emit standardized toast feedback (`FINC_ClosingPeriods_Toast_SaveSuccess` or `FINC_ClosingPeriods_Toast_OperationFailed`).
+- **UI Feedback:**
+  - Save, Delete, and Delete Data commands share localized toast keys (`FINC_*_Toast_SaveSuccess`, `FINC_*_Toast_DeleteSuccess`, `FINC_*_Toast_ReverseSuccess`, `FINC_*_Toast_OperationFailed`) while Lock/Unlock retains dedicated lock-state messages.
+  - The filter ComboBox binds to `FiscalYearFilters` with `DisplayName` values, while the lock button label reflects `SelectedClosingPeriod.IsLocked` using localized `FINC_ClosingPeriods_Button_Lock`/`Unlock` strings.
+
+---
+
 ## Invoice Planner and Notifications
 - **Database Objects:** Tables `InvoicePlan`, `InvoiceItem`, `InvoiceEmission`, `MailOutbox`, `MailOutboxLog`; event `ev_FillMailOutbox_Daily`; procedure `sp_FillMailOutboxForDate`
 - **Services:** `InvoicePlannerService` (planning), SMTP worker (`NotificationWorker`)
@@ -92,6 +115,11 @@ This document details the implementation for every functional capability describ
   - Emission confirmation requires a non-empty BZ code and emission date before closing, and cancellation requests must supply a reason before the invoice reopens.
   - Planner services validate references to engagements and closing periods prior to saving schedules.
 
+- **UI Feedback:**
+  - `PlanEditorViewModel.SavePlan` and `DeletePlan` emit success/warning/error toasts (`INV_InvoicePlan_Toast_PlanSaved`, `INV_InvoicePlan_Toast_PlanDeleted`, etc.) via `ToastService` alongside detailed status messages.
+  - `RequestConfirmationViewModel` surfaces toasts (`INV_Request_Toast_*`) when inserting or reversing invoice requests, keeping inline actions responsive without modal dialogs.
+  - `EmissionConfirmationViewModel` raises toast notifications (`INV_Emission_Toast_*`) for validation failures, no-op updates, successful emissions, cancellations, and persistence errors so controllers receive immediate feedback without relying solely on status text.
+
 ---
 
 ## Power Automate Tasks Export
@@ -103,7 +131,7 @@ This document details the implementation for every functional capability describ
   3. `BuildMessageBuckets` groups recipients by email and role (Manager/Senior Manager), deduplicates contacts, and writes `<Message>` nodes that contain `<Recipients>`, `<Body>` text (with counts), `<Invoices>` (each carrying the computed “Texto de Faturamento” description) and optional `<ETCs>` collections.
   4. `LoadEtcEntriesAsync` loads active engagements whose `ProposedNextEtcDate` is on or before the pivot, skips those without manager/senior-manager assignments, and projects rank budgets into dynamic fiscal-year column sets (consumed/remaining) per engagement.
 - **Validation Mechanics:**
-  - Missing timezone data surfaces `Tasks.Status.TimeZoneMissing`; other failures bubble to `Tasks.Status.GenerationFailure` so the UI reports the issue.
+  - Missing timezone data surfaces `FINC_Tasks_Status_TimeZoneMissing`; other failures bubble to `FINC_Tasks_Status_GenerationFailure` so the UI reports the issue.
   - Payment types are constrained to `PaymentTypeCatalog` (`TRANSFERENCIA_BANCARIA`, `BOLETOS`) and default to transfer if the database does not specify a code.
   - Email lists are trimmed and deduplicated prior to serialization so Power Automate connectors receive valid CDATA strings and XPath selectors.
 - Attachments are no longer emitted; Power BI/Power Automate consume the structured XML payload to build per-recipient tables at runtime.
@@ -123,7 +151,8 @@ This document details the implementation for every functional capability describ
   - Missing required headers or malformed workbooks raise `InvalidDataException` with user-centric instructions (e.g., "clear filters").
   - Decimal parsing sanitizes numeric strings, strips thousand separators, and enforces rounding precision.
   - Status/rank columns are normalized via `NormalizeWhitespace` to maintain consistent storage.
-- Importers call `EngagementImportSkipEvaluator` to ignore rows targeting S/4 Project engagements or engagements with status `Closed`, emitting the warnings `⚠ Values for S/4 Projects must be inserted manually. Data import was skipped for Engagement {EngagementID}.` and `⚠ Engagement {EngagementID} skipped – status is Closed.` while recording the skip reasons in the summary payloads.
+- Importers call `EngagementImportSkipEvaluator` to ignore rows targeting S/4 Project engagements or engagements with status `Closed`, emitting the warnings `⚠ Values for S/4 Projects must be inserted manually. Data import was skipped for Engagement {EngagementID}.` and `⚠ Engagement {EngagementID} skipped – status is Closed.`; the S/4 pathway now only refreshes metadata (description + customer link), creating missing customers and replacing placeholder codes when the workbook finally includes the official identifier. Whenever at least one S/4 engagement changes, `ImportViewModel` triggers `ToastService.ShowSuccess("FINC_Import_Toast_S4MetadataSuccess")` so users receive immediate confirmation.
+- `ImportViewModel` listens for `ApplicationParametersChangedMessage` to toggle `HasClosingPeriodSelected`, keeping the Full Management import command disabled until a closing period is selected on the Home dashboard.
 
 ---
 
@@ -155,6 +184,19 @@ This document details the implementation for every functional capability describ
 
 ---
 
+## Home Dashboard
+- **Primary Components:** `HomeViewModel`, `HomeView`
+- **Workflow:**
+  1. `HomeViewModel.LoadDataAsync` retrieves fiscal years and closing periods, orders them chronologically, and stores `_allClosingPeriods` so filtering is performed client-side.
+  2. Default selections load from `ISettingsService` (`GetDefaultFiscalYearIdAsync`/`GetDefaultClosingPeriodIdAsync`); lacking persisted values, the first available fiscal year/period is preselected.
+  3. `UpdateClosingPeriodsForSelectedFiscalYear` rebuilds the closing-period list whenever a fiscal year changes, while `ConfirmSelectionAsync` persists the defaults and sends `ApplicationParametersChangedMessage` to refresh dependent modules.
+  4. `EnsureReadmeLoadedAsync` executes once per session (`_readmeLoaded` flag) and resolves the embedded `README.md` by calling `ReadmeContentProvider.GetAsync(typeof(HomeViewModel).Assembly)`, populating `ReadmeContent` or the `FINC_Home_Markdown_LoadFailed` fallback when loading fails.
+- **UI Details:**
+  - `HomeView.axaml` places the fiscal-year ComboBox and Confirm button in a three-column grid alongside an indeterminate `ProgressBar` so alignment stays horizontal on wide displays.
+  - README content is no longer hosted on the dashboard; users access the markdown through the Settings documentation tab, keeping the landing experience focused on fiscal-period selection.
+
+---
+
 ## Settings and Application Data Backup
 - **Primary Components:** `ApplicationDataBackupService`, `IApplicationDataBackupService`, `SettingsViewModel`
 - **Dependencies:** `IDbContextFactory<ApplicationDbContext>`, `ISettingsService`, `FilePickerService`, `DialogService`
@@ -164,10 +206,14 @@ This document details the implementation for every functional capability describ
   3. Export requests call `ApplicationDataBackupService.ExportAsync`, which opens a database connection, enumerates tables from the EF model, and writes an XML document with column metadata and serialized values.
   4. Import requests prompt the user for confirmation and delegate to `ImportAsync`, which parses the XML, disables foreign-key checks, deletes existing rows, inserts the payload with typed parameters, and re-enables constraints within a transaction.
   5. After a connection package import, data restore, or language change, `SettingsViewModel` sends `ApplicationRestartRequestedMessage`; both main window view models persist their last navigation key (`SettingKeys.LastGrcNavigationItemKey`/`SettingKeys.LastInvoicePlannerSectionKey`) so the restarted app returns to the previously selected workspace with the saved language.
+  6. `ClearAllDataAsync` deletes transactional tables only (`ActualsEntries`, `PlannedAllocations`, `EngagementFiscalYearRevenueAllocations`, `EngagementRankBudgets`, `FinancialEvolution`, `Exceptions`) and skips master-data/team tables after verifying their existence in `INFORMATION_SCHEMA`.
+  7. The Settings view now exposes a “Project overview” tab that binds `ReadmeContent` to `MarkdownPresenter`, giving operators an in-app location for onboarding documentation with automatic vertical scrolling.
 - **Validation Mechanics:**
   - Both export/import paths fall back to building a context from saved settings if the DI factory lacks a configured provider; missing credentials raise `InvalidOperationException` with guidance.
   - XML serialization captures type information (including binary data) using invariant formatting to ensure round-trippable values on restore.
   - Imports roll back on failure, guaranteeing foreign-key checks are re-enabled even when errors occur.
+- **UI Feedback:**
+  - `SaveSettingsAsync`, `SaveLocalizationSettingsAsync`, and `SavePowerBiSettingsAsync` persist updated dictionaries asynchronously and call `ToastService.ShowSuccess`/`ShowError` with `FINC_Settings_Toast_*` keys while keeping the tab content active (no forced reloads).
 
 ---
 
@@ -181,6 +227,8 @@ This document details the implementation for every functional capability describ
 - Dialog editors expose an `IsReadOnlyMode` flag; `DialogEditorViewModel` and specialized editors (closing periods, fiscal years, allocations) bind text inputs via `IsReadOnly` and disable interactive controls when the View command opens them.
 - Numeric editors opt into `App.Presentation.Behaviors.NumericInputNullSafety`; the attached handler listens for focus loss and rewrites empty values to `0` (or `0.00` via binding formats) so Avalonia never raises binding exceptions when users clear numeric fields.
 - `EngagementEditorViewModel` evaluates the selected status text and, when it resolves to `Closed` for persisted records, forces the editor into read-only mode (papd/manager sections, source selector, and financial evolution grid) while leaving the status ComboBox and Save command enabled so users can intentionally reopen the engagement.
+- `EngagementEditorView` renders the dialog as a tabbed layout (Engagement Data, Financial Data, Financial Evolution, Assignments) so controllers can jump between detail categories without scrolling long forms.
+- `App.Presentation.Services.ToastService` exposes a shared observable toast queue consumed by both desktop shells; view models call `ShowSuccess`/`ShowWarning`/`ShowError` with localized resource keys so button actions surface consistent success/warning/error banners that auto-dismiss after three seconds.
 
 
 ---
@@ -192,6 +240,7 @@ This document details the implementation for every functional capability describ
   - `CustomerEditorViewModel` annotates Name and Customer Code with `[Required]` attributes and exposes `NameError`/`CustomerCodeError` accessors for inline messaging.
   - `DialogEditorViewModel` listens to `ErrorsChanged` and disables the Save command while any validation errors remain, ensuring only complete records are persisted.
   - `CustomersViewModel`, `ManagersViewModel`, `PapdViewModel`, `ClosingPeriodsViewModel`, `FiscalYearsViewModel`, `EngagementsViewModel`, `ManagerAssignmentsViewModel`, and `PapdAssignmentsViewModel` pass `isReadOnlyMode: true` when executing the View command so their dialogs render in read-only state (text boxes bind `IsReadOnlyMode`, combo/date pickers use `AllowEditing`).
+- **UI Feedback:** Master data editors and assignment lists emit standardized toast notifications (`FINC_*_Toast_SaveSuccess`, `FINC_*_Toast_DeleteSuccess`, `FINC_*_Toast_OperationFailed`) for customers, managers, PAPDs, rank mappings, fiscal years, and manager/PAPD assignments, while bulk delete-data commands reuse the same `FINC_*_Toast_DeleteDataSuccess` keys.
 
 ---
 
@@ -201,4 +250,4 @@ This document details the implementation for every functional capability describ
 - **Import Safeguards:** `EngagementImportSkipEvaluator` continues to emit structured metadata used by `ImportService`/`FullManagementDataImporter`; warning messages are added to the per-import summaries and written to the central logger so audit trails show each skipped S/4 Project or Closed engagement.
 - **Read-Only Enforcement:** Dialog view models refresh editing flags when `IsReadOnlyMode` or the engagement status changes, keeping Closed engagements locked while still allowing status updates and ensuring View-mode dialogs remain non-editable until reopened via Add/Edit flows.
 - **Currency & Numeric Stability:** `CurrencyDisplayHelper` centralizes formatting (symbol resolution, localized separators, fixed decimal places) while `NumericInputNullSafety` attaches to numeric controls in both apps to rewrite blank values to zero on focus loss, preventing Avalonia parse exceptions and ensuring totals remain accurate.
-- **Assignment Parity:** Manager and PAPD assignment tabs reuse the same anchoring logic (Add/Edit/View/Delete pipelines) so engagement links behave identically regardless of the selected anchor, avoiding divergent validation or persistence paths.
+- **Assignment Parity:** Manager and PAPD assignment tabs reuse the same anchoring logic (Add/Edit/View/Delete pipelines); the manager workspace now mirrors PAPD behavior by anchoring on the selected manager before editing engagement links, keeping validation and persistence paths aligned.

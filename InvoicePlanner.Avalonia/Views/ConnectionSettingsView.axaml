@@ -10,71 +10,72 @@
              d:DesignWidth="800"
              d:DesignHeight="450">
     <ScrollViewer>
-        <StackPanel Margin="24" Spacing="16">
-            <Border Classes="Card" Padding="24">
-                <StackPanel Spacing="18">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="{loc:Loc Key=Connection.Section.Language.Title}" Classes="TitleMedium"/>
-                        <StackPanel Orientation="Horizontal" Spacing="12">
-                            <TextBlock Text="{loc:Loc Key=Connection.Label.Language}" VerticalAlignment="Center"/>
-                            <ComboBox ItemsSource="{Binding Languages}"
-                                      SelectedItem="{Binding SelectedLanguage}"
-                                      Width="200">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding DisplayName}"/>
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                        </StackPanel>
-                    </StackPanel>
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="{loc:Loc Key=Connection.Title.Setup}" Classes="TitleLarge"/>
-                        <TextBlock Text="{loc:Loc Key=Connection.Description.Setup}" TextWrapping="Wrap"/>
-                    </StackPanel>
-                    <Grid ColumnDefinitions="Auto,16,*" RowDefinitions="Auto,Auto">
-                        <TextBlock Grid.Row="0"
-                                   Text="{loc:Loc Key=Connection.Label.Package}"
-                                   VerticalAlignment="Center"
-                                   Margin="0,0,8,0"/>
-                        <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Spacing="8">
-                            <TextBox Width="320"
-                                     Text="{Binding SelectedPackagePath}"
-                                     Watermark="{loc:Loc Key=Connection.Placeholder.Package}"
-                                     IsReadOnly="True"/>
-                            <Button Content="{loc:Loc Key=Connection.Button.Browse}"
-                                    Command="{Binding BrowseCommand}"
-                                    MinWidth="120"/>
-                        </StackPanel>
-                        <TextBlock Grid.Row="1"
-                                   Text="{loc:Loc Key=Connection.Label.Passphrase}"
-                                   VerticalAlignment="Center"
-                                   Margin="0,8,8,0"/>
-                        <TextBox Grid.Row="1"
-                                 Grid.Column="2"
-                                 Margin="0,8,0,0"
-                                 Text="{Binding Passphrase}"
-                                 Watermark="{loc:Loc Key=Connection.Placeholder.Passphrase}"
-                                 PasswordChar="*"
-                                 MinWidth="240"/>
-                    </Grid>
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <Button Content="{loc:Loc Key=Connection.Button.Import}"
-                                Command="{Binding ImportCommand}"
-                                MinWidth="160"/>
-                        <TextBlock Text="{Binding SelectedFileName}"
-                                   VerticalAlignment="Center"
-                                   Opacity="0.7"
-                                   IsVisible="{Binding HasSelectedFile}"/>
-                    </StackPanel>
-                    <Border Background="{StaticResource BrushSurfaceVariant}"
-                            CornerRadius="6"
-                            Padding="12"
-                            IsVisible="{Binding HasStatusMessage}">
-                        <TextBlock Text="{Binding StatusMessage}"
-                                   TextWrapping="Wrap"/>
-                    </Border>
-                </StackPanel>
+        <StackPanel Margin="{StaticResource PageMarginThickness}" Spacing="{StaticResource SectionSpacing}">
+            <Border Classes="Card" Padding="{StaticResource CardPaddingThickness}">
+                <Grid RowDefinitions="Auto, Auto, Auto, Auto" ColumnDefinitions="Auto, *, Auto" ColumnSpacing="{StaticResource ControlSpacing}" RowSpacing="{StaticResource ControlSpacing}">
+                    <!-- Section 1: Language -->
+                    <TextBlock Grid.Row="0" Grid.Column="0"
+                               Text="{loc:Loc Key=INV_Connection_Label_Language}"
+                               VerticalAlignment="Center"
+                               Margin="0,0,8,0"
+                               Classes="TitleSmall"/>
+                    <ComboBox Grid.Row="0" Grid.Column="1"
+                              ItemsSource="{Binding Languages}"
+                              SelectedItem="{Binding SelectedLanguage}"
+                              MinWidth="200"
+                              HorizontalAlignment="Left">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DisplayName}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <!-- Section 2: Database connection -->
+                    <TextBlock Grid.Row="1" Grid.Column="0"
+                               Text="{loc:Loc Key=INV_Connection_Label_Package}"
+                               VerticalAlignment="Center"
+                               Margin="0,12,8,0"
+                               Classes="TitleSmall"/>
+                    <TextBox Grid.Row="1" Grid.Column="1"
+                             Text="{Binding SelectedPackagePath}"
+                             Watermark="{loc:Loc Key=INV_Connection_Placeholder_Package}"
+                             IsReadOnly="True"
+                             MinWidth="{StaticResource InputMinWidthStandard}"
+                             MinHeight="{StaticResource InputHeightStandard}"
+                             Margin="0,12,8,0"
+                             VerticalAlignment="Center"/>
+                    <Button Grid.Row="1" Grid.Column="2"
+                            Content="{loc:Loc Key=INV_Connection_Button_Browse}"
+                            Command="{Binding BrowseCommand}"
+                            MinWidth="{StaticResource ButtonMinWidth}"
+                            MinHeight="{StaticResource ButtonMinHeight}"
+                            Margin="0,12,0,0"/>
+
+                    <!-- Section 3: Passphrase -->
+                    <TextBlock Grid.Row="2" Grid.Column="0"
+                               Text="{loc:Loc Key=INV_Connection_Label_Passphrase}"
+                               VerticalAlignment="Center"
+                               Margin="0,12,8,0"
+                               Classes="TitleSmall"/>
+                    <TextBox Grid.Row="2" Grid.Column="1"
+                             Grid.ColumnSpan="2"
+                             Text="{Binding Passphrase}"
+                             Watermark="{loc:Loc Key=INV_Connection_Placeholder_Passphrase}"
+                             PasswordChar="•"
+                             MinWidth="{StaticResource InputMinWidthStandard}"
+                             MinHeight="{StaticResource InputHeightStandard}"
+                             Margin="0,12,0,0"/>
+
+                    <!-- Section 4: Import -->
+                    <Button Grid.Row="3" Grid.Column="0"
+                            Grid.ColumnSpan="3"
+                            Content="{loc:Loc Key=INV_Connection_Button_Import}"
+                            Command="{Binding ImportCommand}"
+                            MinHeight="{StaticResource ButtonMinHeight}"
+                            HorizontalAlignment="Center"
+                            Margin="0,24,0,0"/>
+                </Grid>
             </Border>
         </StackPanel>
     </ScrollViewer>

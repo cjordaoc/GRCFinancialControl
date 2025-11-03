@@ -4,6 +4,10 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -21,6 +25,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly ISettingsService _settingsService;
         private readonly Dictionary<string, NavigationItem> _navigationIndex;
         private string? _lastPersistedNavigationKey;
+        private bool? _lastPersistedSidebarExpanded;
+        private bool _suppressSidebarPersistence;
 
         public HomeViewModel Home { get; }
         public EngagementsViewModel Engagements { get; }
@@ -40,6 +46,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         [ObservableProperty]
         private ViewModelBase? _activeView;
+
+        [ObservableProperty]
+        private bool _isSidebarExpanded = true;
 
         public MainWindowViewModel(HomeViewModel homeViewModel,
                                    EngagementsViewModel engagementsViewModel,
@@ -74,31 +83,35 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             NavigationItems = new ObservableCollection<NavigationItem>
             {
-                new(NavigationKeys.Home, LocalizationRegistry.Get("Navigation.Home"), Home),
-                new(NavigationKeys.Import, LocalizationRegistry.Get("Navigation.Import"), Import),
-                new(NavigationKeys.Engagements, LocalizationRegistry.Get("Navigation.Engagements"), Engagements),
-                new(NavigationKeys.GrcTeam, LocalizationRegistry.Get("Navigation.GrcTeam"), GrcTeam),
-                new(NavigationKeys.Allocations, LocalizationRegistry.Get("Navigation.Allocations"), Allocations),
-                new(NavigationKeys.Reports, LocalizationRegistry.Get("Navigation.Reports"), Reports),
-                new(NavigationKeys.Tasks, LocalizationRegistry.Get("Navigation.Tasks"), Tasks),
-                new(NavigationKeys.ControlMasterData, LocalizationRegistry.Get("Navigation.ControlMasterData"), ControlMasterData),
-                new(NavigationKeys.AppMasterData, LocalizationRegistry.Get("Navigation.MasterData"), AppMasterData),
-                new(NavigationKeys.Settings, LocalizationRegistry.Get("Navigation.Settings"), Settings)
+                new(NavigationKeys.Home, LocalizationRegistry.Get("FINC_Navigation_Home"), Home) { Icon = ResolveIcon("IconHome") },
+                new(NavigationKeys.Import, LocalizationRegistry.Get("FINC_Navigation_Import"), Import) { Icon = ResolveIcon("IconImport") },
+                new(NavigationKeys.Engagements, LocalizationRegistry.Get("FINC_Navigation_Engagements"), Engagements) { Icon = ResolveIcon("IconEngagements") },
+                new(NavigationKeys.Allocations, LocalizationRegistry.Get("FINC_Navigation_Allocations"), Allocations) { Icon = ResolveIcon("IconAllocations") },
+                new(NavigationKeys.Reports, LocalizationRegistry.Get("FINC_Navigation_Reports"), Reports) { Icon = ResolveIcon("IconReports") },
+                new(NavigationKeys.Tasks, LocalizationRegistry.Get("FINC_Navigation_Tasks"), Tasks) { Icon = ResolveIcon("IconTasks") },
+                new(NavigationKeys.ControlMasterData, LocalizationRegistry.Get("FINC_Navigation_ControlMasterData"), ControlMasterData) { Icon = ResolveIcon("IconControlMasterData") },
+                new(NavigationKeys.AppMasterData, LocalizationRegistry.Get("FINC_Navigation_MasterData"), AppMasterData) { Icon = ResolveIcon("IconAppMasterData") },
+                new(NavigationKeys.Settings, LocalizationRegistry.Get("FINC_Navigation_Settings"), Settings) { Icon = ResolveIcon("IconSettings") }
             };
 
             _navigationIndex = BuildNavigationIndex(NavigationItems);
 
             var settings = _settingsService.GetAll();
-            NavigationItem? initialItem = null;
+            if (settings.TryGetValue(SettingKeys.FinancialControlSidebarExpanded, out var sidebarValue)
+                && bool.TryParse(sidebarValue, out var storedSidebarExpanded))
+            {
+                _suppressSidebarPersistence = true;
+                IsSidebarExpanded = storedSidebarExpanded;
+                _lastPersistedSidebarExpanded = storedSidebarExpanded;
+                _suppressSidebarPersistence = false;
+            }
             if (settings.TryGetValue(SettingKeys.LastGrcNavigationItemKey, out var storedKey)
-                && !string.IsNullOrWhiteSpace(storedKey)
-                && _navigationIndex.TryGetValue(storedKey, out var storedItem))
+                && !string.IsNullOrWhiteSpace(storedKey))
             {
                 _lastPersistedNavigationKey = storedKey;
-                initialItem = storedItem;
             }
 
-            SelectedNavigationItem = initialItem ?? NavigationItems.FirstOrDefault();
+            SelectedNavigationItem = NavigationItems.FirstOrDefault();
         }
 
         [RelayCommand]
@@ -192,6 +205,26 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
+        async partial void OnIsSidebarExpandedChanged(bool value)
+        {
+            if (_suppressSidebarPersistence || (_lastPersistedSidebarExpanded.HasValue && _lastPersistedSidebarExpanded.Value == value))
+            {
+                return;
+            }
+
+            try
+            {
+                var settings = await _settingsService.GetAllAsync().ConfigureAwait(false);
+                settings[SettingKeys.FinancialControlSidebarExpanded] = value.ToString();
+                await _settingsService.SaveAllAsync(settings).ConfigureAwait(false);
+                _lastPersistedSidebarExpanded = value;
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogError($"Failed to persist sidebar state: {ex.Message}");
+            }
+        }
+
         private static Dictionary<string, NavigationItem> BuildNavigationIndex(IEnumerable<NavigationItem> items)
         {
             var index = new Dictionary<string, NavigationItem>(StringComparer.Ordinal);
@@ -215,6 +248,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
 
             return index;
+        }
+
+        private static Geometry? ResolveIcon(string resourceKey)
+        {
+            if (Application.Current is IResourceHost host
+                && host.TryFindResource(resourceKey, out var resource)
+                && resource is Geometry geometry)
+            {
+                return geometry;
+            }
+
+            return null;
         }
 
         private static class NavigationKeys
@@ -263,6 +308,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             get => _isSelected;
             set => SetProperty(ref _isSelected, value);
+        }
+
+        private Geometry? _icon;
+
+        public Geometry? Icon
+        {
+            get => _icon;
+            set => SetProperty(ref _icon, value);
         }
     }
 }

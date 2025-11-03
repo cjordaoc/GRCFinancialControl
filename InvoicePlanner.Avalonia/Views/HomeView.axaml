@@ -8,17 +8,17 @@
              x:Class="InvoicePlanner.Avalonia.Views.HomeView"
              x:DataType="vm:HomeViewModel"
              mc:Ignorable="d">
-    <Grid RowDefinitions="Auto,*,Auto,Auto,Auto" RowSpacing="16">
-        <Border Grid.Row="0" Classes="Card" Padding="24" Margin="16,16,16,0">
-            <StackPanel Spacing="8">
-                <TextBlock Classes="TitleLarge" Text="{loc:Loc Key=Home.Title.Primary}" />
-                <TextBlock Text="{loc:Loc Key=Home.Description.Primary}" />
+    <Grid RowDefinitions="Auto,*,Auto,Auto,Auto" RowSpacing="{StaticResource GridGap}">
+        <Border Grid.Row="0" Classes="Card" Padding="{StaticResource CardPaddingThickness}" Margin="{StaticResource MarginInsetTop}">
+            <StackPanel Spacing="{StaticResource SpacingUnit}">
+                <TextBlock Classes="TitleLarge" Text="{loc:Loc Key=FINC_Home_Title.Primary}" />
+                <TextBlock Text="{loc:Loc Key=INV_Home_Description_Primary}" />
                 <TextBlock Text="{Binding WelcomeMessage}" />
             </StackPanel>
         </Border>
-        <views:PlanEditorView Grid.Row="1" DataContext="{Binding PlanEditor}" Margin="16,0,16,0" />
-        <views:RequestConfirmationView Grid.Row="2" DataContext="{Binding RequestConfirmation}" Margin="16,0,16,0" />
-        <views:EmissionConfirmationView Grid.Row="3" DataContext="{Binding EmissionConfirmation}" Margin="16,0,16,0" />
-        <views:NotificationPreviewView Grid.Row="4" DataContext="{Binding NotificationPreview}" Margin="16,0,16,16" />
+        <views:PlanEditorView Grid.Row="1" DataContext="{Binding PlanEditor}" Margin="{StaticResource MarginInset}" />
+        <views:RequestConfirmationView Grid.Row="2" DataContext="{Binding RequestConfirmation}" Margin="{StaticResource MarginInset}" />
+        <views:EmissionConfirmationView Grid.Row="3" DataContext="{Binding EmissionConfirmation}" Margin="{StaticResource MarginInset}" />
+        <views:NotificationPreviewView Grid.Row="4" DataContext="{Binding NotificationPreview}" Margin="{StaticResource MarginInsetBottom}" />
     </Grid>
 </UserControl>

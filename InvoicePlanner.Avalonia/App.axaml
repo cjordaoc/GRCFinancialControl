@@ -9,11 +9,18 @@
     </Application.DataTemplates>
 
     <Application.Resources>
-        <sharedConverters:DateTimeOffsetToDateTimeConverter x:Key="DateTimeOffsetToDateTimeConverter" />
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://GRC.Shared.Resources/Theme/Theme.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <sharedConverters:DateTimeOffsetToDateTimeConverter x:Key="DateTimeOffsetToDateTimeConverter" />
+        </ResourceDictionary>
     </Application.Resources>
 
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="avares://GRC.Shared.Resources/Theme/Controls.axaml" />
         <StyleInclude Source="avares://App.Presentation/Styles/Styles.xaml" />
     </Application.Styles>
 </Application>

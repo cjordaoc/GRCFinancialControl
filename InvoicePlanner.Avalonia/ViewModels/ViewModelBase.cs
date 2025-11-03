@@ -1,6 +1,6 @@
 using App.Presentation.Localization;
-using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
+using GRC.Shared.UI.ViewModels;
 using Invoices.Data.Repositories;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
@@ -8,17 +8,12 @@ namespace InvoicePlanner.Avalonia.ViewModels;
 /// <summary>
 /// Provides shared helper behavior for Invoice Planner view models.
 /// </summary>
-public abstract class ViewModelBase : ObservableObject
+public abstract class ViewModelBase : ObservableViewModelBase
 {
-    private const string UnknownLoginResourceKey = "Access.Message.LoginUnknown";
+    private const string UnknownLoginResourceKey = "INV_Access_Message_LoginUnknown";
 
     /// <summary>
-    /// Gets the messenger used to communicate with other view models.
-    /// </summary>
-    protected IMessenger Messenger { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ViewModelBase"/> class with the default messenger.
+    /// Initializes a new instance of the <see cref="ViewModelBase"/> class.
     /// </summary>
     protected ViewModelBase()
         : this(WeakReferenceMessenger.Default)
@@ -28,10 +23,10 @@ public abstract class ViewModelBase : ObservableObject
     /// <summary>
     /// Initializes a new instance of the <see cref="ViewModelBase"/> class.
     /// </summary>
-    /// <param name="messenger">The messenger that handles cross-component communication. When <c>null</c>, the default messenger is used.</param>
+    /// <param name="messenger">The messenger that handles cross-component communication.</param>
     protected ViewModelBase(IMessenger? messenger)
+        : base(messenger)
     {
-        Messenger = messenger ?? WeakReferenceMessenger.Default;
     }
 
     /// <summary>

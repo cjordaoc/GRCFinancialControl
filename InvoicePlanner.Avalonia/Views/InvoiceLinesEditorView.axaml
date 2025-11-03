@@ -18,36 +18,35 @@
                                     FalseResourceKey="BrushOnSurface" />
     </UserControl.Resources>
 
-    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridGap}">
 
         <!-- MAIN SCROLLABLE CONTENT -->
         <ScrollViewer Grid.Row="0"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Auto"
                       HorizontalContentAlignment="Stretch"
-                      Padding="{StaticResource SpaceThickness24}">
+                      Padding="{StaticResource CardPaddingThickness}">
 
             <Grid RowDefinitions="Auto,*"
-                  RowSpacing="{StaticResource Space24}"
+                  RowSpacing="{StaticResource GridGap}"
                   HorizontalAlignment="Stretch">
 
                 <!-- Invoice lines grid -->
                 <Grid Grid.Row="0" RowDefinitions="Auto,Auto,*">
                     <TextBlock Grid.Row="0"
                                Classes="TitleMedium"
-                               Text="{loc:Loc Key=InvoicePlan.Section.InvoiceLines.Title}" />
+                               Text="{loc:Loc Key=INV_InvoicePlan_Section_InvoiceLines_Title}" />
 
                     <StackPanel Grid.Row="1"
-                                Margin="0,12,0,0"
-                                Spacing="{StaticResource Space12}">
-                        <WrapPanel>
+                                Margin="{StaticResource MarginTopRegular}"
+                                Spacing="{StaticResource SectionSpacing}">
+                        <WrapPanel ItemSpacing="{StaticResource SectionSpacing}">
                             <StackPanel Orientation="Horizontal"
-                                        Spacing="{StaticResource Space12}"
-                                        VerticalAlignment="Center"
-                                        Margin="0,0,24,0">
+                                        Spacing="{StaticResource SectionSpacing}"
+                                        VerticalAlignment="Center">
                                 <TextBlock Classes="Caption"
                                            VerticalAlignment="Center"
-                                           Text="{loc:Loc Key=InvoicePlan.Label.PlanType}" />
+                                           Text="{loc:Loc Key=INV_InvoicePlan_Label_PlanType}" />
                                 <ComboBox ItemsSource="{Binding Editor.PlanTypes}"
                                           SelectedItem="{Binding Editor.PlanType}"
                                           MinWidth="180"
@@ -56,55 +55,49 @@
                             </StackPanel>
 
                             <StackPanel Orientation="Horizontal"
-                                        Spacing="{StaticResource Space12}"
-                                        VerticalAlignment="Center"
-                                        Margin="0,0,24,0">
+                                        Spacing="{StaticResource SectionSpacing}"
+                                        VerticalAlignment="Center">
                                 <TextBlock Classes="Caption"
                                            VerticalAlignment="Center"
-                                           Text="{loc:Loc Key=InvoicePlan.Label.InvoiceCount}" />
+                                           Text="{loc:Loc Key=INV_InvoicePlan_Label_InvoiceCount}" />
                                 <NumericUpDown Minimum="1"
                                                Maximum="48"
                                                Increment="1"
                                                Value="{Binding Editor.NumInvoices}"
-                                               MinWidth="120"
+                                               MinWidth="{StaticResource InputMinWidthStandard}"
                                                Width="160"
                                                HorizontalAlignment="Left"
                                                appBehaviors:NumericInputNullSafety.IsEnabled="True" />
                             </StackPanel>
 
-                            <Button Content="{loc:Loc Key=Common.Button.Refresh}"
-                                    Command="{Binding RefreshCommand}"
-                                    MinWidth="120"
-                                    HorizontalAlignment="Stretch"
-                                    Margin="0,0,24,0" />
+                            <Button Content="{loc:Loc Key=INV_Button_Refresh}"
+                                    Command="{Binding RefreshCommand}" />
                         </WrapPanel>
 
-                        <WrapPanel>
+                        <WrapPanel ItemSpacing="{StaticResource SectionSpacing}">
                             <StackPanel Orientation="Horizontal"
-                                        Spacing="{StaticResource Space12}"
-                                        VerticalAlignment="Center"
-                                        Margin="0,0,24,0">
+                                        Spacing="{StaticResource SectionSpacing}"
+                                        VerticalAlignment="Center">
                                 <TextBlock Classes="Caption"
                                            VerticalAlignment="Center"
-                                           Text="{loc:Loc Key=InvoicePlan.Label.PaymentTerms}" />
+                                           Text="{loc:Loc Key=INV_InvoicePlan_Label_PaymentTerms}" />
                                 <NumericUpDown Minimum="0"
                                                Maximum="120"
                                                Increment="1"
                                                Value="{Binding Editor.PaymentTermDays}"
-                                               MinWidth="120"
+                                               MinWidth="{StaticResource InputMinWidthStandard}"
                                                Width="160"
                                                HorizontalAlignment="Left"
                                                appBehaviors:NumericInputNullSafety.IsEnabled="True" />
                             </StackPanel>
 
                             <StackPanel Orientation="Horizontal"
-                                        Spacing="{StaticResource Space12}"
+                                        Spacing="{StaticResource SectionSpacing}"
                                         VerticalAlignment="Center"
-                                        IsVisible="{Binding Editor.RequiresFirstEmissionDate}"
-                                        Margin="0,0,24,0">
+                                        IsVisible="{Binding Editor.RequiresFirstEmissionDate}">
                                 <TextBlock Classes="Caption"
                                            VerticalAlignment="Center"
-                                           Text="{loc:Loc Key=InvoicePlan.Label.FirstEmission}" />
+                                           Text="{loc:Loc Key=INV_InvoicePlan_Label_FirstEmission}" />
                                 <CalendarDatePicker SelectedDate="{Binding Editor.FirstEmissionDate, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}"
                                                     IsVisible="{Binding Editor.RequiresFirstEmissionDate}"
                                                     IsEnabled="{Binding Editor.RequiresFirstEmissionDate}"
@@ -115,10 +108,10 @@
                     </StackPanel>
 
                     <Border Grid.Row="2"
-                            BorderThickness="1"
-                            BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                            CornerRadius="4"
-                            Margin="0,12,0,12"
+                            BorderThickness="{StaticResource ControlBorderThickness}"
+                            BorderBrush="{StaticResource ThemeBorderLowBrush}"
+                            CornerRadius="{StaticResource ControlCornerRadius}"
+                            Margin="{StaticResource MarginVerticalRegular}"
                             HorizontalAlignment="Stretch">
                         <DataGrid x:Name="InvoiceLinesGrid"
                                   ItemsSource="{Binding Items}"
@@ -128,17 +121,20 @@
                                   CanUserResizeColumns="True"
                                   behaviors:DataGridRowResizeBehavior.IsEnabled="True"
                                   HorizontalScrollBarVisibility="Auto"
-                                  VerticalScrollBarVisibility="Auto">
+                                  VerticalScrollBarVisibility="Auto"
+                                  SelectionMode="Single">
                             <DataGrid.Columns>
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Sequence}" Width="60">
+                                <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_Sequence}" Width="60">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
-                                            <TextBlock Text="{Binding Sequence}" HorizontalAlignment="Center" />
+                                            <TextBlock Text="{Binding Sequence}"
+                                                       HorizontalAlignment="Stretch"
+                                                       TextAlignment="Left" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.EmissionDate}" Width="180">
+                                <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_EmissionDate}" Width="180">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
                                             <CalendarDatePicker SelectedDate="{Binding EmissionDate, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}"
@@ -147,18 +143,18 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Delivery}" Width="220">
+                                <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_Delivery}" Width="220">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
                                             <TextBox Text="{Binding DeliveryDescription}"
-                                                     Watermark="{loc:Loc Key=InvoicePlan.Placeholder.DeliveryNotes}"
+                                                     Watermark="{loc:Loc Key=INV_InvoicePlan_Placeholder_DeliveryNotes}"
                                                      IsVisible="{Binding ShowDeliveryDescription}"
                                                      IsEnabled="{Binding IsEditable}" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Cnpj}" Width="180">
+                                <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_Cnpj}" Width="180">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
                                             <TextBox Text="{Binding PayerCnpj, UpdateSourceTrigger=PropertyChanged}"
@@ -168,7 +164,7 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Po}" Width="140">
+                                <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_Po}" Width="140">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
                                             <TextBox Text="{Binding PoNumber, UpdateSourceTrigger=PropertyChanged}"
@@ -177,7 +173,7 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Frs}" Width="140">
+                                <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_Frs}" Width="140">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
                                             <TextBox Text="{Binding FrsNumber, UpdateSourceTrigger=PropertyChanged}"
@@ -186,7 +182,7 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Ticket}" Width="160">
+                                <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_Ticket}" Width="160">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
                                             <TextBox Text="{Binding CustomerTicket, UpdateSourceTrigger=PropertyChanged}"
@@ -195,7 +191,7 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.PaymentType}" Width="200">
+                                <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_PaymentType}" Width="200">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
                                             <ComboBox ItemsSource="{Binding Owner.PaymentTypeOptions}"
@@ -211,11 +207,11 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Percent}" Width="140">
+                                <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_Percent}" Width="140">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
                                             <StackPanel Orientation="Horizontal"
-                                                        Spacing="{StaticResource Space4}"
+                                                        Spacing="{StaticResource SpacingUnit}"
                                                         VerticalAlignment="Center">
                                                 <NumericUpDown Value="{Binding Percentage}"
                                                                Minimum="0"
@@ -230,11 +226,11 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn Header="{loc:Loc Key=InvoicePlan.TableHeader.Amount}" Width="160">
+                                <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_Amount}" Width="160">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
                                             <StackPanel Orientation="Horizontal"
-                                                        Spacing="{StaticResource Space4}"
+                                                        Spacing="{StaticResource SpacingUnit}"
                                                         VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding CurrencySymbol}"
                                                            IsVisible="{Binding IsEditable}"
@@ -262,46 +258,46 @@
                 <!-- Totals -->
                 <Grid Grid.Row="1"
                       ColumnDefinitions="Auto,Auto,Auto,Auto,Auto"
-                      ColumnSpacing="{StaticResource Space16}"
+                      ColumnSpacing="{StaticResource GridGap}"
                       x:Name="TotalsRow">
                     <TextBlock Grid.Column="0"
-                               Text="{loc:Loc Key=InvoicePlan.Section.Totals.Label}"
+                               Text="{loc:Loc Key=INV_InvoicePlan_Section_Totals_Label}"
                                Classes="Caption"
                                Foreground="{StaticResource BrushOnSurface}"
                                VerticalAlignment="Center" />
                     <TextBlock Grid.Column="1"
-                               Text="{loc:Loc Key=InvoicePlan.Section.Totals.Percent}"
+                               Text="{loc:Loc Key=INV_InvoicePlan_Section_Totals_Percent}"
                                Foreground="{StaticResource BrushOnSurface}"
                                VerticalAlignment="Center" />
                     <StackPanel Grid.Column="2"
                                 Orientation="Horizontal"
-                                Spacing="{StaticResource Space4}"
+                                Spacing="{StaticResource SpacingUnit}"
                                 VerticalAlignment="Center">
                         <TextBlock Text="{Binding TotalPercentage, StringFormat={}{0:F2}}"
-                                   FontWeight="Bold"
+                                   FontWeight="{StaticResource FontWeightSemiBold}"
                                    Foreground="{Binding HasTotalsMismatch, Converter={StaticResource TotalsBrushConverter}}" />
                         <TextBlock Text="%"
-                                   FontWeight="Bold"
+                                   FontWeight="{StaticResource FontWeightSemiBold}"
                                    Foreground="{Binding HasTotalsMismatch, Converter={StaticResource TotalsBrushConverter}}"
                                    VerticalAlignment="Center" />
                     </StackPanel>
                     <TextBlock Grid.Column="3"
-                               Text="{loc:Loc Key=InvoicePlan.Section.Totals.Amount}"
+                               Text="{loc:Loc Key=INV_InvoicePlan_Section_Totals_Amount}"
                                Foreground="{StaticResource BrushOnSurface}"
                                VerticalAlignment="Center" />
                     <StackPanel Grid.Column="4"
                                 Orientation="Horizontal"
-                                Spacing="{StaticResource Space4}"
+                                Spacing="{StaticResource SpacingUnit}"
                                 VerticalAlignment="Center">
                         <TextBlock Text="{Binding TotalAmountDisplay}"
-                                   FontWeight="Bold"
+                                   FontWeight="{StaticResource FontWeightSemiBold}"
                                    Foreground="{Binding HasTotalsMismatch, Converter={StaticResource TotalsBrushConverter}}" />
                     </StackPanel>
                 </Grid>
 
                 <!-- Messages -->
                 <StackPanel Grid.Row="2"
-                            Spacing="{StaticResource Space12}">
+                            Spacing="{StaticResource SectionSpacing}">
                     <TextBlock Text="{Binding ValidationMessage}"
                                Classes="StatusError"
                                IsVisible="{Binding HasValidationMessage}" />
@@ -314,18 +310,15 @@
 
         <!-- FOOTER (fixed) -->
         <StackPanel Grid.Row="1"
-                    Orientation="Horizontal"
+                    Classes="ButtonRow"
                     HorizontalAlignment="Right"
-                    Spacing="{StaticResource Space12}"
-                    Margin="{StaticResource SpaceThickness24}">
-            <Button Content="{loc:Loc Key=Common.Button.Save}"
+                    Margin="{StaticResource PageMarginThickness}">
+            <Button Content="{loc:Loc Key=Global_Button_Save}"
                     Command="{Binding SaveCommand}"
-                    IsDefault="True"
-                    MinWidth="120" />
-            <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+                    IsDefault="True" />
+            <Button Content="{loc:Loc Key=Global_Button_Cancel}"
                     Command="{Binding CloseCommand}"
-                    IsCancel="True"
-                    MinWidth="120" />
+                    IsCancel="True" />
         </StackPanel>
     </Grid>
 </UserControl>

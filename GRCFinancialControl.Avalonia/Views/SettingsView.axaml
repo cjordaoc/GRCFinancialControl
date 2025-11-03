@@ -4,86 +4,99 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
+             xmlns:controls="clr-namespace:GRCFinancialControl.Avalonia.Controls"
              mc:Ignorable="d"
              d:DesignWidth="800"
              d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
     <Grid RowDefinitions="*,Auto">
-        <TabControl Margin="24">
-            <TabItem Header="{loc:Loc Key=Settings.Tab.Localization}">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="16" Spacing="16">
-                        <Border Classes="Card" Padding="24">
-                            <StackPanel Spacing="12">
-                                <TextBlock Text="{loc:Loc Key=Settings.Section.Localization.Title}" Classes="TitleMedium"/>
-                                <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <TextBlock Text="{loc:Loc Key=Settings.Label.Language}" VerticalAlignment="Center"/>
-                                    <ComboBox ItemsSource="{Binding Languages}"
-                                              SelectedItem="{Binding SelectedLanguage}"
-                                              Width="200">
-                                        <ComboBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding DisplayName}"/>
-                                            </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                    </ComboBox>
+        <TabControl>
+            <TabItem Header="{loc:Loc Key=FINC_Settings_Tab_Localization}">
+                <Grid RowDefinitions="*,Auto">
+                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="{StaticResource PageMarginThickness}" Spacing="{StaticResource SectionSpacing}">
+                            <Border Classes="Card" Padding="{StaticResource CardPaddingThickness}">
+                                <StackPanel Spacing="{StaticResource ControlSpacing}">
+                                    <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_Localization_Title}" Classes="TitleMedium"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="{StaticResource ControlSpacing}">
+                                        <TextBlock Text="{loc:Loc Key=FINC_Settings_Label_Language}" VerticalAlignment="Center"/>
+                                        <ComboBox ItemsSource="{Binding Languages}"
+                                                  SelectedItem="{Binding SelectedLanguage}"
+                                                  Width="200">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding DisplayName}"/>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="{StaticResource ControlSpacing}">
+                                        <TextBlock Text="{loc:Loc Key=FINC_Settings_Label_DefaultCurrency}" VerticalAlignment="Center"/>
+                                        <TextBox Width="120"
+                                                 Text="{Binding DefaultCurrency}"
+                                                 Watermark="{loc:Loc Key=FINC_Settings_Placeholder_DefaultCurrency}"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{loc:Loc Key=FINC_Settings_Help_DefaultCurrency}"
+                                               TextWrapping="Wrap"
+                                               Opacity="0.7"/>
                                 </StackPanel>
-                                <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <TextBlock Text="{loc:Loc Key=Settings.Label.DefaultCurrency}" VerticalAlignment="Center"/>
-                                    <TextBox Width="120"
-                                             Text="{Binding DefaultCurrency}"
-                                             Watermark="{loc:Loc Key=Settings.Placeholder.DefaultCurrency}"/>
-                                </StackPanel>
-                                <TextBlock Text="{loc:Loc Key=Settings.Help.DefaultCurrency}"
-                                           TextWrapping="Wrap"
-                                           Opacity="0.7"/>
-                            </StackPanel>
-                        </Border>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                    <StackPanel Grid.Row="1"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                Margin="{StaticResource MarginSection}"
+                                Spacing="{StaticResource ControlSpacing}">
+                        <Button Content="{loc:Loc Key=FINC_Settings_Button_Apply}"
+                                Command="{Binding SaveLocalizationSettingsCommand}"
+                                MinWidth="140"/>
                     </StackPanel>
-                </ScrollViewer>
+                </Grid>
             </TabItem>
-            <TabItem Header="{loc:Loc Key=Settings.Tab.Connection}">
+            <TabItem Header="{loc:Loc Key=FINC_Settings_Tab_Connection}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="16" Spacing="16">
-                        <Border Classes="Card" Padding="24">
-                            <StackPanel Spacing="12">
-                                <TextBlock Text="{loc:Loc Key=Settings.Section.Database.Title}" Classes="TitleLarge"/>
-                                <TextBox Text="{Binding Server}" Watermark="{loc:Loc Key=Settings.Label.Server}"/>
-                                <TextBox Text="{Binding Database}" Watermark="{loc:Loc Key=Settings.Label.Database}"/>
-                                <TextBox Text="{Binding User}" Watermark="{loc:Loc Key=Settings.Label.User}"/>
+                    <StackPanel Margin="{StaticResource PageMarginThickness}" Spacing="{StaticResource SectionSpacing}">
+                        <Border Classes="Card" Padding="{StaticResource CardPaddingThickness}">
+                            <StackPanel Spacing="{StaticResource ControlSpacing}">
+                                <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_Database_Title}" Classes="TitleLarge"/>
+                                <TextBox Text="{Binding Server}" Watermark="{loc:Loc Key=FINC_Settings_Label_Server}"/>
+                                <TextBox Text="{Binding Database}" Watermark="{loc:Loc Key=FINC_Settings_Label_Database}"/>
+                                <TextBox Text="{Binding User}" Watermark="{loc:Loc Key=FINC_Settings_Label_User}"/>
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBox Grid.Column="0"
                                              Text="{Binding Password}"
-                                             Watermark="{loc:Loc Key=Settings.Label.Password}"
+                                             Watermark="{loc:Loc Key=FINC_Settings_Label_Password}"
                                              PasswordChar="{Binding DatabasePasswordChar}"/>
                                     <ToggleButton Grid.Column="1"
                                                   Width="36"
                                                   Content="{Binding DatabasePasswordToggleIcon}"
                                                   IsChecked="{Binding IsDatabasePasswordVisible}"
-                                                  Margin="8,0,0,0"
+                                                  Margin="{StaticResource MarginLeftSmall}"
                                                   VerticalAlignment="Center"/>
                                 </Grid>
-                                <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Button Content="{loc:Loc Key=Settings.Button.Load}" Command="{Binding LoadSettingsCommand}" MinWidth="120"/>
-                                    <Button Content="{loc:Loc Key=Settings.Button.Save}" Command="{Binding SaveSettingsCommand}" MinWidth="120"/>
-                                    <Button Content="{loc:Loc Key=Settings.Button.Test}" Command="{Binding TestConnectionCommand}" MinWidth="140"/>
-                                    <Button Content="{loc:Loc Key=Settings.Button.ClearAll}" Command="{Binding ClearAllDataCommand}" Classes="danger" MinWidth="140"/>
+                                <StackPanel Classes="ButtonRow"
+                                            HorizontalAlignment="Left">
+                                    <Button Content="{loc:Loc Key=FINC_Settings_Button_Load}" Command="{Binding LoadSettingsCommand}"/>
+                                    <Button Content="{loc:Loc Key=FINC_Settings_Button_Save}" Command="{Binding SaveSettingsCommand}"/>
+                                    <Button Content="{loc:Loc Key=FINC_Settings_Button_Test}" Command="{Binding TestConnectionCommand}"/>
+                                    <Button Content="{loc:Loc Key=FINC_Settings_Button_ClearAll}" Command="{Binding ClearAllDataCommand}" Classes="Danger"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
-            <TabItem Header="{loc:Loc Key=Settings.Tab.ConnectionPackages}">
+            <TabItem Header="{loc:Loc Key=FINC_Settings_Tab_ConnectionPackages}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="16" Spacing="16">
-                        <Border Classes="Card" Padding="24">
-                            <StackPanel Spacing="12">
-                                <TextBlock Text="{loc:Loc Key=Settings.Section.Package.Title}" Classes="TitleLarge"/>
-                                <TextBlock Text="{loc:Loc Key=Settings.Section.Package.Description}" TextWrapping="Wrap"/>
-                                <StackPanel Spacing="8">
-                                    <TextBlock Text="{loc:Loc Key=Settings.Label.Passphrase}"/>
+                    <StackPanel Margin="{StaticResource PageMarginThickness}" Spacing="{StaticResource SectionSpacing}">
+                        <Border Classes="Card" Padding="{StaticResource CardPaddingThickness}">
+                            <StackPanel Spacing="{StaticResource ControlSpacing}">
+                                <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_Package_Title}" Classes="TitleLarge"/>
+                                <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_Package_Description}" TextWrapping="Wrap"/>
+                                <StackPanel Spacing="{StaticResource SpacingUnit}">
+                                    <TextBlock Text="{loc:Loc Key=FINC_Settings_Label_Passphrase}"/>
                                     <Grid ColumnDefinitions="*,Auto">
                                         <TextBox Grid.Column="0"
                                                  Text="{Binding ExportPassphrase}"
@@ -92,10 +105,10 @@
                                                       Width="36"
                                                       Content="{Binding ExportPassphraseToggleIcon}"
                                                       IsChecked="{Binding IsExportPassphraseVisible}"
-                                                      Margin="8,0,0,0"
+                                                      Margin="{StaticResource MarginLeftSmall}"
                                                       VerticalAlignment="Center"/>
                                     </Grid>
-                                    <TextBlock Text="{loc:Loc Key=Settings.Label.ConfirmPassphrase}"/>
+                                    <TextBlock Text="{loc:Loc Key=FINC_Settings_Label_ConfirmPassphrase}"/>
                                     <Grid ColumnDefinitions="*,Auto">
                                         <TextBox Grid.Column="0"
                                                  Text="{Binding ConfirmExportPassphrase}"
@@ -104,23 +117,23 @@
                                                       Width="36"
                                                       Content="{Binding ConfirmExportPassphraseToggleIcon}"
                                                       IsChecked="{Binding IsConfirmExportPassphraseVisible}"
-                                                      Margin="8,0,0,0"
+                                                      Margin="{StaticResource MarginLeftSmall}"
                                                       VerticalAlignment="Center"/>
                                     </Grid>
-                                    <Button Content="{loc:Loc Key=Settings.Button.ExportPackage}"
+                                    <Button Content="{loc:Loc Key=FINC_Settings_Button_ExportPackage}"
                                             Command="{Binding ExportConnectionPackageCommand}"
                                             MinWidth="180"
                                             HorizontalAlignment="Left"/>
                                 </StackPanel>
                                 <Separator/>
-                                <TextBlock Text="{loc:Loc Key=Settings.Section.Package.ImportDescription}" TextWrapping="Wrap"/>
-                                <StackPanel Spacing="12">
+                                <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_Package_ImportDescription}" TextWrapping="Wrap"/>
+                                <StackPanel Spacing="{StaticResource ControlSpacing}">
                                     <Grid ColumnDefinitions="Auto,16,*"
                                           RowDefinitions="Auto,Auto"
-                                          RowSpacing="{StaticResource Space8}">
+                                          RowSpacing="{StaticResource SpacingUnit}">
                                         <TextBlock Grid.Row="0"
                                                    Grid.Column="0"
-                                                   Text="{loc:Loc Key=Settings.Label.ImportPassphrase}"
+                                                   Text="{loc:Loc Key=FINC_Settings_Label_ImportPassphrase}"
                                                    VerticalAlignment="Center"/>
                                         <Grid Grid.Row="0"
                                               Grid.Column="2"
@@ -133,30 +146,30 @@
                                                           Width="36"
                                                           Content="{Binding ImportPassphraseToggleIcon}"
                                                           IsChecked="{Binding IsImportPassphraseVisible}"
-                                                          Margin="8,0,0,0"
+                                                          Margin="{StaticResource MarginLeftSmall}"
                                                           VerticalAlignment="Center"/>
                                         </Grid>
                                         <TextBlock Grid.Row="1"
                                                    Grid.Column="0"
-                                                   Text="{loc:Loc Key=Settings.Label.ImportPackage}"
+                                                   Text="{loc:Loc Key=FINC_Settings_Label_ImportPackage}"
                                                    VerticalAlignment="Center"/>
                                         <StackPanel Grid.Row="1"
                                                     Grid.Column="2"
                                                     Orientation="Horizontal"
-                                                    Spacing="8">
+                                                    Spacing="{StaticResource SpacingUnit}">
                                             <TextBox Width="320"
                                                      Text="{Binding SelectedImportPackagePath}"
-                                                     Watermark="{loc:Loc Key=Settings.Placeholder.ImportPackage}"
+                                                     Watermark="{loc:Loc Key=FINC_Settings_Placeholder_ImportPackage}"
                                                      IsReadOnly="True"/>
-                                            <Button Content="{loc:Loc Key=Settings.Button.SelectPackage}"
+                                            <Button Content="{loc:Loc Key=FINC_Settings_Button_SelectPackage}"
                                                     Command="{Binding BrowseImportPackageCommand}"
                                                     MinWidth="140"
                                                     IsEnabled="{Binding IsImporting, Converter={StaticResource InverseBooleanConverter}}"/>
                                         </StackPanel>
                                     </Grid>
                                     <StackPanel Orientation="Horizontal"
-                                                Spacing="{StaticResource Space12}">
-                                        <Button Content="{loc:Loc Key=Settings.Button.ImportPackage}"
+                                                Spacing="{StaticResource ControlSpacing}">
+                                        <Button Content="{loc:Loc Key=FINC_Settings_Button_ImportPackage}"
                                                 Command="{Binding ImportConnectionPackageCommand}"
                                                 MinWidth="180"
                                                 IsEnabled="{Binding IsImporting, Converter={StaticResource InverseBooleanConverter}}"/>
@@ -168,7 +181,7 @@
                                                FontStyle="Italic"
                                                IsVisible="{Binding HasSelectedImportPackage}">
                                         <TextBlock.Inlines>
-                                            <Run Text="{loc:Loc Key=Settings.Label.SelectedImportPackagePrefix}" />
+                                            <Run Text="{loc:Loc Key=FINC_Settings_Label_SelectedImportPackagePrefix}" />
                                             <Run Text="{Binding SelectedImportPackageFileName}" />
                                         </TextBlock.Inlines>
                                     </TextBlock>
@@ -178,52 +191,70 @@
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
-            <TabItem Header="{loc:Loc Key=Settings.Tab.ApplicationData}">
+            <TabItem Header="{loc:Loc Key=FINC_Settings_Tab_ApplicationData}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="16" Spacing="16">
-                        <Border Classes="Card" Padding="24">
-                            <StackPanel Spacing="12">
-                                <TextBlock Text="{loc:Loc Key=Settings.Section.ApplicationData.Title}" Classes="TitleLarge"/>
-                                <TextBlock Text="{loc:Loc Key=Settings.Section.ApplicationData.Description}" TextWrapping="Wrap"/>
-                                <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Button Content="{loc:Loc Key=Settings.Button.ExportData}"
+                    <StackPanel Margin="{StaticResource PageMarginThickness}" Spacing="{StaticResource SectionSpacing}">
+                        <Border Classes="Card" Padding="{StaticResource CardPaddingThickness}">
+                            <StackPanel Spacing="{StaticResource ControlSpacing}">
+                                <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_ApplicationData_Title}" Classes="TitleLarge"/>
+                                <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_ApplicationData_Description}" TextWrapping="Wrap"/>
+                                <StackPanel Orientation="Horizontal" Spacing="{StaticResource ControlSpacing}">
+                                    <Button Content="{loc:Loc Key=FINC_Settings_Button_ExportData}"
                                             Command="{Binding ExportApplicationDataCommand}"
-                                            MinWidth="160"
+                                            MinWidth="{StaticResource ButtonMinWidth}"
                                             IsEnabled="{Binding IsApplicationDataOperationRunning, Converter={StaticResource InverseBooleanConverter}}"/>
-                                    <Button Content="{loc:Loc Key=Settings.Button.ImportData}"
+                                    <Button Content="{loc:Loc Key=FINC_Settings_Button_ImportData}"
                                             Command="{Binding ImportApplicationDataCommand}"
-                                            MinWidth="160"
+                                            MinWidth="{StaticResource ButtonMinWidth}"
                                             IsEnabled="{Binding IsApplicationDataOperationRunning, Converter={StaticResource InverseBooleanConverter}}"/>
                                     <ProgressBar Width="120"
                                                  IsIndeterminate="True"
                                                  IsVisible="{Binding IsApplicationDataOperationRunning}"/>
                                 </StackPanel>
-                                <TextBlock Text="{loc:Loc Key=Settings.Section.ApplicationData.RestoreNotice}" TextWrapping="Wrap"/>
+                                <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_ApplicationData_RestoreNotice}" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
-            <TabItem Header="{loc:Loc Key=Settings.Tab.PowerBi}">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="16" Spacing="16">
-                        <Border Classes="Card" Padding="24">
-                            <StackPanel Spacing="12">
-                                <TextBlock Text="{loc:Loc Key=Settings.Section.PowerBi.Title}" Classes="TitleLarge"/>
-                                <TextBlock Text="{loc:Loc Key=Settings.Section.PowerBi.Description}" TextWrapping="Wrap"/>
-                                <TextBox Text="{Binding PowerBiEmbedUrl}" Watermark="{loc:Loc Key=Settings.Label.PowerBiUrl}"/>
-                            </StackPanel>
-                        </Border>
+            <TabItem Header="{loc:Loc Key=FINC_Settings_Tab_PowerBi}">
+                <Grid RowDefinitions="*,Auto">
+                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="{StaticResource PageMarginThickness}" Spacing="{StaticResource SectionSpacing}">
+                            <Border Classes="Card" Padding="{StaticResource CardPaddingThickness}">
+                                <StackPanel Spacing="{StaticResource ControlSpacing}">
+                                    <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_PowerBi_Title}" Classes="TitleLarge"/>
+                                    <TextBlock Text="{loc:Loc Key=FINC_Settings_Section_PowerBi_Description}" TextWrapping="Wrap"/>
+                                    <TextBox Text="{Binding PowerBiEmbedUrl}" Watermark="{loc:Loc Key=FINC_Settings_Label_PowerBiUrl}"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                    <StackPanel Grid.Row="1"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                Margin="{StaticResource MarginSection}"
+                                Spacing="{StaticResource ControlSpacing}">
+                        <Button Content="{loc:Loc Key=FINC_Settings_Button_Apply}"
+                                Command="{Binding SavePowerBiSettingsCommand}"
+                                MinWidth="140"/>
                     </StackPanel>
-                </ScrollViewer>
+                </Grid>
+            </TabItem>
+            <TabItem Header="{loc:Loc Key=FINC_Home_Markdown_Title}">
+                <Border Classes="Card"
+                        Padding="{StaticResource CardPaddingThickness}"
+                        Margin="{StaticResource PageMarginThickness}">
+                    <controls:MarkdownPresenter Markdown="{Binding ReadmeContent}"/>
+                </Border>
             </TabItem>
         </TabControl>
 
         <Border Grid.Row="1"
                 Background="{StaticResource BrushSurfaceVariant}"
-                Padding="12"
-                CornerRadius="{StaticResource CornerRadiusMD}"
-                Margin="24,0,24,24"
+                Padding="{StaticResource CardPaddingThickness}"
+                CornerRadius="{StaticResource ControlCornerRadius}"
+                Margin="{StaticResource PageMarginThickness}"
                 IsVisible="{Binding HasStatusMessage}">
             <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
         </Border>

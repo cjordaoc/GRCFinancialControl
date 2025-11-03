@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Core.Enums;
@@ -57,6 +58,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 await _papdService.UpdateAsync(Papd);
             }
+        }
+
+        protected override void OnSaveSucceeded()
+        {
+            ToastService.ShowSuccess("FINC_Papds_Toast_SaveSuccess", Papd.Name);
+        }
+
+        protected override void OnSaveFailed(Exception exception)
+        {
+            ToastService.ShowError("FINC_Papds_Toast_OperationFailed", exception.Message);
         }
     }
 }

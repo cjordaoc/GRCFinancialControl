@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Core.Configuration;
 using GRCFinancialControl.Persistence.Services.Interfaces;
-using InvoicePlanner.Avalonia.Messages;
 using Microsoft.Extensions.Logging;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
@@ -22,12 +25,17 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly ILogger<MainWindowViewModel> _logger;
     private readonly Dictionary<string, NavigationItemViewModel> _navigationIndex = new(StringComparer.Ordinal);
     private string? _lastPersistedMenuKey;
+    private bool? _lastPersistedSidebarExpanded;
+    private bool _suppressSidebarPersistence;
 
     [ObservableProperty]
-    private string title = LocalizationRegistry.Get("Shell.Title.Application");
+    private string title = LocalizationRegistry.Get("INV_Shell_Title_InvoicePlanner");
 
     [ObservableProperty]
     private ViewModelBase currentViewModel;
+
+    [ObservableProperty]
+    private bool isSidebarExpanded = true;
 
     public IReadOnlyList<NavigationItemViewModel> MenuItems { get; }
 
@@ -50,10 +58,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var items = new List<NavigationItemViewModel>
         {
-            CreateNavigationItem(NavigationKeys.PlanEditor, LocalizationRegistry.Get("Shell.Navigation.InvoicePlan"), _planEditor),
-            CreateNavigationItem(NavigationKeys.RequestConfirmation, LocalizationRegistry.Get("Shell.Navigation.ConfirmRequest"), _requestConfirmation),
-            CreateNavigationItem(NavigationKeys.EmissionConfirmation, LocalizationRegistry.Get("Shell.Navigation.ConfirmEmission"), _emissionConfirmation),
-            CreateNavigationItem(NavigationKeys.ConnectionSettings, LocalizationRegistry.Get("Shell.Navigation.ConnectionSettings"), _connectionSettings)
+            CreateNavigationItem(NavigationKeys.PlanEditor, LocalizationRegistry.Get("INV_Shell_Navigation_InvoicePlan"), _planEditor, ResolveIcon("IconCalendar")),
+            CreateNavigationItem(NavigationKeys.RequestConfirmation, LocalizationRegistry.Get("INV_Shell_Navigation_ConfirmRequest"), _requestConfirmation, ResolveIcon("IconMailInboxCheck")),
+            CreateNavigationItem(NavigationKeys.EmissionConfirmation, LocalizationRegistry.Get("INV_Shell_Navigation_ConfirmEmission"), _emissionConfirmation, ResolveIcon("IconArrowExport")),
+            CreateNavigationItem(NavigationKeys.ConnectionSettings, LocalizationRegistry.Get("INV_Shell_Navigation_ConnectionSettings"), _connectionSettings, ResolveIcon("IconPlugConnected"))
         };
 
         MenuItems = items;
@@ -63,6 +71,15 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var settings = _settingsService.GetAll();
+        if (settings.TryGetValue(SettingKeys.InvoicePlannerSidebarExpanded, out var sidebarValue)
+            && bool.TryParse(sidebarValue, out var storedSidebarExpanded))
+        {
+            _suppressSidebarPersistence = true;
+            IsSidebarExpanded = storedSidebarExpanded;
+            _lastPersistedSidebarExpanded = storedSidebarExpanded;
+            _suppressSidebarPersistence = false;
+        }
+
         NavigationItemViewModel? storedSelection = null;
         if (settings.TryGetValue(SettingKeys.LastInvoicePlannerSectionKey, out var storedKey)
             && !string.IsNullOrWhiteSpace(storedKey)
@@ -86,14 +103,14 @@ public partial class MainWindowViewModel : ViewModelBase
         else
         {
             currentViewModel = _connectionSettings;
-            _connectionSettings.StatusMessage = LocalizationRegistry.Get("Connection.Message.SetupPrompt");
+            _connectionSettings.StatusMessage = LocalizationRegistry.Get("INV_Connection_Message_SetupPrompt");
             Activate(_navigationIndex[NavigationKeys.ConnectionSettings]);
         }
     }
 
-    private NavigationItemViewModel CreateNavigationItem(string key, string title, ViewModelBase viewModel)
+    private NavigationItemViewModel CreateNavigationItem(string key, string title, ViewModelBase viewModel, Geometry? icon = null)
     {
-        return new NavigationItemViewModel(key, title, viewModel, Activate);
+        return new NavigationItemViewModel(key, title, viewModel, Activate, icon);
     }
 
     private void Activate(NavigationItemViewModel selectedItem)
@@ -145,11 +162,43 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    async partial void OnIsSidebarExpandedChanged(bool value)
+    {
+        if (_suppressSidebarPersistence || (_lastPersistedSidebarExpanded.HasValue && _lastPersistedSidebarExpanded.Value == value))
+        {
+            return;
+        }
+
+        try
+        {
+            var settings = await _settingsService.GetAllAsync().ConfigureAwait(false);
+            settings[SettingKeys.InvoicePlannerSidebarExpanded] = value.ToString();
+            await _settingsService.SaveAllAsync(settings).ConfigureAwait(false);
+            _lastPersistedSidebarExpanded = value;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to persist the sidebar expansion preference.");
+        }
+    }
+
     private static class NavigationKeys
     {
         public const string PlanEditor = "PlanEditor";
         public const string RequestConfirmation = "RequestConfirmation";
         public const string EmissionConfirmation = "EmissionConfirmation";
         public const string ConnectionSettings = "ConnectionSettings";
+    }
+
+    private static Geometry? ResolveIcon(string resourceKey)
+    {
+        if (Application.Current is IResourceHost host
+            && host.TryFindResource(resourceKey, out var resource)
+            && resource is Geometry geometry)
+        {
+            return geometry;
+        }
+
+        return null;
     }
 }

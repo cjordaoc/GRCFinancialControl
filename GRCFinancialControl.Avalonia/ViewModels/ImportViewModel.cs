@@ -5,13 +5,15 @@ using App.Presentation.Localization;
 using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Persistence.Services.Importers;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
-    public partial class ImportViewModel : ViewModelBase
+    public partial class ImportViewModel : ViewModelBase, IRecipient<ApplicationParametersChangedMessage>
     {
         private const string BudgetType = "Budget";
         private const string FullManagementType = "FullManagement";
@@ -20,6 +22,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly FilePickerService _filePickerService;
         private readonly IImportService _importService;
         private readonly LoggingService _loggingService;
+        private readonly ISettingsService _settingsService;
         private readonly Action<string> _logHandler;
 
         [ObservableProperty]
@@ -31,25 +34,36 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private string? _fileType;
 
+        [ObservableProperty]
+        private bool _hasClosingPeriodSelected;
+
+        public bool CanSelectFullManagement => HasClosingPeriodSelected && !IsImporting;
+
+        public string? ClosingPeriodSelectionWarning => HasClosingPeriodSelected
+            ? null
+            : LocalizationRegistry.Get("FINC_Import_Warning_SelectClosingPeriod");
+
         public string? FileTypeDisplayName => FileType switch
         {
-            BudgetType => LocalizationRegistry.Get("Import.FileType.Budget"),
-            FullManagementType => LocalizationRegistry.Get("Import.FileType.FullManagement"),
-            AllocationPlanningType => LocalizationRegistry.Get("Import.FileType.AllocationPlanning"),
+            BudgetType => LocalizationRegistry.Get("FINC_Import_FileType_Budget"),
+            FullManagementType => LocalizationRegistry.Get("FINC_Import_FileType_FullManagement"),
+            AllocationPlanningType => LocalizationRegistry.Get("FINC_Import_FileType_AllocationPlanning"),
             _ => FileType
         };
 
         public string? SelectedImportTitle => string.IsNullOrWhiteSpace(FileTypeDisplayName)
             ? null
-            : LocalizationRegistry.Format("Import.Section.Selected.TitleFormat", FileTypeDisplayName);
+            : LocalizationRegistry.Format("FINC_Import_Section_Selected_TitleFormat", FileTypeDisplayName);
 
         public ImportViewModel(FilePickerService filePickerService,
                                IImportService importService,
-                               LoggingService loggingService)
+                               LoggingService loggingService,
+                               ISettingsService settingsService)
         {
             _filePickerService = filePickerService;
             _importService = importService;
             _loggingService = loggingService;
+            _settingsService = settingsService;
             _logHandler = message =>
             {
                 if (Dispatcher.UIThread.CheckAccess())
@@ -77,6 +91,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
+            if (string.Equals(fileType, FullManagementType, StringComparison.Ordinal) && !HasClosingPeriodSelected)
+            {
+                StatusMessage = LocalizationRegistry.Get("FINC_Import_Warning_SelectClosingPeriod");
+                return;
+            }
+
             FileType = fileType;
             StatusMessage = null;
             ImportCommand.NotifyCanExecuteChanged();
@@ -101,25 +121,40 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
 
             var displayName = FileTypeDisplayName ?? FileType ?? string.Empty;
-            _loggingService.LogInfo(LocalizationRegistry.Format("Import.Status.InProgress", displayName));
+            _loggingService.LogInfo(LocalizationRegistry.Format("FINC_Import_Status_InProgress", displayName));
 
-            string? result = null;
+            string? resultSummary = null;
+            FullManagementDataImportResult? managementResult = null;
 
             try
             {
                 IsImporting = true;
 
-                result = FileType switch
+                switch (FileType)
                 {
-                    BudgetType => await Task.Run(() => _importService.ImportBudgetAsync(filePath)),
-                    FullManagementType => await Task.Run(() => _importService.ImportFullManagementDataAsync(filePath)),
-                    AllocationPlanningType => await Task.Run(() => _importService.ImportAllocationPlanningAsync(filePath)),
-                    _ => LocalizationRegistry.Get("Import.Status.InvalidType")
-                };
+                    case BudgetType:
+                        resultSummary = await Task.Run(() => _importService.ImportBudgetAsync(filePath));
+                        break;
+                    case FullManagementType:
+                        managementResult = await Task.Run(() => _importService.ImportFullManagementDataAsync(filePath));
+                        resultSummary = managementResult?.Summary;
+                        break;
+                    case AllocationPlanningType:
+                        resultSummary = await Task.Run(() => _importService.ImportAllocationPlanningAsync(filePath));
+                        break;
+                    default:
+                        resultSummary = LocalizationRegistry.Get("FINC_Import_Status_InvalidType");
+                        break;
+                }
 
-                if (!string.IsNullOrWhiteSpace(result))
+                if (!string.IsNullOrWhiteSpace(resultSummary))
                 {
-                    _loggingService.LogInfo(result);
+                    _loggingService.LogInfo(resultSummary);
+                }
+
+                if (managementResult?.S4MetadataRefreshes > 0)
+                {
+                    ToastService.ShowSuccess("FINC_Import_Toast_S4MetadataSuccess");
                 }
             }
             catch (ImportWarningException warning)
@@ -128,7 +163,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
             catch (Exception ex)
             {
-                _loggingService.LogError(LocalizationRegistry.Format("Import.Status.Error", ex.Message));
+                _loggingService.LogError(LocalizationRegistry.Format("FINC_Import_Status_Error", ex.Message));
             }
             finally
             {
@@ -138,18 +173,33 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private bool CanImport()
         {
-            return !IsImporting && !string.IsNullOrEmpty(FileType);
+            if (IsImporting || string.IsNullOrEmpty(FileType))
+            {
+                return false;
+            }
+
+            if (string.Equals(FileType, FullManagementType, StringComparison.Ordinal))
+            {
+                return HasClosingPeriodSelected;
+            }
+
+            return true;
         }
 
-        public override Task LoadDataAsync()
+        public override async Task LoadDataAsync()
         {
             StatusMessage = null;
-            return Task.CompletedTask;
+            var defaultClosingPeriodId = await _settingsService
+                .GetDefaultClosingPeriodIdAsync()
+                .ConfigureAwait(false);
+
+            HasClosingPeriodSelected = defaultClosingPeriodId.HasValue;
         }
 
         partial void OnIsImportingChanged(bool value)
         {
             ImportCommand.NotifyCanExecuteChanged();
+            OnPropertyChanged(nameof(CanSelectFullManagement));
         }
 
         partial void OnFileTypeChanged(string? value)
@@ -158,6 +208,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             OnPropertyChanged(nameof(SelectedImportTitle));
             StatusMessage = null;
             ImportCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnHasClosingPeriodSelectedChanged(bool value)
+        {
+            NotifyCommandCanExecute(ImportCommand);
+            OnPropertyChanged(nameof(CanSelectFullManagement));
+            OnPropertyChanged(nameof(ClosingPeriodSelectionWarning));
+        }
+
+        public void Receive(ApplicationParametersChangedMessage message)
+        {
+            HasClosingPeriodSelected = message.ClosingPeriodId.HasValue;
         }
     }
 }

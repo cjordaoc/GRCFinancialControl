@@ -7,24 +7,24 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="250"
              x:Class="GRCFinancialControl.Avalonia.Views.ClosingPeriodEditorView"
              x:DataType="vm:ClosingPeriodEditorViewModel">
-    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridGap}">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="{StaticResource Space16}">
-                <TextBlock Text="{loc:Loc Key=Admin.ClosingPeriods.Title.Editor}" FontSize="18" FontWeight="Bold"/>
-                <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="{StaticResource Space12}" ColumnSpacing="{StaticResource Space16}">
+            <StackPanel Spacing="{StaticResource SectionSpacing}">
+                <TextBlock Text="{loc:Loc Key=FINC_Admin_ClosingPeriods_Title_Editor}" Classes="TitleSmall"/>
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="{StaticResource GridGap}" ColumnSpacing="{StaticResource GridGap}">
                     <TextBlock Grid.Row="0"
                                Grid.Column="0"
-                               Text="{loc:Loc Key=Admin.ClosingPeriods.Placeholder.Name}"
+                               Text="{loc:Loc Key=FINC_Admin_ClosingPeriods_Placeholder_Name}"
                                VerticalAlignment="Center"/>
                     <TextBox Grid.Row="0"
                              Grid.Column="1"
                              Text="{Binding Name}"
-                             Watermark="{loc:Loc Key=Admin.ClosingPeriods.Placeholder.Name}"
+                             Watermark="{loc:Loc Key=FINC_Admin_ClosingPeriods_Placeholder_Name}"
                              IsReadOnly="{Binding IsReadOnlyMode}"/>
 
                     <TextBlock Grid.Row="1"
                                Grid.Column="0"
-                               Text="{loc:Loc Key=Admin.ClosingPeriods.Label.FiscalYear}"
+                               Text="{loc:Loc Key=FINC_Admin_ClosingPeriods_Label_FiscalYear}"
                                VerticalAlignment="Center"/>
                     <ComboBox Grid.Row="1"
                               Grid.Column="1"
@@ -34,9 +34,9 @@
                               IsHitTestVisible="{Binding HasFiscalYears}">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space8}">
+                                <StackPanel Orientation="Horizontal" Spacing="{StaticResource SpacingUnit}">
                                     <TextBlock Text="{Binding Name}"/>
-                                    <TextBlock Text="{loc:Loc Key=Admin.ClosingPeriods.Label.Locked}"
+                                    <TextBlock Text="{loc:Loc Key=FINC_Admin_ClosingPeriods_Label_Locked}"
                                                Foreground="{StaticResource BrushWarning}"
                                                IsVisible="{Binding IsLocked}"/>
                                 </StackPanel>
@@ -46,7 +46,7 @@
 
                     <TextBlock Grid.Row="2"
                                Grid.Column="0"
-                               Text="{loc:Loc Key=Admin.ClosingPeriods.Header.Start}"
+                               Text="{loc:Loc Key=FINC_Admin_ClosingPeriods_Header_Start}"
                                VerticalAlignment="Center"/>
                     <CalendarDatePicker Grid.Row="2"
                                         Grid.Column="1"
@@ -55,7 +55,7 @@
 
                     <TextBlock Grid.Row="3"
                                Grid.Column="0"
-                               Text="{loc:Loc Key=Admin.ClosingPeriods.Header.End}"
+                               Text="{loc:Loc Key=FINC_Admin_ClosingPeriods_Header_End}"
                                VerticalAlignment="Center"/>
                     <CalendarDatePicker Grid.Row="3"
                                         Grid.Column="1"
@@ -68,16 +68,16 @@
         <StackPanel Grid.Row="1"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Spacing="{StaticResource Space12}">
-            <Button Content="{loc:Loc Key=Common.Button.Save}"
+                    Spacing="{StaticResource ControlSpacing}">
+            <Button Content="{loc:Loc Key=Global_Button_Save}"
                     Command="{Binding SaveCommand}"
                     IsEnabled="{Binding AllowEditing}"
                     IsDefault="{Binding AllowEditing}"
-                    MinWidth="120" />
-            <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+                    MinWidth="{StaticResource ButtonMinWidth}" />
+            <Button Content="{loc:Loc Key=Global_Button_Cancel}"
                     Command="{Binding CloseCommand}"
                     IsCancel="True"
-                    MinWidth="120" />
+                    MinWidth="{StaticResource ButtonMinWidth}" />
         </StackPanel>
     </Grid>
 </UserControl>

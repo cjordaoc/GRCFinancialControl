@@ -2,7 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Messaging;
-using InvoicePlanner.Avalonia.Messages;
+using GRC.Shared.UI.Messages;
 
 namespace InvoicePlanner.Avalonia.Views;
 
@@ -25,7 +25,7 @@ public partial class InvoiceLinesEditorView : UserControl
             return;
         }
 
-        WeakReferenceMessenger.Default.Register<RefreshInvoiceLinesGridMessage>(this, OnRefreshRequested);
+        WeakReferenceMessenger.Default.Register<RefreshViewMessage>(this, OnRefreshRequested);
         _isRegistered = true;
     }
 
@@ -36,12 +36,17 @@ public partial class InvoiceLinesEditorView : UserControl
             return;
         }
 
-        WeakReferenceMessenger.Default.Unregister<RefreshInvoiceLinesGridMessage>(this);
+        WeakReferenceMessenger.Default.Unregister<RefreshViewMessage>(this);
         _isRegistered = false;
     }
 
-    private void OnRefreshRequested(object recipient, RefreshInvoiceLinesGridMessage message)
+    private void OnRefreshRequested(object recipient, RefreshViewMessage message)
     {
+        if (!message.Matches(RefreshTargets.InvoiceLinesGrid))
+        {
+            return;
+        }
+
         if (InvoiceLinesGrid is null)
         {
             return;

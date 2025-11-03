@@ -1,0 +1,117 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
+             xmlns:models="using:GRCFinancialControl.Core.Models"
+             xmlns:behaviors="clr-namespace:App.Presentation.Behaviors;assembly=App.Presentation"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+             x:Class="GRCFinancialControl.Avalonia.Views.HoursAllocationDetailView"
+             x:Name="HoursAllocationDetailRoot"
+             x:DataType="vm:HoursAllocationDetailViewModel">
+    <UserControl.Resources>
+        <converters:TrafficLightStatusToBrushConverter x:Key="TrafficLightStatusToBrushConverter" />
+    </UserControl.Resources>
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*"
+          Margin="{StaticResource SpaceThickness0}">
+        <TextBlock Grid.Row="0"
+                   Text="{Binding Header}"
+                   Classes="TitleMedium"
+                   Margin="{StaticResource CardPaddingThickness}"/>
+
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    Spacing="{StaticResource SectionSpacing}"
+                    Margin="{StaticResource CardPaddingThickness}">
+            <ComboBox Width="280"
+                      ItemsSource="{Binding Engagements}"
+                      SelectedItem="{Binding SelectedEngagement}"/>
+            <Button Content="Refresh"
+                    Command="{Binding RefreshCommand}"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    Spacing="{StaticResource ControlSpacing}"
+                    Margin="{StaticResource CardPaddingThickness}">
+            <SplitButton Content="Add Resource"
+                         Command="{Binding AddResourceCommand}"
+                         CommandParameter="{Binding SelectedRankOption}">
+                <SplitButton.Flyout>
+                    <MenuFlyout ItemsSource="{Binding AvailableRanks}">
+                        <MenuFlyout.ItemTemplate>
+                            <DataTemplate x:DataType="models:RankOption">
+                                <MenuItem Header="{Binding DisplayName}"
+                                          Command="{Binding DataContext.AddResourceCommand, ElementName=HoursAllocationDetailRoot}"
+                                          CommandParameter="{Binding}"/>
+                            </DataTemplate>
+                        </MenuFlyout.ItemTemplate>
+                    </MenuFlyout>
+                </SplitButton.Flyout>
+            </SplitButton>
+        </StackPanel>
+
+        <StackPanel Grid.Row="3"
+                    Orientation="Horizontal"
+                    Spacing="{StaticResource SectionSpacing}"
+                    Margin="{StaticResource CardPaddingThickness}">
+            <TextBlock Text="{Binding TotalBudgetHours, StringFormat='Budget Hours: {0:N2} h'}"/>
+            <TextBlock Text="{Binding ActualHours, StringFormat='Actual Hours: {0:N2} h'}"/>
+            <TextBlock Text="{Binding ToBeConsumedHours, StringFormat='Remaining Hours: {0:N2} h'}"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="4"
+                   Text="{Binding StatusMessage}"
+                   Foreground="{StaticResource BrushWarning}"
+                   FontWeight="{StaticResource FontWeightSemiBold}"
+                   Margin="{StaticResource CardPaddingThickness}"/>
+
+        <DataGrid x:Name="HoursAllocationsGrid"
+                  Grid.Row="5"
+                  ItemsSource="{Binding Rows}"
+                  SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserSortColumns="True"
+                  Margin="{StaticResource CardPaddingThickness}"
+                  SelectionMode="Single">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="" Width="Auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding TrafficLightSymbol}"
+                                       FontSize="{StaticResource FontSizeSubtitle}"
+                                       HorizontalAlignment="Center"
+                                       Foreground="{Binding Status, Converter={StaticResource TrafficLightStatusToBrushConverter}}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Rank"
+                                    Binding="{Binding RankName}"
+                                    Width="2*"/>
+                <DataGridTextColumn Header="Budget Hours"
+                                    Binding="{Binding TotalBudgetHours, StringFormat='{}{0:N2}'}"
+                                    Width="*"/>
+                <DataGridTextColumn Header="Consumed Hours"
+                                    Binding="{Binding TotalConsumedHours, StringFormat='{}{0:N2}'}"
+                                    Width="*"/>
+                <DataGridTextColumn Header="Remaining Hours"
+                                    Binding="{Binding TotalRemainingHours, StringFormat='{}{0:N2}'}"
+                                    Width="*"/>
+                <DataGridTemplateColumn Header="Actions" Width="Auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal"
+                                        Spacing="{StaticResource SpacingUnit}">
+                                <Button Content="Edit"
+                                        Command="{Binding DataContext.EditRowCommand, ElementName=HoursAllocationDetailRoot}"
+                                        CommandParameter="{Binding}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

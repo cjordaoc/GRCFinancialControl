@@ -1,3 +1,6 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace GRCFinancialControl.Core.Models
 {
     /// <summary>
@@ -5,6 +8,8 @@ namespace GRCFinancialControl.Core.Models
     /// </summary>
     public class EngagementManagerAssignment
     {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public int EngagementId { get; set; }
         public Engagement Engagement { get; set; } = null!;

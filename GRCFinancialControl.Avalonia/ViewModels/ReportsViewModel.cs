@@ -60,7 +60,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             catch (Exception ex)
             {
                 _loggingService.LogError($"Failed to load Power BI configuration: {ex.Message}");
-                StatusMessage = LocalizationRegistry.Get("Reports.Status.LoadFailure");
+                StatusMessage = LocalizationRegistry.Get("FINC_Reports_Status_LoadFailure");
                 DashboardUri = null;
             }
             finally
@@ -89,7 +89,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             catch (Exception ex)
             {
                 _loggingService.LogError($"Failed to launch browser: {ex.Message}");
-                StatusMessage = LocalizationRegistry.Format("Reports.Status.OpenExternalFailure", ex.Message);
+                StatusMessage = LocalizationRegistry.Format("FINC_Reports_Status_OpenExternalFailure", ex.Message);
             }
         }
 

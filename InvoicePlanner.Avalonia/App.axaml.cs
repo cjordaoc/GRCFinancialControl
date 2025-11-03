@@ -13,6 +13,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Messaging;
+using GRC.Shared.UI.Dialogs;
 using GRCFinancialControl.Persistence;
 using GRCFinancialControl.Persistence.Configuration;
 using GRCFinancialControl.Persistence.Services;
@@ -31,8 +32,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
-using ImportResources = GRCFinancialControl.Resources.Features.Import.Import;
-using SharedResources = GRCFinancialControl.Resources.Shared.Resources;
+using GRC.Shared.Resources.Localization;
 
 namespace InvoicePlanner.Avalonia;
 
@@ -64,12 +64,7 @@ public partial class App : Application
     private async Task InitializeAsync()
     {
         ApplyLanguageFromSettings();
-        LocalizationRegistry.Configure(new CompositeLocalizationProvider(
-            new ResourceManagerLocalizationProvider(ImportResources.ResourceManager),
-            new ResourceManagerLocalizationProvider(
-                "InvoicePlanner.Avalonia.Resources.Strings",
-                typeof(App).Assembly),
-            new ResourceManagerLocalizationProvider(SharedResources.ResourceManager)));
+        LocalizationRegistry.Configure(new ResourceManagerLocalizationProvider(Strings.ResourceManager));
 
         _host = Host.CreateDefaultBuilder()
             .ConfigureAppConfiguration((context, config) =>
@@ -88,6 +83,9 @@ public partial class App : Application
                 services.AddTransient<ISettingsService, SettingsService>();
                 services.AddSingleton<IConnectionPackageService, ConnectionPackageService>();
 
+                var connectionAvailability = new DatabaseConnectionAvailability(false);
+                services.AddSingleton<IDatabaseConnectionAvailability>(connectionAvailability);
+
                 using (var tempProvider = services.BuildServiceProvider())
                 {
                     using var scope = tempProvider.CreateScope();
@@ -101,15 +99,23 @@ public partial class App : Application
                     CurrencyDisplayHelper.SetDefaultCurrency(defaultCurrency);
                     string? initialConnection;
                     _hasConnectionSettings = TryBuildConnectionString(initialSettings, out initialConnection);
+                    connectionAvailability.Update(_hasConnectionSettings);
                 }
 
                 services.AddDbContextFactory<ApplicationDbContext>((provider, options) =>
                 {
+                    var availability = provider.GetRequiredService<IDatabaseConnectionAvailability>();
+                    if (!availability.IsConfigured)
+                    {
+                        return;
+                    }
+
                     var settingsService = provider.GetRequiredService<ISettingsService>();
                     var settings = settingsService.GetAll();
 
                     if (!TryBuildConnectionString(settings, out var connectionString))
                     {
+                        availability.Update(false);
                         return;
                     }
 
@@ -130,7 +136,8 @@ public partial class App : Application
                 services.AddSingleton<GlobalErrorHandler>();
                 services.AddTransient<ErrorDialogViewModel>();
                 services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
-                services.AddSingleton<DialogService>(provider => new DialogService(provider.GetRequiredService<IMessenger>()));
+                services.AddSingleton<IModalDialogService, ModalDialogService>();
+                services.AddSingleton<DialogService>();
                 services.AddSingleton(provider => new PlanEditorViewModel(
                     provider.GetRequiredService<IInvoicePlanRepository>(),
                     provider.GetRequiredService<IInvoicePlanValidator>(),
@@ -208,24 +215,27 @@ public partial class App : Application
             _messenger.Register<ConnectionSettingsImportedMessage>(this, (_, _) => RequestRestart());
             _messenger.Register<ApplicationRestartRequestedMessage>(this, (_, _) => RequestRestart());
 
-            using (var scope = Services.CreateScope())
-            {
-                var provider = scope.ServiceProvider;
-                if (_hasConnectionSettings)
+                using (var scope = Services.CreateScope())
                 {
-                    var schemaInitializer = provider.GetRequiredService<IDatabaseSchemaInitializer>();
-                    try
+                    var provider = scope.ServiceProvider;
+                    if (_hasConnectionSettings)
                     {
-                        await schemaInitializer.EnsureSchemaAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        _hasConnectionSettings = false;
-                        var logger = provider.GetRequiredService<ILogger<App>>();
-                        logger.LogError(
-                            ex,
-                            "Failed to initialize the remote database schema. The application will continue without a database connection.");
-                    }
+                        var schemaInitializer = provider.GetRequiredService<IDatabaseSchemaInitializer>();
+                        try
+                        {
+                            await schemaInitializer.EnsureSchemaAsync();
+                        }
+                        catch (Exception ex)
+                        {
+                            _hasConnectionSettings = false;
+                            provider
+                                .GetRequiredService<IDatabaseConnectionAvailability>()
+                                .Update(false, ex.Message);
+                            var logger = provider.GetRequiredService<ILogger<App>>();
+                            logger.LogError(
+                                ex,
+                                "Failed to initialize the remote database schema. The application will continue without a database connection.");
+                        }
                 }
 
                 var settingsDbContext = provider.GetRequiredService<SettingsDbContext>();

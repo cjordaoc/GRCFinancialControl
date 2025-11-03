@@ -1,74 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:converters="clr-namespace:App.Presentation.Converters">
   <Styles.Resources>
-    <!-- Color Tokens -->
-    <Color x:Key="ColorPrimary">#FF0F62FE</Color>
-    <Color x:Key="ColorAccent">#FF4F9EFD</Color>
-    <Color x:Key="ColorError">#FFDC3545</Color>
-    <Color x:Key="ColorSurface">#FF2E2E2E</Color>
-    <Color x:Key="ColorSurfaceVariant">#FF3A3A3A</Color>
-    <Color x:Key="ColorSurfaceMuted">#FF2B2B2B</Color>
-    <Color x:Key="ColorSurfaceLight">#FFF5F5F5</Color>
-    <Color x:Key="ColorOnSurface">#FFFFFFFF</Color>
-    <Color x:Key="ColorBorder">#FF4C4C4C</Color>
-    <Color x:Key="ColorGridLines">#FF4C4C4C</Color>
-    <Color x:Key="ColorOverlay">#80000000</Color>
-    <Color x:Key="ColorOverlayStrong">#CC000000</Color>
-    <Color x:Key="ColorWarning">#FFB8860B</Color>
-    <Color x:Key="ColorWarningHighlight">#FFF1C232</Color>
-    <Color x:Key="ColorSuccess">#FF228B22</Color>
-    <Color x:Key="ColorSuccessDark">#FF145214</Color>
-
-    <!-- Brush Tokens -->
-    <SolidColorBrush x:Key="BrushPrimary" Color="{StaticResource ColorPrimary}" />
-    <SolidColorBrush x:Key="BrushAccent" Color="{StaticResource ColorAccent}" />
-    <SolidColorBrush x:Key="BrushError" Color="{StaticResource ColorError}" />
-    <SolidColorBrush x:Key="BrushSurface" Color="{StaticResource ColorSurface}" />
-    <SolidColorBrush x:Key="BrushSurfaceVariant" Color="{StaticResource ColorSurfaceVariant}" />
-    <SolidColorBrush x:Key="BrushSurfaceMuted" Color="{StaticResource ColorSurfaceMuted}" />
-    <SolidColorBrush x:Key="BrushSurfaceLight" Color="{StaticResource ColorSurfaceLight}" />
-    <SolidColorBrush x:Key="BrushOnSurface" Color="{StaticResource ColorOnSurface}" />
-    <SolidColorBrush x:Key="BrushBorder" Color="{StaticResource ColorBorder}" />
-    <SolidColorBrush x:Key="BrushGridLines" Color="{StaticResource ColorGridLines}" />
-    <SolidColorBrush x:Key="BrushOverlay" Color="{StaticResource ColorOverlay}" />
-    <SolidColorBrush x:Key="BrushOverlayStrong" Color="{StaticResource ColorOverlayStrong}" />
-    <SolidColorBrush x:Key="BrushWarning" Color="{StaticResource ColorWarning}" />
-    <SolidColorBrush x:Key="BrushWarningHighlight" Color="{StaticResource ColorWarningHighlight}" />
-    <SolidColorBrush x:Key="BrushSuccess" Color="{StaticResource ColorSuccess}" />
-    <SolidColorBrush x:Key="BrushSuccessDark" Color="{StaticResource ColorSuccessDark}" />
-
-    <!-- Typography Tokens -->
-    <FontFamily x:Key="FontFamilyBase">avares://Avalonia.Fonts.Inter#Inter</FontFamily>
-    <x:Double x:Key="FontSizeSM">12</x:Double>
-    <x:Double x:Key="FontSizeMD">14</x:Double>
-    <x:Double x:Key="FontSizeLG">18</x:Double>
-    <x:Double x:Key="FontSizeXL">20</x:Double>
-
-    <!-- Spacing Tokens -->
-    <x:Double x:Key="Space4">4</x:Double>
-    <x:Double x:Key="Space5">5</x:Double>
-    <x:Double x:Key="Space6">6</x:Double>
-    <x:Double x:Key="Space8">8</x:Double>
-    <x:Double x:Key="Space10">10</x:Double>
-    <x:Double x:Key="Space12">12</x:Double>
-    <x:Double x:Key="Space16">16</x:Double>
-    <x:Double x:Key="Space20">20</x:Double>
-    <x:Double x:Key="Space24">24</x:Double>
-
-    <!-- Spacing Thickness Tokens -->
-    <Thickness x:Key="SpaceThickness4">4</Thickness>
-    <Thickness x:Key="SpaceThickness8">8</Thickness>
-    <Thickness x:Key="SpaceThickness10">10</Thickness>
-    <Thickness x:Key="SpaceThickness12">12</Thickness>
-    <Thickness x:Key="SpaceThickness16">16</Thickness>
-    <Thickness x:Key="SpaceThickness20">20</Thickness>
-    <Thickness x:Key="SpaceThickness24">24</Thickness>
-
-    <!-- Corner Radius Tokens -->
-    <CornerRadius x:Key="CornerRadiusSM">4</CornerRadius>
-    <CornerRadius x:Key="CornerRadiusMD">8</CornerRadius>
-    <CornerRadius x:Key="CornerRadiusLG">12</CornerRadius>
-
     <!-- Elevation Tokens -->
     <x:Double x:Key="Elevation1">4</x:Double>
     <x:Double x:Key="Elevation2">8</x:Double>
@@ -79,6 +12,16 @@
     <Thickness x:Key="DialogContentPadding">16</Thickness>
     <x:Double x:Key="PopupTextBoxMinWidth">280</x:Double>
     <x:Double x:Key="PopupDatePickerMinWidth">240</x:Double>
+    <converters:ToastTypeToBrushConverter x:Key="ToastBrushConverter"
+                                          SuccessBrush="{StaticResource BrushSuccess}"
+                                          WarningBrush="{StaticResource BrushWarningHighlight}"
+                                          ErrorBrush="{StaticResource BrushError}" />
+
+    <Style x:Key="DataGridWrappedTextStyle" Selector="TextBlock">
+      <Setter Property="TextWrapping" Value="Wrap" />
+      <Setter Property="TextTrimming" Value="None" />
+      <Setter Property="MaxWidth" Value="420" />
+    </Style>
   </Styles.Resources>
 
   <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
@@ -87,62 +30,105 @@
   <Style Selector="Border.Card">
     <Setter Property="Background" Value="{StaticResource BrushSurfaceVariant}" />
     <Setter Property="BorderBrush" Value="{StaticResource BrushBorder}" />
-    <Setter Property="BorderThickness" Value="1" />
-    <Setter Property="CornerRadius" Value="{StaticResource CornerRadiusMD}" />
+    <Setter Property="BorderThickness" Value="{StaticResource BorderThin}" />
+    <Setter Property="CornerRadius" Value="{StaticResource CornerRadiusMedium}" />
+    <Setter Property="BoxShadow" Value="{StaticResource ShadowLow}" />
+  </Style>
+
+  <Style Selector="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeBody}" />
+    <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
+  </Style>
+
+  <Style Selector="TextBlock.SidebarTitle">
+    <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}" />
+  </Style>
+
+  <Style Selector="TextBox">
+    <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeBody}" />
+    <Setter Property="MinHeight" Value="{StaticResource InputHeightStandard}" />
+  </Style>
+
+  <Style Selector="ComboBox">
+    <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeBody}" />
+    <Setter Property="MinHeight" Value="{StaticResource InputHeightStandard}" />
   </Style>
 
   <Style Selector="TextBlock.TitleLarge">
-    <Setter Property="FontFamily" Value="{StaticResource FontFamilyBase}" />
-    <Setter Property="FontSize" Value="{StaticResource FontSizeXL}" />
-    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeTitle}" />
+    <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}" />
     <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
   </Style>
 
   <Style Selector="TextBlock.TitleMedium">
-    <Setter Property="FontFamily" Value="{StaticResource FontFamilyBase}" />
-    <Setter Property="FontSize" Value="{StaticResource FontSizeLG}" />
-    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeSection}" />
+    <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}" />
+    <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
+  </Style>
+
+  <Style Selector="TextBlock.TitleSmall">
+    <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeBody}" />
+    <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}" />
+    <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
+  </Style>
+
+  <Style Selector="TextBlock.TitleXSmall">
+    <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeCaption}" />
+    <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}" />
     <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
   </Style>
 
   <Style Selector="TextBlock.Caption">
-    <Setter Property="FontFamily" Value="{StaticResource FontFamilyBase}" />
-    <Setter Property="FontSize" Value="{StaticResource FontSizeSM}" />
+    <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeCaption}" />
     <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
     <Setter Property="Opacity" Value="0.8" />
   </Style>
 
   <Style Selector="TextBlock.StatusSuccess">
-    <Setter Property="FontFamily" Value="{StaticResource FontFamilyBase}" />
-    <Setter Property="FontSize" Value="{StaticResource FontSizeMD}" />
-    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSize14}" />
+    <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}" />
     <Setter Property="Foreground" Value="{StaticResource BrushSuccess}" />
   </Style>
 
   <Style Selector="TextBlock.StatusError">
-    <Setter Property="FontFamily" Value="{StaticResource FontFamilyBase}" />
-    <Setter Property="FontSize" Value="{StaticResource FontSizeMD}" />
-    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSize14}" />
+    <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}" />
     <Setter Property="Foreground" Value="{StaticResource BrushError}" />
   </Style>
 
-  <Style Selector="Button">
-    <Setter Property="HorizontalContentAlignment" Value="Center" />
-    <Setter Property="VerticalContentAlignment" Value="Center" />
-  </Style>
-
   <Style Selector="DatePicker">
+    <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSize14}" />
     <Setter Property="MinWidth" Value="{StaticResource PopupDatePickerMinWidth}" />
     <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="MinHeight" Value="{StaticResource InputHeightStandard}" />
+  </Style>
+
+  <Style Selector="NumericUpDown">
+    <Setter Property="MinHeight" Value="{StaticResource InputHeightStandard}" />
   </Style>
 
   <Style Selector="ToggleButton.NavButton">
     <Setter Property="HorizontalContentAlignment" Value="Left" />
-    <Setter Property="Padding" Value="{StaticResource ButtonPaddingStandard}" />
+    <Setter Property="Padding" Value="12,6" />
+    <Setter Property="MinHeight" Value="40" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="VerticalAlignment" Value="Center" />
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderBrush" Value="Transparent" />
-    <Setter Property="FontFamily" Value="{StaticResource FontFamilyBase}" />
-    <Setter Property="FontSize" Value="{StaticResource FontSizeMD}" />
+    <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeButtonCompact}" />
+    <Setter Property="FontWeight" Value="{StaticResource FontWeightMedium}" />
     <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
   </Style>
 
@@ -155,17 +141,6 @@
     <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
   </Style>
 
-  <Style Selector="DataGrid">
-    <Setter Property="Background" Value="{StaticResource BrushSurface}" />
-    <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
-    <Setter Property="BorderBrush" Value="{StaticResource BrushBorder}" />
-    <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource BrushGridLines}" />
-    <Setter Property="VerticalGridLinesBrush" Value="{StaticResource BrushGridLines}" />
-    <Setter Property="FontFamily" Value="{StaticResource FontFamilyBase}" />
-    <Setter Property="FontSize" Value="{StaticResource FontSizeMD}" />
-    <Setter Property="RowHeight" Value="32" />
-  </Style>
-
   <Style Selector="DataGridRow:selected">
     <Setter Property="Background" Value="{StaticResource BrushSurfaceVariant}" />
   </Style>
@@ -173,7 +148,15 @@
   <Style Selector="DataGridColumnHeader">
     <Setter Property="Background" Value="{StaticResource BrushSurfaceVariant}" />
     <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
-    <Setter Property="FontWeight" Value="Bold" />
-    <Setter Property="Padding" Value="{StaticResource SpaceThickness8}" />
+    <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeSection}" />
+    <Setter Property="HorizontalContentAlignment" Value="Left" />
+    <Setter Property="Padding" Value="{StaticResource DataGridHeaderPadding}" />
+  </Style>
+
+  <Style Selector="TabItem">
+    <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSize14}" />
+    <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}" />
   </Style>
 </Styles>

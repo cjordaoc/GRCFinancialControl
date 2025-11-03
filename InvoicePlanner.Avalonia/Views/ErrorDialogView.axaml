@@ -7,12 +7,12 @@
              x:Class="InvoicePlanner.Avalonia.Views.ErrorDialogView"
              x:DataType="vm:ErrorDialogViewModel"
              mc:Ignorable="d">
-    <Border Padding="{StaticResource SpaceThickness24}" Classes="Card">
-        <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
-            <StackPanel Grid.Row="0" Spacing="{StaticResource Space16}">
+    <Border Padding="{StaticResource CardPaddingThickness}" Classes="Card">
+        <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridGap}">
+            <StackPanel Grid.Row="0" Spacing="{StaticResource SectionSpacing}">
                 <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Classes="TitleMedium" />
-                <StackPanel Spacing="{StaticResource Space12}">
-                    <TextBlock Text="{Binding DetailsLabel}" FontWeight="SemiBold" />
+                <StackPanel Spacing="{StaticResource ControlSpacing}">
+                    <TextBlock Text="{Binding DetailsLabel}" FontWeight="{StaticResource FontWeightSemiBold}" />
                     <TextBox Text="{Binding Details}"
                              AcceptsReturn="True"
                              IsReadOnly="True"
@@ -25,16 +25,16 @@
             <StackPanel Grid.Row="1"
                         Orientation="Horizontal"
                         HorizontalAlignment="Right"
-                        Spacing="{StaticResource Space12}">
-                <Button Content="{loc:Loc Key=Shared.Common.Button.Save}"
+                        Spacing="{StaticResource ControlSpacing}">
+                <Button Content="{loc:Loc Key=Global_Button_Save}"
                         Command="{Binding SaveCommand}"
                         IsDefault="True"
-                        MinWidth="120" />
-                <Button Content="{loc:Loc Key=Shared.Common.Button.Cancel}"
+                        MinWidth="{StaticResource ButtonMinWidth}" />
+                <Button Content="{loc:Loc Key=Global_Button_Cancel}"
                         Command="{Binding CloseCommand}"
                         IsCancel="True"
-                        MinWidth="120" />
-                <Button Content="{loc:Loc Key=Common.Button.CopyDetails}"
+                        MinWidth="{StaticResource ButtonMinWidth}" />
+                <Button Content="{loc:Loc Key=INV_Button_CopyDetails}"
                         Command="{Binding CopyDetailsCommand}" />
             </StackPanel>
         </Grid>

@@ -3,12 +3,23 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.ClosingPeriodsView"
              x:DataType="vm:ClosingPeriodsViewModel">
-    <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="10">
-        <TextBlock Text="{loc:Loc Key=Admin.ClosingPeriods.Title.List}" FontSize="24" FontWeight="Bold" Margin="0,0,0,10"/>
+    <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="{StaticResource CardPaddingThickness}">
+        <StackPanel Grid.Row="0" Orientation="Vertical" Spacing="{StaticResource SpacingUnit}" Margin="{StaticResource MarginBottomSmall}">
+        <TextBlock Text="{loc:Loc Key=FINC_Admin_ClosingPeriods_Title_List}" Classes="TitleLarge"/>
+            <StackPanel Orientation="Horizontal" Spacing="{StaticResource SpacingUnit}">
+                <TextBlock Text="{loc:Loc Key=FINC_Admin_ClosingPeriods_Filter_FiscalYear}" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding FiscalYearFilters}"
+                          SelectedItem="{Binding SelectedFiscalYearFilter}"
+                          DisplayMemberBinding="{Binding DisplayName}"
+                          Width="220"
+                          HorizontalAlignment="Left"/>
+            </StackPanel>
+        </StackPanel>
 
         <DataGrid Grid.Row="1"
                   ItemsSource="{Binding ClosingPeriods}"
@@ -17,35 +28,41 @@
                   AutoGenerateColumns="False"
                   IsReadOnly="True">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="{loc:Loc Key=Admin.ClosingPeriods.Header.Id}" Binding="{Binding Id}" Width="Auto"/>
-                <DataGridTextColumn Header="{loc:Loc Key=Admin.ClosingPeriods.Header.Name}" Binding="{Binding Name}" Width="2*"/>
-                <DataGridTextColumn Header="{loc:Loc Key=Admin.ClosingPeriods.Header.Start}" Binding="{Binding PeriodStart, StringFormat='yyyy-MM-dd'}" Width="*"/>
-                <DataGridTextColumn Header="{loc:Loc Key=Admin.ClosingPeriods.Header.End}" Binding="{Binding PeriodEnd, StringFormat='yyyy-MM-dd'}" Width="*"/>
-                <DataGridTextColumn Header="{loc:Loc Key=Admin.ClosingPeriods.Header.FiscalYear}" Binding="{Binding FiscalYear.Name}" Width="*"/>
-                <DataGridCheckBoxColumn Header="{loc:Loc Key=Admin.ClosingPeriods.Header.Locked}" Binding="{Binding FiscalYear.IsLocked}" IsReadOnly="True" Width="Auto"/>
+                <DataGridTextColumn Header="{loc:Loc Key=FINC_Admin_ClosingPeriods_Header_Id}" Binding="{Binding Id}" Width="Auto"/>
+                <DataGridTextColumn Header="{loc:Loc Key=FINC_Admin_ClosingPeriods_Header_Name}" Binding="{Binding Name}" Width="2*"/>
+                <DataGridTextColumn Header="{loc:Loc Key=FINC_Admin_ClosingPeriods_Header_Start}" Binding="{Binding PeriodStart, StringFormat='yyyy-MM-dd'}" Width="*"/>
+                <DataGridTextColumn Header="{loc:Loc Key=FINC_Admin_ClosingPeriods_Header_End}" Binding="{Binding PeriodEnd, StringFormat='yyyy-MM-dd'}" Width="*"/>
+                <DataGridTextColumn Header="{loc:Loc Key=FINC_Admin_ClosingPeriods_Header_FiscalYear}" Binding="{Binding FiscalYear.Name}" Width="*"/>
+                <DataGridCheckBoxColumn Header="{loc:Loc Key=FINC_Admin_ClosingPeriods_Header_Locked}" Binding="{Binding IsLocked}" IsReadOnly="True" Width="Auto"/>
             </DataGrid.Columns>
         </DataGrid>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="5" Margin="0,10,0,0">
-            <Button Content="{loc:Loc Key=Common.Button.Add}" Command="{Binding AddCommand}" IsEnabled="{Binding HasUnlockedFiscalYears}"/>
-            <Button Content="{loc:Loc Key=Common.Button.Edit}"
+        <StackPanel Grid.Row="2"
+                    Classes="ButtonRow"
+                    HorizontalAlignment="Left"
+                    Margin="{StaticResource MarginTopSmall}">
+            <Button Content="{loc:Loc Key=FINC_Button_Add}" Command="{Binding AddCommand}" IsEnabled="{Binding HasUnlockedFiscalYears}"/>
+            <Button Content="{loc:Loc Key=FINC_Button_Edit}"
                     Command="{Binding EditCommand}"
                     CommandParameter="{Binding SelectedClosingPeriod}"/>
-            <Button Content="{loc:Loc Key=Common.Button.View}"
+            <Button Content="{loc:Loc Key=FINC_Button_View}"
                     Command="{Binding ViewCommand}"
                     CommandParameter="{Binding SelectedClosingPeriod}"/>
-            <Button Content="{loc:Loc Key=Common.Button.Delete}"
+            <Button Content="{loc:Loc Key=FINC_Button_Delete}"
                     Command="{Binding DeleteCommand}"
                     CommandParameter="{Binding SelectedClosingPeriod}"/>
-            <Button Content="{loc:Loc Key=Admin.ClosingPeriods.Button.DeleteData}"
+            <Button Content="{loc:Loc Key=FINC_Admin_ClosingPeriods_Button_DeleteData}"
                     Command="{Binding DeleteDataCommand}"
                     CommandParameter="{Binding SelectedClosingPeriod}"
-                    Classes="danger"/>
+                    Classes="Danger"/>
+            <Button Content="{Binding LockButtonLabel}"
+                    Command="{Binding ToggleLockCommand}"
+                    IsEnabled="{Binding SelectedClosingPeriod, Converter={x:Static converters:ObjectConverters.IsNotNull}}"/>
         </StackPanel>
 
-        <StackPanel Grid.Row="3" Orientation="Vertical" Margin="0,5,0,0">
+        <StackPanel Grid.Row="3" Orientation="Vertical" Margin="{StaticResource MarginTopMini}">
             <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource BrushWarning}"/>
-            <TextBlock Text="{loc:Loc Key=Admin.ClosingPeriods.Status.AllLocked}"
+            <TextBlock Text="{loc:Loc Key=FINC_Admin_ClosingPeriods_Status_AllLocked}"
                        Foreground="{StaticResource BrushError}"
                        IsVisible="{Binding AreAllFiscalYearsLocked}"/>
         </StackPanel>

@@ -1,12 +1,14 @@
 using System;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
+using GRC.Shared.UI.Messages;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
@@ -70,13 +72,17 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             if (string.IsNullOrWhiteSpace(Name))
             {
-                StatusMessage = LocalizationRegistry.Get("FiscalYears.Validation.NameRequired");
+                const string validationKey = "FINC_FiscalYears_Validation_NameRequired";
+                StatusMessage = LocalizationRegistry.Get(validationKey);
+                ToastService.ShowWarning(validationKey);
                 return;
             }
 
             if (EndDate < StartDate)
             {
-                StatusMessage = LocalizationRegistry.Get("FiscalYears.Validation.EndDateAfterStart");
+                const string validationKey = "FINC_FiscalYears_Validation_EndDateAfterStart";
+                StatusMessage = LocalizationRegistry.Get(validationKey);
+                ToastService.ShowWarning(validationKey);
                 return;
             }
 
@@ -86,16 +92,25 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             FiscalYear.AreaSalesTarget = AreaSalesTarget;
             FiscalYear.AreaRevenueTarget = AreaRevenueTarget;
 
-            if (FiscalYear.Id == 0)
+            try
             {
-                await _fiscalYearService.AddAsync(FiscalYear);
-            }
-            else
-            {
-                await _fiscalYearService.UpdateAsync(FiscalYear);
-            }
+                if (FiscalYear.Id == 0)
+                {
+                    await _fiscalYearService.AddAsync(FiscalYear);
+                }
+                else
+                {
+                    await _fiscalYearService.UpdateAsync(FiscalYear);
+                }
 
-            _messenger.Send(new CloseDialogMessage(true));
+                ToastService.ShowSuccess("FINC_FiscalYears_Toast_SaveSuccess", FiscalYear.Name);
+                _messenger.Send(new CloseDialogMessage(true));
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = ex.Message;
+                ToastService.ShowError("FINC_FiscalYears_Toast_OperationFailed", ex.Message);
+            }
         }
 
         [RelayCommand]

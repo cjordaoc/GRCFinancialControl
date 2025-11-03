@@ -63,14 +63,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             var filePath = await _filePickerService.SaveFileAsync(
                 defaultFileName,
-                title: LocalizationRegistry.Get("Tasks.Dialog.SaveTitle"),
+                title: LocalizationRegistry.Get("FINC_Tasks_Dialog_SaveTitle"),
                 defaultExtension: ".xml",
                 allowedPatterns: new[] { "*.xml" },
                 initialDirectory: initialDirectory).ConfigureAwait(false);
 
             if (string.IsNullOrWhiteSpace(filePath))
             {
-                StatusMessage = LocalizationRegistry.Get("Tasks.Status.Cancelled");
+                StatusMessage = LocalizationRegistry.Get("FINC_Tasks_Status_Cancelled");
                 return;
             }
 
@@ -100,15 +100,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 await WriteXmlAsync(filePath, now, notifyDate, messageBuckets).ConfigureAwait(false);
                 await PersistExportDirectoryAsync(Path.GetDirectoryName(filePath)).ConfigureAwait(false);
 
-                StatusMessage = LocalizationRegistry.Format("Tasks.Status.FileSaved", Path.GetFileName(filePath));
+                StatusMessage = LocalizationRegistry.Format("FINC_Tasks_Status_FileSaved", Path.GetFileName(filePath));
             }
             catch (TimeZoneNotFoundException)
             {
-                StatusMessage = LocalizationRegistry.Format("Tasks.Status.TimeZoneMissing", TimeZoneId);
+                StatusMessage = LocalizationRegistry.Format("FINC_Tasks_Status_TimeZoneMissing", TimeZoneId);
             }
             catch (Exception ex)
             {
-                StatusMessage = LocalizationRegistry.Format("Tasks.Status.GenerationFailure", ex.Message);
+                StatusMessage = LocalizationRegistry.Format("FINC_Tasks_Status_GenerationFailure", ex.Message);
             }
         }
 
@@ -431,16 +431,28 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 var customerTicket = item?.CustomerTicket;
                 var planType = plan?.Type;
 
-                var description = BuildInvoiceDescription(
-                    preview,
-                    engagement,
-                    deliveryDescription,
-                    customerEmails,
-                    currency,
-                    amountValue,
-                    item?.CoeResponsible,
-                    planType,
-                    customerTicket);
+                var descriptionContext = new InvoiceDescriptionContext
+                {
+                    EngagementId = preview.EngagementId,
+                    EngagementDescription = engagement?.Description,
+                    Sequence = preview.SeqNo,
+                    TotalInvoices = preview.NumInvoices,
+                    DueDate = preview.ComputedDueDate,
+                    Amount = amountValue,
+                    CurrencyCode = currency,
+                    PlanType = planType,
+                    DeliveryDescription = deliveryDescription,
+                    PoNumber = preview.PoNumber,
+                    FrsNumber = preview.FrsNumber,
+                    CustomerTicket = customerTicket,
+                    CustomerName = preview.CustomerName,
+                    CustomerFocalPointName = preview.CustomerFocalPointName,
+                    CustomerFocalPointEmail = preview.CustomerFocalPointEmail,
+                    CoeResponsible = item?.CoeResponsible,
+                    CustomerEmails = customerEmails
+                };
+
+                var description = InvoiceDescriptionFormatter.Format(descriptionContext);
 
                 var paymentType = PaymentTypeCatalog.GetByCode(item?.PaymentTypeCode);
                 var emailsCsv = customerEmails.Count == 0 ? null : string.Join("; ", customerEmails);
@@ -566,26 +578,26 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             StatusMessage = null;
 
             var allocationFilePath = await _filePickerService.OpenFileAsync(
-                title: LocalizationRegistry.Get("Tasks.Dialog.GenerateRetainTemplateTitle"),
+                title: LocalizationRegistry.Get("FINC_Tasks_Dialog_GenerateRetainTemplateTitle"),
                 defaultExtension: ".xlsx",
                 allowedPatterns: new[] { "*.xlsx" }).ConfigureAwait(false);
 
             if (string.IsNullOrWhiteSpace(allocationFilePath))
             {
-                StatusMessage = LocalizationRegistry.Get("Tasks.Status.RetainTemplateCancelled");
+                StatusMessage = LocalizationRegistry.Get("FINC_Tasks_Status_RetainTemplateCancelled");
                 return;
             }
 
             var defaultFileName = $"RetainTemplate_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
             var destinationFilePath = await _filePickerService.SaveFileAsync(
                 defaultFileName,
-                title: LocalizationRegistry.Get("Tasks.Dialog.SaveRetainTemplateTitle"),
+                title: LocalizationRegistry.Get("FINC_Tasks_Dialog_SaveRetainTemplateTitle"),
                 defaultExtension: ".xlsx",
                 allowedPatterns: new[] { "*.xlsx" }).ConfigureAwait(false);
 
             if (string.IsNullOrWhiteSpace(destinationFilePath))
             {
-                StatusMessage = LocalizationRegistry.Get("Tasks.Status.RetainTemplateCancelled");
+                StatusMessage = LocalizationRegistry.Get("FINC_Tasks_Status_RetainTemplateCancelled");
                 return;
             }
 
@@ -594,11 +606,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 var generatedFilePath = await _retainTemplateGenerator.GenerateRetainTemplateAsync(
                     allocationFilePath,
                     destinationFilePath).ConfigureAwait(false);
-                StatusMessage = LocalizationRegistry.Format("Tasks.Status.RetainTemplateSuccess", generatedFilePath);
+                StatusMessage = LocalizationRegistry.Format("FINC_Tasks_Status_RetainTemplateSuccess", generatedFilePath);
             }
             catch (Exception ex)
             {
-                StatusMessage = LocalizationRegistry.Format("Tasks.Status.RetainTemplateFailure", ex.Message);
+                StatusMessage = LocalizationRegistry.Format("FINC_Tasks_Status_RetainTemplateFailure", ex.Message);
             }
         }
 
@@ -845,101 +857,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             return bucket.Etcs.Count == 1
                 ? "Há 1 ETC previsto para acompanhamento nesta semana."
                 : $"Há {bucket.Etcs.Count} ETCs previstos para acompanhamento nesta semana.";
-        }
-
-        private static string BuildInvoiceDescription(
-            InvoiceNotificationPreview preview,
-            Engagement? engagement,
-            string? deliveryDescription,
-            IReadOnlyList<string> customerEmails,
-            string currency,
-            decimal invoiceAmount,
-            string? coeResponsible,
-            InvoicePlanType? planType,
-            string? customerTicket)
-        {
-            var builder = new StringBuilder();
-
-            var serviceParts = new List<string>();
-            if (!string.IsNullOrWhiteSpace(engagement?.Description))
-            {
-                serviceParts.Add(engagement.Description.Trim());
-            }
-            else
-            {
-                serviceParts.Add(preview.EngagementId);
-            }
-
-            if (planType == InvoicePlanType.ByDelivery && !string.IsNullOrWhiteSpace(deliveryDescription))
-            {
-                serviceParts.Add(deliveryDescription.Trim());
-            }
-
-            builder.Append("Serviço: ").AppendLine(string.Join(" – ", serviceParts));
-
-            if (!string.IsNullOrWhiteSpace(preview.PoNumber))
-            {
-                builder.Append("PO: ").AppendLine(preview.PoNumber.Trim());
-            }
-
-            if (!string.IsNullOrWhiteSpace(preview.FrsNumber))
-            {
-                builder.Append("FRS: ").AppendLine(preview.FrsNumber.Trim());
-            }
-
-            if (!string.IsNullOrWhiteSpace(customerTicket))
-            {
-                builder.Append("Ticket Cliente: ").AppendLine(customerTicket.Trim());
-            }
-
-            builder.Append("Parcela ")
-                .Append(preview.SeqNo)
-                .Append(" de ")
-                .Append(preview.NumInvoices)
-                .AppendLine();
-
-            builder.Append("Valor da Parcela: ")
-                .AppendLine(FormatCurrency(invoiceAmount, currency));
-
-            builder.Append("Vencimento: ")
-                .AppendLine(preview.ComputedDueDate.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("pt-BR")));
-
-            var contactParts = new List<string>();
-            if (!string.IsNullOrWhiteSpace(preview.CustomerName))
-            {
-                contactParts.Add(preview.CustomerName.Trim());
-            }
-
-            if (!string.IsNullOrWhiteSpace(preview.CustomerFocalPointName))
-            {
-                contactParts.Add(preview.CustomerFocalPointName.Trim());
-            }
-            else if (!string.IsNullOrWhiteSpace(preview.CustomerFocalPointEmail))
-            {
-                contactParts.Add(preview.CustomerFocalPointEmail.Trim());
-            }
-
-            if (!string.IsNullOrWhiteSpace(coeResponsible))
-            {
-                contactParts.Add(coeResponsible.Trim());
-            }
-
-            if (contactParts.Count > 0)
-            {
-                builder.Append("Contato: ").AppendLine(string.Join(" – ", contactParts));
-            }
-
-            if (customerEmails.Count > 0)
-            {
-                builder.Append("E-mails para envio: ").AppendLine(string.Join("; ", customerEmails));
-            }
-
-            return builder.ToString().TrimEnd();
-        }
-
-        private static string FormatCurrency(decimal amount, string currencyCode)
-        {
-            return CurrencyDisplayHelper.Format(amount, string.IsNullOrWhiteSpace(currencyCode) ? null : currencyCode);
         }
 
         private static IReadOnlyList<EtcColumnDefinition> BuildEtcColumns(EtcExport etc)

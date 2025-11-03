@@ -9,45 +9,50 @@
              x:Class="GRCFinancialControl.Avalonia.Views.ImportView"
              x:DataType="vm:ImportViewModel">
     <ScrollViewer>
-        <StackPanel Margin="24" Spacing="16">
-            <Border Classes="Card" Padding="24">
-                <StackPanel Spacing="18">
-                    <TextBlock Text="{loc:Loc Key=Import.Title.Primary}"
+        <StackPanel Margin="{StaticResource PageMarginThickness}" Spacing="{StaticResource SectionSpacing}">
+            <Border Classes="Card" Padding="{StaticResource CardPaddingThickness}">
+                <StackPanel Spacing="{StaticResource SectionSpacing}">
+                    <TextBlock Text="{loc:Loc Key=FINC_Import_Title_Primary}"
                                Classes="TitleLarge"/>
                     <StackPanel Orientation="Horizontal"
-                                Spacing="12"
+                                Spacing="{StaticResource ControlSpacing}"
                                 IsEnabled="{Binding IsImporting, Converter={StaticResource InverseBooleanConverter}}">
-                        <Button Content="{loc:Loc Key=Import.Button.Budget}"
+                        <Button Content="{loc:Loc Key=FINC_Import_Button_Budget}"
                                 Command="{Binding SetImportTypeCommand}"
                                 CommandParameter="Budget"
                                 Classes="accent"/>
-                        <Button Content="{loc:Loc Key=Import.Button.AllocationPlanning}"
+                        <Button Content="{loc:Loc Key=FINC_Import_Button_AllocationPlanning}"
                                 Command="{Binding SetImportTypeCommand}"
                                 CommandParameter="AllocationPlanning"
                                 Classes="accent"/>
-                        <Button Content="{loc:Loc Key=Import.Button.FullManagement}"
+                        <Button Content="{loc:Loc Key=FINC_Import_Button_FullManagement}"
                                 Command="{Binding SetImportTypeCommand}"
                                 CommandParameter="FullManagement"
-                                Classes="accent"/>
+                                Classes="accent"
+                                IsEnabled="{Binding CanSelectFullManagement}"/>
                     </StackPanel>
+                    <Border Background="{StaticResource BrushSurfaceMuted}"
+                            CornerRadius="{StaticResource ControlCornerRadius}"
+                            Padding="{StaticResource CardPaddingThickness}"
+                            IsVisible="{Binding ClosingPeriodSelectionWarning, Converter={x:Static converters:ObjectConverters.IsNotNull}}">
+                        <TextBlock Text="{Binding ClosingPeriodSelectionWarning}" TextWrapping="Wrap"/>
+                    </Border>
                     <Border Background="{StaticResource BrushSurfaceVariant}"
-                            CornerRadius="{StaticResource CornerRadiusSM}"
-                            Padding="16"
+                            CornerRadius="{StaticResource ControlCornerRadius}"
+                            Padding="{StaticResource CardPaddingThickness}"
                             IsVisible="{Binding FileType, Converter={x:Static converters:ObjectConverters.IsNotNull}}">
-                        <StackPanel Spacing="12">
+                        <StackPanel Spacing="{StaticResource ControlSpacing}">
                             <TextBlock Text="{Binding SelectedImportTitle}"
-                                       FontSize="{StaticResource FontSizeLG}"
-                                       FontWeight="SemiBold"/>
-                            <Button Content="{loc:Loc Key=Import.Button.SelectFile}"
+                                       Classes="TitleSmall"/>
+                            <Button Content="{loc:Loc Key=FINC_Import_Button_SelectFile}"
                                     Command="{Binding ImportCommand}"
-                                    Classes="accent"
-                                    IsEnabled="{Binding IsImporting, Converter={StaticResource InverseBooleanConverter}}"/>
+                                    Classes="accent"/>
                             <ProgressBar IsIndeterminate="True"
                                          Height="6"
                                          IsVisible="{Binding IsImporting}"/>
                             <Border Background="{StaticResource BrushSurfaceMuted}"
-                                    CornerRadius="{StaticResource CornerRadiusSM}"
-                                    Padding="12"
+                                    CornerRadius="{StaticResource ControlCornerRadius}"
+                                    Padding="{StaticResource CardPaddingThickness}"
                                     IsVisible="{Binding StatusMessage, Converter={x:Static converters:ObjectConverters.IsNotNull}}">
                                 <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
                             </Border>

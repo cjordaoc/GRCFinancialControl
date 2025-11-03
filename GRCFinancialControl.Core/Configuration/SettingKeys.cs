@@ -14,4 +14,6 @@ public static class SettingKeys
     public const string LastGrcNavigationItemKey = "LastGrcNavigationItemKey";
     public const string LastInvoicePlannerSectionKey = "LastInvoicePlannerSectionKey";
     public const string DefaultCurrency = "DefaultCurrency";
+    public const string FinancialControlSidebarExpanded = "FinancialControlSidebarExpanded";
+    public const string InvoicePlannerSidebarExpanded = "InvoicePlannerSidebarExpanded";
 }

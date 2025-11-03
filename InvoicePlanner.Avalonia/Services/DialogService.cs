@@ -1,17 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
-using Avalonia.Layout;
-using Avalonia.Media;
 using Avalonia.Threading;
-using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.Messaging;
-using InvoicePlanner.Avalonia.Messages;
+using GRC.Shared.UI.Dialogs;
+using GRC.Shared.UI.Messages;
 using InvoicePlanner.Avalonia.ViewModels;
 
 namespace InvoicePlanner.Avalonia.Services
@@ -20,11 +17,13 @@ namespace InvoicePlanner.Avalonia.Services
     {
         private readonly ViewLocator _viewLocator = new();
         private readonly Stack<Window> _dialogStack = new();
+        private readonly IModalDialogService _modalDialogService;
 
         private Window? CurrentDialog => _dialogStack.Count > 0 ? _dialogStack.Peek() : null;
 
-        public DialogService(IMessenger messenger)
+        public DialogService(IMessenger messenger, IModalDialogService modalDialogService)
         {
+            _modalDialogService = modalDialogService;
             messenger.Register<CloseDialogMessage>(this, (r, m) =>
             {
                 CurrentDialog?.Close(m.Value);
@@ -43,8 +42,6 @@ namespace InvoicePlanner.Avalonia.Services
                 throw new InvalidOperationException($"Could not locate a view for the view model '{viewModel.GetType().FullName}'.");
             }
 
-            view.HorizontalAlignment = HorizontalAlignment.Stretch;
-            view.VerticalAlignment = VerticalAlignment.Stretch;
             view.DataContext = viewModel;
 
             if (desktop.MainWindow is null)
@@ -53,198 +50,16 @@ namespace InvoicePlanner.Avalonia.Services
             }
 
             var owner = desktop.MainWindow;
-            var overlayBrush = GetResource("ModalOverlayBrush", new SolidColorBrush(Color.FromArgb(0x8C, 0x00, 0x00, 0x00)));
-            var surfaceBrush = GetResource("ModalDialogBackgroundBrush", GetResource("BrushSurfaceVariant", new SolidColorBrush(Color.FromArgb(0xFF, 0x2E, 0x2E, 0x2E))));
-            var borderBrush = GetResource("BrushBorder", new SolidColorBrush(Color.FromArgb(0xFF, 0x4C, 0x4C, 0x4C)));
-            var contentPadding = GetResource("ModalDialogPadding", new Thickness(24));
-            var cornerRadius = GetResource("ModalDialogCornerRadius", new CornerRadius(12));
-            var boxShadowResource = GetResource<object>("ModalDialogShadow", "0 4 24 0 #66000000");
-            var boxShadow = boxShadowResource switch
+            var session = _modalDialogService.Create(owner, view, title, new ModalDialogOptions
             {
-                string shadowString => BoxShadows.Parse(shadowString),
-                BoxShadows shadows => shadows,
-                _ => BoxShadows.Parse("0 4 24 0 #66000000")
-            };
-            var containerMargin = GetResource("SpaceThickness24", new Thickness(24));
-
-            var container = new Border
-            {
-                Background = surfaceBrush,
-                BorderBrush = borderBrush,
-                BorderThickness = new Thickness(1),
-                CornerRadius = cornerRadius,
-                Padding = contentPadding,
-                Margin = containerMargin,
-                BoxShadow = boxShadow,
-                MinWidth = 360,
-                MinHeight = 320,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                Child = view
-            };
-
-            KeyboardNavigation.SetTabNavigation(container, KeyboardNavigationMode.Cycle);
-
-            Window? dialog = null;
-
-            void UpdateDialogGeometry()
-            {
-                if (dialog is null)
-                {
-                    return;
-                }
-
-                var bounds = owner.Bounds;
-
-                if (owner.WindowState == WindowState.Maximized)
-                {
-                    if (dialog.WindowState != WindowState.Maximized)
-                    {
-                        dialog.WindowState = WindowState.Maximized;
-                    }
-
-                    dialog.Position = owner.Position;
-                }
-                else
-                {
-                    if (dialog.WindowState != WindowState.Normal)
-                    {
-                        dialog.WindowState = WindowState.Normal;
-                    }
-
-                    dialog.Width = bounds.Width;
-                    dialog.Height = bounds.Height;
-                    dialog.Position = owner.Position;
-                }
-            }
-
-            void UpdateSizing(Size size)
-            {
-                if (size.Width > 0)
-                {
-                    var targetWidth = size.Width * 0.85;
-                    container.Width = targetWidth;
-                    container.MaxWidth = targetWidth;
-                }
-                else
-                {
-                    container.Width = double.NaN;
-                    container.MaxWidth = double.PositiveInfinity;
-                }
-
-                if (size.Height > 0)
-                {
-                    var targetHeight = size.Height * 0.85;
-                    container.Height = targetHeight;
-                    container.MaxHeight = targetHeight;
-                }
-                else
-                {
-                    container.Height = double.NaN;
-                    container.MaxHeight = double.PositiveInfinity;
-                }
-
-                UpdateDialogGeometry();
-            }
-
-            UpdateSizing(owner.ClientSize);
-
-            var overlay = new Grid
-            {
-                Background = overlayBrush,
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Stretch,
-                Children = { container }
-            };
-
-            dialog = new Window
-            {
-                Title = title,
-                Content = overlay,
-                WindowStartupLocation = WindowStartupLocation.Manual,
-                ShowInTaskbar = false,
-                CanResize = false,
-                SystemDecorations = SystemDecorations.None,
-                Background = Brushes.Transparent,
-                TransparencyLevelHint = new[] { WindowTransparencyLevel.Transparent },
-                Padding = new Thickness(0),
-                SizeToContent = SizeToContent.Manual
-            };
-
-            UpdateDialogGeometry();
-
-            UpdateSizing(owner.ClientSize);
-            var sizeSubscription = owner.GetObservable(Window.ClientSizeProperty).Subscribe(UpdateSizing);
-            void OwnerPositionChanged(object? _, PixelPointEventArgs __) => UpdateDialogGeometry();
-            owner.PositionChanged += OwnerPositionChanged;
-
-            bool IsEligibleForFocus(Control control) =>
-                control.Focusable && control.IsEffectivelyEnabled && control.IsEffectivelyVisible && control is not ScrollViewer;
-
-            List<Control> GetFocusableControls()
-            {
-                return container
-                    .GetVisualDescendants()
-                    .OfType<Control>()
-                    .Prepend(container)
-                    .Where(IsEligibleForFocus)
-                    .Distinct()
-                    .ToList();
-            }
-
-            void FocusFirstElement()
-            {
-                var focusable = GetFocusableControls().FirstOrDefault();
-
-                if (focusable is null)
-                {
-                    focusable = container.GetVisualDescendants()
-                        .OfType<Button>()
-                        .FirstOrDefault(button => button.IsCancel);
-                }
-
-                focusable?.Focus();
-            }
-
-            void HandleKeyDown(object? sender, KeyEventArgs e)
-            {
-                if (e.Key != Key.Tab)
-                {
-                    return;
-                }
-
-                var focusables = GetFocusableControls();
-
-                if (focusables.Count == 0)
-                {
-                    return;
-                }
-
-                var current = TopLevel.GetTopLevel(dialog)?.FocusManager?.GetFocusedElement() as Control;
-                var currentIndex = current is not null ? focusables.IndexOf(current) : -1;
-
-                if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
-                {
-                    if (currentIndex <= 0)
-                    {
-                        focusables[^1].Focus();
-                        e.Handled = true;
-                    }
-
-                    return;
-                }
-
-                if (currentIndex == -1 || currentIndex >= focusables.Count - 1)
-                {
-                    focusables[0].Focus();
-                    e.Handled = true;
-                }
-            }
+                Layout = ModalDialogLayout.OwnerAligned
+            });
+            var dialog = session.Dialog;
 
             dialog.Opened += (_, _) =>
             {
-                Dispatcher.UIThread.Post(FocusFirstElement, DispatcherPriority.Background);
-                dialog.KeyDown += HandleKeyDown;
+                Dispatcher.UIThread.Post(session.FocusFirstElement, DispatcherPriority.Background);
+                dialog.KeyDown += session.KeyDownHandler;
             };
 
             var previousDialog = CurrentDialog;
@@ -274,9 +89,8 @@ namespace InvoicePlanner.Avalonia.Services
                     _dialogStack.Pop();
                 }
 
-                sizeSubscription?.Dispose();
-                owner.PositionChanged -= OwnerPositionChanged;
-                dialog.KeyDown -= HandleKeyDown;
+                session.Dispose();
+                dialog.KeyDown -= session.KeyDownHandler;
 
                 var restoredDialog = CurrentDialog;
 
@@ -301,16 +115,6 @@ namespace InvoicePlanner.Avalonia.Services
                     Dispatcher.UIThread.Post(() => previousFocus?.Focus(), DispatcherPriority.Background);
                 }
             }
-        }
-
-        private static T GetResource<T>(string key, T fallback)
-        {
-            if (Application.Current is { } app && app.TryFindResource(key, out var resource) && resource is T typed)
-            {
-                return typed;
-            }
-
-            return fallback;
         }
     }
 }

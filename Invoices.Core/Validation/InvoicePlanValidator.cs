@@ -17,58 +17,58 @@ public class InvoicePlanValidator : IInvoicePlanValidator
 
         if (string.IsNullOrWhiteSpace(plan.EngagementId))
         {
-            errors.Add(ValidationStrings.Get("EngagementIdRequired"));
+            errors.Add(ValidationStrings.Get("Global_EngagementIdRequired"));
         }
 
         if (plan.NumInvoices <= 0)
         {
-            errors.Add(ValidationStrings.Get("NumInvoicesMinimum"));
+            errors.Add(ValidationStrings.Get("Global_NumInvoicesMinimum"));
         }
 
         if (plan.PaymentTermDays < 0)
         {
-            errors.Add(ValidationStrings.Get("PaymentTermsNegative"));
+            errors.Add(ValidationStrings.Get("Global_PaymentTermsNegative"));
         }
 
         if (string.IsNullOrWhiteSpace(plan.CustomerFocalPointName))
         {
-            errors.Add(ValidationStrings.Get("CustomerFocalPointNameRequired"));
+            errors.Add(ValidationStrings.Get("Global_CustomerFocalPointNameRequired"));
         }
 
         if (string.IsNullOrWhiteSpace(plan.CustomerFocalPointEmail))
         {
-            errors.Add(ValidationStrings.Get("CustomerFocalPointEmailRequired"));
+            errors.Add(ValidationStrings.Get("Global_CustomerFocalPointEmailRequired"));
         }
         else if (!IsValidEmail(plan.CustomerFocalPointEmail))
         {
-            errors.Add(ValidationStrings.Get("CustomerFocalPointEmailInvalid"));
+            errors.Add(ValidationStrings.Get("Global_CustomerFocalPointEmailInvalid"));
         }
 
         if (plan.Type == InvoicePlanType.ByDate && plan.FirstEmissionDate is null)
         {
-            errors.Add(ValidationStrings.Get("FirstEmissionRequired"));
+            errors.Add(ValidationStrings.Get("Global_FirstEmissionRequired"));
         }
 
         if (plan.Items.Count == 0)
         {
-            errors.Add(ValidationStrings.Get("ItemsRequired"));
+            errors.Add(ValidationStrings.Get("Global_ItemsRequired"));
         }
 
         if (plan.Items.Count != plan.NumInvoices)
         {
-            errors.Add(ValidationStrings.Get("ItemsCountMismatch"));
+            errors.Add(ValidationStrings.Get("Global_ItemsCountMismatch"));
         }
 
         var totalPercent = Math.Round(plan.Items.Sum(item => item.Percentage), 4, MidpointRounding.AwayFromZero);
         if (Math.Abs(totalPercent - 100m) > 0.0001m)
         {
-            errors.Add(ValidationStrings.Format("TotalPercentageInvalid", totalPercent.ToString("F4", CultureInfo.CurrentCulture)));
+            errors.Add(ValidationStrings.Format("Global_TotalPercentageInvalid", totalPercent.ToString("F4", CultureInfo.CurrentCulture)));
         }
 
         var totalAmount = Math.Round(plan.Items.Sum(item => item.Amount), 2, MidpointRounding.AwayFromZero);
         if (Math.Abs(totalAmount - Math.Round(planningBaseValue, 2, MidpointRounding.AwayFromZero)) > 0.01m)
         {
-            errors.Add(ValidationStrings.Format("TotalAmountInvalid", planningBaseValue.ToString("F2", CultureInfo.CurrentCulture)));
+            errors.Add(ValidationStrings.Format("Global_TotalAmountInvalid", planningBaseValue.ToString("F2", CultureInfo.CurrentCulture)));
         }
 
         var orderedItems = plan.Items
@@ -82,13 +82,13 @@ public class InvoicePlanValidator : IInvoicePlanValidator
 
             if (item.SeqNo != expectedSeq)
             {
-                errors.Add(ValidationStrings.Get("SequenceContiguous"));
+                errors.Add(ValidationStrings.Get("Global_SequenceContiguous"));
                 break;
             }
 
             if (item.EmissionDate is null)
             {
-                errors.Add(ValidationStrings.Format("EmissionDateRequired", expectedSeq));
+                errors.Add(ValidationStrings.Format("Global_EmissionDateRequired", expectedSeq));
             }
 
             if (plan.PaymentTermDays > 0 && item.EmissionDate is not null)
@@ -97,33 +97,33 @@ public class InvoicePlanValidator : IInvoicePlanValidator
                     item.EmissionDate.Value.AddDays(plan.PaymentTermDays));
                 if (item.DueDate != expectedDue)
                 {
-                    errors.Add(ValidationStrings.Format("DueDateMustMatch", expectedSeq));
+                    errors.Add(ValidationStrings.Format("Global_DueDateMustMatch", expectedSeq));
                 }
             }
 
             if (plan.Type == InvoicePlanType.ByDelivery && string.IsNullOrWhiteSpace(item.DeliveryDescription))
             {
-                errors.Add(ValidationStrings.Format("DeliveryDescriptionRequired", expectedSeq));
+                errors.Add(ValidationStrings.Format("Global_DeliveryDescriptionRequired", expectedSeq));
             }
 
             if (string.IsNullOrWhiteSpace(item.PayerCnpj))
             {
-                errors.Add(ValidationStrings.Format("PayerCnpjRequired", expectedSeq));
+                errors.Add(ValidationStrings.Format("Global_PayerCnpjRequired", expectedSeq));
             }
 
             if (string.IsNullOrWhiteSpace(item.PoNumber))
             {
-                errors.Add(ValidationStrings.Format("PoNumberRequired", expectedSeq));
+                errors.Add(ValidationStrings.Format("Global_PoNumberRequired", expectedSeq));
             }
 
             if (string.IsNullOrWhiteSpace(item.FrsNumber))
             {
-                errors.Add(ValidationStrings.Format("FrsNumberRequired", expectedSeq));
+                errors.Add(ValidationStrings.Format("Global_FrsNumberRequired", expectedSeq));
             }
 
             if (string.IsNullOrWhiteSpace(item.CustomerTicket))
             {
-                errors.Add(ValidationStrings.Format("CustomerTicketRequired", expectedSeq));
+                errors.Add(ValidationStrings.Format("Global_CustomerTicketRequired", expectedSeq));
             }
 
         }
@@ -132,13 +132,13 @@ public class InvoicePlanValidator : IInvoicePlanValidator
         {
             if (string.IsNullOrWhiteSpace(email.Email))
             {
-                errors.Add(ValidationStrings.Get("AdditionalEmailBlank"));
+                errors.Add(ValidationStrings.Get("Global_AdditionalEmailBlank"));
                 continue;
             }
 
             if (!IsValidEmail(email.Email))
             {
-                errors.Add(ValidationStrings.Format("AdditionalEmailInvalid", email.Email));
+                errors.Add(ValidationStrings.Format("Global_AdditionalEmailInvalid", email.Email));
             }
         }
 

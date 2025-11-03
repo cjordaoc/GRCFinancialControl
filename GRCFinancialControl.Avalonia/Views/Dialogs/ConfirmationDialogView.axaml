@@ -4,27 +4,27 @@
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              x:Class="GRCFinancialControl.Avalonia.Views.Dialogs.ConfirmationDialogView"
              x:DataType="vm:ConfirmationDialogViewModel">
-  <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
-    <Border Padding="{StaticResource SpaceThickness24}"
+  <Grid RowDefinitions="*,Auto" RowSpacing="{DynamicResource GridGap}">
+    <Border Padding="{DynamicResource CardPaddingThickness}"
             Background="{StaticResource BrushSurfaceMuted}"
-            CornerRadius="{StaticResource CornerRadiusMD}">
-      <StackPanel Spacing="{StaticResource Space16}">
-        <TextBlock Text="{Binding Title}" FontSize="{StaticResource FontSizeLG}" FontWeight="Bold"/>
+            CornerRadius="{StaticResource ControlCornerRadius}">
+      <StackPanel Spacing="{DynamicResource SectionSpacing}">
+        <TextBlock Text="{Binding Title}" Classes="TitleSmall"/>
         <TextBlock Text="{Binding Message}" TextWrapping="Wrap"/>
       </StackPanel>
     </Border>
     <StackPanel Grid.Row="1"
                 Orientation="Horizontal"
                 HorizontalAlignment="Right"
-                Spacing="{StaticResource Space12}">
-      <Button Content="{loc:Loc Key=Shared.Common.Button.Save}"
+                Spacing="{DynamicResource ControlSpacing}">
+      <Button Content="{loc:Loc Key=Global_Button_Save}"
               Command="{Binding SaveCommand}"
               IsDefault="True"
-              MinWidth="120" />
-      <Button Content="{loc:Loc Key=Shared.Common.Button.Cancel}"
+              MinWidth="{StaticResource InputMinWidthStandard}" />
+      <Button Content="{loc:Loc Key=Global_Button_Cancel}"
               Command="{Binding CloseCommand}"
               IsCancel="True"
-              MinWidth="120" />
+              MinWidth="{StaticResource InputMinWidthStandard}" />
     </StackPanel>
   </Grid>
 </UserControl>

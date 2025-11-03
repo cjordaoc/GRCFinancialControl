@@ -7,6 +7,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using AvaloniaWebView;
 using CommunityToolkit.Mvvm.Messaging;
+using GRC.Shared.UI.Dialogs;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Avalonia.ViewModels;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
@@ -19,8 +20,7 @@ using GRCFinancialControl.Persistence.Services.Exporters;
 using GRCFinancialControl.Persistence.Services.Importers;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using GRCFinancialControl.Persistence.Services.People;
-using ImportResources = GRCFinancialControl.Resources.Features.Import.Import;
-using SharedResources = GRCFinancialControl.Resources.Shared.Resources;
+using GRC.Shared.Resources.Localization;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +28,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
@@ -63,12 +64,7 @@ namespace GRCFinancialControl.Avalonia
 
         private async Task InitializeAsync()
         {
-            LocalizationRegistry.Configure(new CompositeLocalizationProvider(
-                new ResourceManagerLocalizationProvider(ImportResources.ResourceManager),
-                new ResourceManagerLocalizationProvider(
-                    "GRCFinancialControl.Avalonia.Resources.Strings",
-                    typeof(App).Assembly),
-                new ResourceManagerLocalizationProvider(SharedResources.ResourceManager)));
+            LocalizationRegistry.Configure(new ResourceManagerLocalizationProvider(Strings.ResourceManager));
 
             LiveCharts.Configure(config =>
                 config
@@ -85,6 +81,9 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<ISettingsService, SettingsService>();
 
             var hasConnectionSettings = false;
+
+            var connectionAvailability = new DatabaseConnectionAvailability(false);
+            services.AddSingleton<IDatabaseConnectionAvailability>(connectionAvailability);
 
             using (var tempProvider = services.BuildServiceProvider())
             {
@@ -114,13 +113,31 @@ namespace GRCFinancialControl.Avalonia
                     !string.IsNullOrWhiteSpace(database) &&
                     !string.IsNullOrWhiteSpace(user);
 
-                var connectionString = $"Server={server};Database={database};User ID={user};Password={password};";
-                services.AddDbContextFactory<ApplicationDbContext>(options =>
-                    options.UseMySql(
-                        connectionString,
-                        new MySqlServerVersion(new Version(8, 0, 29)),
-                        mySqlOptions => mySqlOptions.EnableRetryOnFailure()));
+                connectionAvailability.Update(hasConnectionSettings);
             }
+
+            services.AddDbContextFactory<ApplicationDbContext>((provider, options) =>
+            {
+                var availability = provider.GetRequiredService<IDatabaseConnectionAvailability>();
+                if (!availability.IsConfigured)
+                {
+                    return;
+                }
+
+                var settingsService = provider.GetRequiredService<ISettingsService>();
+                var settings = settingsService.GetAll();
+
+                if (!TryBuildConnectionString(settings, out var connectionString))
+                {
+                    availability.Update(false);
+                    return;
+                }
+
+                options.UseMySql(
+                    connectionString,
+                    new MySqlServerVersion(new Version(8, 0, 29)),
+                    mySqlOptions => mySqlOptions.EnableRetryOnFailure());
+            });
 
             services.AddSingleton<IPersonDirectory, NullPersonDirectory>();
 
@@ -136,6 +153,7 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<IPapdService, PapdService>();
             services.AddTransient<IManagerService, ManagerService>();
             services.AddTransient<IManagerAssignmentService, ManagerAssignmentService>();
+            services.AddTransient<IPapdAssignmentService, PapdAssignmentService>();
             services.AddTransient<IExceptionService, ExceptionService>();
             services.AddTransient<ICustomerService, CustomerService>();
             services.AddTransient<IRankMappingService, RankMappingService>();
@@ -144,6 +162,7 @@ namespace GRCFinancialControl.Avalonia
             services.AddSingleton<LoggingService>();
             services.AddLogging(builder => builder.AddConsole());
             services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
+            services.AddSingleton<IModalDialogService, ModalDialogService>();
             services.AddSingleton<DialogService>();
             services.AddTransient<IRetainTemplateGenerator, RetainTemplateGenerator>();
             services.AddSingleton<IConnectionPackageService, ConnectionPackageService>();
@@ -155,6 +174,8 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<EngagementsViewModel>();
             services.AddTransient<FiscalYearsViewModel>();
             services.AddTransient<ImportViewModel>();
+            services.AddTransient<HoursAllocationDetailViewModel>();
+            services.AddTransient<Func<HoursAllocationDetailViewModel>>(provider => () => provider.GetRequiredService<HoursAllocationDetailViewModel>());
             services.AddTransient<HoursAllocationsViewModel>();
             services.AddTransient<RevenueAllocationsViewModel>();
             services.AddTransient<AllocationsViewModel>();
@@ -165,9 +186,6 @@ namespace GRCFinancialControl.Avalonia
             ));
             services.AddTransient<PapdViewModel>();
             services.AddTransient<ManagersViewModel>();
-            services.AddTransient<ManagerAssignmentsViewModel>();
-            services.AddTransient<PapdAssignmentsViewModel>();
-            services.AddTransient<GrcTeamViewModel>();
             services.AddTransient<SettingsViewModel>();
             services.AddTransient<ClosingPeriodsViewModel>();
             services.AddTransient<ClosingPeriodEditorViewModel>();
@@ -208,7 +226,21 @@ namespace GRCFinancialControl.Avalonia
                     if (hasConnectionSettings)
                     {
                         var schemaInitializer = provider.GetRequiredService<IDatabaseSchemaInitializer>();
-                        await schemaInitializer.EnsureSchemaAsync();
+                        try
+                        {
+                            await schemaInitializer.EnsureSchemaAsync();
+                        }
+                        catch (Exception ex)
+                        {
+                            hasConnectionSettings = false;
+                            provider
+                                .GetRequiredService<IDatabaseConnectionAvailability>()
+                                .Update(false, ex.Message);
+                            var logger = provider.GetRequiredService<ILogger<App>>();
+                            logger.LogError(
+                                ex,
+                                "Failed to initialize the remote database schema. The application will continue without a database connection.");
+                        }
                     }
                 }
 
@@ -282,6 +314,36 @@ namespace GRCFinancialControl.Avalonia
             }
 
             desktop.Shutdown();
+        }
+
+        private static bool TryBuildConnectionString(
+            IReadOnlyDictionary<string, string> settings,
+            out string connectionString)
+        {
+            connectionString = string.Empty;
+
+            if (!settings.TryGetValue(SettingKeys.Server, out var server) || string.IsNullOrWhiteSpace(server))
+            {
+                return false;
+            }
+
+            if (!settings.TryGetValue(SettingKeys.Database, out var database) || string.IsNullOrWhiteSpace(database))
+            {
+                return false;
+            }
+
+            if (!settings.TryGetValue(SettingKeys.User, out var user) || string.IsNullOrWhiteSpace(user))
+            {
+                return false;
+            }
+
+            if (!settings.TryGetValue(SettingKeys.Password, out var password))
+            {
+                password = string.Empty;
+            }
+
+            connectionString = $"Server={server};Database={database};User ID={user};Password={password};";
+            return true;
         }
 
         private static string QuoteArgument(string argument) =>

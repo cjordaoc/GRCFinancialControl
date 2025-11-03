@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using GRCFinancialControl.Persistence;
+using GRCFinancialControl.Persistence.Services.Interfaces;
 using Invoices.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -11,6 +12,7 @@ namespace InvoicePlanner.Avalonia.Services;
 public sealed class InvoiceAccessScope : IInvoiceAccessScope
 {
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
+    private readonly IDatabaseConnectionAvailability _connectionAvailability;
     private readonly ILogger<InvoiceAccessScope> _logger;
     private readonly object _syncRoot = new();
     private HashSet<string> _engagementIds = new(StringComparer.OrdinalIgnoreCase);
@@ -18,9 +20,11 @@ public sealed class InvoiceAccessScope : IInvoiceAccessScope
 
     public InvoiceAccessScope(
         IDbContextFactory<ApplicationDbContext> dbContextFactory,
+        IDatabaseConnectionAvailability connectionAvailability,
         ILogger<InvoiceAccessScope> logger)
     {
         _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
+        _connectionAvailability = connectionAvailability ?? throw new ArgumentNullException(nameof(connectionAvailability));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -50,6 +54,15 @@ public sealed class InvoiceAccessScope : IInvoiceAccessScope
 
             try
             {
+                if (!_connectionAvailability.IsConfigured)
+                {
+                    InitializationError = _connectionAvailability.ErrorMessage;
+                    _logger.LogWarning(
+                        "Skipping invoice access scope initialization because the database connection is not configured.");
+                    _engagementIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    return;
+                }
+
                 Login = ResolveLogin();
 
                 if (string.IsNullOrWhiteSpace(Login))

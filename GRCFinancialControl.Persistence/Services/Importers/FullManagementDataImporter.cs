@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using ExcelDataReader;
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
+using GRCFinancialControl.Persistence;
 using GRCFinancialControl.Persistence.Services.Infrastructure;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -32,8 +33,10 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
         private static readonly string[] EngagementNameHeaders =
         {
+            "engagement description",
             "engagement name",
             "project name",
+            "engagement",
             "description"
         };
 
@@ -48,7 +51,19 @@ namespace GRCFinancialControl.Persistence.Services.Importers
         {
             "customer name",
             "client name",
-            "client name (id)"
+            "client name (id)",
+            "client description",
+            "customer description",
+            "customer",
+            "client"
+        };
+
+        private static readonly string[] CustomerIdHeaders =
+        {
+            "customer id",
+            "client id",
+            "customer code",
+            "client code"
         };
 
         private static readonly string[] OpportunityCurrencyHeaders =
@@ -124,8 +139,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
         private static readonly string[] StatusHeaders =
         {
-            "status",
-            "engagement status"
+            "engagement status",
+            "status"
         };
 
         private static readonly string[] EtcAgeDaysHeaders =
@@ -171,6 +186,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             EngagementNameHeaders,
             ClosingPeriodHeaders,
             CustomerNameHeaders,
+            CustomerIdHeaders,
             OpportunityCurrencyHeaders,
             OriginalBudgetHoursHeaders,
             OriginalBudgetTerHeaders,
@@ -231,6 +247,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     0,
                     0,
                     0,
+                    0,
                     Array.Empty<string>(),
                     Array.Empty<string>(),
                     Array.Empty<string>(),
@@ -272,19 +289,39 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
                     var closingPeriodLookup = closingPeriods.ToDictionary(cp => cp.Name, StringComparer.OrdinalIgnoreCase);
 
-                    var customerNames = parsedRows
-                        .Select(r => r.CustomerName)
-                        .Where(name => !string.IsNullOrWhiteSpace(name))
-                        .Distinct(StringComparer.OrdinalIgnoreCase)
-                        .ToList();
+                    var customerNames = new HashSet<string>(
+                        parsedRows
+                            .Select(r => r.CustomerName)
+                            .Where(name => !string.IsNullOrWhiteSpace(name)),
+                        StringComparer.OrdinalIgnoreCase);
 
-                    var customers = customerNames.Count > 0
+                    var customerCodes = new HashSet<string>(
+                        parsedRows
+                            .Select(r => r.CustomerCode)
+                            .Where(code => !string.IsNullOrWhiteSpace(code)),
+                        StringComparer.OrdinalIgnoreCase);
+
+                    var customers = customerNames.Count > 0 || customerCodes.Count > 0
                         ? await context.Customers
-                            .Where(c => customerNames.Contains(c.Name))
+                            .Where(c => customerNames.Contains(c.Name) || customerCodes.Contains(c.CustomerCode))
                             .ToListAsync()
                         : new List<Customer>();
 
-                    var customerLookup = customers.ToDictionary(c => c.Name, StringComparer.OrdinalIgnoreCase);
+                    var customersByCode = new Dictionary<string, Customer>(StringComparer.OrdinalIgnoreCase);
+                    var customersByName = new Dictionary<string, Customer>(StringComparer.OrdinalIgnoreCase);
+
+                    foreach (var customer in customers)
+                    {
+                        if (!string.IsNullOrWhiteSpace(customer.CustomerCode))
+                        {
+                            customersByCode[customer.CustomerCode] = customer;
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(customer.Name))
+                        {
+                            customersByName[customer.Name] = customer;
+                        }
+                    }
 
                     var updatedEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                     var manualOnlySkips = new List<string>();
@@ -296,6 +333,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     var warningMessages = new HashSet<string>(StringComparer.Ordinal);
 
                     var financialEvolutionUpserts = 0;
+                    var s4MetadataRefreshes = 0;
 
                     foreach (var row in parsedRows)
                     {
@@ -316,6 +354,103 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                     row.EngagementId);
                             }
 
+                            if (!engagementLookup.TryGetValue(row.EngagementId, out var engagement))
+                            {
+                                var missingDetail = $"{row.EngagementId} (row {row.RowNumber})";
+                                missingEngagementSkips.Add(missingDetail);
+                                _logger.LogWarning(
+                                    "Engagement not found for Full Management Data row {RowNumber} (Engagement ID {EngagementId}).",
+                                    row.RowNumber,
+                                    row.EngagementId);
+                                continue;
+                            }
+
+                            var detail = $"{engagement.EngagementId} (row {row.RowNumber})";
+
+                            if (engagement.Source == EngagementSource.S4Project)
+                            {
+                                var metadataChanged = false;
+
+                                if (!string.IsNullOrWhiteSpace(row.EngagementName))
+                                {
+                                    if (!string.Equals(engagement.Description, row.EngagementName, StringComparison.Ordinal))
+                                    {
+                                        engagement.Description = row.EngagementName;
+                                        metadataChanged = true;
+                                    }
+                                }
+
+                                var upsertedCustomer = ResolveCustomer(
+                                    context,
+                                    row,
+                                    customersByCode,
+                                    customersByName,
+                                    allowCreateOrUpdate: true);
+
+                                if (upsertedCustomer != null)
+                                {
+                                    if (!ReferenceEquals(engagement.Customer, upsertedCustomer) || engagement.CustomerId != upsertedCustomer.Id)
+                                    {
+                                        engagement.Customer = upsertedCustomer;
+                                        engagement.CustomerId = upsertedCustomer.Id;
+                                        metadataChanged = true;
+                                    }
+                                }
+
+                                if (TryUpdateCustomerMetadataForPlaceholder(
+                                    engagement,
+                                    row,
+                                    customersByCode,
+                                    customersByName))
+                                {
+                                    metadataChanged = true;
+                                }
+
+                                if (!string.IsNullOrWhiteSpace(row.OpportunityCurrency))
+                                {
+                                    if (!string.Equals(engagement.Currency, row.OpportunityCurrency, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        engagement.Currency = row.OpportunityCurrency;
+                                        metadataChanged = true;
+                                    }
+                                }
+
+                                if (!string.IsNullOrWhiteSpace(row.StatusText))
+                                {
+                                    if (!string.Equals(engagement.StatusText, row.StatusText, StringComparison.Ordinal))
+                                    {
+                                        engagement.StatusText = row.StatusText;
+                                        engagement.Status = ParseStatus(row.StatusText);
+                                        metadataChanged = true;
+                                    }
+                                }
+
+                                updatedEngagements.Add(engagement.EngagementId);
+                                if (metadataChanged)
+                                {
+                                    s4MetadataRefreshes++;
+                                }
+
+                                if (EngagementImportSkipEvaluator.TryCreate(engagement, out var manualMetadata) &&
+                                    manualMetadata.ReasonKey == "ManualOnly")
+                                {
+                                    manualOnlySkips.Add(detail);
+                                    warningMessages.Add(manualMetadata.WarningMessage);
+                                    _logger.LogWarning(manualMetadata.WarningMessage);
+                                }
+
+                                continue;
+                            }
+
+                            if (EngagementImportSkipEvaluator.TryCreate(engagement, out var closedMetadata) &&
+                                closedMetadata.ReasonKey == "ClosedEngagement")
+                            {
+                                closedEngagementSkips.Add(detail);
+                                warningMessages.Add(closedMetadata.WarningMessage);
+                                _logger.LogWarning(closedMetadata.WarningMessage);
+                                continue;
+                            }
+
                             if (closingPeriodFound && (closingPeriod!.FiscalYear?.IsLocked ?? false))
                             {
                                 var fiscalYearName = string.IsNullOrWhiteSpace(closingPeriod.FiscalYear.Name)
@@ -330,35 +465,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                 continue;
                             }
 
-                            if (!engagementLookup.TryGetValue(row.EngagementId, out var engagement))
-                            {
-                                var detail = $"{row.EngagementId} (row {row.RowNumber})";
-                                missingEngagementSkips.Add(detail);
-                                _logger.LogWarning(
-                                    "Engagement not found for Full Management Data row {RowNumber} (Engagement ID {EngagementId}).",
-                                    row.RowNumber,
-                                    row.EngagementId);
-                                continue;
-                            }
-
-                            if (EngagementImportSkipEvaluator.TryCreate(engagement, out var skipMetadata))
-                            {
-                                var detail = $"{engagement.EngagementId} (row {row.RowNumber})";
-                                switch (skipMetadata.ReasonKey)
-                                {
-                                    case "ManualOnly":
-                                        manualOnlySkips.Add(detail);
-                                        break;
-                                    case "ClosedEngagement":
-                                        closedEngagementSkips.Add(detail);
-                                        break;
-                                }
-
-                                warningMessages.Add(skipMetadata.WarningMessage);
-                                _logger.LogWarning(skipMetadata.WarningMessage);
-                                continue;
-                            }
-
                             updatedEngagements.Add(engagement.EngagementId);
 
                             if (!string.IsNullOrWhiteSpace(row.EngagementName))
@@ -366,12 +472,24 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                 engagement.Description = row.EngagementName;
                             }
 
-                            if (!string.IsNullOrWhiteSpace(row.CustomerName) &&
-                                customerLookup.TryGetValue(row.CustomerName, out var customer))
+                            var customer = ResolveCustomer(
+                                context,
+                                row,
+                                customersByCode,
+                                customersByName,
+                                allowCreateOrUpdate: false);
+
+                            if (customer != null)
                             {
                                 engagement.Customer = customer;
                                 engagement.CustomerId = customer.Id;
                             }
+
+                            TryUpdateCustomerMetadataForPlaceholder(
+                                engagement,
+                                row,
+                                customersByCode,
+                                customersByName);
 
                             if (!string.IsNullOrWhiteSpace(row.OpportunityCurrency))
                             {
@@ -444,6 +562,19 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
                                 engagement.LastClosingPeriodId = closingPeriod!.Id;
                                 engagement.LastClosingPeriod = closingPeriod;
+                            }
+                            else
+                            {
+                                var lastEtcDate = ResolveLastEtcDate(row, null);
+                                if (lastEtcDate.HasValue)
+                                {
+                                    engagement.LastEtcDate = lastEtcDate;
+                                    engagement.ProposedNextEtcDate = CalculateProposedNextEtcDate(lastEtcDate);
+                                }
+                                else if (row.NextEtcDate.HasValue)
+                                {
+                                    engagement.ProposedNextEtcDate = DateTime.SpecifyKind(row.NextEtcDate.Value.Date, DateTimeKind.Unspecified);
+                                }
                             }
 
                             financialEvolutionUpserts += UpsertFinancialEvolution(
@@ -536,6 +667,11 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         }
                     }
 
+                    if (s4MetadataRefreshes > 0)
+                    {
+                        notes.Insert(0, $"S/4 metadata rows refreshed: {s4MetadataRefreshes}");
+                    }
+
                     var summary = ImportSummaryFormatter.Build(
                         "Full Management Data import",
                         0,
@@ -551,6 +687,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         0,
                         updatedEngagements.Count,
                         financialEvolutionUpserts,
+                        s4MetadataRefreshes,
                         manualOnlySkips.ToArray(),
                         lockedFiscalYearSkips.ToArray(),
                         missingClosingPeriodSkips.ToArray(),
@@ -590,6 +727,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             var closingPeriodIndex = GetOptionalColumnIndex(headerMap, ClosingPeriodHeaders);
             var engagementNameIndex = GetOptionalColumnIndex(headerMap, EngagementNameHeaders);
             var customerNameIndex = GetOptionalColumnIndex(headerMap, CustomerNameHeaders);
+            var customerIdIndex = GetOptionalColumnIndex(headerMap, CustomerIdHeaders);
             var opportunityCurrencyIndex = GetOptionalColumnIndex(headerMap, OpportunityCurrencyHeaders);
             var originalBudgetHoursIndex = GetOptionalColumnIndex(headerMap, OriginalBudgetHoursHeaders);
             var originalBudgetTerIndex = GetOptionalColumnIndex(headerMap, OriginalBudgetTerHeaders);
@@ -605,7 +743,9 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             var lastActiveEtcPDateIndex = GetOptionalColumnIndex(headerMap, LastActiveEtcPDateHeaders);
             var nextEtcDateIndex = GetOptionalColumnIndex(headerMap, NextEtcDateHeaders);
 
-            if (!closingPeriodIndex.HasValue && string.IsNullOrWhiteSpace(defaultClosingPeriodName))
+            var isS4MetadataWorkbook = IsS4MetadataWorkbook(headerMap);
+
+            if (!closingPeriodIndex.HasValue && string.IsNullOrWhiteSpace(defaultClosingPeriodName) && !isS4MetadataWorkbook)
             {
                 throw new InvalidDataException("The Full Management Data workbook is missing the Closing Period column and cell A4 did not specify a closing period.");
             }
@@ -643,6 +783,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     EngagementId = engagementId,
                     EngagementName = engagementNameIndex.HasValue ? NormalizeWhitespace(Convert.ToString(row[engagementNameIndex.Value], CultureInfo.InvariantCulture)) : string.Empty,
                     CustomerName = customerNameIndex.HasValue ? NormalizeWhitespace(Convert.ToString(row[customerNameIndex.Value], CultureInfo.InvariantCulture)) : string.Empty,
+                    CustomerCode = customerIdIndex.HasValue ? NormalizeWhitespace(Convert.ToString(row[customerIdIndex.Value], CultureInfo.InvariantCulture)) : string.Empty,
                     OpportunityCurrency = opportunityCurrencyIndex.HasValue ? NormalizeWhitespace(Convert.ToString(row[opportunityCurrencyIndex.Value], CultureInfo.InvariantCulture)) : string.Empty,
                     ClosingPeriodName = closingPeriod ?? string.Empty,
                     OriginalBudgetHours = originalBudgetHoursIndex.HasValue ? ParseDecimal(row[originalBudgetHoursIndex.Value], 2) : null,
@@ -744,14 +885,66 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             {
                 foreach (var kvp in headerMap)
                 {
-                    if (kvp.Value.Contains(candidate, StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(kvp.Value, candidate, StringComparison.OrdinalIgnoreCase))
                     {
                         return kvp.Key;
                     }
                 }
             }
 
+            foreach (var candidate in candidates)
+            {
+                foreach (var kvp in headerMap)
+                {
+                    var header = kvp.Value;
+                    if (string.IsNullOrEmpty(header))
+                    {
+                        continue;
+                    }
+
+                    if (!header.Contains(candidate, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    if (candidate.Contains("engagement", StringComparison.OrdinalIgnoreCase) && header.Contains("id", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    if (string.Equals(candidate, "description", StringComparison.OrdinalIgnoreCase) &&
+                        (header.Contains("customer", StringComparison.OrdinalIgnoreCase) || header.Contains("client", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        continue;
+                    }
+
+                    return kvp.Key;
+                }
+            }
+
             return null;
+        }
+
+        private static bool IsS4MetadataWorkbook(Dictionary<int, string> headerMap)
+        {
+            var hasEngagement = ContainsAnyHeader(headerMap, EngagementIdHeaders);
+            var hasClientDetails = ContainsAnyHeader(headerMap, CustomerIdHeaders) || ContainsAnyHeader(headerMap, CustomerNameHeaders);
+            var hasStatus = ContainsAnyHeader(headerMap, StatusHeaders);
+            var lacksFinancialColumns = !ContainsAnyHeader(headerMap, OriginalBudgetHoursHeaders)
+                                        && !ContainsAnyHeader(headerMap, OriginalBudgetTerHeaders)
+                                        && !ContainsAnyHeader(headerMap, OriginalBudgetMarginPercentHeaders)
+                                        && !ContainsAnyHeader(headerMap, OriginalBudgetExpensesHeaders)
+                                        && !ContainsAnyHeader(headerMap, ChargedHoursMercuryProjectedHeaders)
+                                        && !ContainsAnyHeader(headerMap, TermMercuryProjectedHeaders)
+                                        && !ContainsAnyHeader(headerMap, MarginPercentMercuryProjectedHeaders)
+                                        && !ContainsAnyHeader(headerMap, ExpensesMercuryProjectedHeaders)
+                                        && !ContainsAnyHeader(headerMap, EtcAgeDaysHeaders)
+                                        && !ContainsAnyHeader(headerMap, UnbilledRevenueDaysHeaders)
+                                        && !ContainsAnyHeader(headerMap, LastActiveEtcPDateHeaders)
+                                        && !ContainsAnyHeader(headerMap, NextEtcDateHeaders);
+            var missingClosingPeriod = !ContainsAnyHeader(headerMap, ClosingPeriodHeaders);
+
+            return hasEngagement && hasClientDetails && hasStatus && lacksFinancialColumns && missingClosingPeriod;
         }
 
         private static bool ContainsAnyHeader(Dictionary<int, string> headerMap, IEnumerable<string> candidates)
@@ -1107,6 +1300,183 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             return DateTime.SpecifyKind(proposal, DateTimeKind.Unspecified);
         }
 
+        private static Customer? ResolveCustomer(
+            ApplicationDbContext context,
+            FullManagementDataRow row,
+            IDictionary<string, Customer> customersByCode,
+            IDictionary<string, Customer> customersByName,
+            bool allowCreateOrUpdate)
+        {
+            Customer? resolved = null;
+            string? originalCode = null;
+            string? originalName = null;
+
+            if (!string.IsNullOrWhiteSpace(row.CustomerCode) &&
+                customersByCode.TryGetValue(row.CustomerCode, out var byCode))
+            {
+                resolved = byCode;
+            }
+            else if (!string.IsNullOrWhiteSpace(row.CustomerName) &&
+                     customersByName.TryGetValue(row.CustomerName, out var byName))
+            {
+                resolved = byName;
+            }
+
+            if (resolved == null)
+            {
+                if (!allowCreateOrUpdate)
+                {
+                    return null;
+                }
+
+                if (string.IsNullOrWhiteSpace(row.CustomerCode) && string.IsNullOrWhiteSpace(row.CustomerName))
+                {
+                    return null;
+                }
+
+                resolved = new Customer
+                {
+                    CustomerCode = DetermineCustomerCodeForInsert(row, customersByCode),
+                    Name = row.CustomerName ?? string.Empty
+                };
+
+                context.Customers.Add(resolved);
+            }
+            else if (allowCreateOrUpdate)
+            {
+                originalCode = resolved.CustomerCode;
+                originalName = resolved.Name;
+
+                if (!string.IsNullOrWhiteSpace(row.CustomerCode) &&
+                    !string.Equals(resolved.CustomerCode, row.CustomerCode, StringComparison.OrdinalIgnoreCase))
+                {
+                    resolved.CustomerCode = row.CustomerCode;
+                }
+
+                if (!string.IsNullOrWhiteSpace(row.CustomerName) &&
+                    !string.Equals(resolved.Name, row.CustomerName, StringComparison.OrdinalIgnoreCase))
+                {
+                    resolved.Name = row.CustomerName;
+                }
+            }
+
+            if (resolved != null)
+            {
+                if (!string.IsNullOrWhiteSpace(originalCode) &&
+                    !string.Equals(originalCode, resolved.CustomerCode, StringComparison.OrdinalIgnoreCase))
+                {
+                    customersByCode.Remove(originalCode);
+                }
+
+                if (!string.IsNullOrWhiteSpace(originalName) &&
+                    !string.Equals(originalName, resolved.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    customersByName.Remove(originalName);
+                }
+
+                if (!string.IsNullOrWhiteSpace(row.CustomerName))
+                {
+                    customersByName[row.CustomerName] = resolved;
+                }
+
+                if (!string.IsNullOrWhiteSpace(resolved.CustomerCode))
+                {
+                    customersByCode[resolved.CustomerCode] = resolved;
+                }
+            }
+
+            return resolved;
+        }
+
+        private static bool TryUpdateCustomerMetadataForPlaceholder(
+            Engagement engagement,
+            FullManagementDataRow row,
+            IDictionary<string, Customer> customersByCode,
+            IDictionary<string, Customer> customersByName)
+        {
+            if (engagement.Customer is null)
+            {
+                return false;
+            }
+
+            var customer = engagement.Customer;
+            var originalCode = customer.CustomerCode;
+            var originalName = customer.Name;
+            var updated = false;
+
+            if (!string.IsNullOrWhiteSpace(row.CustomerCode) &&
+                (string.IsNullOrWhiteSpace(customer.CustomerCode) ||
+                 customer.CustomerCode.StartsWith("AUTO-", StringComparison.OrdinalIgnoreCase)))
+            {
+                customer.CustomerCode = row.CustomerCode;
+                updated = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(row.CustomerName) &&
+                !string.Equals(customer.Name, row.CustomerName, StringComparison.OrdinalIgnoreCase))
+            {
+                customer.Name = row.CustomerName;
+                updated = true;
+            }
+
+            if (!updated)
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(originalCode) &&
+                !string.Equals(originalCode, customer.CustomerCode, StringComparison.OrdinalIgnoreCase))
+            {
+                customersByCode.Remove(originalCode);
+            }
+
+            if (!string.IsNullOrWhiteSpace(originalName) &&
+                !string.Equals(originalName, customer.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                customersByName.Remove(originalName);
+            }
+
+            if (!string.IsNullOrWhiteSpace(customer.CustomerCode))
+            {
+                customersByCode[customer.CustomerCode] = customer;
+            }
+
+            if (!string.IsNullOrWhiteSpace(customer.Name))
+            {
+                customersByName[customer.Name] = customer;
+            }
+
+            return true;
+        }
+
+        private static string DetermineCustomerCodeForInsert(
+            FullManagementDataRow row,
+            IDictionary<string, Customer> customersByCode)
+        {
+            if (!string.IsNullOrWhiteSpace(row.CustomerCode))
+            {
+                return row.CustomerCode;
+            }
+
+            return GeneratePlaceholderCustomerCode(customersByCode);
+        }
+
+        private static string GeneratePlaceholderCustomerCode(IDictionary<string, Customer> customersByCode)
+        {
+            const int randomSegmentLength = 12;
+
+            while (true)
+            {
+                var randomSegment = Guid.NewGuid().ToString("N").Substring(0, randomSegmentLength).ToUpperInvariant();
+                var placeholder = $"AUTO-{randomSegment}";
+
+                if (!customersByCode.ContainsKey(placeholder))
+                {
+                    return placeholder;
+                }
+            }
+        }
+
         private static int UpsertFinancialEvolution(
             ApplicationDbContext context,
             Engagement engagement,
@@ -1153,6 +1523,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             public string EngagementId { get; init; } = string.Empty;
             public string EngagementName { get; init; } = string.Empty;
             public string CustomerName { get; init; } = string.Empty;
+            public string CustomerCode { get; init; } = string.Empty;
             public string OpportunityCurrency { get; init; } = string.Empty;
             public string ClosingPeriodName { get; init; } = string.Empty;
             public decimal? OriginalBudgetHours { get; init; }

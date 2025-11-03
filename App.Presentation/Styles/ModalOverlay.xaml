@@ -1,10 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <Styles.Resources>
-    <SolidColorBrush x:Key="ModalOverlayBrush" Color="#8C000000" />
-    <StaticResource x:Key="ModalDialogBackgroundBrush" ResourceKey="BrushSurfaceVariant" />
-    <CornerRadius x:Key="ModalDialogCornerRadius">12</CornerRadius>
-    <Thickness x:Key="ModalDialogPadding">24</Thickness>
-    <BoxShadows x:Key="ModalDialogShadow">0 4 24 0 #66000000</BoxShadows>
+    <StaticResource x:Key="ModalOverlayBrush" ResourceKey="BrushOverlayStrong" />
+    <StaticResource x:Key="ModalOverlayMaterial" ResourceKey="AcrylicModal" />
   </Styles.Resources>
 </Styles>

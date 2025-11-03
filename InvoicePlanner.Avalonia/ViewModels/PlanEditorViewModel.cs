@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using System.Globalization;
 using App.Presentation.Localization;
@@ -9,15 +10,15 @@ using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using InvoicePlanner.Avalonia.Messages;
 using InvoicePlanner.Avalonia.Services;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
 using Invoices.Core.Payments;
 using Invoices.Core.Validation;
 using Invoices.Data.Repositories;
-using Microsoft.Extensions.Logging;
 using Invoices.Core.Utilities;
+using Microsoft.Extensions.Logging;
+using GRC.Shared.UI.Messages;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
@@ -35,10 +36,12 @@ public partial class PlanEditorViewModel : ViewModelBase
     private readonly RelayCommand _refreshCommand;
     private readonly RelayCommand _deletePlanCommand;
     private readonly RelayCommand _closePlanFormCommand;
+    private readonly RelayCommand _previewDescriptionCommand;
     private bool _suppressLineUpdates;
     private bool _isInitializing;
     private bool _isNormalizingFirstEmissionDate;
     private PlanEditorDialogViewModel? _dialogViewModel;
+    private InvoicePlanLineViewModel? _selectedLineSubscription;
 
     public PlanEditorViewModel(
         IInvoicePlanRepository repository,
@@ -69,6 +72,7 @@ public partial class PlanEditorViewModel : ViewModelBase
         _refreshCommand = new RelayCommand(LoadEngagements);
         _deletePlanCommand = new RelayCommand(DeletePlan, CanDeletePlan);
         _closePlanFormCommand = new RelayCommand(ClosePlanForm);
+        _previewDescriptionCommand = new RelayCommand(PreviewInvoiceDescription, CanPreviewInvoiceDescription);
 
         // Seed with default values so the editor presents a useful layout.
         PlanType = InvoicePlanType.ByDate;
@@ -150,6 +154,22 @@ public partial class PlanEditorViewModel : ViewModelBase
     [ObservableProperty]
     private string? engagementSelectionMessage;
 
+    private InvoicePlanLineViewModel? _selectedInvoiceLine;
+
+    public InvoicePlanLineViewModel? SelectedInvoiceLine
+    {
+        get => _selectedInvoiceLine;
+        set
+        {
+            if (SetProperty(ref _selectedInvoiceLine, value))
+            {
+                OnSelectedInvoiceLineChanged(value);
+            }
+        }
+    }
+
+    public bool HasSelectedInvoiceLine => SelectedInvoiceLine is not null;
+
     public int NumInvoices
     {
         get => _numInvoices;
@@ -191,6 +211,8 @@ public partial class PlanEditorViewModel : ViewModelBase
         RecalculateTotals();
         _savePlanCommand.NotifyCanExecuteChanged();
         OnPropertyChanged(nameof(Items));
+        EnsureSelectedInvoiceLine();
+        _previewDescriptionCommand.NotifyCanExecuteChanged();
     }
 
     public bool HasRecipientEmails => !string.IsNullOrWhiteSpace(RecipientEmails);
@@ -293,6 +315,24 @@ public partial class PlanEditorViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasRecipientEmails));
     }
 
+    private void OnSelectedInvoiceLineChanged(InvoicePlanLineViewModel? value)
+    {
+        if (_selectedLineSubscription is not null)
+        {
+            _selectedLineSubscription.PropertyChanged -= OnSelectedLinePropertyChanged;
+        }
+
+        _selectedLineSubscription = value;
+
+        if (_selectedLineSubscription is not null)
+        {
+            _selectedLineSubscription.PropertyChanged += OnSelectedLinePropertyChanged;
+        }
+
+        OnPropertyChanged(nameof(HasSelectedInvoiceLine));
+        _previewDescriptionCommand.NotifyCanExecuteChanged();
+    }
+
     partial void OnCurrencySymbolChanged(string value)
     {
         OnPropertyChanged(nameof(HasCurrencySymbol));
@@ -316,6 +356,7 @@ public partial class PlanEditorViewModel : ViewModelBase
 
     public IRelayCommand SavePlanCommand => _savePlanCommand;
     public IRelayCommand EditLinesCommand => _editLinesCommand;
+    public IRelayCommand PreviewDescriptionCommand => _previewDescriptionCommand;
 
     public IRelayCommand CreatePlanCommand => _createPlanCommand;
 
@@ -346,18 +387,18 @@ public partial class PlanEditorViewModel : ViewModelBase
             var plan = _repository.GetPlan(planId);
             if (plan is null)
             {
-                ValidationMessage = LocalizationRegistry.Format("InvoicePlan.Validation.PlanNotFound", planId);
+                ValidationMessage = LocalizationRegistry.Format("INV_InvoicePlan_Validation_PlanNotFound", planId);
                 return false;
             }
 
             ApplyPlan(plan);
-            StatusMessage = LocalizationRegistry.Format("InvoicePlan.Status.PlanLoaded", planId, Items.Count);
+            StatusMessage = LocalizationRegistry.Format("INV_InvoicePlan_Status_PlanLoaded", planId, Items.Count);
             return true;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load invoice plan {PlanId}.", planId);
-            ValidationMessage = LocalizationRegistry.Format("InvoicePlan.Status.LoadFailure", ex.Message);
+            ValidationMessage = LocalizationRegistry.Format("INV_InvoicePlan_Status_LoadFailure", ex.Message);
             return false;
         }
     }
@@ -664,6 +705,7 @@ public partial class PlanEditorViewModel : ViewModelBase
         DistributePercentages();
         ApplyEmissionDateRule();
         RecalculateTotals();
+        EnsureSelectedInvoiceLine();
     }
 
     private InvoicePlanLineViewModel CreateNewLine()
@@ -759,6 +801,30 @@ public partial class PlanEditorViewModel : ViewModelBase
         _suppressLineUpdates = false;
 
         RecalculateTotals();
+    }
+
+    private void EnsureSelectedInvoiceLine()
+    {
+        if (Items.Count == 0)
+        {
+            SelectedInvoiceLine = null;
+            return;
+        }
+
+        if (SelectedInvoiceLine is not null && Items.Contains(SelectedInvoiceLine))
+        {
+            return;
+        }
+
+        SelectedInvoiceLine = Items.FirstOrDefault(line => line.IsEditable) ?? Items.FirstOrDefault();
+    }
+
+    private void OnSelectedLinePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.PropertyName) || e.PropertyName == nameof(InvoicePlanLineViewModel.EmissionDate))
+        {
+            _previewDescriptionCommand.NotifyCanExecuteChanged();
+        }
     }
 
     private void RecalculateAmountsFromPercentages()
@@ -872,13 +938,13 @@ public partial class PlanEditorViewModel : ViewModelBase
 
         if (RequiresFirstEmissionDate && FirstEmissionDate is null)
         {
-            ValidationMessage = LocalizationRegistry.Get("InvoicePlan.Validation.FirstEmissionRequired");
+            ValidationMessage = LocalizationRegistry.Get("InvoicePlan.Validation.Global_FirstEmissionRequired");
             return;
         }
 
         if (Items.Count == 0)
         {
-            ValidationMessage = LocalizationRegistry.Get("InvoicePlan.Validation.NoLines");
+            ValidationMessage = LocalizationRegistry.Get("INV_InvoicePlan_Validation_NoLines");
             return;
         }
 
@@ -891,6 +957,7 @@ public partial class PlanEditorViewModel : ViewModelBase
         if (validationErrors.Count > 0)
         {
             ValidationMessage = string.Join(Environment.NewLine, validationErrors.Distinct());
+            ToastService.ShowWarning("INV_InvoicePlan_Toast_ValidationFailed");
             return;
         }
 
@@ -901,20 +968,22 @@ public partial class PlanEditorViewModel : ViewModelBase
             ApplyPlan(persisted);
 
             var action = result.Created == 1
-                ? LocalizationRegistry.Get("InvoicePlan.Status.ActionCreated")
-                : LocalizationRegistry.Get("InvoicePlan.Status.ActionUpdated");
+                ? LocalizationRegistry.Get("INV_InvoicePlan_Status_ActionCreated")
+                : LocalizationRegistry.Get("INV_InvoicePlan_Status_ActionUpdated");
             StatusMessage = LocalizationRegistry.Format(
-                "InvoicePlan.Status.PlanSaved",
+                "INV_InvoicePlan_Status_PlanSaved",
                 PlanId,
                 action,
                 Items.Count,
                 result.AffectedRows,
                 result.Deleted);
+            ToastService.ShowSuccess("INV_InvoicePlan_Toast_PlanSaved", PlanId);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to save invoice plan {PlanId}.", plan.Id);
-            ValidationMessage = LocalizationRegistry.Format("InvoicePlan.Status.SaveFailure", ex.Message);
+            ValidationMessage = LocalizationRegistry.Format("INV_InvoicePlan_Status_SaveFailure", ex.Message);
+            ToastService.ShowError("INV_InvoicePlan_Toast_SaveFailed");
         }
     }
 
@@ -1044,12 +1113,12 @@ public partial class PlanEditorViewModel : ViewModelBase
             SelectedEngagement = selected;
 
             EngagementSelectionMessage = engagements.Count == 0
-                ? LocalizationRegistry.Get("InvoicePlan.Selection.Message.Empty")
-                : LocalizationRegistry.Get("InvoicePlan.Selection.Message.SelectHint");
+                ? LocalizationRegistry.Get("INV_InvoicePlan_Selection_Message_Empty")
+                : LocalizationRegistry.Get("INV_InvoicePlan_Selection_Message_SelectHint");
 
             if (_accessScope.IsInitialized && !_accessScope.HasAssignments && string.IsNullOrWhiteSpace(_accessScope.InitializationError))
             {
-                EngagementSelectionMessage = LocalizationRegistry.Format("Access.Message.NoAssignments", GetLoginDisplay(_accessScope));
+                EngagementSelectionMessage = LocalizationRegistry.Format("INV_Access_Message_NoAssignments", GetLoginDisplay(_accessScope));
             }
         }
         catch (Exception ex)
@@ -1057,7 +1126,7 @@ public partial class PlanEditorViewModel : ViewModelBase
             _logger.LogError(ex, "Failed to load engagements for planning.");
             Engagements.Clear();
             SelectedEngagement = null;
-            EngagementSelectionMessage = LocalizationRegistry.Format("InvoicePlan.Selection.Status.LoadFailure", ex.Message);
+            EngagementSelectionMessage = LocalizationRegistry.Format("INV_InvoicePlan_Selection_Status_LoadFailure", ex.Message);
         }
     }
 
@@ -1079,7 +1148,7 @@ public partial class PlanEditorViewModel : ViewModelBase
                 ex,
                 "Failed to load existing invoice plan for engagement {EngagementId}.",
                 engagement.EngagementId);
-            ValidationMessage = LocalizationRegistry.Format("InvoicePlan.Status.LoadFailure", ex.Message);
+            ValidationMessage = LocalizationRegistry.Format("INV_InvoicePlan_Status_LoadFailure", ex.Message);
             return false;
         }
     }
@@ -1128,6 +1197,7 @@ public partial class PlanEditorViewModel : ViewModelBase
             Items.Clear();
             ValidationMessage = null;
             StatusMessage = null;
+            SelectedInvoiceLine = null;
         }
         finally
         {
@@ -1138,12 +1208,13 @@ public partial class PlanEditorViewModel : ViewModelBase
         RecalculateTotals();
         OnPropertyChanged(nameof(HasRecipientEmails));
         UpdateCurrencySymbol(SelectedEngagement?.Currency);
+        _previewDescriptionCommand.NotifyCanExecuteChanged();
     }
 
     private void ShowPlanDialog()
     {
         _dialogViewModel ??= new PlanEditorDialogViewModel(this);
-        _ = _dialogService.ShowDialogAsync(_dialogViewModel, LocalizationRegistry.Get("InvoicePlan.Title.Primary"));
+        _ = _dialogService.ShowDialogAsync(_dialogViewModel, LocalizationRegistry.Get("INV_InvoicePlan_Title_Primary"));
     }
 
     private void ClosePlanForm()
@@ -1151,16 +1222,11 @@ public partial class PlanEditorViewModel : ViewModelBase
         Messenger.Send(new CloseDialogMessage(false));
     }
 
-    private async void ShowInvoiceLinesDialog()
+    private void ShowInvoiceLinesDialog()
     {
-        var invoiceLinesEditorViewModel = new InvoiceLinesEditorViewModel(this);
-        var result = await _dialogService.ShowDialogAsync(invoiceLinesEditorViewModel, LocalizationRegistry.Get("InvoicePlan.Section.InvoiceLines.Title"));
-
-        if (result == false)
-        {
-            // The user cancelled the lines editor, so close the parent dialog as well.
-            Messenger.Send(new CloseDialogMessage(false));
-        }
+        _dialogViewModel ??= new PlanEditorDialogViewModel(this);
+        _dialogViewModel.NavigateToInvoiceItems();
+        Messenger.Send(new RefreshViewMessage(RefreshTargets.InvoiceLinesGrid));
     }
 
     private void DeletePlan()
@@ -1181,7 +1247,8 @@ public partial class PlanEditorViewModel : ViewModelBase
 
             if (result.Deleted == 0)
             {
-                ValidationMessage = LocalizationRegistry.Format("InvoicePlan.Validation.PlanNotFound", currentPlanId);
+                ValidationMessage = LocalizationRegistry.Format("INV_InvoicePlan_Validation_PlanNotFound", currentPlanId);
+                ToastService.ShowWarning("INV_InvoicePlan_Toast_DeleteMissing", currentPlanId);
                 return;
             }
 
@@ -1197,17 +1264,84 @@ public partial class PlanEditorViewModel : ViewModelBase
                     string.Equals(option.EngagementId, selectedEngagement.EngagementId, StringComparison.OrdinalIgnoreCase));
             }
 
-            EngagementSelectionMessage = LocalizationRegistry.Format("InvoicePlan.Selection.Status.PlanDeleted", currentPlanId);
+            EngagementSelectionMessage = LocalizationRegistry.Format("INV_InvoicePlan_Selection_Status_PlanDeleted", currentPlanId);
+            ToastService.ShowSuccess("INV_InvoicePlan_Toast_PlanDeleted", currentPlanId);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to delete invoice plan {PlanId}.", currentPlanId);
-            ValidationMessage = LocalizationRegistry.Format("InvoicePlan.Status.DeleteFailure", ex.Message);
+            ValidationMessage = LocalizationRegistry.Format("INV_InvoicePlan_Status_DeleteFailure", ex.Message);
+            ToastService.ShowError("INV_InvoicePlan_Toast_DeleteFailed");
         }
         finally
         {
             _deletePlanCommand.NotifyCanExecuteChanged();
         }
+    }
+
+    private bool CanPreviewInvoiceDescription()
+    {
+        return SelectedInvoiceLine is { EmissionDate: not null };
+    }
+
+    private void PreviewInvoiceDescription()
+    {
+        var line = SelectedInvoiceLine;
+
+        if (line is null || line.EmissionDate is null)
+        {
+            return;
+        }
+
+        var recipients = ParseRecipientEmails(RecipientEmails);
+        var primaryRecipient = recipients.FirstOrDefault();
+
+        var emissionDate = line.EmissionDate.Value;
+        var dueDate = BusinessDayCalculator.AdjustToNextBusinessDay(
+            emissionDate.AddDays(Math.Max(0, PaymentTermDays)));
+
+        var engagementDescription = SelectedEngagement?.Name;
+        if (string.IsNullOrWhiteSpace(engagementDescription))
+        {
+            engagementDescription = string.IsNullOrWhiteSpace(EngagementName)
+                ? EngagementId
+                : EngagementName;
+        }
+
+        var context = new InvoiceDescriptionContext
+        {
+            EngagementId = string.IsNullOrWhiteSpace(EngagementId)
+                ? SelectedEngagement?.EngagementId ?? string.Empty
+                : EngagementId,
+            EngagementDescription = engagementDescription,
+            Sequence = line.Sequence,
+            TotalInvoices = NumInvoices,
+            DueDate = dueDate,
+            Amount = Math.Round(line.Amount, 2, MidpointRounding.AwayFromZero),
+            CurrencyCode = SelectedEngagement?.Currency,
+            PlanType = PlanType,
+            DeliveryDescription = line.DeliveryDescription,
+            PoNumber = line.PoNumber,
+            FrsNumber = line.FrsNumber,
+            CustomerTicket = line.CustomerTicket,
+            CustomerName = SelectedEngagement?.CustomerName,
+            CustomerFocalPointName = CustomerFocalPointName,
+            CustomerFocalPointEmail = primaryRecipient,
+            CoeResponsible = null,
+            CustomerEmails = recipients
+        };
+
+        var description = InvoiceDescriptionFormatter.Format(context);
+
+        var previewViewModel = new InvoiceDescriptionPreviewViewModel(
+            LocalizationRegistry.Get("INV_InvoicePlan_Preview_Title"),
+            description,
+            line.Sequence,
+            NumInvoices);
+
+        _ = _dialogService.ShowDialogAsync(
+            previewViewModel,
+            LocalizationRegistry.Get("INV_InvoicePlan_Preview_DialogTitle"));
     }
 
     private void AdjustLastLineForTotals()

@@ -4,4 +4,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GRC.Shared.Resources\GRC.Shared.Resources.csproj" />
+  </ItemGroup>
 </Project>

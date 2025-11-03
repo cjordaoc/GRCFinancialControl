@@ -10,6 +10,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             int engagementsCreated,
             int engagementsUpdated,
             int financialEvolutionUpserts,
+            int s4MetadataRefreshes,
             IReadOnlyCollection<string> manualOnlySkips,
             IReadOnlyCollection<string> lockedFiscalYearSkips,
             IReadOnlyCollection<string> missingClosingPeriodSkips,
@@ -23,6 +24,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             EngagementsCreated = engagementsCreated;
             EngagementsUpdated = engagementsUpdated;
             FinancialEvolutionUpserts = financialEvolutionUpserts;
+            S4MetadataRefreshes = s4MetadataRefreshes;
             ManualOnlySkips = manualOnlySkips;
             LockedFiscalYearSkips = lockedFiscalYearSkips;
             MissingClosingPeriodSkips = missingClosingPeriodSkips;
@@ -37,6 +39,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
         public int EngagementsCreated { get; }
         public int EngagementsUpdated { get; }
         public int FinancialEvolutionUpserts { get; }
+        public int S4MetadataRefreshes { get; }
         public IReadOnlyCollection<string> ManualOnlySkips { get; }
         public IReadOnlyCollection<string> LockedFiscalYearSkips { get; }
         public IReadOnlyCollection<string> MissingClosingPeriodSkips { get; }

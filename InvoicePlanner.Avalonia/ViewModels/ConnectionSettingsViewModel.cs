@@ -84,7 +84,7 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
     {
         StatusMessage = null;
         var filePath = await _filePickerService.OpenFileAsync(
-            title: LocalizationRegistry.Get("Connection.Dialog.BrowseTitle"),
+            title: LocalizationRegistry.Get("INV_Connection_Dialog_BrowseTitle"),
             defaultExtension: ".grcconfig",
             allowedPatterns: new[] { "*.grcconfig" });
 
@@ -103,13 +103,13 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(SelectedPackagePath))
         {
-            StatusMessage = LocalizationRegistry.Get("Connection.Validation.PackageRequired");
+            StatusMessage = LocalizationRegistry.Get("INV_Connection_Validation_PackageRequired");
             return;
         }
 
         if (string.IsNullOrWhiteSpace(Passphrase))
         {
-            StatusMessage = LocalizationRegistry.Get("Connection.Validation.PassphraseRequired");
+            StatusMessage = LocalizationRegistry.Get("INV_Connection_Validation_PassphraseRequired");
             return;
         }
 
@@ -119,7 +119,7 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
         try
         {
             IsImporting = true;
-            StatusMessage = LocalizationRegistry.Get("Connection.Status.ImportInProgress");
+            StatusMessage = LocalizationRegistry.Get("INV_Connection_Status_ImportInProgress");
 
             var importedSettings = await _connectionPackageService.ImportAsync(SelectedPackagePath, Passphrase);
             await _settingsService.SaveAllAsync(new Dictionary<string, string>(importedSettings));
@@ -129,7 +129,7 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
 
             await _schemaInitializer.EnsureSchemaAsync();
 
-            StatusMessage = LocalizationRegistry.Get("Connection.Status.ImportSuccess");
+            StatusMessage = LocalizationRegistry.Get("INV_Connection_Status_ImportSuccess");
             Messenger.Send(ApplicationRestartRequestedMessage.Instance);
             Messenger.Send(ConnectionSettingsImportedMessage.Instance);
         }
@@ -143,7 +143,7 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
         catch (Exception ex)
         {
             var restoreMessage = await TryRestorePreviousSettingsAsync(previousSettings, newSettingsPersisted);
-            var failureMessage = LocalizationRegistry.Format("Connection.Status.ImportFailure", ex.Message);
+            var failureMessage = LocalizationRegistry.Format("INV_Connection_Status_ImportFailure", ex.Message);
             StatusMessage = string.IsNullOrWhiteSpace(restoreMessage)
                 ? failureMessage
                 : string.Concat(failureMessage, " ", restoreMessage);
@@ -163,12 +163,12 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
             var settings = await _settingsService.GetAllAsync();
             settings[SettingKeys.Language] = language.CultureName;
             await _settingsService.SaveAllAsync(new Dictionary<string, string>(settings));
-            StatusMessage = LocalizationRegistry.Get("Localization.Language.PreferenceSaved");
+            StatusMessage = LocalizationRegistry.Get("INV_Localization_Language_PreferenceSaved");
             Messenger.Send(ApplicationRestartRequestedMessage.Instance);
         }
         catch (Exception ex)
         {
-            StatusMessage = LocalizationRegistry.Format("Localization.Language.PreferenceSaveFailure", ex.Message);
+            StatusMessage = LocalizationRegistry.Format("INV_Localization_Language_PreferenceSaveFailure", ex.Message);
         }
     }
 
@@ -188,7 +188,7 @@ public partial class ConnectionSettingsViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            return LocalizationRegistry.Format("Connection.Status.RestoreFailure", ex.Message);
+            return LocalizationRegistry.Format("INV_Connection_Status_RestoreFailure", ex.Message);
         }
     }
 

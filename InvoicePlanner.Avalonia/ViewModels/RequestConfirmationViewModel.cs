@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using App.Presentation.Localization;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -104,15 +105,15 @@ public partial class RequestConfirmationViewModel : ViewModelBase
     public bool HasSelectedLine => SelectedLine is not null;
 
     public string EngagementDisplay => LocalizationRegistry.Format(
-        "Request.Status.EngagementFormat",
+        "INV_Request_Status_EngagementFormat",
         string.IsNullOrWhiteSpace(EngagementId) ? string.Empty : EngagementId);
 
     public string PlannedCountDisplay => LocalizationRegistry.Format(
-        "Request.Status.PlannedFormat",
+        "INV_Request_Status_PlannedFormat",
         PlannedCount);
 
     public string RequestedCountDisplay => LocalizationRegistry.Format(
-        "Request.Status.RequestedFormat",
+        "INV_Request_Status_RequestedFormat",
         RequestedCount);
 
     public IRelayCommand LoadPlanCommand => _loadPlanCommand;
@@ -198,7 +199,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
 
         if (SelectedPlan is null)
         {
-            ValidationMessage = LocalizationRegistry.Get("Request.Validation.PlanSelection");
+            ValidationMessage = LocalizationRegistry.Get("INV_Request_Validation_PlanSelection");
             return;
         }
 
@@ -211,7 +212,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
                 _currentCurrencyCode = null;
                 EngagementId = string.Empty;
                 CurrentPlanId = 0;
-                ValidationMessage = LocalizationRegistry.Format("Request.Validation.PlanNotFound", SelectedPlan.Id);
+                ValidationMessage = LocalizationRegistry.Format("INV_Request_Validation_PlanNotFound", SelectedPlan.Id);
                 return;
             }
 
@@ -248,7 +249,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
 
             RefreshSummaries();
 
-            StatusMessage = LocalizationRegistry.Format("Request.Status.PlanLoaded", plan.Id, Lines.Count);
+            StatusMessage = LocalizationRegistry.Format("INV_Request_Status_PlanLoaded", plan.Id, Lines.Count);
 
             if (Lines.Count > 0)
             {
@@ -263,7 +264,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load invoice plan {PlanId}.", SelectedPlan.Id);
-            ValidationMessage = LocalizationRegistry.Format("Request.Status.LoadFailureDetail", ex.Message);
+            ValidationMessage = LocalizationRegistry.Format("INV_Request_Status_LoadFailureDetail", ex.Message);
         }
     }
 
@@ -278,13 +279,13 @@ public partial class RequestConfirmationViewModel : ViewModelBase
 
         if (CurrentPlanId <= 0)
         {
-            ValidationMessage = LocalizationRegistry.Get("Request.Validation.PlanRequired");
+            ValidationMessage = LocalizationRegistry.Get("INV_Request_Validation_PlanRequired");
             return;
         }
 
         if (line.RequestDate is null)
         {
-            ValidationMessage = LocalizationRegistry.Get("Request.Validation.RequestDateRequired");
+            ValidationMessage = LocalizationRegistry.Get("INV_Request_Validation_RequestDateRequired");
             return;
         }
 
@@ -302,19 +303,22 @@ public partial class RequestConfirmationViewModel : ViewModelBase
 
             if (result.Updated == 0)
             {
-                StatusMessage = LocalizationRegistry.Get("Request.Status.NoUpdates");
+                StatusMessage = LocalizationRegistry.Get("INV_Request_Status_NoUpdates");
+                ToastService.ShowWarning("INV_Request_Toast_NoUpdates");
                 return;
             }
 
             line.ApplyRequestedState(update.RitmNumber, update.CoeResponsible, update.RequestDate.Date);
 
-            StatusMessage = LocalizationRegistry.Format("Request.Status.LineRequested", line.Sequence);
+            StatusMessage = LocalizationRegistry.Format("INV_Request_Status_LineRequested", line.Sequence);
+            ToastService.ShowSuccess("INV_Request_Toast_LineRequested", line.Sequence);
             RefreshActionCommands();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to request invoice item {ItemId}.", line.Id);
             ValidationMessage = ex.Message;
+            ToastService.ShowError("INV_Request_Toast_RequestFailed");
         }
     }
 
@@ -329,7 +333,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
 
         if (CurrentPlanId <= 0)
         {
-            ValidationMessage = LocalizationRegistry.Get("Request.Validation.UndoPlanRequired");
+            ValidationMessage = LocalizationRegistry.Get("INV_Request_Validation_UndoPlanRequired");
             return;
         }
 
@@ -339,19 +343,22 @@ public partial class RequestConfirmationViewModel : ViewModelBase
 
             if (result.Updated == 0)
             {
-                StatusMessage = LocalizationRegistry.Get("Request.Status.NoUndo");
+                StatusMessage = LocalizationRegistry.Get("INV_Request_Status_NoUndo");
+                ToastService.ShowWarning("INV_Request_Toast_NoUndo");
                 return;
             }
 
             line.ResetToPlanned(DateTime.Today);
 
-            StatusMessage = LocalizationRegistry.Format("Request.Status.LineUndone", line.Sequence);
+            StatusMessage = LocalizationRegistry.Format("INV_Request_Status_LineUndone", line.Sequence);
+            ToastService.ShowSuccess("INV_Request_Toast_LineUndone", line.Sequence);
             RefreshActionCommands();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to undo invoice item {ItemId} request.", line.Id);
             ValidationMessage = ex.Message;
+            ToastService.ShowError("INV_Request_Toast_UndoFailed");
         }
     }
 
@@ -399,12 +406,12 @@ public partial class RequestConfirmationViewModel : ViewModelBase
             }
 
             PlanSelectionMessage = plans.Count == 0
-                ? LocalizationRegistry.Get("Request.Message.Empty")
-                : LocalizationRegistry.Get("Request.Message.SelectHint");
+                ? LocalizationRegistry.Get("INV_Request_Message_Empty")
+                : LocalizationRegistry.Get("INV_Request_Message_SelectHint");
 
             if (_accessScope.IsInitialized && !_accessScope.HasAssignments && string.IsNullOrWhiteSpace(_accessScope.InitializationError))
             {
-                PlanSelectionMessage = LocalizationRegistry.Format("Access.Message.NoAssignments", GetLoginDisplay(_accessScope));
+                PlanSelectionMessage = LocalizationRegistry.Format("INV_Access_Message_NoAssignments", GetLoginDisplay(_accessScope));
             }
 
             SelectedPlan = AvailablePlans.FirstOrDefault(plan => plan.Id == previouslySelectedId);
@@ -414,7 +421,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
             _logger.LogError(ex, "Failed to load available plans for request confirmation.");
             AvailablePlans.Clear();
             SelectedPlan = null;
-            PlanSelectionMessage = LocalizationRegistry.Format("Request.Status.LoadFailure", ex.Message);
+            PlanSelectionMessage = LocalizationRegistry.Format("INV_Request_Status_LoadFailure", ex.Message);
         }
     }
 
@@ -436,7 +443,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
     {
         if (SelectedLine is null)
         {
-            ValidationMessage = LocalizationRegistry.Get("Request.Validation.LineSelection");
+            ValidationMessage = LocalizationRegistry.Get("INV_Request_Validation_LineSelection");
             return;
         }
 
@@ -456,7 +463,7 @@ public partial class RequestConfirmationViewModel : ViewModelBase
     {
         if (SelectedLine is null)
         {
-            ValidationMessage = LocalizationRegistry.Get("Request.Validation.LineSelection");
+            ValidationMessage = LocalizationRegistry.Get("INV_Request_Validation_LineSelection");
             return;
         }
 

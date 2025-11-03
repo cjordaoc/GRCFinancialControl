@@ -11,8 +11,8 @@
     <UserControl.Resources>
         <appConv:CurrencyDisplayConverter x:Key="CurrencyDisplayConverter"/>
     </UserControl.Resources>
-    <Grid RowDefinitions="Auto,*,Auto" Margin="10">
-        <TextBlock Text="{loc:Loc Key=Admin.Engagements.Title.List}" FontSize="24" FontWeight="Bold" Margin="0,0,0,10"/>
+    <Grid RowDefinitions="Auto,*,Auto" Margin="{StaticResource CardPaddingThickness}">
+        <TextBlock Text="{loc:Loc Key=FINC_Admin_Engagements_Title_List}" Classes="TitleLarge" Margin="{StaticResource MarginBottomRegular}"/>
 
         <DataGrid Grid.Row="1"
                   ItemsSource="{Binding Engagements}"
@@ -24,9 +24,27 @@
                   ScrollViewer.VerticalScrollBarVisibility="Auto">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto"/>
-                <DataGridTextColumn Header="Engagement ID" Binding="{Binding EngagementId}" Width="*"/>
-                <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="2*"/>
-                <DataGridTextColumn Header="Customer Name" Binding="{Binding CustomerName}" Width="*"/>
+                <DataGridTextColumn Header="Engagement ID" Binding="{Binding EngagementId}" Width="1.5*"/>
+                <DataGridTemplateColumn Header="Description" Width="3*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Description}"
+                                       TextWrapping="Wrap"
+                                       TextTrimming="None"
+                                       MaxWidth="420"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Customer Name" Width="3*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding CustomerName}"
+                                       TextWrapping="Wrap"
+                                       TextTrimming="None"
+                                       MinWidth="180"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTemplateColumn Header="Opening Value" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -47,12 +65,15 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="5" Margin="0,10,0,0">
+        <StackPanel Grid.Row="2"
+                    Classes="ButtonRow"
+                    HorizontalAlignment="Left"
+                    Margin="{StaticResource MarginTopMedium}">
             <Button Content="Add New" Command="{Binding AddCommand}"/>
             <Button Content="View" Command="{Binding ViewCommand}" CommandParameter="{Binding SelectedEngagement}"/>
             <Button Content="Edit" Command="{Binding EditCommand}" CommandParameter="{Binding SelectedEngagement}"/>
             <Button Content="Delete" Command="{Binding DeleteCommand}" CommandParameter="{Binding SelectedEngagement}"/>
-            <Button Content="Delete Data" Command="{Binding DeleteDataCommand}" CommandParameter="{Binding SelectedEngagement}" Classes="danger"/>
+            <Button Content="Delete Data" Command="{Binding DeleteDataCommand}" CommandParameter="{Binding SelectedEngagement}" Classes="Danger"/>
         </StackPanel>
     </Grid>
 </UserControl>

@@ -8,14 +8,14 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="150"
              x:Class="GRCFinancialControl.Avalonia.Views.CustomerEditorView"
              x:DataType="vm:CustomerEditorViewModel">
-    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridGap}">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="{StaticResource Space16}">
-                <TextBlock Text="Customer Details" FontSize="18" FontWeight="Bold"/>
+            <StackPanel Spacing="{StaticResource SectionSpacing}">
+                <TextBlock Text="Customer Details" Classes="TitleSmall"/>
                 <Grid ColumnDefinitions="Auto,*"
                       RowDefinitions="Auto,Auto,Auto,Auto"
-                      RowSpacing="{StaticResource Space12}"
-                      ColumnSpacing="{StaticResource Space16}">
+                      RowSpacing="{StaticResource GridGap}"
+                      ColumnSpacing="{StaticResource GridGap}">
                     <TextBlock Grid.Row="0"
                                Grid.Column="0"
                                Text="Name:"
@@ -23,13 +23,14 @@
                     <TextBox x:Name="NameBox"
                              Grid.Row="0"
                              Grid.Column="1"
+                             MinWidth="360"
                              Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
                              IsReadOnly="{Binding IsReadOnlyMode}"/>
                     <TextBlock Grid.Row="1"
                                Grid.Column="1"
                                Text="{Binding NameError}"
                                Classes="StatusError"
-                               Margin="0,2,0,0"
+                               Margin="{StaticResource MarginTopXXSmall}"
                                IsVisible="{Binding NameError, Converter={x:Static converters:ObjectConverters.IsNotNull}}"/>
                     <TextBlock Grid.Row="2"
                                Grid.Column="0"
@@ -38,13 +39,14 @@
                     <TextBox x:Name="CustomerCodeBox"
                              Grid.Row="2"
                              Grid.Column="1"
+                             MinWidth="360"
                              Text="{Binding CustomerCode, UpdateSourceTrigger=PropertyChanged}"
                              IsReadOnly="{Binding IsReadOnlyMode}"/>
                     <TextBlock Grid.Row="3"
                                Grid.Column="1"
                                Text="{Binding CustomerCodeError}"
                                Classes="StatusError"
-                               Margin="0,2,0,0"
+                               Margin="{StaticResource MarginTopXXSmall}"
                                IsVisible="{Binding CustomerCodeError, Converter={x:Static converters:ObjectConverters.IsNotNull}}"/>
                 </Grid>
             </StackPanel>
@@ -52,16 +54,16 @@
         <StackPanel Grid.Row="1"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Spacing="{StaticResource Space12}">
-            <Button Content="{loc:Loc Key=Common.Button.Save}"
+                    Spacing="{StaticResource ControlSpacing}">
+            <Button Content="{loc:Loc Key=Global_Button_Save}"
                     Command="{Binding SaveCommand}"
                     IsEnabled="{Binding AllowEditing}"
                     IsDefault="{Binding AllowEditing}"
-                    MinWidth="120" />
-            <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+                    MinWidth="{StaticResource ButtonMinWidth}" />
+            <Button Content="{loc:Loc Key=Global_Button_Cancel}"
                     Command="{Binding CloseCommand}"
                     IsCancel="True"
-                    MinWidth="120" />
+                    MinWidth="{StaticResource ButtonMinWidth}" />
         </StackPanel>
     </Grid>
 </UserControl>

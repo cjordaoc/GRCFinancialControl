@@ -3,36 +3,125 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:InvoicePlanner.Avalonia.ViewModels"
+        xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
+        xmlns:services="clr-namespace:App.Presentation.Services;assembly=App.Presentation"
+        xmlns:sharedControls="clr-namespace:GRC.Shared.UI.Controls;assembly=GRC.Shared.UI"
+        xmlns:sharedConverters="clr-namespace:GRC.Shared.UI.Converters;assembly=GRC.Shared.UI"
         x:Class="InvoicePlanner.Avalonia.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         mc:Ignorable="d"
         MinWidth="960"
         MinHeight="640"
         WindowState="Maximized"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="{StaticResource WindowTitleBarHeight}"
+        Padding="{StaticResource WindowClientPadding}"
+        WindowStartupLocation="CenterScreen"
         Title="{Binding Title}">
-    <Grid ColumnDefinitions="240,*" Margin="16">
-        <Border Grid.Column="0"
-                Padding="16"
-                CornerRadius="8"
-                Background="{StaticResource BrushSurfaceVariant}">
-            <StackPanel Spacing="12">
-                <TextBlock Text="{Binding Title}" Classes="TitleLarge"/>
-                <ItemsControl ItemsSource="{Binding MenuItems}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:NavigationItemViewModel">
-                            <ToggleButton Content="{Binding Title}"
-                                          Command="{Binding SelectCommand}"
-                                          IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                                          HorizontalAlignment="Stretch"
-                                          Classes="NavButton"
-                                          Margin="0,4"/>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
-        </Border>
-        <Border Grid.Column="1" Classes="Card" Padding="0" Margin="16,0,0,0">
+    <Window.Resources>
+        <sharedConverters:BoolToHorizontalAlignmentConverter x:Key="SidebarAlignmentConverter"
+                                                             TrueValue="Left"
+                                                             FalseValue="Center" />
+    </Window.Resources>
+    <Panel>
+        <ExperimentalAcrylicBorder IsHitTestVisible="False"
+                                   HorizontalAlignment="Stretch"
+                                   VerticalAlignment="Stretch"
+                                   Material="{StaticResource AcrylicModal}"/>
+
+        <Grid Margin="{StaticResource PageMarginThickness}" ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource GridGap}">
+        <sharedControls:SidebarHost Grid.Column="0"
+                                    Header="{Binding Title}"
+                                    ExpandedLabel="{loc:Loc Key=Global_SidebarCollapse}"
+                                    CollapsedLabel="{loc:Loc Key=Global_SidebarExpand}"
+                                    ItemsSource="{Binding MenuItems}"
+                                    CompactWidth="{StaticResource SidebarCompactWidth}"
+                                    ExpandedWidth="{StaticResource SidebarExpandedWidth}"
+                                    IsExpanded="{Binding IsSidebarExpanded, Mode=TwoWay}">
+            <sharedControls:SidebarHost.HeaderTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="{StaticResource SpacingUnit}"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=sharedControls:SidebarHost}, Converter={StaticResource SidebarAlignmentConverter}}">
+                        <Border Width="32"
+                                Height="32"
+                                CornerRadius="16"
+                                Background="{StaticResource BrushPrimary}">
+                            <Path Data="{StaticResource IconCalendar}"
+                                  Width="20"
+                                  Height="20"
+                                  Stretch="Uniform"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  Fill="{StaticResource BrushOnSurface}"/>
+                        </Border>
+                        <TextBlock Text="{Binding .}"
+                                   Classes="TitleLarge"
+                                   TextTrimming="None"
+                                   VerticalAlignment="Center"
+                                   IsVisible="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=sharedControls:SidebarHost}}"/>
+                    </StackPanel>
+                </DataTemplate>
+            </sharedControls:SidebarHost.HeaderTemplate>
+            <sharedControls:SidebarHost.ItemTemplate>
+                <DataTemplate x:DataType="vm:NavigationItemViewModel">
+                    <ToggleButton Command="{Binding SelectCommand}"
+                                  IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                  HorizontalAlignment="Stretch"
+                                  Classes="NavButton"
+                                  ToolTip.Tip="{Binding Title}"
+                                  HorizontalContentAlignment="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=sharedControls:SidebarHost}, Converter={StaticResource SidebarAlignmentConverter}}">
+                        <ToggleButton.Content>
+                            <StackPanel Orientation="Horizontal"
+                                        Spacing="{StaticResource SpacingUnit}"
+                                        VerticalAlignment="Center">
+                                <Path Data="{Binding Icon}"
+                                      Width="20"
+                                      Height="20"
+                                      Fill="{StaticResource BrushOnSurface}"
+                                      Stretch="Uniform"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding Title}"
+                                           VerticalAlignment="Center"
+                                           Classes="SidebarTitle"
+                                           TextTrimming="None"
+                                           IsVisible="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=sharedControls:SidebarHost}}"/>
+                            </StackPanel>
+                        </ToggleButton.Content>
+                    </ToggleButton>
+                </DataTemplate>
+            </sharedControls:SidebarHost.ItemTemplate>
+        </sharedControls:SidebarHost>
+
+        <Border Grid.Column="1" Classes="Card" Padding="{StaticResource CardPaddingThickness}">
             <ContentControl Content="{Binding CurrentViewModel}" />
         </Border>
-    </Grid>
+
+            <ItemsControl Grid.ColumnSpan="2"
+                          Margin="{StaticResource MarginCallout}"
+                          HorizontalAlignment="Right"
+                          VerticalAlignment="Top"
+                          ItemsSource="{x:Static services:ToastService.Notifications}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Spacing="{StaticResource ControlSpacing}"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="services:ToastNotification">
+                        <Border Classes="ToastControl"
+                                Background="{Binding Type, Converter={StaticResource ToastBrushConverter}}">
+                            <TextBlock Text="{Binding Message}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{StaticResource BrushOnSurface}"/>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
+    </Panel>
 </Window>

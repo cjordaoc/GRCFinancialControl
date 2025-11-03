@@ -93,7 +93,7 @@ public partial class NotificationPreviewViewModel : ViewModelBase
         if (_accessScope.IsInitialized && !_accessScope.HasAssignments && string.IsNullOrWhiteSpace(_accessScope.InitializationError))
         {
             Items.Clear();
-            StatusMessage = LocalizationRegistry.Format("Access.Message.NoAssignments", GetLoginDisplay(_accessScope));
+            StatusMessage = LocalizationRegistry.Format("INV_Access_Message_NoAssignments", GetLoginDisplay(_accessScope));
             OnPropertyChanged(nameof(IsEmpty));
             return;
         }
@@ -110,13 +110,13 @@ public partial class NotificationPreviewViewModel : ViewModelBase
             }
 
             StatusMessage = previews.Count == 0
-                ? LocalizationRegistry.Format("Notifications.Status.Empty", SelectedDate)
-                : LocalizationRegistry.Format("Notifications.Status.Loaded", previews.Count, SelectedDate);
+                ? LocalizationRegistry.Format("INV_Notifications_Status_Empty", SelectedDate)
+                : LocalizationRegistry.Format("INV_Notifications_Status_Loaded", previews.Count, SelectedDate);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load notification preview for {Date}", SelectedDate);
-            ValidationMessage = LocalizationRegistry.Format("Notifications.Status.LoadFailure", ex.Message);
+            ValidationMessage = LocalizationRegistry.Format("INV_Notifications_Status_LoadFailure", ex.Message);
         }
         finally
         {

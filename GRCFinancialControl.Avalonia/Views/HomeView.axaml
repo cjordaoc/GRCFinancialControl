@@ -14,52 +14,67 @@
                                              FalseBrush="{StaticResource BrushSuccess}"/>
     </UserControl.Resources>
     <ScrollViewer>
-        <StackPanel Margin="24" Spacing="18">
-            <TextBlock Text="{loc:Loc Key=Home.Title}"
+        <StackPanel Margin="{StaticResource PageMarginThickness}" Spacing="{StaticResource SectionSpacing}">
+            <TextBlock Text="{loc:Loc Key=FINC_Home_Title}"
                        Classes="TitleLarge"/>
-            <TextBlock Text="{loc:Loc Key=Home.Welcome}"
+            <TextBlock Text="{loc:Loc Key=FINC_Home_Welcome}"
                        TextWrapping="Wrap"/>
-            <StackPanel Spacing="6" Margin="0,12,0,0">
-                <TextBlock Text="{loc:Loc Key=Home.Label.FiscalYear}"
-                           FontWeight="SemiBold"/>
-                <ComboBox ItemsSource="{Binding FiscalYears}"
-                          SelectedItem="{Binding SelectedFiscalYear}"
-                          PlaceholderText="{loc:Loc Key=Home.Placeholder.FiscalYear}"
-                          Width="320"
-                          IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel>
-                                <TextBlock Text="{Binding Name}"
-                                           FontWeight="SemiBold"/>
-                                <TextBlock>
-                                    <TextBlock.Inlines>
-                                        <Run Text="{Binding StartDate, StringFormat='{}{0:yyyy-MM-dd}'}"/>
-                                        <Run Text=" – "/>
-                                        <Run Text="{Binding EndDate, StringFormat='{}{0:yyyy-MM-dd}'}"/>
-                                    </TextBlock.Inlines>
-                                </TextBlock>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-                <TextBlock Text="{loc:Loc Key=Home.Status.NoFiscalYears}"
+            <StackPanel Spacing="{StaticResource SpacingUnit}">
+                <TextBlock Text="{loc:Loc Key=FINC_Home_Label_FiscalYear}"
+                           FontWeight="{StaticResource FontWeightSemiBold}"/>
+                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="{StaticResource GridGap}">
+                    <ComboBox Grid.Column="0"
+                              ItemsSource="{Binding FiscalYears}"
+                              SelectedItem="{Binding SelectedFiscalYear}"
+                              PlaceholderText="{loc:Loc Key=FINC_Home_Placeholder_FiscalYear}"
+                              HorizontalAlignment="Stretch"
+                              MinWidth="280"
+                              IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Name}"
+                                               FontWeight="{StaticResource FontWeightSemiBold}"/>
+                                    <TextBlock>
+                                        <TextBlock.Inlines>
+                                            <Run Text="{Binding StartDate, StringFormat='{}{0:yyyy-MM-dd}'}"/>
+                                            <Run Text=" – "/>
+                                            <Run Text="{Binding EndDate, StringFormat='{}{0:yyyy-MM-dd}'}"/>
+                                        </TextBlock.Inlines>
+                                    </TextBlock>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Button Grid.Column="1"
+                            Content="{loc:Loc Key=FINC_Home_Button_Confirm}"
+                            Command="{Binding ConfirmSelectionCommand}"
+                            Classes="accent"
+                            MinWidth="{StaticResource ButtonMinWidth}"
+                            HorizontalAlignment="Stretch"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}"/>
+                    <ProgressBar Grid.Column="2"
+                                 Width="120"
+                                 IsIndeterminate="True"
+                                 IsVisible="{Binding IsBusy}"/>
+                </Grid>
+                <TextBlock Text="{loc:Loc Key=FINC_Home_Status_NoFiscalYears}"
                            Foreground="{StaticResource BrushWarning}"
                            IsVisible="{Binding HasFiscalYears, Converter={x:Static converters:ObjectConverters.AreEqual}, ConverterParameter=False}"/>
             </StackPanel>
-            <StackPanel Spacing="6" Margin="0,12,0,0">
-                <TextBlock Text="{loc:Loc Key=Home.Label.ClosingPeriod}"
-                           FontWeight="SemiBold"/>
+            <StackPanel Spacing="{StaticResource SpacingUnit}">
+                <TextBlock Text="{loc:Loc Key=FINC_Home_Label_ClosingPeriod}"
+                           FontWeight="{StaticResource FontWeightSemiBold}"/>
                 <ComboBox ItemsSource="{Binding ClosingPeriods}"
                           SelectedItem="{Binding SelectedClosingPeriod}"
-                          PlaceholderText="{loc:Loc Key=Home.Placeholder.ClosingPeriod}"
+                          PlaceholderText="{loc:Loc Key=FINC_Home_Placeholder_ClosingPeriod}"
                           Width="320"
                           IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal" Spacing="6">
+                            <StackPanel Orientation="Horizontal" Spacing="{StaticResource SpacingUnit}">
                                 <TextBlock Text="{Binding Name}"
-                                           FontWeight="SemiBold"/>
+                                           FontWeight="{StaticResource FontWeightSemiBold}"/>
                                 <TextBlock>
                                     <TextBlock.Inlines>
                                         <Run Text="("/>
@@ -73,23 +88,13 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                <TextBlock Text="{loc:Loc Key=Home.Status.NoClosingPeriods}"
+                <TextBlock Text="{loc:Loc Key=FINC_Home_Status_NoClosingPeriods}"
                            Foreground="{StaticResource BrushWarning}"
                            IsVisible="{Binding HasClosingPeriods, Converter={x:Static converters:ObjectConverters.AreEqual}, ConverterParameter=False}"/>
             </StackPanel>
-            <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,12,0,0">
-                <Button Content="{loc:Loc Key=Home.Button.Confirm}"
-                        Command="{Binding ConfirmSelectionCommand}"
-                        Classes="accent"
-                        IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}"/>
-                <ProgressBar Width="120"
-                             IsIndeterminate="True"
-                             IsVisible="{Binding IsBusy}"/>
-            </StackPanel>
             <Border Background="{StaticResource BrushSurfaceVariant}"
-                    CornerRadius="{StaticResource CornerRadiusSM}"
-                    Padding="12"
-                    Margin="0,12,0,0"
+                    CornerRadius="{StaticResource ControlCornerRadius}"
+                    Padding="{StaticResource CardPaddingThickness}"
                     IsVisible="{Binding HasStatusMessage}">
                 <TextBlock Text="{Binding StatusMessage}"
                            Foreground="{Binding IsError, Converter={StaticResource StatusBrushConverter}}"

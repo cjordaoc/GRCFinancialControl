@@ -5,6 +5,8 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using App.Presentation.Services;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -24,6 +26,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private List<ClosingPeriod> _allClosingPeriods = new();
         private bool _isInitializing;
+        private bool _readmeLoaded;
 
         [ObservableProperty]
         private ObservableCollection<FiscalYear> _fiscalYears = new();
@@ -45,6 +48,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         [ObservableProperty]
         private bool _isBusy;
+
+        [ObservableProperty]
+        private string? _readmeContent;
 
         public HomeViewModel(
             IFiscalYearService fiscalYearService,
@@ -85,12 +91,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
                 Messenger.Send(new ApplicationParametersChangedMessage(SelectedFiscalYear.Id, SelectedClosingPeriod.Id));
 
-                StatusMessage = LocalizationRegistry.Get("Home.Status.Saved");
+                StatusMessage = LocalizationRegistry.Get("FINC_Home_Status_Saved");
             }
             catch (Exception ex)
             {
                 _loggingService.LogError($"Failed to persist application parameters: {ex.Message}");
-                StatusMessage = LocalizationRegistry.Format("Home.Status.SaveError", ex.Message);
+                StatusMessage = LocalizationRegistry.Format("FINC_Home_Status_SaveError", ex.Message);
                 IsError = true;
             }
             finally
@@ -150,19 +156,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
                 if (!HasFiscalYears)
                 {
-                    StatusMessage = LocalizationRegistry.Get("Home.Status.NoFiscalYears");
+                    StatusMessage = LocalizationRegistry.Get("FINC_Home_Status_NoFiscalYears");
                     IsError = true;
                 }
                 else if (!HasClosingPeriods)
                 {
-                    StatusMessage = LocalizationRegistry.Get("Home.Status.NoClosingPeriods");
+                    StatusMessage = LocalizationRegistry.Get("FINC_Home_Status_NoClosingPeriods");
                     IsError = true;
                 }
             }
             catch (Exception ex)
             {
                 _loggingService.LogError($"Failed to load application parameters: {ex.Message}");
-                StatusMessage = LocalizationRegistry.Format("Home.Status.LoadError", ex.Message);
+                StatusMessage = LocalizationRegistry.Format("FINC_Home_Status_LoadError", ex.Message);
                 IsError = true;
             }
             finally
@@ -170,6 +176,47 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 _isInitializing = false;
                 IsBusy = false;
                 NotifyCommandCanExecute(ConfirmSelectionCommand);
+                await EnsureReadmeLoadedAsync().ConfigureAwait(false);
+            }
+        }
+
+        private async Task EnsureReadmeLoadedAsync()
+        {
+            if (_readmeLoaded)
+            {
+                return;
+            }
+
+            _readmeLoaded = true;
+
+            try
+            {
+                var content = await ReadmeContentProvider.GetAsync(typeof(HomeViewModel).Assembly).ConfigureAwait(false);
+                var resolved = string.IsNullOrWhiteSpace(content)
+                    ? LocalizationRegistry.Get("FINC_Home_Markdown_LoadFailed")
+                    : content!;
+
+                if (Dispatcher.UIThread.CheckAccess())
+                {
+                    ReadmeContent = resolved;
+                }
+                else
+                {
+                    Dispatcher.UIThread.Post(() => ReadmeContent = resolved);
+                }
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogError($"Failed to load README content: {ex.Message}");
+                var fallback = LocalizationRegistry.Get("FINC_Home_Markdown_LoadFailed");
+                if (Dispatcher.UIThread.CheckAccess())
+                {
+                    ReadmeContent = fallback;
+                }
+                else
+                {
+                    Dispatcher.UIThread.Post(() => ReadmeContent = fallback);
+                }
             }
         }
 
@@ -209,12 +256,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             if (value is null)
             {
-                StatusMessage = LocalizationRegistry.Get("Home.Status.SelectFiscalYear");
+                StatusMessage = LocalizationRegistry.Get("FINC_Home_Status_SelectFiscalYear");
                 IsError = true;
             }
             else if (!HasClosingPeriods)
             {
-                StatusMessage = LocalizationRegistry.Get("Home.Status.NoClosingPeriods");
+                StatusMessage = LocalizationRegistry.Get("FINC_Home_Status_NoClosingPeriods");
                 IsError = true;
             }
             else

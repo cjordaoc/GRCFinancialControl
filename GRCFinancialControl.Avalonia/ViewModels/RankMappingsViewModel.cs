@@ -2,10 +2,11 @@ using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using GRCFinancialControl.Avalonia.Messages;
+using GRC.Shared.UI.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
@@ -43,9 +44,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private async Task AddAsync()
         {
             var editor = new RankMappingEditorViewModel(new RankMapping(), _rankMappingService, Messenger);
-            var title = LocalizationRegistry.Get("MasterData.RankMappings.Dialog.AddTitle");
+            var title = LocalizationRegistry.Get("FINC_MasterData_RankMappings_Dialog_AddTitle");
             await _dialogService.ShowDialogAsync(editor, title).ConfigureAwait(false);
-            Messenger.Send(new RefreshDataMessage());
+            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanModify))]
@@ -57,9 +58,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
 
             var editor = new RankMappingEditorViewModel(rankMapping, _rankMappingService, Messenger);
-            var title = LocalizationRegistry.Get("MasterData.RankMappings.Dialog.EditTitle");
+            var title = LocalizationRegistry.Get("FINC_MasterData_RankMappings_Dialog_EditTitle");
             await _dialogService.ShowDialogAsync(editor, title).ConfigureAwait(false);
-            Messenger.Send(new RefreshDataMessage());
+            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanModify))]
@@ -70,8 +71,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            await _rankMappingService.DeleteAsync(rankMapping.Id).ConfigureAwait(false);
-            Messenger.Send(new RefreshDataMessage());
+            try
+            {
+                await _rankMappingService.DeleteAsync(rankMapping.Id).ConfigureAwait(false);
+                var displayName = string.IsNullOrWhiteSpace(rankMapping.NormalizedRank)
+                    ? rankMapping.RawRank
+                    : rankMapping.NormalizedRank;
+                ToastService.ShowSuccess("FINC_RankMappings_Toast_DeleteSuccess", displayName);
+                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+            }
+            catch (System.Exception ex)
+            {
+                ToastService.ShowError("FINC_RankMappings_Toast_OperationFailed", ex.Message);
+            }
         }
 
         private static bool CanModify(RankMapping? rankMapping) => rankMapping is not null;

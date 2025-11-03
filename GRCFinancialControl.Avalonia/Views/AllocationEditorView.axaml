@@ -18,13 +18,13 @@
                                       TrueBrush="{StaticResource BrushWarning}"
                                       FalseBrush="{StaticResource BrushSuccessDark}"/>
     </UserControl.Resources>
-    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource Space24}">
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridGap}">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="{StaticResource Space16}">
-                <TextBlock Text="{Binding Engagement.Description}" FontSize="{StaticResource FontSizeXL}" FontWeight="Bold"/>
+            <StackPanel Spacing="{StaticResource SectionSpacing}">
+                <TextBlock Text="{Binding Engagement.Description}" Classes="TitleMedium"/>
 
-                <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space12}" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding TargetLabel}" FontWeight="SemiBold"/>
+                <StackPanel Orientation="Horizontal" Spacing="{StaticResource ControlSpacing}" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding TargetLabel}" FontWeight="{StaticResource FontWeightSemiBold}"/>
                     <TextBlock Text="{Binding TargetAmountDisplay}"/>
                     <Ellipse Width="14" Height="14" StrokeThickness="1" ToolTip.Tip="{Binding AllocationVarianceTooltip}"
                              Fill="{Binding HasAllocationVariance, Converter={StaticResource AllocationFillBrush}}"
@@ -41,19 +41,20 @@
 
                 <TextBlock Text="{Binding ValidationMessage}"
                            Foreground="{StaticResource BrushWarning}"
-                           FontWeight="SemiBold"
+                           FontWeight="{StaticResource FontWeightSemiBold}"
                            IsVisible="{Binding HasAllocationVariance}"/>
 
                 <DataGrid ItemsSource="{Binding Allocations}"
                           AutoGenerateColumns="False"
                           CanUserSortColumns="False"
-                          IsReadOnly="{Binding IsReadOnlyMode}">
+                          IsReadOnly="{Binding IsReadOnlyMode}"
+                          SelectionMode="Single">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Fiscal Year" Binding="{Binding FiscalYear.Name}" IsReadOnly="True"/>
                         <DataGridTemplateColumn Header="{Binding #AllocationEditorRoot.DataContext.ToDateColumnHeader}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource Space6}" VerticalAlignment="Center">
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource SpacingUnit}" VerticalAlignment="Center">
                                         <TextBlock Grid.Column="0"
                                                    Text="{Binding DataContext.CurrencySymbol, ElementName=AllocationEditorRoot}"
                                                    IsVisible="{Binding DataContext.HasCurrencySymbol, ElementName=AllocationEditorRoot}"
@@ -71,7 +72,7 @@
                         <DataGridTemplateColumn Header="{Binding #AllocationEditorRoot.DataContext.ToGoColumnHeader}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource Space6}" VerticalAlignment="Center">
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource SpacingUnit}" VerticalAlignment="Center">
                                         <TextBlock Grid.Column="0"
                                                    Text="{Binding DataContext.CurrencySymbol, ElementName=AllocationEditorRoot}"
                                                    IsVisible="{Binding DataContext.HasCurrencySymbol, ElementName=AllocationEditorRoot}"
@@ -94,16 +95,16 @@
         <StackPanel Grid.Row="1"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Spacing="{StaticResource Space12}">
-            <Button Content="{loc:Loc Key=Common.Button.Save}"
+                    Spacing="{StaticResource ControlSpacing}">
+            <Button Content="{loc:Loc Key=Global_Button_Save}"
                     Command="{Binding SaveCommand}"
                     IsEnabled="{Binding AllowEditing}"
                     IsDefault="{Binding AllowEditing}"
-                    MinWidth="120" />
-            <Button Content="{loc:Loc Key=Common.Button.Cancel}"
+                    MinWidth="{StaticResource ButtonMinWidth}" />
+            <Button Content="{loc:Loc Key=Global_Button_Cancel}"
                     Command="{Binding CloseCommand}"
                     IsCancel="True"
-                    MinWidth="120" />
+                    MinWidth="{StaticResource ButtonMinWidth}" />
         </StackPanel>
     </Grid>
 </UserControl>

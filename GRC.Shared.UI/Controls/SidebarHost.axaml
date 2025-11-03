@@ -1,0 +1,73 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:GRC.Shared.UI.Converters"
+             x:Class="GRC.Shared.UI.Controls.SidebarHost"
+             x:Name="Root">
+  <UserControl.Resources>
+    <converters:BoolToHorizontalAlignmentConverter x:Key="SidebarAlignmentConverter"
+                                                   TrueValue="Left"
+                                                   FalseValue="Center" />
+    <converters:BoolToDoubleConverter x:Key="SidebarAngleConverter"
+                                      TrueValue="180"
+                                      FalseValue="0" />
+  </UserControl.Resources>
+  <Border x:Name="SidebarBorder"
+          Width="{Binding EffectiveWidth, ElementName=Root}"
+          Background="{StaticResource BrushSurfaceVariant}"
+          CornerRadius="{StaticResource ControlCornerRadius}"
+          Padding="{StaticResource CardPaddingThickness}"
+          MinWidth="{Binding CompactWidth, ElementName=Root}"
+          BoxShadow="{StaticResource ShadowLow}">
+    <Border.Transitions>
+      <Transitions>
+        <DoubleTransition Property="Border.Width"
+                          Duration="0:0:0.22" />
+      </Transitions>
+    </Border.Transitions>
+    <Grid RowDefinitions="Auto,*,Auto"
+          RowSpacing="{StaticResource GridGap}">
+      <ContentPresenter Content="{Binding Header, ElementName=Root}"
+                        ContentTemplate="{Binding HeaderTemplate, ElementName=Root}"
+                        HorizontalAlignment="Stretch" />
+      <ScrollViewer Grid.Row="1"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+        <ItemsControl ItemsSource="{Binding ItemsSource, ElementName=Root}"
+                      ItemTemplate="{Binding ItemTemplate, ElementName=Root}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Spacing="{StaticResource ControlSpacing}" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+        </ItemsControl>
+      </ScrollViewer>
+      <ToggleButton Grid.Row="2"
+                    Classes="NavButton"
+                    IsChecked="{Binding IsExpanded, ElementName=Root, Mode=TwoWay}"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="{Binding IsExpanded, ElementName=Root, Converter={StaticResource SidebarAlignmentConverter}}">
+        <ToggleButton.Content>
+          <StackPanel Orientation="Horizontal"
+                      Spacing="{StaticResource SpacingUnit}"
+                      VerticalAlignment="Center">
+            <Path Width="20"
+                  Height="20"
+                  Stretch="Uniform"
+                  Fill="{StaticResource BrushOnSurface}"
+                  Data="{StaticResource IconArrowExport}"
+                  RenderTransformOrigin="0.5,0.5">
+              <Path.RenderTransform>
+                <RotateTransform Angle="{Binding IsExpanded, ElementName=Root, Converter={StaticResource SidebarAngleConverter}}" />
+              </Path.RenderTransform>
+            </Path>
+            <TextBlock Text="{Binding ToggleLabel, ElementName=Root}"
+                       Classes="SidebarTitle"
+                       TextTrimming="None"
+                       VerticalAlignment="Center"
+                       IsVisible="{Binding IsExpanded, ElementName=Root}" />
+          </StackPanel>
+        </ToggleButton.Content>
+      </ToggleButton>
+    </Grid>
+  </Border>
+</UserControl>

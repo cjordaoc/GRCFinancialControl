@@ -3,114 +3,46 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
-             xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
-             xmlns:models="using:GRCFinancialControl.Core.Models"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
              x:Class="GRCFinancialControl.Avalonia.Views.HoursAllocationsView"
-             x:Name="HoursAllocationsViewRoot"
              x:DataType="vm:HoursAllocationsViewModel">
-    <UserControl.Resources>
-        <converters:TrafficLightStatusToBrushConverter x:Key="TrafficLightStatusToBrushConverter" />
-    </UserControl.Resources>
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*"
-          Margin="{StaticResource SpaceThickness0}">
+    <Grid RowDefinitions="Auto,*,Auto"
+          Margin="{StaticResource PageMarginThickness}" >
         <TextBlock Grid.Row="0"
                    Text="{Binding Header}"
-                   FontSize="{StaticResource FontSizeXL}"
-                   FontWeight="Bold"
-                   Margin="{StaticResource SpaceThickness10}"/>
+                   Classes="TitleMedium"
+                   Margin="{StaticResource MarginBottomSmall}"/>
 
-        <StackPanel Grid.Row="1"
-                    Orientation="Horizontal"
-                    Spacing="{StaticResource Space16}"
-                    Margin="{StaticResource SpaceThickness10}">
-            <ComboBox Width="280"
-                      ItemsSource="{Binding Engagements}"
-                      SelectedItem="{Binding SelectedEngagement}"/>
-            <Button Content="Refresh"
-                    Command="{Binding RefreshCommand}"/>
-        </StackPanel>
-
-        <StackPanel Grid.Row="2"
-                    Orientation="Horizontal"
-                    Spacing="{StaticResource Space12}"
-                    Margin="{StaticResource SpaceThickness10}">
-            <SplitButton Content="Add Resource"
-                         Command="{Binding AddResourceCommand}"
-                         CommandParameter="{Binding SelectedRankOption}">
-                <SplitButton.Flyout>
-                    <MenuFlyout ItemsSource="{Binding AvailableRanks}">
-                        <MenuFlyout.ItemTemplate>
-                            <DataTemplate x:DataType="models:RankOption">
-                                <MenuItem Header="{Binding DisplayName}"
-                                          Command="{Binding DataContext.AddResourceCommand, ElementName=HoursAllocationsViewRoot}"
-                                          CommandParameter="{Binding}"/>
-                            </DataTemplate>
-                        </MenuFlyout.ItemTemplate>
-                    </MenuFlyout>
-                </SplitButton.Flyout>
-            </SplitButton>
-        </StackPanel>
-
-        <StackPanel Grid.Row="3"
-                    Orientation="Horizontal"
-                    Spacing="{StaticResource Space24}"
-                    Margin="{StaticResource SpaceThickness10}">
-            <TextBlock Text="{Binding TotalBudgetHours, StringFormat='Budget Hours: {0:N2} h'}"/>
-            <TextBlock Text="{Binding ActualHours, StringFormat='Actual Hours: {0:N2} h'}"/>
-            <TextBlock Text="{Binding ToBeConsumedHours, StringFormat='Remaining Hours: {0:N2} h'}"/>
-        </StackPanel>
-
-        <TextBlock Grid.Row="4"
-                   Text="{Binding StatusMessage}"
-                   Foreground="{StaticResource BrushWarning}"
-                   FontWeight="SemiBold"
-                   Margin="{StaticResource SpaceThickness10}"/>
-
-        <DataGrid x:Name="HoursAllocationsGrid"
-                  Grid.Row="5"
-                  ItemsSource="{Binding Rows}"
-                  SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding Engagements}"
+                  SelectedItem="{Binding SelectedEngagement}"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
                   CanUserSortColumns="True"
-                  Margin="{StaticResource SpaceThickness10}">
+                  SelectionMode="Single">
             <DataGrid.Columns>
-                <DataGridTemplateColumn Header="" Width="Auto">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding TrafficLightSymbol}"
-                                       FontSize="{StaticResource FontSizeL}"
-                                       HorizontalAlignment="Center"
-                                       Foreground="{Binding Status, Converter={StaticResource TrafficLightStatusToBrushConverter}}"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTextColumn Header="Rank"
-                                    Binding="{Binding RankName}"
+                <DataGridTextColumn Header="Engagement ID"
+                                    Binding="{Binding Code}"
                                     Width="2*"/>
-                <DataGridTextColumn Header="Budget Hours"
-                                    Binding="{Binding TotalBudgetHours, StringFormat='{}{0:N2}'}"
-                                    Width="*"/>
-                <DataGridTextColumn Header="Consumed Hours"
-                                    Binding="{Binding TotalConsumedHours, StringFormat='{}{0:N2}'}"
-                                    Width="*"/>
-                <DataGridTextColumn Header="Remaining Hours"
-                                    Binding="{Binding TotalRemainingHours, StringFormat='{}{0:N2}'}"
-                                    Width="*"/>
-                <DataGridTemplateColumn Header="Actions" Width="Auto">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal"
-                                        Spacing="{StaticResource Space6}">
-                                <Button Content="Edit"
-                                        Command="{Binding DataContext.EditRowCommand, ElementName=HoursAllocationsViewRoot}"
-                                        CommandParameter="{Binding}"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Description"
+                                    Binding="{Binding Name}"
+                                    Width="3*"/>
+                <DataGridTextColumn Header="Customer"
+                                    Binding="{Binding CustomerName}"
+                                    Width="2*"/>
             </DataGrid.Columns>
         </DataGrid>
+
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="{StaticResource ControlSpacing}"
+                    Margin="{StaticResource MarginTopSmall}">
+            <Button Content="Refresh"
+                    Command="{Binding RefreshCommand}"/>
+            <Button Content="Edit Hours"
+                    Command="{Binding OpenDetailCommand}"
+                    IsEnabled="{Binding CanOpenDetail}"/>
+        </StackPanel>
     </Grid>
 </UserControl>

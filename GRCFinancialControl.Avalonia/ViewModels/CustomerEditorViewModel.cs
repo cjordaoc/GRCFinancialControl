@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
+using App.Presentation.Services;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -61,6 +62,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 await _customerService.UpdateAsync(Customer);
             }
+        }
+
+        protected override void OnSaveSucceeded()
+        {
+            ToastService.ShowSuccess("FINC_Customers_Toast_SaveSuccess", Customer.Name);
+        }
+
+        protected override void OnSaveFailed(Exception exception)
+        {
+            ToastService.ShowError("FINC_Customers_Toast_OperationFailed", exception.Message);
         }
 
         public string? NameError => GetErrors(nameof(Name)).FirstOrDefault()?.ErrorMessage;

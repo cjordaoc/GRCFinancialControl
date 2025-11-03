@@ -20,7 +20,7 @@ public partial class HomeViewModel : ViewModelBase
         EmissionConfirmation = emissionConfirmation;
         Summary = summary;
         NotificationPreview = notificationPreview;
-        welcomeMessage = LocalizationRegistry.Get("Home.Message.Welcome");
+        welcomeMessage = LocalizationRegistry.Get("INV_Home_Message_Welcome");
     }
 
     [ObservableProperty]

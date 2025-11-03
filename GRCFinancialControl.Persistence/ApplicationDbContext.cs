@@ -5,6 +5,7 @@ using Invoices.Core.Enums;
 using Invoices.Core.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
 namespace GRCFinancialControl.Persistence
 {
@@ -133,6 +134,10 @@ namespace GRCFinancialControl.Persistence
             modelBuilder.Entity<ClosingPeriod>()
                 .Property(cp => cp.PeriodEnd)
                 .HasMySqlColumnType("datetime(6)", isMySql);
+
+            modelBuilder.Entity<ClosingPeriod>()
+                .Property(cp => cp.IsLocked)
+                .HasDefaultValue(false);
 
             modelBuilder.Entity<ClosingPeriod>()
                 .HasOne(cp => cp.FiscalYear)
@@ -326,12 +331,24 @@ namespace GRCFinancialControl.Persistence
             modelBuilder.Entity<Employee>()
                 .HasIndex(e => e.CostCenter);
 
-            modelBuilder.Entity<EngagementManagerAssignment>()
-                .HasKey(a => a.Id);
+            var managerAssignmentBuilder = modelBuilder.Entity<EngagementManagerAssignment>();
+            managerAssignmentBuilder.HasKey(a => a.Id);
 
-            modelBuilder.Entity<EngagementManagerAssignment>()
+            var assignmentIdProperty = managerAssignmentBuilder
+                .Property(a => a.Id)
+                .ValueGeneratedOnAdd();
+
+            if (isMySql)
+            {
+                assignmentIdProperty.UseMySqlIdentityColumn();
+            }
+
+            managerAssignmentBuilder
                 .HasIndex(a => new { a.EngagementId, a.ManagerId })
                 .IsUnique();
+
+            modelBuilder.Entity<PlannedAllocation>()
+                .ToTable("PlannedAllocations");
 
             modelBuilder.Entity<PlannedAllocation>()
                 .HasOne(pa => pa.Engagement)

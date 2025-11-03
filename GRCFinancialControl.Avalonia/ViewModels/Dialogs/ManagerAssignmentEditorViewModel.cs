@@ -1,14 +1,17 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using App.Presentation.Localization;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
+using GRC.Shared.UI.Messages;
 
 namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
 {
@@ -33,8 +36,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
         private bool _isReadOnlyMode;
 
         public string Title => _assignment.Id == 0
-            ? LocalizationRegistry.Get("Admin.ManagerAssignments.Dialog.Add.Title")
-            : LocalizationRegistry.Get("Admin.ManagerAssignments.Dialog.Edit.Title");
+            ? LocalizationRegistry.Get("FINC_Admin_ManagerAssignments_Dialog_Add_Title")
+            : LocalizationRegistry.Get("FINC_Admin_ManagerAssignments_Dialog_Edit_Title");
 
         public ManagerAssignmentEditorViewModel(
             EngagementManagerAssignment assignment,
@@ -77,16 +80,28 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             _assignment.EngagementId = SelectedEngagement.InternalId;
             _assignment.ManagerId = SelectedManager.Id;
 
-            if (_assignment.Id == 0)
+            try
             {
-                await _assignmentService.AddAsync(_assignment);
-            }
-            else
-            {
-                await _assignmentService.UpdateAsync(_assignment);
-            }
+                if (_assignment.Id == 0)
+                {
+                    await _assignmentService.AddAsync(_assignment);
+                }
+                else
+                {
+                    await _assignmentService.UpdateAsync(_assignment);
+                }
 
-            Messenger.Send(new CloseDialogMessage(true));
+                ToastService.ShowSuccess(
+                    "FINC_Admin_ManagerAssignments_Toast_SaveSuccess",
+                    SelectedManager.Name,
+                    SelectedEngagement.ToString());
+
+                Messenger.Send(new CloseDialogMessage(true));
+            }
+            catch (Exception ex)
+            {
+                ToastService.ShowError("FINC_Admin_ManagerAssignments_Toast_OperationFailed", ex.Message);
+            }
         }
 
         [RelayCommand]

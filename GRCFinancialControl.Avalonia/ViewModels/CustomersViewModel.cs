@@ -1,10 +1,12 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using GRCFinancialControl.Avalonia.Messages;
+using GRC.Shared.UI.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
@@ -39,7 +41,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             var editorViewModel = new CustomerEditorViewModel(new Customer(), _customerService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
-            Messenger.Send(new RefreshDataMessage());
+            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanEdit))]
@@ -48,7 +50,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (customer == null) return;
             var editorViewModel = new CustomerEditorViewModel(customer, _customerService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
-            Messenger.Send(new RefreshDataMessage());
+            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanEdit))]
@@ -63,8 +65,20 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private async Task Delete(Customer customer)
         {
             if (customer == null) return;
-            await _customerService.DeleteAsync(customer.Id);
-            Messenger.Send(new RefreshDataMessage());
+            try
+            {
+                await _customerService.DeleteAsync(customer.Id);
+                ToastService.ShowSuccess("FINC_Customers_Toast_DeleteSuccess", customer.Name);
+                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+            }
+            catch (InvalidOperationException ex)
+            {
+                ToastService.ShowWarning("FINC_Customers_Toast_OperationFailed", ex.Message);
+            }
+            catch (Exception ex)
+            {
+                ToastService.ShowError("FINC_Customers_Toast_OperationFailed", ex.Message);
+            }
         }
 
         [RelayCommand(CanExecute = nameof(CanDeleteData))]
@@ -73,12 +87,24 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             if (customer is null) return;
 
             var result = await _dialogService.ShowConfirmationAsync(
-                LocalizationRegistry.Get("Common.Dialog.DeleteData.Title"),
-                LocalizationRegistry.Format("Common.Dialog.DeleteData.Message", customer.Name));
+                LocalizationRegistry.Get("FINC_Dialog_DeleteData_Title"),
+                LocalizationRegistry.Format("FINC_Dialog_DeleteData_Message", customer.Name));
             if (result)
             {
-                await _customerService.DeleteDataAsync(customer.Id);
-                Messenger.Send(new RefreshDataMessage());
+                try
+                {
+                    await _customerService.DeleteDataAsync(customer.Id);
+                    ToastService.ShowSuccess("FINC_Customers_Toast_ReverseSuccess", customer.Name);
+                    Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+                }
+                catch (InvalidOperationException ex)
+                {
+                    ToastService.ShowWarning("FINC_Customers_Toast_OperationFailed", ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    ToastService.ShowError("FINC_Customers_Toast_OperationFailed", ex.Message);
+                }
             }
         }
 

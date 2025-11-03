@@ -62,20 +62,20 @@ public class InvoiceSummaryGroupViewModel : ObservableObject
     public ObservableCollection<InvoiceSummaryItemViewModel> Items { get; }
 
     public string TotalAmountDisplay => LocalizationRegistry.Format(
-        "InvoiceSummary.Group.AmountFormat",
+        "INV_InvoiceSummary_Group_AmountFormat",
         CurrencyDisplayHelper.Format(TotalAmount, null));
 
-    public string TotalPercentageDisplay => LocalizationRegistry.Format("InvoiceSummary.Group.PercentageFormat", TotalPercentage);
+    public string TotalPercentageDisplay => LocalizationRegistry.Format("INV_InvoiceSummary_Group_PercentageFormat", TotalPercentage);
 
-    public string PlannedCountDisplay => LocalizationRegistry.Format("InvoiceSummary.Group.PlannedCountFormat", PlannedCount);
+    public string PlannedCountDisplay => LocalizationRegistry.Format("INV_InvoiceSummary_Group_PlannedCountFormat", PlannedCount);
 
-    public string RequestedCountDisplay => LocalizationRegistry.Format("InvoiceSummary.Group.RequestedCountFormat", RequestedCount);
+    public string RequestedCountDisplay => LocalizationRegistry.Format("INV_InvoiceSummary_Group_RequestedCountFormat", RequestedCount);
 
-    public string ClosedCountDisplay => LocalizationRegistry.Format("InvoiceSummary.Group.ClosedCountFormat", ClosedCount);
+    public string ClosedCountDisplay => LocalizationRegistry.Format("INV_InvoiceSummary_Group_ClosedCountFormat", ClosedCount);
 
-    public string CanceledCountDisplay => LocalizationRegistry.Format("InvoiceSummary.Group.CanceledCountFormat", CanceledCount);
+    public string CanceledCountDisplay => LocalizationRegistry.Format("INV_InvoiceSummary_Group_CanceledCountFormat", CanceledCount);
 
-    public string EmittedCountDisplay => LocalizationRegistry.Format("InvoiceSummary.Group.EmittedCountFormat", EmittedCount);
+    public string EmittedCountDisplay => LocalizationRegistry.Format("INV_InvoiceSummary_Group_EmittedCountFormat", EmittedCount);
 
-    public string ReissuedCountDisplay => LocalizationRegistry.Format("InvoiceSummary.Group.ReissuedCountFormat", ReissuedCount);
+    public string ReissuedCountDisplay => LocalizationRegistry.Format("INV_InvoiceSummary_Group_ReissuedCountFormat", ReissuedCount);
 }

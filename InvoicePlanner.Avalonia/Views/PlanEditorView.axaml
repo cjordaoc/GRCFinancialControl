@@ -9,11 +9,11 @@
              mc:Ignorable="d">
     <Grid>
         <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="16" Margin="16">
-                <Border Classes="Card" Padding="24">
-                    <StackPanel Spacing="16">
-                        <TextBlock Classes="TitleLarge" Text="{loc:Loc Key=InvoicePlan.Selection.Title.Primary}" />
-                        <TextBlock Text="{loc:Loc Key=InvoicePlan.Selection.Description.Primary}" TextWrapping="Wrap" />
+            <StackPanel Spacing="{StaticResource SectionSpacing}" Margin="{StaticResource CardPaddingThickness}">
+                <Border Classes="Card" Padding="{StaticResource CardPaddingThickness}">
+                    <StackPanel Spacing="{StaticResource SectionSpacing}">
+                        <TextBlock Classes="TitleLarge" Text="{loc:Loc Key=INV_InvoicePlan_Selection_Title_Primary}" />
+                        <TextBlock Text="{loc:Loc Key=INV_InvoicePlan_Selection_Description_Primary}" TextWrapping="Wrap" />
                         <TextBlock Text="{Binding EngagementSelectionMessage}" TextWrapping="Wrap" />
                         <DataGrid ItemsSource="{Binding Engagements}"
                                   SelectedItem="{Binding SelectedEngagement, Mode=TwoWay}"
@@ -22,20 +22,20 @@
                                   GridLinesVisibility="All"
                                   HorizontalScrollBarVisibility="Auto"
                                   MaxHeight="240"
-                                  IsReadOnly="True">
+                                  IsReadOnly="True"
+                                  SelectionMode="Single">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Header.Engagement}" Binding="{Binding EngagementId}" Width="160"/>
-                                <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Header.Plan}" Binding="{Binding Name}" Width="280"/>
-                                <DataGridTextColumn Header="{loc:Loc Key=InvoicePlan.Selection.Header.Customer}" Binding="{Binding CustomerName}" Width="220"/>
+                                <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Header_Engagement}" Binding="{Binding EngagementId}" Width="160"/>
+                                <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Header_Plan}" Binding="{Binding Name}" Width="280"/>
+                                <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Header_Customer}" Binding="{Binding CustomerName}" Width="220"/>
                             </DataGrid.Columns>
                         </DataGrid>
-                        <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space12}">
-                            <Button Content="{loc:Loc Key=Common.Button.Refresh}"
-                                    Command="{Binding RefreshCommand}"
-                                    MinWidth="140" />
-                            <Button Content="{loc:Loc Key=InvoicePlan.Selection.Button.AddEdit}"
-                                    Command="{Binding CreatePlanCommand}"
-                                    MinWidth="200" />
+                        <StackPanel Classes="ButtonRow"
+                                    HorizontalAlignment="Left">
+                            <Button Content="{loc:Loc Key=INV_Button_Refresh}"
+                                    Command="{Binding RefreshCommand}" />
+                            <Button Content="{loc:Loc Key=INV_InvoicePlan_Selection_Button_AddEdit}"
+                                    Command="{Binding CreatePlanCommand}" />
                         </StackPanel>
                     </StackPanel>
                 </Border>
