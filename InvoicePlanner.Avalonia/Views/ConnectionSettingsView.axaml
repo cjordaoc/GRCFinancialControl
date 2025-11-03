@@ -10,15 +10,15 @@
              d:DesignWidth="800"
              d:DesignHeight="450">
     <ScrollViewer>
-        <StackPanel Margin="{DynamicResource PageMarginThickness}" Spacing="{DynamicResource SectionSpacing}">
-            <Border Classes="Card" Padding="{DynamicResource CardPaddingThickness}">
-                <Grid RowDefinitions="Auto, Auto, Auto, Auto" ColumnDefinitions="Auto, *, Auto" ColumnSpacing="{DynamicResource ControlSpacing}" RowSpacing="{DynamicResource ControlSpacing}">
+        <StackPanel Margin="{StaticResource PageMarginThickness}" Spacing="{StaticResource SectionSpacing}">
+            <Border Classes="Card" Padding="{StaticResource CardPaddingThickness}">
+                <Grid RowDefinitions="Auto, Auto, Auto, Auto" ColumnDefinitions="Auto, *, Auto" ColumnSpacing="{StaticResource ControlSpacing}" RowSpacing="{StaticResource ControlSpacing}">
                     <!-- Section 1: Language -->
                     <TextBlock Grid.Row="0" Grid.Column="0"
                                Text="{loc:Loc Key=INV_Connection_Label_Language}"
                                VerticalAlignment="Center"
                                Margin="0,0,8,0"
-                               Style="{StaticResource LabelBodyText}"/>
+                               Classes="TitleSmall"/>
                     <ComboBox Grid.Row="0" Grid.Column="1"
                               ItemsSource="{Binding Languages}"
                               SelectedItem="{Binding SelectedLanguage}"
@@ -36,13 +36,13 @@
                                Text="{loc:Loc Key=INV_Connection_Label_Package}"
                                VerticalAlignment="Center"
                                Margin="0,12,8,0"
-                               Style="{StaticResource LabelBodyText}"/>
+                               Classes="TitleSmall"/>
                     <TextBox Grid.Row="1" Grid.Column="1"
                              Text="{Binding SelectedPackagePath}"
                              Watermark="{loc:Loc Key=INV_Connection_Placeholder_Package}"
                              IsReadOnly="True"
-                             MinWidth="{StaticResource TextBoxMinWidth}"
-                             MinHeight="{StaticResource TextBoxMinHeight}"
+                             MinWidth="{StaticResource InputMinWidthStandard}"
+                             MinHeight="{StaticResource InputHeightStandard}"
                              Margin="0,12,8,0"
                              VerticalAlignment="Center"/>
                     <Button Grid.Row="1" Grid.Column="2"
@@ -57,14 +57,15 @@
                                Text="{loc:Loc Key=INV_Connection_Label_Passphrase}"
                                VerticalAlignment="Center"
                                Margin="0,12,8,0"
-                               Style="{StaticResource LabelBodyText}"/>
-                    <PasswordBox Grid.Row="2" Grid.Column="1"
-                                 Grid.ColumnSpan="2"
-                                 Text="{Binding Passphrase}"
-                                 Watermark="{loc:Loc Key=INV_Connection_Placeholder_Passphrase}"
-                                 MinWidth="{StaticResource PasswordBoxMinWidth}"
-                                 MinHeight="{StaticResource PasswordBoxMinHeight}"
-                                 Margin="0,12,0,0"/>
+                               Classes="TitleSmall"/>
+                    <TextBox Grid.Row="2" Grid.Column="1"
+                             Grid.ColumnSpan="2"
+                             Text="{Binding Passphrase}"
+                             Watermark="{loc:Loc Key=INV_Connection_Placeholder_Passphrase}"
+                             PasswordChar="•"
+                             MinWidth="{StaticResource InputMinWidthStandard}"
+                             MinHeight="{StaticResource InputHeightStandard}"
+                             Margin="0,12,0,0"/>
 
                     <!-- Section 4: Import -->
                     <Button Grid.Row="3" Grid.Column="0"
