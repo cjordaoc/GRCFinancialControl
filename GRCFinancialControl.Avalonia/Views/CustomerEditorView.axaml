@@ -8,14 +8,14 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="150"
              x:Class="GRCFinancialControl.Avalonia.Views.CustomerEditorView"
              x:DataType="vm:CustomerEditorViewModel">
-    <Grid RowDefinitions="*,Auto" RowSpacing="{DynamicResource GridGap}">
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridGap}">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="{DynamicResource SectionSpacing}">
+            <StackPanel Spacing="{StaticResource SectionSpacing}">
                 <TextBlock Text="Customer Details" Classes="TitleSmall"/>
                 <Grid ColumnDefinitions="Auto,*"
                       RowDefinitions="Auto,Auto,Auto,Auto"
-                      RowSpacing="{DynamicResource GridGap}"
-                      ColumnSpacing="{DynamicResource GridGap}">
+                      RowSpacing="{StaticResource GridGap}"
+                      ColumnSpacing="{StaticResource GridGap}">
                     <TextBlock Grid.Row="0"
                                Grid.Column="0"
                                Text="Name:"
@@ -54,16 +54,16 @@
         <StackPanel Grid.Row="1"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Spacing="{DynamicResource ControlSpacing}">
+                    Spacing="{StaticResource ControlSpacing}">
             <Button Content="{loc:Loc Key=Global_Button_Save}"
                     Command="{Binding SaveCommand}"
                     IsEnabled="{Binding AllowEditing}"
                     IsDefault="{Binding AllowEditing}"
-                    MinWidth="{StaticResource InputMinWidthStandard}" />
+                    MinWidth="{StaticResource ButtonMinWidth}" />
             <Button Content="{loc:Loc Key=Global_Button_Cancel}"
                     Command="{Binding CloseCommand}"
                     IsCancel="True"
-                    MinWidth="{StaticResource InputMinWidthStandard}" />
+                    MinWidth="{StaticResource ButtonMinWidth}" />
         </StackPanel>
     </Grid>
 </UserControl>

@@ -12,71 +12,69 @@
     <ScrollViewer>
         <StackPanel Margin="{DynamicResource PageMarginThickness}" Spacing="{DynamicResource SectionSpacing}">
             <Border Classes="Card" Padding="{DynamicResource CardPaddingThickness}">
-                <StackPanel Spacing="{DynamicResource SectionSpacing}">
-                    <StackPanel Spacing="{DynamicResource SpacingUnit}">
-                        <TextBlock Text="{loc:Loc Key=INV_Connection_Section_Language_Title}" Classes="TitleMedium"/>
-                        <StackPanel Orientation="Horizontal" Spacing="{DynamicResource ControlSpacing}">
-                            <TextBlock Text="{loc:Loc Key=INV_Connection_Label_Language}" VerticalAlignment="Center"/>
-                            <ComboBox ItemsSource="{Binding Languages}"
-                                      SelectedItem="{Binding SelectedLanguage}"
-                                      Width="200">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding DisplayName}"/>
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                        </StackPanel>
-                    </StackPanel>
-                    <StackPanel Spacing="{DynamicResource SpacingUnit}">
-                        <TextBlock Text="{loc:Loc Key=INV_Connection_Title_Setup}" Classes="TitleLarge"/>
-                        <TextBlock Text="{loc:Loc Key=INV_Connection_Description_Setup}" TextWrapping="Wrap"/>
-                    </StackPanel>
-                    <Grid ColumnDefinitions="Auto,Auto,*"
-                          ColumnSpacing="{DynamicResource GridGap}"
-                          RowSpacing="{DynamicResource GridGap}">
-                        <TextBlock Grid.Row="0"
-                                   Text="{loc:Loc Key=INV_Connection_Label_Package}"
-                                   VerticalAlignment="Center"/>
-                        <StackPanel Grid.Row="0"
-                                    Grid.Column="2"
-                                    Orientation="Horizontal"
-                                    Spacing="{DynamicResource ControlSpacing}">
-                            <TextBox Width="320"
-                                     Text="{Binding SelectedPackagePath}"
-                                     Watermark="{loc:Loc Key=INV_Connection_Placeholder_Package}"
-                                     IsReadOnly="True"/>
-                            <Button Content="{loc:Loc Key=INV_Connection_Button_Browse}"
-                                    Command="{Binding BrowseCommand}"
-                                    MinWidth="{StaticResource ButtonMinWidthBaseline}"/>
-                        </StackPanel>
-                        <TextBlock Grid.Row="1"
-                                   Text="{loc:Loc Key=INV_Connection_Label_Passphrase}"
-                                   VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="1"
-                                 Grid.Column="2"
+                <Grid RowDefinitions="Auto, Auto, Auto, Auto" ColumnDefinitions="Auto, *, Auto" ColumnSpacing="{DynamicResource ControlSpacing}" RowSpacing="{DynamicResource ControlSpacing}">
+                    <!-- Section 1: Language -->
+                    <TextBlock Grid.Row="0" Grid.Column="0"
+                               Text="{loc:Loc Key=INV_Connection_Label_Language}"
+                               VerticalAlignment="Center"
+                               Margin="0,0,8,0"
+                               Style="{StaticResource LabelBodyText}"/>
+                    <ComboBox Grid.Row="0" Grid.Column="1"
+                              ItemsSource="{Binding Languages}"
+                              SelectedItem="{Binding SelectedLanguage}"
+                              MinWidth="200"
+                              HorizontalAlignment="Left">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DisplayName}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <!-- Section 2: Database connection -->
+                    <TextBlock Grid.Row="1" Grid.Column="0"
+                               Text="{loc:Loc Key=INV_Connection_Label_Package}"
+                               VerticalAlignment="Center"
+                               Margin="0,12,8,0"
+                               Style="{StaticResource LabelBodyText}"/>
+                    <TextBox Grid.Row="1" Grid.Column="1"
+                             Text="{Binding SelectedPackagePath}"
+                             Watermark="{loc:Loc Key=INV_Connection_Placeholder_Package}"
+                             IsReadOnly="True"
+                             MinWidth="{StaticResource TextBoxMinWidth}"
+                             MinHeight="{StaticResource TextBoxMinHeight}"
+                             Margin="0,12,8,0"
+                             VerticalAlignment="Center"/>
+                    <Button Grid.Row="1" Grid.Column="2"
+                            Content="{loc:Loc Key=INV_Connection_Button_Browse}"
+                            Command="{Binding BrowseCommand}"
+                            MinWidth="{StaticResource ButtonMinWidth}"
+                            MinHeight="{StaticResource ButtonMinHeight}"
+                            Margin="0,12,0,0"/>
+
+                    <!-- Section 3: Passphrase -->
+                    <TextBlock Grid.Row="2" Grid.Column="0"
+                               Text="{loc:Loc Key=INV_Connection_Label_Passphrase}"
+                               VerticalAlignment="Center"
+                               Margin="0,12,8,0"
+                               Style="{StaticResource LabelBodyText}"/>
+                    <PasswordBox Grid.Row="2" Grid.Column="1"
+                                 Grid.ColumnSpan="2"
                                  Text="{Binding Passphrase}"
                                  Watermark="{loc:Loc Key=INV_Connection_Placeholder_Passphrase}"
-                                 PasswordChar="*"
-                                 MinWidth="240"/>
-                    </Grid>
-                    <StackPanel Orientation="Horizontal" Spacing="{DynamicResource ControlSpacing}">
-                        <Button Content="{loc:Loc Key=INV_Connection_Button_Import}"
-                                Command="{Binding ImportCommand}"
-                                MinWidth="{StaticResource ButtonMinWidthStandard}"/>
-                        <TextBlock Text="{Binding SelectedFileName}"
-                                   VerticalAlignment="Center"
-                                   Opacity="0.7"
-                                   IsVisible="{Binding HasSelectedFile}"/>
-                    </StackPanel>
-                    <Border Background="{StaticResource BrushSurfaceVariant}"
-                            CornerRadius="{StaticResource ControlCornerRadius}"
-                            Padding="{DynamicResource CardPaddingThickness}"
-                            IsVisible="{Binding HasStatusMessage}">
-                        <TextBlock Text="{Binding StatusMessage}"
-                                   TextWrapping="Wrap"/>
-                    </Border>
-                </StackPanel>
+                                 MinWidth="{StaticResource PasswordBoxMinWidth}"
+                                 MinHeight="{StaticResource PasswordBoxMinHeight}"
+                                 Margin="0,12,0,0"/>
+
+                    <!-- Section 4: Import -->
+                    <Button Grid.Row="3" Grid.Column="0"
+                            Grid.ColumnSpan="3"
+                            Content="{loc:Loc Key=INV_Connection_Button_Import}"
+                            Command="{Binding ImportCommand}"
+                            MinHeight="{StaticResource ButtonMinHeight}"
+                            HorizontalAlignment="Center"
+                            Margin="0,24,0,0"/>
+                </Grid>
             </Border>
         </StackPanel>
     </ScrollViewer>

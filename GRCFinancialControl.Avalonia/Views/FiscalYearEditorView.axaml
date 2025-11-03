@@ -12,11 +12,11 @@
     <UserControl.Resources>
         <converters:NumericConverter x:Key="NumericConverter"/>
     </UserControl.Resources>
-    <Grid RowDefinitions="*,Auto" RowSpacing="{DynamicResource GridGap}">
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridGap}">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="{DynamicResource SectionSpacing}">
+            <StackPanel Spacing="{StaticResource SectionSpacing}">
                 <TextBlock Text="{loc:Loc Key=FINC_Admin_FiscalYears_Title_Editor}" Classes="TitleSmall"/>
-                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="{DynamicResource GridGap}" ColumnSpacing="{DynamicResource GridGap}">
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="{StaticResource GridGap}" ColumnSpacing="{StaticResource GridGap}">
                     <TextBlock Grid.Row="0"
                                Grid.Column="0"
                                Text="{loc:Loc Key=FINC_Admin_FiscalYears_Placeholder_Name}"
@@ -27,7 +27,7 @@
                              Watermark="{loc:Loc Key=FINC_Admin_FiscalYears_Placeholder_Name}"
                              IsReadOnly="{Binding IsReadOnlyMode}"
                              HorizontalAlignment="Stretch"
-                             MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
+                             MinWidth="{StaticResource TextBoxMinWidth}"/>
 
                     <TextBlock Grid.Row="1"
                                Grid.Column="0"
@@ -59,7 +59,7 @@
                              Watermark="{loc:Loc Key=FINC_Admin_FiscalYears_Placeholder_AreaSalesTarget}"
                              IsReadOnly="{Binding IsReadOnlyMode}"
                              HorizontalAlignment="Stretch"
-                             MinWidth="{StaticResource PopupTextBoxMinWidth}"
+                             MinWidth="{StaticResource TextBoxMinWidth}"
                              behaviors:NumericInputNullSafety.IsEnabled="True"/>
 
                     <TextBlock Grid.Row="4"
@@ -72,7 +72,7 @@
                              Watermark="{loc:Loc Key=FINC_Admin_FiscalYears_Placeholder_AreaRevenueTarget}"
                              IsReadOnly="{Binding IsReadOnlyMode}"
                              HorizontalAlignment="Stretch"
-                             MinWidth="{StaticResource PopupTextBoxMinWidth}"
+                             MinWidth="{StaticResource TextBoxMinWidth}"
                              behaviors:NumericInputNullSafety.IsEnabled="True"/>
                 </Grid>
                 <TextBlock Text="{Binding StatusMessage}" Foreground="Red"/>
@@ -81,16 +81,16 @@
         <StackPanel Grid.Row="1"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Spacing="{DynamicResource ControlSpacing}">
+                    Spacing="{StaticResource ControlSpacing}">
             <Button Content="{loc:Loc Key=Global_Button_Save}"
                     Command="{Binding SaveCommand}"
                     IsEnabled="{Binding AllowEditing}"
                     IsDefault="{Binding AllowEditing}"
-                    MinWidth="{StaticResource InputMinWidthStandard}" />
+                    MinWidth="{StaticResource ButtonMinWidth}" />
             <Button Content="{loc:Loc Key=Global_Button_Cancel}"
                     Command="{Binding CloseCommand}"
                     IsCancel="True"
-                    MinWidth="{StaticResource InputMinWidthStandard}" />
+                    MinWidth="{StaticResource ButtonMinWidth}" />
         </StackPanel>
     </Grid>
 </UserControl>

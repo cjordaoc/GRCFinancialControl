@@ -31,7 +31,7 @@
                                    VerticalAlignment="Stretch"
                                    Material="{StaticResource AcrylicModal}"/>
 
-        <Grid Margin="{DynamicResource PageMarginThickness}" ColumnDefinitions="Auto,*" ColumnSpacing="{DynamicResource GridGap}">
+        <Grid Margin="{StaticResource PageMarginThickness}" ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource GridGap}">
         <sharedControls:SidebarHost Grid.Column="0"
                                     Header="{Binding Title}"
                                     ExpandedLabel="{loc:Loc Key=Global_SidebarCollapse}"
@@ -43,7 +43,7 @@
             <sharedControls:SidebarHost.HeaderTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal"
-                                Spacing="{DynamicResource SpacingUnit}"
+                                Spacing="{StaticResource SpacingUnit}"
                                 VerticalAlignment="Center"
                                 HorizontalAlignment="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=sharedControls:SidebarHost}, Converter={StaticResource SidebarAlignmentConverter}}">
                         <Border Width="32"
@@ -76,7 +76,7 @@
                                   HorizontalContentAlignment="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=sharedControls:SidebarHost}, Converter={StaticResource SidebarAlignmentConverter}}">
                         <ToggleButton.Content>
                             <StackPanel Orientation="Horizontal"
-                                        Spacing="{DynamicResource SpacingUnit}"
+                                        Spacing="{StaticResource SpacingUnit}"
                                         VerticalAlignment="Center">
                                 <Path Data="{Binding Icon}"
                                       Width="20"
@@ -97,18 +97,18 @@
             </sharedControls:SidebarHost.ItemTemplate>
         </sharedControls:SidebarHost>
 
-        <Border Grid.Column="1" Classes="Card" Padding="{DynamicResource CardPaddingThickness}">
+        <Border Grid.Column="1" Classes="Card" Padding="{StaticResource CardPaddingThickness}">
             <ContentControl Content="{Binding CurrentViewModel}" />
         </Border>
 
             <ItemsControl Grid.ColumnSpan="2"
-                          Margin="{DynamicResource MarginCallout}"
+                          Margin="{StaticResource MarginCallout}"
                           HorizontalAlignment="Right"
                           VerticalAlignment="Top"
                           ItemsSource="{x:Static services:ToastService.Notifications}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <StackPanel Spacing="{DynamicResource ControlSpacing}"/>
+                        <StackPanel Spacing="{StaticResource ControlSpacing}"/>
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>

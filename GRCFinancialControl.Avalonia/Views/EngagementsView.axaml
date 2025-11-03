@@ -11,8 +11,8 @@
     <UserControl.Resources>
         <appConv:CurrencyDisplayConverter x:Key="CurrencyDisplayConverter"/>
     </UserControl.Resources>
-    <Grid RowDefinitions="Auto,*,Auto" Margin="{DynamicResource CardPaddingThickness}">
-        <TextBlock Text="{loc:Loc Key=FINC_Admin_Engagements_Title_List}" Classes="TitleLarge" Margin="{DynamicResource MarginBottomRegular}"/>
+    <Grid RowDefinitions="Auto,*,Auto" Margin="{StaticResource CardPaddingThickness}">
+        <TextBlock Text="{loc:Loc Key=FINC_Admin_Engagements_Title_List}" Classes="TitleLarge" Margin="{StaticResource MarginBottomRegular}"/>
 
         <DataGrid Grid.Row="1"
                   ItemsSource="{Binding Engagements}"

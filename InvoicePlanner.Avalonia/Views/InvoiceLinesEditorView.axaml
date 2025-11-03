@@ -18,17 +18,17 @@
                                     FalseResourceKey="BrushOnSurface" />
     </UserControl.Resources>
 
-    <Grid RowDefinitions="*,Auto" RowSpacing="{DynamicResource GridGap}">
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridGap}">
 
         <!-- MAIN SCROLLABLE CONTENT -->
         <ScrollViewer Grid.Row="0"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Auto"
                       HorizontalContentAlignment="Stretch"
-                      Padding="{DynamicResource CardPaddingThickness}">
+                      Padding="{StaticResource CardPaddingThickness}">
 
             <Grid RowDefinitions="Auto,*"
-                  RowSpacing="{DynamicResource GridGap}"
+                  RowSpacing="{StaticResource GridGap}"
                   HorizontalAlignment="Stretch">
 
                 <!-- Invoice lines grid -->
@@ -39,10 +39,10 @@
 
                     <StackPanel Grid.Row="1"
                                 Margin="{StaticResource MarginTopRegular}"
-                                Spacing="{DynamicResource SectionSpacing}">
-                        <WrapPanel ItemSpacing="{DynamicResource SectionSpacing}">
+                                Spacing="{StaticResource SectionSpacing}">
+                        <WrapPanel ItemSpacing="{StaticResource SectionSpacing}">
                             <StackPanel Orientation="Horizontal"
-                                        Spacing="{DynamicResource SectionSpacing}"
+                                        Spacing="{StaticResource SectionSpacing}"
                                         VerticalAlignment="Center">
                                 <TextBlock Classes="Caption"
                                            VerticalAlignment="Center"
@@ -55,7 +55,7 @@
                             </StackPanel>
 
                             <StackPanel Orientation="Horizontal"
-                                        Spacing="{DynamicResource SectionSpacing}"
+                                        Spacing="{StaticResource SectionSpacing}"
                                         VerticalAlignment="Center">
                                 <TextBlock Classes="Caption"
                                            VerticalAlignment="Center"
@@ -74,9 +74,9 @@
                                     Command="{Binding RefreshCommand}" />
                         </WrapPanel>
 
-                        <WrapPanel ItemSpacing="{DynamicResource SectionSpacing}">
+                        <WrapPanel ItemSpacing="{StaticResource SectionSpacing}">
                             <StackPanel Orientation="Horizontal"
-                                        Spacing="{DynamicResource SectionSpacing}"
+                                        Spacing="{StaticResource SectionSpacing}"
                                         VerticalAlignment="Center">
                                 <TextBlock Classes="Caption"
                                            VerticalAlignment="Center"
@@ -92,7 +92,7 @@
                             </StackPanel>
 
                             <StackPanel Orientation="Horizontal"
-                                        Spacing="{DynamicResource SectionSpacing}"
+                                        Spacing="{StaticResource SectionSpacing}"
                                         VerticalAlignment="Center"
                                         IsVisible="{Binding Editor.RequiresFirstEmissionDate}">
                                 <TextBlock Classes="Caption"
@@ -109,9 +109,9 @@
 
                     <Border Grid.Row="2"
                             BorderThickness="{StaticResource ControlBorderThickness}"
-                            BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                            BorderBrush="{StaticResource ThemeBorderLowBrush}"
                             CornerRadius="{StaticResource ControlCornerRadius}"
-                            Margin="{DynamicResource MarginVerticalRegular}"
+                            Margin="{StaticResource MarginVerticalRegular}"
                             HorizontalAlignment="Stretch">
                         <DataGrid x:Name="InvoiceLinesGrid"
                                   ItemsSource="{Binding Items}"
@@ -210,7 +210,7 @@
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
                                             <StackPanel Orientation="Horizontal"
-                                                        Spacing="{DynamicResource SpacingUnit}"
+                                                        Spacing="{StaticResource SpacingUnit}"
                                                         VerticalAlignment="Center">
                                                 <NumericUpDown Value="{Binding Percentage}"
                                                                Minimum="0"
@@ -229,7 +229,7 @@
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
                                             <StackPanel Orientation="Horizontal"
-                                                        Spacing="{DynamicResource SpacingUnit}"
+                                                        Spacing="{StaticResource SpacingUnit}"
                                                         VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding CurrencySymbol}"
                                                            IsVisible="{Binding IsEditable}"
@@ -257,7 +257,7 @@
                 <!-- Totals -->
                 <Grid Grid.Row="1"
                       ColumnDefinitions="Auto,Auto,Auto,Auto,Auto"
-                      ColumnSpacing="{DynamicResource GridGap}"
+                      ColumnSpacing="{StaticResource GridGap}"
                       x:Name="TotalsRow">
                     <TextBlock Grid.Column="0"
                                Text="{loc:Loc Key=INV_InvoicePlan_Section_Totals_Label}"
@@ -270,7 +270,7 @@
                                VerticalAlignment="Center" />
                     <StackPanel Grid.Column="2"
                                 Orientation="Horizontal"
-                                Spacing="{DynamicResource SpacingUnit}"
+                                Spacing="{StaticResource SpacingUnit}"
                                 VerticalAlignment="Center">
                         <TextBlock Text="{Binding TotalPercentage, StringFormat={}{0:F2}}"
                                    FontWeight="{StaticResource FontWeightSemiBold}"
@@ -286,7 +286,7 @@
                                VerticalAlignment="Center" />
                     <StackPanel Grid.Column="4"
                                 Orientation="Horizontal"
-                                Spacing="{DynamicResource SpacingUnit}"
+                                Spacing="{StaticResource SpacingUnit}"
                                 VerticalAlignment="Center">
                         <TextBlock Text="{Binding TotalAmountDisplay}"
                                    FontWeight="{StaticResource FontWeightSemiBold}"
@@ -296,7 +296,7 @@
 
                 <!-- Messages -->
                 <StackPanel Grid.Row="2"
-                            Spacing="{DynamicResource SectionSpacing}">
+                            Spacing="{StaticResource SectionSpacing}">
                     <TextBlock Text="{Binding ValidationMessage}"
                                Classes="StatusError"
                                IsVisible="{Binding HasValidationMessage}" />
@@ -311,7 +311,7 @@
         <StackPanel Grid.Row="1"
                     Classes="ButtonRow"
                     HorizontalAlignment="Right"
-                    Margin="{DynamicResource PageMarginThickness}">
+                    Margin="{StaticResource PageMarginThickness}">
             <Button Content="{loc:Loc Key=Global_Button_Save}"
                     Command="{Binding SaveCommand}"
                     IsDefault="True" />

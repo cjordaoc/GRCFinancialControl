@@ -7,11 +7,11 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
              x:Class="GRCFinancialControl.Avalonia.Views.PapdEditorView"
              x:DataType="vm:PapdEditorViewModel">
-    <Grid RowDefinitions="*,Auto" RowSpacing="{DynamicResource GridGap}">
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridGap}">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="{DynamicResource SectionSpacing}">
+            <StackPanel Spacing="{StaticResource SectionSpacing}">
                 <TextBlock Text="{loc:Loc Key=FINC_Admin_Papds_Title_Editor}" Classes="TitleSmall"/>
-                <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="{DynamicResource GridGap}" ColumnSpacing="{DynamicResource GridGap}">
+                <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="{StaticResource GridGap}" ColumnSpacing="{StaticResource GridGap}">
                     <TextBlock Grid.Row="0"
                                Grid.Column="0"
                                Text="{loc:Loc Key=FINC_Admin_Papds_Placeholder_Name}"
@@ -22,7 +22,7 @@
                              Watermark="{loc:Loc Key=FINC_Admin_Papds_Placeholder_Name}"
                              IsReadOnly="{Binding IsReadOnlyMode}"
                              HorizontalAlignment="Stretch"
-                             MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
+                             MinWidth="{StaticResource TextBoxMinWidth}"/>
 
                     <TextBlock Grid.Row="1"
                                Grid.Column="0"
@@ -35,7 +35,7 @@
                               PlaceholderText="{loc:Loc Key=FINC_Admin_Papds_Placeholder_Level}"
                               IsEnabled="{Binding AllowEditing}"
                               HorizontalAlignment="Stretch"
-                              MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
+                              MinWidth="{StaticResource ComboBoxMinWidth}"/>
 
                     <TextBlock Grid.Row="2"
                                Grid.Column="0"
@@ -47,23 +47,23 @@
                              Watermark="{loc:Loc Key=FINC_Admin_Papds_Placeholder_WindowsLogin}"
                              IsReadOnly="{Binding IsReadOnlyMode}"
                              HorizontalAlignment="Stretch"
-                             MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
+                             MinWidth="{StaticResource TextBoxMinWidth}"/>
                 </Grid>
             </StackPanel>
         </ScrollViewer>
         <StackPanel Grid.Row="1"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Spacing="{DynamicResource ControlSpacing}">
+                    Spacing="{StaticResource ControlSpacing}">
             <Button Content="{loc:Loc Key=Global_Button_Save}"
                     Command="{Binding SaveCommand}"
                     IsEnabled="{Binding AllowEditing}"
                     IsDefault="{Binding AllowEditing}"
-                    MinWidth="{StaticResource InputMinWidthStandard}" />
+                    MinWidth="{StaticResource ButtonMinWidth}" />
             <Button Content="{loc:Loc Key=Global_Button_Cancel}"
                     Command="{Binding CloseCommand}"
                     IsCancel="True"
-                    MinWidth="{StaticResource InputMinWidthStandard}" />
+                    MinWidth="{StaticResource ButtonMinWidth}" />
         </StackPanel>
     </Grid>
 </UserControl>

@@ -9,9 +9,9 @@
              mc:Ignorable="d">
     <Grid>
         <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="{DynamicResource SectionSpacing}" Margin="{DynamicResource CardPaddingThickness}">
-                <Border Classes="Card" Padding="{DynamicResource CardPaddingThickness}">
-                    <StackPanel Spacing="{DynamicResource SectionSpacing}">
+            <StackPanel Spacing="{StaticResource SectionSpacing}" Margin="{StaticResource CardPaddingThickness}">
+                <Border Classes="Card" Padding="{StaticResource CardPaddingThickness}">
+                    <StackPanel Spacing="{StaticResource SectionSpacing}">
                         <TextBlock Classes="TitleLarge" Text="{loc:Loc Key=INV_InvoicePlan_Selection_Title_Primary}" />
                         <TextBlock Text="{loc:Loc Key=INV_InvoicePlan_Selection_Description_Primary}" TextWrapping="Wrap" />
                         <TextBlock Text="{Binding EngagementSelectionMessage}" TextWrapping="Wrap" />
