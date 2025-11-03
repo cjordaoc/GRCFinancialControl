@@ -15,6 +15,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         private readonly IManagerService _managerService;
         private readonly DialogService _dialogService;
+        private readonly Func<EngagementAssignmentViewModel> _engagementAssignmentViewModelFactory;
 
         [ObservableProperty]
         private ObservableCollection<Manager> _managers = new();
@@ -22,11 +23,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private Manager? _selectedManager;
 
-        public ManagersViewModel(IManagerService managerService, DialogService dialogService, IMessenger messenger)
+        public ManagersViewModel(IManagerService managerService, DialogService dialogService, Func<EngagementAssignmentViewModel> engagementAssignmentViewModelFactory, IMessenger messenger)
             : base(messenger)
         {
             _managerService = managerService;
             _dialogService = dialogService;
+            _engagementAssignmentViewModelFactory = engagementAssignmentViewModelFactory;
         }
 
         public override async Task LoadDataAsync()
@@ -87,13 +89,29 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
+        [RelayCommand(CanExecute = nameof(CanAssignEngagements))]
+        private async Task AssignEngagements()
+        {
+            if (SelectedManager is null)
+            {
+                return;
+            }
+
+            var assignmentViewModel = _engagementAssignmentViewModelFactory();
+            assignmentViewModel.Initialize(SelectedManager.Id, true);
+            await assignmentViewModel.LoadDataAsync();
+            await _dialogService.ShowDialogAsync(assignmentViewModel);
+        }
+
         private bool CanModifySelection(Manager? manager) => manager is not null;
+        private bool CanAssignEngagements() => SelectedManager is not null;
 
         partial void OnSelectedManagerChanged(Manager? value)
         {
             EditCommand.NotifyCanExecuteChanged();
             DeleteCommand.NotifyCanExecuteChanged();
             ViewCommand.NotifyCanExecuteChanged();
+            AssignEngagementsCommand.NotifyCanExecuteChanged();
         }
     }
 }
