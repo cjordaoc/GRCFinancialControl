@@ -22,7 +22,8 @@
                                   GridLinesVisibility="All"
                                   HorizontalScrollBarVisibility="Auto"
                                   MaxHeight="240"
-                                  IsReadOnly="True">
+                                  IsReadOnly="True"
+                                  SelectionMode="Single">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Header_Engagement}" Binding="{Binding EngagementId}" Width="160"/>
                                 <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Header_Plan}" Binding="{Binding Name}" Width="280"/>

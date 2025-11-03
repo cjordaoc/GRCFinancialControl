@@ -47,7 +47,8 @@
                 <DataGrid ItemsSource="{Binding Allocations}"
                           AutoGenerateColumns="False"
                           CanUserSortColumns="False"
-                          IsReadOnly="{Binding IsReadOnlyMode}">
+                          IsReadOnly="{Binding IsReadOnlyMode}"
+                          SelectionMode="Single">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Fiscal Year" Binding="{Binding FiscalYear.Name}" IsReadOnly="True"/>
                         <DataGridTemplateColumn Header="{Binding #AllocationEditorRoot.DataContext.ToDateColumnHeader}">

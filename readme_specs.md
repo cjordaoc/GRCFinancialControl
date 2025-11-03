@@ -190,10 +190,10 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
   1. `HomeViewModel.LoadDataAsync` retrieves fiscal years and closing periods, orders them chronologically, and stores `_allClosingPeriods` so filtering is performed client-side.
   2. Default selections load from `ISettingsService` (`GetDefaultFiscalYearIdAsync`/`GetDefaultClosingPeriodIdAsync`); lacking persisted values, the first available fiscal year/period is preselected.
   3. `UpdateClosingPeriodsForSelectedFiscalYear` rebuilds the closing-period list whenever a fiscal year changes, while `ConfirmSelectionAsync` persists the defaults and sends `ApplicationParametersChangedMessage` to refresh dependent modules.
-  4. `EnsureReadmeLoadedAsync` executes once per session (`_readmeLoaded` flag), reads the embedded `README.md` resource through `GetManifestResourceStream`, and populates `ReadmeContent` (falling back to `FINC_Home_Markdown_LoadFailed` when the file cannot be read).
+  4. `EnsureReadmeLoadedAsync` executes once per session (`_readmeLoaded` flag) and resolves the embedded `README.md` by calling `ReadmeContentProvider.GetAsync(typeof(HomeViewModel).Assembly)`, populating `ReadmeContent` or the `FINC_Home_Markdown_LoadFailed` fallback when loading fails.
 - **UI Details:**
   - `HomeView.axaml` places the fiscal-year ComboBox and Confirm button in a three-column grid alongside an indeterminate `ProgressBar` so alignment stays horizontal on wide displays.
-  - README content renders inside `MarkdownScrollViewer` hosted in a rounded `Border` positioned immediately below the fiscal-year selection stack, capped at `MaxHeight="420"` with auto vertical scrolling to keep onboarding documentation accessible without leaving the dashboard.
+  - README content is no longer hosted on the dashboard; users access the markdown through the Settings documentation tab, keeping the landing experience focused on fiscal-period selection.
 
 ---
 
@@ -207,6 +207,7 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
   4. Import requests prompt the user for confirmation and delegate to `ImportAsync`, which parses the XML, disables foreign-key checks, deletes existing rows, inserts the payload with typed parameters, and re-enables constraints within a transaction.
   5. After a connection package import, data restore, or language change, `SettingsViewModel` sends `ApplicationRestartRequestedMessage`; both main window view models persist their last navigation key (`SettingKeys.LastGrcNavigationItemKey`/`SettingKeys.LastInvoicePlannerSectionKey`) so the restarted app returns to the previously selected workspace with the saved language.
   6. `ClearAllDataAsync` deletes transactional tables only (`ActualsEntries`, `PlannedAllocations`, `EngagementFiscalYearRevenueAllocations`, `EngagementRankBudgets`, `FinancialEvolution`, `Exceptions`) and skips master-data/team tables after verifying their existence in `INFORMATION_SCHEMA`.
+  7. The Settings view now exposes a “Project overview” tab that binds `ReadmeContent` to `MarkdownPresenter`, giving operators an in-app location for onboarding documentation with automatic vertical scrolling.
 - **Validation Mechanics:**
   - Both export/import paths fall back to building a context from saved settings if the DI factory lacks a configured provider; missing credentials raise `InvalidOperationException` with guidance.
   - XML serialization captures type information (including binary data) using invariant formatting to ensure round-trippable values on restore.

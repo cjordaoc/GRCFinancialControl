@@ -5,7 +5,6 @@
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
              xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
-             xmlns:controls="clr-namespace:GRCFinancialControl.Avalonia.Controls"
              mc:Ignorable="d" d:DesignWidth="960" d:DesignHeight="640"
              x:Class="GRCFinancialControl.Avalonia.Views.HomeView"
              x:DataType="vm:HomeViewModel">
@@ -63,16 +62,6 @@
                            Foreground="{StaticResource BrushWarning}"
                            IsVisible="{Binding HasFiscalYears, Converter={x:Static converters:ObjectConverters.AreEqual}, ConverterParameter=False}"/>
             </StackPanel>
-            <Border Background="{StaticResource BrushSurfaceVariant}"
-                    CornerRadius="{StaticResource ControlCornerRadius}"
-                    Padding="{StaticResource CardPaddingThickness}">
-                <StackPanel Spacing="{StaticResource ControlSpacing}">
-                    <TextBlock Text="{loc:Loc Key=FINC_Home_Markdown_Title}"
-                               Classes="TitleMedium"/>
-                    <controls:MarkdownPresenter x:Name="ReadmeViewer"
-                                                MaxHeight="420"/>
-                </StackPanel>
-            </Border>
             <StackPanel Spacing="{StaticResource SpacingUnit}">
                 <TextBlock Text="{loc:Loc Key=FINC_Home_Label_ClosingPeriod}"
                            FontWeight="{StaticResource FontWeightSemiBold}"/>

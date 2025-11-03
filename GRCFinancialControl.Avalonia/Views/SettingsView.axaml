@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
+             xmlns:controls="clr-namespace:GRCFinancialControl.Avalonia.Controls"
              mc:Ignorable="d"
              d:DesignWidth="800"
              d:DesignHeight="450"
@@ -239,6 +240,13 @@
                                 MinWidth="140"/>
                     </StackPanel>
                 </Grid>
+            </TabItem>
+            <TabItem Header="{loc:Loc Key=FINC_Home_Markdown_Title}">
+                <Border Classes="Card"
+                        Padding="{StaticResource CardPaddingThickness}"
+                        Margin="{StaticResource PageMarginThickness}">
+                    <controls:MarkdownPresenter Markdown="{Binding ReadmeContent}"/>
+                </Border>
             </TabItem>
         </TabControl>
 
