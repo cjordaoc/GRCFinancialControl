@@ -6,6 +6,8 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRC.Shared.UI.Messages;
 using GRCFinancialControl.Avalonia.Services;
+using System;
+using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -15,7 +17,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         private readonly IManagerService _managerService;
         private readonly DialogService _dialogService;
-        private readonly Func<EngagementAssignmentViewModel> _engagementAssignmentViewModelFactory;
+        private readonly Func<ManagerAssignmentEditorViewModel> _engagementAssignmentViewModelFactory;
 
         [ObservableProperty]
         private ObservableCollection<Manager> _managers = new();
@@ -23,10 +25,27 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private Manager? _selectedManager;
 
-        public ManagersViewModel(IManagerService managerService, DialogService dialogService, Func<EngagementAssignmentViewModel> engagementAssignmentViewModelFactory, IMessenger messenger)
+        private readonly IEngagementService _engagementService;
+        private readonly IPapdService _papdService;
+        private readonly ICustomerService _customerService;
+        private readonly IClosingPeriodService _closingPeriodService;
+
+        public ManagersViewModel(
+            IManagerService managerService,
+            IEngagementService engagementService,
+            IPapdService papdService,
+            ICustomerService customerService,
+            IClosingPeriodService closingPeriodService,
+            DialogService dialogService,
+            Func<ManagerAssignmentEditorViewModel> engagementAssignmentViewModelFactory,
+            IMessenger messenger)
             : base(messenger)
         {
             _managerService = managerService;
+            _engagementService = engagementService;
+            _papdService = papdService;
+            _customerService = customerService;
+            _closingPeriodService = closingPeriodService;
             _dialogService = dialogService;
             _engagementAssignmentViewModelFactory = engagementAssignmentViewModelFactory;
         }
@@ -97,10 +116,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            var assignmentViewModel = _engagementAssignmentViewModelFactory();
-            assignmentViewModel.Initialize(SelectedManager.Id, true);
-            await assignmentViewModel.LoadDataAsync();
-            await _dialogService.ShowDialogAsync(assignmentViewModel);
+            var engagement = new Engagement();
+            engagement.ManagerAssignments.Add(new EngagementManagerAssignment { Manager = SelectedManager });
+            var editorViewModel = new EngagementEditorViewModel(engagement, _engagementService, _customerService, _closingPeriodService, Messenger);
+            await _dialogService.ShowDialogAsync(editorViewModel);
+            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
 
         private bool CanModifySelection(Manager? manager) => manager is not null;

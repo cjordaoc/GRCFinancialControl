@@ -62,7 +62,7 @@
 
         <StackPanel Grid.Row="3" Orientation="Vertical" Margin="{StaticResource MarginTopMini}">
             <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource BrushWarning}"/>
-            <TextBlock Text="{loc:Loc Key=FINC_Admin_ClosingPeriods_Status_AllLocked}" 
+            <TextBlock Text="{loc:Loc Key=FINC_Admin_ClosingPeriods_Status_AllLocked}"
                        Foreground="{StaticResource BrushError}"
                        IsVisible="{Binding AreAllFiscalYearsLocked}"/>
         </StackPanel>

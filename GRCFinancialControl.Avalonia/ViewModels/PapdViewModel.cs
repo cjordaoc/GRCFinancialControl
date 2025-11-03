@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using GRC.Shared.UI.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
+using System;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -17,15 +18,32 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         private readonly IPapdService _papdService;
         private readonly DialogService _dialogService;
-        private readonly Func<EngagementAssignmentViewModel> _engagementAssignmentViewModelFactory;
+        private readonly Func<PapdEngagementAssignmentViewModel> _engagementAssignmentViewModelFactory;
 
         [ObservableProperty]
         private Papd? _selectedPapd;
 
-        public PapdViewModel(IPapdService papdService, DialogService dialogService, Func<EngagementAssignmentViewModel> engagementAssignmentViewModelFactory, IMessenger messenger)
+        private readonly IEngagementService _engagementService;
+        private readonly IManagerService _managerService;
+        private readonly ICustomerService _customerService;
+        private readonly IClosingPeriodService _closingPeriodService;
+
+        public PapdViewModel(
+            IPapdService papdService,
+            IEngagementService engagementService,
+            IManagerService managerService,
+            ICustomerService customerService,
+            IClosingPeriodService closingPeriodService,
+            DialogService dialogService,
+            Func<PapdEngagementAssignmentViewModel> engagementAssignmentViewModelFactory,
+            IMessenger messenger)
             : base(messenger)
         {
             _papdService = papdService;
+            _engagementService = engagementService;
+            _managerService = managerService;
+            _customerService = customerService;
+            _closingPeriodService = closingPeriodService;
             _dialogService = dialogService;
             _engagementAssignmentViewModelFactory = engagementAssignmentViewModelFactory;
         }
@@ -110,10 +128,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            var assignmentViewModel = _engagementAssignmentViewModelFactory();
-            assignmentViewModel.Initialize(SelectedPapd.Id);
-            await assignmentViewModel.LoadDataAsync();
-            await _dialogService.ShowDialogAsync(assignmentViewModel);
+            var engagement = new Engagement();
+            engagement.EngagementPapds.Add(new EngagementPapd { Papd = SelectedPapd });
+            var editorViewModel = new EngagementEditorViewModel(engagement, _engagementService, _customerService, _closingPeriodService, Messenger);
+            await _dialogService.ShowDialogAsync(editorViewModel);
+            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
 
         private static bool CanEdit(Papd papd) => papd is not null;
