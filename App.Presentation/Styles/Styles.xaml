@@ -41,6 +41,10 @@
     <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
   </Style>
 
+  <Style Selector="TextBlock.SidebarTitle">
+    <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}" />
+  </Style>
+
   <Style Selector="TextBox">
     <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
     <Setter Property="FontSize" Value="{StaticResource FontSize14}" />
@@ -116,7 +120,7 @@
 
   <Style Selector="ToggleButton.NavButton">
     <Setter Property="HorizontalContentAlignment" Value="Left" />
-    <Setter Property="Padding" Value="{StaticResource ButtonPaddingStandard}" />
+    <Setter Property="Padding" Value="{StaticResource SidebarItemPadding}" />
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderBrush" Value="Transparent" />
     <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
