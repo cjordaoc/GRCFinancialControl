@@ -9,30 +9,26 @@
              x:DataType="vm:ManagerAssignmentsViewModel">
     <StackPanel Margin="{StaticResource CardPaddingThickness}" Spacing="{StaticResource SectionSpacing}">
         <StackPanel Spacing="{StaticResource SpacingUnit}">
-            <TextBlock Text="Manager" Classes="TitleSmall"/>
-            <ComboBox ItemsSource="{Binding Managers}"
-                      SelectedItem="{Binding SelectedManager}"
-                      MinWidth="320"
-                      DisplayMemberBinding="{Binding Name}"/>
+            <TextBlock Text="Engagement" Classes="TitleSmall"/>
+            <ComboBox ItemsSource="{Binding Engagements}"
+                      SelectedItem="{Binding SelectedEngagement}"
+                      MinWidth="320"/>
         </StackPanel>
+
+        <ScrollViewer Height="280" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding AvailableManagers}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <CheckBox Content="{Binding Manager.Name}"
+                                  IsChecked="{Binding IsSelected}"
+                                  Margin="2"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
 
         <StackPanel Orientation="Horizontal" Spacing="{StaticResource SpacingUnit}">
-            <Button Content="{loc:Loc Key=FINC_Button_Add}" Command="{Binding AddCommand}"/>
-            <Button Content="{loc:Loc Key=FINC_Button_Edit}" Command="{Binding EditCommand}"/>
-            <Button Content="{loc:Loc Key=FINC_Button_View}" Command="{Binding ViewCommand}"/>
-            <Button Content="{loc:Loc Key=FINC_Button_Delete}" Command="{Binding DeleteCommand}"/>
+            <Button Content="{loc:Loc Key=FINC_Button_Save}" Command="{Binding SaveCommand}"/>
         </StackPanel>
-
-        <DataGrid ItemsSource="{Binding Assignments}"
-                  SelectedItem="{Binding SelectedAssignment}"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  HeadersVisibility="Column"
-                  GridLinesVisibility="All"
-                  Height="280">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="{loc:Loc Key=FINC_Admin_PapdAssignments_Header_Engagement}" Binding="{Binding EngagementDisplay}" Width="2*"/>
-            </DataGrid.Columns>
-        </DataGrid>
     </StackPanel>
 </UserControl>

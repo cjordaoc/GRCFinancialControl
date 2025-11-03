@@ -153,6 +153,7 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<IPapdService, PapdService>();
             services.AddTransient<IManagerService, ManagerService>();
             services.AddTransient<IManagerAssignmentService, ManagerAssignmentService>();
+            services.AddTransient<IPapdAssignmentService, PapdAssignmentService>();
             services.AddTransient<IExceptionService, ExceptionService>();
             services.AddTransient<ICustomerService, CustomerService>();
             services.AddTransient<IRankMappingService, RankMappingService>();
