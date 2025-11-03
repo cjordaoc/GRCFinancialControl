@@ -69,7 +69,7 @@
                 <StackPanel Spacing="{StaticResource ControlSpacing}">
                     <TextBlock Text="{loc:Loc Key=FINC_Home_Markdown_Title}"
                                Classes="TitleMedium"/>
-                    <md:MarkdownScrollViewer Markdown="{Binding ReadmeContent}"
+                    <md:MarkdownScrollViewer x:Name="ReadmeViewer"
                                              x:CompileBindings="False"
                                              MaxHeight="420"
                                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
