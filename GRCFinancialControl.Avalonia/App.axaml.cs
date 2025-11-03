@@ -174,6 +174,7 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<FiscalYearsViewModel>();
             services.AddTransient<ImportViewModel>();
             services.AddTransient<HoursAllocationDetailViewModel>();
+            services.AddTransient<Func<HoursAllocationDetailViewModel>>(provider => () => provider.GetRequiredService<HoursAllocationDetailViewModel>());
             services.AddTransient<HoursAllocationsViewModel>();
             services.AddTransient<RevenueAllocationsViewModel>();
             services.AddTransient<AllocationsViewModel>();

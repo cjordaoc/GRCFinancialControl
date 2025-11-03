@@ -68,7 +68,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 IsBusy = true;
                 StatusMessage = null;
 
-                var engagements = await _engagementService.GetAllAsync().ConfigureAwait(false);
+                var engagements = await _engagementService.GetAllAsync();
                 var ordered = engagements
                     .OrderBy(e => e.EngagementId, StringComparer.OrdinalIgnoreCase)
                     .Select(e => new EngagementListItem(e.Id, e.EngagementId, e.Description, e.Customer?.Name ?? string.Empty))
@@ -102,7 +102,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand]
         private async Task RefreshAsync()
         {
-            await LoadDataAsync().ConfigureAwait(false);
+            await LoadDataAsync();
         }
 
         [RelayCommand(CanExecute = nameof(CanExecuteOpenDetail))]
@@ -120,8 +120,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
                 var detail = _detailFactory();
                 detail.InitializeSelection(SelectedEngagement.Id);
-                await detail.LoadDataAsync().ConfigureAwait(false);
-                await _dialogService.ShowDialogAsync(detail, "Hours Allocation").ConfigureAwait(false);
+                await detail.LoadDataAsync();
+                await _dialogService.ShowDialogAsync(detail, "Hours Allocation");
             }
             catch (Exception ex)
             {
