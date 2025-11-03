@@ -27,7 +27,7 @@
                                    VerticalAlignment="Stretch"
                                    Material="{StaticResource AcrylicModal}"/>
 
-        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource GridSpacing}" Margin="{StaticResource LayoutMarginStandard}">
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="{DynamicResource GridGap}" Margin="{DynamicResource PageMarginThickness}">
             <sharedControls:SidebarHost Grid.Column="0"
                                         Header="{loc:Loc Key=FINC_Shell_Brand_Primary}"
                                         ExpandedLabel="{loc:Loc Key=Global_SidebarCollapse}"
@@ -45,7 +45,7 @@
                 </sharedControls:SidebarHost.HeaderTemplate>
                 <sharedControls:SidebarHost.ItemTemplate>
                     <DataTemplate x:DataType="vm:NavigationItem">
-                        <StackPanel Spacing="{StaticResource SpacingUnit}">
+                        <StackPanel Spacing="{DynamicResource SpacingUnit}">
                             <ToggleButton Command="{Binding $parent[Window].DataContext.SelectNavigationItemCommand}"
                                           CommandParameter="{Binding}"
                                           IsChecked="{Binding IsSelected, Mode=TwoWay}"
@@ -53,7 +53,7 @@
                                           ToolTip.Tip="{Binding Title}">
                                 <ToggleButton.Content>
                                     <StackPanel Orientation="Horizontal"
-                                                Spacing="{StaticResource SpacingUnit}"
+                                                Spacing="{DynamicResource SpacingUnit}"
                                                 VerticalAlignment="Center">
                                         <Path Data="{Binding Icon}"
                                               Width="20"
@@ -69,11 +69,11 @@
                                 </ToggleButton.Content>
                             </ToggleButton>
                             <ItemsControl ItemsSource="{Binding Children}"
-                                          Margin="{StaticResource MarginLeftMedium}"
+                                          Margin="{DynamicResource MarginLeftMedium}"
                                           IsVisible="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=sharedControls:SidebarHost}}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
-                                        <StackPanel Spacing="{StaticResource SpacingUnit}" />
+                                        <StackPanel Spacing="{DynamicResource SpacingUnit}" />
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
@@ -82,11 +82,11 @@
                                                       CommandParameter="{Binding}"
                                                       IsChecked="{Binding IsSelected, Mode=TwoWay}"
                                                       Classes="NavButton"
-                                                      Margin="{StaticResource MarginTopXSmall}"
+                                                      Margin="{DynamicResource MarginTopXSmall}"
                                                       ToolTip.Tip="{Binding Title}">
                                             <ToggleButton.Content>
                                                 <StackPanel Orientation="Horizontal"
-                                                            Spacing="{StaticResource SpacingUnit}"
+                                                            Spacing="{DynamicResource SpacingUnit}"
                                                             VerticalAlignment="Center">
                                                      <Path Data="{Binding Icon}"
                                                            Width="18"
@@ -111,19 +111,19 @@
 
             <Border Grid.Column="1"
                     Classes="Card"
-                    Padding="{StaticResource LayoutPaddingStandard}">
+                    Padding="{DynamicResource CardPaddingThickness}">
                 <ContentControl Content="{Binding ActiveView}"
                                 IsVisible="{Binding ActiveView, Converter={x:Static converters:ObjectConverters.IsNotNull}}"/>
             </Border>
         </Grid>
 
-        <ItemsControl Margin="{StaticResource MarginCallout}"
+        <ItemsControl Margin="{DynamicResource MarginCallout}"
                       HorizontalAlignment="Right"
                       VerticalAlignment="Top"
                       ItemsSource="{x:Static services:ToastService.Notifications}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <StackPanel Spacing="{StaticResource ControlSpacing}"/>
+                    <StackPanel Spacing="{DynamicResource ControlSpacing}"/>
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>

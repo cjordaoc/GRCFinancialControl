@@ -7,11 +7,11 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
              x:Class="GRCFinancialControl.Avalonia.Views.PapdEditorView"
              x:DataType="vm:PapdEditorViewModel">
-    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridSpacing}">
+    <Grid RowDefinitions="*,Auto" RowSpacing="{DynamicResource GridGap}">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="{StaticResource SectionSpacing}">
+            <StackPanel Spacing="{DynamicResource SectionSpacing}">
                 <TextBlock Text="{loc:Loc Key=FINC_Admin_Papds_Title_Editor}" Classes="TitleSmall"/>
-                <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="{StaticResource GridSpacing}" ColumnSpacing="{StaticResource GridSpacing}">
+                <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="{DynamicResource GridGap}" ColumnSpacing="{DynamicResource GridGap}">
                     <TextBlock Grid.Row="0"
                                Grid.Column="0"
                                Text="{loc:Loc Key=FINC_Admin_Papds_Placeholder_Name}"
@@ -54,7 +54,7 @@
         <StackPanel Grid.Row="1"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Spacing="{StaticResource ControlSpacing}">
+                    Spacing="{DynamicResource ControlSpacing}">
             <Button Content="{loc:Loc Key=Global_Button_Save}"
                     Command="{Binding SaveCommand}"
                     IsEnabled="{Binding AllowEditing}"

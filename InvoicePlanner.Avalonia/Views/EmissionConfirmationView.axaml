@@ -9,12 +9,12 @@
              mc:Ignorable="d">
     <Grid>
         <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="{StaticResource SectionSpacing}" Margin="{StaticResource LayoutPaddingStandard}">
-                <Border Classes="Card" Padding="{StaticResource LayoutPaddingStandard}">
-                    <StackPanel Spacing="{StaticResource SectionSpacing}">
+            <StackPanel Spacing="{DynamicResource SectionSpacing}" Margin="{DynamicResource CardPaddingThickness}">
+                <Border Classes="Card" Padding="{DynamicResource CardPaddingThickness}">
+                    <StackPanel Spacing="{DynamicResource SectionSpacing}">
                         <TextBlock Classes="TitleMedium" Text="{loc:Loc Key=INV_Emission_Title_Primary}" />
                         <TextBlock Text="{loc:Loc Key=INV_Emission_Description_Primary}" />
-                        <StackPanel Spacing="{StaticResource ControlSpacing}">
+                        <StackPanel Spacing="{DynamicResource ControlSpacing}">
                         <TextBlock Text="{loc:Loc Key=INV_Emission_Section_AvailablePlans_Header}" FontWeight="{StaticResource FontWeightSemiBold}" />
                             <TextBlock Text="{Binding PlanSelectionMessage}" TextWrapping="Wrap" />
                             <DataGrid ItemsSource="{Binding AvailablePlans}"
@@ -25,7 +25,7 @@
                                       HorizontalScrollBarVisibility="Auto"
                                       IsVisible="{Binding HasAvailablePlans}"
                                       MaxHeight="220"
-                                      Margin="{StaticResource MarginTopXSmall}"
+                                      Margin="{DynamicResource MarginTopXSmall}"
                                       IsReadOnly="True">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_PlanId}" Binding="{Binding Id}" Width="80"/>
@@ -38,7 +38,7 @@
                                     <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Canceled}" Binding="{Binding CanceledItemCount}" Width="120"/>
                                 </DataGrid.Columns>
                             </DataGrid>
-                            <StackPanel Orientation="Horizontal" Spacing="{StaticResource ControlSpacing}">
+                            <StackPanel Orientation="Horizontal" Spacing="{DynamicResource ControlSpacing}">
                                 <Button Content="{loc:Loc Key=INV_Button_Refresh}"
                                         Command="{Binding RefreshCommand}"
                                         MinWidth="140"/>
@@ -50,10 +50,10 @@
                     </StackPanel>
                 </Border>
 
-                <Border Classes="Card" Padding="{StaticResource LayoutPaddingStandard}" IsVisible="{Binding IsPlanDetailsVisible}">
-                    <StackPanel Spacing="{StaticResource SectionSpacing}">
+                <Border Classes="Card" Padding="{DynamicResource CardPaddingThickness}" IsVisible="{Binding IsPlanDetailsVisible}">
+                    <StackPanel Spacing="{DynamicResource SectionSpacing}">
                         <TextBlock Classes="TitleMedium" Text="{loc:Loc Key=INV_Emission_Section_InvoiceDetails_Header}" />
-                        <StackPanel Orientation="Horizontal" Spacing="{StaticResource SectionSpacing}">
+                        <StackPanel Orientation="Horizontal" Spacing="{DynamicResource SectionSpacing}">
                             <TextBlock Text="{Binding EngagementDisplay}" />
                             <TextBlock Text="{Binding RequestedCountDisplay}" />
                             <TextBlock Text="{Binding EmittedCountDisplay}" />
@@ -87,14 +87,14 @@
                                 <DataGridTextColumn Header="{loc:Loc Key=INV_Emission_TableHeader_LastCancelReason}" Binding="{Binding LastCancellationReason}" Width="200"/>
                             </DataGrid.Columns>
                         </DataGrid>
-                        <StackPanel Spacing="{StaticResource ControlSpacing}" IsVisible="{Binding HasSelectedLine}">
+                        <StackPanel Spacing="{DynamicResource ControlSpacing}" IsVisible="{Binding HasSelectedLine}">
                             <ContentControl Content="{Binding SelectedLine}">
                                 <ContentControl.ContentTemplate>
                                     <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
                                         <Grid ColumnDefinitions="Auto,1*"
                                               RowDefinitions="Auto,Auto,Auto,Auto"
-                                              ColumnSpacing="{StaticResource GridSpacing}"
-                                              RowSpacing="{StaticResource GridSpacing}">
+                                              ColumnSpacing="{DynamicResource GridGap}"
+                                              RowSpacing="{DynamicResource GridGap}">
                                             <TextBlock Grid.Row="0"
                                                        Grid.Column="0"
                                                        VerticalAlignment="Center"
@@ -135,7 +135,7 @@
                             </ContentControl>
                             <StackPanel Orientation="Horizontal"
                                         HorizontalAlignment="Right"
-                                        Spacing="{StaticResource ControlSpacing}">
+                                        Spacing="{DynamicResource ControlSpacing}">
                                 <Button Content="{loc:Loc Key=Global_Button_Save}"
                                         Command="{Binding SavePlanDetailsCommand}"
                                         MinWidth="{StaticResource InputMinWidthStandard}" />
@@ -151,7 +151,7 @@
                     </StackPanel>
                 </Border>
 
-                <StackPanel Spacing="{StaticResource SpacingUnit}">
+                <StackPanel Spacing="{DynamicResource SpacingUnit}">
                     <TextBlock Text="{Binding ValidationMessage}"
                                Classes="StatusError"
                                IsVisible="{Binding HasValidationMessage}" />

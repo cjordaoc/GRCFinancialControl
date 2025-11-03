@@ -7,13 +7,13 @@
              x:Class="InvoicePlanner.Avalonia.Views.NotificationPreviewView"
              x:DataType="vm:NotificationPreviewViewModel"
              mc:Ignorable="d">
-    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="{StaticResource GridSpacing}">
-        <Border Grid.Row="0" Classes="Card" Padding="{StaticResource LayoutPaddingStandard}" Margin="{StaticResource MarginInset}">
-            <StackPanel Spacing="{StaticResource ControlSpacing}">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="{DynamicResource GridGap}">
+        <Border Grid.Row="0" Classes="Card" Padding="{DynamicResource CardPaddingThickness}" Margin="{DynamicResource MarginInset}">
+            <StackPanel Spacing="{DynamicResource ControlSpacing}">
                 <TextBlock Classes="TitleMedium" Text="{loc:Loc Key=INV_Notifications_Title_Primary}" />
                 <TextBlock Text="{loc:Loc Key=INV_Notifications_Description_Primary}" />
-                <StackPanel Orientation="Horizontal" Spacing="{StaticResource ControlSpacing}" VerticalAlignment="Center">
-                    <StackPanel Spacing="{StaticResource SpacingUnit}">
+                <StackPanel Orientation="Horizontal" Spacing="{DynamicResource ControlSpacing}" VerticalAlignment="Center">
+                    <StackPanel Spacing="{DynamicResource SpacingUnit}">
                         <TextBlock Text="{loc:Loc Key=INV_Notifications_Label_NotificationDate}" />
                         <CalendarDatePicker SelectedDate="{Binding SelectedDate, Mode=TwoWay, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}" />
                     </StackPanel>
@@ -22,21 +22,21 @@
             </StackPanel>
         </Border>
 
-        <StackPanel Grid.Row="1" Margin="{StaticResource MarginHorizontalMedium}" Spacing="{StaticResource SpacingUnit}">
+        <StackPanel Grid.Row="1" Margin="{DynamicResource MarginHorizontalMedium}" Spacing="{DynamicResource SpacingUnit}">
             <TextBlock Classes="StatusSuccess" Text="{Binding StatusMessage}" IsVisible="{Binding HasStatusMessage}" />
             <TextBlock Classes="StatusError" Text="{Binding ValidationMessage}" IsVisible="{Binding HasValidationMessage}" />
         </StackPanel>
 
-        <ScrollViewer Grid.Row="2" Margin="{StaticResource MarginInsetBottom}" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="2" Margin="{DynamicResource MarginInsetBottom}" VerticalScrollBarVisibility="Auto">
             <StackPanel>
-                <TextBlock Text="{loc:Loc Key=INV_Notifications_Message_Empty}" HorizontalAlignment="Center" Margin="{StaticResource MarginVerticalCompact}"
+                <TextBlock Text="{loc:Loc Key=INV_Notifications_Message_Empty}" HorizontalAlignment="Center" Margin="{DynamicResource MarginVerticalCompact}"
                            IsVisible="{Binding IsEmpty}" />
                 <ItemsControl ItemsSource="{Binding Items}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:NotificationPreviewItemViewModel">
-                            <Border Classes="Card" Padding="{StaticResource LayoutPaddingStandard}" Margin="{StaticResource MarginBottomRegular}">
-                                <StackPanel Spacing="{StaticResource ControlSpacing}">
-                                    <StackPanel Spacing="{StaticResource SpacingUnit}">
+                            <Border Classes="Card" Padding="{DynamicResource CardPaddingThickness}" Margin="{DynamicResource MarginBottomRegular}">
+                                <StackPanel Spacing="{DynamicResource ControlSpacing}">
+                                    <StackPanel Spacing="{DynamicResource SpacingUnit}">
                                         <TextBlock Classes="TitleMedium" Text="{Binding EngagementDisplay}" />
                                         <TextBlock Text="{Binding CustomerDisplay}" IsVisible="{Binding HasCustomerName}" />
                                     </StackPanel>
@@ -48,7 +48,7 @@
                                         <TextBlock Text="{Binding DueDisplay}" Margin="{StaticResource MarginRightRegular}" />
                                         <TextBlock Text="{Binding AmountDisplay}" />
                                     </WrapPanel>
-                                    <StackPanel Spacing="{StaticResource SpacingUnit}">
+                                    <StackPanel Spacing="{DynamicResource SpacingUnit}">
                                         <TextBlock Text="{Binding ToDisplay}" />
                                         <TextBlock Text="{Binding CcDisplay}" IsVisible="{Binding HasCc}" />
                                         <TextBlock Text="{Binding RecipientsDisplay}" />
@@ -56,7 +56,7 @@
                                     </StackPanel>
                                     <TextBlock FontWeight="{StaticResource FontWeightSemiBold}" Text="{Binding Subject}" TextWrapping="Wrap" />
                                     <Border Background="{StaticResource BrushSurfaceLight}"
-                                            Padding="{StaticResource LayoutPaddingStandard}"
+                                            Padding="{DynamicResource CardPaddingThickness}"
                                             CornerRadius="{StaticResource ControlCornerRadius}">
                                         <TextBlock Text="{Binding Body}" TextWrapping="Wrap" />
                                     </Border>

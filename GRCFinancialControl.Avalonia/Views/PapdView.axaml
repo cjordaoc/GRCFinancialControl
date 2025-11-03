@@ -6,8 +6,8 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.PapdView"
              x:DataType="vm:PapdViewModel">
-    <Grid RowDefinitions="Auto,*,Auto" Margin="{StaticResource LayoutPaddingStandard}">
-        <TextBlock Text="PAPD Management" Classes="TitleLarge" Margin="{StaticResource MarginBottomSmall}"/>
+    <Grid RowDefinitions="Auto,*,Auto" Margin="{DynamicResource CardPaddingThickness}">
+        <TextBlock Text="PAPD Management" Classes="TitleLarge" Margin="{DynamicResource MarginBottomSmall}"/>
 
         <DataGrid Grid.Row="1"
                   ItemsSource="{Binding Papds}"

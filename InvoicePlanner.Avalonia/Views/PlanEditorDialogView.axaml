@@ -17,24 +17,24 @@
                                     FalseResourceKey="BrushOnSurface" />
     </UserControl.Resources>
     <Grid RowDefinitions="Auto,*,Auto"
-          RowSpacing="{StaticResource GridSpacing}">
-        <StackPanel Margin="{StaticResource LayoutPaddingStandard}"
-                    Spacing="{StaticResource SpacingUnit}">
+          RowSpacing="{DynamicResource GridGap}">
+        <StackPanel Margin="{DynamicResource CardPaddingThickness}"
+                    Spacing="{DynamicResource SpacingUnit}">
             <TextBlock Classes="TitleLarge"
                        Text="{loc:Loc Key=INV_InvoicePlan_Title_Primary}" />
             <TextBlock Text="{loc:Loc Key=INV_InvoicePlan_Description_Primary}" />
         </StackPanel>
 
         <TabControl Grid.Row="1"
-                    Margin="{StaticResource LayoutPaddingStandard}"
+                    Margin="{DynamicResource CardPaddingThickness}"
                     SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
             <TabItem Header="{loc:Loc Key=INV_InvoicePlan_Tab_General}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Spacing="{StaticResource SectionSpacing}"
+                    <StackPanel Spacing="{DynamicResource SectionSpacing}"
                                 Margin="{StaticResource SpaceThickness0}">
                         <Grid ColumnDefinitions="200,*"
-                              RowSpacing="{StaticResource GridSpacing}"
-                              ColumnSpacing="{StaticResource GridSpacing}">
+                              RowSpacing="{DynamicResource GridGap}"
+                              ColumnSpacing="{DynamicResource GridGap}">
                             <TextBlock Grid.Row="0"
                                        Grid.Column="0"
                                        Text="{loc:Loc Key=INV_InvoicePlan_Label_Engagement}"
@@ -43,7 +43,7 @@
                             <Grid Grid.Row="0"
                                   Grid.Column="1"
                                   ColumnDefinitions="180,*"
-                                  ColumnSpacing="{StaticResource GridSpacing}">
+                                  ColumnSpacing="{DynamicResource GridGap}">
                                 <TextBox Grid.Column="0"
                                          Text="{Binding Editor.EngagementId}"
                                          IsReadOnly="True"
@@ -64,7 +64,7 @@
                             <Grid Grid.Row="1"
                                   Grid.Column="1"
                                   ColumnDefinitions="Auto,*"
-                                  ColumnSpacing="{StaticResource SpacingUnit}"
+                                  ColumnSpacing="{DynamicResource SpacingUnit}"
                                   VerticalAlignment="Center">
                                 <TextBlock Grid.Column="0"
                                            Text="{Binding Editor.CurrencySymbol}"
@@ -97,13 +97,13 @@
 
             <TabItem Header="{loc:Loc Key=INV_InvoicePlan_Tab_Items}">
                 <Grid RowDefinitions="Auto,*,Auto,Auto"
-                      RowSpacing="{StaticResource GridSpacing}"
+                      RowSpacing="{DynamicResource GridGap}"
                       Margin="{StaticResource SpaceThickness0}">
                     <WrapPanel Grid.Row="0"
-                              ItemSpacing="{StaticResource SectionSpacing}"
-                              Margin="{StaticResource LayoutPaddingStandard}">
+                              ItemSpacing="{DynamicResource SectionSpacing}"
+                              Margin="{DynamicResource CardPaddingThickness}">
                         <StackPanel Orientation="Horizontal"
-                                    Spacing="{StaticResource SectionSpacing}"
+                                    Spacing="{DynamicResource SectionSpacing}"
                                     VerticalAlignment="Center">
                             <TextBlock Classes="Caption"
                                        VerticalAlignment="Center"
@@ -114,7 +114,7 @@
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal"
-                                    Spacing="{StaticResource SectionSpacing}"
+                                    Spacing="{DynamicResource SectionSpacing}"
                                     VerticalAlignment="Center">
                             <TextBlock Classes="Caption"
                                        VerticalAlignment="Center"
@@ -128,7 +128,7 @@
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal"
-                                    Spacing="{StaticResource SectionSpacing}"
+                                    Spacing="{DynamicResource SectionSpacing}"
                                     VerticalAlignment="Center">
                             <TextBlock Classes="Caption"
                                        VerticalAlignment="Center"
@@ -142,7 +142,7 @@
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal"
-                                    Spacing="{StaticResource SectionSpacing}"
+                                    Spacing="{DynamicResource SectionSpacing}"
                                     VerticalAlignment="Center"
                                     IsVisible="{Binding Editor.RequiresFirstEmissionDate}">
                             <TextBlock Classes="Caption"
@@ -265,7 +265,7 @@
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
                                             <StackPanel Orientation="Horizontal"
-                                                        Spacing="{StaticResource SpacingUnit}"
+                                                        Spacing="{DynamicResource SpacingUnit}"
                                                         VerticalAlignment="Center">
                                                 <NumericUpDown Value="{Binding Percentage}"
                                                                Minimum="0"
@@ -284,7 +284,7 @@
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
                                             <StackPanel Orientation="Horizontal"
-                                                        Spacing="{StaticResource SpacingUnit}"
+                                                        Spacing="{DynamicResource SpacingUnit}"
                                                         VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding CurrencySymbol}"
                                                            IsVisible="{Binding IsEditable}"
@@ -310,7 +310,7 @@
 
                     <Grid Grid.Row="2"
                           ColumnDefinitions="Auto,Auto,Auto,Auto,Auto"
-                          ColumnSpacing="{StaticResource GridSpacing}">
+                          ColumnSpacing="{DynamicResource GridGap}">
                         <TextBlock Grid.Column="0"
                                    Text="{loc:Loc Key=INV_InvoicePlan_Section_Totals_Label}"
                                    Classes="Caption"
@@ -322,7 +322,7 @@
                                    VerticalAlignment="Center" />
                         <StackPanel Grid.Column="2"
                                     Orientation="Horizontal"
-                                    Spacing="{StaticResource SpacingUnit}"
+                                    Spacing="{DynamicResource SpacingUnit}"
                                     VerticalAlignment="Center">
                             <TextBlock Text="{Binding Editor.TotalPercentage, StringFormat={}{0:F2}}"
                                        FontWeight="{StaticResource FontWeightSemiBold}"
@@ -338,7 +338,7 @@
                                    VerticalAlignment="Center" />
                         <StackPanel Grid.Column="4"
                                     Orientation="Horizontal"
-                                    Spacing="{StaticResource SpacingUnit}"
+                                    Spacing="{DynamicResource SpacingUnit}"
                                     VerticalAlignment="Center">
                             <TextBlock Text="{Binding Editor.TotalAmountDisplay}"
                                        FontWeight="{StaticResource FontWeightSemiBold}"
@@ -347,7 +347,7 @@
                     </Grid>
 
                     <StackPanel Grid.Row="3"
-                                Spacing="{StaticResource ControlSpacing}">
+                                Spacing="{DynamicResource ControlSpacing}">
                         <TextBlock Text="{Binding Editor.ValidationMessage}"
                                    Classes="StatusError"
                                    IsVisible="{Binding Editor.HasValidationMessage}" />
@@ -360,7 +360,7 @@
 
             <TabItem Header="{loc:Loc Key=INV_InvoicePlan_Tab_Notes}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Spacing="{StaticResource SectionSpacing}">
+                    <StackPanel Spacing="{DynamicResource SectionSpacing}">
                         <TextBlock Text="{loc:Loc Key=INV_InvoicePlan_Label_Instructions}"
                                    Classes="Caption" />
                         <TextBox Text="{Binding Editor.CustomInstructions}"
@@ -383,7 +383,7 @@
         <StackPanel Grid.Row="2"
                     Classes="ButtonRow"
                     HorizontalAlignment="Right"
-                    Margin="{StaticResource LayoutPaddingStandard}">
+                    Margin="{DynamicResource CardPaddingThickness}">
             <Button Content="{loc:Loc Key=INV_InvoicePlan_Dialog_Button_DeletePlan}"
                     Command="{Binding DeletePlanCommand}"
                     Classes="Danger" />

@@ -13,14 +13,14 @@
         <converters:TrafficLightStatusToBrushConverter x:Key="TrafficLightStatusToBrushConverter" />
     </UserControl.Resources>
     <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto" ColumnDefinitions="*"
-          Margin="{StaticResource LayoutPaddingStandard}">
+          Margin="{DynamicResource CardPaddingThickness}">
         <TextBlock Grid.Row="0"
                    Text="{Binding Header}"
                    Classes="TitleMedium"/>
 
         <StackPanel Grid.Row="1"
                     Orientation="Horizontal"
-                    Spacing="{StaticResource SectionSpacing}">
+                    Spacing="{DynamicResource SectionSpacing}">
             <TextBlock Text="{Binding TotalBudgetHours, StringFormat='Budget Hours: {0:N2} h'}"/>
             <TextBlock Text="{Binding ActualHours, StringFormat='Actual Hours: {0:N2} h'}"/>
             <TextBlock Text="{Binding RemainingHours, StringFormat='Remaining Hours: {0:N2} h'}"/>
@@ -28,7 +28,7 @@
 
         <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
-                    Spacing="{StaticResource ControlSpacing}">
+                    Spacing="{DynamicResource ControlSpacing}">
             <TextBlock Text="Resource:" FontWeight="{StaticResource FontWeightSemiBold}"/>
             <TextBlock Text="{Binding SelectedRow.RankName}"/>
             <TextBlock Text="{Binding SelectedRow.TrafficLightSymbol}"
@@ -44,7 +44,7 @@
                   ItemsSource="{Binding FiscalYearRows}"
                   AutoGenerateColumns="False"
                   CanUserSortColumns="False"
-                  Margin="{StaticResource LayoutPaddingStandard}">
+                  Margin="{DynamicResource CardPaddingThickness}">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Fiscal Year"
                                     Binding="{Binding FiscalYearName}"
@@ -84,7 +84,7 @@
         <StackPanel Grid.Row="5"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Spacing="{StaticResource ControlSpacing}">
+                    Spacing="{DynamicResource ControlSpacing}">
             <Button Content="Save"
                     Command="{Binding SaveCommand}"
                     IsDefault="True"

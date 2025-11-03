@@ -7,10 +7,10 @@
              x:Class="InvoicePlanner.Avalonia.Views.InvoiceDescriptionPreviewView"
              x:DataType="vm:InvoiceDescriptionPreviewViewModel"
              mc:Ignorable="d">
-    <Grid Margin="{StaticResource LayoutPaddingStandard}"
+    <Grid Margin="{DynamicResource CardPaddingThickness}"
           RowDefinitions="Auto,Auto,*,Auto"
-          RowSpacing="{StaticResource GridSpacing}">
-        <StackPanel Spacing="{StaticResource SpacingUnit}">
+          RowSpacing="{DynamicResource GridGap}">
+        <StackPanel Spacing="{DynamicResource SpacingUnit}">
             <TextBlock Classes="TitleMedium"
                        Text="{Binding Header}" />
             <TextBlock Text="{Binding SequenceSummary}" />
@@ -21,7 +21,7 @@
                    Text="{loc:Loc Key=INV_InvoicePlan_Preview_DescriptionLabel}" />
 
         <Border Grid.Row="2"
-                Padding="{StaticResource LayoutPaddingStandard}"
+                Padding="{DynamicResource CardPaddingThickness}"
                 Background="{DynamicResource ThemeSubtleRegionBrush}"
                 CornerRadius="{StaticResource ControlCornerRadius}">
             <ScrollViewer>
@@ -38,7 +38,7 @@
         <StackPanel Grid.Row="3"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Spacing="{StaticResource SectionSpacing}">
+                    Spacing="{DynamicResource SectionSpacing}">
             <Button Content="{loc:Loc Key=Global_Button_Close}"
                     Command="{Binding CloseCommand}"
                     MinWidth="{StaticResource ButtonMinWidthBaseline}" />

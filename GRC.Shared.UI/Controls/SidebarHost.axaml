@@ -6,7 +6,7 @@
           Width="{Binding EffectiveWidth, ElementName=Root}"
           Background="{StaticResource BrushSurfaceVariant}"
           CornerRadius="{StaticResource ControlCornerRadius}"
-          Padding="{StaticResource LayoutPaddingStandard}"
+          Padding="{DynamicResource CardPaddingThickness}"
           MinWidth="{Binding CompactWidth, ElementName=Root}"
           BoxShadow="{StaticResource ShadowLow}">
     <Border.Transitions>
@@ -16,7 +16,7 @@
       </Transitions>
     </Border.Transitions>
     <Grid RowDefinitions="Auto,*,Auto"
-          RowSpacing="{StaticResource GridSpacing}">
+          RowSpacing="{DynamicResource GridGap}">
       <ContentPresenter Content="{Binding Header, ElementName=Root}"
                         ContentTemplate="{Binding HeaderTemplate, ElementName=Root}"
                         HorizontalAlignment="Stretch" />
@@ -27,7 +27,7 @@
                       ItemTemplate="{Binding ItemTemplate, ElementName=Root}">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
-              <StackPanel Spacing="{StaticResource ControlSpacing}" />
+              <StackPanel Spacing="{DynamicResource ControlSpacing}" />
             </ItemsPanelTemplate>
           </ItemsControl.ItemsPanel>
         </ItemsControl>

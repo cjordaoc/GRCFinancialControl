@@ -8,10 +8,10 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.ClosingPeriodsView"
              x:DataType="vm:ClosingPeriodsViewModel">
-    <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="{StaticResource LayoutPaddingStandard}">
-        <StackPanel Grid.Row="0" Orientation="Vertical" Spacing="{StaticResource SpacingUnit}" Margin="{StaticResource MarginBottomSmall}">
+    <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="{DynamicResource CardPaddingThickness}">
+        <StackPanel Grid.Row="0" Orientation="Vertical" Spacing="{DynamicResource SpacingUnit}" Margin="{DynamicResource MarginBottomSmall}">
         <TextBlock Text="{loc:Loc Key=FINC_Admin_ClosingPeriods_Title_List}" Classes="TitleLarge"/>
-            <StackPanel Orientation="Horizontal" Spacing="{StaticResource SpacingUnit}">
+            <StackPanel Orientation="Horizontal" Spacing="{DynamicResource SpacingUnit}">
                 <TextBlock Text="{loc:Loc Key=FINC_Admin_ClosingPeriods_Filter_FiscalYear}" VerticalAlignment="Center"/>
                 <ComboBox ItemsSource="{Binding FiscalYearFilters}"
                           SelectedItem="{Binding SelectedFiscalYearFilter}"

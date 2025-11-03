@@ -7,15 +7,15 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="300"
              x:Class="GRCFinancialControl.Avalonia.Views.Dialogs.ManagerAssignmentEditorView"
              x:DataType="vm:ManagerAssignmentEditorViewModel">
-    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridSpacing}">
+    <Grid RowDefinitions="*,Auto" RowSpacing="{DynamicResource GridGap}">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="{StaticResource SectionSpacing}">
+            <StackPanel Spacing="{DynamicResource SectionSpacing}">
                 <TextBlock Text="{Binding Title}" Classes="TitleSmall"/>
 
                 <Grid RowDefinitions="Auto,Auto"
                       ColumnDefinitions="Auto,*"
-                      RowSpacing="{StaticResource GridSpacing}"
-                      ColumnSpacing="{StaticResource GridSpacing}">
+                      RowSpacing="{DynamicResource GridGap}"
+                      ColumnSpacing="{DynamicResource GridGap}">
                     <TextBlock Grid.Row="0"
                                Grid.Column="0"
                                Text="{loc:Loc Key=FINC_Admin_ManagerAssignments_Label_Engagement}"/>
@@ -50,7 +50,7 @@
         <StackPanel Grid.Row="1"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Spacing="{StaticResource ControlSpacing}">
+                    Spacing="{DynamicResource ControlSpacing}">
             <Button Content="{loc:Loc Key=Global_Button_Save}"
                     Command="{Binding SaveCommand}"
                     IsEnabled="{Binding AllowEditing}"
