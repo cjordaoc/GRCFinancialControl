@@ -43,6 +43,14 @@ namespace GRCFinancialControl.Persistence.Services.Infrastructure
             return await query.ToListAsync();
         }
 
+        protected async Task<TEntity?> GetSingleInternalAsync(Func<IQueryable<TEntity>, IQueryable<TEntity>> configure)
+        {
+            await using var context = await CreateContextAsync();
+            IQueryable<TEntity> query = BuildQuery(context);
+            query = configure(query);
+            return await query.FirstOrDefaultAsync();
+        }
+
         protected async Task AddEntityAsync(TEntity entity)
         {
             ArgumentNullException.ThrowIfNull(entity);
