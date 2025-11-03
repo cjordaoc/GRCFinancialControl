@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using GRCFinancialControl.Core.Enums;
 
 namespace GRCFinancialControl.Core.Models
@@ -11,5 +12,6 @@ namespace GRCFinancialControl.Core.Models
         public string Name { get; set; } = string.Empty;
         public PapdLevel Level { get; set; } // e.g., "Partner", "Director"
         public string? WindowsLogin { get; set; }
+        public ICollection<Engagement> Engagements { get; set; } = new List<Engagement>();
     }
 }

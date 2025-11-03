@@ -10,8 +10,7 @@
     <Grid RowDefinitions="*,Auto" Margin="{StaticResource CardPaddingThickness}">
         <DataGrid Grid.Row="0"
                   ItemsSource="{Binding Engagements}"
-                  SelectedItems="{Binding SelectedEngagements}"
-                  SelectionMode="Multiple"
+                  SelectionMode="Extended"
                   IsReadOnly="False"
                   AutoGenerateColumns="False"
                   ScrollViewer.HorizontalScrollBarVisibility="Auto"

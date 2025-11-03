@@ -27,9 +27,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
         private ObservableCollection<EngagementAssignmentItem> _engagements = new();
 
         [ObservableProperty]
-        private ObservableCollection<EngagementAssignmentItem> _selectedEngagements = new();
-
-        [ObservableProperty]
         private bool _isBusy;
 
         public EngagementAssignmentViewModel(
@@ -71,16 +68,22 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
                 if (_papdId.HasValue)
                 {
                     var papd = await _papdService.GetByIdAsync(_papdId.Value);
-                    var assignedEngagementIds = papd.Engagements.Select(e => e.Id).ToHashSet();
-                    Engagements = new ObservableCollection<EngagementAssignmentItem>(
-                        allEngagements.Select(e => new EngagementAssignmentItem(e, assignedEngagementIds.Contains(e.Id))));
+                    if (papd is not null)
+                    {
+                        var assignedEngagementIds = papd.Engagements.Select(e => e.Id).ToHashSet();
+                        Engagements = new ObservableCollection<EngagementAssignmentItem>(
+                            allEngagements.Select(e => new EngagementAssignmentItem(e, assignedEngagementIds.Contains(e.Id))));
+                    }
                 }
                 else if (_managerId.HasValue)
                 {
                     var manager = await _managerService.GetByIdAsync(_managerId.Value);
-                    var assignedEngagementIds = manager.Engagements.Select(e => e.Id).ToHashSet();
-                    Engagements = new ObservableCollection<EngagementAssignmentItem>(
-                        allEngagements.Select(e => new EngagementAssignmentItem(e, assignedEngagementIds.Contains(e.Id))));
+                    if (manager is not null)
+                    {
+                        var assignedEngagementIds = manager.EngagementAssignments.Select(e => e.EngagementId).ToHashSet();
+                        Engagements = new ObservableCollection<EngagementAssignmentItem>(
+                            allEngagements.Select(e => new EngagementAssignmentItem(e, assignedEngagementIds.Contains(e.Id))));
+                    }
                 }
             }
             catch (Exception ex)
@@ -130,12 +133,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
 
         private bool CanAssign()
         {
-            return SelectedEngagements.Any();
-        }
-
-        partial void OnSelectedEngagementsChanged(ObservableCollection<EngagementAssignmentItem> value)
-        {
-            AssignCommand.NotifyCanExecuteChanged();
+            return Engagements.Any(e => e.IsSelected);
         }
     }
 
