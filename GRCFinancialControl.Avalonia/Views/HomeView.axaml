@@ -70,6 +70,7 @@
                     <TextBlock Text="{loc:Loc Key=FINC_Home_Markdown_Title}"
                                Classes="TitleMedium"/>
                     <md:MarkdownScrollViewer Markdown="{Binding ReadmeContent}"
+                                             x:CompileBindings="False"
                                              MaxHeight="420"
                                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                              ScrollViewer.VerticalScrollBarVisibility="Auto"/>
