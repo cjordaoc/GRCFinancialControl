@@ -120,11 +120,14 @@
 
   <Style Selector="ToggleButton.NavButton">
     <Setter Property="HorizontalContentAlignment" Value="Left" />
-    <Setter Property="Padding" Value="{StaticResource SidebarItemPadding}" />
+    <Setter Property="Padding" Value="12,6" />
+    <Setter Property="MinHeight" Value="40" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="VerticalAlignment" Value="Center" />
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderBrush" Value="Transparent" />
     <Setter Property="FontFamily" Value="{StaticResource FontPrimary}" />
-    <Setter Property="FontSize" Value="{StaticResource FontSizeButton}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeButtonCompact}" />
     <Setter Property="FontWeight" Value="{StaticResource FontWeightMedium}" />
     <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
   </Style>

@@ -7,6 +7,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
         xmlns:sharedControls="clr-namespace:GRC.Shared.UI.Controls;assembly=GRC.Shared.UI"
+        xmlns:sharedConverters="clr-namespace:GRC.Shared.UI.Converters;assembly=GRC.Shared.UI"
         mc:Ignorable="d" d:DesignWidth="960" d:DesignHeight="640"
         x:Class="GRCFinancialControl.Avalonia.Views.MainWindow"
         x:Name="MainWindowRoot"
@@ -20,6 +21,11 @@
         Padding="{StaticResource WindowClientPadding}"
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <sharedConverters:BoolToHorizontalAlignmentConverter x:Key="SidebarAlignmentConverter"
+                                                             TrueValue="Left"
+                                                             FalseValue="Center" />
+    </Window.Resources>
 
     <Panel>
         <ExperimentalAcrylicBorder IsHitTestVisible="False"
@@ -38,9 +44,29 @@
                                         IsExpanded="{Binding IsSidebarExpanded, Mode=TwoWay}">
                 <sharedControls:SidebarHost.HeaderTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding .}"
-                                   Classes="TitleMedium"
-                                   Foreground="{StaticResource BrushOnSurface}"/>
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="{DynamicResource SpacingUnit}"
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=sharedControls:SidebarHost}, Converter={StaticResource SidebarAlignmentConverter}}">
+                            <Border Width="32"
+                                    Height="32"
+                                    CornerRadius="16"
+                                    Background="{StaticResource BrushPrimary}">
+                                <Path Data="{StaticResource IconHome}"
+                                      Width="20"
+                                      Height="20"
+                                      Stretch="Uniform"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Fill="{StaticResource BrushOnSurface}"/>
+                            </Border>
+                            <TextBlock Text="{Binding .}"
+                                       Classes="TitleMedium"
+                                       TextTrimming="None"
+                                       VerticalAlignment="Center"
+                                       Foreground="{StaticResource BrushOnSurface}"
+                                       IsVisible="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=sharedControls:SidebarHost}}"/>
+                        </StackPanel>
                     </DataTemplate>
                 </sharedControls:SidebarHost.HeaderTemplate>
                 <sharedControls:SidebarHost.ItemTemplate>
@@ -50,7 +76,8 @@
                                           CommandParameter="{Binding}"
                                           IsChecked="{Binding IsSelected, Mode=TwoWay}"
                                           Classes="NavButton"
-                                          ToolTip.Tip="{Binding Title}">
+                                          ToolTip.Tip="{Binding Title}"
+                                          HorizontalContentAlignment="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=sharedControls:SidebarHost}, Converter={StaticResource SidebarAlignmentConverter}}">
                                 <ToggleButton.Content>
                                     <StackPanel Orientation="Horizontal"
                                                 Spacing="{DynamicResource SpacingUnit}"
@@ -60,10 +87,12 @@
                                               Height="20"
                                               Fill="{StaticResource BrushOnSurface}"
                                               Stretch="Uniform"
+                                              HorizontalAlignment="Center"
                                               VerticalAlignment="Center"/>
                                         <TextBlock Text="{Binding Title}"
                                                    VerticalAlignment="Center"
                                                    Classes="SidebarTitle"
+                                                   TextTrimming="None"
                                                    IsVisible="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=sharedControls:SidebarHost}}"/>
                                     </StackPanel>
                                 </ToggleButton.Content>
@@ -83,7 +112,8 @@
                                                       IsChecked="{Binding IsSelected, Mode=TwoWay}"
                                                       Classes="NavButton"
                                                       Margin="{DynamicResource MarginTopXSmall}"
-                                                      ToolTip.Tip="{Binding Title}">
+                                                      ToolTip.Tip="{Binding Title}"
+                                                      HorizontalContentAlignment="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=sharedControls:SidebarHost}, Converter={StaticResource SidebarAlignmentConverter}}">
                                             <ToggleButton.Content>
                                                 <StackPanel Orientation="Horizontal"
                                                             Spacing="{DynamicResource SpacingUnit}"
@@ -93,10 +123,12 @@
                                                            Height="18"
                                                            Fill="{StaticResource BrushOnSurface}"
                                                            Stretch="Uniform"
+                                                           HorizontalAlignment="Center"
                                                            VerticalAlignment="Center"/>
                                                      <TextBlock Text="{Binding Title}"
                                                                 VerticalAlignment="Center"
-                                                               Classes="SidebarTitle"
+                                                              Classes="SidebarTitle"
+                                                               TextTrimming="None"
                                                                IsVisible="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=sharedControls:SidebarHost}}"/>
                                                 </StackPanel>
                                             </ToggleButton.Content>
