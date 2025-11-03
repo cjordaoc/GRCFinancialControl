@@ -15,7 +15,7 @@
           Width="{Binding EffectiveWidth, ElementName=Root}"
           Background="{StaticResource BrushSurfaceVariant}"
           CornerRadius="{StaticResource ControlCornerRadius}"
-          Padding="{DynamicResource CardPaddingThickness}"
+          Padding="{StaticResource CardPaddingThickness}"
           MinWidth="{Binding CompactWidth, ElementName=Root}"
           BoxShadow="{StaticResource ShadowLow}">
     <Border.Transitions>
@@ -25,7 +25,7 @@
       </Transitions>
     </Border.Transitions>
     <Grid RowDefinitions="Auto,*,Auto"
-          RowSpacing="{DynamicResource GridGap}">
+          RowSpacing="{StaticResource GridGap}">
       <ContentPresenter Content="{Binding Header, ElementName=Root}"
                         ContentTemplate="{Binding HeaderTemplate, ElementName=Root}"
                         HorizontalAlignment="Stretch" />
@@ -36,7 +36,7 @@
                       ItemTemplate="{Binding ItemTemplate, ElementName=Root}">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
-              <StackPanel Spacing="{DynamicResource ControlSpacing}" />
+              <StackPanel Spacing="{StaticResource ControlSpacing}" />
             </ItemsPanelTemplate>
           </ItemsControl.ItemsPanel>
         </ItemsControl>
@@ -48,7 +48,7 @@
                     HorizontalContentAlignment="{Binding IsExpanded, ElementName=Root, Converter={StaticResource SidebarAlignmentConverter}}">
         <ToggleButton.Content>
           <StackPanel Orientation="Horizontal"
-                      Spacing="{DynamicResource SpacingUnit}"
+                      Spacing="{StaticResource SpacingUnit}"
                       VerticalAlignment="Center">
             <Path Width="20"
                   Height="20"

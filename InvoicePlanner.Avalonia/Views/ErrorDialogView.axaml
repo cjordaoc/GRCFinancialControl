@@ -7,11 +7,11 @@
              x:Class="InvoicePlanner.Avalonia.Views.ErrorDialogView"
              x:DataType="vm:ErrorDialogViewModel"
              mc:Ignorable="d">
-    <Border Padding="{DynamicResource CardPaddingThickness}" Classes="Card">
-        <Grid RowDefinitions="*,Auto" RowSpacing="{DynamicResource GridGap}">
-            <StackPanel Grid.Row="0" Spacing="{DynamicResource SectionSpacing}">
+    <Border Padding="{StaticResource CardPaddingThickness}" Classes="Card">
+        <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridGap}">
+            <StackPanel Grid.Row="0" Spacing="{StaticResource SectionSpacing}">
                 <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Classes="TitleMedium" />
-                <StackPanel Spacing="{DynamicResource ControlSpacing}">
+                <StackPanel Spacing="{StaticResource ControlSpacing}">
                     <TextBlock Text="{Binding DetailsLabel}" FontWeight="{StaticResource FontWeightSemiBold}" />
                     <TextBox Text="{Binding Details}"
                              AcceptsReturn="True"
@@ -25,15 +25,15 @@
             <StackPanel Grid.Row="1"
                         Orientation="Horizontal"
                         HorizontalAlignment="Right"
-                        Spacing="{DynamicResource ControlSpacing}">
+                        Spacing="{StaticResource ControlSpacing}">
                 <Button Content="{loc:Loc Key=Global_Button_Save}"
                         Command="{Binding SaveCommand}"
                         IsDefault="True"
-                        MinWidth="{StaticResource InputMinWidthStandard}" />
+                        MinWidth="{StaticResource ButtonMinWidth}" />
                 <Button Content="{loc:Loc Key=Global_Button_Cancel}"
                         Command="{Binding CloseCommand}"
                         IsCancel="True"
-                        MinWidth="{StaticResource InputMinWidthStandard}" />
+                        MinWidth="{StaticResource ButtonMinWidth}" />
                 <Button Content="{loc:Loc Key=INV_Button_CopyDetails}"
                         Command="{Binding CopyDetailsCommand}" />
             </StackPanel>

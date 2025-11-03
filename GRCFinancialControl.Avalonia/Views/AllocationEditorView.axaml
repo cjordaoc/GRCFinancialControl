@@ -18,12 +18,12 @@
                                       TrueBrush="{StaticResource BrushWarning}"
                                       FalseBrush="{StaticResource BrushSuccessDark}"/>
     </UserControl.Resources>
-    <Grid RowDefinitions="*,Auto" RowSpacing="{DynamicResource GridGap}">
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridGap}">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="{DynamicResource SectionSpacing}">
+            <StackPanel Spacing="{StaticResource SectionSpacing}">
                 <TextBlock Text="{Binding Engagement.Description}" Classes="TitleMedium"/>
 
-                <StackPanel Orientation="Horizontal" Spacing="{DynamicResource ControlSpacing}" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="{StaticResource ControlSpacing}" VerticalAlignment="Center">
                     <TextBlock Text="{Binding TargetLabel}" FontWeight="{StaticResource FontWeightSemiBold}"/>
                     <TextBlock Text="{Binding TargetAmountDisplay}"/>
                     <Ellipse Width="14" Height="14" StrokeThickness="1" ToolTip.Tip="{Binding AllocationVarianceTooltip}"
@@ -53,7 +53,7 @@
                         <DataGridTemplateColumn Header="{Binding #AllocationEditorRoot.DataContext.ToDateColumnHeader}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="{DynamicResource SpacingUnit}" VerticalAlignment="Center">
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource SpacingUnit}" VerticalAlignment="Center">
                                         <TextBlock Grid.Column="0"
                                                    Text="{Binding DataContext.CurrencySymbol, ElementName=AllocationEditorRoot}"
                                                    IsVisible="{Binding DataContext.HasCurrencySymbol, ElementName=AllocationEditorRoot}"
@@ -71,7 +71,7 @@
                         <DataGridTemplateColumn Header="{Binding #AllocationEditorRoot.DataContext.ToGoColumnHeader}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="{DynamicResource SpacingUnit}" VerticalAlignment="Center">
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource SpacingUnit}" VerticalAlignment="Center">
                                         <TextBlock Grid.Column="0"
                                                    Text="{Binding DataContext.CurrencySymbol, ElementName=AllocationEditorRoot}"
                                                    IsVisible="{Binding DataContext.HasCurrencySymbol, ElementName=AllocationEditorRoot}"
@@ -94,16 +94,16 @@
         <StackPanel Grid.Row="1"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Spacing="{DynamicResource ControlSpacing}">
+                    Spacing="{StaticResource ControlSpacing}">
             <Button Content="{loc:Loc Key=Global_Button_Save}"
                     Command="{Binding SaveCommand}"
                     IsEnabled="{Binding AllowEditing}"
                     IsDefault="{Binding AllowEditing}"
-                    MinWidth="{StaticResource InputMinWidthStandard}" />
+                    MinWidth="{StaticResource ButtonMinWidth}" />
             <Button Content="{loc:Loc Key=Global_Button_Cancel}"
                     Command="{Binding CloseCommand}"
                     IsCancel="True"
-                    MinWidth="{StaticResource InputMinWidthStandard}" />
+                    MinWidth="{StaticResource ButtonMinWidth}" />
         </StackPanel>
     </Grid>
 </UserControl>

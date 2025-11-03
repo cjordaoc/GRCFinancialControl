@@ -17,12 +17,12 @@
         <TextBlock Grid.Row="0"
                    Text="{Binding Header}"
                    Classes="TitleMedium"
-                   Margin="{DynamicResource CardPaddingThickness}"/>
+                   Margin="{StaticResource CardPaddingThickness}"/>
 
         <StackPanel Grid.Row="1"
                     Orientation="Horizontal"
-                    Spacing="{DynamicResource SectionSpacing}"
-                    Margin="{DynamicResource CardPaddingThickness}">
+                    Spacing="{StaticResource SectionSpacing}"
+                    Margin="{StaticResource CardPaddingThickness}">
             <ComboBox Width="280"
                       ItemsSource="{Binding Engagements}"
                       SelectedItem="{Binding SelectedEngagement}"/>
@@ -32,8 +32,8 @@
 
         <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
-                    Spacing="{DynamicResource ControlSpacing}"
-                    Margin="{DynamicResource CardPaddingThickness}">
+                    Spacing="{StaticResource ControlSpacing}"
+                    Margin="{StaticResource CardPaddingThickness}">
             <SplitButton Content="Add Resource"
                          Command="{Binding AddResourceCommand}"
                          CommandParameter="{Binding SelectedRankOption}">
@@ -53,8 +53,8 @@
 
         <StackPanel Grid.Row="3"
                     Orientation="Horizontal"
-                    Spacing="{DynamicResource SectionSpacing}"
-                    Margin="{DynamicResource CardPaddingThickness}">
+                    Spacing="{StaticResource SectionSpacing}"
+                    Margin="{StaticResource CardPaddingThickness}">
             <TextBlock Text="{Binding TotalBudgetHours, StringFormat='Budget Hours: {0:N2} h'}"/>
             <TextBlock Text="{Binding ActualHours, StringFormat='Actual Hours: {0:N2} h'}"/>
             <TextBlock Text="{Binding ToBeConsumedHours, StringFormat='Remaining Hours: {0:N2} h'}"/>
@@ -64,7 +64,7 @@
                    Text="{Binding StatusMessage}"
                    Foreground="{StaticResource BrushWarning}"
                    FontWeight="{StaticResource FontWeightSemiBold}"
-                   Margin="{DynamicResource CardPaddingThickness}"/>
+                   Margin="{StaticResource CardPaddingThickness}"/>
 
         <DataGrid x:Name="HoursAllocationsGrid"
                   Grid.Row="5"
@@ -73,7 +73,7 @@
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
                   CanUserSortColumns="True"
-                  Margin="{DynamicResource CardPaddingThickness}">
+                  Margin="{StaticResource CardPaddingThickness}">
             <DataGrid.Columns>
                 <DataGridTemplateColumn Header="" Width="Auto">
                     <DataGridTemplateColumn.CellTemplate>
@@ -101,7 +101,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal"
-                                        Spacing="{DynamicResource SpacingUnit}">
+                                        Spacing="{StaticResource SpacingUnit}">
                                 <Button Content="Edit"
                                         Command="{Binding DataContext.EditRowCommand, ElementName=HoursAllocationsViewRoot}"
                                         CommandParameter="{Binding}"/>

@@ -9,12 +9,12 @@
              mc:Ignorable="d">
     <Grid>
         <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="{DynamicResource SectionSpacing}" Margin="{DynamicResource CardPaddingThickness}">
-                <Border Classes="Card" Padding="{DynamicResource CardPaddingThickness}">
-                    <StackPanel Spacing="{DynamicResource SectionSpacing}">
+            <StackPanel Spacing="{StaticResource SectionSpacing}" Margin="{StaticResource CardPaddingThickness}">
+                <Border Classes="Card" Padding="{StaticResource CardPaddingThickness}">
+                    <StackPanel Spacing="{StaticResource SectionSpacing}">
                         <TextBlock Classes="TitleMedium" Text="{loc:Loc Key=INV_Request_Title_Primary}" />
                         <TextBlock Text="{loc:Loc Key=INV_Request_Description_Primary}" />
-                        <StackPanel Spacing="{DynamicResource ControlSpacing}">
+                        <StackPanel Spacing="{StaticResource ControlSpacing}">
                         <TextBlock Text="{loc:Loc Key=INV_Request_Section_AvailablePlans_Header}" FontWeight="{StaticResource FontWeightSemiBold}" />
                             <TextBlock Text="{Binding PlanSelectionMessage}" TextWrapping="Wrap" />
                             <DataGrid ItemsSource="{Binding AvailablePlans}"
@@ -25,7 +25,7 @@
                                       HorizontalScrollBarVisibility="Auto"
                                       IsVisible="{Binding HasAvailablePlans}"
                                       MaxHeight="220"
-                                      Margin="{DynamicResource MarginTopXSmall}"
+                                      Margin="{StaticResource MarginTopXSmall}"
                                       IsReadOnly="True">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_PlanId}" Binding="{Binding Id}" Width="80"/>
@@ -38,7 +38,7 @@
                                     <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Canceled}" Binding="{Binding CanceledItemCount}" Width="120"/>
                                 </DataGrid.Columns>
                             </DataGrid>
-                            <StackPanel Orientation="Horizontal" Spacing="{DynamicResource ControlSpacing}">
+                            <StackPanel Orientation="Horizontal" Spacing="{StaticResource ControlSpacing}">
                                 <Button Content="{loc:Loc Key=INV_Button_Refresh}"
                                         Command="{Binding RefreshCommand}"
                                         MinWidth="140"/>
@@ -50,10 +50,10 @@
                     </StackPanel>
                 </Border>
 
-                <Border Classes="Card" Padding="{DynamicResource CardPaddingThickness}" IsVisible="{Binding IsPlanDetailsVisible}">
-                    <StackPanel Spacing="{DynamicResource SectionSpacing}">
+                <Border Classes="Card" Padding="{StaticResource CardPaddingThickness}" IsVisible="{Binding IsPlanDetailsVisible}">
+                    <StackPanel Spacing="{StaticResource SectionSpacing}">
                         <TextBlock Classes="TitleMedium" Text="{loc:Loc Key=INV_Request_Section_InvoiceDetails_Header}" />
-                        <StackPanel Orientation="Horizontal" Spacing="{DynamicResource SectionSpacing}">
+                        <StackPanel Orientation="Horizontal" Spacing="{StaticResource SectionSpacing}">
                             <TextBlock Text="{Binding EngagementDisplay}" />
                             <TextBlock Text="{Binding PlannedCountDisplay}" />
                             <TextBlock Text="{Binding RequestedCountDisplay}" />
@@ -84,14 +84,14 @@
                                 <DataGridTextColumn Header="{loc:Loc Key=INV_Request_TableHeader_Status}" Binding="{Binding Status}" Width="120"/>
                             </DataGrid.Columns>
                         </DataGrid>
-                        <StackPanel Spacing="{DynamicResource ControlSpacing}" IsVisible="{Binding HasSelectedLine}">
+                        <StackPanel Spacing="{StaticResource ControlSpacing}" IsVisible="{Binding HasSelectedLine}">
                             <ContentControl Content="{Binding SelectedLine}">
                                 <ContentControl.ContentTemplate>
                                     <DataTemplate x:DataType="vm:RequestConfirmationLineViewModel">
                                         <Grid ColumnDefinitions="Auto,1*"
                                               RowDefinitions="Auto,Auto,Auto"
-                                              ColumnSpacing="{DynamicResource GridGap}"
-                                              RowSpacing="{DynamicResource GridGap}">
+                                              ColumnSpacing="{StaticResource GridGap}"
+                                              RowSpacing="{StaticResource GridGap}">
                                             <TextBlock Grid.Row="0"
                                                        Grid.Column="0"
                                                        VerticalAlignment="Center"
@@ -119,22 +119,22 @@
                             </ContentControl>
                             <StackPanel Orientation="Horizontal"
                                         HorizontalAlignment="Right"
-                                        Spacing="{DynamicResource ControlSpacing}">
+                                        Spacing="{StaticResource ControlSpacing}">
                                 <Button Content="{loc:Loc Key=Global_Button_Save}"
                                         Command="{Binding SavePlanDetailsCommand}"
-                                        MinWidth="{StaticResource InputMinWidthStandard}" />
+                                        MinWidth="{StaticResource ButtonMinWidth}" />
                                 <Button Content="{loc:Loc Key=INV_Request_Button_Reverse}"
                                         Command="{Binding ReverseSelectedLineCommand}"
-                                        MinWidth="{StaticResource InputMinWidthStandard}" />
+                                        MinWidth="{StaticResource ButtonMinWidth}" />
                                 <Button Content="{loc:Loc Key=INV_Button_Close}"
                                         Command="{Binding ClosePlanDetailsCommand}"
-                                        MinWidth="{StaticResource InputMinWidthStandard}" />
+                                        MinWidth="{StaticResource ButtonMinWidth}" />
                             </StackPanel>
                         </StackPanel>
                     </StackPanel>
                 </Border>
 
-                <StackPanel Spacing="{DynamicResource SpacingUnit}">
+                <StackPanel Spacing="{StaticResource SpacingUnit}">
                     <TextBlock Text="{Binding ValidationMessage}"
                                Classes="StatusError"
                                IsVisible="{Binding HasValidationMessage}" />

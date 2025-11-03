@@ -22,7 +22,7 @@
     <Grid RowDefinitions="Auto,*">
         <TextBlock Text="{Binding Header}"
                    Classes="TitleMedium"
-                   Margin="{DynamicResource CardPaddingThickness}"/>
+                   Margin="{StaticResource CardPaddingThickness}"/>
         <DataGrid Grid.Row="1" ItemsSource="{Binding Engagements}" AutoGenerateColumns="False" IsReadOnly="True" CanUserSortColumns="True">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Engagement ID" Binding="{Binding EngagementId}" Width="*"/>
@@ -59,7 +59,7 @@
                 <DataGridTemplateColumn Header="Review" Width="Auto">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate x:DataType="models:Engagement">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="{DynamicResource SpacingUnit}">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="{StaticResource SpacingUnit}">
                                 <Ellipse Width="12" Height="12" StrokeThickness="1" ToolTip.Tip="{Binding RevenueAllocationVariance, StringFormat='Variance {0:+0.##;-0.##;0}'}"
                                          Fill="{Binding RequiresRevenueAllocationReview, Converter={StaticResource AllocationFillBrush}}"
                                          Stroke="{Binding RequiresRevenueAllocationReview, Converter={StaticResource AllocationStrokeBrush}}"/>
@@ -73,7 +73,7 @@
                 <DataGridTemplateColumn Header="Actions">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate x:DataType="models:Engagement">
-                            <StackPanel Orientation="Horizontal" Spacing="{DynamicResource SpacingUnit}">
+                            <StackPanel Orientation="Horizontal" Spacing="{StaticResource SpacingUnit}">
                                 <Button Content="View"
                                         Command="{Binding DataContext.ViewAllocationCommand, ElementName=RevenueAllocationsViewRoot}"
                                         CommandParameter="{Binding}"/>

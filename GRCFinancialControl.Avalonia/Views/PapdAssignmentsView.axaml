@@ -7,8 +7,8 @@
              mc:Ignorable="d" d:DesignWidth="820" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.PapdAssignmentsView"
              x:DataType="vm:PapdAssignmentsViewModel">
-    <StackPanel Margin="{DynamicResource CardPaddingThickness}" Spacing="{DynamicResource SectionSpacing}">
-        <StackPanel Spacing="{DynamicResource SpacingUnit}">
+    <StackPanel Margin="{StaticResource CardPaddingThickness}" Spacing="{StaticResource SectionSpacing}">
+        <StackPanel Spacing="{StaticResource SpacingUnit}">
             <TextBlock Text="PAPD" Classes="TitleSmall"/>
             <ComboBox ItemsSource="{Binding Papds}"
                       SelectedItem="{Binding SelectedPapd}"
@@ -21,7 +21,7 @@
             </ComboBox>
         </StackPanel>
 
-        <StackPanel Orientation="Horizontal" Spacing="{DynamicResource SpacingUnit}">
+        <StackPanel Orientation="Horizontal" Spacing="{StaticResource SpacingUnit}">
             <Button Content="{loc:Loc Key=FINC_Button_Add}" Command="{Binding AddCommand}"/>
             <Button Content="{loc:Loc Key=FINC_Button_Edit}" Command="{Binding EditCommand}"/>
             <Button Content="{loc:Loc Key=FINC_Button_View}" Command="{Binding ViewCommand}"/>

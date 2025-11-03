@@ -14,14 +14,14 @@
         <conv:PercentageOfSizeConverter x:Key="PercentageOfSizeConverter" />
     </UserControl.Resources>
 
-    <Grid RowDefinitions="*,Auto" RowSpacing="{DynamicResource GridGap}">
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridGap}">
         <ScrollViewer Grid.Row="0"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled"
                       HorizontalAlignment="Stretch"
                       HorizontalContentAlignment="Stretch"
-                      Padding="{DynamicResource CardPaddingThickness}">
-            <StackPanel Spacing="{DynamicResource SectionSpacing}"
+                      Padding="{StaticResource CardPaddingThickness}">
+            <StackPanel Spacing="{StaticResource SectionSpacing}"
                         HorizontalAlignment="Stretch"
                         MaxWidth="{Binding ElementName=EngagementEditorRoot,
                                             Path=Bounds.Width,
@@ -31,175 +31,175 @@
 
                 <TabControl HorizontalAlignment="Stretch">
                     <TabItem Header="Engagement Data">
-                        <StackPanel Spacing="{DynamicResource SectionSpacing}">
-                            <Grid ColumnDefinitions="*,*" ColumnSpacing="{DynamicResource GridGap}">
-                                <StackPanel Spacing="{DynamicResource SpacingUnit}" Grid.Column="0">
+                        <StackPanel Spacing="{StaticResource SectionSpacing}">
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource GridGap}">
+                                <StackPanel Spacing="{StaticResource SpacingUnit}" Grid.Column="0">
                                     <TextBlock Text="Engagement ID:" VerticalAlignment="Center"/>
                                     <TextBox Text="{Binding EngagementId}"
                                              IsReadOnly="{Binding IsEngagementIdReadOnly}"
                                              IsEnabled="{Binding CanEditEngagementId}"
                                              HorizontalAlignment="Stretch"
-                                             MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
+                                             MinWidth="{StaticResource TextBoxMinWidth}"/>
                                 </StackPanel>
-                                <StackPanel Spacing="{DynamicResource SpacingUnit}" Grid.Column="1">
+                                <StackPanel Spacing="{StaticResource SpacingUnit}" Grid.Column="1">
                                     <TextBlock Text="Customer:" VerticalAlignment="Center"/>
                                     <ComboBox ItemsSource="{Binding Customers}"
                                               SelectedItem="{Binding SelectedCustomer}"
                                               DisplayMemberBinding="{Binding DisplayName}"
                                               IsEnabled="{Binding CanEditCustomer}"
                                               HorizontalAlignment="Stretch"
-                                              MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
+                                              MinWidth="{StaticResource ComboBoxMinWidth}"/>
                                 </StackPanel>
                             </Grid>
 
-                            <StackPanel Spacing="{DynamicResource SpacingUnit}">
+                            <StackPanel Spacing="{StaticResource SpacingUnit}">
                                 <TextBlock Text="Description:" VerticalAlignment="Center"/>
                                 <TextBox Text="{Binding Description}"
                                          IsReadOnly="{Binding IsGeneralFieldReadOnly}"
                                          HorizontalAlignment="Stretch"
-                                         MinWidth="{StaticResource PopupTextBoxMinWidth}"
+                                         MinWidth="{StaticResource TextBoxMinWidth}"
                                          MinHeight="80"
                                          AcceptsReturn="True"
                                          TextWrapping="Wrap"/>
                             </StackPanel>
 
-                            <Grid ColumnDefinitions="*,*" ColumnSpacing="{DynamicResource GridGap}">
-                                <StackPanel Spacing="{DynamicResource SpacingUnit}" Grid.Column="0">
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource GridGap}">
+                                <StackPanel Spacing="{StaticResource SpacingUnit}" Grid.Column="0">
                                     <TextBlock Text="Status:" VerticalAlignment="Center"/>
                                     <ComboBox ItemsSource="{Binding StatusTextOptions}"
                                               SelectedItem="{Binding SelectedStatusText}"
                                               IsEnabled="{Binding CanEditStatus}"
                                               HorizontalAlignment="Stretch"
-                                              MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
+                                              MinWidth="{StaticResource ComboBoxMinWidth}"/>
                                 </StackPanel>
-                                <StackPanel Spacing="{DynamicResource SpacingUnit}" Grid.Column="1">
+                                <StackPanel Spacing="{StaticResource SpacingUnit}" Grid.Column="1">
                                     <TextBlock Text="Currency:" VerticalAlignment="Center"/>
                                     <TextBox Text="{Binding Currency}"
                                              IsReadOnly="{Binding IsCurrencyReadOnly}"
                                              HorizontalAlignment="Stretch"
-                                             MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
+                                             MinWidth="{StaticResource TextBoxMinWidth}"/>
                                 </StackPanel>
                             </Grid>
 
-                            <StackPanel Spacing="{DynamicResource SpacingUnit}">
+                            <StackPanel Spacing="{StaticResource SpacingUnit}">
                                 <TextBlock Text="Source:" VerticalAlignment="Center"/>
                                 <ComboBox ItemsSource="{Binding SourceOptions}"
                                           SelectedItem="{Binding SelectedSource}"
                                           DisplayMemberBinding="{Binding DisplayName}"
                                           IsEnabled="{Binding AllowEditing}"
                                           HorizontalAlignment="Stretch"
-                                          MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
+                                          MinWidth="{StaticResource ComboBoxMinWidth}"/>
                             </StackPanel>
                         </StackPanel>
                     </TabItem>
 
                     <TabItem Header="Financial Data">
-                        <StackPanel Spacing="{DynamicResource SectionSpacing}">
-                            <Grid ColumnDefinitions="*,*" ColumnSpacing="{DynamicResource GridGap}">
-                                <StackPanel Spacing="{DynamicResource SpacingUnit}" Grid.Column="0">
+                        <StackPanel Spacing="{StaticResource SectionSpacing}">
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource GridGap}">
+                                <StackPanel Spacing="{StaticResource SpacingUnit}" Grid.Column="0">
                                     <TextBlock Text="Opening Value:" VerticalAlignment="Center"/>
                                     <TextBox Text="{Binding OpeningValue}"
                                              IsReadOnly="{Binding IsFinancialSnapshotReadOnly}"
                                              HorizontalAlignment="Stretch"
-                                             MinWidth="{StaticResource PopupTextBoxMinWidth}"
+                                             MinWidth="{StaticResource TextBoxMinWidth}"
                                              behaviors:NumericInputNullSafety.IsEnabled="True"/>
                                 </StackPanel>
-                                <StackPanel Spacing="{DynamicResource SpacingUnit}" Grid.Column="1">
+                                <StackPanel Spacing="{StaticResource SpacingUnit}" Grid.Column="1">
                                     <TextBlock Text="Value ETC-P:" VerticalAlignment="Center"/>
                                     <TextBox Text="{Binding ValueEtcp}"
                                              IsReadOnly="{Binding IsGeneralFieldReadOnly}"
                                              HorizontalAlignment="Stretch"
-                                             MinWidth="{StaticResource PopupTextBoxMinWidth}"
+                                             MinWidth="{StaticResource TextBoxMinWidth}"
                                              behaviors:NumericInputNullSafety.IsEnabled="True"/>
                                 </StackPanel>
                             </Grid>
 
-                            <Grid ColumnDefinitions="*,*" ColumnSpacing="{DynamicResource GridGap}">
-                                <StackPanel Spacing="{DynamicResource SpacingUnit}" Grid.Column="0">
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource GridGap}">
+                                <StackPanel Spacing="{StaticResource SpacingUnit}" Grid.Column="0">
                                     <TextBlock Text="Opening Expenses:" VerticalAlignment="Center"/>
                                     <TextBox Text="{Binding OpeningExpenses}"
                                              IsReadOnly="{Binding IsFinancialSnapshotReadOnly}"
                                              HorizontalAlignment="Stretch"
-                                             MinWidth="{StaticResource PopupTextBoxMinWidth}"
+                                             MinWidth="{StaticResource TextBoxMinWidth}"
                                              behaviors:NumericInputNullSafety.IsEnabled="True"/>
                                 </StackPanel>
-                                <StackPanel Spacing="{DynamicResource SpacingUnit}" Grid.Column="1">
+                                <StackPanel Spacing="{StaticResource SpacingUnit}" Grid.Column="1">
                                     <TextBlock Text="Expenses ETC-P:" VerticalAlignment="Center"/>
                                     <TextBox Text="{Binding ExpensesEtcp}"
                                              IsReadOnly="{Binding IsGeneralFieldReadOnly}"
                                              HorizontalAlignment="Stretch"
-                                             MinWidth="{StaticResource PopupTextBoxMinWidth}"
+                                             MinWidth="{StaticResource TextBoxMinWidth}"
                                              behaviors:NumericInputNullSafety.IsEnabled="True"/>
                                 </StackPanel>
                             </Grid>
 
-                            <Grid ColumnDefinitions="*,*" ColumnSpacing="{DynamicResource GridGap}">
-                                <StackPanel Spacing="{DynamicResource SpacingUnit}" Grid.Column="0">
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource GridGap}">
+                                <StackPanel Spacing="{StaticResource SpacingUnit}" Grid.Column="0">
                                     <TextBlock Text="Planned Hours:" VerticalAlignment="Center"/>
                                     <TextBox Text="{Binding InitialHoursBudget}"
                                              IsReadOnly="{Binding IsFinancialSnapshotReadOnly}"
                                              HorizontalAlignment="Stretch"
-                                             MinWidth="{StaticResource PopupTextBoxMinWidth}"
+                                             MinWidth="{StaticResource TextBoxMinWidth}"
                                              behaviors:NumericInputNullSafety.IsEnabled="True"/>
                                 </StackPanel>
-                                <StackPanel Spacing="{DynamicResource SpacingUnit}" Grid.Column="1">
+                                <StackPanel Spacing="{StaticResource SpacingUnit}" Grid.Column="1">
                                     <TextBlock Text="Estimated Hours:" VerticalAlignment="Center"/>
                                     <TextBox Text="{Binding EstimatedToCompleteHours}"
                                              IsReadOnly="{Binding IsGeneralFieldReadOnly}"
                                              HorizontalAlignment="Stretch"
-                                             MinWidth="{StaticResource PopupTextBoxMinWidth}"
+                                             MinWidth="{StaticResource TextBoxMinWidth}"
                                              behaviors:NumericInputNullSafety.IsEnabled="True"/>
                                 </StackPanel>
                             </Grid>
 
-                            <Grid ColumnDefinitions="*,*" ColumnSpacing="{DynamicResource GridGap}">
-                                <StackPanel Spacing="{DynamicResource SpacingUnit}" Grid.Column="0">
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource GridGap}">
+                                <StackPanel Spacing="{StaticResource SpacingUnit}" Grid.Column="0">
                                     <TextBlock Text="Margin % Budget:" VerticalAlignment="Center"/>
                                     <TextBox Text="{Binding MarginPctBudget}"
                                              IsReadOnly="{Binding IsFinancialSnapshotReadOnly}"
                                              HorizontalAlignment="Stretch"
-                                             MinWidth="{StaticResource PopupTextBoxMinWidth}"
+                                             MinWidth="{StaticResource TextBoxMinWidth}"
                                              behaviors:NumericInputNullSafety.IsEnabled="True"/>
                                 </StackPanel>
-                                <StackPanel Spacing="{DynamicResource SpacingUnit}" Grid.Column="1">
+                                <StackPanel Spacing="{StaticResource SpacingUnit}" Grid.Column="1">
                                     <TextBlock Text="Margin % ETC-P:" VerticalAlignment="Center"/>
                                     <TextBox Text="{Binding MarginPctEtcp}"
                                              IsReadOnly="{Binding IsGeneralFieldReadOnly}"
                                              HorizontalAlignment="Stretch"
-                                             MinWidth="{StaticResource PopupTextBoxMinWidth}"
+                                             MinWidth="{StaticResource TextBoxMinWidth}"
                                              behaviors:NumericInputNullSafety.IsEnabled="True"/>
                                 </StackPanel>
                             </Grid>
 
-                            <Grid ColumnDefinitions="*,*" ColumnSpacing="{DynamicResource GridGap}">
-                                <StackPanel Spacing="{DynamicResource SpacingUnit}" Grid.Column="0">
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource GridGap}">
+                                <StackPanel Spacing="{StaticResource SpacingUnit}" Grid.Column="0">
                                     <TextBlock Text="ETC-P Age (Days):" VerticalAlignment="Center"/>
                                     <TextBox Text="{Binding EtcpAgeDays, Mode=OneWay}"
                                              IsReadOnly="True"
                                              IsHitTestVisible="False"
                                              IsTabStop="False"
                                              HorizontalAlignment="Stretch"
-                                             MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
+                                             MinWidth="{StaticResource TextBoxMinWidth}"/>
                                 </StackPanel>
-                                <StackPanel Spacing="{DynamicResource SpacingUnit}" Grid.Column="1">
+                                <StackPanel Spacing="{StaticResource SpacingUnit}" Grid.Column="1">
                                     <TextBlock Text="Last Closing Period:" VerticalAlignment="Center"/>
                                     <TextBox Text="{Binding LastClosingPeriodDisplay}"
                                              IsReadOnly="True"
                                              IsHitTestVisible="False"
                                              IsTabStop="False"
                                              HorizontalAlignment="Stretch"
-                                             MinWidth="{StaticResource PopupTextBoxMinWidth}"/>
+                                             MinWidth="{StaticResource TextBoxMinWidth}"/>
                                 </StackPanel>
                             </Grid>
 
-                            <Grid ColumnDefinitions="*,*" ColumnSpacing="{DynamicResource GridGap}">
-                                <StackPanel Spacing="{DynamicResource SpacingUnit}" Grid.Column="0">
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource GridGap}">
+                                <StackPanel Spacing="{StaticResource SpacingUnit}" Grid.Column="0">
                                     <TextBlock Text="Last ETC Date:" VerticalAlignment="Center"/>
                                     <CalendarDatePicker SelectedDate="{Binding LastEtcDate, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}"
                                                         IsEnabled="False"
                                                         HorizontalAlignment="Stretch"/>
                                 </StackPanel>
-                                <StackPanel Spacing="{DynamicResource SpacingUnit}" Grid.Column="1">
+                                <StackPanel Spacing="{StaticResource SpacingUnit}" Grid.Column="1">
                                     <TextBlock Text="Proposed Next ETC Date:" VerticalAlignment="Center"/>
                                     <CalendarDatePicker SelectedDate="{Binding ProposedNextEtcDate, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}"
                                                         IsEnabled="False"
@@ -210,7 +210,7 @@
                     </TabItem>
 
                     <TabItem Header="Financial Evolution">
-                        <StackPanel Spacing="{DynamicResource SectionSpacing}">
+                        <StackPanel Spacing="{StaticResource SectionSpacing}">
                             <TextBlock Text="Financial Evolution Data" Classes="TitleXSmall"/>
                             <DataGrid ItemsSource="{Binding FinancialEvolutionEntries}"
                                       SelectedItem="{Binding SelectedFinancialEvolutionEntry}"
@@ -236,7 +236,7 @@
                                 </DataGrid.Columns>
                             </DataGrid>
                             <StackPanel Orientation="Horizontal"
-                                        Spacing="{DynamicResource ControlSpacing}"
+                                        Spacing="{StaticResource ControlSpacing}"
                                         IsVisible="{Binding AllowEditing}">
                                 <Button Content="Add Period Data"
                                         Command="{Binding AddFinancialEvolutionEntryCommand}"
@@ -248,8 +248,8 @@
                     </TabItem>
 
                     <TabItem Header="Assignments">
-                        <StackPanel Spacing="{DynamicResource SectionSpacing}">
-                            <StackPanel Spacing="{DynamicResource SectionSpacing}">
+                        <StackPanel Spacing="{StaticResource SectionSpacing}">
+                            <StackPanel Spacing="{StaticResource SectionSpacing}">
                                 <TextBlock Text="PAPD Assignments" Classes="TitleXSmall"/>
                                 <DataGrid ItemsSource="{Binding PapdAssignments}"
                                           AutoGenerateColumns="False"
@@ -263,7 +263,7 @@
                                 </DataGrid>
                             </StackPanel>
 
-                            <StackPanel Spacing="{DynamicResource SectionSpacing}">
+                            <StackPanel Spacing="{StaticResource SectionSpacing}">
                                 <TextBlock Text="Manager Assignments" Classes="TitleXSmall"/>
                                 <DataGrid ItemsSource="{Binding ManagerAssignments}"
                                           AutoGenerateColumns="False"
@@ -284,16 +284,16 @@
         <StackPanel Grid.Row="1"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Spacing="{DynamicResource ControlSpacing}">
+                    Spacing="{StaticResource ControlSpacing}">
             <Button Content="{loc:Loc Key=Global_Button_Save}"
                     Command="{Binding SaveCommand}"
                     IsEnabled="{Binding CanSave}"
                     IsDefault="{Binding CanSave}"
-                    MinWidth="{StaticResource InputMinWidthStandard}" />
+                    MinWidth="{StaticResource ButtonMinWidth}" />
             <Button Content="{loc:Loc Key=Global_Button_Cancel}"
                     Command="{Binding CloseCommand}"
                     IsCancel="True"
-                    MinWidth="{StaticResource InputMinWidthStandard}" />
+                    MinWidth="{StaticResource ButtonMinWidth}" />
         </StackPanel>
     </Grid>
 </UserControl>
