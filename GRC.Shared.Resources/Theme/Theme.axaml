@@ -8,5 +8,6 @@
     <ResourceInclude Source="avares://GRC.Shared.Resources/Theme/Elevation.axaml" />
     <ResourceInclude Source="avares://GRC.Shared.Resources/Theme/Effects.axaml" />
     <ResourceInclude Source="avares://GRC.Shared.Resources/Theme/Typography.axaml" />
+    <ResourceInclude Source="avares://GRC.Shared.Resources/Theme/Icons.axaml" />
   </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

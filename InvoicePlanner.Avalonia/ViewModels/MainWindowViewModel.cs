@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Core.Configuration;
@@ -54,10 +58,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var items = new List<NavigationItemViewModel>
         {
-            CreateNavigationItem(NavigationKeys.PlanEditor, LocalizationRegistry.Get("INV_Shell_Navigation_InvoicePlan"), _planEditor, "🗓"),
-            CreateNavigationItem(NavigationKeys.RequestConfirmation, LocalizationRegistry.Get("INV_Shell_Navigation_ConfirmRequest"), _requestConfirmation, "📬"),
-            CreateNavigationItem(NavigationKeys.EmissionConfirmation, LocalizationRegistry.Get("INV_Shell_Navigation_ConfirmEmission"), _emissionConfirmation, "📤"),
-            CreateNavigationItem(NavigationKeys.ConnectionSettings, LocalizationRegistry.Get("INV_Shell_Navigation_ConnectionSettings"), _connectionSettings, "🔌")
+            CreateNavigationItem(NavigationKeys.PlanEditor, LocalizationRegistry.Get("INV_Shell_Navigation_InvoicePlan"), _planEditor, ResolveIcon("IconCalendar")),
+            CreateNavigationItem(NavigationKeys.RequestConfirmation, LocalizationRegistry.Get("INV_Shell_Navigation_ConfirmRequest"), _requestConfirmation, ResolveIcon("IconMailInboxCheck")),
+            CreateNavigationItem(NavigationKeys.EmissionConfirmation, LocalizationRegistry.Get("INV_Shell_Navigation_ConfirmEmission"), _emissionConfirmation, ResolveIcon("IconArrowExport")),
+            CreateNavigationItem(NavigationKeys.ConnectionSettings, LocalizationRegistry.Get("INV_Shell_Navigation_ConnectionSettings"), _connectionSettings, ResolveIcon("IconPlugConnected"))
         };
 
         MenuItems = items;
@@ -104,7 +108,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    private NavigationItemViewModel CreateNavigationItem(string key, string title, ViewModelBase viewModel, string? icon = null)
+    private NavigationItemViewModel CreateNavigationItem(string key, string title, ViewModelBase viewModel, Geometry? icon = null)
     {
         return new NavigationItemViewModel(key, title, viewModel, Activate, icon);
     }
@@ -184,5 +188,17 @@ public partial class MainWindowViewModel : ViewModelBase
         public const string RequestConfirmation = "RequestConfirmation";
         public const string EmissionConfirmation = "EmissionConfirmation";
         public const string ConnectionSettings = "ConnectionSettings";
+    }
+
+    private static Geometry? ResolveIcon(string resourceKey)
+    {
+        if (Application.Current is IResourceHost host
+            && host.TryFindResource(resourceKey, out var resource)
+            && resource is Geometry geometry)
+        {
+            return geometry;
+        }
+
+        return null;
     }
 }
