@@ -120,8 +120,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
                 var detail = _detailFactory();
                 detail.InitializeSelection(SelectedEngagement.Id);
-                await detail.LoadDataAsync().ConfigureAwait(false);
-                await _dialogService.ShowDialogAsync(detail, "Hours Allocation").ConfigureAwait(false);
+                await detail.LoadDataAsync();
+                await _dialogService.ShowDialogAsync(detail, "Hours Allocation");
             }
             catch (Exception ex)
             {

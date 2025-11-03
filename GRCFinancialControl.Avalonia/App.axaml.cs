@@ -186,9 +186,6 @@ namespace GRCFinancialControl.Avalonia
             ));
             services.AddTransient<PapdViewModel>();
             services.AddTransient<ManagersViewModel>();
-            services.AddTransient<ManagerAssignmentsViewModel>();
-            services.AddTransient<PapdAssignmentsViewModel>();
-            services.AddTransient<GrcTeamViewModel>();
             services.AddTransient<SettingsViewModel>();
             services.AddTransient<ClosingPeriodsViewModel>();
             services.AddTransient<ClosingPeriodEditorViewModel>();
@@ -199,6 +196,8 @@ namespace GRCFinancialControl.Avalonia
             services.AddTransient<RankMappingsViewModel>();
             services.AddTransient<RankMappingEditorViewModel>();
             services.AddTransient<TasksViewModel>();
+            services.AddTransient<EngagementAssignmentViewModel>();
+            services.AddTransient<Func<EngagementAssignmentViewModel>>(provider => () => provider.GetRequiredService<EngagementAssignmentViewModel>());
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {

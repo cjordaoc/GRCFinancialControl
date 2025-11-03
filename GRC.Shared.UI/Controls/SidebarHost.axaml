@@ -48,9 +48,8 @@
                     HorizontalContentAlignment="{Binding IsExpanded, ElementName=Root, Converter={StaticResource SidebarAlignmentConverter}}">
         <ToggleButton.Content>
           <StackPanel Orientation="Horizontal"
-                      Spacing="0"
-                      VerticalAlignment="Center"
-                      HorizontalAlignment="Center">
+                      Spacing="{StaticResource SpacingUnit}"
+                      VerticalAlignment="Center">
             <Path Width="20"
                   Height="20"
                   Stretch="Uniform"
@@ -64,7 +63,6 @@
             <TextBlock Text="{Binding ToggleLabel, ElementName=Root}"
                        Classes="SidebarTitle"
                        TextTrimming="None"
-                       Margin="{StaticResource MarginLeftSmall}"
                        VerticalAlignment="Center"
                        IsVisible="{Binding IsExpanded, ElementName=Root}" />
           </StackPanel>

@@ -348,6 +348,9 @@ namespace GRCFinancialControl.Persistence
                 .IsUnique();
 
             modelBuilder.Entity<PlannedAllocation>()
+                .ToTable("PlannedAllocations");
+
+            modelBuilder.Entity<PlannedAllocation>()
                 .HasOne(pa => pa.Engagement)
                 .WithMany() // An engagement can have multiple planned allocations
                 .HasForeignKey(pa => pa.EngagementId);
