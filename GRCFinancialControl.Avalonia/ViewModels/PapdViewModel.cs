@@ -8,7 +8,6 @@ using CommunityToolkit.Mvvm.Messaging;
 using GRC.Shared.UI.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
-using System;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -18,7 +17,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         private readonly IPapdService _papdService;
         private readonly DialogService _dialogService;
-        private readonly Func<PapdEngagementAssignmentViewModel> _engagementAssignmentViewModelFactory;
 
         [ObservableProperty]
         private Papd? _selectedPapd;
@@ -35,7 +33,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             ICustomerService customerService,
             IClosingPeriodService closingPeriodService,
             DialogService dialogService,
-            Func<PapdEngagementAssignmentViewModel> engagementAssignmentViewModelFactory,
             IMessenger messenger)
             : base(messenger)
         {
@@ -45,7 +42,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _customerService = customerService;
             _closingPeriodService = closingPeriodService;
             _dialogService = dialogService;
-            _engagementAssignmentViewModelFactory = engagementAssignmentViewModelFactory;
         }
 
         [ObservableProperty]

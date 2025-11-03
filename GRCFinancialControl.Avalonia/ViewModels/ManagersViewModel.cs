@@ -6,7 +6,6 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRC.Shared.UI.Messages;
 using GRCFinancialControl.Avalonia.Services;
-using System;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
@@ -17,7 +16,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         private readonly IManagerService _managerService;
         private readonly DialogService _dialogService;
-        private readonly Func<ManagerAssignmentEditorViewModel> _engagementAssignmentViewModelFactory;
 
         [ObservableProperty]
         private ObservableCollection<Manager> _managers = new();
@@ -37,7 +35,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             ICustomerService customerService,
             IClosingPeriodService closingPeriodService,
             DialogService dialogService,
-            Func<ManagerAssignmentEditorViewModel> engagementAssignmentViewModelFactory,
             IMessenger messenger)
             : base(messenger)
         {
@@ -47,7 +44,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _customerService = customerService;
             _closingPeriodService = closingPeriodService;
             _dialogService = dialogService;
-            _engagementAssignmentViewModelFactory = engagementAssignmentViewModelFactory;
         }
 
         public override async Task LoadDataAsync()
