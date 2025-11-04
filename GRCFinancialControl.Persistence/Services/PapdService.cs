@@ -22,7 +22,7 @@ namespace GRCFinancialControl.Persistence.Services
         public Task<Papd?> GetByIdAsync(int id) =>
             GetSingleInternalAsync(
                 query => query
-                    .Include(p => p.Engagements)
+                    .Include(p => p.EngagementPapds)
                     .Where(p => p.Id == id));
 
         public Task AddAsync(Papd papd) => AddEntityAsync(papd);
