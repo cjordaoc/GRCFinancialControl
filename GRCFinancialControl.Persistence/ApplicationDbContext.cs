@@ -242,7 +242,7 @@ namespace GRCFinancialControl.Persistence
                 .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Papd>()
-                .HasMany<EngagementPapd>() // A PAPD can be linked to many EngagementPapd records
+                .HasMany(p => p.EngagementPapds) // A PAPD can be linked to many EngagementPapd records
                 .WithOne(ep => ep.Papd)
                 .HasForeignKey(ep => ep.PapdId);
 
