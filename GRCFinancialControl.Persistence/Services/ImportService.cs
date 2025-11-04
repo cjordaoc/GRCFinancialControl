@@ -2054,6 +2054,236 @@ namespace GRCFinancialControl.Persistence.Services
         }
 
 
+        private static Dictionary<string, string> BuildRankLookupForCanonicalMapping(IReadOnlyList<RankMapping> rankMappings)
+        {
+            // Build rank lookup: maps normalized rank from spreadsheet to canonical RankCode (RawRank)
+            var rankLookup = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var mapping in rankMappings.Where(m => m.IsActive))
+            {
+                var rankCode = NormalizeCode(mapping.RawRank);
+                if (string.IsNullOrEmpty(rankCode))
+                {
+                    continue;
+                }
+
+                // Map SpreadsheetRank to canonical RankCode
+                if (!string.IsNullOrWhiteSpace(mapping.SpreadsheetRank))
+                {
+                    var normalizedSpreadsheetRank = NormalizeRank(mapping.SpreadsheetRank);
+                    if (!string.IsNullOrEmpty(normalizedSpreadsheetRank))
+                    {
+                        rankLookup[normalizedSpreadsheetRank] = rankCode;
+                    }
+                }
+
+                // Map RawRank to canonical RankCode
+                if (!string.IsNullOrWhiteSpace(mapping.RawRank))
+                {
+                    var normalizedRawRank = NormalizeRank(mapping.RawRank);
+                    if (!string.IsNullOrEmpty(normalizedRawRank) && !rankLookup.ContainsKey(normalizedRawRank))
+                    {
+                        rankLookup[normalizedRawRank] = rankCode;
+                    }
+                }
+
+                // Map NormalizedRank to canonical RankCode
+                if (!string.IsNullOrWhiteSpace(mapping.NormalizedRank))
+                {
+                    var normalizedRank = NormalizeRank(mapping.NormalizedRank);
+                    if (!string.IsNullOrEmpty(normalizedRank) && !rankLookup.ContainsKey(normalizedRank))
+                    {
+                        rankLookup[normalizedRank] = rankCode;
+                    }
+                }
+            }
+
+            return rankLookup;
+        }
+
+        private static string NormalizeRank(string? value)
+        {
+            return string.IsNullOrWhiteSpace(value)
+                ? string.Empty
+                : value.Trim().ToUpperInvariant();
+        }
+
+        private static string NormalizeCode(string? value)
+        {
+            return string.IsNullOrWhiteSpace(value)
+                ? string.Empty
+                : value.Trim().ToUpperInvariant();
+        }
+
+        private static string? TryExtractEngagementCode(object? value)
+        {
+            if (value is null)
+            {
+                return null;
+            }
+
+            if (value is string s)
+            {
+                var match = Regex.Match(s, "E-\\d+");
+                return match.Success ? match.Value.ToUpperInvariant() : null;
+            }
+
+            var text = Convert.ToString(value, CultureInfo.InvariantCulture);
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return null;
+            }
+
+            var regexMatch = Regex.Match(text, "E-\\d+");
+            return regexMatch.Success ? regexMatch.Value.ToUpperInvariant() : null;
+        }
+
+        private static string GetString(object? value)
+        {
+            return value switch
+            {
+                null => string.Empty,
+                string s => s.Trim(),
+                IFormattable formattable => formattable.ToString(null, CultureInfo.InvariantCulture).Trim(),
+                _ => value.ToString()?.Trim() ?? string.Empty
+            };
+        }
+
+        private static DateTime? TryParseWeekDate(object? value)
+        {
+            if (value is null)
+            {
+                return null;
+            }
+
+            if (value is DateTime directDate)
+            {
+                return directDate.Date;
+            }
+
+            var text = GetString(value);
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return null;
+            }
+
+            var dateFormats = new[]
+            {
+                "dd/MM/yyyy",
+                "d/M/yyyy",
+                "dd/MM/yy",
+                "d/M/yy"
+            };
+
+            var cultures = new[]
+            {
+                CultureInfo.InvariantCulture,
+                new CultureInfo("pt-BR")
+            };
+
+            foreach (var culture in cultures)
+            {
+                if (DateTime.TryParseExact(text, dateFormats, culture, DateTimeStyles.AssumeLocal, out var parsed))
+                {
+                    return parsed.Date;
+                }
+            }
+
+            return null;
+        }
+
+        private sealed record EmployeeRowData(int RowIndex, string Rank);
+
+        private static List<EmployeeRowData> ExtractEmployeeRows(IWorksheet worksheet)
+        {
+            var rows = new List<EmployeeRowData>();
+            var consecutiveBlanks = 0;
+
+            for (var rowIndex = 1; rowIndex < worksheet.RowCount; rowIndex++)
+            {
+                var gpn = GetString(worksheet.GetValue(rowIndex, 0));
+                if (string.IsNullOrWhiteSpace(gpn))
+                {
+                    consecutiveBlanks++;
+                    if (consecutiveBlanks >= 3)
+                    {
+                        break;
+                    }
+
+                    continue;
+                }
+
+                consecutiveBlanks = 0;
+
+                var rank = GetString(worksheet.GetValue(rowIndex, 2)); // Column 2 is the Rank column
+                rows.Add(new EmployeeRowData(rowIndex, rank));
+            }
+
+            return rows;
+        }
+
+        private sealed record WeekColumnData(int ColumnIndex, DateTime WeekDate);
+
+        private static List<WeekColumnData> ExtractWeekColumns(IWorksheet worksheet, IReadOnlyList<FiscalYear> fiscalYears)
+        {
+            var columns = new List<WeekColumnData>();
+            var consecutiveBlanks = 0;
+            const int maxConsecutiveBlanks = 5;
+
+            for (var columnIndex = 0; columnIndex < worksheet.ColumnCount; columnIndex++)
+            {
+                var cellValue = worksheet.GetValue(0, columnIndex);
+                var date = TryParseWeekDate(cellValue);
+
+                if (!date.HasValue)
+                {
+                    // Check if cell is blank
+                    if (IsBlank(cellValue))
+                    {
+                        consecutiveBlanks++;
+                        if (consecutiveBlanks >= maxConsecutiveBlanks)
+                        {
+                            break; // Stop after 5 consecutive blank cells
+                        }
+                    }
+                    else
+                    {
+                        consecutiveBlanks = 0; // Reset counter if non-blank non-date found
+                    }
+                    continue;
+                }
+
+                consecutiveBlanks = 0; // Reset counter when date found
+
+                var weekDate = date.Value.Date;
+                
+                // Only include columns that fall within a fiscal year
+                var fiscalYear = fiscalYears.FirstOrDefault(fy =>
+                    weekDate >= fy.StartDate.Date && weekDate <= fy.EndDate.Date);
+
+                if (fiscalYear != null)
+                {
+                    columns.Add(new WeekColumnData(columnIndex, weekDate));
+                }
+            }
+
+            return columns;
+        }
+
+        private static bool IsBlank(object? value)
+        {
+            if (value == null || value == DBNull.Value)
+            {
+                return true;
+            }
+
+            if (value is string text)
+            {
+                return string.IsNullOrWhiteSpace(text);
+            }
+
+            return false;
+        }
+
         public async Task<string> ImportAllocationPlanningAsync(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
@@ -2103,41 +2333,29 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new InvalidOperationException("No fiscal years have been configured. Add a fiscal year before importing allocation planning data.");
             }
 
-            // Parse the workbook into normalized engagement/rank groupings.
+            // Load rank mappings for normalization
             var rankMappings = await context.RankMappings
                 .AsNoTracking()
                 .Where(mapping => mapping.IsActive)
                 .ToListAsync()
                 .ConfigureAwait(false);
 
-            var parserLogger = _loggerFactory.CreateLogger<SimplifiedStaffAllocationParser>();
-            var parser = new SimplifiedStaffAllocationParser(parserLogger);
-            var aggregatedRecords = parser.ParseWithFiscalYearMapping(worksheet, fiscalYears, rankMappings);
-
-            var processedRowCount = aggregatedRecords.Count;
-            var distinctEngagementCount = aggregatedRecords
-                .Select(record => NormalizeEngagementCode(record.EngagementCode))
-                .Where(code => !string.IsNullOrEmpty(code))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .Count();
-            var distinctRankCount = aggregatedRecords
-                .Select(record => NormalizeWhitespace(record.RankCode))
-                .Where(rank => !string.IsNullOrEmpty(rank))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .Count();
-
             var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>();
-            var allocationManualOnlyEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var allocationClosedEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var allocationWarningMessages = new HashSet<string>(StringComparer.Ordinal);
+            var unknownEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            if (aggregatedRecords.Count == 0)
+            // STEP A & B: Read the file and list all ranks per engagement
+            var employees = ExtractEmployeeRows(worksheet);
+            var weekColumns = ExtractWeekColumns(worksheet, fiscalYears);
+
+            if (employees.Count == 0 || weekColumns.Count == 0)
             {
                 var emptyNotes = new List<string>
                 {
                     "The worksheet did not contain any staff allocation records.",
-                    $"Distinct engagements detected: {distinctEngagementCount}",
-                    $"Distinct ranks detected: {distinctRankCount}"
+                    $"Employees found: {employees.Count}",
+                    $"Week columns found: {weekColumns.Count}"
                 };
 
                 return ImportSummaryFormatter.Build(
@@ -2146,43 +2364,30 @@ namespace GRCFinancialControl.Persistence.Services
                     updated: 0,
                     skipReasons: null,
                     notes: emptyNotes,
-                    processed: processedRowCount);
+                    processed: 0);
             }
 
-            // Collect engagement codes from the file and from previous history entries so we can load all relevant budgets.
+            // Collect all engagement codes from the spreadsheet
             var engagementCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var record in aggregatedRecords)
+            foreach (var employee in employees)
             {
-                var normalizedCode = NormalizeEngagementCode(record.EngagementCode);
-                if (!string.IsNullOrEmpty(normalizedCode))
+                foreach (var week in weekColumns)
                 {
-                    engagementCodes.Add(normalizedCode);
+                    var engagementCode = TryExtractEngagementCode(worksheet.GetValue(employee.RowIndex, week.ColumnIndex));
+                    if (!string.IsNullOrEmpty(engagementCode))
+                    {
+                        var normalizedCode = NormalizeEngagementCode(engagementCode);
+                        if (!string.IsNullOrEmpty(normalizedCode))
+                        {
+                            engagementCodes.Add(normalizedCode);
+                        }
+                    }
                 }
             }
 
-            // Load histories for all fiscal years that appear in the import
-            var fiscalYearIds = aggregatedRecords.Select(r => r.FiscalYearId).Distinct().ToList();
+            // Load engagements and their existing budgets
+            var fiscalYearIds = fiscalYears.Select(fy => fy.Id).Distinct().ToList();
             var closingPeriodId = activeClosingPeriod?.Id ?? 0;
-            var existingHistories = closingPeriodId > 0
-                ? await context.EngagementRankBudgetHistory
-                    .Where(h => h.ClosingPeriodId == closingPeriodId && fiscalYearIds.Contains(h.FiscalYearId))
-                    .ToListAsync()
-                    .ConfigureAwait(false)
-                : new List<EngagementRankBudgetHistory>();
-
-            var historyLookup = new Dictionary<(string EngagementCode, int FiscalYearId, int ClosingPeriodId, string RankCode), EngagementRankBudgetHistory>();
-            foreach (var history in existingHistories)
-            {
-                var normalizedCode = NormalizeEngagementCode(history.EngagementCode);
-                var normalizedRank = NormalizeRankKey(history.RankCode);
-                if (string.IsNullOrEmpty(normalizedCode) || string.IsNullOrEmpty(normalizedRank))
-                {
-                    continue;
-                }
-
-                historyLookup[(normalizedCode, history.FiscalYearId, history.ClosingPeriodId, normalizedRank)] = history;
-                engagementCodes.Add(normalizedCode);
-            }
 
             List<Engagement> engagements;
             if (engagementCodes.Count > 0)
@@ -2221,92 +2426,94 @@ namespace GRCFinancialControl.Persistence.Services
                 }
             }
 
-            // Aggregate the parsed rows by engagement/rank to compute rounded import totals.
-            var groupedImports = new Dictionary<(int EngagementId, int FiscalYearId, string RankCode), (string EngagementCode, decimal TotalHours)>();
-            var unknownEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            // STEP C & D: Normalize ranks and ensure EngagementRankBudgets records exist
+            var updateTimestamp = DateTime.UtcNow;
+            var inserted = 0;
+            var allEngagementRankCombinations = new HashSet<(string EngagementCode, string RawRank, int FiscalYearId)>();
 
-            foreach (var record in aggregatedRecords)
+            // Build rank lookup for canonical ID mapping
+            var rankLookup = BuildRankLookupForCanonicalMapping(rankMappings);
+
+            // Extract all engagement/rank/fiscal year combinations from spreadsheet
+            foreach (var employee in employees)
             {
-                var normalizedCode = NormalizeEngagementCode(record.EngagementCode);
-                if (string.IsNullOrEmpty(normalizedCode))
+                if (string.IsNullOrWhiteSpace(employee.Rank))
                 {
                     continue;
                 }
 
-                if (!engagementLookup.TryGetValue(normalizedCode, out var engagement))
+                var normalizedRawRank = NormalizeRank(employee.Rank);
+
+                foreach (var week in weekColumns)
                 {
-                    var rawEngagement = NormalizeWhitespace(record.EngagementCode);
+                    var engagementCode = TryExtractEngagementCode(worksheet.GetValue(employee.RowIndex, week.ColumnIndex));
+                    if (string.IsNullOrEmpty(engagementCode))
+                    {
+                        continue;
+                    }
+
+                    var normalizedEngagement = NormalizeEngagementCode(engagementCode);
+                    if (string.IsNullOrEmpty(normalizedEngagement))
+                    {
+                        continue;
+                    }
+
+                    // Map week date to fiscal year
+                    var fiscalYear = fiscalYears.FirstOrDefault(fy =>
+                        week.WeekDate >= fy.StartDate.Date && week.WeekDate <= fy.EndDate.Date);
+
+                    if (fiscalYear is null || !fiscalYearIds.Contains(fiscalYear.Id))
+                    {
+                        continue;
+                    }
+
+                    allEngagementRankCombinations.Add((normalizedEngagement, normalizedRawRank, fiscalYear.Id));
+                }
+            }
+
+            // Ensure all engagement/rank combinations exist in EngagementRankBudgets
+            foreach (var (engagementCode, rawRank, fiscalYearId) in allEngagementRankCombinations)
+            {
+                if (!engagementLookup.TryGetValue(engagementCode, out var engagement))
+                {
+                    var rawEngagement = NormalizeWhitespace(engagementCode);
                     unknownEngagements.Add(string.IsNullOrEmpty(rawEngagement) ? "<unknown>" : rawEngagement);
                     continue;
                 }
 
-                // For GRC allocation planning import, only skip closed engagements, not S/4 projects
+                // Skip closed engagements
                 if (EngagementImportSkipEvaluator.TryCreate(engagement, out var skipMetadata) &&
                     skipMetadata.ReasonKey == "ClosedEngagement")
                 {
                     var detail = $"{engagement.EngagementId} (closing period {closingPeriodLabel})";
                     allocationClosedEngagements.Add(detail);
                     allocationWarningMessages.Add(skipMetadata.WarningMessage);
-                    _logger.LogWarning("{Warning} (closing period {ClosingPeriod})", skipMetadata.WarningMessage, closingPeriodLabel);
                     continue;
                 }
 
-                var normalizedRank = NormalizeRankKey(record.RankCode);
-                if (string.IsNullOrEmpty(normalizedRank))
+                // Convert raw rank to canonical RankCode
+                if (!rankLookup.TryGetValue(rawRank, out var canonicalRankCode))
                 {
                     continue;
                 }
 
-                var key = (engagement.Id, record.FiscalYearId, normalizedRank);
-                if (groupedImports.TryGetValue(key, out var existing))
+                var normalizedCanonicalRank = NormalizeRankKey(canonicalRankCode);
+                if (string.IsNullOrEmpty(normalizedCanonicalRank))
                 {
-                    groupedImports[key] = (existing.EngagementCode, existing.TotalHours + record.Hours);
+                    continue;
                 }
-                else
-                {
-                    groupedImports[key] = (normalizedCode, record.Hours);
-                }
-            }
 
-            var allocationImports = groupedImports
-                .Select(kvp =>
-                {
-                    var key = kvp.Key;
-                    var value = kvp.Value;
-                    var rounded = Math.Round(value.TotalHours, 2, MidpointRounding.AwayFromZero);
-                    return (
-                        EngagementId: key.EngagementId,
-                        EngagementCode: value.EngagementCode,
-                        FiscalYearId: key.FiscalYearId,
-                        ClosingPeriodId: closingPeriodId,
-                        RankCode: key.RankCode,
-                        RoundedHours: rounded);
-                })
-                .ToList();
-
-            var updateTimestamp = DateTime.UtcNow;
-            var processedHistoryKeys = new HashSet<(string EngagementCode, int FiscalYearId, int ClosingPeriodId, string RankCode)>();
-            var inserted = 0;
-            var updated = 0;
-            var historyUpserts = 0;
-
-            // Apply the rounded totals to the live engagement/rank budgets and append to the history ledger.
-            foreach (var entry in allocationImports)
-            {
-                var historyKey = (entry.EngagementCode, entry.FiscalYearId, entry.ClosingPeriodId, entry.RankCode);
-                historyLookup.TryGetValue(historyKey, out var historyEntry);
-                var previousHours = historyEntry?.Hours ?? 0m;
-                var delta = entry.RoundedHours - previousHours;
-
-                if (!budgetLookup.TryGetValue((entry.EngagementId, entry.FiscalYearId, entry.RankCode), out var budget))
+                // Check if EngagementRankBudget already exists, if not create it
+                var budgetKey = (engagement.Id, fiscalYearId, normalizedCanonicalRank);
+                if (!budgetLookup.ContainsKey(budgetKey))
                 {
                     var newBudget = new EngagementRankBudget
                     {
-                        EngagementId = entry.EngagementId,
-                        FiscalYearId = entry.FiscalYearId,
-                        RankName = entry.RankCode,
-                        BudgetHours = 0m,
-                        ConsumedHours = entry.RoundedHours,
+                        EngagementId = engagement.Id,
+                        FiscalYearId = fiscalYearId,
+                        RankName = canonicalRankCode, // Use canonical ID (RawRank from RankMapping)
+                        BudgetHours = 0m, // BudgetHours = 0 and editable
+                        ConsumedHours = 0m,
                         AdditionalHours = 0m,
                         RemainingHours = 0m,
                         Status = nameof(TrafficLightStatus.Green),
@@ -2314,38 +2521,154 @@ namespace GRCFinancialControl.Persistence.Services
                         UpdatedAtUtc = updateTimestamp
                     };
 
-                    // Recalculate remaining hours based on consumed hours
-                    var remaining = newBudget.BudgetHours + newBudget.AdditionalHours - newBudget.ConsumedHours;
-                    newBudget.RemainingHours = Math.Round(remaining, 2, MidpointRounding.AwayFromZero);
-
                     await context.EngagementRankBudgets.AddAsync(newBudget).ConfigureAwait(false);
-                    budgetLookup[(entry.EngagementId, entry.FiscalYearId, entry.RankCode)] = newBudget;
-                    budget = newBudget;
+                    budgetLookup[budgetKey] = newBudget;
                     inserted++;
                 }
-                else
+            }
+
+            // Save changes from first pass
+            await context.SaveChangesAsync().ConfigureAwait(false);
+
+            // STEP E, F, G, H, I: Go back to the file, calculate consumed hours (40 hours per engagement week)
+            // and aggregate by engagement/rank/fiscal year, then update ConsumedHours
+            const decimal HoursPerEngagementWeek = 40m;
+            var consumedHoursByEngagementRank = new Dictionary<(int EngagementId, int FiscalYearId, string RankCode), decimal>();
+
+            foreach (var employee in employees)
+            {
+                if (string.IsNullOrWhiteSpace(employee.Rank))
                 {
-                    var previousConsumed = budget.ConsumedHours;
-                    var previousRemaining = budget.RemainingHours;
-                    budget.ConsumedHours = entry.RoundedHours;
-
-                    // Recalculate remaining hours based on consumed hours
-                    var remaining = budget.BudgetHours + budget.AdditionalHours - budget.ConsumedHours;
-                    budget.RemainingHours = Math.Round(remaining, 2, MidpointRounding.AwayFromZero);
-
-                    if (Math.Abs(previousConsumed - budget.ConsumedHours) > 0.005m ||
-                        Math.Abs(previousRemaining - budget.RemainingHours) > 0.005m)
-                    {
-                        budget.UpdatedAtUtc = updateTimestamp;
-                        updated++;
-                    }
+                    continue;
                 }
 
-                if (historyEntry is not null)
+                var normalizedRawRank = NormalizeRank(employee.Rank);
+                if (!rankLookup.TryGetValue(normalizedRawRank, out var canonicalRankCode))
                 {
-                    if (historyEntry.Hours != entry.RoundedHours)
+                    continue;
+                }
+
+                var normalizedCanonicalRank = NormalizeRankKey(canonicalRankCode);
+                if (string.IsNullOrEmpty(normalizedCanonicalRank))
+                {
+                    continue;
+                }
+
+                foreach (var week in weekColumns)
+                {
+                    var engagementCode = TryExtractEngagementCode(worksheet.GetValue(employee.RowIndex, week.ColumnIndex));
+                    if (string.IsNullOrEmpty(engagementCode))
                     {
-                        historyEntry.Hours = entry.RoundedHours;
+                        continue;
+                    }
+
+                    var normalizedEngagement = NormalizeEngagementCode(engagementCode);
+                    if (string.IsNullOrEmpty(normalizedEngagement))
+                    {
+                        continue;
+                    }
+
+                    if (!engagementLookup.TryGetValue(normalizedEngagement, out var engagement))
+                    {
+                        continue;
+                    }
+
+                    // Skip closed engagements
+                    if (EngagementImportSkipEvaluator.TryCreate(engagement, out var skipMetadata) &&
+                        skipMetadata.ReasonKey == "ClosedEngagement")
+                    {
+                        continue;
+                    }
+
+                    // Map week date to fiscal year
+                    var fiscalYear = fiscalYears.FirstOrDefault(fy =>
+                        week.WeekDate >= fy.StartDate.Date && week.WeekDate <= fy.EndDate.Date);
+
+                    if (fiscalYear is null || !fiscalYearIds.Contains(fiscalYear.Id))
+                    {
+                        continue;
+                    }
+
+                    // Aggregate hours: 40 hours per engagement week
+                    var key = (engagement.Id, fiscalYear.Id, normalizedCanonicalRank);
+                    if (consumedHoursByEngagementRank.TryGetValue(key, out var existingHours))
+                    {
+                        consumedHoursByEngagementRank[key] = existingHours + HoursPerEngagementWeek;
+                    }
+                    else
+                    {
+                        consumedHoursByEngagementRank[key] = HoursPerEngagementWeek;
+                    }
+                }
+            }
+
+            // Load histories for updating
+            var existingHistories = closingPeriodId > 0
+                ? await context.EngagementRankBudgetHistory
+                    .Where(h => h.ClosingPeriodId == closingPeriodId && fiscalYearIds.Contains(h.FiscalYearId))
+                    .ToListAsync()
+                    .ConfigureAwait(false)
+                : new List<EngagementRankBudgetHistory>();
+
+            var historyLookup = new Dictionary<(string EngagementCode, int FiscalYearId, int ClosingPeriodId, string RankCode), EngagementRankBudgetHistory>();
+            foreach (var history in existingHistories)
+            {
+                var normalizedCode = NormalizeEngagementCode(history.EngagementCode);
+                var normalizedRank = NormalizeRankKey(history.RankCode);
+                if (string.IsNullOrEmpty(normalizedCode) || string.IsNullOrEmpty(normalizedRank))
+                {
+                    continue;
+                }
+
+                historyLookup[(normalizedCode, history.FiscalYearId, history.ClosingPeriodId, normalizedRank)] = history;
+            }
+
+            // Update ConsumedHours based on aggregated values
+            var updated = 0;
+            var historyUpserts = 0;
+            var processedHistoryKeys = new HashSet<(string EngagementCode, int FiscalYearId, int ClosingPeriodId, string RankCode)>();
+
+            foreach (var (key, totalHours) in consumedHoursByEngagementRank)
+            {
+                var (engagementId, fiscalYearId, rankCode) = key;
+
+                if (!budgetLookup.TryGetValue(key, out var budget))
+                {
+                    continue;
+                }
+
+                var engagement = engagements.FirstOrDefault(e => e.Id == engagementId);
+                if (engagement is null)
+                {
+                    continue;
+                }
+
+                var normalizedEngagementCode = NormalizeEngagementCode(engagement.EngagementId);
+                var roundedHours = Math.Round(totalHours, 2, MidpointRounding.AwayFromZero);
+
+                // Update ConsumedHours
+                var previousConsumed = budget.ConsumedHours;
+                var previousRemaining = budget.RemainingHours;
+                budget.ConsumedHours = roundedHours;
+
+                // Recalculate remaining hours
+                var remaining = budget.BudgetHours + budget.AdditionalHours - budget.ConsumedHours;
+                budget.RemainingHours = Math.Round(remaining, 2, MidpointRounding.AwayFromZero);
+
+                if (Math.Abs(previousConsumed - budget.ConsumedHours) > 0.005m ||
+                    Math.Abs(previousRemaining - budget.RemainingHours) > 0.005m)
+                {
+                    budget.UpdatedAtUtc = updateTimestamp;
+                    updated++;
+                }
+
+                // Update history
+                var historyKey = (normalizedEngagementCode, fiscalYearId, closingPeriodId, rankCode);
+                if (historyLookup.TryGetValue(historyKey, out var historyEntry))
+                {
+                    if (historyEntry.Hours != roundedHours)
+                    {
+                        historyEntry.Hours = roundedHours;
                     }
 
                     historyEntry.UploadedAt = updateTimestamp;
@@ -2354,11 +2677,11 @@ namespace GRCFinancialControl.Persistence.Services
                 {
                     var history = new EngagementRankBudgetHistory
                     {
-                        EngagementCode = entry.EngagementCode,
-                        RankCode = entry.RankCode,
-                        FiscalYearId = entry.FiscalYearId,
-                        ClosingPeriodId = entry.ClosingPeriodId,
-                        Hours = entry.RoundedHours,
+                        EngagementCode = normalizedEngagementCode,
+                        RankCode = rankCode,
+                        FiscalYearId = fiscalYearId,
+                        ClosingPeriodId = closingPeriodId,
+                        Hours = roundedHours,
                         UploadedAt = updateTimestamp
                     };
 
@@ -2391,7 +2714,7 @@ namespace GRCFinancialControl.Persistence.Services
                     var previousRemaining = budget.RemainingHours;
                     budget.ConsumedHours = Math.Max(0m, budget.ConsumedHours - previousHours);
 
-                    // Recalculate remaining hours based on consumed hours
+                    // Recalculate remaining hours
                     var remaining = budget.BudgetHours + budget.AdditionalHours - budget.ConsumedHours;
                     budget.RemainingHours = Math.Round(remaining, 2, MidpointRounding.AwayFromZero);
 
@@ -2426,9 +2749,19 @@ namespace GRCFinancialControl.Persistence.Services
                     .ToList();
             }
 
+            var processedRowCount = consumedHoursByEngagementRank.Count;
+            var distinctEngagementCount = consumedHoursByEngagementRank.Keys
+                .Select(k => k.EngagementId)
+                .Distinct()
+                .Count();
+            var distinctRankCount = consumedHoursByEngagementRank.Keys
+                .Select(k => k.RankCode)
+                .Distinct()
+                .Count();
+
             var notes = new List<string>
             {
-                $"Rows processed: {processedRowCount}",
+                $"Engagement/rank combinations processed: {processedRowCount}",
                 $"Distinct engagements detected: {distinctEngagementCount}",
                 $"Distinct ranks detected: {distinctRankCount}",
                 $"History entries updated: {historyUpserts}",
