@@ -50,10 +50,20 @@ namespace GRCFinancialControl.Persistence.Services.Importers
         private static readonly string[] CustomerNameHeaders =
         {
             "customer name",
+            "customername",
+            "customer-name",
             "client name",
+            "clientname",
+            "client-name",
             "client name (id)",
+            "clientname(id)",
+            "client-name(id)",
             "client description",
+            "clientdescription",
+            "client-description",
             "customer description",
+            "customerdescription",
+            "customer-description",
             "customer",
             "client"
         };
@@ -61,9 +71,17 @@ namespace GRCFinancialControl.Persistence.Services.Importers
         private static readonly string[] CustomerIdHeaders =
         {
             "customer id",
+            "customerid",
+            "customer-id",
             "client id",
+            "clientid",
+            "client-id",
             "customer code",
-            "client code"
+            "customercode",
+            "customer-code",
+            "client code",
+            "clientcode",
+            "client-code"
         };
 
         private static readonly string[] OpportunityCurrencyHeaders =
@@ -477,7 +495,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                 row,
                                 customersByCode,
                                 customersByName,
-                                allowCreateOrUpdate: false);
+                                allowCreateOrUpdate: true);
 
                             if (customer != null)
                             {

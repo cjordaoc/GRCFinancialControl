@@ -1,0 +1,63 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels.Dialogs"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
+             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="300"
+             x:Class="GRCFinancialControl.Avalonia.Views.Dialogs.PapdEngagementAssignmentView"
+             x:DataType="vm:PapdEngagementAssignmentViewModel">
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridGap}" Margin="{StaticResource CardPaddingThickness}">
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="{StaticResource SectionSpacing}">
+                <TextBlock Text="{Binding Title}" Classes="TitleSmall"/>
+                
+                <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="{StaticResource GridGap}" ColumnSpacing="{StaticResource GridGap}">
+                    <TextBlock Grid.Row="0"
+                               Grid.Column="0"
+                               Text="PAPD:"
+                               VerticalAlignment="Center"
+                               FontWeight="{StaticResource FontWeightSemiBold}"/>
+                    <TextBlock Grid.Row="0"
+                               Grid.Column="1"
+                               Text="{Binding Papd.Name}"
+                               VerticalAlignment="Center"/>
+
+                    <TextBlock Grid.Row="1"
+                               Grid.Column="0"
+                               Text="{loc:Loc Key=FINC_Admin_PapdAssignments_Label_Engagement}"
+                               VerticalAlignment="Center"/>
+                    <ComboBox Grid.Row="1"
+                              Grid.Column="1"
+                              ItemsSource="{Binding Engagements}"
+                              SelectedItem="{Binding SelectedEngagement}"
+                              IsEnabled="{Binding AllowEditing}"
+                              HorizontalAlignment="Stretch"
+                              MinWidth="{StaticResource ComboBoxMinWidth}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+        
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="{StaticResource ControlSpacing}">
+            <Button Content="{loc:Loc Key=Global_Button_Save}"
+                    Command="{Binding SaveCommand}"
+                    IsEnabled="{Binding AllowEditing}"
+                    IsDefault="{Binding AllowEditing}"
+                    MinWidth="{StaticResource ButtonMinWidth}" />
+            <Button Content="{loc:Loc Key=Global_Button_Cancel}"
+                    Command="{Binding CloseCommand}"
+                    IsCancel="True"
+                    MinWidth="{StaticResource ButtonMinWidth}" />
+        </StackPanel>
+    </Grid>
+</UserControl>
+

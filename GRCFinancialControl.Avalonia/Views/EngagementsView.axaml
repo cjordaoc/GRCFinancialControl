@@ -74,6 +74,17 @@
             <Button Content="Edit" Command="{Binding EditCommand}" CommandParameter="{Binding SelectedEngagement}"/>
             <Button Content="Delete" Command="{Binding DeleteCommand}" CommandParameter="{Binding SelectedEngagement}"/>
             <Button Content="Delete Data" Command="{Binding DeleteDataCommand}" CommandParameter="{Binding SelectedEngagement}" Classes="Danger"/>
+            <SplitButton Content="Assign"
+                         Command="{Binding AssignPapdCommand}">
+                <SplitButton.Flyout>
+                    <MenuFlyout>
+                        <MenuItem Header="PAPDs"
+                                  Command="{Binding AssignPapdCommand}"/>
+                        <MenuItem Header="Managers"
+                                  Command="{Binding AssignManagerCommand}"/>
+                    </MenuFlyout>
+                </SplitButton.Flyout>
+            </SplitButton>
         </StackPanel>
     </Grid>
 </UserControl>

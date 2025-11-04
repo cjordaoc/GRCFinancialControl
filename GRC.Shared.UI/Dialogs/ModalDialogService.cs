@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -61,10 +62,125 @@ public sealed class ModalDialogService : IModalDialogService
             Child = container
         };
 
+        var rootPanel = new Grid
+        {
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            VerticalAlignment = VerticalAlignment.Stretch
+        };
+        rootPanel.Children.Add(overlay);
+
+        // Add toast notifications to modal windows
+        try
+        {
+            var toastServiceType = Type.GetType("App.Presentation.Services.ToastService, App.Presentation");
+            if (toastServiceType != null)
+            {
+                var notificationsProperty = toastServiceType.GetProperty("Notifications", BindingFlags.Public | BindingFlags.Static);
+                if (notificationsProperty != null)
+                {
+                    var notifications = notificationsProperty.GetValue(null);
+                    if (notifications != null)
+                    {
+                        var toastItemsControl = new ItemsControl
+                        {
+                            Margin = new Thickness(16),
+                            HorizontalAlignment = HorizontalAlignment.Right,
+                            VerticalAlignment = VerticalAlignment.Top,
+                            Panel.ZIndex = 10000,
+                            ItemsSource = notifications
+                        };
+
+                        var itemsPanelTemplate = new ItemsPanelTemplate();
+                        itemsPanelTemplate.Content = new Func<IServiceProvider, object>(_ => new StackPanel { Spacing = 8 });
+                        toastItemsControl.ItemsPanel = itemsPanelTemplate;
+
+                        var itemTemplate = new FuncDataTemplate<object>((data, _) =>
+                        {
+                            var toastTypeProp = data.GetType().GetProperty("Type");
+                            var messageProp = data.GetType().GetProperty("Message");
+                            var toastType = toastTypeProp?.GetValue(data);
+                            var message = messageProp?.GetValue(data)?.ToString() ?? string.Empty;
+
+                            var border = new Border
+                            {
+                                Classes = { "ToastControl" },
+                                Padding = new Thickness(16),
+                                CornerRadius = new CornerRadius(8),
+                                MaxWidth = 420,
+                                HorizontalAlignment = HorizontalAlignment.Right,
+                                Opacity = 0.95
+                            };
+
+                            // Try to get brush from converter
+                            try
+                            {
+                                var converterType = Type.GetType("App.Presentation.Converters.ToastTypeToBrushConverter, App.Presentation");
+                                if (converterType != null)
+                                {
+                                    var successBrushProp = converterType.GetProperty("SuccessBrush");
+                                    var warningBrushProp = converterType.GetProperty("WarningBrush");
+                                    var errorBrushProp = converterType.GetProperty("ErrorBrush");
+                                    
+                                    IBrush? brush = null;
+                                    if (toastType != null)
+                                    {
+                                        var toastTypeName = toastType.ToString();
+                                        if (toastTypeName?.Contains("Success") == true && successBrushProp != null)
+                                        {
+                                            brush = successBrushProp.GetValue(null) as IBrush;
+                                        }
+                                        else if (toastTypeName?.Contains("Warning") == true && warningBrushProp != null)
+                                        {
+                                            brush = warningBrushProp.GetValue(null) as IBrush;
+                                        }
+                                        else if (toastTypeName?.Contains("Error") == true && errorBrushProp != null)
+                                        {
+                                            brush = errorBrushProp.GetValue(null) as IBrush;
+                                        }
+                                    }
+                                    
+                                    if (brush != null)
+                                    {
+                                        border.Background = brush;
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                                // Fallback to default colors
+                                if (toastType?.ToString()?.Contains("Success") == true)
+                                    border.Background = new SolidColorBrush(Color.FromRgb(0x4C, 0xAF, 0x50));
+                                else if (toastType?.ToString()?.Contains("Warning") == true)
+                                    border.Background = new SolidColorBrush(Color.FromRgb(0xFF, 0x98, 0x00));
+                                else if (toastType?.ToString()?.Contains("Error") == true)
+                                    border.Background = new SolidColorBrush(Color.FromRgb(0xF4, 0x43, 0x36));
+                            }
+
+                            var textBlock = new TextBlock
+                            {
+                                Text = message,
+                                TextWrapping = TextWrapping.Wrap
+                            };
+                            border.Child = textBlock;
+
+                            return border;
+                        });
+
+                        toastItemsControl.ItemTemplate = itemTemplate;
+                        rootPanel.Children.Add(toastItemsControl);
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // ToastService not available, skip adding toasts
+        }
+
         var dialog = new Window
         {
             Title = title,
-            Content = overlay,
+            Content = rootPanel,
             ShowInTaskbar = false,
             CanResize = false,
             SystemDecorations = SystemDecorations.None,
