@@ -49,7 +49,6 @@ namespace GRCFinancialControl.Persistence.Services
                 .AsSplitQuery()
                 .Include(e => e.Customer)
                 .Include(e => e.EngagementPapds)
-                    .ThenInclude(ep => ep.Papd)
                 .Include(e => e.ManagerAssignments)
                     .ThenInclude(ma => ma.Manager)
                 .Include(e => e.RankBudgets)
@@ -60,6 +59,7 @@ namespace GRCFinancialControl.Persistence.Services
                 .Include(e => e.LastClosingPeriod)
                 .ToListAsync();
 
+            await PopulatePapdAssignmentsAsync(context, engagements);
             ApplyFinancialControlSnapshots(engagements, closingPeriods);
 
             return engagements;
@@ -89,7 +89,6 @@ namespace GRCFinancialControl.Persistence.Services
                 .AsSplitQuery()
                 .Include(e => e.Customer)
                 .Include(e => e.EngagementPapds)
-                    .ThenInclude(ep => ep.Papd)
                 .Include(e => e.ManagerAssignments)
                     .ThenInclude(ma => ma.Manager)
                 .Include(e => e.RankBudgets)
@@ -102,6 +101,7 @@ namespace GRCFinancialControl.Persistence.Services
 
             if (engagement != null)
             {
+                await PopulatePapdAssignmentsAsync(context, new[] { engagement });
                 ApplyFinancialControlSnapshot(engagement, closingPeriods);
             }
 
@@ -207,6 +207,68 @@ namespace GRCFinancialControl.Persistence.Services
                 engagement.MarginPctEtcp = null;
                 engagement.LastClosingPeriodId = null;
                 engagement.LastClosingPeriod = null;
+            }
+        }
+
+        private static async Task PopulatePapdAssignmentsAsync(ApplicationDbContext context, IEnumerable<Engagement> engagements)
+        {
+            ArgumentNullException.ThrowIfNull(context);
+            ArgumentNullException.ThrowIfNull(engagements);
+
+            var engagementList = engagements
+                .Where(e => e != null)
+                .ToList();
+
+            if (engagementList.Count == 0)
+            {
+                return;
+            }
+
+            var assignments = engagementList
+                .Where(e => e.EngagementPapds != null && e.EngagementPapds.Count > 0)
+                .SelectMany(e => e.EngagementPapds)
+                .ToList();
+
+            if (assignments.Count == 0)
+            {
+                return;
+            }
+
+            var papdIds = assignments
+                .Select(a => a.PapdId)
+                .Where(id => id > 0)
+                .Distinct()
+                .ToList();
+
+            if (papdIds.Count == 0)
+            {
+                return;
+            }
+
+            var papds = await context.Papds
+                .AsNoTracking()
+                .Where(p => papdIds.Contains(p.Id))
+                .ToListAsync();
+
+            if (papds.Count == 0)
+            {
+                return;
+            }
+
+            var papdLookup = papds.ToDictionary(p => p.Id);
+            var engagementLookup = engagementList.ToDictionary(e => e.Id);
+
+            foreach (var assignment in assignments)
+            {
+                if (papdLookup.TryGetValue(assignment.PapdId, out var papd))
+                {
+                    assignment.Papd = papd;
+                }
+
+                if (engagementLookup.TryGetValue(assignment.EngagementId, out var engagement))
+                {
+                    assignment.Engagement = engagement;
+                }
             }
         }
 
