@@ -155,10 +155,12 @@
                         </StackPanel>
 
                         <Button Content="{loc:Loc Key=INV_Button_Refresh}"
-                                Command="{Binding Editor.RefreshCommand}" />
+                                Command="{Binding Editor.RefreshCommand}"
+                                MinWidth="{StaticResource ButtonMinWidth}" />
 
                         <Button Content="{loc:Loc Key=INV_InvoicePlan_Button_PreviewDescription}"
-                                Command="{Binding Editor.PreviewDescriptionCommand}" />
+                                Command="{Binding Editor.PreviewDescriptionCommand}"
+                                MinWidth="{StaticResource ButtonMinWidth}" />
                     </WrapPanel>
 
                     <Border Grid.Row="1"
@@ -361,19 +363,18 @@
 
             <TabItem Header="{loc:Loc Key=INV_InvoicePlan_Tab_Notes}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Spacing="{StaticResource SectionSpacing}">
+                    <StackPanel Spacing="{StaticResource SectionSpacing}"
+                                Margin="{StaticResource SpaceThickness0}">
                         <TextBlock Text="{loc:Loc Key=INV_InvoicePlan_Label_Instructions}"
                                    Classes="Caption" />
                         <TextBox Text="{Binding Editor.CustomInstructions}"
                                  AcceptsReturn="True"
-                                 MinHeight="100"
                                  TextWrapping="Wrap" />
 
                         <TextBlock Text="{loc:Loc Key=INV_InvoicePlan_Label_RecipientEmails}"
                                    Classes="Caption" />
                         <TextBox Text="{Binding Editor.RecipientEmails}"
                                  AcceptsReturn="True"
-                                 MinHeight="120"
                                  TextWrapping="Wrap"
                                  Watermark="{loc:Loc Key=INV_InvoicePlan_Placeholder_Recipients}" />
                     </StackPanel>
@@ -387,12 +388,15 @@
                     Margin="{StaticResource CardPaddingThickness}">
             <Button Content="{loc:Loc Key=INV_InvoicePlan_Dialog_Button_DeletePlan}"
                     Command="{Binding DeletePlanCommand}"
-                    Classes="Danger" />
+                    Classes="Danger"
+                    MinWidth="{StaticResource ButtonMinWidth}" />
             <Button Content="{loc:Loc Key=INV_InvoicePlan_Dialog_Button_EditPlan}"
-                    Command="{Binding EditLinesCommand}" />
+                    Command="{Binding EditLinesCommand}"
+                    MinWidth="{StaticResource ButtonMinWidth}" />
             <Button Content="{loc:Loc Key=Global_Button_Cancel}"
                     Command="{Binding CloseCommand}"
-                    IsCancel="True" />
+                    IsCancel="True"
+                    MinWidth="{StaticResource ButtonMinWidth}" />
         </StackPanel>
     </Grid>
 </UserControl>

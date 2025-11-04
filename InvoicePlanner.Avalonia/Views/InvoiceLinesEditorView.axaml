@@ -49,8 +49,7 @@
                                            Text="{loc:Loc Key=INV_InvoicePlan_Label_PlanType}" />
                                 <ComboBox ItemsSource="{Binding Editor.PlanTypes}"
                                           SelectedItem="{Binding Editor.PlanType}"
-                                          MinWidth="180"
-                                          Width="200"
+                                          MinWidth="{StaticResource InputMinWidthWide}"
                                           HorizontalAlignment="Left" />
                             </StackPanel>
 
@@ -64,8 +63,7 @@
                                                Maximum="48"
                                                Increment="1"
                                                Value="{Binding Editor.NumInvoices}"
-                                               MinWidth="{StaticResource InputMinWidthStandard}"
-                                               Width="160"
+                                               MinWidth="{StaticResource InputMinWidthWide}"
                                                HorizontalAlignment="Left"
                                                appBehaviors:NumericInputNullSafety.IsEnabled="True" />
                             </StackPanel>
@@ -85,8 +83,7 @@
                                                Maximum="120"
                                                Increment="1"
                                                Value="{Binding Editor.PaymentTermDays}"
-                                               MinWidth="{StaticResource InputMinWidthStandard}"
-                                               Width="160"
+                                               MinWidth="{StaticResource InputMinWidthWide}"
                                                HorizontalAlignment="Left"
                                                appBehaviors:NumericInputNullSafety.IsEnabled="True" />
                             </StackPanel>
@@ -102,14 +99,14 @@
                                                     IsVisible="{Binding Editor.RequiresFirstEmissionDate}"
                                                     IsEnabled="{Binding Editor.RequiresFirstEmissionDate}"
                                                     HorizontalAlignment="Left"
-                                                    Width="240" />
+                                                    MinWidth="{StaticResource PopupDatePickerMinWidth}" />
                             </StackPanel>
                         </WrapPanel>
                     </StackPanel>
 
                     <Border Grid.Row="2"
                             BorderThickness="{StaticResource ControlBorderThickness}"
-                            BorderBrush="{StaticResource ThemeBorderLowBrush}"
+                            BorderBrush="{StaticResource BrushBorder}"
                             CornerRadius="{StaticResource ControlCornerRadius}"
                             Margin="{StaticResource MarginVerticalRegular}"
                             HorizontalAlignment="Stretch">
