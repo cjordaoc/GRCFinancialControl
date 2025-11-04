@@ -1,10 +1,12 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -79,20 +81,19 @@ public sealed class ModalDialogService : IModalDialogService
                 if (notificationsProperty != null)
                 {
                     var notifications = notificationsProperty.GetValue(null);
-                    if (notifications != null)
+                    if (notifications != null && notifications is IEnumerable enumerable)
                     {
                         var toastItemsControl = new ItemsControl
                         {
                             Margin = new Thickness(16),
                             HorizontalAlignment = HorizontalAlignment.Right,
                             VerticalAlignment = VerticalAlignment.Top,
-                            Panel.ZIndex = 10000,
-                            ItemsSource = notifications
+                            ItemsSource = enumerable
                         };
+                        toastItemsControl.SetValue(Panel.ZIndexProperty, 10000);
 
-                        var itemsPanelTemplate = new ItemsPanelTemplate();
-                        itemsPanelTemplate.Content = new Func<IServiceProvider, object>(_ => new StackPanel { Spacing = 8 });
-                        toastItemsControl.ItemsPanel = itemsPanelTemplate;
+                        // ItemsPanel will use default vertical stack panel which is fine for toasts
+                        // Spacing is handled via styles if needed
 
                         var itemTemplate = new FuncDataTemplate<object>((data, _) =>
                         {

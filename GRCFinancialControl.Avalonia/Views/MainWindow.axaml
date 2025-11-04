@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:sys="clr-namespace:System;assembly=System.Runtime"
         xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
         xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
         xmlns:services="clr-namespace:App.Presentation.Services;assembly=App.Presentation"
@@ -149,10 +150,10 @@
             </Border>
         </Grid>
 
-        <ItemsControl Margin="{StaticResource MarginCallout}"
+        <ItemsControl x:Name="ToastItemsControl"
+                      Margin="{StaticResource MarginCallout}"
                       HorizontalAlignment="Right"
                       VerticalAlignment="Top"
-                      Panel.ZIndex="10000"
                       ItemsSource="{x:Static services:ToastService.Notifications}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>

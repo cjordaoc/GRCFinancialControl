@@ -234,7 +234,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private static bool CanDeleteData(Engagement engagement) => engagement is not null;
 
-        private static bool CanAssign(Engagement? engagement) => engagement is not null;
+        private bool CanAssign() => SelectedEngagement is not null;
 
         partial void OnSelectedEngagementChanged(Engagement? value)
         {
