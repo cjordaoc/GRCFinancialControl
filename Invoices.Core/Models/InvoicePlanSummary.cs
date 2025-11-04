@@ -9,6 +9,10 @@ public sealed class InvoicePlanSummary
 
     public string EngagementId { get; init; } = string.Empty;
 
+    public string EngagementDescription { get; init; } = string.Empty;
+
+    public string? CustomerName { get; init; }
+
     public InvoicePlanType Type { get; init; }
 
     public DateTime CreatedAt { get; init; }

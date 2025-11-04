@@ -21,7 +21,7 @@ namespace GRCFinancialControl.Persistence.Services.Infrastructure
 
         protected async Task<ApplicationDbContext> CreateContextAsync()
         {
-            var context = await _contextFactory.CreateDbContextAsync();
+            var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
             ArgumentNullException.ThrowIfNull(context);
 
             return context;
@@ -40,7 +40,7 @@ namespace GRCFinancialControl.Persistence.Services.Infrastructure
                 query = configure(query);
             }
 
-            return await query.ToListAsync();
+            return await query.ToListAsync().ConfigureAwait(false);
         }
 
         protected async Task<TEntity?> GetSingleInternalAsync(Func<IQueryable<TEntity>, IQueryable<TEntity>> configure)
@@ -48,48 +48,48 @@ namespace GRCFinancialControl.Persistence.Services.Infrastructure
             await using var context = await CreateContextAsync();
             IQueryable<TEntity> query = BuildQuery(context);
             query = configure(query);
-            return await query.FirstOrDefaultAsync();
+            return await query.FirstOrDefaultAsync().ConfigureAwait(false);
         }
 
         protected async Task AddEntityAsync(TEntity entity)
         {
             ArgumentNullException.ThrowIfNull(entity);
 
-            await using var context = await CreateContextAsync();
-            await Set(context).AddAsync(entity);
-            await context.SaveChangesAsync();
+            await using var context = await CreateContextAsync().ConfigureAwait(false);
+            await Set(context).AddAsync(entity).ConfigureAwait(false);
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
 
         protected async Task UpdateEntityAsync(TEntity entity)
         {
             ArgumentNullException.ThrowIfNull(entity);
 
-            await using var context = await CreateContextAsync();
+            await using var context = await CreateContextAsync().ConfigureAwait(false);
             Set(context).Update(entity);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
 
         protected async Task<TEntity?> FindEntityAsync(params object[] keyValues)
         {
             ValidateKeyValues(keyValues);
 
-            await using var context = await CreateContextAsync();
-            return await Set(context).FindAsync(keyValues);
+            await using var context = await CreateContextAsync().ConfigureAwait(false);
+            return await Set(context).FindAsync(keyValues).ConfigureAwait(false);
         }
 
         protected async Task DeleteEntityAsync(params object[] keyValues)
         {
             ValidateKeyValues(keyValues);
 
-            await using var context = await CreateContextAsync();
-            var entity = await Set(context).FindAsync(keyValues);
+            await using var context = await CreateContextAsync().ConfigureAwait(false);
+            var entity = await Set(context).FindAsync(keyValues).ConfigureAwait(false);
             if (entity is null)
             {
                 return;
             }
 
             Set(context).Remove(entity);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
 
         private static void ValidateKeyValues(object[] keyValues)

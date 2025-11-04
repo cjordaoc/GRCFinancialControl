@@ -107,6 +107,8 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
 
     public bool HasSelectedLine => SelectedLine is not null;
 
+    public bool HasEmittedSelectedLine => SelectedLine?.IsEmitted ?? false;
+
     public string EngagementDisplay => LocalizationRegistry.Format(
         "INV_Emission_Status_EngagementFormat",
         string.IsNullOrWhiteSpace(EngagementId) ? string.Empty : EngagementId);
@@ -170,6 +172,7 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         }
 
         OnPropertyChanged(nameof(HasSelectedLine));
+        OnPropertyChanged(nameof(HasEmittedSelectedLine));
         RefreshActionCommands();
     }
 
@@ -564,6 +567,10 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
             or nameof(EmissionConfirmationLineViewModel.Status)
             or nameof(EmissionConfirmationLineViewModel.CancelReason))
         {
+            if (e.PropertyName == nameof(EmissionConfirmationLineViewModel.Status))
+            {
+                OnPropertyChanged(nameof(HasEmittedSelectedLine));
+            }
             RefreshActionCommands();
         }
     }

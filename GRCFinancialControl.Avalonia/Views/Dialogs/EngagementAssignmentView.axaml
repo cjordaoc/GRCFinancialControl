@@ -19,6 +19,7 @@
                 <DataGridCheckBoxColumn Header="{loc:Loc Key=Global_Selected}" Binding="{Binding IsSelected}" Width="Auto"/>
                 <DataGridTextColumn Header="{loc:Loc Key=Global_Id}" Binding="{Binding Engagement.Id}" Width="Auto" IsReadOnly="True"/>
                 <DataGridTextColumn Header="{loc:Loc Key=FINC_Engagements_EngagementCode}" Binding="{Binding Engagement.EngagementId}" Width="2*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Description" Binding="{Binding Engagement.Description}" Width="3*" IsReadOnly="True"/>
                 <DataGridTextColumn Header="{loc:Loc Key=Global_Status}" Binding="{Binding Engagement.Status}" Width="*" IsReadOnly="True"/>
                 <DataGridTextColumn Header="{loc:Loc Key=FINC_Customers_CustomerName}" Binding="{Binding Engagement.Customer.Name}" Width="2*" IsReadOnly="True"/>
             </DataGrid.Columns>

@@ -6,6 +6,7 @@
              xmlns:models="using:GRCFinancialControl.Core.Models"
              xmlns:conv="using:GRCFinancialControl.Avalonia.Converters"
              xmlns:appConv="clr-namespace:App.Presentation.Converters;assembly=App.Presentation"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.RevenueAllocationsView"
              x:Name="RevenueAllocationsViewRoot"
@@ -23,10 +24,11 @@
         <TextBlock Text="{Binding Header}"
                    Classes="TitleMedium"
                    Margin="{StaticResource CardPaddingThickness}"/>
-        <DataGrid Grid.Row="1" ItemsSource="{Binding Engagements}" AutoGenerateColumns="False" IsReadOnly="True" CanUserSortColumns="True">
+        <DataGrid Grid.Row="1" ItemsSource="{Binding Engagements}" AutoGenerateColumns="False" IsReadOnly="True" CanUserResizeColumns="True" CanUserSortColumns="True">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Engagement ID" Binding="{Binding EngagementId}" Width="*"/>
                 <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="2*"/>
+                <DataGridTextColumn Header="Customer" Binding="{Binding CustomerName}" Width="2*"/>
                 <DataGridTextColumn Header="Currency" Binding="{Binding Currency}" Width="Auto"/>
                 <DataGridTemplateColumn Header="Value to Allocate" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
@@ -74,12 +76,14 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate x:DataType="models:Engagement">
                             <StackPanel Orientation="Horizontal" Spacing="{StaticResource SpacingUnit}">
-                                <Button Content="View"
+                                <Button Content="{loc:Loc Key=FINC_Button_View}"
                                         Command="{Binding DataContext.ViewAllocationCommand, ElementName=RevenueAllocationsViewRoot}"
-                                        CommandParameter="{Binding}"/>
-                                <Button Content="Edit"
+                                        CommandParameter="{Binding}"
+                                        MinWidth="{StaticResource ButtonMinWidth}"/>
+                                <Button Content="{loc:Loc Key=FINC_Button_Edit}"
                                         Command="{Binding DataContext.EditAllocationCommand, ElementName=RevenueAllocationsViewRoot}"
-                                        CommandParameter="{Binding}"/>
+                                        CommandParameter="{Binding}"
+                                        MinWidth="{StaticResource ButtonMinWidth}"/>
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>

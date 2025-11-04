@@ -30,6 +30,8 @@
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_PlanId}" Binding="{Binding Id}" Width="80"/>
                                     <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Engagement}" Binding="{Binding EngagementId}" Width="160"/>
+                                    <DataGridTextColumn Header="Description" Binding="{Binding EngagementDescription}" Width="220"/>
+                                    <DataGridTextColumn Header="Customer" Binding="{Binding CustomerName}" Width="180"/>
                                     <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Type}" Binding="{Binding TypeName}" Width="120"/>
                                     <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_FirstEmission}" Binding="{Binding FirstEmissionDate, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
                                     <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_PendingRequests}" Binding="{Binding PlannedItemCount}" Width="140"/>
