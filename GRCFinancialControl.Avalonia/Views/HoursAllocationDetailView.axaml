@@ -13,19 +13,14 @@
     <UserControl.Resources>
         <converters:TrafficLightStatusToBrushConverter x:Key="TrafficLightStatusToBrushConverter" />
     </UserControl.Resources>
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*"
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto"
           Margin="{StaticResource SpaceThickness0}">
         <Grid Grid.Row="0"
-              ColumnDefinitions="*,Auto"
+              ColumnDefinitions="*"
               Margin="{StaticResource CardPaddingThickness}">
             <TextBlock Grid.Column="0"
                        Text="{Binding Header}"
                        Classes="TitleMedium"/>
-            <Button Grid.Column="1"
-                    Content="Close"
-                    Command="{Binding CloseCommand}"
-                    IsCancel="True"
-                    MinWidth="{StaticResource ButtonMinWidth}"/>
         </Grid>
 
         <StackPanel Grid.Row="1"
@@ -121,5 +116,16 @@
                 </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
+
+        <StackPanel Grid.Row="6"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="{StaticResource ControlSpacing}"
+                    Margin="{StaticResource CardPaddingThickness}">
+            <Button Content="Close"
+                    Command="{Binding CloseCommand}"
+                    IsCancel="True"
+                    MinWidth="{StaticResource ButtonMinWidth}"/>
+        </StackPanel>
     </Grid>
 </UserControl>

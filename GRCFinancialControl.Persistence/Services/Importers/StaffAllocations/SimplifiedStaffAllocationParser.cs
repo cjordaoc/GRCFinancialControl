@@ -88,6 +88,116 @@ public sealed class SimplifiedStaffAllocationParser
         return aggregated;
     }
 
+    public IReadOnlyList<AggregatedAllocation> ParseWithFiscalYearMapping(
+        ImportService.IWorksheet worksheet,
+        IReadOnlyList<FiscalYear> fiscalYears,
+        IReadOnlyList<RankMapping> rankMappings)
+    {
+        ArgumentNullException.ThrowIfNull(worksheet);
+        ArgumentNullException.ThrowIfNull(fiscalYears);
+        ArgumentNullException.ThrowIfNull(rankMappings);
+
+        if (worksheet.RowCount == 0 || worksheet.ColumnCount == 0)
+        {
+            return Array.Empty<AggregatedAllocation>();
+        }
+
+        var employees = IdentifyEmployees(worksheet);
+        if (employees.Rows.Count == 0)
+        {
+            _logger.LogWarning("No staff allocation rows found in the worksheet.");
+            return Array.Empty<AggregatedAllocation>();
+        }
+
+        var weekColumns = IdentifyWeekColumnsWithFiscalYearMapping(worksheet, fiscalYears);
+        if (weekColumns.Active.Count == 0)
+        {
+            _logger.LogWarning("No weekly allocation columns found in the worksheet.");
+            return Array.Empty<AggregatedAllocation>();
+        }
+
+        var rankLookup = BuildRankLookup(rankMappings);
+        if (rankLookup.Count == 0)
+        {
+            _logger.LogWarning("Rank mappings are empty. Unable to map ranks to rank codes.");
+            return Array.Empty<AggregatedAllocation>();
+        }
+
+        var records = ExtractAllocations(worksheet, employees.Rows, weekColumns.Active);
+        if (records.Count == 0)
+        {
+            return Array.Empty<AggregatedAllocation>();
+        }
+
+        // Aggregate by engagement, rank, and fiscal year (mapping each date to its fiscal year)
+        var mapped = new List<MappedAllocation>(records.Count);
+
+        foreach (var record in records)
+        {
+            if (string.IsNullOrWhiteSpace(record.Rank))
+            {
+                _logger.LogWarning(
+                    "Skipping allocation for employee {Gpn} on {WeekDate:yyyy-MM-dd} because the rank is empty.",
+                    record.Gpn,
+                    record.WeekDate);
+                continue;
+            }
+
+            var normalizedRank = NormalizeRank(record.Rank);
+            if (!rankLookup.TryGetValue(normalizedRank, out var rankCode))
+            {
+                _logger.LogWarning(
+                    "No mapping found for rank '{Rank}'. Skipping allocation for employee {Gpn} on {WeekDate:yyyy-MM-dd}.",
+                    record.Rank,
+                    record.Gpn,
+                    record.WeekDate);
+                continue;
+            }
+
+            var normalizedEngagement = NormalizeCode(record.EngagementCode);
+            if (string.IsNullOrEmpty(normalizedEngagement))
+            {
+                continue;
+            }
+
+            var normalizedRankCode = NormalizeCode(rankCode);
+            if (string.IsNullOrEmpty(normalizedRankCode))
+            {
+                continue;
+            }
+
+            // Map week date to fiscal year
+            var fiscalYear = fiscalYears.FirstOrDefault(fy =>
+                record.WeekDate >= fy.StartDate.Date && record.WeekDate <= fy.EndDate.Date);
+
+            if (fiscalYear is null)
+            {
+                _logger.LogWarning(
+                    "Week date {WeekDate:yyyy-MM-dd} does not fall within any fiscal year. Skipping allocation for engagement {Engagement}.",
+                    record.WeekDate,
+                    normalizedEngagement);
+                continue;
+            }
+
+            var key = new AllocationKey(normalizedEngagement, normalizedRankCode, fiscalYear.Id);
+            mapped.Add(new MappedAllocation(key, record.AmountOfHours));
+        }
+
+        if (mapped.Count == 0)
+        {
+            return new List<AggregatedAllocation>();
+        }
+
+        return mapped
+            .GroupBy(allocation => allocation.Key, AllocationKeyComparer.Instance)
+            .Select(group => new AggregatedAllocation(
+                group.Key.EngagementCode,
+                group.Key.RankCode,
+                group.Key.FiscalYearId,
+                group.Sum(allocation => allocation.Hours)))
+            .ToList();
+    }
+
     private static EmployeeCapture IdentifyEmployees(ImportService.IWorksheet worksheet)
     {
         var rows = new List<EmployeeRow>();
@@ -161,6 +271,69 @@ public sealed class SimplifiedStaffAllocationParser
         }
 
         return new WeekColumnCapture(allColumns, activeColumns);
+    }
+
+    private static WeekColumnCapture IdentifyWeekColumnsWithFiscalYearMapping(
+        ImportService.IWorksheet worksheet,
+        IReadOnlyList<FiscalYear> fiscalYears)
+    {
+        var allColumns = new List<WeekColumn>();
+        var activeColumns = new List<WeekColumn>();
+        if (worksheet.RowCount == 0)
+        {
+            return new WeekColumnCapture(allColumns, activeColumns);
+        }
+
+        var consecutiveBlanks = 0;
+        const int maxConsecutiveBlanks = 5;
+
+        for (var columnIndex = 0; columnIndex < worksheet.ColumnCount; columnIndex++)
+        {
+            var cellValue = worksheet.GetValue(0, columnIndex);
+            var date = TryParseWeekDate(cellValue);
+
+            if (!date.HasValue)
+            {
+                // Check if cell is blank
+                if (IsBlank(cellValue))
+                {
+                    consecutiveBlanks++;
+                    if (consecutiveBlanks >= maxConsecutiveBlanks)
+                    {
+                        break; // Stop after 5 consecutive blank cells
+                    }
+                }
+                else
+                {
+                    consecutiveBlanks = 0; // Reset counter if non-blank non-date found
+                }
+                continue;
+            }
+
+            consecutiveBlanks = 0; // Reset counter when date found
+
+            var weekDate = date.Value.Date;
+            var column = new WeekColumn(columnIndex, weekDate);
+            allColumns.Add(column);
+            activeColumns.Add(column); // Include all date columns, not filtered by current date
+        }
+
+        return new WeekColumnCapture(allColumns, activeColumns);
+    }
+
+    private static bool IsBlank(object? value)
+    {
+        if (value == null || value == DBNull.Value)
+        {
+            return true;
+        }
+
+        if (value is string text)
+        {
+            return string.IsNullOrWhiteSpace(text);
+        }
+
+        return false;
     }
 
     private List<StaffAllocationRecord> ExtractAllocations(

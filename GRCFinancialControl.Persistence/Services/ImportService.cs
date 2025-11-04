@@ -1033,6 +1033,7 @@ namespace GRCFinancialControl.Persistence.Services
         {
             int RowCount { get; }
             int ColumnCount { get; }
+            string Name { get; }
             object? GetValue(int rowIndex, int columnIndex);
         }
 
@@ -1048,7 +1049,8 @@ namespace GRCFinancialControl.Persistence.Services
             }
 
             public string Name { get; }
-            public int RowCount => _cells.Length;
+            int IWorksheet.RowCount => _cells.Length;
+            int IWorksheet.ColumnCount => ColumnCount;
             public int ColumnCount { get; }
 
             public object? GetValue(int rowIndex, int columnIndex)
@@ -2051,6 +2053,7 @@ namespace GRCFinancialControl.Persistence.Services
                 .ConfigureAwait(false);
         }
 
+
         public async Task<string> ImportAllocationPlanningAsync(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
@@ -2077,6 +2080,7 @@ namespace GRCFinancialControl.Persistence.Services
                 .ConfigureAwait(false);
 
             var nowUtc = DateTime.UtcNow;
+            var today = nowUtc.Date;
 
             // Locate the active closing period; the import only makes sense when a window is open.
             var activeClosingPeriod = await context.ClosingPeriods
@@ -2110,6 +2114,17 @@ namespace GRCFinancialControl.Persistence.Services
                 ? $"Id={activeClosingPeriod.Id}"
                 : activeClosingPeriod.Name;
 
+            // Load all fiscal years to map column dates correctly
+            var fiscalYears = await context.FiscalYears
+                .AsNoTracking()
+                .ToListAsync()
+                .ConfigureAwait(false);
+
+            if (fiscalYears.Count == 0)
+            {
+                throw new InvalidOperationException("No fiscal years have been configured. Add a fiscal year before importing allocation planning data.");
+            }
+
             // Parse the workbook into normalized engagement/rank groupings.
             var rankMappings = await context.RankMappings
                 .AsNoTracking()
@@ -2119,7 +2134,7 @@ namespace GRCFinancialControl.Persistence.Services
 
             var parserLogger = _loggerFactory.CreateLogger<SimplifiedStaffAllocationParser>();
             var parser = new SimplifiedStaffAllocationParser(parserLogger);
-            var aggregatedRecords = parser.Parse(worksheet, activeClosingPeriod, rankMappings);
+            var aggregatedRecords = parser.ParseWithFiscalYearMapping(worksheet, fiscalYears, rankMappings);
 
             var processedRowCount = aggregatedRecords.Count;
             var distinctEngagementCount = aggregatedRecords
@@ -2167,8 +2182,10 @@ namespace GRCFinancialControl.Persistence.Services
                 }
             }
 
+            // Load histories for all fiscal years that appear in the import
+            var fiscalYearIds = aggregatedRecords.Select(r => r.FiscalYearId).Distinct().ToList();
             var existingHistories = await context.EngagementRankBudgetHistory
-                .Where(h => h.ClosingPeriodId == activeClosingPeriod.Id && h.FiscalYearId == activeClosingPeriod.FiscalYearId)
+                .Where(h => h.ClosingPeriodId == activeClosingPeriod.Id && fiscalYearIds.Contains(h.FiscalYearId))
                 .ToListAsync()
                 .ConfigureAwait(false);
 
@@ -2190,7 +2207,7 @@ namespace GRCFinancialControl.Persistence.Services
             if (engagementCodes.Count > 0)
             {
                 engagements = await context.Engagements
-                    .Include(e => e.RankBudgets.Where(b => b.FiscalYearId == activeClosingPeriod.FiscalYearId))
+                    .Include(e => e.RankBudgets.Where(b => fiscalYearIds.Contains(b.FiscalYearId)))
                     .Where(e => e.EngagementId != null && engagementCodes.Contains(e.EngagementId))
                     .ToListAsync()
                     .ConfigureAwait(false);
@@ -2211,7 +2228,7 @@ namespace GRCFinancialControl.Persistence.Services
                     continue;
                 }
 
-                foreach (var budget in engagement.RankBudgets.Where(b => b.FiscalYearId == activeClosingPeriod.FiscalYearId))
+                foreach (var budget in engagement.RankBudgets.Where(b => fiscalYearIds.Contains(b.FiscalYearId)))
                 {
                     var normalizedRank = NormalizeRankKey(budget.RankName);
                     if (string.IsNullOrEmpty(normalizedRank))
@@ -2324,7 +2341,7 @@ namespace GRCFinancialControl.Persistence.Services
                         UpdatedAtUtc = updateTimestamp
                     };
 
-                    newBudget.UpdateConsumedHours(entry.RoundedHours);
+                    newBudget.ApplyIncurredHours(entry.RoundedHours);
 
                     await context.EngagementRankBudgets.AddAsync(newBudget).ConfigureAwait(false);
                     budgetLookup[(entry.EngagementId, entry.FiscalYearId, entry.RankCode)] = newBudget;
@@ -2333,12 +2350,13 @@ namespace GRCFinancialControl.Persistence.Services
                 }
                 else
                 {
-                    var newConsumed = budget.ConsumedHours + delta;
-                    var previousConsumed = budget.ConsumedHours;
+                    var currentIncurred = budget.CalculateIncurredHours();
+                    var previousIncurred = currentIncurred;
                     var previousRemaining = budget.RemainingHours;
-                    budget.UpdateConsumedHours(newConsumed);
+                    budget.ApplyIncurredHours(currentIncurred + delta);
 
-                    if (Math.Abs(previousConsumed - budget.ConsumedHours) > 0.005m ||
+                    var newIncurred = budget.CalculateIncurredHours();
+                    if (Math.Abs(previousIncurred - newIncurred) > 0.005m ||
                         Math.Abs(previousRemaining - budget.RemainingHours) > 0.005m)
                     {
                         budget.UpdatedAtUtc = updateTimestamp;
@@ -2392,12 +2410,13 @@ namespace GRCFinancialControl.Persistence.Services
                 if (engagementLookup.TryGetValue(historyKey.EngagementCode, out var engagement) &&
                     budgetLookup.TryGetValue((engagement.Id, historyKey.FiscalYearId, historyKey.RankCode), out var budget))
                 {
-                    var newConsumed = budget.ConsumedHours - previousHours;
-                    var previousConsumed = budget.ConsumedHours;
+                    var currentIncurred = budget.CalculateIncurredHours();
+                    var previousIncurred = currentIncurred;
                     var previousRemaining = budget.RemainingHours;
-                    budget.UpdateConsumedHours(newConsumed);
+                    budget.ApplyIncurredHours(currentIncurred - previousHours);
 
-                    if (Math.Abs(previousConsumed - budget.ConsumedHours) > 0.005m ||
+                    var newIncurred = budget.CalculateIncurredHours();
+                    if (Math.Abs(previousIncurred - newIncurred) > 0.005m ||
                         Math.Abs(previousRemaining - budget.RemainingHours) > 0.005m)
                     {
                         budget.UpdatedAtUtc = updateTimestamp;
