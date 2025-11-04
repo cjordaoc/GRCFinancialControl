@@ -95,7 +95,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var updates = Rows
                 .SelectMany(row => row.CellsByFiscalYear.Values)
                 .Where(cell => cell.HasChanges && cell.BudgetId.HasValue)
-                .Select(cell => new HoursAllocationCellUpdate(cell.BudgetId!.Value, cell.ConsumedHours))
+                .Select(cell => new HoursAllocationCellUpdate(
+                    cell.BudgetId!.Value,
+                    cell.ConsumedHours,
+                    cell.HasBudgetHoursChanges ? cell.BudgetHours : null))
                 .ToList();
 
             var rowAdjustments = Rows
@@ -401,7 +404,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             public string FiscalYearName => _cell.FiscalYearName;
 
-            public decimal BudgetHours => _cell.BudgetHours;
+            public decimal BudgetHours
+            {
+                get => _cell.BudgetHours;
+                set => _cell.BudgetHours = value;
+            }
 
             public decimal IncurredHours
             {
@@ -452,25 +459,27 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
-        public sealed partial class HoursAllocationEditorCellViewModel : ObservableObject
-        {
-            private readonly Action _notifyChange;
-            private readonly decimal _originalConsumedHours;
-
-            public HoursAllocationEditorCellViewModel(HoursAllocationCellSnapshot snapshot, string fiscalYearName, Action notifyChange)
+            public sealed partial class HoursAllocationEditorCellViewModel : ObservableObject
             {
-                ArgumentNullException.ThrowIfNull(snapshot);
-                _notifyChange = notifyChange ?? throw new ArgumentNullException(nameof(notifyChange));
+                private readonly Action _notifyChange;
+                private readonly decimal _originalConsumedHours;
+                private readonly decimal _originalBudgetHours;
 
-                BudgetId = snapshot.BudgetId;
-                FiscalYearId = snapshot.FiscalYearId;
-                FiscalYearName = fiscalYearName;
-                _budgetHours = snapshot.BudgetHours;
-                _consumedHours = snapshot.ConsumedHours;
-                _remainingHours = snapshot.RemainingHours;
-                IsLocked = snapshot.IsLocked;
-                _originalConsumedHours = snapshot.ConsumedHours;
-            }
+                public HoursAllocationEditorCellViewModel(HoursAllocationCellSnapshot snapshot, string fiscalYearName, Action notifyChange)
+                {
+                    ArgumentNullException.ThrowIfNull(snapshot);
+                    _notifyChange = notifyChange ?? throw new ArgumentNullException(nameof(notifyChange));
+
+                    BudgetId = snapshot.BudgetId;
+                    FiscalYearId = snapshot.FiscalYearId;
+                    FiscalYearName = fiscalYearName;
+                    _budgetHours = snapshot.BudgetHours;
+                    _consumedHours = snapshot.ConsumedHours;
+                    _remainingHours = snapshot.RemainingHours;
+                    IsLocked = snapshot.IsLocked;
+                    _originalConsumedHours = snapshot.ConsumedHours;
+                    _originalBudgetHours = snapshot.BudgetHours;
+                }
 
             public long? BudgetId { get; }
 
@@ -491,9 +500,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             public bool IsEditable => !IsLocked && BudgetId.HasValue;
 
-            public bool HasChanges => BudgetId.HasValue &&
+            public bool HasChanges => BudgetId.HasValue && (
                 Math.Round(ConsumedHours, 2, MidpointRounding.AwayFromZero) !=
-                Math.Round(_originalConsumedHours, 2, MidpointRounding.AwayFromZero);
+                Math.Round(_originalConsumedHours, 2, MidpointRounding.AwayFromZero) ||
+                Math.Round(BudgetHours, 2, MidpointRounding.AwayFromZero) !=
+                Math.Round(_originalBudgetHours, 2, MidpointRounding.AwayFromZero));
+
+            public bool HasBudgetHoursChanges => BudgetId.HasValue &&
+                Math.Round(BudgetHours, 2, MidpointRounding.AwayFromZero) !=
+                Math.Round(_originalBudgetHours, 2, MidpointRounding.AwayFromZero);
 
             partial void OnConsumedHoursChanged(decimal value)
             {
@@ -511,7 +526,17 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             partial void OnBudgetHoursChanged(decimal value)
             {
+                var normalized = Math.Round(value, 2, MidpointRounding.AwayFromZero);
+                if (normalized != value)
+                {
+                    BudgetHours = normalized;
+                    return;
+                }
+
                 RemainingHours = Math.Round(value - ConsumedHours, 2, MidpointRounding.AwayFromZero);
+                OnPropertyChanged(nameof(HasChanges));
+                OnPropertyChanged(nameof(HasBudgetHoursChanges));
+                _notifyChange();
             }
         }
     }

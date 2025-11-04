@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -18,7 +19,9 @@ namespace GRCFinancialControl.Avalonia.Services
         private readonly IMessenger _messenger;
         private readonly ViewLocator _viewLocator = new();
         private readonly IModalDialogService _modalDialogService;
-        private Window? _currentDialog;
+        private readonly Stack<Window> _dialogStack = new();
+
+        private Window? CurrentDialog => _dialogStack.Count > 0 ? _dialogStack.Peek() : null;
 
         public DialogService(IMessenger messenger, IModalDialogService modalDialogService)
         {
@@ -26,7 +29,7 @@ namespace GRCFinancialControl.Avalonia.Services
             _modalDialogService = modalDialogService;
             _messenger.Register<CloseDialogMessage>(this, (recipient, message) =>
             {
-                _currentDialog?.Close(message.Value);
+                CurrentDialog?.Close(message.Value);
             });
         }
 
@@ -51,12 +54,13 @@ namespace GRCFinancialControl.Avalonia.Services
 
             var owner = desktop.MainWindow;
             var session = _modalDialogService.Create(owner, view, title);
-            _currentDialog = session.Dialog;
+            var dialog = session.Dialog;
+            _dialogStack.Push(dialog);
 
-            _currentDialog.Opened += (_, _) =>
+            dialog.Opened += (_, _) =>
             {
                 Dispatcher.UIThread.Post(session.FocusFirstElement, DispatcherPriority.Background);
-                _currentDialog.KeyDown += session.KeyDownHandler;
+                dialog.KeyDown += session.KeyDownHandler;
             };
 
             var previousFocus = owner.FocusManager?.GetFocusedElement();
@@ -64,7 +68,7 @@ namespace GRCFinancialControl.Avalonia.Services
             try
             {
                 owner.IsEnabled = false;
-                var result = await _currentDialog.ShowDialog<bool?>(owner);
+                var result = await dialog.ShowDialog<bool?>(owner);
                 return result ?? false;
             }
             finally
@@ -72,13 +76,17 @@ namespace GRCFinancialControl.Avalonia.Services
                 owner.IsEnabled = true;
                 session.Dispose();
 
-                if (_currentDialog is not null)
+                if (dialog is not null)
                 {
-                    _currentDialog.KeyDown -= session.KeyDownHandler;
+                    dialog.KeyDown -= session.KeyDownHandler;
+                }
+
+                if (_dialogStack.Count > 0 && _dialogStack.Peek() == dialog)
+                {
+                    _dialogStack.Pop();
                 }
 
                 Dispatcher.UIThread.Post(() => previousFocus?.Focus(), DispatcherPriority.Background);
-                _currentDialog = null;
             }
         }
 
