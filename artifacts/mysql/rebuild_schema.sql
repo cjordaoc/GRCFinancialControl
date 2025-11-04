@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS `RankMappings`
     `RankCode`        VARCHAR(50)     NOT NULL,
     `RankName`        VARCHAR(100)    NULL,
     `SpreadsheetRank` VARCHAR(100)    NULL,
-    `CreatedAt`       DATETIME(6)     NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    `CreatedAt`       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `IsActive`        TINYINT(1)      NOT NULL DEFAULT 1,
     `LastSeenAt`      DATETIME(6)     NULL,
     CONSTRAINT `PK_RankMappings` PRIMARY KEY (`Id`),
@@ -193,7 +193,7 @@ CREATE TABLE `EngagementRankBudgets`
     `AdditionalHours` DECIMAL(18, 2) NOT NULL DEFAULT 0,
     `RemainingHours` DECIMAL(18, 2) NOT NULL DEFAULT 0,
     `Status`         VARCHAR(20)    NOT NULL DEFAULT 'Green',
-    `CreatedAtUtc`   DATETIME(6)    NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    `CreatedAtUtc`   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `UpdatedAtUtc`   DATETIME(6)    NULL,
     CONSTRAINT `PK_EngagementRankBudgets` PRIMARY KEY (`Id`),
     CONSTRAINT `FK_EngagementRankBudgets_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
@@ -210,7 +210,7 @@ CREATE TABLE `EngagementRankBudgetHistory`
     `FiscalYearId`     INT             NOT NULL,
     `ClosingPeriodId`  INT             NOT NULL,
     `Hours`            DECIMAL(12, 2)  NOT NULL,
-    `UploadedAt`       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `UploadedAt`       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT `PK_EngagementRankBudgetHistory` PRIMARY KEY (`Id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
