@@ -33,6 +33,7 @@
                     <StackPanel Spacing="{StaticResource SectionSpacing}"
                                 Margin="{StaticResource SpaceThickness0}">
                         <Grid ColumnDefinitions="Auto,*"
+                              RowDefinitions="Auto,Auto,Auto"
                               RowSpacing="{StaticResource GridGap}"
                               ColumnSpacing="{StaticResource GridGap}">
                             <TextBlock Grid.Row="0"
@@ -43,17 +44,20 @@
                             <Grid Grid.Row="0"
                                   Grid.Column="1"
                                   ColumnDefinitions="Auto,*"
-                                  ColumnSpacing="{StaticResource GridGap}">
+                                  ColumnSpacing="{StaticResource GridGap}"
+                                  HorizontalAlignment="Stretch">
                                 <TextBox Grid.Column="0"
                                          Text="{Binding Editor.EngagementId}"
                                          IsReadOnly="True"
                                          IsEnabled="False"
-                                         IsTabStop="False" />
+                                         IsTabStop="False"
+                                         MinWidth="120" />
                                 <TextBox Grid.Column="1"
                                          Text="{Binding Editor.EngagementName}"
                                          IsReadOnly="True"
                                          IsEnabled="False"
-                                         IsTabStop="False" />
+                                         IsTabStop="False"
+                                         HorizontalAlignment="Stretch" />
                             </Grid>
 
                             <TextBlock Grid.Row="1"
@@ -65,11 +69,13 @@
                                   Grid.Column="1"
                                   ColumnDefinitions="Auto,*"
                                   ColumnSpacing="{StaticResource SpacingUnit}"
-                                  VerticalAlignment="Center">
+                                  VerticalAlignment="Center"
+                                  HorizontalAlignment="Stretch">
                                 <TextBlock Grid.Column="0"
                                            Text="{Binding Editor.CurrencySymbol}"
                                            IsVisible="{Binding Editor.HasCurrencySymbol}"
-                                           VerticalAlignment="Center" />
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,4,0" />
                                 <NumericUpDown Grid.Column="1"
                                                Minimum="0"
                                                Maximum="100000000"
@@ -89,7 +95,8 @@
                             <TextBox Grid.Row="2"
                                      Grid.Column="1"
                                      Text="{Binding Editor.CustomerFocalPointName}"
-                                     Watermark="{loc:Loc Key=INV_Placeholder_Name}" />
+                                     Watermark="{loc:Loc Key=INV_Placeholder_Name}"
+                                     HorizontalAlignment="Stretch" />
                         </Grid>
                     </StackPanel>
                 </ScrollViewer>
