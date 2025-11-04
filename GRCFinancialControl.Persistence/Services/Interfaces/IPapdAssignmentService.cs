@@ -7,6 +7,8 @@ namespace GRCFinancialControl.Persistence.Services.Interfaces
     public interface IPapdAssignmentService
     {
         Task<List<EngagementPapd>> GetByEngagementIdAsync(int engagementId);
+        Task<List<EngagementPapd>> GetByPapdIdAsync(int papdId);
+        Task DeleteAsync(int id);
         Task UpdateAssignmentsForEngagementAsync(int engagementId, IEnumerable<int> papdIds);
     }
 }

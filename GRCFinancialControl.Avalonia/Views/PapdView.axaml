@@ -34,7 +34,7 @@
             <Button Content="View" Command="{Binding ViewCommand}" CommandParameter="{Binding SelectedPapd}"/>
             <Button Content="Delete" Command="{Binding DeleteCommand}" CommandParameter="{Binding SelectedPapd}"/>
             <Button Content="Delete Data" Command="{Binding DeleteDataCommand}" CommandParameter="{Binding SelectedPapd}" Classes="Danger"/>
-            <Button Content="Assign Engagements" Command="{Binding AssignEngagementsCommand}" CommandParameter="{Binding SelectedPapd}"/>
+            <Button Content="Edit Assignment" Command="{Binding EditAssignmentCommand}" CommandParameter="{Binding SelectedPapd}"/>
         </StackPanel>
     </Grid>
 </UserControl>

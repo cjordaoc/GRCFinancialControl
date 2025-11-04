@@ -26,6 +26,39 @@ namespace GRCFinancialControl.Persistence.Services
                 .ToListAsync();
         }
 
+        public async Task<List<EngagementPapd>> GetByPapdIdAsync(int papdId)
+        {
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.EngagementPapds
+                .AsNoTracking()
+                .AsSplitQuery()
+                .Include(a => a.Papd)
+                .Include(a => a.Engagement)
+                .Where(a => a.PapdId == papdId)
+                .OrderBy(a => a.Engagement.EngagementId)
+                .ThenBy(a => a.Engagement.Description)
+                .ToListAsync();
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            var existingAssignment = await context.EngagementPapds.FirstOrDefaultAsync(a => a.Id == id);
+            if (existingAssignment is null)
+            {
+                return;
+            }
+
+            await EngagementMutationGuard.EnsureCanMutateAsync(
+                context,
+                existingAssignment.EngagementId,
+                "Deleting PAPD assignments",
+                allowManualSources: true);
+
+            context.EngagementPapds.Remove(existingAssignment);
+            await context.SaveChangesAsync();
+        }
+
         public async Task UpdateAssignmentsForEngagementAsync(int engagementId, IEnumerable<int> papdIds)
         {
             await using var context = await _contextFactory.CreateDbContextAsync();
