@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels.Dialogs"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="500"
+             x:Class="GRCFinancialControl.Avalonia.Views.Dialogs.EditAssignmentView"
+             x:DataType="vm:EditAssignmentViewModel">
+    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="{StaticResource GridGap}" Margin="{StaticResource CardPaddingThickness}">
+        <TextBlock Grid.Row="0" Text="{Binding Title}" Classes="TitleSmall" Margin="{StaticResource MarginBottomSmall}"/>
+        
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding Assignments}"
+                  SelectedItem="{Binding SelectedAssignment}"
+                  SelectionMode="Single"
+                  IsReadOnly="True"
+                  AutoGenerateColumns="False"
+                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                  ScrollViewer.VerticalScrollBarVisibility="Auto">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Engagement ID" Binding="{Binding EngagementId}" Width="2*"/>
+                <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="3*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="{StaticResource ControlSpacing}"
+                    Margin="{StaticResource MarginTopSmall}">
+            <Button Content="Delete Assignment"
+                    Command="{Binding DeleteAssignmentCommand}"
+                    Classes="Danger"
+                    MinWidth="{StaticResource ButtonMinWidth}" />
+            <Button Content="{loc:Loc Key=Global_Button_Close}"
+                    Command="{Binding CloseCommand}"
+                    IsCancel="True"
+                    MinWidth="{StaticResource ButtonMinWidth}" />
+        </StackPanel>
+    </Grid>
+</UserControl>
+

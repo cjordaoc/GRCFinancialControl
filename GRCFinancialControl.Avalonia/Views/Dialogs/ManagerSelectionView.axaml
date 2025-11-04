@@ -5,14 +5,14 @@
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels.Dialogs"
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="300"
-             x:Class="GRCFinancialControl.Avalonia.Views.Dialogs.PapdSelectionView"
-             x:DataType="vm:PapdSelectionViewModel">
+             x:Class="GRCFinancialControl.Avalonia.Views.Dialogs.ManagerSelectionView"
+             x:DataType="vm:ManagerSelectionViewModel">
     <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridGap}" Margin="{StaticResource CardPaddingThickness}">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
             <StackPanel Spacing="{StaticResource SectionSpacing}">
                 <TextBlock Text="{Binding Title}" Classes="TitleSmall"/>
                 
-                <DataGrid ItemsSource="{Binding AvailablePapds}"
+                <DataGrid ItemsSource="{Binding AvailableManagers}"
                           SelectionMode="Extended"
                           IsReadOnly="False"
                           AutoGenerateColumns="False"
@@ -20,9 +20,10 @@
                           ScrollViewer.VerticalScrollBarVisibility="Auto">
                     <DataGrid.Columns>
                         <DataGridCheckBoxColumn Header="Selected" Binding="{Binding IsSelected}" Width="Auto"/>
-                        <DataGridTextColumn Header="Name" Binding="{Binding Papd.Name}" Width="*" IsReadOnly="True"/>
-                        <DataGridTextColumn Header="Level" Binding="{Binding Papd.Level}" Width="Auto" IsReadOnly="True"/>
-                        <DataGridTextColumn Header="Windows Login" Binding="{Binding Papd.WindowsLogin}" Width="*" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Name" Binding="{Binding Manager.Name}" Width="2*" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Email" Binding="{Binding Manager.Email}" Width="2*" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Position" Binding="{Binding Manager.Position}" Width="*" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Windows Login" Binding="{Binding Manager.WindowsLogin}" Width="*" IsReadOnly="True"/>
                     </DataGrid.Columns>
                 </DataGrid>
             </StackPanel>

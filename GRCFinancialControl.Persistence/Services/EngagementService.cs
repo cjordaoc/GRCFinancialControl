@@ -318,12 +318,6 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new InvalidOperationException($"Engagement with Id={engagement.Id} could not be found.");
             }
 
-            if (existingEngagement.Source == EngagementSource.S4Project)
-            {
-                throw new InvalidOperationException(
-                    $"Engagement '{existingEngagement.EngagementId}' is sourced from S/4Project and must be managed manually. " +
-                    "Updates through the application are blocked.");
-            }
 
             static string FormatFiscalYearName(FiscalYear fiscalYear) => string.IsNullOrWhiteSpace(fiscalYear.Name)
                 ? $"Id={fiscalYear.Id}"
@@ -439,13 +433,6 @@ namespace GRCFinancialControl.Persistence.Services
                 .FirstOrDefaultAsync(e => e.Id == id);
             if (engagement != null)
             {
-                if (engagement.Source == EngagementSource.S4Project)
-                {
-                    throw new InvalidOperationException(
-                        $"Engagement '{engagement.EngagementId}' is sourced from S/4Project and must be managed manually. " +
-                        "Deletion is not permitted.");
-                }
-
                 context.Engagements.Remove(engagement);
                 await context.SaveChangesAsync();
             }
@@ -467,13 +454,6 @@ namespace GRCFinancialControl.Persistence.Services
             if (engagement == null)
             {
                 return;
-            }
-
-            if (engagement.Source == EngagementSource.S4Project)
-            {
-                throw new InvalidOperationException(
-                    $"Engagement '{engagement.EngagementId}' is sourced from S/4Project and must be managed manually. " +
-                    "Data deletion is not permitted.");
             }
 
             var lockedFiscalYears = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

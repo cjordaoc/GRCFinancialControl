@@ -199,30 +199,23 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
 
             var managers = await _managerService.GetAllAsync();
-            var engagements = await _engagementService.GetAllAsync();
-
-            var engagementOptions = engagements
-                .OrderBy(e => e.Description, StringComparer.OrdinalIgnoreCase)
-                .Select(e => new EngagementOption(e.Id, e.EngagementId, e.Description))
-                .ToList();
-
-            var assignment = new EngagementManagerAssignment
+            var assignedManagerIds = fullEngagement.ManagerAssignments.Select(a => a.ManagerId).ToHashSet();
+            var availableManagers = managers.Where(m => !assignedManagerIds.Contains(m.Id)).ToList();
+            
+            if (availableManagers.Count == 0)
             {
-                EngagementId = fullEngagement.Id
-            };
+                ToastService.ShowWarning("FINC_Engagements_Toast_AllManagersAssigned");
+                return;
+            }
 
-            var assignmentViewModel = new ManagerAssignmentEditorViewModel(
-                assignment,
-                new ObservableCollection<EngagementOption>(engagementOptions),
-                new ObservableCollection<Manager>(managers),
-                _managerAssignmentService,
+            var selectionViewModel = new ManagerSelectionViewModel(
+                fullEngagement,
+                _engagementService,
+                _managerService,
                 Messenger);
 
-            // Pre-select the current engagement
-            assignmentViewModel.SelectedEngagement = engagementOptions.FirstOrDefault(e => e.InternalId == fullEngagement.Id);
-
-            await assignmentViewModel.LoadDataAsync();
-            await _dialogService.ShowDialogAsync(assignmentViewModel, assignmentViewModel.Title);
+            await selectionViewModel.LoadDataAsync();
+            await _dialogService.ShowDialogAsync(selectionViewModel, selectionViewModel.Title);
             Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
 

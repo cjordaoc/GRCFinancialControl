@@ -27,6 +27,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly IPapdService _papdService;
         private readonly ICustomerService _customerService;
         private readonly IClosingPeriodService _closingPeriodService;
+        private readonly IManagerAssignmentService _managerAssignmentService;
 
         public ManagersViewModel(
             IManagerService managerService,
@@ -34,6 +35,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             IPapdService papdService,
             ICustomerService customerService,
             IClosingPeriodService closingPeriodService,
+            IManagerAssignmentService managerAssignmentService,
             DialogService dialogService,
             IMessenger messenger)
             : base(messenger)
@@ -43,6 +45,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _papdService = papdService;
             _customerService = customerService;
             _closingPeriodService = closingPeriodService;
+            _managerAssignmentService = managerAssignmentService;
             _dialogService = dialogService;
         }
 
@@ -104,30 +107,28 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
-        [RelayCommand(CanExecute = nameof(CanAssignEngagements))]
-        private async Task AssignEngagements()
+        [RelayCommand(CanExecute = nameof(CanEditAssignment))]
+        private async Task EditAssignment()
         {
             if (SelectedManager is null)
             {
                 return;
             }
 
-            var engagement = new Engagement();
-            engagement.ManagerAssignments.Add(new EngagementManagerAssignment { Manager = SelectedManager });
-            var editorViewModel = new EngagementEditorViewModel(engagement, _engagementService, _customerService, _closingPeriodService, Messenger);
-            await _dialogService.ShowDialogAsync(editorViewModel);
-            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+            var editViewModel = new EditAssignmentViewModel(SelectedManager, _managerAssignmentService, Messenger);
+            await editViewModel.LoadDataAsync();
+            await _dialogService.ShowDialogAsync(editViewModel, editViewModel.Title);
         }
 
         private bool CanModifySelection(Manager? manager) => manager is not null;
-        private bool CanAssignEngagements() => SelectedManager is not null;
+        private bool CanEditAssignment() => SelectedManager is not null;
 
         partial void OnSelectedManagerChanged(Manager? value)
         {
             EditCommand.NotifyCanExecuteChanged();
             DeleteCommand.NotifyCanExecuteChanged();
             ViewCommand.NotifyCanExecuteChanged();
-            AssignEngagementsCommand.NotifyCanExecuteChanged();
+            EditAssignmentCommand.NotifyCanExecuteChanged();
         }
     }
 }

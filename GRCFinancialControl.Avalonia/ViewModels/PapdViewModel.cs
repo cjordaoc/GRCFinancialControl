@@ -25,6 +25,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly IManagerService _managerService;
         private readonly ICustomerService _customerService;
         private readonly IClosingPeriodService _closingPeriodService;
+        private readonly IPapdAssignmentService _papdAssignmentService;
 
         public PapdViewModel(
             IPapdService papdService,
@@ -32,6 +33,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             IManagerService managerService,
             ICustomerService customerService,
             IClosingPeriodService closingPeriodService,
+            IPapdAssignmentService papdAssignmentService,
             DialogService dialogService,
             IMessenger messenger)
             : base(messenger)
@@ -41,6 +43,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _managerService = managerService;
             _customerService = customerService;
             _closingPeriodService = closingPeriodService;
+            _papdAssignmentService = papdAssignmentService;
             _dialogService = dialogService;
         }
 
@@ -116,19 +119,17 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
-        [RelayCommand(CanExecute = nameof(CanAssignEngagements))]
-        private async Task AssignEngagements()
+        [RelayCommand(CanExecute = nameof(CanEditAssignment))]
+        private async Task EditAssignment()
         {
             if (SelectedPapd is null)
             {
                 return;
             }
 
-            var engagement = new Engagement();
-            engagement.EngagementPapds.Add(new EngagementPapd { Papd = SelectedPapd });
-            var editorViewModel = new EngagementEditorViewModel(engagement, _engagementService, _customerService, _closingPeriodService, Messenger);
-            await _dialogService.ShowDialogAsync(editorViewModel);
-            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+            var editViewModel = new EditAssignmentViewModel(SelectedPapd, _papdAssignmentService, Messenger);
+            await editViewModel.LoadDataAsync();
+            await _dialogService.ShowDialogAsync(editViewModel, editViewModel.Title);
         }
 
         private static bool CanEdit(Papd papd) => papd is not null;
@@ -137,14 +138,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private static bool CanDeleteData(Papd papd) => papd is not null;
 
-        private bool CanAssignEngagements() => SelectedPapd is not null;
+        private bool CanEditAssignment() => SelectedPapd is not null;
 
         partial void OnSelectedPapdChanged(Papd? value)
         {
             EditCommand.NotifyCanExecuteChanged();
             DeleteCommand.NotifyCanExecuteChanged();
             DeleteDataCommand.NotifyCanExecuteChanged();
-            AssignEngagementsCommand.NotifyCanExecuteChanged();
+            EditAssignmentCommand.NotifyCanExecuteChanged();
             ViewCommand.NotifyCanExecuteChanged();
         }
 

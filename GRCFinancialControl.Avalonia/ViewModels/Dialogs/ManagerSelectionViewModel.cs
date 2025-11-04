@@ -13,48 +13,48 @@ using GRC.Shared.UI.Messages;
 
 namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
 {
-    public partial class PapdSelectionViewModel : ViewModelBase
+    public partial class ManagerSelectionViewModel : ViewModelBase
     {
         private readonly IEngagementService _engagementService;
-        private readonly IPapdService _papdService;
+        private readonly IManagerService _managerService;
         private readonly Engagement _engagement;
 
         [ObservableProperty]
-        private ObservableCollection<PapdSelectionItem> _availablePapds = new();
+        private ObservableCollection<ManagerSelectionItem> _availableManagers = new();
 
-        public string Title => LocalizationRegistry.Get("FINC_Admin_PapdAssignments_Title_Editor");
+        public string Title => LocalizationRegistry.Get("FINC_Admin_ManagerAssignments_Title_Editor");
 
-        public PapdSelectionViewModel(
+        public ManagerSelectionViewModel(
             Engagement engagement,
             IEngagementService engagementService,
-            IPapdService papdService,
+            IManagerService managerService,
             IMessenger messenger)
             : base(messenger)
         {
             _engagement = engagement ?? throw new ArgumentNullException(nameof(engagement));
             _engagementService = engagementService ?? throw new ArgumentNullException(nameof(engagementService));
-            _papdService = papdService ?? throw new ArgumentNullException(nameof(papdService));
+            _managerService = managerService ?? throw new ArgumentNullException(nameof(managerService));
         }
 
         public override async Task LoadDataAsync()
         {
-            var allPapds = await _papdService.GetAllAsync();
-            var assignedPapdIds = _engagement.EngagementPapds.Select(a => a.PapdId).ToHashSet();
+            var allManagers = await _managerService.GetAllAsync();
+            var assignedManagerIds = _engagement.ManagerAssignments.Select(a => a.ManagerId).ToHashSet();
             
-            var available = allPapds
-                .Where(p => !assignedPapdIds.Contains(p.Id))
-                .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
-                .Select(p => new PapdSelectionItem(p))
+            var available = allManagers
+                .Where(m => !assignedManagerIds.Contains(m.Id))
+                .OrderBy(m => m.Name, StringComparer.OrdinalIgnoreCase)
+                .Select(m => new ManagerSelectionItem(m))
                 .ToList();
 
-            AvailablePapds = new ObservableCollection<PapdSelectionItem>(available);
+            AvailableManagers = new ObservableCollection<ManagerSelectionItem>(available);
         }
 
         [RelayCommand(CanExecute = nameof(CanSave))]
         private async Task SaveAsync()
         {
-            var selectedPapds = AvailablePapds.Where(p => p.IsSelected).Select(p => p.Papd).ToList();
-            if (selectedPapds.Count == 0)
+            var selectedManagers = AvailableManagers.Where(m => m.IsSelected).Select(m => m.Manager).ToList();
+            if (selectedManagers.Count == 0)
             {
                 return;
             }
@@ -63,22 +63,22 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             if (fullEngagement is null)
             {
                 ToastService.ShowError(
-                    "FINC_Admin_PapdAssignments_Toast_OperationFailed",
-                    LocalizationRegistry.Get("FINC_Admin_PapdAssignments_Error_EngagementMissing"));
+                    "FINC_Admin_ManagerAssignments_Toast_OperationFailed",
+                    LocalizationRegistry.Get("FINC_Admin_ManagerAssignments_Error_EngagementMissing"));
                 return;
             }
 
-            var assignedPapdIds = fullEngagement.EngagementPapds.Select(a => a.PapdId).ToHashSet();
-            var newAssignments = selectedPapds
-                .Where(p => !assignedPapdIds.Contains(p.Id))
+            var assignedManagerIds = fullEngagement.ManagerAssignments.Select(a => a.ManagerId).ToHashSet();
+            var newAssignments = selectedManagers
+                .Where(m => !assignedManagerIds.Contains(m.Id))
                 .ToList();
 
-            foreach (var papd in newAssignments)
+            foreach (var manager in newAssignments)
             {
-                fullEngagement.EngagementPapds.Add(new EngagementPapd
+                fullEngagement.ManagerAssignments.Add(new EngagementManagerAssignment
                 {
                     EngagementId = fullEngagement.Id,
-                    PapdId = papd.Id
+                    ManagerId = manager.Id
                 });
             }
 
@@ -88,15 +88,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
                 if (newAssignments.Count > 0)
                 {
                     ToastService.ShowSuccess(
-                        "FINC_Admin_PapdAssignments_Toast_SaveSuccess",
-                        string.Join(", ", newAssignments.Select(p => p.Name)),
+                        "FINC_Admin_ManagerAssignments_Toast_SaveSuccess",
+                        string.Join(", ", newAssignments.Select(m => m.Name)),
                         fullEngagement.EngagementId ?? fullEngagement.Description);
                 }
                 Messenger.Send(new CloseDialogMessage(true));
             }
             catch (Exception ex)
             {
-                ToastService.ShowError("FINC_Admin_PapdAssignments_Toast_OperationFailed", ex.Message);
+                ToastService.ShowError("FINC_Admin_ManagerAssignments_Toast_OperationFailed", ex.Message);
             }
         }
 
@@ -106,19 +106,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             Messenger.Send(new CloseDialogMessage(false));
         }
 
-        private bool CanSave() => AvailablePapds.Any(p => p.IsSelected);
+        private bool CanSave() => AvailableManagers.Any(m => m.IsSelected);
     }
 
-    public sealed partial class PapdSelectionItem : ObservableObject
+    public sealed partial class ManagerSelectionItem : ObservableObject
     {
         [ObservableProperty]
         private bool _isSelected;
 
-        public Papd Papd { get; }
+        public Manager Manager { get; }
 
-        public PapdSelectionItem(Papd papd)
+        public ManagerSelectionItem(Manager manager)
         {
-            Papd = papd ?? throw new ArgumentNullException(nameof(papd));
+            Manager = manager ?? throw new ArgumentNullException(nameof(manager));
         }
     }
 }
