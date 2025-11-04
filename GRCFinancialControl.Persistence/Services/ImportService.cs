@@ -2082,37 +2082,15 @@ namespace GRCFinancialControl.Persistence.Services
             var nowUtc = DateTime.UtcNow;
             var today = nowUtc.Date;
 
-            // Locate the active closing period; the import only makes sense when a window is open.
+            // Locate the active closing period for labeling purposes only.
             var activeClosingPeriod = await context.ClosingPeriods
                 .Include(cp => cp.FiscalYear)
                 .FirstOrDefaultAsync(cp => nowUtc >= cp.PeriodStart && nowUtc <= cp.PeriodEnd)
                 .ConfigureAwait(false);
 
-            if (activeClosingPeriod is null)
-            {
-                throw new InvalidOperationException("No active closing period is currently open. Adjust the fiscal calendar before importing allocation planning data.");
-            }
-
-            if (activeClosingPeriod.FiscalYear is null)
-            {
-                await context.Entry(activeClosingPeriod)
-                    .Reference(cp => cp.FiscalYear)
-                    .LoadAsync()
-                    .ConfigureAwait(false);
-            }
-
-            if (activeClosingPeriod.FiscalYear?.IsLocked ?? false)
-            {
-                var fiscalYearName = string.IsNullOrWhiteSpace(activeClosingPeriod.FiscalYear.Name)
-                    ? $"Id={activeClosingPeriod.FiscalYearId}"
-                    : activeClosingPeriod.FiscalYear.Name;
-
-                throw new InvalidOperationException($"Fiscal year '{fiscalYearName}' is locked. Unlock it before importing allocation planning data.");
-            }
-
-            var closingPeriodLabel = string.IsNullOrWhiteSpace(activeClosingPeriod.Name)
-                ? $"Id={activeClosingPeriod.Id}"
-                : activeClosingPeriod.Name;
+            var closingPeriodLabel = activeClosingPeriod != null && !string.IsNullOrWhiteSpace(activeClosingPeriod.Name)
+                ? activeClosingPeriod.Name
+                : $"Id={activeClosingPeriod?.Id ?? 0}";
 
             // Load all fiscal years to map column dates correctly
             var fiscalYears = await context.FiscalYears
@@ -2184,10 +2162,13 @@ namespace GRCFinancialControl.Persistence.Services
 
             // Load histories for all fiscal years that appear in the import
             var fiscalYearIds = aggregatedRecords.Select(r => r.FiscalYearId).Distinct().ToList();
-            var existingHistories = await context.EngagementRankBudgetHistory
-                .Where(h => h.ClosingPeriodId == activeClosingPeriod.Id && fiscalYearIds.Contains(h.FiscalYearId))
-                .ToListAsync()
-                .ConfigureAwait(false);
+            var closingPeriodId = activeClosingPeriod?.Id ?? 0;
+            var existingHistories = closingPeriodId > 0
+                ? await context.EngagementRankBudgetHistory
+                    .Where(h => h.ClosingPeriodId == closingPeriodId && fiscalYearIds.Contains(h.FiscalYearId))
+                    .ToListAsync()
+                    .ConfigureAwait(false)
+                : new List<EngagementRankBudgetHistory>();
 
             var historyLookup = new Dictionary<(string EngagementCode, int FiscalYearId, int ClosingPeriodId, string RankCode), EngagementRankBudgetHistory>();
             foreach (var history in existingHistories)
@@ -2259,20 +2240,12 @@ namespace GRCFinancialControl.Persistence.Services
                     continue;
                 }
 
-                if (EngagementImportSkipEvaluator.TryCreate(engagement, out var skipMetadata))
+                // For GRC allocation planning import, only skip closed engagements, not S/4 projects
+                if (EngagementImportSkipEvaluator.TryCreate(engagement, out var skipMetadata) &&
+                    skipMetadata.ReasonKey == "ClosedEngagement")
                 {
                     var detail = $"{engagement.EngagementId} (closing period {closingPeriodLabel})";
-
-                    switch (skipMetadata.ReasonKey)
-                    {
-                        case "ManualOnly":
-                            allocationManualOnlyEngagements.Add(detail);
-                            break;
-                        case "ClosedEngagement":
-                            allocationClosedEngagements.Add(detail);
-                            break;
-                    }
-
+                    allocationClosedEngagements.Add(detail);
                     allocationWarningMessages.Add(skipMetadata.WarningMessage);
                     _logger.LogWarning("{Warning} (closing period {ClosingPeriod})", skipMetadata.WarningMessage, closingPeriodLabel);
                     continue;
@@ -2305,7 +2278,7 @@ namespace GRCFinancialControl.Persistence.Services
                         EngagementId: key.EngagementId,
                         EngagementCode: value.EngagementCode,
                         FiscalYearId: key.FiscalYearId,
-                        ClosingPeriodId: activeClosingPeriod.Id,
+                        ClosingPeriodId: closingPeriodId,
                         RankCode: key.RankCode,
                         RoundedHours: rounded);
                 })
@@ -2333,7 +2306,7 @@ namespace GRCFinancialControl.Persistence.Services
                         FiscalYearId = entry.FiscalYearId,
                         RankName = entry.RankCode,
                         BudgetHours = 0m,
-                        ConsumedHours = 0m,
+                        ConsumedHours = entry.RoundedHours,
                         AdditionalHours = 0m,
                         RemainingHours = 0m,
                         Status = nameof(TrafficLightStatus.Green),
@@ -2341,7 +2314,9 @@ namespace GRCFinancialControl.Persistence.Services
                         UpdatedAtUtc = updateTimestamp
                     };
 
-                    newBudget.ApplyIncurredHours(entry.RoundedHours);
+                    // Recalculate remaining hours based on consumed hours
+                    var remaining = newBudget.BudgetHours + newBudget.AdditionalHours - newBudget.ConsumedHours;
+                    newBudget.RemainingHours = Math.Round(remaining, 2, MidpointRounding.AwayFromZero);
 
                     await context.EngagementRankBudgets.AddAsync(newBudget).ConfigureAwait(false);
                     budgetLookup[(entry.EngagementId, entry.FiscalYearId, entry.RankCode)] = newBudget;
@@ -2350,13 +2325,15 @@ namespace GRCFinancialControl.Persistence.Services
                 }
                 else
                 {
-                    var currentIncurred = budget.CalculateIncurredHours();
-                    var previousIncurred = currentIncurred;
+                    var previousConsumed = budget.ConsumedHours;
                     var previousRemaining = budget.RemainingHours;
-                    budget.ApplyIncurredHours(currentIncurred + delta);
+                    budget.ConsumedHours = entry.RoundedHours;
 
-                    var newIncurred = budget.CalculateIncurredHours();
-                    if (Math.Abs(previousIncurred - newIncurred) > 0.005m ||
+                    // Recalculate remaining hours based on consumed hours
+                    var remaining = budget.BudgetHours + budget.AdditionalHours - budget.ConsumedHours;
+                    budget.RemainingHours = Math.Round(remaining, 2, MidpointRounding.AwayFromZero);
+
+                    if (Math.Abs(previousConsumed - budget.ConsumedHours) > 0.005m ||
                         Math.Abs(previousRemaining - budget.RemainingHours) > 0.005m)
                     {
                         budget.UpdatedAtUtc = updateTimestamp;
@@ -2410,13 +2387,15 @@ namespace GRCFinancialControl.Persistence.Services
                 if (engagementLookup.TryGetValue(historyKey.EngagementCode, out var engagement) &&
                     budgetLookup.TryGetValue((engagement.Id, historyKey.FiscalYearId, historyKey.RankCode), out var budget))
                 {
-                    var currentIncurred = budget.CalculateIncurredHours();
-                    var previousIncurred = currentIncurred;
+                    var previousConsumed = budget.ConsumedHours;
                     var previousRemaining = budget.RemainingHours;
-                    budget.ApplyIncurredHours(currentIncurred - previousHours);
+                    budget.ConsumedHours = Math.Max(0m, budget.ConsumedHours - previousHours);
 
-                    var newIncurred = budget.CalculateIncurredHours();
-                    if (Math.Abs(previousIncurred - newIncurred) > 0.005m ||
+                    // Recalculate remaining hours based on consumed hours
+                    var remaining = budget.BudgetHours + budget.AdditionalHours - budget.ConsumedHours;
+                    budget.RemainingHours = Math.Round(remaining, 2, MidpointRounding.AwayFromZero);
+
+                    if (Math.Abs(previousConsumed - budget.ConsumedHours) > 0.005m ||
                         Math.Abs(previousRemaining - budget.RemainingHours) > 0.005m)
                     {
                         budget.UpdatedAtUtc = updateTimestamp;
@@ -2430,10 +2409,10 @@ namespace GRCFinancialControl.Persistence.Services
                 historyUpserts++;
             }
 
-            if (allocationManualOnlyEngagements.Count > 0)
-            {
-                skipReasons["ManualOnly"] = allocationManualOnlyEngagements.ToList();
-            }
+            // Save all changes to the database
+            await context.SaveChangesAsync().ConfigureAwait(false);
+
+            // Note: ManualOnly (S/4 projects) are no longer skipped for GRC allocation planning import
 
             if (allocationClosedEngagements.Count > 0)
             {

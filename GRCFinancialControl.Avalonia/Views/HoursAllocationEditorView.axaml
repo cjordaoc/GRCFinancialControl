@@ -54,7 +54,7 @@
                                     Binding="{Binding BudgetHours, StringFormat='{}{0:N2}'}"
                                     IsReadOnly="True"
                                     Width="*"/>
-                <DataGridTemplateColumn Header="Incurred Hours" Width="*">
+                <DataGridTemplateColumn Header="Consumed Hours" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding IncurredHours, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
