@@ -32,7 +32,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Spacing="{StaticResource SectionSpacing}"
                                 Margin="{StaticResource SpaceThickness0}">
-                        <Grid ColumnDefinitions="200,*"
+                        <Grid ColumnDefinitions="Auto,*"
                               RowSpacing="{StaticResource GridGap}"
                               ColumnSpacing="{StaticResource GridGap}">
                             <TextBlock Grid.Row="0"
@@ -42,7 +42,7 @@
                                        VerticalAlignment="Center" />
                             <Grid Grid.Row="0"
                                   Grid.Column="1"
-                                  ColumnDefinitions="180,*"
+                                  ColumnDefinitions="Auto,*"
                                   ColumnSpacing="{StaticResource GridGap}">
                                 <TextBox Grid.Column="0"
                                          Text="{Binding Editor.EngagementId}"
@@ -77,7 +77,7 @@
                                                FormatString="F2"
                                                Value="{Binding Editor.PlanningBaseValue}"
                                                HorizontalAlignment="Stretch"
-                                               MinWidth="200"
+                                               MinWidth="{StaticResource InputMinWidthWide}"
                                                appBehaviors:NumericInputNullSafety.IsEnabled="True" />
                             </Grid>
 
@@ -110,7 +110,7 @@
                                        Text="{loc:Loc Key=INV_InvoicePlan_Label_PlanType}" />
                             <ComboBox ItemsSource="{Binding Editor.PlanTypes}"
                                       SelectedItem="{Binding Editor.PlanType}"
-                                      MinWidth="180" />
+                                      MinWidth="{StaticResource InputMinWidthWide}" />
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal"
@@ -151,7 +151,7 @@
                             <CalendarDatePicker SelectedDate="{Binding Editor.FirstEmissionDate, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}"
                                                 IsVisible="{Binding Editor.RequiresFirstEmissionDate}"
                                                 IsEnabled="{Binding Editor.RequiresFirstEmissionDate}"
-                                                Width="240" />
+                                                MinWidth="{StaticResource PopupDatePickerMinWidth}" />
                         </StackPanel>
 
                         <Button Content="{loc:Loc Key=INV_Button_Refresh}"
@@ -163,7 +163,7 @@
 
                     <Border Grid.Row="1"
                             BorderThickness="{StaticResource ControlBorderThickness}"
-                            BorderBrush="{StaticResource ThemeBorderLowBrush}"
+                            BorderBrush="{StaticResource BrushBorder}"
                             CornerRadius="{StaticResource ControlCornerRadius}"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Stretch">

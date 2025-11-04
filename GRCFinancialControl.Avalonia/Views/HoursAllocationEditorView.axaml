@@ -50,10 +50,17 @@
                 <DataGridTextColumn Header="Fiscal Year"
                                     Binding="{Binding FiscalYearName}"
                                     Width="2*"/>
-                <DataGridTextColumn Header="Budget Hours"
-                                    Binding="{Binding BudgetHours, StringFormat='{}{0:N2}'}"
-                                    IsReadOnly="True"
-                                    Width="*"/>
+                <DataGridTemplateColumn Header="Budget Hours" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding BudgetHours, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding IsEditable}"
+                                     HorizontalContentAlignment="Right"
+                                     MinWidth="{StaticResource InputMinWidthCompact}"
+                                     behaviors:NumericInputNullSafety.IsEnabled="True"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTemplateColumn Header="Consumed Hours" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>

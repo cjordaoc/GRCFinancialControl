@@ -127,6 +127,11 @@ namespace GRCFinancialControl.Persistence.Services
                     throw new InvalidOperationException($"Fiscal year '{budget.FiscalYear.Name}' is locked. Unlock it before adjusting consumed hours.");
                 }
 
+                if (update.BudgetHours.HasValue)
+                {
+                    budget.BudgetHours = Math.Round(update.BudgetHours.Value, 2, MidpointRounding.AwayFromZero);
+                }
+
                 budget.UpdateConsumedHours(update.ConsumedHours);
             }
 
