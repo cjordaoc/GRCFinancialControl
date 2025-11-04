@@ -90,6 +90,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 new(NavigationKeys.Reports, LocalizationRegistry.Get("FINC_Navigation_Reports"), Reports) { Icon = ResolveIcon("IconReports") },
                 new(NavigationKeys.Tasks, LocalizationRegistry.Get("FINC_Navigation_Tasks"), Tasks) { Icon = ResolveIcon("IconTasks") },
                 new(NavigationKeys.ControlMasterData, LocalizationRegistry.Get("FINC_Navigation_ControlMasterData"), ControlMasterData) { Icon = ResolveIcon("IconControlMasterData") },
+                new(NavigationKeys.GrcTeam, LocalizationRegistry.Get("FINC_Navigation_GrcTeam"), GrcTeam) { Icon = ResolveIcon("IconGrcTeam") },
                 new(NavigationKeys.AppMasterData, LocalizationRegistry.Get("FINC_Navigation_MasterData"), AppMasterData) { Icon = ResolveIcon("IconAppMasterData") },
                 new(NavigationKeys.Settings, LocalizationRegistry.Get("FINC_Navigation_Settings"), Settings) { Icon = ResolveIcon("IconSettings") }
             };

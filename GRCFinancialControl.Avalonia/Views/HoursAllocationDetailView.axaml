@@ -15,10 +15,18 @@
     </UserControl.Resources>
     <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*"
           Margin="{StaticResource SpaceThickness0}">
-        <TextBlock Grid.Row="0"
-                   Text="{Binding Header}"
-                   Classes="TitleMedium"
-                   Margin="{StaticResource CardPaddingThickness}"/>
+        <Grid Grid.Row="0"
+              ColumnDefinitions="*,Auto"
+              Margin="{StaticResource CardPaddingThickness}">
+            <TextBlock Grid.Column="0"
+                       Text="{Binding Header}"
+                       Classes="TitleMedium"/>
+            <Button Grid.Column="1"
+                    Content="Close"
+                    Command="{Binding CloseCommand}"
+                    IsCancel="True"
+                    MinWidth="{StaticResource ButtonMinWidth}"/>
+        </Grid>
 
         <StackPanel Grid.Row="1"
                     Orientation="Horizontal"

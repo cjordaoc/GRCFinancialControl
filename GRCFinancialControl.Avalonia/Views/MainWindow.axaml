@@ -152,6 +152,7 @@
         <ItemsControl Margin="{StaticResource MarginCallout}"
                       HorizontalAlignment="Right"
                       VerticalAlignment="Top"
+                      Panel.ZIndex="10000"
                       ItemsSource="{x:Static services:ToastService.Notifications}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>

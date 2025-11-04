@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
 using App.Presentation.Services;
@@ -8,6 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRC.Shared.UI.Messages;
 using GRCFinancialControl.Avalonia.Services;
+using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -18,17 +20,31 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly IEngagementService _engagementService;
         private readonly ICustomerService _customerService;
         private readonly IClosingPeriodService _closingPeriodService;
+        private readonly IPapdService _papdService;
+        private readonly IManagerService _managerService;
+        private readonly IManagerAssignmentService _managerAssignmentService;
         private readonly DialogService _dialogService;
 
         [ObservableProperty]
         private Engagement? _selectedEngagement;
 
-        public EngagementsViewModel(IEngagementService engagementService, ICustomerService customerService, IClosingPeriodService closingPeriodService, DialogService dialogService, IMessenger messenger)
+        public EngagementsViewModel(
+            IEngagementService engagementService, 
+            ICustomerService customerService, 
+            IClosingPeriodService closingPeriodService,
+            IPapdService papdService,
+            IManagerService managerService,
+            IManagerAssignmentService managerAssignmentService,
+            DialogService dialogService, 
+            IMessenger messenger)
             : base(messenger)
         {
             _engagementService = engagementService;
             _customerService = customerService;
             _closingPeriodService = closingPeriodService;
+            _papdService = papdService;
+            _managerService = managerService;
+            _managerAssignmentService = managerAssignmentService;
             _dialogService = dialogService;
         }
 
@@ -125,6 +141,91 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
         }
 
+        [RelayCommand(CanExecute = nameof(CanAssign))]
+        private async Task AssignPapd()
+        {
+            if (SelectedEngagement is null)
+            {
+                return;
+            }
+
+            var fullEngagement = await _engagementService.GetByIdAsync(SelectedEngagement.Id);
+            if (fullEngagement is null)
+            {
+                return;
+            }
+
+            var papds = await _papdService.GetAllAsync();
+            if (papds.Count == 0)
+            {
+                ToastService.ShowWarning("FINC_Engagements_Toast_NoPapdsAvailable");
+                return;
+            }
+
+            // Check if all PAPDs are already assigned
+            var assignedPapdIds = fullEngagement.EngagementPapds.Select(a => a.PapdId).ToHashSet();
+            var availablePapds = papds.Where(p => !assignedPapdIds.Contains(p.Id)).ToList();
+            
+            if (availablePapds.Count == 0)
+            {
+                ToastService.ShowWarning("FINC_Engagements_Toast_AllPapdsAssigned");
+                return;
+            }
+
+            // Use the selection view model for choosing a PAPD
+            var selectionViewModel = new PapdSelectionViewModel(
+                fullEngagement,
+                _engagementService,
+                _papdService,
+                Messenger);
+
+            await selectionViewModel.LoadDataAsync();
+            await _dialogService.ShowDialogAsync(selectionViewModel, selectionViewModel.Title);
+            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+        }
+
+        [RelayCommand(CanExecute = nameof(CanAssign))]
+        private async Task AssignManager()
+        {
+            if (SelectedEngagement is null)
+            {
+                return;
+            }
+
+            var fullEngagement = await _engagementService.GetByIdAsync(SelectedEngagement.Id);
+            if (fullEngagement is null)
+            {
+                return;
+            }
+
+            var managers = await _managerService.GetAllAsync();
+            var engagements = await _engagementService.GetAllAsync();
+
+            var engagementOptions = engagements
+                .OrderBy(e => e.Description, StringComparer.OrdinalIgnoreCase)
+                .Select(e => new EngagementOption(e.Id, e.EngagementId, e.Description))
+                .ToList();
+
+            var assignment = new EngagementManagerAssignment
+            {
+                EngagementId = fullEngagement.Id
+            };
+
+            var assignmentViewModel = new ManagerAssignmentEditorViewModel(
+                assignment,
+                new ObservableCollection<EngagementOption>(engagementOptions),
+                new ObservableCollection<Manager>(managers),
+                _managerAssignmentService,
+                Messenger);
+
+            // Pre-select the current engagement
+            assignmentViewModel.SelectedEngagement = engagementOptions.FirstOrDefault(e => e.InternalId == fullEngagement.Id);
+
+            await assignmentViewModel.LoadDataAsync();
+            await _dialogService.ShowDialogAsync(assignmentViewModel, assignmentViewModel.Title);
+            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+        }
+
         private static bool CanEdit(Engagement engagement) => engagement is not null;
 
         private static bool CanView(Engagement engagement) => engagement is not null;
@@ -133,12 +234,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private static bool CanDeleteData(Engagement engagement) => engagement is not null;
 
+        private static bool CanAssign(Engagement? engagement) => engagement is not null;
+
         partial void OnSelectedEngagementChanged(Engagement? value)
         {
             EditCommand.NotifyCanExecuteChanged();
             ViewCommand.NotifyCanExecuteChanged();
             DeleteCommand.NotifyCanExecuteChanged();
             DeleteDataCommand.NotifyCanExecuteChanged();
+            AssignPapdCommand.NotifyCanExecuteChanged();
+            AssignManagerCommand.NotifyCanExecuteChanged();
         }
 
     }

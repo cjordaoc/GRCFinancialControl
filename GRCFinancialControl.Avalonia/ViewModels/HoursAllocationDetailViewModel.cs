@@ -965,5 +965,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             NotifyCommandCanExecute(AddResourceCommand);
         }
+
+        /// <summary>
+        /// Closes the dialog without saving changes.
+        /// </summary>
+        [RelayCommand]
+        private void Close()
+        {
+            Messenger.Send(new CloseDialogMessage(false));
+        }
     }
 }

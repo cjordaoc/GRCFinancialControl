@@ -220,6 +220,7 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
 ## UI Architecture
 - **Pattern:** MVVM enforced across Avalonia projects (`App.Presentation`, `GRCFinancialControl.Avalonia`)
 - **Key Components:** View models leverage `RelayCommand`/`AsyncRelayCommand`; modal interactions flow through a centralized ModalService.
+- **Navigation:** The main navigation sidebar includes Home, Import, Engagements, Allocations, Reports, Tasks, Control Master Data, GRC Team, App Master Data, and Settings. The GRC Team workspace aggregates PAPD and Manager management through a tabbed interface (`GrcTeamView`), delegating to `PapdViewModel` and `ManagersViewModel` for data operations.
 - **Guidelines:**
 - Views contain declarative layout only; logic belongs in view models or services.
 - Modal overlays use opaque backgrounds to focus attention.
@@ -228,18 +229,20 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
 - Numeric editors opt into `App.Presentation.Behaviors.NumericInputNullSafety`; the attached handler listens for focus loss and rewrites empty values to `0` (or `0.00` via binding formats) so Avalonia never raises binding exceptions when users clear numeric fields.
 - `EngagementEditorViewModel` evaluates the selected status text and, when it resolves to `Closed` for persisted records, forces the editor into read-only mode (papd/manager sections, source selector, and financial evolution grid) while leaving the status ComboBox and Save command enabled so users can intentionally reopen the engagement.
 - `EngagementEditorView` renders the dialog as a tabbed layout (Engagement Data, Financial Data, Financial Evolution, Assignments) so controllers can jump between detail categories without scrolling long forms.
+- `GrcTeamViewModel` coordinates loading of both PAPD and Manager collections via `LoadDataAsync`, which delegates to `PapdViewModel.LoadDataAsync` and `ManagersViewModel.LoadDataAsync` in parallel.
 - `App.Presentation.Services.ToastService` exposes a shared observable toast queue consumed by both desktop shells; view models call `ShowSuccess`/`ShowWarning`/`ShowError` with localized resource keys so button actions surface consistent success/warning/error banners that auto-dismiss after three seconds.
 
 
 ---
 
 ## Master Data Editors
-- **Primary Components:** `CustomerEditorView`, `CustomerEditorViewModel`, `DialogEditorViewModel`
+- **Primary Components:** `CustomerEditorView`, `CustomerEditorViewModel`, `DialogEditorViewModel`, `GrcTeamView`, `GrcTeamViewModel`
 - **Validation Mechanics:**
   - `ViewModelBase` now derives from `ObservableValidator`, enabling dialog editors to participate in `INotifyDataErrorInfo` workflows.
   - `CustomerEditorViewModel` annotates Name and Customer Code with `[Required]` attributes and exposes `NameError`/`CustomerCodeError` accessors for inline messaging.
   - `DialogEditorViewModel` listens to `ErrorsChanged` and disables the Save command while any validation errors remain, ensuring only complete records are persisted.
   - `CustomersViewModel`, `ManagersViewModel`, `PapdViewModel`, `ClosingPeriodsViewModel`, `FiscalYearsViewModel`, `EngagementsViewModel`, `ManagerAssignmentsViewModel`, and `PapdAssignmentsViewModel` pass `isReadOnlyMode: true` when executing the View command so their dialogs render in read-only state (text boxes bind `IsReadOnlyMode`, combo/date pickers use `AllowEditing`).
+  - `GrcTeamViewModel` aggregates `PapdViewModel` and `ManagersViewModel` into a tabbed workspace (`GrcTeamView`), delegating data loading to both child view models in parallel via `Task.WhenAll`.
 - **UI Feedback:** Master data editors and assignment lists emit standardized toast notifications (`FINC_*_Toast_SaveSuccess`, `FINC_*_Toast_DeleteSuccess`, `FINC_*_Toast_OperationFailed`) for customers, managers, PAPDs, rank mappings, fiscal years, and manager/PAPD assignments, while bulk delete-data commands reuse the same `FINC_*_Toast_DeleteDataSuccess` keys.
 
 ---

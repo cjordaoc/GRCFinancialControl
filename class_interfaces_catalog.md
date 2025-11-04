@@ -74,6 +74,11 @@ Authoritative reference for reusable classes and interfaces. Consult this catalo
 
 ---
 
+## ViewModels (Avalonia)
+| Type | Namespace | Name | Purpose | Key Members | Dependencies | Status | Notes |
+|------|-----------|------|---------|-------------|--------------|--------|-------|
+| Class | `GRCFinancialControl.Avalonia.ViewModels` | `GrcTeamViewModel` | Aggregates PAPD and Manager management into a unified workspace. | `Papd`, `Managers`, `LoadDataAsync` | `PapdViewModel`, `ManagersViewModel`, `IMessenger` | Stable | Delegates to child view models for data operations; exposed via GRC Team navigation item. |
+
 ## UI Utilities
 | Type | Namespace | Name | Purpose | Key Members | Dependencies | Status | Notes |
 |------|-----------|------|---------|-------------|--------------|--------|-------|
