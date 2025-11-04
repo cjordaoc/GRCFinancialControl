@@ -7,19 +7,14 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using AvaloniaWebView;
 using CommunityToolkit.Mvvm.Messaging;
-using GRC.Shared.UI.Dialogs;
-using GRCFinancialControl.Avalonia.Services;
+using GRCFinancialControl.Avalonia.Services.DependencyInjection;
 using GRCFinancialControl.Avalonia.ViewModels;
-using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRCFinancialControl.Avalonia.Views;
 using GRCFinancialControl.Core.Configuration;
 using GRCFinancialControl.Persistence;
 using GRCFinancialControl.Persistence.Configuration;
 using GRCFinancialControl.Persistence.Services;
-using GRCFinancialControl.Persistence.Services.Exporters;
-using GRCFinancialControl.Persistence.Services.Importers;
 using GRCFinancialControl.Persistence.Services.Interfaces;
-using GRCFinancialControl.Persistence.Services.People;
 using GRC.Shared.Resources.Localization;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
@@ -38,7 +33,15 @@ namespace GRCFinancialControl.Avalonia
     public partial class App : Application
     {
         public static new App? Current => (App?)Application.Current;
-        public IServiceProvider Services { get; private set; } = null!;
+
+        public App()
+        {
+            var services = new ServiceCollection();
+            services.AddAvaloniaAppServices();
+            Services = services.BuildServiceProvider();
+        }
+
+        public IServiceProvider Services { get; }
         private IMessenger? _messenger;
         private ILogger<App>? _logger;
         private bool _restartRequested;
@@ -72,27 +75,19 @@ namespace GRCFinancialControl.Avalonia
                     .AddDefaultMappers()
                     .AddLightTheme());
 
-            var services = new ServiceCollection();
             string? restoredLanguage = null;
             string? restoredDefaultCurrency = null;
-
-            services.AddDbContext<SettingsDbContext>(options =>
-                options.UseSqlite(SettingsDatabaseOptions.BuildConnectionString()));
-            services.AddTransient<ISettingsService, SettingsService>();
-
             var hasConnectionSettings = false;
 
-            var connectionAvailability = new DatabaseConnectionAvailability(false);
-            services.AddSingleton<IDatabaseConnectionAvailability>(connectionAvailability);
+            var connectionAvailability = Services.GetRequiredService<IDatabaseConnectionAvailability>();
 
-            using (var tempProvider = services.BuildServiceProvider())
+            using (var scope = Services.CreateScope())
             {
-                using var scope = tempProvider.CreateScope();
-                var scopedProvider = scope.ServiceProvider;
-                var settingsDbContext = scopedProvider.GetRequiredService<SettingsDbContext>();
+                var provider = scope.ServiceProvider;
+                var settingsDbContext = provider.GetRequiredService<SettingsDbContext>();
                 await settingsDbContext.Database.EnsureCreatedAsync();
 
-                var settingsService = scopedProvider.GetRequiredService<ISettingsService>();
+                var settingsService = provider.GetRequiredService<ISettingsService>();
                 var settings = await settingsService.GetAllAsync();
                 settings.TryGetValue(SettingKeys.Language, out var language);
                 settings.TryGetValue(SettingKeys.DefaultCurrency, out var defaultCurrency);
@@ -106,7 +101,6 @@ namespace GRCFinancialControl.Avalonia
                 settings.TryGetValue(SettingKeys.Server, out var server);
                 settings.TryGetValue(SettingKeys.Database, out var database);
                 settings.TryGetValue(SettingKeys.User, out var user);
-                settings.TryGetValue(SettingKeys.Password, out var password);
 
                 hasConnectionSettings =
                     !string.IsNullOrWhiteSpace(server) &&
@@ -116,109 +110,19 @@ namespace GRCFinancialControl.Avalonia
                 connectionAvailability.Update(hasConnectionSettings);
             }
 
-            services.AddDbContextFactory<ApplicationDbContext>((provider, options) =>
-            {
-                var availability = provider.GetRequiredService<IDatabaseConnectionAvailability>();
-                if (!availability.IsConfigured)
-                {
-                    return;
-                }
-
-                var settingsService = provider.GetRequiredService<ISettingsService>();
-                var settings = settingsService.GetAll();
-
-                if (!TryBuildConnectionString(settings, out var connectionString))
-                {
-                    availability.Update(false);
-                    return;
-                }
-
-                options.UseMySql(
-                    connectionString,
-                    new MySqlServerVersion(new Version(8, 0, 29)),
-                    mySqlOptions => mySqlOptions.EnableRetryOnFailure());
-            });
-
-            services.AddSingleton<IPersonDirectory, NullPersonDirectory>();
-
-            services.AddTransient<IEngagementService, EngagementService>();
-            services.AddTransient<IFiscalYearService, FiscalYearService>();
-            services.AddTransient<IFullManagementDataImporter, FullManagementDataImporter>();
-            services.AddTransient<IFiscalCalendarConsistencyService, FiscalCalendarConsistencyService>();
-            services.AddTransient<IHoursAllocationService, HoursAllocationService>();
-            services.AddTransient<IImportService, ImportService>();
-            services.AddTransient<IClosingPeriodService, ClosingPeriodService>();
-            services.AddTransient<IPlannedAllocationService, PlannedAllocationService>();
-            services.AddTransient<IReportService, ReportService>();
-            services.AddTransient<IPapdService, PapdService>();
-            services.AddTransient<IManagerService, ManagerService>();
-            services.AddTransient<IManagerAssignmentService, ManagerAssignmentService>();
-            services.AddTransient<IPapdAssignmentService, PapdAssignmentService>();
-            services.AddTransient<IExceptionService, ExceptionService>();
-            services.AddTransient<ICustomerService, CustomerService>();
-            services.AddTransient<IRankMappingService, RankMappingService>();
-            services.AddSingleton<IDatabaseSchemaInitializer, DatabaseSchemaInitializer>();
-
-            services.AddSingleton<LoggingService>();
-            services.AddLogging(builder => builder.AddConsole());
-            services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
-            services.AddSingleton<IModalDialogService, ModalDialogService>();
-            services.AddSingleton<DialogService>();
-            services.AddTransient<IRetainTemplateGenerator, RetainTemplateGenerator>();
-            services.AddSingleton<IConnectionPackageService, ConnectionPackageService>();
-            services.AddSingleton<IApplicationDataBackupService, ApplicationDataBackupService>();
-            services.AddSingleton<PowerBiEmbeddingService>();
-
-            services.AddTransient<HomeViewModel>();
-            services.AddTransient<MainWindowViewModel>();
-            services.AddTransient<EngagementsViewModel>();
-            services.AddTransient<FiscalYearsViewModel>();
-            services.AddTransient<ImportViewModel>();
-            services.AddTransient<HoursAllocationDetailViewModel>();
-            services.AddTransient<Func<HoursAllocationDetailViewModel>>(provider => () => provider.GetRequiredService<HoursAllocationDetailViewModel>());
-            services.AddTransient<HoursAllocationsViewModel>();
-            services.AddTransient<RevenueAllocationsViewModel>();
-            services.AddTransient<AllocationsViewModel>();
-            services.AddTransient<GrcTeamViewModel>();
-            services.AddTransient(sp => new ReportsViewModel(
-                sp.GetRequiredService<PowerBiEmbeddingService>(),
-                sp.GetRequiredService<LoggingService>(),
-                sp.GetRequiredService<IMessenger>()
-            ));
-            services.AddTransient<PapdViewModel>();
-            services.AddTransient<ManagersViewModel>();
-            services.AddTransient<SettingsViewModel>();
-            services.AddTransient<ClosingPeriodsViewModel>();
-            services.AddTransient<ClosingPeriodEditorViewModel>();
-            services.AddTransient<CustomersViewModel>();
-            services.AddTransient<CustomerEditorViewModel>();
-            services.AddTransient<AppMasterDataViewModel>();
-            services.AddTransient<ControlMasterDataViewModel>();
-            services.AddTransient<RankMappingsViewModel>();
-            services.AddTransient<RankMappingEditorViewModel>();
-            services.AddTransient<TasksViewModel>();
-            services.AddTransient<EngagementAssignmentViewModel>();
-            services.AddTransient<Func<EngagementAssignmentViewModel>>(provider => () => provider.GetRequiredService<EngagementAssignmentViewModel>());
+            _logger = Services.GetRequiredService<ILogger<App>>();
+            _logger.LogInformation(
+                "GRC Financial Control initialised with language '{Language}' and default currency '{Currency}'.",
+                string.IsNullOrWhiteSpace(restoredLanguage) ? "system" : restoredLanguage,
+                string.IsNullOrWhiteSpace(restoredDefaultCurrency) ? "system" : restoredDefaultCurrency);
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                var mainWindow = new MainWindow();
-                services.AddSingleton(new FilePickerService(mainWindow));
+                var connectionAvailable = hasConnectionSettings;
 
-                Services = services.BuildServiceProvider();
-                _logger = Services.GetRequiredService<ILogger<App>>();
-                _logger.LogInformation(
-                    "GRC Financial Control initialised with language '{Language}' and default currency '{Currency}'.",
-                    string.IsNullOrWhiteSpace(restoredLanguage) ? "system" : restoredLanguage,
-                    string.IsNullOrWhiteSpace(restoredDefaultCurrency) ? "system" : restoredDefaultCurrency);
-                _logger.LogInformation(
-                    "Connection settings detected during startup: {HasConnectionSettings}.",
-                    hasConnectionSettings);
-
-                _messenger = Services.GetRequiredService<IMessenger>();
-                _messenger.Register<ApplicationRestartRequestedMessage>(this, (_, _) => RequestRestart());
-
+                var mainWindow = Services.GetRequiredService<MainWindow>();
                 mainWindow.DataContext = Services.GetRequiredService<MainWindowViewModel>();
+
                 using (var scope = Services.CreateScope())
                 {
                     var provider = scope.ServiceProvider;
@@ -226,7 +130,7 @@ namespace GRCFinancialControl.Avalonia
                     await settingsDbContext.Database.EnsureCreatedAsync();
                     await settingsDbContext.Database.MigrateAsync();
 
-                    if (hasConnectionSettings)
+                    if (connectionAvailable)
                     {
                         var schemaInitializer = provider.GetRequiredService<IDatabaseSchemaInitializer>();
                         try
@@ -235,7 +139,7 @@ namespace GRCFinancialControl.Avalonia
                         }
                         catch (Exception ex)
                         {
-                            hasConnectionSettings = false;
+                            connectionAvailable = false;
                             provider
                                 .GetRequiredService<IDatabaseConnectionAvailability>()
                                 .Update(false, ex.Message);
@@ -247,6 +151,13 @@ namespace GRCFinancialControl.Avalonia
                     }
                 }
 
+                _logger.LogInformation(
+                    "Connection settings detected during startup: {HasConnectionSettings}.",
+                    connectionAvailable);
+
+                _messenger = Services.GetRequiredService<IMessenger>();
+                _messenger.Register<ApplicationRestartRequestedMessage>(this, (_, _) => RequestRestart());
+
                 desktop.MainWindow = mainWindow;
                 desktop.Exit += (_, _) =>
                 {
@@ -254,6 +165,12 @@ namespace GRCFinancialControl.Avalonia
                     _messenger = null;
                 };
                 mainWindow.Show();
+            }
+            else
+            {
+                _logger.LogInformation(
+                    "Connection settings detected during startup: {HasConnectionSettings}.",
+                    hasConnectionSettings);
             }
 
             base.OnFrameworkInitializationCompleted();
@@ -319,7 +236,7 @@ namespace GRCFinancialControl.Avalonia
             desktop.Shutdown();
         }
 
-        private static bool TryBuildConnectionString(
+        internal static bool TryBuildConnectionString(
             IReadOnlyDictionary<string, string> settings,
             out string connectionString)
         {
