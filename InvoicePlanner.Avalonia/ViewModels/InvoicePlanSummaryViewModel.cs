@@ -26,6 +26,10 @@ public partial class InvoicePlanSummaryViewModel : ObservableObject
 
     public string EngagementId { get; }
 
+    public string EngagementDescription { get; }
+
+    public string? CustomerName { get; }
+
     public InvoicePlanType Type { get; }
 
     public DateTime CreatedAt { get; }
@@ -41,6 +45,8 @@ public partial class InvoicePlanSummaryViewModel : ObservableObject
     private InvoicePlanSummaryViewModel(
         int id,
         string engagementId,
+        string engagementDescription,
+        string? customerName,
         InvoicePlanType type,
         DateTime createdAt,
         DateTime? firstEmissionDate,
@@ -52,6 +58,8 @@ public partial class InvoicePlanSummaryViewModel : ObservableObject
     {
         Id = id;
         EngagementId = engagementId;
+        EngagementDescription = engagementDescription;
+        CustomerName = customerName;
         Type = type;
         CreatedAt = createdAt;
         FirstEmissionDate = firstEmissionDate;
@@ -72,6 +80,8 @@ public partial class InvoicePlanSummaryViewModel : ObservableObject
         return new InvoicePlanSummaryViewModel(
             summary.Id,
             summary.EngagementId,
+            summary.EngagementDescription,
+            summary.CustomerName,
             summary.Type,
             summary.CreatedAt,
             summary.FirstEmissionDate,

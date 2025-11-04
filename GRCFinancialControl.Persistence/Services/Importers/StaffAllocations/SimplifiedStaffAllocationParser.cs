@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text.RegularExpressions;
 using GRCFinancialControl.Core.Models;
+using GRCFinancialControl.Persistence.Services.Importers;
 using Microsoft.Extensions.Logging;
 
 namespace GRCFinancialControl.Persistence.Services.Importers.StaffAllocations;
@@ -489,50 +489,22 @@ public sealed class SimplifiedStaffAllocationParser
 
     private static string? TryExtractEngagementCode(object? value)
     {
-        if (value is null)
-        {
-            return null;
-        }
-
-        if (value is string s)
-        {
-            var match = Regex.Match(s, "E-\\d+");
-            return match.Success ? match.Value.ToUpperInvariant() : null;
-        }
-
-        var text = Convert.ToString(value, CultureInfo.InvariantCulture);
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return null;
-        }
-
-        var regexMatch = Regex.Match(text, "E-\\d+");
-        return regexMatch.Success ? regexMatch.Value.ToUpperInvariant() : null;
+        return WorksheetValueHelper.TryExtractEngagementCode(value);
     }
 
     private static string GetString(object? value)
     {
-        return value switch
-        {
-            null => string.Empty,
-            string s => s.Trim(),
-            IFormattable formattable => formattable.ToString(null, CultureInfo.InvariantCulture).Trim(),
-            _ => value.ToString()?.Trim() ?? string.Empty
-        };
+        return WorksheetValueHelper.GetString(value);
     }
 
     private static string NormalizeRank(string? value)
     {
-        return string.IsNullOrWhiteSpace(value)
-            ? string.Empty
-            : value.Trim().ToUpperInvariant();
+        return WorksheetValueHelper.NormalizeToUpperInvariant(value);
     }
 
     private static string NormalizeCode(string? value)
     {
-        return string.IsNullOrWhiteSpace(value)
-            ? string.Empty
-            : value.Trim().ToUpperInvariant();
+        return WorksheetValueHelper.NormalizeToUpperInvariant(value);
     }
 
     private sealed record EmployeeRow(

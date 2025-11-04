@@ -63,7 +63,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
                         a.Id,
                         a.Engagement.EngagementId,
                         a.Engagement.Description,
-                        a.Engagement.Id)));
+                        a.Engagement.Id,
+                        a.Engagement.CustomerName)));
             }
             else if (_papdId.HasValue && _papdAssignmentService != null)
             {
@@ -73,7 +74,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
                         a.Id,
                         a.Engagement.EngagementId,
                         a.Engagement.Description,
-                        a.Engagement.Id)));
+                        a.Engagement.Id,
+                        a.Engagement.CustomerName)));
             }
         }
 
@@ -121,7 +123,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
         }
     }
 
-    public record AssignmentItem(int AssignmentId, string EngagementId, string Description, int EngagementIdInternal)
+    public record AssignmentItem(int AssignmentId, string EngagementId, string Description, int EngagementIdInternal, string CustomerName)
     {
         public string DisplayText => string.IsNullOrWhiteSpace(EngagementId)
             ? Description

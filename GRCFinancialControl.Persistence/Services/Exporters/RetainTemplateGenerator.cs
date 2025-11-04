@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ClosedXML.Excel;
+using GRCFinancialControl.Persistence.Services.Importers;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -322,7 +323,7 @@ public sealed class RetainTemplateGenerator : IRetainTemplateGenerator
 
         private static string Normalize(string? value)
         {
-            return value?.Trim().ToUpperInvariant() ?? string.Empty;
+            return WorksheetValueHelper.NormalizeToUpperInvariant(value);
         }
     }
 }

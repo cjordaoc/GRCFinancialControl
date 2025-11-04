@@ -408,6 +408,15 @@
   <data name="FINC_Import_Warning_SelectClosingPeriod" xml:space="preserve">
     <value>Select a closing period before importing full management data.</value>
   </data>
+  <data name="FINC_Import_Panel_NewEngagements" xml:space="preserve">
+    <value>New Engagements</value>
+  </data>
+  <data name="FINC_Import_Panel_TeamAllocation" xml:space="preserve">
+    <value>Team Allocation</value>
+  </data>
+  <data name="FINC_Import_Panel_FinancialData" xml:space="preserve">
+    <value>Financial Data</value>
+  </data>
   <data name="FINC_Managers_Toast_DeleteSuccess" xml:space="preserve">
     <value>Manager {0} removed successfully.</value>
   </data>

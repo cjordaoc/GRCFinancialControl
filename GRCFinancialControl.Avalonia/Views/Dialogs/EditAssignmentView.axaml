@@ -21,6 +21,7 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Engagement ID" Binding="{Binding EngagementId}" Width="2*"/>
                 <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="3*"/>
+                <DataGridTextColumn Header="Customer" Binding="{Binding CustomerName}" Width="2*"/>
             </DataGrid.Columns>
         </DataGrid>
         

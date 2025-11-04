@@ -14,23 +14,55 @@
                 <StackPanel Spacing="{StaticResource SectionSpacing}">
                     <TextBlock Text="{loc:Loc Key=FINC_Import_Title_Primary}"
                                Classes="TitleLarge"/>
-                    <StackPanel Orientation="Horizontal"
-                                Spacing="{StaticResource ControlSpacing}"
-                                IsEnabled="{Binding IsImporting, Converter={StaticResource InverseBooleanConverter}}">
-                        <Button Content="{loc:Loc Key=FINC_Import_Button_Budget}"
-                                Command="{Binding SetImportTypeCommand}"
-                                CommandParameter="Budget"
-                                Classes="accent"/>
-                        <Button Content="{loc:Loc Key=FINC_Import_Button_AllocationPlanning}"
-                                Command="{Binding SetImportTypeCommand}"
-                                CommandParameter="AllocationPlanning"
-                                Classes="accent"/>
-                        <Button Content="{loc:Loc Key=FINC_Import_Button_FullManagement}"
-                                Command="{Binding SetImportTypeCommand}"
-                                CommandParameter="FullManagement"
-                                Classes="accent"
-                                IsEnabled="{Binding CanSelectFullManagement}"/>
-                    </StackPanel>
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="{StaticResource GridGap}">
+                        <!-- New Engagements Panel -->
+                        <Border Grid.Column="0"
+                                Classes="Card"
+                                Padding="{StaticResource CardPaddingThickness}"
+                                Background="{StaticResource BrushSurfaceVariant}">
+                            <StackPanel Spacing="{StaticResource ControlSpacing}">
+                                <TextBlock Text="{loc:Loc Key=FINC_Import_Panel_NewEngagements}" Classes="TitleSmall"/>
+                                <Button Content="{loc:Loc Key=FINC_Import_Button_Budget}"
+                                        Command="{Binding SetImportTypeCommand}"
+                                        CommandParameter="Budget"
+                                        Classes="accent"
+                                        IsEnabled="{Binding IsImporting, Converter={StaticResource InverseBooleanConverter}}"
+                                        HorizontalAlignment="Stretch"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Team Allocation Panel -->
+                        <Border Grid.Column="1"
+                                Classes="Card"
+                                Padding="{StaticResource CardPaddingThickness}"
+                                Background="{StaticResource BrushSurfaceVariant}">
+                            <StackPanel Spacing="{StaticResource ControlSpacing}">
+                                <TextBlock Text="{loc:Loc Key=FINC_Import_Panel_TeamAllocation}" Classes="TitleSmall"/>
+                                <Button Content="{loc:Loc Key=FINC_Import_Button_AllocationPlanning}"
+                                        Command="{Binding SetImportTypeCommand}"
+                                        CommandParameter="AllocationPlanning"
+                                        Classes="accent"
+                                        IsEnabled="{Binding IsImporting, Converter={StaticResource InverseBooleanConverter}}"
+                                        HorizontalAlignment="Stretch"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Financial Data Panel -->
+                        <Border Grid.Column="2"
+                                Classes="Card"
+                                Padding="{StaticResource CardPaddingThickness}"
+                                Background="{StaticResource BrushSurfaceVariant}">
+                            <StackPanel Spacing="{StaticResource ControlSpacing}">
+                                <TextBlock Text="{loc:Loc Key=FINC_Import_Panel_FinancialData}" Classes="TitleSmall"/>
+                                <Button Content="{loc:Loc Key=FINC_Import_Button_FullManagement}"
+                                        Command="{Binding SetImportTypeCommand}"
+                                        CommandParameter="FullManagement"
+                                        Classes="accent"
+                                        IsEnabled="{Binding CanSelectFullManagement}"
+                                        HorizontalAlignment="Stretch"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
                     <Border Background="{StaticResource BrushSurfaceMuted}"
                             CornerRadius="{StaticResource ControlCornerRadius}"
                             Padding="{StaticResource CardPaddingThickness}"

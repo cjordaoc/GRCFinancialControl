@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.CustomersView"
              x:DataType="vm:CustomersViewModel">
@@ -10,6 +11,7 @@
         <TextBlock Grid.Row="0" Text="Customers" Classes="TitleLarge"/>
 
         <DataGrid Grid.Row="1" ItemsSource="{Binding Customers}" SelectedItem="{Binding SelectedCustomer}" SelectionMode="Single" AutoGenerateColumns="False" IsReadOnly="True" Margin="{StaticResource MarginTopSmall}"
+                  CanUserResizeColumns="True"
                   ScrollViewer.HorizontalScrollBarVisibility="Auto"
                   ScrollViewer.VerticalScrollBarVisibility="Auto">
             <DataGrid.Columns>
@@ -32,11 +34,11 @@
                     Classes="ButtonRow"
                     HorizontalAlignment="Left"
                     Margin="{StaticResource MarginTopSmall}">
-            <Button Content="Add" Command="{Binding AddCommand}"/>
-            <Button Content="Edit" Command="{Binding EditCommand}" CommandParameter="{Binding SelectedCustomer}"/>
-            <Button Content="View" Command="{Binding ViewCommand}" CommandParameter="{Binding SelectedCustomer}"/>
-            <Button Content="Delete" Command="{Binding DeleteCommand}" CommandParameter="{Binding SelectedCustomer}"/>
-            <Button Content="Delete Data" Command="{Binding DeleteDataCommand}" CommandParameter="{Binding SelectedCustomer}" Classes="Danger"/>
+            <Button Content="{loc:Loc Key=FINC_Button_Add}" Command="{Binding AddCommand}" MinWidth="{StaticResource ButtonMinWidth}"/>
+            <Button Content="{loc:Loc Key=FINC_Button_Edit}" Command="{Binding EditCommand}" CommandParameter="{Binding SelectedCustomer}" MinWidth="{StaticResource ButtonMinWidth}"/>
+            <Button Content="{loc:Loc Key=FINC_Button_View}" Command="{Binding ViewCommand}" CommandParameter="{Binding SelectedCustomer}" MinWidth="{StaticResource ButtonMinWidth}"/>
+            <Button Content="{loc:Loc Key=FINC_Button_Delete}" Command="{Binding DeleteCommand}" CommandParameter="{Binding SelectedCustomer}" MinWidth="{StaticResource ButtonMinWidth}"/>
+            <Button Content="{loc:Loc Key=FINC_Admin_ClosingPeriods_Button_DeleteData}" Command="{Binding DeleteDataCommand}" CommandParameter="{Binding SelectedCustomer}" Classes="Danger" MinWidth="{StaticResource ButtonMinWidth}"/>
         </StackPanel>
     </Grid>
 </UserControl>

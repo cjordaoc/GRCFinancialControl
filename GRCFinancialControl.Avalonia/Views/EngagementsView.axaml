@@ -20,6 +20,7 @@
                   SelectionMode="Single"
                   IsReadOnly="True"
                   AutoGenerateColumns="False"
+                  CanUserResizeColumns="True"
                   ScrollViewer.HorizontalScrollBarVisibility="Auto"
                   ScrollViewer.VerticalScrollBarVisibility="Auto">
             <DataGrid.Columns>
@@ -69,11 +70,11 @@
                     Classes="ButtonRow"
                     HorizontalAlignment="Left"
                     Margin="{StaticResource MarginTopMedium}">
-            <Button Content="Add New" Command="{Binding AddCommand}"/>
-            <Button Content="View" Command="{Binding ViewCommand}" CommandParameter="{Binding SelectedEngagement}"/>
-            <Button Content="Edit" Command="{Binding EditCommand}" CommandParameter="{Binding SelectedEngagement}"/>
-            <Button Content="Delete" Command="{Binding DeleteCommand}" CommandParameter="{Binding SelectedEngagement}"/>
-            <Button Content="Delete Data" Command="{Binding DeleteDataCommand}" CommandParameter="{Binding SelectedEngagement}" Classes="Danger"/>
+            <Button Content="{loc:Loc Key=FINC_Button_Add}" Command="{Binding AddCommand}" MinWidth="{StaticResource ButtonMinWidth}"/>
+            <Button Content="{loc:Loc Key=FINC_Button_View}" Command="{Binding ViewCommand}" CommandParameter="{Binding SelectedEngagement}" MinWidth="{StaticResource ButtonMinWidth}"/>
+            <Button Content="{loc:Loc Key=FINC_Button_Edit}" Command="{Binding EditCommand}" CommandParameter="{Binding SelectedEngagement}" MinWidth="{StaticResource ButtonMinWidth}"/>
+            <Button Content="{loc:Loc Key=FINC_Button_Delete}" Command="{Binding DeleteCommand}" CommandParameter="{Binding SelectedEngagement}" MinWidth="{StaticResource ButtonMinWidth}"/>
+            <Button Content="{loc:Loc Key=FINC_Admin_ClosingPeriods_Button_DeleteData}" Command="{Binding DeleteDataCommand}" CommandParameter="{Binding SelectedEngagement}" Classes="Danger" MinWidth="{StaticResource ButtonMinWidth}"/>
             <SplitButton Content="Assign"
                          Command="{Binding AssignPapdCommand}">
                 <SplitButton.Flyout>

@@ -61,11 +61,11 @@ namespace GRCFinancialControl.Persistence.Services
             "future fy backlog",
             "future fiscal year backlog"
         };
-        private static readonly Regex DigitsRegex = new Regex("\\d+", RegexOptions.Compiled);
+        private static readonly Regex DigitsRegex = new Regex(@"\d+", RegexOptions.Compiled);
         private static readonly Regex TrailingDigitsRegex = new Regex(@"\d+$", RegexOptions.Compiled);
-        private static readonly Regex FiscalYearCodeRegex = new Regex(@"FY\\d{2,4}", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex EngagementIdRegex = new Regex(@"\\bE-\\d+\\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex LastUpdateDateRegex = new Regex(@"Last Update\\s*:\\s*(\\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{4})", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex FiscalYearCodeRegex = new Regex(@"FY\d{2,4}", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex EngagementIdRegex = new Regex(@"\bE-\d+\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex LastUpdateDateRegex = new Regex(@"Last Update\s*:\s*(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly CultureInfo PtBrCulture = CultureInfo.GetCultureInfo("pt-BR");
         private const string MissingRankWarningKey = "MissingRankMapping";
         private const string MissingEngagementWarningKey = "MissingEngagement";
@@ -228,10 +228,11 @@ namespace GRCFinancialControl.Persistence.Services
                         engagement.CustomerId = customer.Id;
                     }
 
-                    var fiscalYears = await context.FiscalYears
-                        .OrderBy(fy => fy.StartDate)
-                        .ToListAsync()
-                        .ConfigureAwait(false);
+            var fiscalYears = await context.FiscalYears
+                .AsNoTracking()
+                .OrderBy(fy => fy.StartDate)
+                .ToListAsync()
+                .ConfigureAwait(false);
 
                     var insertedBudgets = ApplyBudgetSnapshot(engagement, fiscalYears, aggregatedBudgets, DateTime.UtcNow);
 
@@ -1831,6 +1832,7 @@ namespace GRCFinancialControl.Persistence.Services
                 .ConfigureAwait(false);
 
             var fiscalYears = await context.FiscalYears
+                .AsNoTracking()
                 .Where(fy => fy.Name == currentFiscalYearName || fy.Name == nextFiscalYearName)
                 .ToListAsync()
                 .ConfigureAwait(false);
@@ -1900,7 +1902,7 @@ namespace GRCFinancialControl.Persistence.Services
                 }
 
                 var toGoCurrent = RoundMoney(row.CurrentBacklog);
-                var toDateCurrent = RoundMoney(engagement.OpeningValue - row.CurrentBacklog - row.FutureBacklog);
+                var toDateCurrent = RoundMoney(engagement.ValueToAllocate - row.CurrentBacklog - row.FutureBacklog);
                 var toGoNext = RoundMoney(row.FutureBacklog);
 
                 if (currentFiscalYear.IsLocked)
@@ -2102,50 +2104,22 @@ namespace GRCFinancialControl.Persistence.Services
 
         private static string NormalizeRank(string? value)
         {
-            return string.IsNullOrWhiteSpace(value)
-                ? string.Empty
-                : value.Trim().ToUpperInvariant();
+            return NormalizeRankKey(value); // Reuse existing method for consistency
         }
 
         private static string NormalizeCode(string? value)
         {
-            return string.IsNullOrWhiteSpace(value)
-                ? string.Empty
-                : value.Trim().ToUpperInvariant();
+            return NormalizeEngagementCode(value); // Reuse existing method for consistency
         }
 
         private static string? TryExtractEngagementCode(object? value)
         {
-            if (value is null)
-            {
-                return null;
-            }
-
-            if (value is string s)
-            {
-                var match = Regex.Match(s, "E-\\d+");
-                return match.Success ? match.Value.ToUpperInvariant() : null;
-            }
-
-            var text = Convert.ToString(value, CultureInfo.InvariantCulture);
-            if (string.IsNullOrWhiteSpace(text))
-            {
-                return null;
-            }
-
-            var regexMatch = Regex.Match(text, "E-\\d+");
-            return regexMatch.Success ? regexMatch.Value.ToUpperInvariant() : null;
+            return WorksheetValueHelper.TryExtractEngagementCode(value);
         }
 
         private static string GetString(object? value)
         {
-            return value switch
-            {
-                null => string.Empty,
-                string s => s.Trim(),
-                IFormattable formattable => formattable.ToString(null, CultureInfo.InvariantCulture).Trim(),
-                _ => value.ToString()?.Trim() ?? string.Empty
-            };
+            return WorksheetValueHelper.GetString(value);
         }
 
         private static DateTime? TryParseWeekDate(object? value)
@@ -2759,7 +2733,7 @@ namespace GRCFinancialControl.Persistence.Services
                 .Distinct()
                 .Count();
 
-            var notes = new List<string>
+            var notes = new List<string>(8 + allocationWarningMessages.Count)
             {
                 $"Engagement/rank combinations processed: {processedRowCount}",
                 $"Distinct engagements detected: {distinctEngagementCount}",
@@ -3001,7 +2975,7 @@ namespace GRCFinancialControl.Persistence.Services
 
             if (isNegative)
             {
-                sanitized = "-" + sanitized;
+                sanitized = string.Concat("-", sanitized);
             }
 
             return sanitized;
@@ -3023,11 +2997,9 @@ namespace GRCFinancialControl.Persistence.Services
 
         private sealed record FcsBacklogRow(string EngagementId, decimal CurrentBacklog, decimal FutureBacklog, int RowNumber);
 
-                private static string NormalizeAllocationCode(string? value)
+        private static string NormalizeAllocationCode(string? value)
         {
-            return string.IsNullOrWhiteSpace(value)
-                ? string.Empty
-                : value.Trim().ToUpperInvariant();
+            return NormalizeEngagementCode(value); // Reuse existing method for consistency
         }
 
         private readonly record struct AllocationKey(string EngagementCode, string RankCode, int FiscalYearId);

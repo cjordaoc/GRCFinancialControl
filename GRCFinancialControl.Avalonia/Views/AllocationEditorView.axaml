@@ -51,7 +51,7 @@
                           SelectionMode="Single">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Fiscal Year" Binding="{Binding FiscalYear.Name}" IsReadOnly="True"/>
-                        <DataGridTemplateColumn Header="{Binding #AllocationEditorRoot.DataContext.ToDateColumnHeader}">
+                        <DataGridTemplateColumn Header="{Binding DataContext.ToDateColumnHeader, ElementName=AllocationEditorRoot}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource SpacingUnit}" VerticalAlignment="Center">
@@ -69,7 +69,7 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        <DataGridTemplateColumn Header="{Binding #AllocationEditorRoot.DataContext.ToGoColumnHeader}">
+                        <DataGridTemplateColumn Header="{Binding DataContext.ToGoColumnHeader, ElementName=AllocationEditorRoot}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource SpacingUnit}" VerticalAlignment="Center">
