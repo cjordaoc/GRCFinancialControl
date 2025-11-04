@@ -70,7 +70,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
                     var papd = await _papdService.GetByIdAsync(_papdId.Value);
                     if (papd is not null)
                     {
-                        var assignedEngagementIds = papd.Engagements.Select(e => e.Id).ToHashSet();
+                        var assignedEngagementIds = papd.EngagementPapds
+                            .Select(ep => ep.EngagementId)
+                            .ToHashSet();
                         Engagements = new ObservableCollection<EngagementAssignmentItem>(
                             allEngagements.Select(e => new EngagementAssignmentItem(e, assignedEngagementIds.Contains(e.Id))));
                     }
