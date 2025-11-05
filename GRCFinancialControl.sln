@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
@@ -17,9 +17,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Invoices.Data", "Invoices.D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvoicePlanner.Avalonia", "InvoicePlanner.Avalonia\InvoicePlanner.Avalonia.csproj", "{C20054C8-5A08-4BD9-8818-51C1E1E90012}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GRC.Shared.Resources", "GRC.Shared.Resources\GRC.Shared.Resources.csproj", "{58F38076-DF30-4E3A-A128-B879FD8BD508}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GRC.Shared.Resources", "GRC.Shared\GRC.Shared.Resources\GRC.Shared.Resources.csproj", "{58F38076-DF30-4E3A-A128-B879FD8BD508}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GRC.Shared.UI", "GRC.Shared.UI\GRC.Shared.UI.csproj", "{FA2D0F2A-1876-4731-94CB-FBDAB14559F1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GRC.Shared.UI", "GRC.Shared\GRC.Shared.UI\GRC.Shared.UI.csproj", "{FA2D0F2A-1876-4731-94CB-FBDAB14559F1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GRCFinancialControl.Avalonia.Tests", "GRCFinancialControl.Avalonia.Tests\GRCFinancialControl.Avalonia.Tests.csproj", "{BAB18F3D-ABD3-4A6E-927A-D6D1107CDC3F}"
 EndProject
