@@ -187,6 +187,20 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             "next etc-p"
         };
 
+        private static readonly string[] CurrentFiscalYearBacklogHeaders =
+        {
+            "fytg backlog",
+            "fiscal year to go backlog",
+            "current backlog"
+        };
+
+        private static readonly string[] FutureFiscalYearBacklogHeaders =
+        {
+            "future fy backlog",
+            "future fiscal year backlog",
+            "future backlog"
+        };
+
         private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
         private readonly ILogger<FullManagementDataImporter> _logger;
 
@@ -218,7 +232,9 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             EtcAgeDaysHeaders,
             UnbilledRevenueDaysHeaders,
             LastActiveEtcPDateHeaders,
-            NextEtcDateHeaders
+            NextEtcDateHeaders,
+            CurrentFiscalYearBacklogHeaders,
+            FutureFiscalYearBacklogHeaders
         };
 
         public async Task<FullManagementDataImportResult> ImportAsync(string filePath)
@@ -295,6 +311,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     var engagements = await context.Engagements
                         .Include(e => e.FinancialEvolutions)
                         .Include(e => e.Customer)
+                        .Include(e => e.RevenueAllocations)
                         .Where(e => engagementIds.Contains(e.EngagementId))
                         .ToListAsync();
 
@@ -614,6 +631,18 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                     row.TERMercuryProjectedOppCurrency,
                                     row.MarginPercentMercuryProjected,
                                     row.ExpensesMercuryProjected);
+
+                                // Process backlog data if available
+                                if (row.CurrentFiscalYearBacklog.HasValue || row.FutureFiscalYearBacklog.HasValue)
+                                {
+                                    ProcessBacklogData(
+                                        context,
+                                        engagement,
+                                        closingPeriod,
+                                        row.CurrentFiscalYearBacklog ?? 0m,
+                                        row.FutureFiscalYearBacklog ?? 0m,
+                                        _logger);
+                                }
                             }
                         }
                         catch (Exception ex)
@@ -760,6 +789,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             var unbilledRevenueDaysIndex = GetOptionalColumnIndex(headerMap, UnbilledRevenueDaysHeaders);
             var lastActiveEtcPDateIndex = GetOptionalColumnIndex(headerMap, LastActiveEtcPDateHeaders);
             var nextEtcDateIndex = GetOptionalColumnIndex(headerMap, NextEtcDateHeaders);
+            var currentFiscalYearBacklogIndex = GetOptionalColumnIndex(headerMap, CurrentFiscalYearBacklogHeaders);
+            var futureFiscalYearBacklogIndex = GetOptionalColumnIndex(headerMap, FutureFiscalYearBacklogHeaders);
 
             var isS4MetadataWorkbook = IsS4MetadataWorkbook(headerMap);
 
@@ -816,7 +847,9 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     EtcpAgeDays = etcAgeDaysIndex.HasValue ? ParseInt(row[etcAgeDaysIndex.Value]) : null,
                     UnbilledRevenueDays = unbilledRevenueDaysIndex.HasValue ? ParseInt(row[unbilledRevenueDaysIndex.Value]) : null,
                     LastActiveEtcPDate = lastActiveEtcPDateIndex.HasValue ? ParseDate(row[lastActiveEtcPDateIndex.Value]) : null,
-                    NextEtcDate = nextEtcDateIndex.HasValue ? ParseDate(row[nextEtcDateIndex.Value]) : null
+                    NextEtcDate = nextEtcDateIndex.HasValue ? ParseDate(row[nextEtcDateIndex.Value]) : null,
+                    CurrentFiscalYearBacklog = currentFiscalYearBacklogIndex.HasValue ? ParseDecimal(row[currentFiscalYearBacklogIndex.Value], 2) : null,
+                    FutureFiscalYearBacklog = futureFiscalYearBacklogIndex.HasValue ? ParseDecimal(row[futureFiscalYearBacklogIndex.Value], 2) : null
                 });
             }
 
@@ -1557,6 +1590,160 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             public int? UnbilledRevenueDays { get; init; }
             public DateTime? LastActiveEtcPDate { get; init; }
             public DateTime? NextEtcDate { get; init; }
+            public decimal? CurrentFiscalYearBacklog { get; init; }
+            public decimal? FutureFiscalYearBacklog { get; init; }
+        }
+
+        private static void ProcessBacklogData(
+            ApplicationDbContext context,
+            Engagement engagement,
+            ClosingPeriod closingPeriod,
+            decimal currentBacklog,
+            decimal futureBacklog,
+            ILogger logger)
+        {
+            if (closingPeriod.FiscalYear == null)
+            {
+                logger.LogWarning(
+                    "Skipping backlog processing for engagement {EngagementId} because closing period {ClosingPeriod} has no fiscal year.",
+                    engagement.EngagementId,
+                    closingPeriod.Name);
+                return;
+            }
+
+            var currentFiscalYear = closingPeriod.FiscalYear;
+            var currentFiscalYearName = currentFiscalYear.Name;
+
+            if (string.IsNullOrWhiteSpace(currentFiscalYearName))
+            {
+                logger.LogWarning(
+                    "Skipping backlog processing for engagement {EngagementId} because fiscal year has no name.",
+                    engagement.EngagementId);
+                return;
+            }
+
+            // Calculate next fiscal year name
+            string? nextFiscalYearName = null;
+            try
+            {
+                nextFiscalYearName = IncrementFiscalYearName(currentFiscalYearName);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(
+                    ex,
+                    "Unable to determine next fiscal year from '{CurrentFiscalYear}' for engagement {EngagementId}. Future backlog will be skipped.",
+                    currentFiscalYearName,
+                    engagement.EngagementId);
+            }
+
+            // Load fiscal years
+            var fiscalYears = context.FiscalYears
+                .AsNoTracking()
+                .Where(fy => fy.Name == currentFiscalYearName || (nextFiscalYearName != null && fy.Name == nextFiscalYearName))
+                .ToList();
+
+            var fiscalYearLookup = fiscalYears.ToDictionary(fy => fy.Name, StringComparer.OrdinalIgnoreCase);
+
+            if (!fiscalYearLookup.TryGetValue(currentFiscalYearName, out var currentFy))
+            {
+                logger.LogWarning(
+                    "Fiscal year '{FiscalYear}' not found for engagement {EngagementId}. Current backlog will be skipped.",
+                    currentFiscalYearName,
+                    engagement.EngagementId);
+            }
+            else if (!currentFy.IsLocked)
+            {
+                var toGoCurrent = RoundMoney(currentBacklog);
+                var toDateCurrent = RoundMoney(engagement.ValueToAllocate - currentBacklog - futureBacklog);
+
+                var allocation = engagement.RevenueAllocations
+                    .FirstOrDefault(a => a.FiscalYearId == currentFy.Id);
+
+                if (allocation == null)
+                {
+                    allocation = new EngagementFiscalYearRevenueAllocation
+                    {
+                        EngagementId = engagement.Id,
+                        FiscalYearId = currentFy.Id,
+                        ToGoValue = toGoCurrent,
+                        ToDateValue = toDateCurrent,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    engagement.RevenueAllocations.Add(allocation);
+                    context.EngagementFiscalYearRevenueAllocations.Add(allocation);
+                }
+                else
+                {
+                    allocation.ToGoValue = toGoCurrent;
+                    allocation.ToDateValue = toDateCurrent;
+                    allocation.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+
+            // Process future backlog
+            if (nextFiscalYearName != null && fiscalYearLookup.TryGetValue(nextFiscalYearName, out var nextFy))
+            {
+                if (!nextFy.IsLocked)
+                {
+                    var toGoNext = RoundMoney(futureBacklog);
+
+                    var nextAllocation = engagement.RevenueAllocations
+                        .FirstOrDefault(a => a.FiscalYearId == nextFy.Id);
+
+                    if (nextAllocation == null)
+                    {
+                        nextAllocation = new EngagementFiscalYearRevenueAllocation
+                        {
+                            EngagementId = engagement.Id,
+                            FiscalYearId = nextFy.Id,
+                            ToGoValue = toGoNext,
+                            ToDateValue = 0m,
+                            UpdatedAt = DateTime.UtcNow
+                        };
+                        engagement.RevenueAllocations.Add(nextAllocation);
+                        context.EngagementFiscalYearRevenueAllocations.Add(nextAllocation);
+                    }
+                    else
+                    {
+                        nextAllocation.ToGoValue = toGoNext;
+                        nextAllocation.ToDateValue = 0m;
+                        nextAllocation.UpdatedAt = DateTime.UtcNow;
+                    }
+                }
+            }
+        }
+
+        private static decimal RoundMoney(decimal value) => Math.Round(value, 2, MidpointRounding.AwayFromZero);
+
+        private static string IncrementFiscalYearName(string fiscalYearName)
+        {
+            if (string.IsNullOrWhiteSpace(fiscalYearName))
+            {
+                throw new ArgumentException("Fiscal year name must be provided.", nameof(fiscalYearName));
+            }
+
+            var match = Regex.Match(fiscalYearName, @"\d+");
+            if (!match.Success)
+            {
+                throw new InvalidDataException($"Unable to determine next fiscal year based on '{fiscalYearName}'.");
+            }
+
+            if (!int.TryParse(match.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var currentYear))
+            {
+                throw new InvalidDataException($"Unable to parse fiscal year component from '{fiscalYearName}'.");
+            }
+
+            var prefix = fiscalYearName[..match.Index];
+            var suffix = fiscalYearName[(match.Index + match.Length)..];
+
+            var format = new string('0', match.Length);
+            var nextYearText = currentYear + 1;
+            var formattedNumber = format.Length > 0
+                ? nextYearText.ToString(format, CultureInfo.InvariantCulture)
+                : nextYearText.ToString(CultureInfo.InvariantCulture);
+
+            return (prefix + formattedNumber + suffix).ToUpperInvariant();
         }
     }
 }
