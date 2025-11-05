@@ -1,0 +1,3 @@
+[submodule "GRC.Shared"]
+	path = GRC.Shared
+	url = https://github.com/cjordaoc/GRC.Shared.git
