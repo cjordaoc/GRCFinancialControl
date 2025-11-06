@@ -1376,10 +1376,16 @@ public partial class PlanEditorViewModel : ViewModelBase
             PoNumber = line.PoNumber,
             FrsNumber = line.FrsNumber,
             CustomerTicket = line.CustomerTicket,
+            LineAdditionalDetails = string.IsNullOrWhiteSpace(line.AdditionalDetails)
+                ? null
+                : line.AdditionalDetails.Trim(),
             CustomerName = SelectedEngagement?.CustomerName,
             CustomerFocalPointName = CustomerFocalPointName,
             CustomerFocalPointEmail = primaryRecipient,
             CoeResponsible = null,
+            PlanAdditionalDetails = string.IsNullOrWhiteSpace(AdditionalDetails)
+                ? null
+                : AdditionalDetails.Trim(),
             CustomerEmails = recipients
         };
 

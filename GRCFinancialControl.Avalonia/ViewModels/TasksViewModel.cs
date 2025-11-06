@@ -365,23 +365,24 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 .ToDictionaryAsync(item => item.Id)
                 .ConfigureAwait(false);
 
-            var planIds = previews
-                .Select(preview => preview.PlanId)
-                .Distinct()
-                .ToArray();
+              var planIds = previews
+                  .Select(preview => preview.PlanId)
+                  .Distinct()
+                  .ToArray();
 
-            var plans = await context.InvoicePlans
-                .AsNoTracking()
-                .Where(plan => planIds.Contains(plan.Id))
-                .Select(plan => new
-                {
-                    plan.Id,
-                    plan.Type,
-                    plan.NumInvoices,
-                    plan.CustomInstructions
-                })
-                .ToDictionaryAsync(plan => plan.Id)
-                .ConfigureAwait(false);
+              var plans = await context.InvoicePlans
+                  .AsNoTracking()
+                  .Where(plan => planIds.Contains(plan.Id))
+                  .Select(plan => new
+                  {
+                      plan.Id,
+                      plan.Type,
+                      plan.NumInvoices,
+                      plan.CustomInstructions,
+                      plan.AdditionalDetails
+                  })
+                  .ToDictionaryAsync(plan => plan.Id)
+                  .ConfigureAwait(false);
 
             var engagementIds = previews
                 .Select(preview => preview.EngagementIntId)
@@ -445,10 +446,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     PoNumber = preview.PoNumber,
                     FrsNumber = preview.FrsNumber,
                     CustomerTicket = customerTicket,
+                    LineAdditionalDetails = string.IsNullOrWhiteSpace(item?.AdditionalInfo)
+                        ? null
+                        : item.AdditionalInfo.Trim(),
                     CustomerName = preview.CustomerName,
                     CustomerFocalPointName = preview.CustomerFocalPointName,
                     CustomerFocalPointEmail = preview.CustomerFocalPointEmail,
                     CoeResponsible = item?.CoeResponsible,
+                    PlanAdditionalDetails = string.IsNullOrWhiteSpace(plan?.AdditionalDetails)
+                        ? null
+                        : plan.AdditionalDetails.Trim(),
                     CustomerEmails = customerEmails
                 };
 
