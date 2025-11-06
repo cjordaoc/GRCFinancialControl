@@ -85,10 +85,15 @@ public class ImportServiceBacklogTests
 
         var candidates = new[] { "fytg backlog", "fiscal year to go backlog" };
 
-        var exception = Assert.ThrowsException<TargetInvocationException>(
-            () => InvokeGetRequiredColumnIndex(headerMap, candidates, "FYTG Backlog"));
-
-        Assert.IsNotNull(exception.InnerException);
-        Assert.IsInstanceOfType(exception.InnerException, typeof(InvalidDataException));
+        try
+        {
+            InvokeGetRequiredColumnIndex(headerMap, candidates, "FYTG Backlog");
+            Assert.Fail("Expected InvalidDataException.");
+        }
+        catch (TargetInvocationException ex)
+        {
+            Assert.IsNotNull(ex.InnerException);
+            Assert.IsInstanceOfType(ex.InnerException, typeof(InvalidDataException));
+        }
     }
 }
