@@ -14,8 +14,6 @@ namespace GRCFinancialControl.Persistence.Services
 {
     public class EngagementService : IEngagementService
     {
-        private const string FinancialEvolutionInitialPeriodId = "INITIAL";
-
         private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
 
         public EngagementService(IDbContextFactory<ApplicationDbContext> contextFactory)
@@ -32,17 +30,9 @@ namespace GRCFinancialControl.Persistence.Services
 
             var closingPeriodRecords = await context.ClosingPeriods
                 .AsNoTracking()
-                .Where(cp => !string.IsNullOrWhiteSpace(cp.Name))
                 .ToListAsync();
 
-            var closingPeriods = closingPeriodRecords
-                .GroupBy(cp => cp.Name!.Trim(), StringComparer.OrdinalIgnoreCase)
-                .ToDictionary(
-                    group => group.Key,
-                    group => group
-                        .OrderByDescending(cp => cp.PeriodEnd)
-                        .First(),
-                    StringComparer.OrdinalIgnoreCase);
+            var closingPeriods = BuildClosingPeriodLookup(closingPeriodRecords);
 
             var engagements = await context.Engagements
                 .AsNoTrackingWithIdentityResolution()
@@ -72,17 +62,9 @@ namespace GRCFinancialControl.Persistence.Services
 
             var closingPeriodRecords = await context.ClosingPeriods
                 .AsNoTracking()
-                .Where(cp => !string.IsNullOrWhiteSpace(cp.Name))
                 .ToListAsync();
 
-            var closingPeriods = closingPeriodRecords
-                .GroupBy(cp => cp.Name!.Trim(), StringComparer.OrdinalIgnoreCase)
-                .ToDictionary(
-                    group => group.Key,
-                    group => group
-                        .OrderByDescending(cp => cp.PeriodEnd)
-                        .First(),
-                    StringComparer.OrdinalIgnoreCase);
+            var closingPeriods = BuildClosingPeriodLookup(closingPeriodRecords);
 
             var engagement = await context.Engagements
                 .AsNoTrackingWithIdentityResolution()
@@ -123,6 +105,31 @@ namespace GRCFinancialControl.Persistence.Services
             return assignment?.Papd;
         }
 
+        private static IReadOnlyDictionary<string, ClosingPeriod> BuildClosingPeriodLookup(IEnumerable<ClosingPeriod> records)
+        {
+            ArgumentNullException.ThrowIfNull(records);
+
+            var lookup = new Dictionary<string, ClosingPeriod>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var group in records
+                .Where(record => record is not null && !string.IsNullOrWhiteSpace(record.Name))
+                .GroupBy(record => record.Name!.Trim(), StringComparer.OrdinalIgnoreCase))
+            {
+                var latest = group
+                    .OrderByDescending(cp => cp.PeriodEnd)
+                    .First();
+
+                lookup[group.Key] = latest;
+            }
+
+            foreach (var period in records)
+            {
+                lookup[period.Id.ToString(CultureInfo.InvariantCulture)] = period;
+            }
+
+            return lookup;
+        }
+
         private static void ApplyFinancialControlSnapshots(IEnumerable<Engagement> engagements, IReadOnlyDictionary<string, ClosingPeriod> closingPeriods)
         {
             foreach (var engagement in engagements)
@@ -135,79 +142,81 @@ namespace GRCFinancialControl.Persistence.Services
         {
             if (engagement.FinancialEvolutions == null || engagement.FinancialEvolutions.Count == 0)
             {
-                engagement.InitialHoursBudget = 0m;
-                engagement.OpeningValue = 0m;
-                engagement.OpeningExpenses = 0m;
-                engagement.MarginPctBudget = null;
-                engagement.EstimatedToCompleteHours = 0m;
-                engagement.ValueEtcp = 0m;
-                engagement.ExpensesEtcp = 0m;
-                engagement.MarginPctEtcp = null;
-                engagement.LastClosingPeriodId = null;
-                engagement.LastClosingPeriod = null;
+                ResetFinancialSnapshot(engagement);
                 return;
             }
 
-            var initialSnapshot = engagement.FinancialEvolutions
-                .FirstOrDefault(evolution => string.Equals(
-                    evolution.ClosingPeriodId,
-                    FinancialEvolutionInitialPeriodId,
-                    StringComparison.OrdinalIgnoreCase));
+            var candidates = engagement.FinancialEvolutions
+                .Where(evolution => evolution is not null && !string.IsNullOrWhiteSpace(evolution.ClosingPeriodId))
+                .Select(evolution => new
+                {
+                    Evolution = evolution,
+                    SortKey = BuildFinancialEvolutionSortKey(evolution, closingPeriods)
+                })
+                .ToList();
 
-            if (initialSnapshot != null)
+            if (candidates.Count == 0)
             {
-                engagement.InitialHoursBudget = initialSnapshot.HoursData ?? 0m;
-                engagement.OpeningValue = initialSnapshot.ValueData ?? 0m;
-                engagement.OpeningExpenses = initialSnapshot.ExpenseData ?? 0m;
-                engagement.MarginPctBudget = initialSnapshot.MarginData;
+                ResetFinancialSnapshot(engagement);
+                return;
+            }
+
+            var resolvedCandidates = candidates
+                .Where(candidate => !string.IsNullOrEmpty(candidate.SortKey.NormalizedId) && closingPeriods.ContainsKey(candidate.SortKey.NormalizedId))
+                .ToList();
+
+            var orderedCandidates = (resolvedCandidates.Count > 0 ? resolvedCandidates : candidates)
+                .OrderBy(candidate => candidate.SortKey.Priority)
+                .ThenBy(candidate => candidate.SortKey.SortDate)
+                .ThenBy(candidate => candidate.SortKey.NumericValue)
+                .ThenBy(candidate => candidate.Evolution.Id)
+                .ToList();
+
+            if (orderedCandidates.Count == 0)
+            {
+                ResetFinancialSnapshot(engagement);
+                return;
+            }
+
+            var baseline = orderedCandidates.First().Evolution;
+            engagement.InitialHoursBudget = baseline.HoursData ?? 0m;
+            engagement.OpeningValue = baseline.ValueData ?? 0m;
+            engagement.OpeningExpenses = baseline.ExpenseData ?? 0m;
+            engagement.MarginPctBudget = baseline.MarginData;
+
+            var latest = orderedCandidates.Last().Evolution;
+            engagement.EstimatedToCompleteHours = latest.HoursData ?? 0m;
+            engagement.ValueEtcp = latest.ValueData ?? 0m;
+            engagement.ExpensesEtcp = latest.ExpenseData ?? 0m;
+            engagement.MarginPctEtcp = latest.MarginData;
+
+            var normalizedClosingPeriodId = Normalize(latest.ClosingPeriodId);
+
+            if (!string.IsNullOrEmpty(normalizedClosingPeriodId) &&
+                closingPeriods.TryGetValue(normalizedClosingPeriodId, out var closingPeriod))
+            {
+                engagement.LastClosingPeriodId = closingPeriod.Id;
+                engagement.LastClosingPeriod = closingPeriod;
             }
             else
             {
-                engagement.InitialHoursBudget = 0m;
-                engagement.OpeningValue = 0m;
-                engagement.OpeningExpenses = 0m;
-                engagement.MarginPctBudget = null;
-            }
-
-            var latestSnapshot = engagement.FinancialEvolutions
-                .Where(evolution => !string.IsNullOrWhiteSpace(evolution.ClosingPeriodId))
-                .Where(evolution => !string.Equals(
-                    evolution.ClosingPeriodId,
-                    FinancialEvolutionInitialPeriodId,
-                    StringComparison.OrdinalIgnoreCase))
-                .OrderByDescending(evolution => BuildFinancialEvolutionSortKey(evolution, closingPeriods))
-                .ThenByDescending(evolution => evolution.Id)
-                .FirstOrDefault();
-
-            if (latestSnapshot != null)
-            {
-                engagement.EstimatedToCompleteHours = latestSnapshot.HoursData ?? 0m;
-                engagement.ValueEtcp = latestSnapshot.ValueData ?? 0m;
-                engagement.ExpensesEtcp = latestSnapshot.ExpenseData ?? 0m;
-                engagement.MarginPctEtcp = latestSnapshot.MarginData;
-                var normalizedClosingPeriodId = Normalize(latestSnapshot.ClosingPeriodId);
-
-                if (!string.IsNullOrEmpty(normalizedClosingPeriodId) &&
-                    closingPeriods.TryGetValue(normalizedClosingPeriodId, out var closingPeriod))
-                {
-                    engagement.LastClosingPeriodId = closingPeriod.Id;
-                    engagement.LastClosingPeriod = closingPeriod;
-                }
-                else
-                {
-                    engagement.LastClosingPeriodId = null;
-                    engagement.LastClosingPeriod = null;
-                }
-            }
-            else
-            {
-                engagement.EstimatedToCompleteHours = 0m;
-                engagement.ValueEtcp = 0m;
-                engagement.ExpensesEtcp = 0m;
-                engagement.MarginPctEtcp = null;
                 engagement.LastClosingPeriodId = null;
                 engagement.LastClosingPeriod = null;
             }
+        }
+
+        private static void ResetFinancialSnapshot(Engagement engagement)
+        {
+            engagement.InitialHoursBudget = 0m;
+            engagement.OpeningValue = 0m;
+            engagement.OpeningExpenses = 0m;
+            engagement.MarginPctBudget = null;
+            engagement.EstimatedToCompleteHours = 0m;
+            engagement.ValueEtcp = 0m;
+            engagement.ExpensesEtcp = 0m;
+            engagement.MarginPctEtcp = null;
+            engagement.LastClosingPeriodId = null;
+            engagement.LastClosingPeriod = null;
         }
 
         private static async Task PopulatePapdAssignmentsAsync(ApplicationDbContext context, IEnumerable<Engagement> engagements)

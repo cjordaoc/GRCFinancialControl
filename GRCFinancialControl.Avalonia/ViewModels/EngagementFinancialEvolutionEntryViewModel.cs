@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using GRCFinancialControl.Core.Models;
@@ -37,10 +38,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private decimal? _expenses;
 
-        public bool IsInitialClosingPeriod => string.Equals(ClosingPeriodId, "Initial", StringComparison.OrdinalIgnoreCase);
-
-        public bool CanEditClosingPeriod => !IsInitialClosingPeriod;
-
         partial void OnSelectedClosingPeriodChanged(ClosingPeriod? value)
         {
             if (_isUpdating)
@@ -51,9 +48,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             try
             {
                 _isUpdating = true;
-                ClosingPeriodId = value?.Name ?? ClosingPeriodId;
-                OnPropertyChanged(nameof(IsInitialClosingPeriod));
-                OnPropertyChanged(nameof(CanEditClosingPeriod));
+                if (value is null)
+                {
+                    ClosingPeriodId = string.Empty;
+                }
+                else
+                {
+                    ClosingPeriodId = value.Id.ToString(CultureInfo.InvariantCulture);
+                }
             }
             finally
             {
@@ -77,10 +79,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 }
                 else
                 {
-                    SelectedClosingPeriod = _closingPeriods.FirstOrDefault(p => p.Name == value);
+                    if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var identifier))
+                    {
+                        SelectedClosingPeriod = _closingPeriods.FirstOrDefault(p => p.Id == identifier);
+                    }
+                    else
+                    {
+                        SelectedClosingPeriod = _closingPeriods.FirstOrDefault(p => string.Equals(p.Name, value, StringComparison.OrdinalIgnoreCase));
+                    }
                 }
-                OnPropertyChanged(nameof(IsInitialClosingPeriod));
-                OnPropertyChanged(nameof(CanEditClosingPeriod));
             }
             finally
             {
@@ -92,7 +99,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             if (!string.IsNullOrWhiteSpace(ClosingPeriodId))
             {
-                SelectedClosingPeriod = _closingPeriods.FirstOrDefault(p => p.Name == ClosingPeriodId);
+                if (int.TryParse(ClosingPeriodId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var identifier))
+                {
+                    SelectedClosingPeriod = _closingPeriods.FirstOrDefault(p => p.Id == identifier);
+                }
+                else
+                {
+                    SelectedClosingPeriod = _closingPeriods.FirstOrDefault(p => string.Equals(p.Name, ClosingPeriodId, StringComparison.OrdinalIgnoreCase));
+                }
             }
         }
     }

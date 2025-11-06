@@ -123,6 +123,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 StatusMessage = null;
                 IsError = false;
 
+                var priorFiscalYearId = SelectedFiscalYear?.Id;
+                var priorClosingPeriodId = SelectedClosingPeriod?.Id;
+
                 var fiscalYears = await _fiscalYearService
                     .GetAllAsync()
                     .ConfigureAwait(false);
@@ -149,10 +152,31 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 var defaultFiscalYearId = await defaultFiscalYearIdTask.ConfigureAwait(false);
                 var defaultClosingPeriodId = await defaultClosingPeriodIdTask.ConfigureAwait(false);
 
-                SelectedFiscalYear = FiscalYears.FirstOrDefault(fy => fy.Id == defaultFiscalYearId)
-                    ?? FiscalYears.FirstOrDefault();
+                FiscalYear? resolvedFiscalYear = null;
 
-                UpdateClosingPeriodsForSelectedFiscalYear(defaultClosingPeriodId);
+                if (priorFiscalYearId.HasValue)
+                {
+                    resolvedFiscalYear = FiscalYears.FirstOrDefault(fy => fy.Id == priorFiscalYearId.Value);
+                }
+
+                if (resolvedFiscalYear is null && defaultFiscalYearId.HasValue)
+                {
+                    resolvedFiscalYear = FiscalYears.FirstOrDefault(fy => fy.Id == defaultFiscalYearId.Value);
+                }
+
+                resolvedFiscalYear ??= FiscalYears.FirstOrDefault();
+                SelectedFiscalYear = resolvedFiscalYear;
+
+                int? preferredClosingPeriodId = null;
+
+                if (resolvedFiscalYear is not null && priorFiscalYearId.HasValue && resolvedFiscalYear.Id == priorFiscalYearId.Value)
+                {
+                    preferredClosingPeriodId = priorClosingPeriodId;
+                }
+
+                preferredClosingPeriodId ??= defaultClosingPeriodId;
+
+                UpdateClosingPeriodsForSelectedFiscalYear(preferredClosingPeriodId);
 
                 if (!HasFiscalYears)
                 {

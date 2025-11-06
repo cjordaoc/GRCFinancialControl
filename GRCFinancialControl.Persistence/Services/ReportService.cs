@@ -14,8 +14,6 @@ namespace GRCFinancialControl.Persistence.Services
 {
     public class ReportService : IReportService
     {
-        private const string FinancialEvolutionInitialPeriodId = "INITIAL";
-
         private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
 
         public ReportService(IDbContextFactory<ApplicationDbContext> contextFactory)
@@ -58,23 +56,9 @@ namespace GRCFinancialControl.Persistence.Services
 
             var closingPeriodRecords = await context.ClosingPeriods
                 .AsNoTracking()
-                .Where(cp => !string.IsNullOrWhiteSpace(cp.Name))
                 .ToListAsync();
 
-            var closingPeriods = closingPeriodRecords
-                .Select(cp => new
-                {
-                    NormalizedName = cp.Name!.Trim(),
-                    cp.PeriodEnd
-                })
-                .GroupBy(entry => entry.NormalizedName, StringComparer.OrdinalIgnoreCase)
-                .ToDictionary(
-                    group => group.Key,
-                    group => group
-                        .OrderByDescending(entry => entry.PeriodEnd)
-                        .First()
-                        .PeriodEnd,
-                    StringComparer.OrdinalIgnoreCase);
+            var closingPeriodLookup = BuildClosingPeriodLookup(closingPeriodRecords);
 
             var sortKeyCache = new Dictionary<string, (int Priority, DateTime SortDate, int NumericValue, string NormalizedId)>(StringComparer.OrdinalIgnoreCase);
 
@@ -83,7 +67,7 @@ namespace GRCFinancialControl.Persistence.Services
                 var normalized = Normalize(closingPeriodId) ?? string.Empty;
                 if (!sortKeyCache.TryGetValue(normalized, out var key))
                 {
-                    key = BuildFinancialEvolutionSortKey(closingPeriodId, closingPeriods);
+                    key = BuildFinancialEvolutionSortKey(closingPeriodId, closingPeriodLookup);
                     sortKeyCache[normalized] = key;
                 }
 
@@ -110,7 +94,7 @@ namespace GRCFinancialControl.Persistence.Services
                 papdToEngagementIds.TryGetValue(papd.Id, out var engagementIds);
 
                 var revenueContribution = 0m;
-                var hoursByPeriod = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
+                var hoursByPeriod = new Dictionary<string, (decimal Hours, string DisplayName)>(StringComparer.OrdinalIgnoreCase);
 
                 if (engagementIds != null)
                 {
@@ -122,62 +106,80 @@ namespace GRCFinancialControl.Persistence.Services
                             continue;
                         }
 
-                        var latestSnapshot = snapshots
-                            .Where(snapshot => !string.Equals(
-                                snapshot.ClosingPeriodId,
-                                FinancialEvolutionInitialPeriodId,
-                                StringComparison.OrdinalIgnoreCase))
-                            .OrderByDescending(snapshot => GetSortKey(snapshot.ClosingPeriodId))
-                            .ThenByDescending(snapshot => snapshot.Id)
-                            .FirstOrDefault();
+                        var orderedSnapshots = OrderSnapshots(snapshots);
 
-                        if (latestSnapshot?.ValueData is decimal latestValue)
+                        if (orderedSnapshots.Count > 0)
                         {
-                            revenueContribution += latestValue;
-                        }
-                        else
-                        {
-                            var initialSnapshot = snapshots.FirstOrDefault(snapshot => string.Equals(
-                                snapshot.ClosingPeriodId,
-                                FinancialEvolutionInitialPeriodId,
-                                StringComparison.OrdinalIgnoreCase));
-
-                            if (initialSnapshot?.ValueData is decimal initialValue)
+                            var latestSnapshot = orderedSnapshots.Last().Snapshot;
+                            if (latestSnapshot.ValueData is decimal latestValue)
                             {
-                                revenueContribution += initialValue;
+                                revenueContribution += latestValue;
                             }
-                        }
-
-                        foreach (var snapshot in snapshots)
-                        {
-                            if (string.Equals(
-                                    snapshot.ClosingPeriodId,
-                                    FinancialEvolutionInitialPeriodId,
-                                    StringComparison.OrdinalIgnoreCase) ||
-                                !snapshot.HoursData.HasValue)
+                            else
                             {
-                                continue;
+                                var baselineSnapshot = orderedSnapshots.First().Snapshot;
+                                if (baselineSnapshot.ValueData is decimal baselineValue)
+                                {
+                                    revenueContribution += baselineValue;
+                                }
                             }
 
-                            var periodId = Normalize(snapshot.ClosingPeriodId);
-                            if (string.IsNullOrEmpty(periodId))
+                            foreach (var candidate in orderedSnapshots)
                             {
-                                continue;
-                            }
+                                var snapshot = candidate.Snapshot;
+                                if (!snapshot.HoursData.HasValue)
+                                {
+                                    continue;
+                                }
 
-                            hoursByPeriod[periodId] = hoursByPeriod.TryGetValue(periodId, out var existing)
-                                ? existing + snapshot.HoursData.Value
-                                : snapshot.HoursData.Value;
+                                var normalizedId = Normalize(snapshot.ClosingPeriodId);
+                                if (string.IsNullOrEmpty(normalizedId))
+                                {
+                                    continue;
+                                }
+
+                                string bucketKey = normalizedId;
+                                string displayName = normalizedId;
+
+                                if (closingPeriodLookup.TryGetValue(normalizedId, out var closingPeriod))
+                                {
+                                    bucketKey = closingPeriod.Id.ToString(CultureInfo.InvariantCulture);
+                                    displayName = !string.IsNullOrWhiteSpace(closingPeriod.Name)
+                                        ? closingPeriod.Name
+                                        : closingPeriod.Id.ToString(CultureInfo.InvariantCulture);
+                                }
+
+                                if (hoursByPeriod.TryGetValue(bucketKey, out var existing))
+                                {
+                                    var resolvedDisplayName = string.IsNullOrWhiteSpace(existing.DisplayName)
+                                        ? displayName
+                                        : existing.DisplayName;
+                                    hoursByPeriod[bucketKey] = (existing.Hours + snapshot.HoursData.Value, resolvedDisplayName);
+                                }
+                                else
+                                {
+                                    hoursByPeriod[bucketKey] = (snapshot.HoursData.Value, displayName);
+                                }
+                            }
                         }
                     }
                 }
 
                 var orderedHours = hoursByPeriod
-                    .OrderBy(kvp => GetSortKey(kvp.Key))
-                    .Select(kvp => new HoursWorked
+                    .Select(kvp => new
                     {
-                        ClosingPeriodName = kvp.Key,
-                        Hours = kvp.Value
+                        Key = kvp.Key,
+                        kvp.Value.DisplayName,
+                        kvp.Value.Hours,
+                        SortKey = GetSortKey(kvp.Key)
+                    })
+                    .OrderBy(entry => entry.SortKey.Priority)
+                    .ThenBy(entry => entry.SortKey.SortDate)
+                    .ThenBy(entry => entry.SortKey.NumericValue)
+                    .Select(entry => new HoursWorked
+                    {
+                        ClosingPeriodName = entry.DisplayName,
+                        Hours = entry.Hours
                     })
                     .ToList();
 
@@ -196,6 +198,30 @@ namespace GRCFinancialControl.Persistence.Services
             }
 
             return result;
+
+            List<(FinancialEvolution Snapshot, (int Priority, DateTime SortDate, int NumericValue, string NormalizedId) SortKey)> OrderSnapshots(List<FinancialEvolution> snapshots)
+            {
+                var candidates = snapshots
+                    .Where(snapshot => snapshot is not null && !string.IsNullOrWhiteSpace(snapshot.ClosingPeriodId))
+                    .Select(snapshot => (Snapshot: snapshot, SortKey: GetSortKey(snapshot.ClosingPeriodId)))
+                    .ToList();
+
+                if (candidates.Count == 0)
+                {
+                    return candidates;
+                }
+
+                var resolvedCandidates = candidates
+                    .Where(candidate => !string.IsNullOrEmpty(candidate.SortKey.NormalizedId) && closingPeriodLookup.ContainsKey(candidate.SortKey.NormalizedId))
+                    .ToList();
+
+                return (resolvedCandidates.Count > 0 ? resolvedCandidates : candidates)
+                    .OrderBy(candidate => candidate.SortKey.Priority)
+                    .ThenBy(candidate => candidate.SortKey.SortDate)
+                    .ThenBy(candidate => candidate.SortKey.NumericValue)
+                    .ThenBy(candidate => candidate.Snapshot.Id)
+                    .ToList();
+            }
         }
 
         public async Task<List<FinancialEvolutionPoint>> GetFinancialEvolutionPointsAsync(string engagementId)
@@ -220,43 +246,54 @@ namespace GRCFinancialControl.Persistence.Services
                 return new List<FinancialEvolutionPoint>();
             }
 
+            var closingPeriodRecords = await context.ClosingPeriods
+                .AsNoTracking()
+                .ToListAsync();
+
+            var closingPeriodLookup = BuildClosingPeriodLookup(closingPeriodRecords);
+
             var entries = await context.FinancialEvolutions
                 .AsNoTracking()
                 .Where(fe => fe.EngagementId == engagementDbId.Value)
                 .Where(HasRelevantMetricsExpression())
-                .GroupJoin(
-                    context.ClosingPeriods.AsNoTracking(),
-                    fe => fe.ClosingPeriodId,
-                    cp => cp.Name,
-                    (fe, cps) => new { FinancialEvolution = fe, ClosingPeriods = cps })
-                .SelectMany(
-                    x => x.ClosingPeriods.DefaultIfEmpty(),
-                    (x, cp) => new
-                    {
-                        x.FinancialEvolution.ClosingPeriodId,
-                        PeriodEnd = cp != null ? (DateTime?)cp.PeriodEnd : null,
-                        x.FinancialEvolution.HoursData,
-                        x.FinancialEvolution.ValueData,
-                        x.FinancialEvolution.MarginData,
-                        x.FinancialEvolution.ExpenseData
-                    })
                 .ToListAsync();
 
             var points = entries
-                .Select(fe => new FinancialEvolutionPoint
+                .Select(evolution => new
                 {
-                    ClosingPeriodId = fe.ClosingPeriodId,
-                    ClosingPeriodDate = fe.PeriodEnd,
-                    Hours = fe.HoursData,
-                    Revenue = fe.ValueData,
-                    Margin = fe.MarginData,
-                    Expenses = fe.ExpenseData
+                    Evolution = evolution,
+                    SortKey = BuildFinancialEvolutionSortKey(evolution.ClosingPeriodId, closingPeriodLookup),
+                    PeriodEnd = ResolveClosingPeriodEnd(evolution.ClosingPeriodId, closingPeriodLookup)
                 })
-                .OrderBy(p => GetClosingPeriodSortKey(p.ClosingPeriodId))
-                .ThenBy(p => p.ClosingPeriodId, StringComparer.OrdinalIgnoreCase)
+                .OrderBy(entry => entry.SortKey.Priority)
+                .ThenBy(entry => entry.SortKey.SortDate)
+                .ThenBy(entry => entry.SortKey.NumericValue)
+                .ThenBy(entry => entry.Evolution.Id)
+                .Select(entry => new FinancialEvolutionPoint
+                {
+                    ClosingPeriodId = entry.Evolution.ClosingPeriodId,
+                    ClosingPeriodDate = entry.PeriodEnd,
+                    Hours = entry.Evolution.HoursData,
+                    Revenue = entry.Evolution.ValueData,
+                    Margin = entry.Evolution.MarginData,
+                    Expenses = entry.Evolution.ExpenseData
+                })
                 .ToList();
 
             return points;
+
+            static DateTime? ResolveClosingPeriodEnd(string? closingPeriodId, IReadOnlyDictionary<string, ClosingPeriod> lookup)
+            {
+                var normalized = Normalize(closingPeriodId);
+                if (string.IsNullOrEmpty(normalized))
+                {
+                    return null;
+                }
+
+                return lookup.TryGetValue(normalized, out var closingPeriod)
+                    ? closingPeriod.PeriodEnd
+                    : null;
+            }
         }
 
         private static Expression<Func<FinancialEvolution, bool>> HasRelevantMetricsExpression()
@@ -267,32 +304,40 @@ namespace GRCFinancialControl.Persistence.Services
                                  || (evolution.ExpenseData ?? 0m) != 0m;
         }
 
-        private static (int Group, int Number) GetClosingPeriodSortKey(string closingPeriodId)
+        private static IReadOnlyDictionary<string, ClosingPeriod> BuildClosingPeriodLookup(IEnumerable<ClosingPeriod> records)
         {
-            if (string.Equals(closingPeriodId, "INITIAL", StringComparison.OrdinalIgnoreCase))
+            ArgumentNullException.ThrowIfNull(records);
+
+            var lookup = new Dictionary<string, ClosingPeriod>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var group in records
+                .Where(record => record is not null && !string.IsNullOrWhiteSpace(record.Name))
+                .GroupBy(record => record.Name!.Trim(), StringComparer.OrdinalIgnoreCase))
             {
-                return (0, 0);
+                var latest = group
+                    .OrderByDescending(cp => cp.PeriodEnd)
+                    .First();
+
+                lookup[group.Key] = latest;
             }
 
-            if (closingPeriodId.StartsWith("CP", StringComparison.OrdinalIgnoreCase)
-                && closingPeriodId.Length > 2
-                && int.TryParse(closingPeriodId.Substring(2), out var periodNumber))
+            foreach (var period in records)
             {
-                return (1, periodNumber);
+                lookup[period.Id.ToString(CultureInfo.InvariantCulture)] = period;
             }
 
-            return (2, 0);
+            return lookup;
         }
 
         private static (int Priority, DateTime SortDate, int NumericValue, string NormalizedId) BuildFinancialEvolutionSortKey(
             string? closingPeriodId,
-            IReadOnlyDictionary<string, DateTime> closingPeriods)
+            IReadOnlyDictionary<string, ClosingPeriod> closingPeriods)
         {
             var normalizedId = Normalize(closingPeriodId);
 
-            if (!string.IsNullOrEmpty(normalizedId) && closingPeriods.TryGetValue(normalizedId, out var periodEnd))
+            if (!string.IsNullOrEmpty(normalizedId) && closingPeriods.TryGetValue(normalizedId, out var closingPeriod))
             {
-                return (3, periodEnd, int.MaxValue, normalizedId);
+                return (3, closingPeriod.PeriodEnd, closingPeriod.Id, normalizedId);
             }
 
             if (!string.IsNullOrEmpty(normalizedId) && TryParsePeriodDate(normalizedId, out var parsedDate))

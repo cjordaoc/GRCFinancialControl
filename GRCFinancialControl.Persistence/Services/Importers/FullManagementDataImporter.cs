@@ -21,7 +21,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 {
     public sealed class FullManagementDataImporter : IFullManagementDataImporter
     {
-        private const string FinancialEvolutionInitialPeriodId = "INITIAL";
         private static readonly CultureInfo PtBrCulture = CultureInfo.GetCultureInfo("pt-BR");
 
         private static readonly string[] EngagementIdHeaders =
@@ -612,21 +611,12 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                 }
                             }
 
-                            financialEvolutionUpserts += UpsertFinancialEvolution(
-                                context,
-                                engagement,
-                                FinancialEvolutionInitialPeriodId,
-                                row.OriginalBudgetHours,
-                                row.OriginalBudgetTer,
-                                row.OriginalBudgetMarginPercent,
-                                row.OriginalBudgetExpenses);
-
                             if (closingPeriodFound)
                             {
                                 financialEvolutionUpserts += UpsertFinancialEvolution(
                                     context,
                                     engagement,
-                                    closingPeriod!.Name,
+                                    closingPeriod!.Id.ToString(CultureInfo.InvariantCulture),
                                     row.ChargedHoursMercuryProjected,
                                     row.TERMercuryProjectedOppCurrency,
                                     row.MarginPercentMercuryProjected,
