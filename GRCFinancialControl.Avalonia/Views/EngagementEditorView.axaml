@@ -223,8 +223,7 @@
                                             <DataTemplate x:DataType="vm:EngagementFinancialEvolutionEntryViewModel">
                                                 <ComboBox ItemsSource="{Binding DataContext.ClosingPeriods, ElementName=EngagementEditorRoot}"
                                                           SelectedItem="{Binding SelectedClosingPeriod}"
-                                                          DisplayMemberBinding="{Binding Name}"
-                                                          IsEnabled="{Binding CanEditClosingPeriod}"/>
+                                                                DisplayMemberBinding="{Binding Name}"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>

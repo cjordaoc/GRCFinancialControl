@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Services;
@@ -228,8 +229,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             var periods = await _closingPeriodService.GetAllAsync();
             var orderedPeriods = periods
-                .OrderBy(p => !string.Equals(p.Name, "Initial", StringComparison.OrdinalIgnoreCase))
-                .ThenBy(p => p.PeriodStart)
+                .OrderBy(p => p.PeriodStart)
                 .ToList();
 
             ClosingPeriods.Clear();
@@ -347,13 +347,25 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private void AddFinancialEvolutionEntry()
         {
             var entry = new EngagementFinancialEvolutionEntryViewModel(ClosingPeriods);
-            if (ClosingPeriods.Any())
+            if (LastClosingPeriod is not null)
+            {
+                var matched = ClosingPeriods.FirstOrDefault(p => p.Id == LastClosingPeriod.Id);
+                if (matched is not null)
+                {
+                    entry.SelectedClosingPeriod = matched;
+                }
+                else if (ClosingPeriods.Any())
+                {
+                    entry.SelectedClosingPeriod = ClosingPeriods.First();
+                }
+            }
+            else if (ClosingPeriods.Any())
             {
                 entry.SelectedClosingPeriod = ClosingPeriods.First();
             }
-            else if (!string.IsNullOrWhiteSpace(LastClosingPeriodDisplay))
+            else if (!string.IsNullOrWhiteSpace(LastClosingPeriodFallbackName))
             {
-                entry.ClosingPeriodId = LastClosingPeriodDisplay;
+                entry.ClosingPeriodId = LastClosingPeriodFallbackName;
             }
 
             FinancialEvolutionEntries.Add(entry);
@@ -561,8 +573,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
 
             var sorted = FinancialEvolutionEntries
-                .OrderBy(e => e.IsInitialClosingPeriod ? 0 : 1)
-                .ThenBy(e => GetClosingPeriodIndex(e.ClosingPeriodId))
+                .OrderBy(e => GetClosingPeriodIndex(e.ClosingPeriodId))
                 .ThenBy(e => e.ClosingPeriodId, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
@@ -594,6 +605,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return int.MaxValue;
             }
 
+            if (int.TryParse(closingPeriodId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var identifier))
+            {
+                for (var i = 0; i < ClosingPeriods.Count; i++)
+                {
+                    if (ClosingPeriods[i].Id == identifier)
+                    {
+                        return i;
+                    }
+                }
+
+                return int.MaxValue;
+            }
+
             for (var i = 0; i < ClosingPeriods.Count; i++)
             {
                 if (string.Equals(ClosingPeriods[i].Name, closingPeriodId, StringComparison.OrdinalIgnoreCase))
@@ -614,40 +638,62 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            var latest = FinancialEvolutionEntries
+            var candidates = FinancialEvolutionEntries
                 .Where(entry => !string.IsNullOrWhiteSpace(entry.ClosingPeriodId))
-                .Where(entry => !entry.IsInitialClosingPeriod)
                 .Select(entry =>
                 {
                     var normalizedId = entry.ClosingPeriodId.Trim();
                     var index = GetClosingPeriodIndex(normalizedId);
-                    var sortIndex = index == int.MaxValue ? int.MaxValue : index;
-                    return (entry, normalizedId, sortIndex);
+                    return (entry, normalizedId, index);
                 })
-                .OrderByDescending(tuple => tuple.sortIndex)
-                .ThenByDescending(tuple => tuple.normalizedId, StringComparer.OrdinalIgnoreCase)
-                .FirstOrDefault();
+                .ToList();
 
-            if (latest.entry is null)
+            if (candidates.Count == 0)
             {
                 LastClosingPeriod = null;
                 LastClosingPeriodFallbackName = null;
                 return;
             }
 
-            var matched = ClosingPeriods.FirstOrDefault(p =>
-                string.Equals(p.Name, latest.normalizedId, StringComparison.OrdinalIgnoreCase));
+            var resolved = candidates
+                .Where(candidate => candidate.index != int.MaxValue)
+                .ToList();
 
-            if (matched is not null)
+            var target = (resolved.Count > 0 ? resolved : candidates)
+                .OrderBy(candidate => candidate.index)
+                .ThenBy(candidate => candidate.normalizedId, StringComparer.OrdinalIgnoreCase)
+                .LastOrDefault();
+
+            if (target.entry is null)
             {
-                LastClosingPeriod = matched;
-                LastClosingPeriodFallbackName = matched.Name;
+                LastClosingPeriod = null;
+                LastClosingPeriodFallbackName = null;
+                return;
+            }
+
+            if (int.TryParse(target.normalizedId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var identifier))
+            {
+                var matched = ClosingPeriods.FirstOrDefault(p => p.Id == identifier);
+                if (matched is not null)
+                {
+                    LastClosingPeriod = matched;
+                    LastClosingPeriodFallbackName = matched.Name;
+                    return;
+                }
             }
             else
             {
-                LastClosingPeriod = null;
-                LastClosingPeriodFallbackName = latest.normalizedId;
+                var matchedByName = ClosingPeriods.FirstOrDefault(p => string.Equals(p.Name, target.normalizedId, StringComparison.OrdinalIgnoreCase));
+                if (matchedByName is not null)
+                {
+                    LastClosingPeriod = matchedByName;
+                    LastClosingPeriodFallbackName = matchedByName.Name;
+                    return;
+                }
             }
+
+            LastClosingPeriod = null;
+            LastClosingPeriodFallbackName = target.normalizedId;
         }
     }
 }

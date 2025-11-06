@@ -41,7 +41,6 @@ namespace GRCFinancialControl.Persistence.Services
         private readonly ILoggerFactory _loggerFactory;
         private readonly IFiscalCalendarConsistencyService _fiscalCalendarConsistencyService;
         private readonly IFullManagementDataImporter _fullManagementDataImporter;
-        private const string FinancialEvolutionInitialPeriodId = "INITIAL";
         private const int FcsHeaderSearchLimit = 20;
         private const int FcsDataStartRowIndex = 11; // Default row 12 in Excel (1-based)
         private const int FullManagementHeaderRowIndex = 10;
