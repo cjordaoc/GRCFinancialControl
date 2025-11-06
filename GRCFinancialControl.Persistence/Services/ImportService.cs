@@ -1751,7 +1751,7 @@ namespace GRCFinancialControl.Persistence.Services
             return false;
         }
 
-        public async Task<string> ImportFcsRevenueBacklogAsync(string filePath)
+        public async Task<FullManagementDataImportResult> ImportFcsRevenueBacklogAsync(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
             {
@@ -1833,13 +1833,28 @@ namespace GRCFinancialControl.Persistence.Services
                     emptyNotes.Add($"Workbook last update: {lastUpdateDate.Value:yyyy-MM-dd}");
                 }
 
-                return ImportSummaryFormatter.Build(
+                var emptySummary = ImportSummaryFormatter.Build(
                     $"FCS backlog import ({currentFiscalYearName})",
                     inserted: 0,
                     updated: 0,
                     skipReasons: null,
                     notes: emptyNotes,
                     processed: 0);
+
+                return new FullManagementDataImportResult(
+                    emptySummary,
+                    rowsProcessed: 0,
+                    engagementsCreated: 0,
+                    engagementsUpdated: 0,
+                    financialEvolutionUpserts: 0,
+                    s4MetadataRefreshes: 0,
+                    manualOnlySkips: Array.Empty<string>(),
+                    lockedFiscalYearSkips: Array.Empty<string>(),
+                    missingClosingPeriodSkips: Array.Empty<string>(),
+                    missingEngagementSkips: Array.Empty<string>(),
+                    closedEngagementSkips: Array.Empty<string>(),
+                    errors: Array.Empty<string>(),
+                    warningMessages: Array.Empty<string>());
             }
 
             var distinctEngagementIds = parsedRows
@@ -2055,13 +2070,28 @@ namespace GRCFinancialControl.Persistence.Services
                 notes.Add($"Future backlog values skipped because fiscal year {nextFiscalYearName} was not found.");
             }
 
-            return ImportSummaryFormatter.Build(
+            var summary = ImportSummaryFormatter.Build(
                 $"FCS backlog import ({currentFiscalYear.Name})",
                 createdAllocations,
                 updatedAllocations,
                 skipReasons,
                 notes,
                 parsedRows.Count);
+
+            return new FullManagementDataImportResult(
+                summary,
+                rowsProcessed: parsedRows.Count,
+                engagementsCreated: 0,
+                engagementsUpdated: touchedEngagements.Count,
+                financialEvolutionUpserts: 0,
+                s4MetadataRefreshes: 0,
+                manualOnlySkips: manualOnlyDetails.ToArray(),
+                lockedFiscalYearSkips: lockedFiscalYearDetails.ToArray(),
+                missingClosingPeriodSkips: Array.Empty<string>(),
+                missingEngagementSkips: missingEngagementDetails.ToArray(),
+                closedEngagementSkips: closedEngagementDetails.ToArray(),
+                errors: Array.Empty<string>(),
+                warningMessages: warningMessages.ToArray());
         }
 
         public async Task<FullManagementDataImportResult> ImportFullManagementDataAsync(string filePath)
@@ -2071,9 +2101,46 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new ArgumentException("File path must be provided.", nameof(filePath));
             }
 
+            if (LooksLikeFcsBacklogWorkbook(filePath))
+            {
+                return await ImportFcsRevenueBacklogAsync(filePath).ConfigureAwait(false);
+            }
+
             return await _fullManagementDataImporter
                 .ImportAsync(filePath)
                 .ConfigureAwait(false);
+        }
+
+        private static bool LooksLikeFcsBacklogWorkbook(string filePath)
+        {
+            try
+            {
+                using var workbook = LoadWorkbook(filePath);
+                var worksheet = workbook.FirstWorksheet;
+                if (worksheet == null)
+                {
+                    return false;
+                }
+
+                var (currentFiscalYearName, _) = ParseFcsMetadata(worksheet);
+                var nextFiscalYearName = IncrementFiscalYearName(currentFiscalYearName);
+                var (headerMap, _) = BuildFcsHeaderMap(worksheet);
+
+                if (headerMap.Count == 0)
+                {
+                    return false;
+                }
+
+                GetRequiredColumnIndex(headerMap, FcsEngagementIdHeaders, "Engagement ID");
+                GetRequiredColumnIndex(headerMap, FcsCurrentFiscalYearBacklogHeaders, "FYTG Backlog");
+
+                var futureFiscalYearIndexes = ResolveFutureFiscalYearColumns(headerMap, nextFiscalYearName);
+                return futureFiscalYearIndexes.Count > 0;
+            }
+            catch (Exception ex) when (ex is InvalidDataException || ex is ArgumentException)
+            {
+                return false;
+            }
         }
 
 
