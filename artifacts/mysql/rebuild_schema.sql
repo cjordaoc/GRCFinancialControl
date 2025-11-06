@@ -390,165 +390,47 @@ CREATE TABLE `InvoiceEmission` (
   CONSTRAINT `FK_InvoiceEmission_Item` FOREIGN KEY (`InvoiceItemId`) REFERENCES `InvoiceItem`(`Id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `MailOutbox` (
-  `Id`               INT NOT NULL AUTO_INCREMENT,
-  `NotificationDate` DATE NOT NULL,
-  `InvoiceItemId`    INT NOT NULL,
-  `ToName`           VARCHAR(120) NOT NULL,
-  `ToEmail`          VARCHAR(200) NOT NULL,
-  `CcCsv`            TEXT NULL,
-  `Subject`          VARCHAR(255) NOT NULL,
-  `BodyText`         TEXT NOT NULL,
-  `SendToken`        CHAR(36) NULL,
-  `CreatedAt`        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `SentAt`           TIMESTAMP NULL,
-  PRIMARY KEY (`Id`),
-  CONSTRAINT `FK_MailOutbox_InvoiceItem` FOREIGN KEY (`InvoiceItemId`) REFERENCES `InvoiceItem`(`Id`) ON DELETE CASCADE,
-  KEY `IX_MailOutbox_Notification` (`NotificationDate`),
-  KEY `IX_MailOutbox_Pending` (`NotificationDate`,`SentAt`,`SendToken`),
-  KEY `IX_MailOutbox_InvoiceItem` (`InvoiceItemId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*========
+Views
+=====*/
 
-CREATE TABLE `MailOutboxLog` (
-  `Id`           INT NOT NULL AUTO_INCREMENT,
-  `OutboxId`     INT NOT NULL,
-  `AttemptAt`    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `Success`      TINYINT(1) NOT NULL,
-  `ErrorMessage` VARCHAR(500) NULL,
-  PRIMARY KEY (`Id`),
-  KEY `IX_MailOutboxLog_Outbox` (`OutboxId`),
-  CONSTRAINT `FK_MailOutboxLog_Outbox` FOREIGN KEY (`OutboxId`) REFERENCES `MailOutbox`(`Id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- View
-DROP VIEW IF EXISTS `vw_InvoiceNotifyOnDate`;
-CREATE VIEW `vw_InvoiceNotifyOnDate` AS
-SELECT
-  ii.Id AS InvoiceItemId,
-  DATE_SUB(DATE_SUB(ii.EmissionDate, INTERVAL 7 DAY),
-           INTERVAL WEEKDAY(DATE_SUB(ii.EmissionDate, INTERVAL 7 DAY)) DAY) AS NotifyDate,
-  ip.Id AS PlanId,
-  ip.EngagementId,
-  ip.NumInvoices,
-  ip.PaymentTermDays,
-  e.Id AS EngagementIntId,
-  e.Description AS EngagementDescription,
-  c.Name AS CustomerName,
-  ii.SeqNo,
-  ii.EmissionDate,
-  COALESCE(ii.DueDate, DATE_ADD(ii.EmissionDate, INTERVAL ip.PaymentTermDays DAY)) AS ComputedDueDate,
-  ii.Amount,
-  ip.CustomerFocalPointName,
-  ip.CustomerFocalPointEmail,
-  GROUP_CONCAT(DISTINCT ipe.Email ORDER BY ipe.Id SEPARATOR ';') AS ExtraEmails,
-  GROUP_CONCAT(DISTINCT m.Email ORDER BY m.Id SEPARATOR ';') AS ManagerEmails,
-  GROUP_CONCAT(DISTINCT m.Name ORDER BY m.Id SEPARATOR ';') AS ManagerNames,
-  ii.PoNumber,
-  ii.FrsNumber,
-  ii.RitmNumber
-FROM InvoiceItem ii
-JOIN InvoicePlan ip ON ip.Id = ii.PlanId
-LEFT JOIN InvoicePlanEmail ipe ON ipe.PlanId = ip.Id
-LEFT JOIN Engagements e ON e.EngagementId = ip.EngagementId
-LEFT JOIN Customers c ON c.Id = e.CustomerId
-LEFT JOIN EngagementManagerAssignments ema ON ema.EngagementId = e.Id
-LEFT JOIN Managers m ON m.Id = ema.ManagerId
-WHERE ii.Status IN ('Planned','Requested')
-GROUP BY ii.Id, NotifyDate, ip.Id, ip.EngagementId, ip.NumInvoices, ip.PaymentTermDays, e.Id,
-         e.Description, c.Name, ii.SeqNo, ii.EmissionDate,
-         ComputedDueDate, ii.Amount, ip.CustomerFocalPointName, ip.CustomerFocalPointEmail,
-         ii.PoNumber, ii.FrsNumber, ii.RitmNumber;
-
--- Stored Procedure
-DROP PROCEDURE IF EXISTS `sp_FillMailOutboxForDate`;
-DELIMITER //
-CREATE PROCEDURE `sp_FillMailOutboxForDate`(IN pTargetDate DATE)
-BEGIN
-  INSERT INTO MailOutbox
-    (NotificationDate, InvoiceItemId, ToName, ToEmail, CcCsv, Subject, BodyText)
-  SELECT
-    v.NotifyDate,
-    v.InvoiceItemId,
-    v.CustomerFocalPointName,
-    v.CustomerFocalPointEmail,
-    NULLIF(TRIM(BOTH ';' FROM CONCAT(IFNULL(v.ManagerEmails,''),
-      CASE WHEN v.ManagerEmails IS NOT NULL AND v.ManagerEmails <> '' AND v.ExtraEmails IS NOT NULL AND v.ExtraEmails <> '' THEN ';' ELSE '' END,
-      IFNULL(v.ExtraEmails,''))), '') AS CcCsv,
-    CONCAT('[D-7] Emissão planejada em ', DATE_FORMAT(v.EmissionDate,'%d/%m/%Y'),
-           ' – ', v.EngagementId, ' / Parcela ', v.SeqNo, ' de ', v.NumInvoices) AS Subject,
-    CONCAT('Serviço: Serviços - Assistência e Consultoria','\n',
-           'Competência: ', DATE_FORMAT(v.EmissionDate,'%b/%Y'),'\n',
-           'PO: ', IFNULL(v.PoNumber,''),'\n',
-           'FRS: ', IFNULL(v.FrsNumber,''),'\n',
-           'Chamado: ', IFNULL(v.RitmNumber,''),'\n',
-           'Parcela ', v.SeqNo, ' de ', v.NumInvoices,'\n',
-           'Valor da Parcela: R$ ', FORMAT(v.Amount, 2),'\n',
-           'Vencimento: ', DATE_FORMAT(v.ComputedDueDate,'%d/%m/%Y'),'\n',
-           'Contato ', IFNULL(v.CustomerName,''), ': ', IFNULL(v.CustomerFocalPointName,''),'\n',
-           'E-mails para envio: ', TRIM(BOTH ';' FROM CONCAT(IFNULL(v.CustomerFocalPointEmail,''),';',IFNULL(v.ExtraEmails,''))),'\n',
-           'Gestores: ', IFNULL(v.ManagerNames,''),'\n',
-           'E-mails Gestores: ', IFNULL(v.ManagerEmails,'')) AS BodyText
-  FROM vw_InvoiceNotifyOnDate v
-  WHERE v.NotifyDate = pTargetDate
-    AND NOT EXISTS (SELECT 1 FROM MailOutbox mo
-                     WHERE mo.NotificationDate = v.NotifyDate
-                       AND mo.InvoiceItemId = v.InvoiceItemId);
-END//
-DELIMITER ;
-
--- Scheduled Event (unchanged as requested)
-DROP EVENT IF EXISTS `ev_FillMailOutbox_Daily`;
-CREATE EVENT `ev_FillMailOutbox_Daily`
-ON SCHEDULE EVERY 1 DAY
-STARTS (TIMESTAMP(CURRENT_DATE()) + INTERVAL 7 HOUR + INTERVAL 5 MINUTE)
-DO
-  CALL sp_FillMailOutboxForDate(CURRENT_DATE());
+DROP VIEW IF EXISTS `vw_PapdRevenueSummary`;
+CREATE  VIEW `vw_PapdRevenueSummary` AS select `fy`.`Id` AS `FiscalYearId`,`fy`.`Name` AS `FiscalYearName`,`p`.`Id` AS `PapdId`,`p`.`Name` AS `PapdName`,coalesce(sum(`ea`.`ToGoValue`),0) AS `TotalToGoValue`,coalesce(sum(`ea`.`ToDateValue`),0) AS `TotalToDateValue`,(coalesce(sum(`ea`.`ToGoValue`),0) + coalesce(sum(`ea`.`ToDateValue`),0)) AS `TotalValue` from ((((`Papds` `p` left join `EngagementPapds` `ep` on((`ep`.`PapdId` = `p`.`Id`))) left join `Engagements` `e` on((`e`.`Id` = `ep`.`EngagementId`))) left join `EngagementFiscalYearRevenueAllocations` `ea` on((`ea`.`EngagementId` = `e`.`Id`))) left join `FiscalYears` `fy` on((`fy`.`Id` = `ea`.`FiscalYearId`))) group by `fy`.`Id`,`fy`.`Name`,`p`.`Id`,`p`.`Name` order by `fy`.`Name`,`p`.`Name`;
 
 
-/* ========
-   TRIGGERS
-   ======== */
-
--- Populate Exceptions.Timestamp (DATETIME) with CURRENT_TIMESTAMP(6) on insert
-DROP TRIGGER IF EXISTS trg_Exceptions_bi;
-DELIMITER //
-CREATE TRIGGER trg_Exceptions_bi
-BEFORE INSERT ON Exceptions
-FOR EACH ROW
-BEGIN
-  IF NEW.Timestamp IS NULL THEN
-    SET NEW.Timestamp = CURRENT_TIMESTAMP;
-  END IF;
-END//
-DELIMITER ;
 
 /* ========
    SEEDS
    ======== */
-INSERT INTO `ClosingPeriods` (`Name`, `FiscalYearId`, `PeriodStart`, `PeriodEnd`) VALUES
-    ('2025-10', 2, '2025-10-01 00:00:00', '2025-10-31 23:59:59'),
-    ('2025-11', 2, '2025-11-01 00:00:00', '2025-11-30 23:59:59'),
-    ('2025-12', 2, '2025-12-01 00:00:00', '2025-12-31 23:59:59'),
-    ('2026-01', 2, '2026-01-01 00:00:00', '2026-01-31 23:59:59');
 
 INSERT INTO `FiscalYears` (`Name`, `StartDate`, `EndDate`, `AreaSalesTarget`, `AreaRevenueTarget`) VALUES
-    ('FY25', '2024-07-01 00:00:00', '2025-06-30 23:59:59', 0, 0),
-    ('FY26', '2025-07-01 00:00:00', '2026-06-30 23:59:59', 0, 0),
+    ('FY26', '2025-07-01 00:00:00', '2026-06-30 23:59:59', 20000000, 23000000),
     ('FY27', '2026-07-01 00:00:00', '2027-06-30 23:59:59', 0, 0);
     
-INSERT INTO `Papds` (`Name`,`Level`,`WindowsLogin`) VALUES
-    ('Danilo Passos','AssociatePartner','danilo.passos'),
-    ('Fernando São Pedro','Director','fernando.sao-pedro'),
-    ('Alexandre Jucá de Paiva','AssociatePartner', NULL);
+INSERT INTO `ClosingPeriods` (`Name`, `FiscalYearId`, `PeriodStart`, `PeriodEnd`) VALUES
+    ('2025-09', 1, '2025-09-01 00:00:00', '2025-09-30 23:59:59'),
+    ('2025-10', 1, '2025-10-01 00:00:00', '2025-10-31 23:59:59');
 
-INSERT INTO `Managers` (`Name`,`Email`,`Position`,`WindowsLogin`) VALUES
-    ('Caio Jordão Calisto','caio.calisto@br.ey.com','SeniorManager','caio.calisto'),
-    ('Gabriel Cortezia','gabriel.cortezia@br.ey.com','SeniorManager',NULL),
-    ('Rafael Gimenis','rafael.gimenis@br.ey.com','SeniorManager',NULL),
-    ('Salomão Bruno','salomao.bruno@br.ey.com','SeniorManager',NULL),
-    ('Mariana Galegale','mariana.galegale@br.ey.com','Manager',NULL),
-    ('Thomas Lima','thomas.lima@br.ey.com','Manager',NULL),
-    ('Vinicius Almeida','vinicius.almeida@br.ey.com','SeniorManager',NULL);
+INSERT INTO `Managers` 
+    (`Name`, `Email`, `Position`, `WindowsLogin`)
+VALUES
+    ('Caio Jordão Calisto', 'caio.calisto@br.ey.com', 'SeniorManager', 'SA\\caio.calisto'),
+    ('Gabriel Cortezia', 'gabriel.cortezia@br.ey.com', 'SeniorManager', 'SA\\FW734PN'),
+    ('Rafael Gimenis', 'rafael.gimenis@br.ey.com', 'SeniorManager', 'SA\\rafael.gimenis'),
+    ('Salomão Bruno', 'salomao.bruno@br.ey.com', 'SeniorManager', 'SA\\salomao.bruno'),
+    ('Mariana Galegale', 'mariana.galegale@br.ey.com', 'Manager', 'SA\\BG536BP'),
+    ('Thomas Lima', 'thomas.lima@br.ey.com', 'Manager', 'SA\\JA983DJ'),
+    ('Vinicius Almeida', 'vinicius.almeida@br.ey.com', 'Manager', 'SA\\MP311WS');
+    
+    
+    INSERT INTO blac3289_GRCFinancialControl.Papds 
+    (`Name`, `Level`, `WindowsLogin`)
+VALUES
+    ('Danilo Passos', 'AssociatePartner', 'SA\\danilo.passos'),
+    ('Fernando São Pedro', 'Director', 'SA\\fernando.sao-pedro'),
+    ('Alexandre Jucá de Paiva', 'AssociatePartner', 'SA\\RG563KA');
+
+
 
 
 SET FOREIGN_KEY_CHECKS = 1;
