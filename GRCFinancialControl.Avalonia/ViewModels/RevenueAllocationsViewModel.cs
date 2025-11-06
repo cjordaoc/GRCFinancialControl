@@ -8,9 +8,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         public RevenueAllocationsViewModel(IEngagementService engagementService,
                                            IFiscalYearService fiscalYearService,
+                                           ICustomerService customerService,
+                                           IClosingPeriodService closingPeriodService,
                                            DialogService dialogService,
                                            IMessenger messenger)
-            : base(engagementService, fiscalYearService, dialogService, messenger)
+            : base(engagementService, fiscalYearService, customerService, closingPeriodService, dialogService, messenger)
         {
         }
 

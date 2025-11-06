@@ -70,11 +70,37 @@
                     Classes="ButtonRow"
                     HorizontalAlignment="Left"
                     Margin="{StaticResource MarginTopMedium}">
-            <Button Content="{loc:Loc Key=FINC_Button_Add}" Command="{Binding AddCommand}" MinWidth="{StaticResource ButtonMinWidth}"/>
-            <Button Content="{loc:Loc Key=FINC_Button_View}" Command="{Binding ViewCommand}" CommandParameter="{Binding SelectedEngagement}" MinWidth="{StaticResource ButtonMinWidth}"/>
-            <Button Content="{loc:Loc Key=FINC_Button_Edit}" Command="{Binding EditCommand}" CommandParameter="{Binding SelectedEngagement}" MinWidth="{StaticResource ButtonMinWidth}"/>
-            <Button Content="{loc:Loc Key=FINC_Button_Delete}" Command="{Binding DeleteCommand}" CommandParameter="{Binding SelectedEngagement}" MinWidth="{StaticResource ButtonMinWidth}"/>
-            <Button Content="{loc:Loc Key=FINC_Admin_ClosingPeriods_Button_DeleteData}" Command="{Binding DeleteDataCommand}" CommandParameter="{Binding SelectedEngagement}" Classes="Danger" MinWidth="{StaticResource ButtonMinWidth}"/>
+            <SplitButton Content="{loc:Loc Key=FINC_Button_Add}"
+                         Command="{Binding AddCommand}"
+                         MinWidth="{StaticResource ButtonMinWidth}">
+                <SplitButton.Flyout>
+                    <MenuFlyout>
+                        <MenuItem Header="{loc:Loc Key=FINC_Button_Add}"
+                                  Command="{Binding AddCommand}"/>
+                        <MenuItem Header="{loc:Loc Key=FINC_Button_Edit}"
+                                  Command="{Binding EditCommand}"
+                                  CommandParameter="{Binding SelectedEngagement}"/>
+                        <MenuItem Header="{loc:Loc Key=FINC_Button_View}"
+                                  Command="{Binding ViewCommand}"
+                                  CommandParameter="{Binding SelectedEngagement}"/>
+                    </MenuFlyout>
+                </SplitButton.Flyout>
+            </SplitButton>
+            <SplitButton Content="{loc:Loc Key=FINC_Button_Delete}"
+                         Command="{Binding DeleteCommand}"
+                         CommandParameter="{Binding SelectedEngagement}"
+                         MinWidth="{StaticResource ButtonMinWidth}">
+                <SplitButton.Flyout>
+                    <MenuFlyout>
+                        <MenuItem Header="{loc:Loc Key=FINC_Button_Delete}"
+                                  Command="{Binding DeleteCommand}"
+                                  CommandParameter="{Binding SelectedEngagement}"/>
+                        <MenuItem Header="{loc:Loc Key=FINC_Admin_ClosingPeriods_Button_DeleteData}"
+                                  Command="{Binding DeleteDataCommand}"
+                                  CommandParameter="{Binding SelectedEngagement}"/>
+                    </MenuFlyout>
+                </SplitButton.Flyout>
+            </SplitButton>
             <SplitButton Content="Assign"
                          Command="{Binding AssignPapdCommand}">
                 <SplitButton.Flyout>

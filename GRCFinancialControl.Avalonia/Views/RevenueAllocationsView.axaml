@@ -26,7 +26,20 @@
                    Margin="{StaticResource CardPaddingThickness}"/>
         <DataGrid Grid.Row="1" ItemsSource="{Binding Engagements}" AutoGenerateColumns="False" IsReadOnly="True" CanUserResizeColumns="True" CanUserSortColumns="True">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Engagement ID" Binding="{Binding EngagementId}" Width="*"/>
+                <DataGridTemplateColumn Header="Engagement ID" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="{Binding EngagementId}"
+                                    Command="{Binding $parent[UserControl].DataContext.ViewEngagementCommand}"
+                                    CommandParameter="{Binding}"
+                                    Classes="link"
+                                    HorizontalAlignment="Left"
+                                    Padding="0"
+                                    Background="Transparent"
+                                    BorderThickness="0"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="2*"/>
                 <DataGridTextColumn Header="Customer" Binding="{Binding CustomerName}" Width="2*"/>
                 <DataGridTextColumn Header="Currency" Binding="{Binding Currency}" Width="Auto"/>

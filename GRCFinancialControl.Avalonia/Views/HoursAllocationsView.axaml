@@ -21,9 +21,20 @@
                   CanUserSortColumns="True"
                   SelectionMode="Single">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Engagement ID"
-                                    Binding="{Binding Code}"
-                                    Width="2*"/>
+                <DataGridTemplateColumn Header="Engagement ID" Width="2*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="{Binding Code}"
+                                    Command="{Binding $parent[UserControl].DataContext.ViewEngagementCommand}"
+                                    CommandParameter="{Binding}"
+                                    Classes="link"
+                                    HorizontalAlignment="Left"
+                                    Padding="0"
+                                    Background="Transparent"
+                                    BorderThickness="0"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Header="Description"
                                     Binding="{Binding Name}"
                                     Width="3*"/>

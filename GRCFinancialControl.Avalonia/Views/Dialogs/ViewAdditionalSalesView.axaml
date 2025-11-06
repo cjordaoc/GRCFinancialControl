@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels.Dialogs"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
+             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="400"
+             x:Class="GRCFinancialControl.Avalonia.Views.Dialogs.ViewAdditionalSalesView"
+             x:DataType="vm:ViewAdditionalSalesViewModel">
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridGap}">
+        <StackPanel Grid.Row="0"
+                    Spacing="{StaticResource SectionSpacing}"
+                    Margin="{StaticResource CardPaddingThickness}">
+            <TextBlock Text="Additional Sales" Classes="TitleSmall"/>
+
+            <DataGrid ItemsSource="{Binding AdditionalSales}"
+                      SelectedItem="{Binding SelectedAdditionalSale}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      SelectionMode="Single"
+                      Height="250">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="3*"/>
+                    <DataGridTextColumn Header="Opportunity ID" Binding="{Binding OpportunityId}" Width="*"/>
+                    <DataGridTextColumn Header="Value" Binding="{Binding Value, StringFormat='{}{0:N2}'}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="{StaticResource ControlSpacing}"
+                    Margin="{StaticResource CardPaddingThickness}">
+            <Button Content="{loc:Loc Key=FINC_Button_Delete}"
+                    Command="{Binding DeleteCommand}"
+                    IsEnabled="{Binding CanDelete}"
+                    MinWidth="{StaticResource ButtonMinWidth}" />
+            <Button Content="{loc:Loc Key=Global_Button_Close}"
+                    Command="{Binding CloseCommand}"
+                    IsDefault="True"
+                    MinWidth="{StaticResource ButtonMinWidth}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

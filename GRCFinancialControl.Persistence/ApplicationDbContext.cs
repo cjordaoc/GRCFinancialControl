@@ -35,6 +35,7 @@ namespace GRCFinancialControl.Persistence
         public DbSet<MailOutbox> MailOutboxEntries { get; set; }
         public DbSet<MailOutboxLog> MailOutboxLogs { get; set; }
         public DbSet<InvoiceNotificationPreview> InvoiceNotificationPreviews { get; set; }
+        public DbSet<EngagementAdditionalSale> EngagementAdditionalSales { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
@@ -570,6 +571,25 @@ namespace GRCFinancialControl.Persistence
 
             modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
                 .HasIndex(e => e.FiscalYearId);
+
+            modelBuilder.Entity<EngagementAdditionalSale>()
+                .HasOne(s => s.Engagement)
+                .WithMany(e => e.AdditionalSales)
+                .HasForeignKey(s => s.EngagementId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<EngagementAdditionalSale>()
+                .Property(s => s.Description)
+                .HasMaxLength(500)
+                .IsRequired();
+
+            modelBuilder.Entity<EngagementAdditionalSale>()
+                .Property(s => s.OpportunityId)
+                .HasMaxLength(100);
+
+            modelBuilder.Entity<EngagementAdditionalSale>()
+                .Property(s => s.Value)
+                .HasPrecision(18, 2);
 
             modelBuilder.Entity<FiscalYear>()
                 .HasKey(e => e.Id);
