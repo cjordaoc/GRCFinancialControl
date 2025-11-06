@@ -62,3 +62,14 @@ Confirm .NET 8, restore dependencies, and ensure `dotnet build -c Release` passe
 
 ✅ **Core Mantra**
 > Make it work → Make it simple → Keep it consistent → **Make it perform.**
+
+
+## Submodule Setup Instructions
+
+After cloning this repository, run:
+
+\\\ash
+git submodule update --init --recursive
+\\\
+
+This ensures GRC.Shared is available before building.
