@@ -305,6 +305,7 @@ CREATE TABLE `InvoicePlan` (
   `CustomerFocalPointName`  VARCHAR(120) NOT NULL,
   `CustomerFocalPointEmail` VARCHAR(200) NOT NULL,
   `CustomInstructions`      TEXT NULL,
+  `AdditionalDetails`      TEXT NULL,
   `FirstEmissionDate`       DATE NULL,
   `CreatedAt`               TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `UpdatedAt`               TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

@@ -99,7 +99,7 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
   1. Invoice plans define schedule metadata per engagement/period.
   2. Daily event triggers stored procedure execution, which selects due invoice items and inserts messages into `MailOutbox`.
   3. Background worker dequeues `MailOutbox` entries, sends e-mails, and archives results in `MailOutboxLog`.
-  4. The Invoice Planner's Add / Edit action loads the most recent plan for the selected engagement (or starts a new draft) and displays invoice lines in a flat grid with confirmed items locked for editing.
+   4. The Invoice Planner's Save action loads the most recent plan for the selected engagement (or starts a new draft), displays invoice lines in a flat grid with confirmed items locked for editing, and persists plan-level additional details captured in the Notes tab.
   5. The Confirm Request workspace keeps plans and line editing on a single screen: `RequestConfirmationViewModel` loads plan summaries, surfaces invoice lines in a read-only grid, and binds the inline form to `SelectedLine`. `SavePlanDetailsCommand` calls `MarkItemsAsRequested`, while `ReverseSelectedLineCommand` invokes `UndoRequest` to reset the invoice back to Planned.
   6. The Confirm Emission workspace keeps the full workflow inline: controllers load the plan, select a requested line, and provide BZ code plus emission date before invoking `CloseItems`, which persists the new `InvoiceEmission` entry and flips the status to Emitted. `CancelEmissions` captures a cancel reason from the same editor, marks the latest emission as canceled, and returns the invoice to Planned without deleting history.
   7. Controllers can delete the active plan from the editor dialog, removing the header and all invoice items and refreshing the engagement list for a clean restart.
@@ -107,8 +107,10 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
   - Plan type **By Date** auto-generates emission dates from the first emission date plus payment term days; the delivery column is hidden. Plan type **By Milestone** leaves emission dates and delivery descriptions fully manual.
   - Emitted/requested/canceled items remain visible but read-only; only planned items can be recalculated or removed when the invoice count changes (at least one editable line is always present).
   - Changing the **# Invoices** field enforces that the grid shows exactly that number of editable rows in addition to any emitted items already stored for the engagement.
-  - Editing the percentage or amount on a planned line recalculates the companion value and redistributes the remaining editable lines evenly so that total percentage stays at 100% and total amount matches the engagement total. Rounding differences flow into the last editable line.
-  - Monetary inputs and totals display the engagement currency symbol, falling back to the default currency configured in Settings when an engagement lacks a code; percentages show two decimals plus the `%` suffix. Emission dates use short-date formatting.
+   - Editing the percentage or amount on a planned line recalculates the companion value and redistributes the remaining editable lines evenly so that total percentage stays at 100% and total amount matches the engagement total. Rounding differences flow into the last editable line.
+   - A read-only **Due Date** column mirrors _Emission date + Payment term days_, normalized to the next Monday so financial controllers share a single reference for payment windows.
+   - Monetary inputs and totals display the engagement currency symbol, falling back to the default currency configured in Settings when an engagement lacks a code; percentages show two decimals plus the `%` suffix. Emission dates use short-date formatting.
+   - Each row exposes an **Additional details** text box (`InvoiceItem.AdditionalInfo`) that stores free-form notes alongside PO/FRS/Ticket values and flows through save, request, and notification stages.
   - Totals highlight in red and the Save action is disabled whenever the aggregated percentage or amount diverges from the required targets (100.00% / engagement total).
 - **Validation Mechanics:**
   - Stored procedure filters by due date and checks `MailOutboxLog` to prevent duplicates.

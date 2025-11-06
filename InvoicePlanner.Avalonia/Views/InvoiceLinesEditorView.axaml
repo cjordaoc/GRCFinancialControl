@@ -140,6 +140,16 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
+                    <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_DueDate}" Width="180">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                <TextBlock Text="{Binding DueDate, StringFormat={}{0:yyyy-MM-dd}}"
+                                           HorizontalAlignment="Stretch"
+                                           VerticalAlignment="Center" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
                                 <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_Delivery}" Width="220">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
@@ -187,6 +197,17 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_AdditionalDetails}" Width="220">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="vm:InvoicePlanLineViewModel">
+                                <TextBox Text="{Binding AdditionalDetails, UpdateSourceTrigger=PropertyChanged}"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         IsEnabled="{Binding IsEditable}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
 
                                 <DataGridTemplateColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_PaymentType}" Width="200">
                                     <DataGridTemplateColumn.CellTemplate>

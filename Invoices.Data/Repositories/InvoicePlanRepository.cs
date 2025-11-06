@@ -1042,6 +1042,7 @@ public class InvoicePlanRepository : IInvoicePlanRepository
         tracked.CustomerFocalPointName = incoming.CustomerFocalPointName;
         tracked.CustomerFocalPointEmail = incoming.CustomerFocalPointEmail;
         tracked.CustomInstructions = incoming.CustomInstructions;
+        tracked.AdditionalDetails = incoming.AdditionalDetails;
         tracked.FirstEmissionDate = incoming.FirstEmissionDate;
         tracked.UpdatedAt = utcNow;
 

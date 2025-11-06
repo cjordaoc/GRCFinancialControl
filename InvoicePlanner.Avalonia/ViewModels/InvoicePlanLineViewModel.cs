@@ -37,6 +37,9 @@ public partial class InvoicePlanLineViewModel : ObservableObject
     private string? customerTicket;
 
     [ObservableProperty]
+    private DateTime? dueDate;
+
+    [ObservableProperty]
     private decimal percentage;
 
     [ObservableProperty]
@@ -53,6 +56,9 @@ public partial class InvoicePlanLineViewModel : ObservableObject
 
     [ObservableProperty]
     private InvoiceItemStatus status = InvoiceItemStatus.Planned;
+
+    [ObservableProperty]
+    private string? additionalDetails;
 
     public bool IsEditable => Status == InvoiceItemStatus.Planned;
 
@@ -132,6 +138,16 @@ public partial class InvoicePlanLineViewModel : ObservableObject
         OnPropertyChanged(nameof(AmountDisplay));
     }
 
+    partial void OnEmissionDateChanged(DateTime? value)
+    {
+        if (_suppressNotifications)
+        {
+            return;
+        }
+
+        _owner?.HandleLineEmissionChanged(this);
+    }
+
     internal void SetPercentage(decimal value)
     {
         _suppressNotifications = true;
@@ -157,6 +173,13 @@ public partial class InvoicePlanLineViewModel : ObservableObject
     {
         _suppressNotifications = true;
         EmissionDate = value;
+        _suppressNotifications = false;
+    }
+
+    internal void SetDueDate(DateTime? value)
+    {
+        _suppressNotifications = true;
+        DueDate = value;
         _suppressNotifications = false;
     }
 
