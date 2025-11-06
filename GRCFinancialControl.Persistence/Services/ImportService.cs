@@ -1574,10 +1574,9 @@ namespace GRCFinancialControl.Persistence.Services
         private static int GetRequiredColumnIndex(
             Dictionary<int, string> headerMap,
             IEnumerable<string> candidates,
-            string friendlyName,
-            Func<string, bool>? headerPredicate = null)
+            string friendlyName)
         {
-            var hadFilteredMatches = false;
+            int? firstPartialMatch = null;
 
             foreach (var candidate in candidates)
             {
@@ -1590,31 +1589,18 @@ namespace GRCFinancialControl.Persistence.Services
                         continue;
                     }
 
-                    if (headerPredicate != null && !headerPredicate(header))
-                    {
-                        hadFilteredMatches = true;
-                        continue;
-                    }
-
-                    return kvp.Key;
-                }
-            }
-
-            if (headerPredicate != null && hadFilteredMatches)
-            {
-                throw new InvalidDataException($"The FCS backlog worksheet contains '{friendlyName}' only in unsupported formats (e.g., Opp Currency or Lead columns).");
-            }
-
-            foreach (var candidate in candidates)
-            {
-                var normalizedCandidate = candidate.ToLowerInvariant();
-                foreach (var kvp in headerMap)
-                {
-                    if (!string.IsNullOrEmpty(kvp.Value) && kvp.Value.Contains(normalizedCandidate, StringComparison.Ordinal))
+                    if (string.Equals(header, normalizedCandidate, StringComparison.Ordinal))
                     {
                         return kvp.Key;
                     }
+
+                    firstPartialMatch ??= kvp.Key;
                 }
+            }
+
+            if (firstPartialMatch.HasValue)
+            {
+                return firstPartialMatch.Value;
             }
 
             throw new InvalidDataException($"The FCS backlog worksheet is missing required column '{friendlyName}'. Ensure the first sheet is selected and filters are cleared before importing.");
@@ -1799,8 +1785,7 @@ namespace GRCFinancialControl.Persistence.Services
             var currentFiscalYearBacklogIndex = GetRequiredColumnIndex(
                 headerMap,
                 FcsCurrentFiscalYearBacklogHeaders,
-                "FYTG Backlog",
-                header => !header.Contains("opp currency", StringComparison.Ordinal) && !header.Contains("lead", StringComparison.Ordinal));
+                "FYTG Backlog");
             var futureFiscalYearIndexes = ResolveFutureFiscalYearColumns(headerMap, nextFiscalYearName);
             if (futureFiscalYearIndexes.Count == 0)
             {

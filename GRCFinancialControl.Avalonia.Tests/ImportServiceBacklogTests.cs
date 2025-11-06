@@ -19,8 +19,7 @@ public class ImportServiceBacklogTests
             {
                 typeof(Dictionary<int, string>),
                 typeof(IEnumerable<string>),
-                typeof(string),
-                typeof(Func<string, bool>)
+                typeof(string)
             },
             modifiers: null)
         ?? throw new InvalidOperationException("Unable to resolve ImportService.GetRequiredColumnIndex via reflection.");
@@ -28,8 +27,7 @@ public class ImportServiceBacklogTests
     private static int InvokeGetRequiredColumnIndex(
         Dictionary<int, string> headerMap,
         IEnumerable<string> candidates,
-        string friendlyName,
-        Func<string, bool> predicate)
+        string friendlyName)
     {
         var result = GetRequiredColumnIndexMethod.Invoke(
             null,
@@ -37,8 +35,7 @@ public class ImportServiceBacklogTests
             {
                 headerMap,
                 candidates,
-                friendlyName,
-                predicate
+                friendlyName
             });
 
         return (int)result!;
@@ -56,33 +53,42 @@ public class ImportServiceBacklogTests
         };
 
         var candidates = new[] { "fytg backlog", "fiscal year to go backlog" };
-        Func<string, bool> filter = header => !header.Contains("opp currency", StringComparison.Ordinal) && !header.Contains("lead", StringComparison.Ordinal);
 
-        var result = InvokeGetRequiredColumnIndex(headerMap, candidates, "FYTG Backlog", filter);
+        var result = InvokeGetRequiredColumnIndex(headerMap, candidates, "FYTG Backlog");
 
         Assert.AreEqual(2, result);
     }
 
     [TestMethod]
-    public void GetRequiredColumnIndex_ThrowsWhenOnlyUnsupportedFormatsExist()
+    public void GetRequiredColumnIndex_FallsBackToPartialMatchWhenExactMissing()
     {
         var headerMap = new Dictionary<int, string>
         {
             [0] = "engagement id",
-            [1] = "fytg backlog (opp currency)"
+            [1] = "fytg backlog details"
         };
 
         var candidates = new[] { "fytg backlog", "fiscal year to go backlog" };
-        Func<string, bool> filter = header => !header.Contains("opp currency", StringComparison.Ordinal) && !header.Contains("lead", StringComparison.Ordinal);
 
-        try
+        var result = InvokeGetRequiredColumnIndex(headerMap, candidates, "FYTG Backlog");
+
+        Assert.AreEqual(1, result);
+    }
+
+    [TestMethod]
+    public void GetRequiredColumnIndex_ThrowsWhenColumnMissing()
+    {
+        var headerMap = new Dictionary<int, string>
         {
-            InvokeGetRequiredColumnIndex(headerMap, candidates, "FYTG Backlog", filter);
-            Assert.Fail("Expected the invocation to throw an InvalidDataException.");
-        }
-        catch (TargetInvocationException ex) when (ex.InnerException is InvalidDataException)
-        {
-            // Expected path.
-        }
+            [0] = "engagement id"
+        };
+
+        var candidates = new[] { "fytg backlog", "fiscal year to go backlog" };
+
+        var exception = Assert.ThrowsException<TargetInvocationException>(
+            () => InvokeGetRequiredColumnIndex(headerMap, candidates, "FYTG Backlog"));
+
+        Assert.IsNotNull(exception.InnerException);
+        Assert.IsInstanceOfType(exception.InnerException, typeof(InvalidDataException));
     }
 }
