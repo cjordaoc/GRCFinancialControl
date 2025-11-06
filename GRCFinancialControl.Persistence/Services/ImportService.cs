@@ -1289,7 +1289,8 @@ namespace GRCFinancialControl.Persistence.Services
                 AdditionalHours = 0m,
                 RemainingHours = roundedBudget,
                 Status = nameof(TrafficLightStatus.Green),
-                CreatedAtUtc = timestamp
+                CreatedAtUtc = timestamp,
+                UpdatedAtUtc = timestamp
             });
 
             return 1;
@@ -1432,7 +1433,8 @@ namespace GRCFinancialControl.Persistence.Services
                         AdditionalHours = 0m,
                         RemainingHours = 0m,
                         Status = nameof(TrafficLightStatus.Green),
-                        CreatedAtUtc = nowUtc
+                        CreatedAtUtc = nowUtc,
+                        UpdatedAtUtc = nowUtc
                     };
 
                     context.EngagementRankBudgets.Add(budget);

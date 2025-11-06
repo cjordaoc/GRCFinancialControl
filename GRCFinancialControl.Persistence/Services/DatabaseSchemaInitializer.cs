@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using System.Threading.Tasks;
@@ -45,7 +46,36 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task EnsureSchemaAsync()
         {
-            await ExecuteWithContextAsync(context => context.Database.EnsureCreatedAsync()).ConfigureAwait(false);
+            await ExecuteWithContextAsync(async context =>
+            {
+                await context.Database.EnsureCreatedAsync().ConfigureAwait(false);
+
+                if (!IsMySqlProvider(context))
+                {
+                    return;
+                }
+
+                var connection = context.Database.GetDbConnection();
+                var shouldCloseConnection = connection.State != ConnectionState.Open;
+
+                if (shouldCloseConnection)
+                {
+                    await connection.OpenAsync().ConfigureAwait(false);
+                }
+
+                try
+                {
+                    await EnsurePlannedAllocationsTableAsync(context, connection).ConfigureAwait(false);
+                    await DropLegacyBudgetTriggersAsync(context).ConfigureAwait(false);
+                }
+                finally
+                {
+                    if (shouldCloseConnection)
+                    {
+                        await connection.CloseAsync().ConfigureAwait(false);
+                    }
+                }
+            }).ConfigureAwait(false);
         }
 
         public async Task ClearAllDataAsync()
@@ -122,6 +152,45 @@ namespace GRCFinancialControl.Persistence.Services
                 await using var context = await CreateContextFromSettingsAsync().ConfigureAwait(false);
                 await action(context).ConfigureAwait(false);
             }
+        }
+
+        private static bool IsMySqlProvider(ApplicationDbContext context)
+        {
+            return context.Database.ProviderName?.Contains("MySql", StringComparison.OrdinalIgnoreCase) == true;
+        }
+
+        private static async Task EnsurePlannedAllocationsTableAsync(
+            ApplicationDbContext context,
+            DbConnection connection)
+        {
+            if (await TableExistsAsync(connection, "PlannedAllocations").ConfigureAwait(false))
+            {
+                return;
+            }
+
+            const string createSql = @"
+CREATE TABLE `PlannedAllocations` (
+    `Id` INT NOT NULL AUTO_INCREMENT,
+    `EngagementId` INT NOT NULL,
+    `ClosingPeriodId` INT NOT NULL,
+    `AllocatedHours` DECIMAL(18, 2) NOT NULL DEFAULT 0,
+    PRIMARY KEY (`Id`),
+    UNIQUE KEY `UX_PlannedAllocations_EngagementPeriod` (`EngagementId`, `ClosingPeriodId`),
+    KEY `IX_PlannedAllocations_ClosingPeriodId` (`ClosingPeriodId`),
+    CONSTRAINT `FK_PlannedAllocations_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_PlannedAllocations_ClosingPeriods` FOREIGN KEY (`ClosingPeriodId`) REFERENCES `ClosingPeriods` (`Id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
+
+            await context.Database.ExecuteSqlRawAsync(createSql).ConfigureAwait(false);
+        }
+
+        private static async Task DropLegacyBudgetTriggersAsync(ApplicationDbContext context)
+        {
+            const string dropInsertTrigger = "DROP TRIGGER IF EXISTS `trg_EngagementRankBudgets_bi`;";
+            const string dropUpdateTrigger = "DROP TRIGGER IF EXISTS `trg_EngagementRankBudgets_bu`;";
+
+            await context.Database.ExecuteSqlRawAsync(dropInsertTrigger).ConfigureAwait(false);
+            await context.Database.ExecuteSqlRawAsync(dropUpdateTrigger).ConfigureAwait(false);
         }
 
         private async Task<ApplicationDbContext> CreateContextFromSettingsAsync()

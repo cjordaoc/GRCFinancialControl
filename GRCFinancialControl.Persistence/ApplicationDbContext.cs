@@ -365,7 +365,8 @@ namespace GRCFinancialControl.Persistence
 
             modelBuilder.Entity<PlannedAllocation>()
                 .Property(pa => pa.AllocatedHours)
-                .HasPrecision(18, 2);
+                .HasPrecision(18, 2)
+                .HasDefaultValue(0m);
 
             modelBuilder.Entity<ActualsEntry>()
                 .HasOne(ae => ae.Engagement)
@@ -443,7 +444,13 @@ namespace GRCFinancialControl.Persistence
 
             modelBuilder.Entity<EngagementRankBudget>()
                 .Property(rb => rb.CreatedAtUtc)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .ValueGeneratedOnAdd()
+                .HasMySqlColumnType("timestamp", isMySql);
+
+            modelBuilder.Entity<EngagementRankBudget>()
+                .Property(rb => rb.UpdatedAtUtc)
+                .HasMySqlColumnType("datetime(6)", isMySql);
 
             modelBuilder.Entity<EngagementRankBudget>()
                 .HasIndex(rb => new { rb.EngagementId, rb.FiscalYearId, rb.RankName })

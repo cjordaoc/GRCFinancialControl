@@ -114,6 +114,8 @@ namespace GRCFinancialControl.Persistence.Services
             }
 
             var budgetsById = budgets.ToDictionary(b => b.Id);
+            var updatedBudgets = new HashSet<EngagementRankBudget>();
+            var nowUtc = DateTime.UtcNow;
 
             foreach (var update in updateList)
             {
@@ -133,6 +135,7 @@ namespace GRCFinancialControl.Persistence.Services
                 }
 
                 budget.UpdateConsumedHours(update.ConsumedHours);
+                updatedBudgets.Add(budget);
             }
 
             var adjustmentLookup = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
@@ -155,6 +158,7 @@ namespace GRCFinancialControl.Persistence.Services
                 if (adjustmentLookup.TryGetValue(group.Key, out var additionalHours))
                 {
                     summaryBudget.UpdateAdditionalHours(additionalHours);
+                    updatedBudgets.Add(summaryBudget);
                 }
 
                 var nonSummaryBudgets = new List<EngagementRankBudget>(Math.Max(orderedBudgets.Count - 1, 0));
@@ -173,6 +177,7 @@ namespace GRCFinancialControl.Persistence.Services
                     {
                         budget.UpdateAdditionalHours(0m);
                         nonSummaryBudgets.Add(budget);
+                        updatedBudgets.Add(budget);
                     }
                 }
 
@@ -194,7 +199,13 @@ namespace GRCFinancialControl.Persistence.Services
                 {
                     budget.Status = statusText;
                     budget.ApplyIncurredHours(0m);
+                    updatedBudgets.Add(budget);
                 }
+            }
+
+            foreach (var budget in updatedBudgets)
+            {
+                budget.UpdatedAtUtc = nowUtc;
             }
 
             await context.SaveChangesAsync().ConfigureAwait(false);
@@ -235,6 +246,8 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new InvalidOperationException("There are no open fiscal years available to create the rank allocation.");
             }
 
+            var creationTimestamp = DateTime.UtcNow;
+
             foreach (var fiscalYearId in openFiscalYears)
             {
                 context.EngagementRankBudgets.Add(new EngagementRankBudget
@@ -246,7 +259,9 @@ namespace GRCFinancialControl.Persistence.Services
                     ConsumedHours = 0m,
                     AdditionalHours = 0m,
                     RemainingHours = 0m,
-                    Status = nameof(TrafficLightStatus.Green)
+                    Status = nameof(TrafficLightStatus.Green),
+                    CreatedAtUtc = creationTimestamp,
+                    UpdatedAtUtc = creationTimestamp
                 });
             }
 

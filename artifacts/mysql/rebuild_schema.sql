@@ -238,6 +238,19 @@ CREATE TABLE `FinancialEvolution`
    Allocations (hours & revenue)
    ============================ */
 
+CREATE TABLE `PlannedAllocations`
+(
+    `Id`              INT            NOT NULL AUTO_INCREMENT,
+    `EngagementId`    INT            NOT NULL,
+    `ClosingPeriodId` INT            NOT NULL,
+    `AllocatedHours`  DECIMAL(18, 2) NOT NULL DEFAULT 0,
+    CONSTRAINT `PK_PlannedAllocations` PRIMARY KEY (`Id`),
+    CONSTRAINT `UQ_PlannedAllocations_EngagementPeriod` UNIQUE (`EngagementId`, `ClosingPeriodId`),
+    CONSTRAINT `FK_PlannedAllocations_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_PlannedAllocations_ClosingPeriods` FOREIGN KEY (`ClosingPeriodId`) REFERENCES `ClosingPeriods` (`Id`) ON DELETE CASCADE,
+    INDEX `IX_PlannedAllocations_ClosingPeriodId` (`ClosingPeriodId`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
 CREATE TABLE `ActualsEntries`
 (
     `Id`              INT            NOT NULL AUTO_INCREMENT,
@@ -496,31 +509,6 @@ BEGIN
   END IF;
 END//
 DELIMITER ;
-
--- Maintain EngagementRankBudgets audit DATETIMEs
-DROP TRIGGER IF EXISTS trg_EngagementRankBudgets_bi;
-DROP TRIGGER IF EXISTS trg_EngagementRankBudgets_bu;
-DELIMITER //
-CREATE TRIGGER trg_EngagementRankBudgets_bi
-BEFORE INSERT ON EngagementRankBudgets
-FOR EACH ROW
-BEGIN
-  IF NEW.CreatedAtUtc IS NULL THEN
-    SET NEW.CreatedAtUtc = CURRENT_TIMESTAMP;
-  END IF;
-  SET NEW.UpdatedAtUtc = CURRENT_TIMESTAMP;
-END//
-CREATE TRIGGER trg_EngagementRankBudgets_bu
-BEFORE UPDATE ON EngagementRankBudgets
-FOR EACH ROW
-BEGIN
-  IF NEW.BudgetHours <> OLD.BudgetHours THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'BudgetHours is immutable once created';
-  END IF;
-  SET NEW.UpdatedAtUtc = CURRENT_TIMESTAMP;
-END//
-DELIMITER ;
-
 
 /* ========
    SEEDS
