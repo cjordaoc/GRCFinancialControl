@@ -1,26 +1,26 @@
-# GRC Financial Control — Agent Guide (vNext Refactored)
+﻿# GRC Financial Control â€” Agent Guide (vNext Refactored)
 
 These instructions keep contributors consistent across tooling, architecture, and workflow.
-All work must follow the **“as simple as it can be”** rule — every change should reduce complexity, not add it.
+All work must follow the **â€œas simple as it can beâ€** rule â€” every change should reduce complexity, not add it.
 
 ---
 
-## 1 · Environment & Build Readiness
+## 1 Â· Environment & Build Readiness
 Confirm .NET 8, restore dependencies, and ensure `dotnet build -c Release` passes with zero warnings before shipping significant code changes.
 
 ---
 
-## 2 · Architecture & Coding Principles
+## 2 Â· Architecture & Coding Principles
 - MVVM (Avalonia).
 - Views = XAML layout only; no business logic.
 - ViewModels = interaction/state handling.
 - Models = domain entities inside *.Core.
 - Register all services through Host Builder; no custom factories.
-- Simplicity First → reuse > abstraction.
+- Simplicity First â†’ reuse > abstraction.
 
 ---
 
-## 3 · Performance & Refactor Policy (Precision Mode)
+## 3 Â· Performance & Refactor Policy (Precision Mode)
 - Evaluate loops and replace nested iterations with dictionary/set lookups.
 - Pull allocations and heavy operations out of hot paths.
 - Use `StringBuilder` for concatenations.
@@ -33,7 +33,7 @@ Confirm .NET 8, restore dependencies, and ensure `dotnet build -c Release` passe
 
 ---
 
-## 4 · Quality Gates
+## 4 Â· Quality Gates
 - Strict MVVM boundaries.
 - Code must be small, readable, deterministic.
 - Behavior unchanged unless a functional requirement explicitly demands it.
@@ -41,22 +41,22 @@ Confirm .NET 8, restore dependencies, and ensure `dotnet build -c Release` passe
 
 ---
 
-## 5 · Documentation Discipline
+## 5 Â· Documentation Discipline
 - For **every new functionality** (beyond bug fixes), update both `README.md` and `readme_specs.md` to reflect the behavior and technical specification.
 - Keep documentation changes synchronized with the implemented scope in the same branch.
 
 ---
 
-## 6 · Class & Interface Governance
+## 6 Â· Class & Interface Governance
 - Consult `class_interfaces_catalog.md` before creating any class or interface to determine if reuse, improvement, or inheritance is possible.
 - Whenever you add, rename, or delete a class/interface, update `class_interfaces_catalog.md` in the same change set with its purpose and dependencies.
 
 ---
 
-## 7 · Tasks Export Conventions
-- Weekly tasks exports must target the XML schema `WeeklyTasks.xsd` (version 1.3) — legacy JSON payloads are no longer supported.
+## 7 Â· Tasks Export Conventions
+- Weekly tasks exports must target the XML schema `WeeklyTasks.xsd` (version 1.3) â€” legacy JSON payloads are no longer supported.
 - Planner payment types surface through `PaymentTypeCatalog` (`TRANSFERENCIA_BANCARIA`, `BOLETOS`); do not introduce free-form values.
-- Invoice descriptions are generated at runtime following the Excel “Texto de Faturamento” pattern and must not be persisted in the database.
+- Invoice descriptions are generated at runtime following the Excel â€œTexto de Faturamentoâ€ pattern and must not be persisted in the database.
 
 ---
 
@@ -68,8 +68,23 @@ Confirm .NET 8, restore dependencies, and ensure `dotnet build -c Release` passe
 
 After cloning this repository, run:
 
+<<<<<<< HEAD
 \\\ash
 git submodule update --init --recursive
 \\\
 
 This ensures GRC.Shared is available before building.
+=======
+`ash
+git submodule update --init --recursive
+`
+
+If the submodule breaks, fix it with:
+
+`ash
+git submodule deinit -f --all
+git rm -rf --cached GRC.Shared
+git submodule add https://github.com/cjordaoc/GRC.Shared.git GRC.Shared
+git submodule update --init --recursive
+`
+
