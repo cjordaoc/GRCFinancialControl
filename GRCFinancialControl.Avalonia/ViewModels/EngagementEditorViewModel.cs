@@ -125,6 +125,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private bool _isReadOnlyMode;
 
+        [ObservableProperty]
+        private bool _hasChanges;
+
         public Engagement Engagement { get; }
 
         public bool IsExistingRecord => Engagement.Id != 0;
@@ -134,7 +137,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public bool AllowEditing => !IsReadOnlyMode && !ShouldLockForClosedStatus;
 
-        public bool CanSave => !IsReadOnlyMode;
+        public bool CanSave => !IsReadOnlyMode && HasChanges;
 
         public bool IsEngagementIdReadOnly => IsReadOnlyMode || IsExistingRecord;
 
@@ -203,6 +206,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _ = LoadClosingPeriodsAsync();
 
             IsReadOnlyMode = isReadOnlyMode;
+            
+            SubscribeToPropertyChanges();
         }
 
         private async Task LoadCustomersAsync()
@@ -331,6 +336,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 Margin = evolution.MarginData,
                 Expenses = evolution.ExpenseData
             };
+            
+            entry.PropertyChanged += OnFinancialEvolutionEntryPropertyChanged;
 
             return entry;
         }
@@ -367,10 +374,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 entry.ClosingPeriodId = LastClosingPeriodFallbackName;
             }
+            
+            entry.PropertyChanged += OnFinancialEvolutionEntryPropertyChanged;
 
             FinancialEvolutionEntries.Add(entry);
             SelectedFinancialEvolutionEntry = entry;
             SortFinancialEvolutionEntries();
+            MarkAsChanged();
         }
 
         [RelayCommand(CanExecute = nameof(CanRemoveFinancialEvolutionEntry))]
@@ -380,10 +390,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 return;
             }
-
+            
+            SelectedFinancialEvolutionEntry.PropertyChanged -= OnFinancialEvolutionEntryPropertyChanged;
             FinancialEvolutionEntries.Remove(SelectedFinancialEvolutionEntry);
             SelectedFinancialEvolutionEntry = FinancialEvolutionEntries.LastOrDefault();
             SortFinancialEvolutionEntries();
+            MarkAsChanged();
         }
 
         private bool CanRemoveFinancialEvolutionEntry() => SelectedFinancialEvolutionEntry is not null;
@@ -516,6 +528,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         partial void OnSelectedStatusTextChanged(string? value)
         {
             RefreshEditingState();
+        }
+        
+        partial void OnHasChangesChanged(bool value)
+        {
+            OnPropertyChanged(nameof(CanSave));
         }
 
         private void RefreshEditingState()
@@ -694,6 +711,39 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             LastClosingPeriod = null;
             LastClosingPeriodFallbackName = target.normalizedId;
+        }
+        
+        private void SubscribeToPropertyChanges()
+        {
+            PropertyChanged += (sender, args) =>
+            {
+                if (args.PropertyName != nameof(HasChanges) && 
+                    args.PropertyName != nameof(CanSave) &&
+                    args.PropertyName != nameof(AllowEditing) &&
+                    args.PropertyName != nameof(IsEngagementIdReadOnly) &&
+                    args.PropertyName != nameof(CanEditEngagementId) &&
+                    args.PropertyName != nameof(IsFinancialSnapshotReadOnly) &&
+                    args.PropertyName != nameof(IsGeneralFieldReadOnly) &&
+                    args.PropertyName != nameof(IsFinancialEvolutionReadOnly) &&
+                    args.PropertyName != nameof(CanEditCustomer) &&
+                    args.PropertyName != nameof(CanEditStatus) &&
+                    args.PropertyName != nameof(IsCurrencyReadOnly) &&
+                    args.PropertyName != nameof(EtcpAgeDays) &&
+                    args.PropertyName != nameof(LastClosingPeriodDisplay))
+                {
+                    MarkAsChanged();
+                }
+            };
+        }
+        
+        private void OnFinancialEvolutionEntryPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            MarkAsChanged();
+        }
+        
+        private void MarkAsChanged()
+        {
+            HasChanges = true;
         }
     }
 }
