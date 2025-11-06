@@ -159,4 +159,16 @@
     <Setter Property="FontSize" Value="{StaticResource FontSize14}" />
     <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}" />
   </Style>
+
+  <Style Selector="Button.link">
+    <Setter Property="Foreground" Value="#FFD700" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Cursor" Value="Hand" />
+  </Style>
+
+  <Style Selector="Button.link:pointerover">
+    <Setter Property="Foreground" Value="#FFF44D" />
+  </Style>
 </Styles>
