@@ -16,9 +16,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     public sealed partial class HoursAllocationsViewModel : ViewModelBase
     {
         private readonly IEngagementService _engagementService;
+        private readonly ICustomerService _customerService;
+        private readonly IClosingPeriodService _closingPeriodService;
         private readonly Func<HoursAllocationDetailViewModel> _detailFactory;
         private readonly DialogService _dialogService;
         private readonly LoggingService _loggingService;
+        private readonly IMessenger _messenger;
 
         [ObservableProperty]
         private ObservableCollection<EngagementListItem> _engagements = new();
@@ -34,6 +37,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public HoursAllocationsViewModel(
             IEngagementService engagementService,
+            ICustomerService customerService,
+            IClosingPeriodService closingPeriodService,
             Func<HoursAllocationDetailViewModel> detailFactory,
             DialogService dialogService,
             LoggingService loggingService,
@@ -41,9 +46,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             : base(messenger)
         {
             _engagementService = engagementService ?? throw new ArgumentNullException(nameof(engagementService));
+            _customerService = customerService ?? throw new ArgumentNullException(nameof(customerService));
+            _closingPeriodService = closingPeriodService ?? throw new ArgumentNullException(nameof(closingPeriodService));
             _detailFactory = detailFactory ?? throw new ArgumentNullException(nameof(detailFactory));
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
             _loggingService = loggingService ?? throw new ArgumentNullException(nameof(loggingService));
+            _messenger = messenger;
         }
 
         /// <summary>
@@ -147,6 +155,39 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             OnPropertyChanged(nameof(CanOpenDetail));
             NotifyCommandCanExecute(OpenDetailCommand);
+        }
+
+        [RelayCommand]
+        private async Task ViewEngagement(EngagementListItem engagementItem)
+        {
+            if (engagementItem == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var fullEngagement = await _engagementService.GetByIdAsync(engagementItem.Id);
+                if (fullEngagement is null)
+                {
+                    return;
+                }
+
+                var editorViewModel = new EngagementEditorViewModel(
+                    fullEngagement,
+                    _engagementService,
+                    _customerService,
+                    _closingPeriodService,
+                    _messenger,
+                    _dialogService,
+                    isReadOnlyMode: true);
+                await _dialogService.ShowDialogAsync(editorViewModel);
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogError(ex.Message);
+                StatusMessage = ex.Message;
+            }
         }
 
         /// <summary>

@@ -59,7 +59,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand]
         private async Task Add()
         {
-            var editorViewModel = new EngagementEditorViewModel(new Engagement(), _engagementService, _customerService, _closingPeriodService, Messenger);
+            var editorViewModel = new EngagementEditorViewModel(new Engagement(), _engagementService, _customerService, _closingPeriodService, Messenger, _dialogService);
             await _dialogService.ShowDialogAsync(editorViewModel);
             Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
@@ -74,7 +74,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            var editorViewModel = new EngagementEditorViewModel(fullEngagement, _engagementService, _customerService, _closingPeriodService, Messenger);
+            var editorViewModel = new EngagementEditorViewModel(fullEngagement, _engagementService, _customerService, _closingPeriodService, Messenger, _dialogService);
             await _dialogService.ShowDialogAsync(editorViewModel);
             Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
@@ -90,7 +90,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            var editorViewModel = new EngagementEditorViewModel(fullEngagement, _engagementService, _customerService, _closingPeriodService, Messenger, isReadOnlyMode: true);
+            var editorViewModel = new EngagementEditorViewModel(fullEngagement, _engagementService, _customerService, _closingPeriodService, Messenger, _dialogService, isReadOnlyMode: true);
             await _dialogService.ShowDialogAsync(editorViewModel);
         }
 

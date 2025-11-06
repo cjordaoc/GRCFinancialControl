@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
+using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
@@ -23,6 +24,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly IClosingPeriodService _closingPeriodService;
         private readonly IMessenger _messenger;
         private readonly int? _initialLastClosingPeriodId;
+        private readonly DialogService _dialogService;
 
         private static readonly string[] DefaultStatusTextChoices =
         {
@@ -123,6 +125,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private ObservableCollection<EngagementManagerAssignment> _managerAssignments = new();
 
         [ObservableProperty]
+        private ObservableCollection<EngagementAdditionalSale> _additionalSales = new();
+
+        [ObservableProperty]
+        private EngagementAdditionalSale? _selectedAdditionalSale;
+
+        [ObservableProperty]
         private bool _isReadOnlyMode;
 
         [ObservableProperty]
@@ -155,6 +163,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public bool IsCurrencyReadOnly => IsReadOnlyMode || IsExistingRecord;
 
+        public bool CanDeleteAdditionalSale => SelectedAdditionalSale is not null && AllowEditing;
+
         public string LastClosingPeriodDisplay => LastClosingPeriod?.Name ?? LastClosingPeriodFallbackName ?? string.Empty;
 
         public EngagementEditorViewModel(
@@ -163,6 +173,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             ICustomerService customerService,
             IClosingPeriodService closingPeriodService,
             IMessenger messenger,
+            DialogService dialogService,
             bool isReadOnlyMode = false)
         {
             _initialLastClosingPeriodId = engagement.LastClosingPeriodId;
@@ -171,6 +182,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _customerService = customerService;
             _closingPeriodService = closingPeriodService;
             _messenger = messenger;
+            _dialogService = dialogService;
 
             EngagementId = engagement.EngagementId;
             Description = engagement.Description;
@@ -200,6 +212,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             ManagerAssignments = new ObservableCollection<EngagementManagerAssignment>(
                 engagement.ManagerAssignments
                     .OrderBy(a => a.Manager?.Name, StringComparer.OrdinalIgnoreCase));
+            AdditionalSales = new ObservableCollection<EngagementAdditionalSale>(
+                engagement.AdditionalSales
+                    .OrderBy(s => s.Description, StringComparer.OrdinalIgnoreCase));
             InitializeFinancialEvolutionEntries(engagement.FinancialEvolutions);
 
             _ = LoadCustomersAsync();
@@ -401,6 +416,63 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private bool CanRemoveFinancialEvolutionEntry() => SelectedFinancialEvolutionEntry is not null;
 
         [RelayCommand]
+        private async Task AddAdditionalSale()
+        {
+            if (!AllowEditing)
+            {
+                return;
+            }
+
+            var viewModel = new ViewModels.Dialogs.AddAdditionalSaleViewModel(_messenger);
+            var result = await _dialogService.ShowDialogAsync(viewModel, viewModel.Title);
+            
+            if (result && viewModel.Result is not null)
+            {
+                AdditionalSales.Add(viewModel.Result);
+                MarkAsChanged();
+            }
+        }
+
+        [RelayCommand]
+        private async Task ViewAdditionalSales()
+        {
+            if (Engagement.Id == 0)
+            {
+                ToastService.ShowWarning("Please save the engagement first before managing additional sales.");
+                return;
+            }
+
+            var viewModel = new ViewModels.Dialogs.ViewAdditionalSalesViewModel(
+                Engagement.Id,
+                _engagementService,
+                _messenger);
+            
+            await viewModel.LoadDataAsync();
+            await _dialogService.ShowDialogAsync(viewModel, viewModel.Title);
+            
+            // Reload additional sales after the dialog closes
+            var engagement = await _engagementService.GetByIdAsync(Engagement.Id);
+            if (engagement is not null)
+            {
+                AdditionalSales = new ObservableCollection<EngagementAdditionalSale>(
+                    engagement.AdditionalSales.OrderBy(s => s.Description, StringComparer.OrdinalIgnoreCase));
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanDeleteAdditionalSale))]
+        private void DeleteAdditionalSale()
+        {
+            if (SelectedAdditionalSale is null)
+            {
+                return;
+            }
+
+            AdditionalSales.Remove(SelectedAdditionalSale);
+            SelectedAdditionalSale = null;
+            MarkAsChanged();
+        }
+
+        [RelayCommand]
         private async Task Save()
         {
             if (IsReadOnlyMode)
@@ -473,6 +545,21 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     evolutions.Add(evolution);
                 }
 
+                var additionalSales = Engagement.AdditionalSales;
+                additionalSales.Clear();
+                foreach (var sale in AdditionalSales)
+                {
+                    additionalSales.Add(new EngagementAdditionalSale
+                    {
+                        Id = sale.Id,
+                        EngagementId = Engagement.Id,
+                        Engagement = Engagement,
+                        Description = sale.Description,
+                        OpportunityId = sale.OpportunityId,
+                        Value = sale.Value
+                    });
+                }
+
                 if (Engagement.Id == 0)
                 {
                     await _engagementService.AddAsync(Engagement);
@@ -518,6 +605,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         partial void OnSelectedFinancialEvolutionEntryChanged(EngagementFinancialEvolutionEntryViewModel? value)
         {
             RemoveFinancialEvolutionEntryCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnSelectedAdditionalSaleChanged(EngagementAdditionalSale? value)
+        {
+            OnPropertyChanged(nameof(CanDeleteAdditionalSale));
+            DeleteAdditionalSaleCommand.NotifyCanExecuteChanged();
         }
 
         partial void OnIsReadOnlyModeChanged(bool value)

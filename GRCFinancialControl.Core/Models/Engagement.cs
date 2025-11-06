@@ -40,6 +40,7 @@ namespace GRCFinancialControl.Core.Models
         public ICollection<EngagementRankBudget> RankBudgets { get; } = new List<EngagementRankBudget>();
         public ICollection<FinancialEvolution> FinancialEvolutions { get; } = new List<FinancialEvolution>();
         public ICollection<EngagementFiscalYearRevenueAllocation> RevenueAllocations { get; } = new List<EngagementFiscalYearRevenueAllocation>();
+        public ICollection<EngagementAdditionalSale> AdditionalSales { get; } = new List<EngagementAdditionalSale>();
 
         [NotMapped]
         public bool IsManualOnly => Source == EngagementSource.S4Project;

@@ -1,0 +1,62 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels.Dialogs"
+             xmlns:behaviors="clr-namespace:App.Presentation.Behaviors;assembly=App.Presentation"
+             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
+             mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="300"
+             x:Class="GRCFinancialControl.Avalonia.Views.Dialogs.AddAdditionalSaleView"
+             x:DataType="vm:AddAdditionalSaleViewModel">
+    <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridGap}">
+        <StackPanel Grid.Row="0"
+                    Spacing="{StaticResource SectionSpacing}"
+                    Margin="{StaticResource CardPaddingThickness}">
+            <TextBlock Text="Add Additional Sale" Classes="TitleSmall"/>
+
+            <StackPanel Spacing="{StaticResource SpacingUnit}">
+                <TextBlock Text="Description:" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding Description}"
+                         HorizontalAlignment="Stretch"
+                         MinWidth="{StaticResource TextBoxMinWidth}"
+                         MinHeight="60"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         Watermark="Enter sale description (required)"/>
+            </StackPanel>
+
+            <StackPanel Spacing="{StaticResource SpacingUnit}">
+                <TextBlock Text="Opportunity ID:" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding OpportunityId}"
+                         HorizontalAlignment="Stretch"
+                         MinWidth="{StaticResource TextBoxMinWidth}"
+                         Watermark="Enter opportunity ID (optional)"/>
+            </StackPanel>
+
+            <StackPanel Spacing="{StaticResource SpacingUnit}">
+                <TextBlock Text="Value:" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding Value}"
+                         HorizontalAlignment="Stretch"
+                         MinWidth="{StaticResource TextBoxMinWidth}"
+                         Watermark="Enter value (required)"
+                         behaviors:NumericInputNullSafety.IsEnabled="True"/>
+            </StackPanel>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="{StaticResource ControlSpacing}"
+                    Margin="{StaticResource CardPaddingThickness}">
+            <Button Content="{loc:Loc Key=Global_Button_Save}"
+                    Command="{Binding SaveCommand}"
+                    IsEnabled="{Binding CanSave}"
+                    IsDefault="{Binding CanSave}"
+                    MinWidth="{StaticResource ButtonMinWidth}" />
+            <Button Content="{loc:Loc Key=Global_Button_Cancel}"
+                    Command="{Binding CancelCommand}"
+                    IsCancel="True"
+                    MinWidth="{StaticResource ButtonMinWidth}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

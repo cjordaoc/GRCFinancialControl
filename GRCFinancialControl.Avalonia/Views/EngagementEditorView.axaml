@@ -276,6 +276,42 @@
                             </StackPanel>
                         </StackPanel>
                     </TabItem>
+
+                    <TabItem Header="Additional Sales">
+                        <StackPanel Spacing="{StaticResource SectionSpacing}">
+                            <TextBlock Text="Additional Sales" Classes="TitleXSmall"/>
+                            <DataGrid ItemsSource="{Binding AdditionalSales}"
+                                      SelectedItem="{Binding SelectedAdditionalSale}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      Height="200">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="3*"/>
+                                    <DataGridTextColumn Header="Opportunity ID" Binding="{Binding OpportunityId}" Width="*"/>
+                                    <DataGridTextColumn Header="Value" Binding="{Binding Value, StringFormat='{}{0:N2}'}" Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <StackPanel Orientation="Horizontal"
+                                        Spacing="{StaticResource ControlSpacing}"
+                                        IsVisible="{Binding AllowEditing}">
+                                <SplitButton Content="Additional Sales"
+                                             Command="{Binding AddAdditionalSaleCommand}"
+                                             MinWidth="{StaticResource ButtonMinWidth}">
+                                    <SplitButton.Flyout>
+                                        <MenuFlyout>
+                                            <MenuItem Header="Add Additional Sale"
+                                                      Command="{Binding AddAdditionalSaleCommand}"/>
+                                            <MenuItem Header="View Additional Sales"
+                                                      Command="{Binding ViewAdditionalSalesCommand}"/>
+                                        </MenuFlyout>
+                                    </SplitButton.Flyout>
+                                </SplitButton>
+                                <Button Content="Delete Selected"
+                                        Command="{Binding DeleteAdditionalSaleCommand}"
+                                        IsEnabled="{Binding CanDeleteAdditionalSale}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </TabItem>
                 </TabControl>
             </StackPanel>
         </ScrollViewer>

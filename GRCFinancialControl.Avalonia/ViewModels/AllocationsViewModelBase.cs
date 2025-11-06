@@ -17,6 +17,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly IEngagementService _engagementService;
         private readonly IFiscalYearService _fiscalYearService;
         private readonly DialogService _dialogService;
+        private readonly ICustomerService _customerService;
+        private readonly IClosingPeriodService _closingPeriodService;
 
         [ObservableProperty]
         private ObservableCollection<Engagement> _engagements = new();
@@ -29,12 +31,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         protected AllocationsViewModelBase(IEngagementService engagementService,
                                            IFiscalYearService fiscalYearService,
+                                           ICustomerService customerService,
+                                           IClosingPeriodService closingPeriodService,
                                            DialogService dialogService,
                                            IMessenger messenger)
             : base(messenger)
         {
             _engagementService = engagementService;
             _fiscalYearService = fiscalYearService;
+            _customerService = customerService;
+            _closingPeriodService = closingPeriodService;
             _dialogService = dialogService;
         }
 
@@ -75,6 +81,31 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                                                                 _engagementService,
                                                                 Messenger,
                                                                 isReadOnlyMode: true);
+            await _dialogService.ShowDialogAsync(editorViewModel);
+        }
+
+        [RelayCommand]
+        private async Task ViewEngagement(Engagement engagement)
+        {
+            if (engagement == null)
+            {
+                return;
+            }
+
+            var fullEngagement = await _engagementService.GetByIdAsync(engagement.Id);
+            if (fullEngagement is null)
+            {
+                return;
+            }
+
+            var editorViewModel = new EngagementEditorViewModel(
+                fullEngagement,
+                _engagementService,
+                _customerService,
+                _closingPeriodService,
+                Messenger,
+                _dialogService,
+                isReadOnlyMode: true);
             await _dialogService.ShowDialogAsync(editorViewModel);
         }
     }
