@@ -1571,18 +1571,36 @@ namespace GRCFinancialControl.Persistence.Services
                 : (new Dictionary<int, string>(), -1);
         }
 
-        private static int GetRequiredColumnIndex(Dictionary<int, string> headerMap, IEnumerable<string> candidates, string friendlyName)
+        private static int GetRequiredColumnIndex(
+            Dictionary<int, string> headerMap,
+            IEnumerable<string> candidates,
+            string friendlyName)
         {
+            int? firstPartialMatch = null;
+
             foreach (var candidate in candidates)
             {
                 var normalizedCandidate = candidate.ToLowerInvariant();
                 foreach (var kvp in headerMap)
                 {
-                    if (!string.IsNullOrEmpty(kvp.Value) && kvp.Value.Contains(normalizedCandidate, StringComparison.Ordinal))
+                    var header = kvp.Value;
+                    if (string.IsNullOrEmpty(header) || !header.Contains(normalizedCandidate, StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    if (string.Equals(header, normalizedCandidate, StringComparison.Ordinal))
                     {
                         return kvp.Key;
                     }
+
+                    firstPartialMatch ??= kvp.Key;
                 }
+            }
+
+            if (firstPartialMatch.HasValue)
+            {
+                return firstPartialMatch.Value;
             }
 
             throw new InvalidDataException($"The FCS backlog worksheet is missing required column '{friendlyName}'. Ensure the first sheet is selected and filters are cleared before importing.");
@@ -1764,7 +1782,10 @@ namespace GRCFinancialControl.Persistence.Services
             }
 
             var engagementIdIndex = GetRequiredColumnIndex(headerMap, FcsEngagementIdHeaders, "Engagement ID");
-            var currentFiscalYearBacklogIndex = GetRequiredColumnIndex(headerMap, FcsCurrentFiscalYearBacklogHeaders, "FYTG Backlog");
+            var currentFiscalYearBacklogIndex = GetRequiredColumnIndex(
+                headerMap,
+                FcsCurrentFiscalYearBacklogHeaders,
+                "FYTG Backlog");
             var futureFiscalYearIndexes = ResolveFutureFiscalYearColumns(headerMap, nextFiscalYearName);
             if (futureFiscalYearIndexes.Count == 0)
             {

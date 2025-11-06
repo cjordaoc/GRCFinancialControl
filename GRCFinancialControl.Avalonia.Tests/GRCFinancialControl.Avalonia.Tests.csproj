@@ -14,5 +14,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GRCFinancialControl.Avalonia\GRCFinancialControl.Avalonia.csproj" />
+    <ProjectReference Include="..\GRCFinancialControl.Persistence\GRCFinancialControl.Persistence.csproj" />
   </ItemGroup>
 </Project>
