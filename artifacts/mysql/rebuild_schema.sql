@@ -430,6 +430,28 @@ VALUES
     ('Fernando São Pedro', 'Director', 'SA\\fernando.sao-pedro'),
     ('Alexandre Jucá de Paiva', 'AssociatePartner', 'SA\\RG563KA');
 
+INSERT INTO `Engagements`
+    (`EngagementId`, `Source`)
+VALUES
+    ('E-69062277', 'GrcProject'),
+    ('E-69069706', 'GrcProject'),
+    ('E-68737076', 'GrcProject'),
+    ('E-69419868', 'GrcProject'),
+    ('E-68890312', 'S4Project'),
+    ('E-68806990', 'S4Project'),
+    ('E-67004338', 'GrcProject'),
+    ('E-69355617', 'GrcProject'),
+    ('E-68172281', 'GrcProject'),
+    ('E-68543849', 'GrcProject'),
+    ('E-68631643', 'GrcProject'),
+    ('E-68462036', 'GrcProject'),
+    ('E-68611841', 'S4Project'),
+    ('E-69121330', 'GrcProject'),
+    ('E-69288339', 'GrcProject'),
+    ('E-68230167', 'GrcProject'),
+    ('E-68251032', 'GrcProject'),
+    ('E-69067946', 'GrcProject'),
+    ('E-68964575', 'GrcProject');
 
 
 
