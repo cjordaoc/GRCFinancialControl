@@ -56,6 +56,16 @@ public static class InvoiceDescriptionFormatter
             builder.Append("Ticket Cliente: ").AppendLine(context.CustomerTicket.Trim());
         }
 
+        if (!string.IsNullOrWhiteSpace(context.LineAdditionalDetails))
+        {
+            builder.Append("Informações extras da linha: ").AppendLine(context.LineAdditionalDetails.Trim());
+        }
+
+        if (!string.IsNullOrWhiteSpace(context.PlanAdditionalDetails))
+        {
+            builder.Append("Informações adicionais do plano: ").AppendLine(context.PlanAdditionalDetails.Trim());
+        }
+
         builder.Append("Parcela ")
             .Append(context.Sequence)
             .Append(" de ")
@@ -140,6 +150,10 @@ public sealed record InvoiceDescriptionContext
     public string? FrsNumber { get; init; }
 
     public string? CustomerTicket { get; init; }
+
+    public string? LineAdditionalDetails { get; init; }
+
+    public string? PlanAdditionalDetails { get; init; }
 
     public string? CustomerName { get; init; }
 
