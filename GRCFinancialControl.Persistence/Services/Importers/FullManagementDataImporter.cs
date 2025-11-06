@@ -613,6 +613,12 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
                             if (closingPeriodFound)
                             {
+                                // Calculate revenue to-go and to-date values from backlog data
+                                var revenueToGo = row.CurrentFiscalYearBacklog;
+                                var revenueToDate = (row.CurrentFiscalYearBacklog.HasValue || row.FutureFiscalYearBacklog.HasValue)
+                                    ? engagement.ValueToAllocate - (row.CurrentFiscalYearBacklog ?? 0m) - (row.FutureFiscalYearBacklog ?? 0m)
+                                    : (decimal?)null;
+
                                 financialEvolutionUpserts += UpsertFinancialEvolution(
                                     context,
                                     engagement,
@@ -620,7 +626,10 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                     row.ChargedHoursMercuryProjected,
                                     row.TERMercuryProjectedOppCurrency,
                                     row.MarginPercentMercuryProjected,
-                                    row.ExpensesMercuryProjected);
+                                    row.ExpensesMercuryProjected,
+                                    closingPeriod.FiscalYearId,
+                                    revenueToGo,
+                                    revenueToDate);
 
                                 // Process backlog data if available
                                 if (row.CurrentFiscalYearBacklog.HasValue || row.FutureFiscalYearBacklog.HasValue)
@@ -1525,9 +1534,13 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             decimal? hours,
             decimal? value,
             decimal? margin,
-            decimal? expenses)
+            decimal? expenses,
+            int? fiscalYearId = null,
+            decimal? revenueToGoValue = null,
+            decimal? revenueToDateValue = null)
         {
-            if (!hours.HasValue && !value.HasValue && !margin.HasValue && !expenses.HasValue)
+            if (!hours.HasValue && !value.HasValue && !margin.HasValue && !expenses.HasValue && 
+                !revenueToGoValue.HasValue && !revenueToDateValue.HasValue)
             {
                 return 0;
             }
@@ -1552,6 +1565,9 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             evolution.ValueData = value;
             evolution.MarginData = margin;
             evolution.ExpenseData = expenses;
+            evolution.FiscalYearId = fiscalYearId;
+            evolution.RevenueToGoValue = revenueToGoValue;
+            evolution.RevenueToDateValue = revenueToDateValue;
 
             return 1;
         }

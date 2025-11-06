@@ -9,7 +9,11 @@ namespace GRCFinancialControl.Core.Models
         public decimal? ValueData { get; set; }
         public decimal? MarginData { get; set; }
         public decimal? ExpenseData { get; set; }
+        public int? FiscalYearId { get; set; }
+        public decimal? RevenueToGoValue { get; set; }
+        public decimal? RevenueToDateValue { get; set; }
 
         public Engagement Engagement { get; set; } = null!;
+        public FiscalYear? FiscalYear { get; set; }
     }
 }

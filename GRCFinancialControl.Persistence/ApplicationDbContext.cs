@@ -499,6 +499,12 @@ namespace GRCFinancialControl.Persistence
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<FinancialEvolution>()
+                .HasOne(fe => fe.FiscalYear)
+                .WithMany()
+                .HasForeignKey(fe => fe.FiscalYearId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<FinancialEvolution>()
                 .Property(fe => fe.ClosingPeriodId)
                 .HasMaxLength(100);
 
@@ -516,6 +522,14 @@ namespace GRCFinancialControl.Persistence
 
             modelBuilder.Entity<FinancialEvolution>()
                 .Property(fe => fe.ExpenseData)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<FinancialEvolution>()
+                .Property(fe => fe.RevenueToGoValue)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<FinancialEvolution>()
+                .Property(fe => fe.RevenueToDateValue)
                 .HasPrecision(18, 2);
 
             modelBuilder.Entity<FinancialEvolution>()

@@ -405,7 +405,10 @@ namespace GRCFinancialControl.Persistence.Services
                     HoursData = evolution.HoursData,
                     ValueData = evolution.ValueData,
                     MarginData = evolution.MarginData,
-                    ExpenseData = evolution.ExpenseData
+                    ExpenseData = evolution.ExpenseData,
+                    FiscalYearId = evolution.FiscalYearId,
+                    RevenueToGoValue = evolution.RevenueToGoValue,
+                    RevenueToDateValue = evolution.RevenueToDateValue
                 });
             }
 
