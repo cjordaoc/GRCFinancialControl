@@ -124,6 +124,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _loggingService.LogInfo(LocalizationRegistry.Format("FINC_Import_Status_InProgress", displayName));
 
             string? resultSummary = null;
+            string? backlogSummary = null;
             FullManagementDataImportResult? managementResult = null;
 
             try
@@ -136,8 +137,22 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                         resultSummary = await Task.Run(() => _importService.ImportBudgetAsync(filePath));
                         break;
                     case FullManagementType:
+                        backlogSummary = await Task.Run(() => _importService.ImportFcsRevenueBacklogAsync(filePath));
                         managementResult = await Task.Run(() => _importService.ImportFullManagementDataAsync(filePath));
-                        resultSummary = managementResult?.Summary;
+
+                        var managementSummary = managementResult?.Summary;
+                        if (!string.IsNullOrWhiteSpace(backlogSummary) && !string.IsNullOrWhiteSpace(managementSummary))
+                        {
+                            resultSummary = string.Join(Environment.NewLine + Environment.NewLine, backlogSummary, managementSummary);
+                        }
+                        else if (!string.IsNullOrWhiteSpace(backlogSummary))
+                        {
+                            resultSummary = backlogSummary;
+                        }
+                        else
+                        {
+                            resultSummary = managementSummary;
+                        }
                         break;
                     case AllocationPlanningType:
                         resultSummary = await Task.Run(() => _importService.ImportAllocationPlanningAsync(filePath));
