@@ -21,7 +21,7 @@ public sealed class MarkdownPresenter : ScrollViewer
 
     public MarkdownPresenter()
     {
-        HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
+        HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
         VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
 
         _engine = new Markdown.Avalonia.Markdown

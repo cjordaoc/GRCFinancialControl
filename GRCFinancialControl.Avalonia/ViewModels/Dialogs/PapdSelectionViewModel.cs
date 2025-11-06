@@ -40,24 +40,31 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
         {
             var allPapds = await _papdService.GetAllAsync();
             var assignedPapdIds = _engagement.EngagementPapds.Select(a => a.PapdId).ToHashSet();
-            
+
             var available = allPapds
-                .Where(p => !assignedPapdIds.Contains(p.Id))
                 .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
-                .Select(p => new PapdSelectionItem(p))
+                .Select(p =>
+                {
+                    var item = new PapdSelectionItem(p)
+                    {
+                        IsSelected = assignedPapdIds.Contains(p.Id)
+                    };
+                    item.PropertyChanged += (_, _) => SaveCommand.NotifyCanExecuteChanged();
+                    return item;
+                })
                 .ToList();
 
             AvailablePapds = new ObservableCollection<PapdSelectionItem>(available);
+            SaveCommand.NotifyCanExecuteChanged();
         }
 
         [RelayCommand(CanExecute = nameof(CanSave))]
         private async Task SaveAsync()
         {
-            var selectedPapds = AvailablePapds.Where(p => p.IsSelected).Select(p => p.Papd).ToList();
-            if (selectedPapds.Count == 0)
-            {
-                return;
-            }
+            var selectedPapdIds = AvailablePapds
+                .Where(p => p.IsSelected)
+                .Select(p => p.Papd.Id)
+                .ToHashSet();
 
             var fullEngagement = await _engagementService.GetByIdAsync(_engagement.Id);
             if (fullEngagement is null)
@@ -69,28 +76,54 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             }
 
             var assignedPapdIds = fullEngagement.EngagementPapds.Select(a => a.PapdId).ToHashSet();
-            var newAssignments = selectedPapds
-                .Where(p => !assignedPapdIds.Contains(p.Id))
+            var newAssignments = selectedPapdIds.Except(assignedPapdIds).ToList();
+            var removedAssignments = fullEngagement.EngagementPapds
+                .Where(a => !selectedPapdIds.Contains(a.PapdId))
                 .ToList();
 
-            foreach (var papd in newAssignments)
+            if (newAssignments.Count == 0 && removedAssignments.Count == 0)
+            {
+                Messenger.Send(new CloseDialogMessage(false));
+                return;
+            }
+
+            foreach (var papdId in newAssignments)
             {
                 fullEngagement.EngagementPapds.Add(new EngagementPapd
                 {
                     EngagementId = fullEngagement.Id,
-                    PapdId = papd.Id
+                    PapdId = papdId
                 });
+            }
+
+            foreach (var assignment in removedAssignments)
+            {
+                fullEngagement.EngagementPapds.Remove(assignment);
             }
 
             try
             {
                 await _engagementService.UpdateAsync(fullEngagement);
+                var engagementDisplay = fullEngagement.EngagementId ?? fullEngagement.Description;
+
                 if (newAssignments.Count > 0)
                 {
                     ToastService.ShowSuccess(
                         "FINC_Admin_PapdAssignments_Toast_SaveSuccess",
-                        string.Join(", ", newAssignments.Select(p => p.Name)),
-                        fullEngagement.EngagementId ?? fullEngagement.Description);
+                        string.Join(", ", AvailablePapds
+                            .Where(p => newAssignments.Contains(p.Papd.Id))
+                            .Select(p => p.Papd.Name)),
+                        engagementDisplay);
+                }
+
+                if (removedAssignments.Count > 0)
+                {
+                    ToastService.ShowSuccess(
+                        "FINC_Admin_PapdAssignments_Toast_DeleteSuccess",
+                        string.Join(", ", removedAssignments
+                            .Select(a => AvailablePapds.FirstOrDefault(p => p.Papd.Id == a.PapdId)?.Papd.Name)
+                            .Where(name => !string.IsNullOrWhiteSpace(name))),
+                        engagementDisplay);
                 }
                 Messenger.Send(new CloseDialogMessage(true));
             }
@@ -106,7 +139,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             Messenger.Send(new CloseDialogMessage(false));
         }
 
-        private bool CanSave() => AvailablePapds.Any(p => p.IsSelected);
+        private bool CanSave() => AvailablePapds.Count > 0;
     }
 
     public sealed partial class PapdSelectionItem : ObservableObject

@@ -40,24 +40,31 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
         {
             var allManagers = await _managerService.GetAllAsync();
             var assignedManagerIds = _engagement.ManagerAssignments.Select(a => a.ManagerId).ToHashSet();
-            
+
             var available = allManagers
-                .Where(m => !assignedManagerIds.Contains(m.Id))
                 .OrderBy(m => m.Name, StringComparer.OrdinalIgnoreCase)
-                .Select(m => new ManagerSelectionItem(m))
+                .Select(m =>
+                {
+                    var item = new ManagerSelectionItem(m)
+                    {
+                        IsSelected = assignedManagerIds.Contains(m.Id)
+                    };
+                    item.PropertyChanged += (_, _) => SaveCommand.NotifyCanExecuteChanged();
+                    return item;
+                })
                 .ToList();
 
             AvailableManagers = new ObservableCollection<ManagerSelectionItem>(available);
+            SaveCommand.NotifyCanExecuteChanged();
         }
 
         [RelayCommand(CanExecute = nameof(CanSave))]
         private async Task SaveAsync()
         {
-            var selectedManagers = AvailableManagers.Where(m => m.IsSelected).Select(m => m.Manager).ToList();
-            if (selectedManagers.Count == 0)
-            {
-                return;
-            }
+            var selectedManagerIds = AvailableManagers
+                .Where(m => m.IsSelected)
+                .Select(m => m.Manager.Id)
+                .ToHashSet();
 
             var fullEngagement = await _engagementService.GetByIdAsync(_engagement.Id);
             if (fullEngagement is null)
@@ -69,28 +76,54 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             }
 
             var assignedManagerIds = fullEngagement.ManagerAssignments.Select(a => a.ManagerId).ToHashSet();
-            var newAssignments = selectedManagers
-                .Where(m => !assignedManagerIds.Contains(m.Id))
+            var newAssignments = selectedManagerIds.Except(assignedManagerIds).ToList();
+            var removedAssignments = fullEngagement.ManagerAssignments
+                .Where(a => !selectedManagerIds.Contains(a.ManagerId))
                 .ToList();
 
-            foreach (var manager in newAssignments)
+            if (newAssignments.Count == 0 && removedAssignments.Count == 0)
+            {
+                Messenger.Send(new CloseDialogMessage(false));
+                return;
+            }
+
+            foreach (var managerId in newAssignments)
             {
                 fullEngagement.ManagerAssignments.Add(new EngagementManagerAssignment
                 {
                     EngagementId = fullEngagement.Id,
-                    ManagerId = manager.Id
+                    ManagerId = managerId
                 });
+            }
+
+            foreach (var assignment in removedAssignments)
+            {
+                fullEngagement.ManagerAssignments.Remove(assignment);
             }
 
             try
             {
                 await _engagementService.UpdateAsync(fullEngagement);
+                var engagementDisplay = fullEngagement.EngagementId ?? fullEngagement.Description;
+
                 if (newAssignments.Count > 0)
                 {
                     ToastService.ShowSuccess(
                         "FINC_Admin_ManagerAssignments_Toast_SaveSuccess",
-                        string.Join(", ", newAssignments.Select(m => m.Name)),
-                        fullEngagement.EngagementId ?? fullEngagement.Description);
+                        string.Join(", ", AvailableManagers
+                            .Where(m => newAssignments.Contains(m.Manager.Id))
+                            .Select(m => m.Manager.Name)),
+                        engagementDisplay);
+                }
+
+                if (removedAssignments.Count > 0)
+                {
+                    ToastService.ShowSuccess(
+                        "FINC_Admin_ManagerAssignments_Toast_DeleteSuccess",
+                        string.Join(", ", removedAssignments
+                            .Select(a => AvailableManagers.FirstOrDefault(m => m.Manager.Id == a.ManagerId)?.Manager.Name)
+                            .Where(name => !string.IsNullOrWhiteSpace(name))),
+                        engagementDisplay);
                 }
                 Messenger.Send(new CloseDialogMessage(true));
             }
@@ -106,7 +139,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             Messenger.Send(new CloseDialogMessage(false));
         }
 
-        private bool CanSave() => AvailableManagers.Any(m => m.IsSelected);
+        private bool CanSave() => AvailableManagers.Count > 0;
     }
 
     public sealed partial class ManagerSelectionItem : ObservableObject

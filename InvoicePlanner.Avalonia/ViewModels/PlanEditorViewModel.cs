@@ -120,6 +120,9 @@ public partial class PlanEditorViewModel : ViewModelBase
     private string? customInstructions;
 
     [ObservableProperty]
+    private string? additionalDetails;
+
+    [ObservableProperty]
     private string? recipientEmails;
 
     [ObservableProperty]
@@ -208,6 +211,7 @@ public partial class PlanEditorViewModel : ViewModelBase
         }
 
         RefreshSequences();
+        RecalculateDueDates();
         RecalculateTotals();
         _savePlanCommand.NotifyCanExecuteChanged();
         OnPropertyChanged(nameof(Items));
@@ -242,6 +246,7 @@ public partial class PlanEditorViewModel : ViewModelBase
         }
 
         ApplyEmissionDateRule();
+        RecalculateDueDates();
     }
 
     partial void OnPlanningBaseValueChanged(decimal value)
@@ -287,6 +292,7 @@ public partial class PlanEditorViewModel : ViewModelBase
         }
 
         ApplyEmissionDateRule();
+        RecalculateDueDates();
     }
 
     partial void OnValidationMessageChanged(string? value)
@@ -417,6 +423,7 @@ public partial class PlanEditorViewModel : ViewModelBase
             PaymentTermDays = plan.PaymentTermDays;
             CustomerFocalPointName = plan.CustomerFocalPointName;
             CustomInstructions = plan.CustomInstructions;
+            AdditionalDetails = plan.AdditionalDetails;
             FirstEmissionDate = plan.FirstEmissionDate;
             _numInvoices = plan.NumInvoices;
             OnPropertyChanged(nameof(NumInvoices));
@@ -437,9 +444,11 @@ public partial class PlanEditorViewModel : ViewModelBase
                     FrsNumber = item.FrsNumber,
                     CustomerTicket = item.CustomerTicket,
                     Status = item.Status,
+                    AdditionalDetails = item.AdditionalInfo,
                 };
 
                 line.SetPaymentType(item.PaymentTypeCode);
+                line.SetDueDate(item.DueDate);
                 line.CanEditEmissionDate = line.IsEditable && plan.Type != InvoicePlanType.ByDate;
                 line.ShowDeliveryDescription = plan.Type == InvoicePlanType.ByDelivery;
 
@@ -457,6 +466,7 @@ public partial class PlanEditorViewModel : ViewModelBase
             RefreshSequences();
             UpdateLineTypeSettings();
             ApplyEmissionDateRule();
+            RecalculateDueDates();
             RecalculateTotals();
             OnPropertyChanged(nameof(RequiresFirstEmissionDate));
             OnPropertyChanged(nameof(HasRecipientEmails));
@@ -483,6 +493,21 @@ public partial class PlanEditorViewModel : ViewModelBase
         }
 
         RecalculateTotals();
+    }
+
+    internal void HandleLineEmissionChanged(InvoicePlanLineViewModel line)
+    {
+        if (line is null)
+        {
+            return;
+        }
+
+        line.SetDueDate(CalculateDueDate(line.EmissionDate));
+
+        if (ReferenceEquals(line, SelectedInvoiceLine))
+        {
+            _previewDescriptionCommand.NotifyCanExecuteChanged();
+        }
     }
 
     internal void HandleLineAmountChanged(InvoicePlanLineViewModel line)
@@ -704,6 +729,7 @@ public partial class PlanEditorViewModel : ViewModelBase
         UpdateLineTypeSettings();
         DistributePercentages();
         ApplyEmissionDateRule();
+        RecalculateDueDates();
         RecalculateTotals();
         EnsureSelectedInvoiceLine();
     }
@@ -724,6 +750,7 @@ public partial class PlanEditorViewModel : ViewModelBase
         line.SetPaymentType(PaymentTypeCatalog.TransferenciaBancariaCode);
         line.CanEditEmissionDate = line.IsEditable && PlanType != InvoicePlanType.ByDate;
         line.ShowDeliveryDescription = PlanType == InvoicePlanType.ByDelivery;
+        line.SetDueDate(CalculateDueDate(line.EmissionDate));
 
         return line;
     }
@@ -900,6 +927,31 @@ public partial class PlanEditorViewModel : ViewModelBase
         _suppressLineUpdates = false;
     }
 
+    private void RecalculateDueDates()
+    {
+        foreach (var line in Items)
+        {
+            UpdateLineDueDate(line);
+        }
+    }
+
+    private void UpdateLineDueDate(InvoicePlanLineViewModel line)
+    {
+        var dueDate = CalculateDueDate(line.EmissionDate);
+        line.SetDueDate(dueDate);
+    }
+
+    private DateTime? CalculateDueDate(DateTime? emissionDate)
+    {
+        if (emissionDate is null)
+        {
+            return null;
+        }
+
+        var baseDate = emissionDate.Value.AddDays(Math.Max(0, PaymentTermDays));
+        return BusinessDayCalculator.AdjustToNextMonday(baseDate);
+    }
+
     private void UpdateLineTypeSettings()
     {
         var isByDate = PlanType == InvoicePlanType.ByDate;
@@ -998,6 +1050,7 @@ public partial class PlanEditorViewModel : ViewModelBase
             PaymentTermDays = PaymentTermDays,
             CustomerFocalPointName = CustomerFocalPointName?.Trim() ?? string.Empty,
             CustomInstructions = string.IsNullOrWhiteSpace(CustomInstructions) ? null : CustomInstructions!.Trim(),
+            AdditionalDetails = string.IsNullOrWhiteSpace(AdditionalDetails) ? null : AdditionalDetails!.Trim(),
             FirstEmissionDate = FirstEmissionDate,
         };
 
@@ -1007,9 +1060,7 @@ public partial class PlanEditorViewModel : ViewModelBase
         foreach (var line in Items.OrderBy(line => line.Sequence))
         {
             var emissionDate = line.EmissionDate;
-            var dueDate = emissionDate is null
-                ? (DateTime?)null
-                : BusinessDayCalculator.AdjustToNextBusinessDay(emissionDate.Value.AddDays(Math.Max(0, PaymentTermDays)));
+            var dueDate = CalculateDueDate(emissionDate);
 
             var item = new InvoiceItem
             {
@@ -1025,6 +1076,7 @@ public partial class PlanEditorViewModel : ViewModelBase
                 PoNumber = string.IsNullOrWhiteSpace(line.PoNumber) ? null : line.PoNumber.Trim(),
                 FrsNumber = string.IsNullOrWhiteSpace(line.FrsNumber) ? null : line.FrsNumber.Trim(),
                 CustomerTicket = string.IsNullOrWhiteSpace(line.CustomerTicket) ? null : line.CustomerTicket.Trim(),
+                AdditionalInfo = string.IsNullOrWhiteSpace(line.AdditionalDetails) ? null : line.AdditionalDetails.Trim(),
                 PaymentTypeCode = PaymentTypeCatalog.NormalizeCode(line.PaymentTypeCode),
             };
 
@@ -1193,6 +1245,7 @@ public partial class PlanEditorViewModel : ViewModelBase
             FirstEmissionDate = DateTime.Today;
             CustomerFocalPointName = string.Empty;
             CustomInstructions = string.Empty;
+            AdditionalDetails = string.Empty;
             RecipientEmails = string.Empty;
             Items.Clear();
             ValidationMessage = null;
@@ -1297,8 +1350,7 @@ public partial class PlanEditorViewModel : ViewModelBase
         var primaryRecipient = recipients.FirstOrDefault();
 
         var emissionDate = line.EmissionDate.Value;
-        var dueDate = BusinessDayCalculator.AdjustToNextBusinessDay(
-            emissionDate.AddDays(Math.Max(0, PaymentTermDays)));
+        var dueDate = CalculateDueDate(line.EmissionDate) ?? emissionDate;
 
         var engagementDescription = SelectedEngagement?.Name;
         if (string.IsNullOrWhiteSpace(engagementDescription))

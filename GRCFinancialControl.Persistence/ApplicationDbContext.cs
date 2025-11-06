@@ -604,6 +604,10 @@ namespace GRCFinancialControl.Persistence
                 .HasMySqlColumnType("text", isMySql);
 
             modelBuilder.Entity<InvoicePlan>()
+                .Property(plan => plan.AdditionalDetails)
+                .HasMySqlColumnType("text", isMySql);
+
+            modelBuilder.Entity<InvoicePlan>()
                 .Property(plan => plan.FirstEmissionDate)
                 .HasMySqlColumnType("date", isMySql);
 

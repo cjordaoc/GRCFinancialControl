@@ -20,6 +20,8 @@ public class InvoicePlan
 
     public string? CustomInstructions { get; set; }
 
+    public string? AdditionalDetails { get; set; }
+
     public DateTime? FirstEmissionDate { get; set; }
 
     public DateTime CreatedAt { get; set; }

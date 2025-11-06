@@ -91,10 +91,10 @@ public class InvoicePlanValidator : IInvoicePlanValidator
                 errors.Add(ValidationStrings.Format("Global_EmissionDateRequired", expectedSeq));
             }
 
-            if (plan.PaymentTermDays > 0 && item.EmissionDate is not null)
+            if (item.EmissionDate is not null)
             {
-                var expectedDue = BusinessDayCalculator.AdjustToNextBusinessDay(
-                    item.EmissionDate.Value.AddDays(plan.PaymentTermDays));
+                var expectedDue = BusinessDayCalculator.AdjustToNextMonday(
+                    item.EmissionDate.Value.AddDays(Math.Max(0, plan.PaymentTermDays)));
                 if (item.DueDate != expectedDue)
                 {
                     errors.Add(ValidationStrings.Format("Global_DueDateMustMatch", expectedSeq));
