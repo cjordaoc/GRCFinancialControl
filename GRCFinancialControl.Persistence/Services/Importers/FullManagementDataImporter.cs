@@ -1688,8 +1688,9 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                 var toGoCurrent = RoundMoney(currentBacklog);
                 var toDateCurrent = RoundMoney(engagement.ValueToAllocate - currentBacklog - futureBacklog);
 
+                // Snapshot-based: Look for allocation for this specific closing period
                 var allocation = engagement.RevenueAllocations
-                    .FirstOrDefault(a => a.FiscalYearId == currentFy.Id);
+                    .FirstOrDefault(a => a.FiscalYearId == currentFy.Id && a.ClosingPeriodId == closingPeriod.Id);
 
                 if (allocation == null)
                 {
@@ -1697,6 +1698,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     {
                         EngagementId = engagement.Id,
                         FiscalYearId = currentFy.Id,
+                        ClosingPeriodId = closingPeriod.Id,
                         ToGoValue = toGoCurrent,
                         ToDateValue = toDateCurrent,
                         UpdatedAt = DateTime.UtcNow
@@ -1706,6 +1708,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                 }
                 else
                 {
+                    // Update existing snapshot for this closing period
                     allocation.ToGoValue = toGoCurrent;
                     allocation.ToDateValue = toDateCurrent;
                     allocation.UpdatedAt = DateTime.UtcNow;
@@ -1719,8 +1722,9 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                 {
                     var toGoNext = RoundMoney(futureBacklog);
 
+                    // Snapshot-based: Look for allocation for this specific closing period
                     var nextAllocation = engagement.RevenueAllocations
-                        .FirstOrDefault(a => a.FiscalYearId == nextFy.Id);
+                        .FirstOrDefault(a => a.FiscalYearId == nextFy.Id && a.ClosingPeriodId == closingPeriod.Id);
 
                     if (nextAllocation == null)
                     {
@@ -1728,6 +1732,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         {
                             EngagementId = engagement.Id,
                             FiscalYearId = nextFy.Id,
+                            ClosingPeriodId = closingPeriod.Id,
                             ToGoValue = toGoNext,
                             ToDateValue = 0m,
                             UpdatedAt = DateTime.UtcNow
@@ -1737,6 +1742,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     }
                     else
                     {
+                        // Update existing snapshot for this closing period
                         nextAllocation.ToGoValue = toGoNext;
                         nextAllocation.ToDateValue = 0m;
                         nextAllocation.UpdatedAt = DateTime.UtcNow;

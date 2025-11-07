@@ -199,6 +199,7 @@ CREATE TABLE `EngagementRankBudgets`
     `Id`             BIGINT         NOT NULL AUTO_INCREMENT,
     `EngagementId`   INT            NOT NULL,
     `FiscalYearId`   INT            NOT NULL,
+    `ClosingPeriodId` INT           NOT NULL,
     `RankName`       VARCHAR(100)   NOT NULL,
     `BudgetHours`    DECIMAL(18, 2) NOT NULL DEFAULT 0,
     `ConsumedHours`  DECIMAL(18, 2) NOT NULL DEFAULT 0,
@@ -210,8 +211,11 @@ CREATE TABLE `EngagementRankBudgets`
     CONSTRAINT `PK_EngagementRankBudgets` PRIMARY KEY (`Id`),
     CONSTRAINT `FK_EngagementRankBudgets_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
     CONSTRAINT `FK_EngagementRankBudgets_FiscalYears` FOREIGN KEY (`FiscalYearId`) REFERENCES `FiscalYears` (`Id`) ON DELETE CASCADE,
-    CONSTRAINT `UQ_EngagementRankBudgets` UNIQUE (`EngagementId`, `FiscalYearId`, `RankName`),
-    INDEX `IX_EngagementRankBudgets_EngagementId` (`EngagementId`)
+    CONSTRAINT `FK_EngagementRankBudgets_ClosingPeriods` FOREIGN KEY (`ClosingPeriodId`) REFERENCES `ClosingPeriods` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `UX_EngagementRankBudgets_Snapshot` UNIQUE (`EngagementId`, `FiscalYearId`, `RankName`, `ClosingPeriodId`),
+    INDEX `IX_EngagementRankBudgets_EngagementId` (`EngagementId`),
+    INDEX `IX_EngagementRankBudgets_ClosingPeriodId` (`ClosingPeriodId`),
+    INDEX `IX_EngagementRankBudgets_Latest` (`EngagementId`, `FiscalYearId`, `RankName`, `ClosingPeriodId` DESC)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 CREATE TABLE `EngagementRankBudgetHistory`
@@ -229,19 +233,34 @@ CREATE TABLE `EngagementRankBudgetHistory`
 CREATE UNIQUE INDEX `IX_History_Key`
     ON `EngagementRankBudgetHistory` (`EngagementCode`, `RankCode`, `FiscalYearId`, `ClosingPeriodId`);
 
--- Applied Suggestion #2: Use INT FK for EngagementId to keep consistency/performance
+-- Financial Evolution: Granular metrics per closing period (Budget/ETD/FYTD breakdowns)
 CREATE TABLE `FinancialEvolution`
 (
-    `Id`              INT            NOT NULL AUTO_INCREMENT,
-    `ClosingPeriodId` VARCHAR(100)   NOT NULL,
-    `EngagementId`    INT            NOT NULL,
-    `HoursData`       DECIMAL(18, 2) NULL,
-    `ValueData`       DECIMAL(18, 2) NULL,
-    `MarginData`      DECIMAL(9, 4)  NULL,
-    `ExpenseData`     DECIMAL(18, 2) NULL,
+    `Id`                   INT            NOT NULL AUTO_INCREMENT,
+    `ClosingPeriodId`      VARCHAR(100)   NOT NULL,
+    `EngagementId`         INT            NOT NULL,
+    -- Hours Metrics
+    `BudgetHours`          DECIMAL(18, 2) NULL,
+    `ChargedHours`         DECIMAL(18, 2) NULL,
+    `FYTDHours`            DECIMAL(18, 2) NULL,
+    `AdditionalHours`      DECIMAL(18, 2) NULL,
+    -- Revenue Metrics
+    `ValueData`            DECIMAL(18, 2) NULL,
+    `FiscalYearId`         INT            NULL,
+    `RevenueToGoValue`     DECIMAL(18, 2) NULL,
+    `RevenueToDateValue`   DECIMAL(18, 2) NULL,
+    -- Margin Metrics
+    `BudgetMargin`         DECIMAL(18, 2) NULL,
+    `ToDateMargin`         DECIMAL(18, 2) NULL,
+    `FYTDMargin`           DECIMAL(18, 2) NULL,
+    -- Expense Metrics
+    `ExpenseBudget`        DECIMAL(18, 2) NULL,
+    `ExpensesToDate`       DECIMAL(18, 2) NULL,
+    `FYTDExpenses`         DECIMAL(18, 2) NULL,
     CONSTRAINT `PK_FinancialEvolution` PRIMARY KEY (`Id`),
     CONSTRAINT `UX_FinancialEvolution_Key` UNIQUE (`EngagementId`, `ClosingPeriodId`),
-    CONSTRAINT `FK_FinancialEvolution_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE
+    CONSTRAINT `FK_FinancialEvolution_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_FinancialEvolution_FiscalYears` FOREIGN KEY (`FiscalYearId`) REFERENCES `FiscalYears` (`Id`) ON DELETE SET NULL
     -- NOTE: Keeping ClosingPeriodId as VARCHAR(100) to preserve your current external key format.
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
@@ -292,24 +311,29 @@ CREATE TABLE `Exceptions`
     CONSTRAINT `PK_Exceptions` PRIMARY KEY (`Id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
--- Applied Suggestion #3: rename PlannedValue -> ToGoValue and add ToDateValue
+-- Snapshot-based Revenue Allocations (aligned with Financial Evolution closing periods)
 CREATE TABLE `EngagementFiscalYearRevenueAllocations`
 (
     `Id`             INT            NOT NULL AUTO_INCREMENT,
     `EngagementId`   INT            NOT NULL,
     `FiscalYearId`   INT            NOT NULL,
+    `ClosingPeriodId` INT           NOT NULL,
     `ToGoValue`      DECIMAL(18, 2) NOT NULL,
     `ToDateValue`    DECIMAL(18, 2) NOT NULL DEFAULT 0,
     `LastUpdateDate` DATE           NULL,
-  `CreatedAt`               TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `UpdatedAt`               TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `CreatedAt`      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `UpdatedAt`      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT `PK_EngagementFiscalYearRevenueAllocations` PRIMARY KEY (`Id`),
     CONSTRAINT `FK_EFYRA_Engagements` FOREIGN KEY (`EngagementId`)
         REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
     CONSTRAINT `FK_EFYRA_FiscalYears` FOREIGN KEY (`FiscalYearId`)
         REFERENCES `FiscalYears` (`Id`) ON DELETE CASCADE,
-    CONSTRAINT `UQ_EFYRA_Allocation` UNIQUE (`EngagementId`, `FiscalYearId`),
-    INDEX `IX_EFYRA_FiscalYearId` (`FiscalYearId`)
+    CONSTRAINT `FK_EFYRA_ClosingPeriods` FOREIGN KEY (`ClosingPeriodId`)
+        REFERENCES `ClosingPeriods` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `UX_EngagementFiscalYearRevenueAllocations_Snapshot` UNIQUE (`EngagementId`, `FiscalYearId`, `ClosingPeriodId`),
+    INDEX `IX_EFYRA_FiscalYearId` (`FiscalYearId`),
+    INDEX `IX_EFYRA_ClosingPeriodId` (`ClosingPeriodId`),
+    INDEX `IX_EngagementFiscalYearRevenueAllocations_Latest` (`EngagementId`, `FiscalYearId`, `ClosingPeriodId` DESC)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
