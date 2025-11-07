@@ -262,7 +262,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
         {
             EngagementIdHeaders,
             EngagementNameHeaders,
-            ClosingPeriodHeaders,
+            // Note: ClosingPeriodHeaders removed - closing period now comes from UI selection
             CustomerNameHeaders,
             CustomerIdHeaders,
             OpportunityCurrencyHeaders,
@@ -283,11 +283,16 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             FutureFiscalYearBacklogHeaders
         };
 
-        public async Task<FullManagementDataImportResult> ImportAsync(string filePath)
+        public async Task<FullManagementDataImportResult> ImportAsync(string filePath, int closingPeriodId)
         {
             if (string.IsNullOrWhiteSpace(filePath))
             {
                 throw new ArgumentException("File path must be provided.", nameof(filePath));
+            }
+
+            if (closingPeriodId <= 0)
+            {
+                throw new ArgumentException("Valid closing period ID must be provided.", nameof(closingPeriodId));
             }
 
             if (!File.Exists(filePath))
@@ -313,12 +318,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                 throw new InvalidDataException("The Full Management Data workbook does not contain any worksheets.");
             }
 
-            var metadata = ExtractReportMetadata(worksheet);
-            if (string.IsNullOrWhiteSpace(metadata.ClosingPeriodName))
-            {
-                throw new ImportWarningException("Full Management Data workbook is missing the closing period filter. Set the period before exporting and try again.");
-            }
-            var parsedRows = ParseRows(worksheet, metadata.ClosingPeriodName);
+            // Parse rows without requiring closing period from Excel
+            var parsedRows = ParseRows(worksheet, null);
             if (parsedRows.Count == 0)
             {
                 return new FullManagementDataImportResult(
@@ -348,11 +349,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                 try
                 {
                     var engagementIds = parsedRows.Select(r => r.EngagementId).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-                    var closingPeriodNames = parsedRows
-                        .Select(r => r.ClosingPeriodName)
-                        .Where(name => !string.IsNullOrWhiteSpace(name))
-                        .Distinct(StringComparer.OrdinalIgnoreCase)
-                        .ToList();
 
                     var engagements = await context.Engagements
                         .Include(e => e.FinancialEvolutions)
@@ -364,13 +360,21 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
                     var engagementLookup = engagements.ToDictionary(e => e.EngagementId, StringComparer.OrdinalIgnoreCase);
 
-                    var closingPeriods = await context.ClosingPeriods
+                    // Fetch the user-selected closing period
+                    var closingPeriod = await context.ClosingPeriods
                         .Include(cp => cp.FiscalYear)
-                        .Where(cp => closingPeriodNames.Contains(cp.Name))
-                        .ToListAsync()
+                        .FirstOrDefaultAsync(cp => cp.Id == closingPeriodId)
                         .ConfigureAwait(false);
 
-                    var closingPeriodLookup = closingPeriods.ToDictionary(cp => cp.Name, StringComparer.OrdinalIgnoreCase);
+                    if (closingPeriod == null)
+                    {
+                        throw new InvalidDataException($"Closing period with ID {closingPeriodId} not found in database.");
+                    }
+
+                    if (closingPeriod.FiscalYear?.IsLocked ?? false)
+                    {
+                        throw new InvalidOperationException($"Cannot import data for closing period '{closingPeriod.Name}' because its fiscal year '{closingPeriod.FiscalYear.Name}' is locked.");
+                    }
 
                     var customerNames = new HashSet<string>(
                         parsedRows
@@ -410,8 +414,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     var updatedEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                     var manualOnlySkips = new List<string>();
                     var closedEngagementSkips = new List<string>();
-                    var lockedFiscalYearSkips = new List<string>();
-                    var missingClosingPeriodSkips = new List<string>();
                     var missingEngagementSkips = new List<string>();
                     var errors = new List<string>();
                     var warningMessages = new HashSet<string>(StringComparer.Ordinal);
@@ -423,20 +425,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     {
                         try
                         {
-                            var closingPeriodFound = closingPeriodLookup.TryGetValue(row.ClosingPeriodName, out var closingPeriod);
-
-                            if (!closingPeriodFound)
-                            {
-                                var missingLabel = string.IsNullOrWhiteSpace(row.ClosingPeriodName)
-                                    ? "<blank>"
-                                    : row.ClosingPeriodName;
-                                missingClosingPeriodSkips.Add($"{missingLabel} (row {row.RowNumber})");
-                                Logger.LogWarning(
-                                    "Closing period '{ClosingPeriod}' not found for Full Management Data row {RowNumber} (Engagement {EngagementId}). Period-specific metrics will be skipped.",
-                                    missingLabel,
-                                    row.RowNumber,
-                                    row.EngagementId);
-                            }
 
                             if (!engagementLookup.TryGetValue(row.EngagementId, out var engagement))
                             {
@@ -535,20 +523,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                 continue;
                             }
 
-                            if (closingPeriodFound && (closingPeriod!.FiscalYear?.IsLocked ?? false))
-                            {
-                                var fiscalYearName = string.IsNullOrWhiteSpace(closingPeriod.FiscalYear.Name)
-                                    ? $"Id={closingPeriod.FiscalYear.Id}"
-                                    : closingPeriod.FiscalYear.Name;
-                                lockedFiscalYearSkips.Add($"{row.EngagementId} ({fiscalYearName}, row {row.RowNumber})");
-                                Logger.LogInformation(
-                                    "Skipping row {RowNumber} for engagement {EngagementId} because fiscal year '{FiscalYear}' is locked.",
-                                    row.RowNumber,
-                                    row.EngagementId,
-                                    fiscalYearName);
-                                continue;
-                            }
-
                             updatedEngagements.Add(engagement.EngagementId);
 
                             if (!string.IsNullOrWhiteSpace(row.EngagementName))
@@ -606,98 +580,81 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                 engagement.OpeningExpenses = row.OriginalBudgetExpenses.Value;
                             }
 
-                            if (closingPeriodFound)
+                            // Always process period-specific data with user-selected closing period
+                            if (row.ChargedHours.HasValue)
                             {
-                                if (row.ChargedHours.HasValue)
-                                {
-                                    engagement.EstimatedToCompleteHours = row.ChargedHours.Value;
-                                }
-
-                                if (row.TERMercuryProjectedOppCurrency.HasValue)
-                                {
-                                    engagement.ValueEtcp = row.TERMercuryProjectedOppCurrency.Value;
-                                }
-
-                                if (row.ToDateMargin.HasValue)
-                                {
-                                    engagement.MarginPctEtcp = row.ToDateMargin;
-                                }
-
-                                if (row.ExpensesToDate.HasValue)
-                                {
-                                    engagement.ExpensesEtcp = row.ExpensesToDate.Value;
-                                }
-
-                                if (row.UnbilledRevenueDays.HasValue)
-                                {
-                                    engagement.UnbilledRevenueDays = row.UnbilledRevenueDays.Value;
-                                }
-
-                                var lastEtcDate = ResolveLastEtcDate(row, closingPeriod!);
-                                if (lastEtcDate.HasValue)
-                                {
-                                    engagement.LastEtcDate = lastEtcDate;
-                                    engagement.ProposedNextEtcDate = CalculateProposedNextEtcDate(lastEtcDate);
-                                }
-                                else if (row.NextEtcDate.HasValue)
-                                {
-                                    engagement.ProposedNextEtcDate = DateTime.SpecifyKind(row.NextEtcDate.Value.Date, DateTimeKind.Unspecified);
-                                }
-
-                                engagement.LastClosingPeriodId = closingPeriod!.Id;
-                                engagement.LastClosingPeriod = closingPeriod;
-                            }
-                            else
-                            {
-                                var lastEtcDate = ResolveLastEtcDate(row, null);
-                                if (lastEtcDate.HasValue)
-                                {
-                                    engagement.LastEtcDate = lastEtcDate;
-                                    engagement.ProposedNextEtcDate = CalculateProposedNextEtcDate(lastEtcDate);
-                                }
-                                else if (row.NextEtcDate.HasValue)
-                                {
-                                    engagement.ProposedNextEtcDate = DateTime.SpecifyKind(row.NextEtcDate.Value.Date, DateTimeKind.Unspecified);
-                                }
+                                engagement.EstimatedToCompleteHours = row.ChargedHours.Value;
                             }
 
-                            if (closingPeriodFound)
+                            if (row.TERMercuryProjectedOppCurrency.HasValue)
                             {
-                                // Calculate revenue to-go and to-date values from backlog data
-                                var revenueToGo = row.CurrentFiscalYearBacklog;
-                                var revenueToDate = (row.CurrentFiscalYearBacklog.HasValue || row.FutureFiscalYearBacklog.HasValue)
-                                    ? engagement.ValueToAllocate - (row.CurrentFiscalYearBacklog ?? 0m) - (row.FutureFiscalYearBacklog ?? 0m)
-                                    : (decimal?)null;
+                                engagement.ValueEtcp = row.TERMercuryProjectedOppCurrency.Value;
+                            }
 
-                                financialEvolutionUpserts += UpsertFinancialEvolution(
+                            if (row.ToDateMargin.HasValue)
+                            {
+                                engagement.MarginPctEtcp = row.ToDateMargin;
+                            }
+
+                            if (row.ExpensesToDate.HasValue)
+                            {
+                                engagement.ExpensesEtcp = row.ExpensesToDate.Value;
+                            }
+
+                            if (row.UnbilledRevenueDays.HasValue)
+                            {
+                                engagement.UnbilledRevenueDays = row.UnbilledRevenueDays.Value;
+                            }
+
+                            var lastEtcDate = ResolveLastEtcDate(row, closingPeriod);
+                            if (lastEtcDate.HasValue)
+                            {
+                                engagement.LastEtcDate = lastEtcDate;
+                                engagement.ProposedNextEtcDate = CalculateProposedNextEtcDate(lastEtcDate);
+                            }
+                            else if (row.NextEtcDate.HasValue)
+                            {
+                                engagement.ProposedNextEtcDate = DateTime.SpecifyKind(row.NextEtcDate.Value.Date, DateTimeKind.Unspecified);
+                            }
+
+                            engagement.LastClosingPeriodId = closingPeriod.Id;
+                            engagement.LastClosingPeriod = closingPeriod;
+
+                            // Always create FinancialEvolution and process RevenueAllocations
+                            // Calculate revenue to-go and to-date values from backlog data
+                            var revenueToGo = row.CurrentFiscalYearBacklog;
+                            var revenueToDate = (row.CurrentFiscalYearBacklog.HasValue || row.FutureFiscalYearBacklog.HasValue)
+                                ? engagement.ValueToAllocate - (row.CurrentFiscalYearBacklog ?? 0m) - (row.FutureFiscalYearBacklog ?? 0m)
+                                : (decimal?)null;
+
+                            financialEvolutionUpserts += UpsertFinancialEvolution(
+                                context,
+                                engagement,
+                                closingPeriod.Id.ToString(CultureInfo.InvariantCulture),
+                                row.OriginalBudgetHours,
+                                row.ChargedHours,
+                                row.FYTDHours,
+                                row.TERMercuryProjectedOppCurrency,
+                                row.OriginalBudgetMarginPercent,
+                                row.ToDateMargin,
+                                row.FYTDMargin,
+                                row.OriginalBudgetExpenses,
+                                row.ExpensesToDate,
+                                row.FYTDExpenses,
+                                closingPeriod.FiscalYearId,
+                                revenueToGo,
+                                revenueToDate);
+
+                            // Process backlog data if available
+                            if (row.CurrentFiscalYearBacklog.HasValue || row.FutureFiscalYearBacklog.HasValue)
+                            {
+                                ProcessBacklogData(
                                     context,
                                     engagement,
-                                    closingPeriod!.Id.ToString(CultureInfo.InvariantCulture),
-                                    row.OriginalBudgetHours,
-                                    row.ChargedHours,
-                                    row.FYTDHours,
-                                    row.TERMercuryProjectedOppCurrency,
-                                    row.OriginalBudgetMarginPercent,
-                                    row.ToDateMargin,
-                                    row.FYTDMargin,
-                                    row.OriginalBudgetExpenses,
-                                    row.ExpensesToDate,
-                                    row.FYTDExpenses,
-                                    closingPeriod.FiscalYearId,
-                                    revenueToGo,
-                                    revenueToDate);
-
-                                // Process backlog data if available
-                                if (row.CurrentFiscalYearBacklog.HasValue || row.FutureFiscalYearBacklog.HasValue)
-                                {
-                                    ProcessBacklogData(
-                                        context,
-                                        engagement,
-                                        closingPeriod,
-                                        row.CurrentFiscalYearBacklog ?? 0m,
-                                        row.FutureFiscalYearBacklog ?? 0m,
-                                        Logger);
-                                }
+                                    closingPeriod,
+                                    row.CurrentFiscalYearBacklog ?? 0m,
+                                    row.FutureFiscalYearBacklog ?? 0m,
+                                    Logger);
                             }
                         }
                         catch (Exception ex)
@@ -723,11 +680,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         skipReasons["ClosedEngagement"] = closedEngagementSkips;
                     }
 
-                    if (lockedFiscalYearSkips.Count > 0)
-                    {
-                        skipReasons["LockedFiscalYear"] = lockedFiscalYearSkips;
-                    }
-
                     if (missingEngagementSkips.Count > 0)
                     {
                         skipReasons["Engagement not found"] = missingEngagementSkips;
@@ -741,25 +693,9 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     var notes = new List<string>
                     {
                         $"Financial evolution entries upserted: {financialEvolutionUpserts}",
-                        $"Distinct engagements updated: {updatedEngagements.Count}"
+                        $"Distinct engagements updated: {updatedEngagements.Count}",
+                        $"Closing period used: {closingPeriod.Name} (ID: {closingPeriod.Id})"
                     };
-
-                    if (!string.IsNullOrWhiteSpace(metadata.ClosingPeriodName))
-                    {
-                        notes.Add($"Workbook closing period: {metadata.ClosingPeriodName}");
-                    }
-
-                    if (metadata.LastUpdateDate.HasValue)
-                    {
-                        notes.Add($"Workbook last update: {metadata.LastUpdateDate:yyyy-MM-dd}");
-                    }
-
-                    if (missingClosingPeriodSkips.Count > 0)
-                    {
-                        var sample = string.Join(", ", missingClosingPeriodSkips.Take(5));
-                        var suffix = missingClosingPeriodSkips.Count > 5 ? ", ..." : string.Empty;
-                        notes.Add($"Rows missing closing period: {missingClosingPeriodSkips.Count} (sample: {sample}{suffix}). Period-specific metrics were skipped.");
-                    }
 
                     if (warningMessages.Count > 0)
                     {
@@ -791,8 +727,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         financialEvolutionUpserts,
                         s4MetadataRefreshes,
                         manualOnlySkips.ToArray(),
-                        lockedFiscalYearSkips.ToArray(),
-                        missingClosingPeriodSkips.ToArray(),
+                        Array.Empty<string>(), // lockedFiscalYearSkips (now checked at import start)
+                        Array.Empty<string>(), // missingClosingPeriodSkips (now from UI selection)
                         missingEngagementSkips.ToArray(),
                         closedEngagementSkips.ToArray(),
                         errors.ToArray(),
@@ -826,7 +762,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             }
 
             var engagementIdIndex = GetRequiredColumnIndex(headerMap, EngagementIdHeaders, "Engagement ID");
-            var closingPeriodIndex = GetOptionalColumnIndex(headerMap, ClosingPeriodHeaders);
             var engagementNameIndex = GetOptionalColumnIndex(headerMap, EngagementNameHeaders);
             var customerNameIndex = GetOptionalColumnIndex(headerMap, CustomerNameHeaders);
             var customerIdIndex = GetOptionalColumnIndex(headerMap, CustomerIdHeaders);
@@ -853,13 +788,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             var expensesETDIndex = GetOptionalColumnIndex(headerMap, ExpensesETDHeaders);
             var expensesFYTDIndex = GetOptionalColumnIndex(headerMap, ExpensesFYTDHeaders);
 
-            var isS4MetadataWorkbook = IsS4MetadataWorkbook(headerMap);
-
-            if (!closingPeriodIndex.HasValue && string.IsNullOrWhiteSpace(defaultClosingPeriodName) && !isS4MetadataWorkbook)
-            {
-                throw new InvalidDataException("The Full Management Data workbook is missing the Closing Period column and cell A4 did not specify a closing period.");
-            }
-
             var rows = new List<FullManagementDataRow>();
 
             for (var rowIndex = headerRowIndex + 1; rowIndex < worksheet.Rows.Count; rowIndex++)
@@ -878,15 +806,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     continue;
                 }
 
-                var closingPeriod = closingPeriodIndex.HasValue
-                    ? NormalizeWhitespace(Convert.ToString(row[closingPeriodIndex.Value], CultureInfo.InvariantCulture))
-                    : defaultClosingPeriodName ?? string.Empty;
-
-                if (string.IsNullOrWhiteSpace(closingPeriod) && !string.IsNullOrWhiteSpace(defaultClosingPeriodName))
-                {
-                    closingPeriod = defaultClosingPeriodName!;
-                }
-
                 rows.Add(new FullManagementDataRow
                 {
                     RowNumber = rowNumber,
@@ -895,7 +814,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     CustomerName = customerNameIndex.HasValue ? NormalizeWhitespace(Convert.ToString(row[customerNameIndex.Value], CultureInfo.InvariantCulture)) : string.Empty,
                     CustomerCode = customerIdIndex.HasValue ? NormalizeWhitespace(Convert.ToString(row[customerIdIndex.Value], CultureInfo.InvariantCulture)) : string.Empty,
                     OpportunityCurrency = opportunityCurrencyIndex.HasValue ? NormalizeWhitespace(Convert.ToString(row[opportunityCurrencyIndex.Value], CultureInfo.InvariantCulture)) : string.Empty,
-                    ClosingPeriodName = closingPeriod ?? string.Empty,
                     OriginalBudgetHours = originalBudgetHoursIndex.HasValue ? ParseDecimal(row[originalBudgetHoursIndex.Value], 2) : null,
                     OriginalBudgetTer = originalBudgetTerIndex.HasValue ? ParseDecimal(row[originalBudgetTerIndex.Value], 2) : null,
                     OriginalBudgetMarginPercent = originalBudgetMarginPercentIndex.HasValue ? ParsePercent(row[originalBudgetMarginPercentIndex.Value]) : null,
@@ -1687,7 +1605,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             public string CustomerName { get; init; } = string.Empty;
             public string CustomerCode { get; init; } = string.Empty;
             public string OpportunityCurrency { get; init; } = string.Empty;
-            public string ClosingPeriodName { get; init; } = string.Empty;
             public decimal? OriginalBudgetHours { get; init; }
             public decimal? OriginalBudgetTer { get; init; }
             public decimal? OriginalBudgetMarginPercent { get; init; }

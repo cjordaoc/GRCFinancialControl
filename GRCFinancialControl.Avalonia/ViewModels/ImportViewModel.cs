@@ -143,7 +143,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                         resultSummary = await Task.Run(() => _budgetImporter.ImportAsync(filePath));
                         break;
                     case FullManagementType:
-                        managementResult = await Task.Run(() => _fullManagementImporter.ImportAsync(filePath));
+                        var closingPeriodId = await _settingsService.GetDefaultClosingPeriodIdAsync().ConfigureAwait(false);
+                        if (!closingPeriodId.HasValue)
+                        {
+                            _loggingService.LogError("No closing period selected. Please select a closing period before importing.");
+                            return;
+                        }
+                        managementResult = await Task.Run(() => _fullManagementImporter.ImportAsync(filePath, closingPeriodId.Value));
                         resultSummary = managementResult?.Summary;
                         break;
                     case AllocationPlanningType:
