@@ -127,7 +127,7 @@ namespace GRCFinancialControl.Persistence.Services
                             foreach (var candidate in orderedSnapshots)
                             {
                                 var snapshot = candidate.Snapshot;
-                                if (!snapshot.HoursData.HasValue)
+                                if (!snapshot.ChargedHours.HasValue)
                                 {
                                     continue;
                                 }
@@ -154,11 +154,11 @@ namespace GRCFinancialControl.Persistence.Services
                                     var resolvedDisplayName = string.IsNullOrWhiteSpace(existing.DisplayName)
                                         ? displayName
                                         : existing.DisplayName;
-                                    hoursByPeriod[bucketKey] = (existing.Hours + snapshot.HoursData.Value, resolvedDisplayName);
+                                    hoursByPeriod[bucketKey] = (existing.Hours + snapshot.ChargedHours.Value, resolvedDisplayName);
                                 }
                                 else
                                 {
-                                    hoursByPeriod[bucketKey] = (snapshot.HoursData.Value, displayName);
+                                    hoursByPeriod[bucketKey] = (snapshot.ChargedHours.Value, displayName);
                                 }
                             }
                         }
@@ -273,10 +273,10 @@ namespace GRCFinancialControl.Persistence.Services
                 {
                     ClosingPeriodId = entry.Evolution.ClosingPeriodId,
                     ClosingPeriodDate = entry.PeriodEnd,
-                    Hours = entry.Evolution.HoursData,
+                    Hours = entry.Evolution.ChargedHours,
                     Revenue = entry.Evolution.ValueData,
-                    Margin = entry.Evolution.MarginData,
-                    Expenses = entry.Evolution.ExpenseData
+                    Margin = entry.Evolution.ToDateMargin,
+                    Expenses = entry.Evolution.ExpensesToDate
                 })
                 .ToList();
 
@@ -298,10 +298,10 @@ namespace GRCFinancialControl.Persistence.Services
 
         private static Expression<Func<FinancialEvolution, bool>> HasRelevantMetricsExpression()
         {
-            return evolution => (evolution.HoursData ?? 0m) != 0m
+            return evolution => (evolution.ChargedHours ?? 0m) != 0m
                                  || (evolution.ValueData ?? 0m) != 0m
-                                 || (evolution.MarginData ?? 0m) != 0m
-                                 || (evolution.ExpenseData ?? 0m) != 0m;
+                                 || (evolution.ToDateMargin ?? 0m) != 0m
+                                 || (evolution.ExpensesToDate ?? 0m) != 0m;
         }
 
         private static IReadOnlyDictionary<string, ClosingPeriod> BuildClosingPeriodLookup(IEnumerable<ClosingPeriod> records)

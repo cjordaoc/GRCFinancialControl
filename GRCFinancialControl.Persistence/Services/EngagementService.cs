@@ -178,17 +178,20 @@ namespace GRCFinancialControl.Persistence.Services
                 return;
             }
 
-            var baseline = orderedCandidates.First().Evolution;
-            engagement.InitialHoursBudget = baseline.HoursData ?? 0m;
-            engagement.OpeningValue = baseline.ValueData ?? 0m;
-            engagement.OpeningExpenses = baseline.ExpenseData ?? 0m;
-            engagement.MarginPctBudget = baseline.MarginData;
-
+            // Read ONLY latest snapshot (Budget values are same across all snapshots)
             var latest = orderedCandidates.Last().Evolution;
-            engagement.EstimatedToCompleteHours = latest.HoursData ?? 0m;
+            
+            // Budget values (baseline, constant across snapshots)
+            engagement.InitialHoursBudget = latest.BudgetHours ?? 0m;
+            engagement.OpeningValue = latest.ValueData ?? 0m;
+            engagement.OpeningExpenses = latest.ExpenseBudget ?? 0m;
+            engagement.MarginPctBudget = latest.BudgetMargin;
+
+            // Current ETD (Estimate To Date) values
+            engagement.EstimatedToCompleteHours = latest.ChargedHours ?? 0m;
             engagement.ValueEtcp = latest.ValueData ?? 0m;
-            engagement.ExpensesEtcp = latest.ExpenseData ?? 0m;
-            engagement.MarginPctEtcp = latest.MarginData;
+            engagement.ExpensesEtcp = latest.ExpensesToDate ?? 0m;
+            engagement.MarginPctEtcp = latest.ToDateMargin;
 
             var normalizedClosingPeriodId = Normalize(latest.ClosingPeriodId);
 
@@ -402,10 +405,20 @@ namespace GRCFinancialControl.Persistence.Services
                     ClosingPeriodId = closingPeriodId,
                     EngagementId = existingEngagement.Id,
                     Engagement = existingEngagement,
-                    HoursData = evolution.HoursData,
+                    BudgetHours = evolution.BudgetHours,
+                    ChargedHours = evolution.ChargedHours,
+                    FYTDHours = evolution.FYTDHours,
+                    AdditionalHours = evolution.AdditionalHours,
                     ValueData = evolution.ValueData,
-                    MarginData = evolution.MarginData,
-                    ExpenseData = evolution.ExpenseData
+                    BudgetMargin = evolution.BudgetMargin,
+                    ToDateMargin = evolution.ToDateMargin,
+                    FYTDMargin = evolution.FYTDMargin,
+                    ExpenseBudget = evolution.ExpenseBudget,
+                    ExpensesToDate = evolution.ExpensesToDate,
+                    FYTDExpenses = evolution.FYTDExpenses,
+                    FiscalYearId = evolution.FiscalYearId,
+                    RevenueToGoValue = evolution.RevenueToGoValue,
+                    RevenueToDateValue = evolution.RevenueToDateValue
                 });
             }
 

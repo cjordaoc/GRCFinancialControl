@@ -499,23 +499,69 @@ namespace GRCFinancialControl.Persistence
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<FinancialEvolution>()
+                .HasOne(fe => fe.FiscalYear)
+                .WithMany()
+                .HasForeignKey(fe => fe.FiscalYearId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<FinancialEvolution>()
                 .Property(fe => fe.ClosingPeriodId)
                 .HasMaxLength(100);
 
+            // Hours Metrics
             modelBuilder.Entity<FinancialEvolution>()
-                .Property(fe => fe.HoursData)
+                .Property(fe => fe.BudgetHours)
                 .HasPrecision(18, 2);
 
+            modelBuilder.Entity<FinancialEvolution>()
+                .Property(fe => fe.ChargedHours)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<FinancialEvolution>()
+                .Property(fe => fe.FYTDHours)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<FinancialEvolution>()
+                .Property(fe => fe.AdditionalHours)
+                .HasPrecision(18, 2);
+
+            // Revenue Metrics
             modelBuilder.Entity<FinancialEvolution>()
                 .Property(fe => fe.ValueData)
                 .HasPrecision(18, 2);
 
+            // Margin Metrics
             modelBuilder.Entity<FinancialEvolution>()
-                .Property(fe => fe.MarginData)
-                .HasPrecision(9, 4);
+                .Property(fe => fe.BudgetMargin)
+                .HasPrecision(18, 2);
 
             modelBuilder.Entity<FinancialEvolution>()
-                .Property(fe => fe.ExpenseData)
+                .Property(fe => fe.ToDateMargin)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<FinancialEvolution>()
+                .Property(fe => fe.FYTDMargin)
+                .HasPrecision(18, 2);
+
+            // Expense Metrics
+            modelBuilder.Entity<FinancialEvolution>()
+                .Property(fe => fe.ExpenseBudget)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<FinancialEvolution>()
+                .Property(fe => fe.ExpensesToDate)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<FinancialEvolution>()
+                .Property(fe => fe.FYTDExpenses)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<FinancialEvolution>()
+                .Property(fe => fe.RevenueToGoValue)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<FinancialEvolution>()
+                .Property(fe => fe.RevenueToDateValue)
                 .HasPrecision(18, 2);
 
             modelBuilder.Entity<FinancialEvolution>()
