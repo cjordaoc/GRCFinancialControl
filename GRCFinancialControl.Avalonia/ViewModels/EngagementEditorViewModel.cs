@@ -346,10 +346,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 Id = evolution.Id,
                 ClosingPeriodId = evolution.ClosingPeriodId ?? string.Empty,
-                Hours = evolution.HoursData,
+                Hours = evolution.ChargedHours,
                 Value = evolution.ValueData,
-                Margin = evolution.MarginData,
-                Expenses = evolution.ExpenseData
+                Margin = evolution.ToDateMargin,
+                Expenses = evolution.ExpensesToDate
             };
             
             entry.PropertyChanged += OnFinancialEvolutionEntryPropertyChanged;
@@ -536,10 +536,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                                  ClosingPeriodId = e.ClosingPeriodId.Trim(),
                                  EngagementId = Engagement.Id,
                                  Engagement = Engagement,
-                                 HoursData = e.Hours,
+                                 ChargedHours = e.Hours,
                                  ValueData = e.Value,
-                                 MarginData = e.Margin,
-                                 ExpenseData = e.Expenses
+                                 ToDateMargin = e.Margin,
+                                 ExpensesToDate = e.Expenses
                              }))
                 {
                     evolutions.Add(evolution);
