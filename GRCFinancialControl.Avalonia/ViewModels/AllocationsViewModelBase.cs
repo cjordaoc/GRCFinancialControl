@@ -58,6 +58,25 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             FiscalYears = new ObservableCollection<FiscalYear>(await _fiscalYearService.GetAllAsync());
         }
 
+        /// <summary>
+        /// Gets the currently selected global closing period from settings.
+        /// Returns null if no period is selected.
+        /// </summary>
+        private async Task<ClosingPeriod?> GetCurrentClosingPeriodAsync()
+        {
+            var closingPeriodId = await _settingsService.GetDefaultClosingPeriodIdAsync()
+                .ConfigureAwait(false);
+            
+            if (!closingPeriodId.HasValue)
+            {
+                // TODO: Consider showing user notification that closing period must be selected
+                return null;
+            }
+
+            return await _closingPeriodService.GetByIdAsync(closingPeriodId.Value)
+                .ConfigureAwait(false);
+        }
+
         [RelayCommand]
         private async Task EditAllocation(Engagement engagement)
         {
@@ -66,15 +85,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            // Get the global closing period from settings (set in Home view)
-            var closingPeriodId = await _settingsService.GetDefaultClosingPeriodIdAsync().ConfigureAwait(false);
-            if (!closingPeriodId.HasValue)
-            {
-                // TODO: Show user-friendly message via dialog or status bar
-                return;
-            }
-
-            var closingPeriod = await _closingPeriodService.GetByIdAsync(closingPeriodId.Value).ConfigureAwait(false);
+            var closingPeriod = await GetCurrentClosingPeriodAsync();
             if (closingPeriod == null)
             {
                 return;
@@ -99,14 +110,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            // Get the global closing period from settings (set in Home view)
-            var closingPeriodId = await _settingsService.GetDefaultClosingPeriodIdAsync().ConfigureAwait(false);
-            if (!closingPeriodId.HasValue)
-            {
-                return;
-            }
-
-            var closingPeriod = await _closingPeriodService.GetByIdAsync(closingPeriodId.Value).ConfigureAwait(false);
+            var closingPeriod = await GetCurrentClosingPeriodAsync();
             if (closingPeriod == null)
             {
                 return;
