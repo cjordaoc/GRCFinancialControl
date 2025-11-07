@@ -10,6 +10,9 @@ using ExcelDataReader;
 
 namespace GRCFinancialControl.Persistence.Services.Exporters;
 
+/// <summary>
+/// Loads and parses planning workbooks for Retain template generation.
+/// </summary>
 internal static class RetainTemplatePlanningWorkbook
 {
     private const decimal DefaultWeeklyHours = 40m;

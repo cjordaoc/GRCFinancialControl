@@ -10,6 +10,9 @@ using Microsoft.Extensions.Logging;
 
 namespace GRCFinancialControl.Persistence.Services.Exporters;
 
+/// <summary>
+/// Generates Retain templates from allocation planning workbooks.
+/// </summary>
 public sealed class RetainTemplateGenerator : IRetainTemplateGenerator
 {
     private const string TemplatesDirectoryName = "Templates";
