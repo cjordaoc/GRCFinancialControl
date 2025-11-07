@@ -6,6 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GRCFinancialControl.Persistence.Services.Infrastructure
 {
+    /// <summary>
+    /// Guards engagement mutations by enforcing source and status constraints.
+    /// </summary>
     internal static class EngagementMutationGuard
     {
         public static async Task EnsureCanMutateAsync(
@@ -27,7 +30,7 @@ namespace GRCFinancialControl.Persistence.Services.Infrastructure
             var engagement = await context.Engagements
                 .AsNoTracking()
                 .Select(e => new { e.Id, e.EngagementId, e.Source, e.Status })
-                .FirstOrDefaultAsync(e => e.Id == engagementId);
+                .FirstOrDefaultAsync(e => e.Id == engagementId).ConfigureAwait(false);
 
             if (engagement == null)
             {

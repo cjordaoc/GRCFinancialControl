@@ -10,6 +10,11 @@ using Microsoft.Extensions.Logging;
 
 namespace GRCFinancialControl.Persistence.Services
 {
+    /// <summary>
+    /// Manages fiscal year entities with lock/unlock functionality.
+    /// Fiscal years can be locked to prevent modifications to associated financial data.
+    /// Supports year-end closing workflow with automatic promotion to next fiscal year.
+    /// </summary>
     public class FiscalYearService : ContextFactoryCrudService<FiscalYear>, IFiscalYearService
     {
         private readonly ILogger<FiscalYearService> _logger;

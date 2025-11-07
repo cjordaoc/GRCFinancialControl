@@ -8,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GRCFinancialControl.Persistence.Services
 {
+    /// <summary>
+    /// Manages manager-to-engagement assignment relationships.
+    /// </summary>
     public class ManagerAssignmentService : IManagerAssignmentService
     {
         private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
@@ -19,7 +22,7 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task<List<EngagementManagerAssignment>> GetAllAsync()
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
             return await context.EngagementManagerAssignments
                 .AsNoTracking()
                 .AsSplitQuery()
@@ -27,12 +30,12 @@ namespace GRCFinancialControl.Persistence.Services
                 .Include(a => a.Engagement)
                 .OrderBy(a => a.Engagement.EngagementId)
                 .ThenBy(a => a.Manager.Name)
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
         }
 
         public async Task<List<EngagementManagerAssignment>> GetByEngagementIdAsync(int engagementId)
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
             return await context.EngagementManagerAssignments
                 .AsNoTracking()
                 .AsSplitQuery()
@@ -40,12 +43,12 @@ namespace GRCFinancialControl.Persistence.Services
                 .Include(a => a.Engagement)
                 .Where(a => a.EngagementId == engagementId)
                 .OrderBy(a => a.Manager.Name)
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
         }
 
         public async Task<List<EngagementManagerAssignment>> GetByManagerIdAsync(int managerId)
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
             return await context.EngagementManagerAssignments
                 .AsNoTracking()
                 .AsSplitQuery()
@@ -54,18 +57,18 @@ namespace GRCFinancialControl.Persistence.Services
                 .Where(a => a.ManagerId == managerId)
                 .OrderBy(a => a.Engagement.EngagementId)
                 .ThenBy(a => a.Engagement.Description)
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
         }
 
         public async Task<EngagementManagerAssignment?> GetByIdAsync(int id)
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
             return await context.EngagementManagerAssignments
                 .AsNoTracking()
                 .AsSplitQuery()
                 .Include(a => a.Manager)
                 .Include(a => a.Engagement)
-                .FirstOrDefaultAsync(a => a.Id == id);
+                .FirstOrDefaultAsync(a => a.Id == id).ConfigureAwait(false);
         }
 
         public async Task AddAsync(EngagementManagerAssignment assignment)
@@ -76,22 +79,22 @@ namespace GRCFinancialControl.Persistence.Services
                 return;
             }
 
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
             await EngagementMutationGuard.EnsureCanMutateAsync(
                 context,
                 assignment.EngagementId,
                 "Adding manager assignments",
-                allowManualSources: true);
+                allowManualSources: true).ConfigureAwait(false);
 
-            await context.EngagementManagerAssignments.AddAsync(assignment);
-            await context.SaveChangesAsync();
+            await context.EngagementManagerAssignments.AddAsync(assignment).ConfigureAwait(false);
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
 
         public async Task UpdateAsync(EngagementManagerAssignment assignment)
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
-            var existingAssignment = await context.EngagementManagerAssignments.FirstOrDefaultAsync(a => a.Id == assignment.Id);
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+            var existingAssignment = await context.EngagementManagerAssignments.FirstOrDefaultAsync(a => a.Id == assignment.Id).ConfigureAwait(false);
             if (existingAssignment is null)
             {
                 return;
@@ -101,7 +104,7 @@ namespace GRCFinancialControl.Persistence.Services
                 context,
                 existingAssignment.EngagementId,
                 "Updating manager assignments",
-                allowManualSources: true);
+                allowManualSources: true).ConfigureAwait(false);
 
             if (existingAssignment.EngagementId != assignment.EngagementId)
             {
@@ -109,19 +112,19 @@ namespace GRCFinancialControl.Persistence.Services
                     context,
                     assignment.EngagementId,
                     "Reassigning manager assignments",
-                    allowManualSources: true);
+                    allowManualSources: true).ConfigureAwait(false);
             }
 
             existingAssignment.EngagementId = assignment.EngagementId;
             existingAssignment.ManagerId = assignment.ManagerId;
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
 
         public async Task DeleteAsync(int id)
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
-            var existingAssignment = await context.EngagementManagerAssignments.FirstOrDefaultAsync(a => a.Id == id);
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+            var existingAssignment = await context.EngagementManagerAssignments.FirstOrDefaultAsync(a => a.Id == id).ConfigureAwait(false);
             if (existingAssignment is null)
             {
                 return;
@@ -131,25 +134,25 @@ namespace GRCFinancialControl.Persistence.Services
                 context,
                 existingAssignment.EngagementId,
                 "Deleting manager assignments",
-                allowManualSources: true);
+                allowManualSources: true).ConfigureAwait(false);
 
             context.EngagementManagerAssignments.Remove(existingAssignment);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
 
         public async Task UpdateAssignmentsForEngagementAsync(int engagementId, IEnumerable<int> managerIds)
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
             await EngagementMutationGuard.EnsureCanMutateAsync(
                 context,
                 engagementId,
                 "Updating manager assignments",
-                allowManualSources: true);
+                allowManualSources: true).ConfigureAwait(false);
 
             var existingAssignments = await context.EngagementManagerAssignments
                 .Where(a => a.EngagementId == engagementId)
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             var existingManagerIds = existingAssignments.Select(a => a.ManagerId).ToHashSet();
             var incomingManagerIds = managerIds.ToHashSet();
@@ -174,12 +177,12 @@ namespace GRCFinancialControl.Persistence.Services
                     EngagementId = engagementId,
                     ManagerId = managerId
                 });
-                await context.EngagementManagerAssignments.AddRangeAsync(newAssignments);
+                await context.EngagementManagerAssignments.AddRangeAsync(newAssignments).ConfigureAwait(false);
             }
 
             if (assignmentsToRemove.Any() || managerIdsToAdd.Any())
             {
-                await context.SaveChangesAsync();
+                await context.SaveChangesAsync().ConfigureAwait(false);
             }
         }
     }

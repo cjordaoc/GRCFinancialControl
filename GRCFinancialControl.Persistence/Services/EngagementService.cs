@@ -25,12 +25,13 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task<List<Engagement>> GetAllAsync()
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
             ArgumentNullException.ThrowIfNull(context);
 
             var closingPeriodRecords = await context.ClosingPeriods
                 .AsNoTracking()
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
 
             var closingPeriods = BuildClosingPeriodLookup(closingPeriodRecords);
 
@@ -47,9 +48,10 @@ namespace GRCFinancialControl.Persistence.Services
                     .ThenInclude(a => a.FiscalYear)
                 .Include(e => e.FinancialEvolutions)
                 .Include(e => e.LastClosingPeriod)
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
 
-            await PopulatePapdAssignmentsAsync(context, engagements);
+            await PopulatePapdAssignmentsAsync(context, engagements).ConfigureAwait(false);
             ApplyFinancialControlSnapshots(engagements, closingPeriods);
 
             return engagements;
@@ -57,12 +59,13 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task<Engagement?> GetByIdAsync(int id)
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
             ArgumentNullException.ThrowIfNull(context);
 
             var closingPeriodRecords = await context.ClosingPeriods
                 .AsNoTracking()
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
 
             var closingPeriods = BuildClosingPeriodLookup(closingPeriodRecords);
 
@@ -79,11 +82,12 @@ namespace GRCFinancialControl.Persistence.Services
                     .ThenInclude(a => a.FiscalYear)
                 .Include(e => e.FinancialEvolutions)
                 .Include(e => e.LastClosingPeriod)
-                .FirstOrDefaultAsync(e => e.Id == id);
+                .FirstOrDefaultAsync(e => e.Id == id)
+                .ConfigureAwait(false);
 
             if (engagement != null)
             {
-                await PopulatePapdAssignmentsAsync(context, new[] { engagement });
+                await PopulatePapdAssignmentsAsync(context, new[] { engagement }).ConfigureAwait(false);
                 ApplyFinancialControlSnapshot(engagement, closingPeriods);
             }
 
@@ -92,7 +96,7 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task<Papd?> GetPapdForDateAsync(int engagementId, DateTime date)
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
             ArgumentNullException.ThrowIfNull(context);
 
             var assignment = await context.EngagementPapds
@@ -100,7 +104,8 @@ namespace GRCFinancialControl.Persistence.Services
                 .Include(ep => ep.Papd)
                 .Where(ep => ep.EngagementId == engagementId)
                 .OrderBy(ep => ep.Id)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync()
+                .ConfigureAwait(false);
 
             return assignment?.Papd;
         }
@@ -138,6 +143,15 @@ namespace GRCFinancialControl.Persistence.Services
             }
         }
 
+        /// <summary>
+        /// Applies the latest financial snapshot from FinancialEvolutions to the engagement entity.
+        /// 
+        /// Snapshot Reading Strategy:
+        /// - Reads ONLY the latest snapshot per engagement (ordered by closing period date)
+        /// - Budget values (BudgetHours, BudgetMargin, ExpenseBudget) are the same across all snapshots
+        /// - ETD values (ChargedHours, ToDateMargin, ExpensesToDate) reflect the most recent period
+        /// - This approach simplifies data access while maintaining budget baseline consistency
+        /// </summary>
         private static void ApplyFinancialControlSnapshot(Engagement engagement, IReadOnlyDictionary<string, ClosingPeriod> closingPeriods)
         {
             if (engagement.FinancialEvolutions == null || engagement.FinancialEvolutions.Count == 0)
@@ -260,7 +274,8 @@ namespace GRCFinancialControl.Persistence.Services
             var papds = await context.Papds
                 .AsNoTracking()
                 .Where(p => papdIds.Contains(p.Id))
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
 
             if (papds.Count == 0)
             {
@@ -310,20 +325,21 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task AddAsync(Engagement engagement)
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
-            await context.Engagements.AddAsync(engagement);
-            await context.SaveChangesAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+            await context.Engagements.AddAsync(engagement).ConfigureAwait(false);
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
 
         public async Task UpdateAsync(Engagement engagement)
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
             var existingEngagement = await context.Engagements
                 .Include(e => e.EngagementPapds)
                 .Include(e => e.RevenueAllocations)
                     .ThenInclude(a => a.FiscalYear)
                 .Include(e => e.FinancialEvolutions)
-                .FirstOrDefaultAsync(e => e.Id == engagement.Id);
+                .FirstOrDefaultAsync(e => e.Id == engagement.Id)
+                .ConfigureAwait(false);
 
             if (existingEngagement == null)
             {
@@ -362,7 +378,7 @@ namespace GRCFinancialControl.Persistence.Services
                 .Where(id => !lockedRevenueAllocations.ContainsKey(id))
                 .ToList();
 
-            await FiscalYearLockGuard.EnsureFiscalYearsUnlockedAsync(context, unlockedRevenueFiscalYearIds, "update revenue allocations");
+            await FiscalYearLockGuard.EnsureFiscalYearsUnlockedAsync(context, unlockedRevenueFiscalYearIds, "update revenue allocations").ConfigureAwait(false);
 
             context.Entry(existingEngagement).CurrentValues.SetValues(engagement);
 
@@ -444,25 +460,26 @@ namespace GRCFinancialControl.Persistence.Services
                 });
             }
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
 
         public async Task DeleteAsync(int id)
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
             var engagement = await context.Engagements
                 .Include(e => e.EngagementPapds)
-                .FirstOrDefaultAsync(e => e.Id == id);
+                .FirstOrDefaultAsync(e => e.Id == id)
+                .ConfigureAwait(false);
             if (engagement != null)
             {
                 context.Engagements.Remove(engagement);
-                await context.SaveChangesAsync();
+                await context.SaveChangesAsync().ConfigureAwait(false);
             }
         }
 
         public async Task DeleteDataAsync(int engagementId)
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
             var engagement = await context.Engagements
                 .Include(e => e.EngagementPapds)
@@ -471,7 +488,8 @@ namespace GRCFinancialControl.Persistence.Services
                 .Include(e => e.FinancialEvolutions)
                 .Include(e => e.RevenueAllocations)
                     .ThenInclude(a => a.FiscalYear)
-                .FirstOrDefaultAsync(e => e.Id == engagementId);
+                .FirstOrDefaultAsync(e => e.Id == engagementId)
+                .ConfigureAwait(false);
 
             if (engagement == null)
             {
@@ -499,7 +517,8 @@ namespace GRCFinancialControl.Persistence.Services
                 .Where(fy => fy.IsLocked)
                 .Select(fy => new { fy.Id, fy.Name })
                 .Distinct()
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
 
             foreach (var fiscalYear in lockedActualFiscalYears)
             {
@@ -515,12 +534,14 @@ namespace GRCFinancialControl.Persistence.Services
 
             var actualsToDelete = await context.ActualsEntries
                 .Where(a => a.EngagementId == engagement.Id)
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
             context.ActualsEntries.RemoveRange(actualsToDelete);
 
             var plannedAllocationsToDelete = await context.PlannedAllocations
                 .Where(p => p.EngagementId == engagement.Id)
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
             context.PlannedAllocations.RemoveRange(plannedAllocationsToDelete);
 
             context.EngagementPapds.RemoveRange(engagement.EngagementPapds);
@@ -528,7 +549,7 @@ namespace GRCFinancialControl.Persistence.Services
             context.FinancialEvolutions.RemoveRange(engagement.FinancialEvolutions);
             context.EngagementFiscalYearRevenueAllocations.RemoveRange(engagement.RevenueAllocations);
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
 
         private static string FormatFiscalYearName(FiscalYear fiscalYear, int fiscalYearId)

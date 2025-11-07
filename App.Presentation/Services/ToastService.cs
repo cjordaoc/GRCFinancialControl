@@ -6,6 +6,9 @@ using App.Presentation.Localization;
 
 namespace App.Presentation.Services;
 
+/// <summary>
+/// Defines the visual severity of a toast notification.
+/// </summary>
 public enum ToastType
 {
     Success,
@@ -13,6 +16,9 @@ public enum ToastType
     Error
 }
 
+/// <summary>
+/// Represents a single toast notification with type, message, and metadata.
+/// </summary>
 public sealed class ToastNotification
 {
     internal ToastNotification(ToastType type, string message)
@@ -32,6 +38,9 @@ public sealed class ToastNotification
     public DateTimeOffset CreatedAt { get; }
 }
 
+/// <summary>
+/// Manages toast notifications with auto-dismiss timers and UI thread dispatching.
+/// </summary>
 public static class ToastService
 {
     private static readonly ObservableCollection<ToastNotification> NotificationsImpl = new();

@@ -8,6 +8,9 @@ using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.Services
 {
+    /// <summary>
+    /// Resolves Power BI dashboard embedding configuration from settings.
+    /// </summary>
     public class PowerBiEmbeddingService
     {
         private readonly ISettingsService _settingsService;
@@ -19,7 +22,7 @@ namespace GRCFinancialControl.Avalonia.Services
 
         public async Task<PowerBiEmbedConfiguration> GetConfigurationAsync()
         {
-            var settings = await _settingsService.GetAllAsync();
+            var settings = await _settingsService.GetAllAsync().ConfigureAwait(false);
             var configuration = BuildConfiguration(settings);
 
             return configuration;

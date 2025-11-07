@@ -10,6 +10,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GRCFinancialControl.Persistence.Services
 {
+    /// <summary>
+    /// Manages hours allocation across fiscal years with budget tracking and traffic-light status.
+    /// </summary>
     public sealed class HoursAllocationService : IHoursAllocationService
     {
         private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;

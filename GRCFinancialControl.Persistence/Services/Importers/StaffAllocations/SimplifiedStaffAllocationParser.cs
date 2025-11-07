@@ -8,6 +8,9 @@ using Microsoft.Extensions.Logging;
 
 namespace GRCFinancialControl.Persistence.Services.Importers.StaffAllocations;
 
+/// <summary>
+/// Parses simplified staff allocation Excel worksheets into aggregated allocation records.
+/// </summary>
 public sealed class SimplifiedStaffAllocationParser
 {
     private const decimal HoursPerEngagementWeek = 40m;

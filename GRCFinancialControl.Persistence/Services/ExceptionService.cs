@@ -8,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GRCFinancialControl.Persistence.Services
 {
+    /// <summary>
+    /// Tracks and retrieves application exception entries for diagnostics.
+    /// </summary>
     public class ExceptionService : IExceptionService
     {
         private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
@@ -21,13 +24,13 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task<List<ExceptionEntry>> GetAllAsync()
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
             ArgumentNullException.ThrowIfNull(context);
 
             return await context.Exceptions
                 .AsNoTracking()
                 .OrderByDescending(e => e.Timestamp)
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
         }
     }
 }

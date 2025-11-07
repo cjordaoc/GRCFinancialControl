@@ -8,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GRCFinancialControl.Persistence.Services
 {
+    /// <summary>
+    /// Manages PAPD (Partner/Principal) entities and engagement assignments.
+    /// </summary>
     public class PapdService : ContextFactoryCrudService<Papd>, IPapdService
     {
         public PapdService(IDbContextFactory<ApplicationDbContext> contextFactory)
@@ -33,22 +36,22 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task DeleteDataAsync(int papdId)
         {
-            await using var context = await CreateContextAsync();
+            await using var context = await CreateContextAsync().ConfigureAwait(false);
 
             await context.ActualsEntries
                 .Where(a => a.PapdId == papdId)
-                .ExecuteDeleteAsync();
+                .ExecuteDeleteAsync().ConfigureAwait(false);
 
             await context.EngagementPapds
                 .Where(ep => ep.PapdId == papdId)
-                .ExecuteDeleteAsync();
+                .ExecuteDeleteAsync().ConfigureAwait(false);
         }
 
         public async Task AssignEngagementsAsync(int papdId, List<int> engagementIds)
         {
-            await using var context = await CreateContextAsync();
+            await using var context = await CreateContextAsync().ConfigureAwait(false);
             var papd = await context.Papds
-                .SingleOrDefaultAsync(p => p.Id == papdId);
+                .SingleOrDefaultAsync(p => p.Id == papdId).ConfigureAwait(false);
 
             if (papd is null)
             {
@@ -57,7 +60,7 @@ namespace GRCFinancialControl.Persistence.Services
 
             var currentAssignments = await context.EngagementPapds
                 .Where(ep => ep.PapdId == papdId)
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             var currentEngagementIds = currentAssignments.Select(a => a.EngagementId).ToList();
             var idsToAdd = engagementIds.Except(currentEngagementIds).ToList();
@@ -79,7 +82,7 @@ namespace GRCFinancialControl.Persistence.Services
                     });
                 }
             }
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
     }
 }

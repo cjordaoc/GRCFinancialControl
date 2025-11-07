@@ -15,6 +15,9 @@ using MySqlConnector;
 
 namespace GRCFinancialControl.Persistence.Services
 {
+    /// <summary>
+    /// Exports and imports full application data backups as XML with FK-safe operations.
+    /// </summary>
     public sealed class ApplicationDataBackupService : IApplicationDataBackupService
     {
         private const string DisableForeignKeyChecksSql = "SET FOREIGN_KEY_CHECKS = 0;";

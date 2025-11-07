@@ -13,9 +13,9 @@
 
     <UserControl.Resources>
         <conv:PercentageOfSizeConverter x:Key="PercentageOfSizeConverter" />
-        <conv:BoolToBrushConverter x:Key="TotalsBrushConverter"
-                                    TrueResourceKey="BrushError"
-                                    FalseResourceKey="BrushOnSurface" />
+        <conv:BoolToThemeResourceBrushConverter x:Key="TotalsBrushConverter"
+                                                 TrueResourceKey="BrushError"
+                                                 FalseResourceKey="BrushOnSurface" />
     </UserControl.Resources>
 
     <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridGap}">

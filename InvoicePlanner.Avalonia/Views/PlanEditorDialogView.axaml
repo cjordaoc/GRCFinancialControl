@@ -12,9 +12,9 @@
              x:DataType="vm:PlanEditorDialogViewModel"
              mc:Ignorable="d">
     <UserControl.Resources>
-        <conv:BoolToBrushConverter x:Key="TotalsBrushConverter"
-                                    TrueResourceKey="BrushError"
-                                    FalseResourceKey="BrushOnSurface" />
+        <conv:BoolToThemeResourceBrushConverter x:Key="TotalsBrushConverter"
+                                                 TrueResourceKey="BrushError"
+                                                 FalseResourceKey="BrushOnSurface" />
     </UserControl.Resources>
     <Grid RowDefinitions="Auto,*,Auto"
           RowSpacing="{StaticResource GridGap}">

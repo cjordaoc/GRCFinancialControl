@@ -37,8 +37,8 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new InvalidOperationException("A fiscal year must be selected before adding a closing period.");
             }
 
-            await using var context = await CreateContextAsync();
-            await FiscalYearLockGuard.EnsureFiscalYearUnlockedAsync(context, period.FiscalYearId, "add a closing period");
+            await using var context = await CreateContextAsync().ConfigureAwait(false);
+            await FiscalYearLockGuard.EnsureFiscalYearUnlockedAsync(context, period.FiscalYearId, "add a closing period").ConfigureAwait(false);
 
             var newPeriod = new ClosingPeriod
             {
@@ -48,8 +48,8 @@ namespace GRCFinancialControl.Persistence.Services
                 PeriodEnd = period.PeriodEnd
             };
 
-            await context.ClosingPeriods.AddAsync(newPeriod);
-            await context.SaveChangesAsync();
+            await context.ClosingPeriods.AddAsync(newPeriod).ConfigureAwait(false);
+            await context.SaveChangesAsync().ConfigureAwait(false);
 
             period.Id = newPeriod.Id;
         }
@@ -63,11 +63,11 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new InvalidOperationException("A fiscal year must be selected before updating a closing period.");
             }
 
-            await using var context = await CreateContextAsync();
+            await using var context = await CreateContextAsync().ConfigureAwait(false);
 
             var existing = await context.ClosingPeriods
                 .Include(cp => cp.FiscalYear)
-                .FirstOrDefaultAsync(cp => cp.Id == period.Id);
+                .FirstOrDefaultAsync(cp => cp.Id == period.Id).ConfigureAwait(false);
 
             if (existing is null)
             {
@@ -79,15 +79,15 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new InvalidOperationException("Cannot update a locked closing period.");
             }
 
-            await FiscalYearLockGuard.EnsureFiscalYearUnlockedAsync(context, existing.FiscalYearId, "update the closing period");
+            await FiscalYearLockGuard.EnsureFiscalYearUnlockedAsync(context, existing.FiscalYearId, "update the closing period").ConfigureAwait(false);
 
             if (existing.FiscalYearId != period.FiscalYearId)
             {
-                await FiscalYearLockGuard.EnsureFiscalYearUnlockedAsync(context, period.FiscalYearId, "update the closing period");
+                await FiscalYearLockGuard.EnsureFiscalYearUnlockedAsync(context, period.FiscalYearId, "update the closing period").ConfigureAwait(false);
             }
 
             context.Entry(existing).CurrentValues.SetValues(period);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
 
         public async Task DeleteAsync(int id)
@@ -97,9 +97,9 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new ArgumentOutOfRangeException(nameof(id), id, "Closing period identifier must be positive.");
             }
 
-            await using var context = await CreateContextAsync();
+            await using var context = await CreateContextAsync().ConfigureAwait(false);
 
-            var period = await context.ClosingPeriods.FindAsync(id);
+            var period = await context.ClosingPeriods.FindAsync(id).ConfigureAwait(false);
             if (period == null)
             {
                 return;
@@ -110,16 +110,16 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new InvalidOperationException("Cannot delete a locked closing period.");
             }
 
-            await FiscalYearLockGuard.EnsureFiscalYearUnlockedAsync(context, period.FiscalYearId, "delete the closing period");
+            await FiscalYearLockGuard.EnsureFiscalYearUnlockedAsync(context, period.FiscalYearId, "delete the closing period").ConfigureAwait(false);
 
-            var hasActuals = await context.ActualsEntries.AnyAsync(a => a.ClosingPeriodId == id);
+            var hasActuals = await context.ActualsEntries.AnyAsync(a => a.ClosingPeriodId == id).ConfigureAwait(false);
             if (hasActuals)
             {
                 throw new InvalidOperationException(CannotDeleteClosingPeriodMessage);
             }
 
             context.ClosingPeriods.Remove(period);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
 
         public async Task DeleteDataAsync(int closingPeriodId)
@@ -129,9 +129,9 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new ArgumentOutOfRangeException(nameof(closingPeriodId), closingPeriodId, "Closing period identifier must be positive.");
             }
 
-            await using var context = await CreateContextAsync();
+            await using var context = await CreateContextAsync().ConfigureAwait(false);
 
-            var period = await context.ClosingPeriods.FirstOrDefaultAsync(cp => cp.Id == closingPeriodId);
+            var period = await context.ClosingPeriods.FirstOrDefaultAsync(cp => cp.Id == closingPeriodId).ConfigureAwait(false);
             if (period is null)
             {
                 return;
@@ -142,15 +142,15 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new InvalidOperationException("Cannot delete data for a locked closing period.");
             }
 
-            await FiscalYearLockGuard.EnsureClosingPeriodUnlockedAsync(context, closingPeriodId, "delete data for the closing period");
+            await FiscalYearLockGuard.EnsureClosingPeriodUnlockedAsync(context, closingPeriodId, "delete data for the closing period").ConfigureAwait(false);
 
             await context.ActualsEntries
                 .Where(a => a.ClosingPeriodId == closingPeriodId)
-                .ExecuteDeleteAsync();
+                .ExecuteDeleteAsync().ConfigureAwait(false);
 
             await context.PlannedAllocations
                 .Where(p => p.ClosingPeriodId == closingPeriodId)
-                .ExecuteDeleteAsync();
+                .ExecuteDeleteAsync().ConfigureAwait(false);
         }
 
         public async Task SetLockStateAsync(int closingPeriodId, bool isLocked)
@@ -160,10 +160,10 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new ArgumentOutOfRangeException(nameof(closingPeriodId), closingPeriodId, "Closing period identifier must be positive.");
             }
 
-            await using var context = await CreateContextAsync();
+            await using var context = await CreateContextAsync().ConfigureAwait(false);
 
             var period = await context.ClosingPeriods
-                .FirstOrDefaultAsync(cp => cp.Id == closingPeriodId);
+                .FirstOrDefaultAsync(cp => cp.Id == closingPeriodId).ConfigureAwait(false);
 
             if (period is null)
             {
@@ -176,7 +176,7 @@ namespace GRCFinancialControl.Persistence.Services
             }
 
             period.IsLocked = isLocked;
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
     }
 }

@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GRCFinancialControl.Persistence.Services.Infrastructure
 {
+    /// <summary>
+    /// Guards fiscal year and closing period mutations by enforcing lock constraints.
+    /// </summary>
     public static class FiscalYearLockGuard
     {
         public static async Task EnsureFiscalYearUnlockedAsync(ApplicationDbContext context, int fiscalYearId, string operation)
@@ -16,7 +19,7 @@ namespace GRCFinancialControl.Persistence.Services.Infrastructure
                 return;
             }
 
-            await EnsureFiscalYearsUnlockedAsync(context, new[] { fiscalYearId }, operation);
+            await EnsureFiscalYearsUnlockedAsync(context, new[] { fiscalYearId }, operation).ConfigureAwait(false);
         }
 
         public static async Task EnsureFiscalYearsUnlockedAsync(ApplicationDbContext context, IEnumerable<int> fiscalYearIds, string operation)
@@ -38,7 +41,7 @@ namespace GRCFinancialControl.Persistence.Services.Infrastructure
             var lockedFiscalYears = await context.FiscalYears
                 .Where(fy => ids.Contains(fy.Id) && fy.IsLocked)
                 .Select(fy => new { fy.Id, fy.Name })
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             if (lockedFiscalYears.Count == 0)
             {
@@ -64,7 +67,7 @@ namespace GRCFinancialControl.Persistence.Services.Infrastructure
 
             var closingPeriod = await context.ClosingPeriods
                 .Include(cp => cp.FiscalYear)
-                .FirstOrDefaultAsync(cp => cp.Id == closingPeriodId);
+                .FirstOrDefaultAsync(cp => cp.Id == closingPeriodId).ConfigureAwait(false);
 
             if (closingPeriod?.FiscalYear == null || !closingPeriod.FiscalYear.IsLocked)
             {

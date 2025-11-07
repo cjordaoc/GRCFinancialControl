@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GRCFinancialControl.Persistence.Services.Infrastructure
 {
+    /// <summary>
+    /// Base service providing CRUD operations with DbContext factory pattern.
+    /// </summary>
     public abstract class ContextFactoryCrudService<TEntity>
         where TEntity : class
     {

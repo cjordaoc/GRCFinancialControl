@@ -3,6 +3,9 @@ using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Persistence.Services;
 
+/// <summary>
+/// Tracks database connection configuration status with thread-safe updates.
+/// </summary>
 public sealed class DatabaseConnectionAvailability : IDatabaseConnectionAvailability
 {
     private const string DefaultErrorMessage = "Connection settings are missing or incomplete.";

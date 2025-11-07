@@ -4,6 +4,9 @@ using System.Text.RegularExpressions;
 
 namespace GRCFinancialControl.Persistence.Services.Importers;
 
+/// <summary>
+/// Utilities for parsing and normalizing Excel worksheet cell values.
+/// </summary>
 internal static class WorksheetValueHelper
 {
     private static readonly Regex MultiWhitespaceRegex = new(@"\s+", RegexOptions.Compiled);

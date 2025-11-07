@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace InvoicePlanner.Avalonia.Services;
 
+/// <summary>
+/// Handles global unhandled exceptions from AppDomain, TaskScheduler, and UI thread.
+/// </summary>
 public sealed class GlobalErrorHandler : IDisposable
 {
     private readonly ILogger<GlobalErrorHandler> _logger;

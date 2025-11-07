@@ -5,6 +5,9 @@ using System.Text;
 
 namespace GRCFinancialControl.Persistence.Services.Importers
 {
+    /// <summary>
+    /// Formats import operation summaries with statistics and skip reasons.
+    /// </summary>
     internal static class ImportSummaryFormatter
     {
         public static string Build(

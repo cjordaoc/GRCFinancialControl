@@ -21,6 +21,9 @@ using static GRCFinancialControl.Persistence.Services.Importers.WorksheetValueHe
 
 namespace GRCFinancialControl.Persistence.Services
 {
+    /// <summary>
+    /// Imports budget, FCS backlog, hours allocation, and planned allocation data from Excel workbooks.
+    /// </summary>
     public class ImportService : IImportService
     {
         private static readonly FileStreamOptions SharedReadOptions = new()

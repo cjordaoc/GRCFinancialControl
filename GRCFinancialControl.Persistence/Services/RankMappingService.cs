@@ -9,6 +9,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GRCFinancialControl.Persistence.Services
 {
+    /// <summary>
+    /// Manages rank mappings for raw-to-normalized rank translations.
+    /// </summary>
     public sealed class RankMappingService : ContextFactoryCrudService<RankMapping>, IRankMappingService
     {
         public RankMappingService(IDbContextFactory<ApplicationDbContext> contextFactory)

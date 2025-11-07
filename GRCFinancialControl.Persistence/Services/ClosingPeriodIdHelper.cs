@@ -4,6 +4,9 @@ using System.Linq;
 
 namespace GRCFinancialControl.Persistence.Services;
 
+/// <summary>
+/// Parsing utilities for closing period identifiers.
+/// </summary>
 internal static class ClosingPeriodIdHelper
 {
     public static string? Normalize(string? closingPeriodId)

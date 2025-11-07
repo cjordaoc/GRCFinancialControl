@@ -2,6 +2,9 @@ using System;
 
 namespace GRCFinancialControl.Avalonia.Services.Models
 {
+    /// <summary>
+    /// Represents Power BI dashboard embed configuration with URI and status.
+    /// </summary>
     public sealed class PowerBiEmbedConfiguration
     {
         public static PowerBiEmbedConfiguration Empty { get; } = new();

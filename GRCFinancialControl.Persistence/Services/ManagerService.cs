@@ -8,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GRCFinancialControl.Persistence.Services
 {
+    /// <summary>
+    /// Manages manager entities and engagement assignments.
+    /// </summary>
     public class ManagerService : ContextFactoryCrudService<Manager>, IManagerService
     {
         public ManagerService(IDbContextFactory<ApplicationDbContext> contextFactory)
@@ -34,10 +37,10 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task AssignEngagementsAsync(int managerId, List<int> engagementIds)
         {
-            await using var context = await CreateContextAsync();
+            await using var context = await CreateContextAsync().ConfigureAwait(false);
             var manager = await context.Managers
                 .Include(m => m.EngagementAssignments)
-                .SingleOrDefaultAsync(m => m.Id == managerId);
+                .SingleOrDefaultAsync(m => m.Id == managerId).ConfigureAwait(false);
 
             if (manager is null)
             {
@@ -64,7 +67,7 @@ namespace GRCFinancialControl.Persistence.Services
                     });
                 }
             }
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
     }
 }

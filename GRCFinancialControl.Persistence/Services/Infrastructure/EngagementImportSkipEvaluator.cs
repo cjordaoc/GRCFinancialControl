@@ -4,6 +4,9 @@ using GRCFinancialControl.Core.Models;
 
 namespace GRCFinancialControl.Persistence.Services.Infrastructure
 {
+    /// <summary>
+    /// Evaluates whether an engagement should be skipped during import based on source and status.
+    /// </summary>
     internal static class EngagementImportSkipEvaluator
     {
         public static bool TryCreate(Engagement? engagement, out ImportSkipMetadata metadata)

@@ -9,6 +9,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GRCFinancialControl.Persistence.Services
 {
+    /// <summary>
+    /// Manages customer entities including CRUD operations and customer-specific data deletion.
+    /// Extends ContextFactoryCrudService for standard database operations.
+    /// </summary>
     public class CustomerService : ContextFactoryCrudService<Customer>, ICustomerService
     {
         public CustomerService(IDbContextFactory<ApplicationDbContext> contextFactory)
@@ -26,6 +30,11 @@ namespace GRCFinancialControl.Persistence.Services
 
         public Task DeleteAsync(int id) => DeleteEntityAsync(id);
 
+        /// <summary>
+        /// Deletes all engagement and financial data associated with a customer.
+        /// Cascades through: Actuals, Planned Allocations, PAPD assignments, Rank Budgets,
+        /// Financial Evolution snapshots, Revenue Allocations, and Engagements.
+        /// </summary>
         public async Task DeleteDataAsync(int customerId)
         {
             if (customerId <= 0)
@@ -33,12 +42,13 @@ namespace GRCFinancialControl.Persistence.Services
                 throw new ArgumentOutOfRangeException(nameof(customerId), customerId, "Customer identifier must be positive.");
             }
 
-            await using var context = await CreateContextAsync();
+            await using var context = await CreateContextAsync().ConfigureAwait(false);
 
             var engagementKeyPairs = await context.Engagements
                 .Where(e => e.CustomerId == customerId)
                 .Select(e => new { e.Id, e.EngagementId })
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
 
             if (engagementKeyPairs.Count == 0)
             {
@@ -51,31 +61,38 @@ namespace GRCFinancialControl.Persistence.Services
 
             await context.ActualsEntries
                 .Where(a => engagementIds.Contains(a.EngagementId))
-                .ExecuteDeleteAsync();
+                .ExecuteDeleteAsync()
+                .ConfigureAwait(false);
 
             await context.PlannedAllocations
                 .Where(p => engagementIds.Contains(p.EngagementId))
-                .ExecuteDeleteAsync();
+                .ExecuteDeleteAsync()
+                .ConfigureAwait(false);
 
             await context.EngagementPapds
                 .Where(ep => engagementIds.Contains(ep.EngagementId))
-                .ExecuteDeleteAsync();
+                .ExecuteDeleteAsync()
+                .ConfigureAwait(false);
 
             await context.EngagementRankBudgets
                 .Where(rb => engagementIds.Contains(rb.EngagementId))
-                .ExecuteDeleteAsync();
+                .ExecuteDeleteAsync()
+                .ConfigureAwait(false);
 
             await context.FinancialEvolutions
                 .Where(fe => engagementIds.Contains(fe.EngagementId))
-                .ExecuteDeleteAsync();
+                .ExecuteDeleteAsync()
+                .ConfigureAwait(false);
 
             await context.EngagementFiscalYearRevenueAllocations
                 .Where(a => engagementIds.Contains(a.EngagementId))
-                .ExecuteDeleteAsync();
+                .ExecuteDeleteAsync()
+                .ConfigureAwait(false);
 
             await context.Engagements
                 .Where(e => engagementIds.Contains(e.Id))
-                .ExecuteDeleteAsync();
+                .ExecuteDeleteAsync()
+                .ConfigureAwait(false);
         }
     }
 }
