@@ -19,6 +19,17 @@ using static GRCFinancialControl.Persistence.Services.Importers.WorksheetValueHe
 
 namespace GRCFinancialControl.Persistence.Services.Importers
 {
+    /// <summary>
+    /// Imports Full Management Data Excel workbooks and populates engagement financial snapshots.
+    /// Maps 6 Excel data sources to the granular FinancialEvolution structure:
+    /// - Original Budget (Hours, Value, Margin, Expenses)
+    /// - ETD (Estimate To Date) metrics
+    /// - FYTD (Fiscal Year To Date) metrics  
+    /// - Backlog data for revenue allocation
+    /// 
+    /// Performance: Uses dictionary lookups for engagement/closing period resolution
+    /// and applies ConfigureAwait(false) to all async operations.
+    /// </summary>
     public sealed class FullManagementDataImporter : IFullManagementDataImporter
     {
         private static readonly CultureInfo PtBrCulture = CultureInfo.GetCultureInfo("pt-BR");
@@ -330,13 +341,13 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     Array.Empty<string>());
             }
 
-            await using var strategyContext = await _contextFactory.CreateDbContextAsync();
+            await using var strategyContext = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
             var strategy = strategyContext.Database.CreateExecutionStrategy();
 
             return await strategy.ExecuteAsync(async () =>
             {
-                await using var context = await _contextFactory.CreateDbContextAsync();
-                await using var transaction = await context.Database.BeginTransactionAsync();
+                await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+                await using var transaction = await context.Database.BeginTransactionAsync().ConfigureAwait(false);
 
                 try
                 {
@@ -352,14 +363,16 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         .Include(e => e.Customer)
                         .Include(e => e.RevenueAllocations)
                         .Where(e => engagementIds.Contains(e.EngagementId))
-                        .ToListAsync();
+                        .ToListAsync()
+                        .ConfigureAwait(false);
 
                     var engagementLookup = engagements.ToDictionary(e => e.EngagementId, StringComparer.OrdinalIgnoreCase);
 
                     var closingPeriods = await context.ClosingPeriods
                         .Include(cp => cp.FiscalYear)
                         .Where(cp => closingPeriodNames.Contains(cp.Name))
-                        .ToListAsync();
+                        .ToListAsync()
+                        .ConfigureAwait(false);
 
                     var closingPeriodLookup = closingPeriods.ToDictionary(cp => cp.Name, StringComparer.OrdinalIgnoreCase);
 
@@ -379,6 +392,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         ? await context.Customers
                             .Where(c => customerNames.Contains(c.Name) || customerCodes.Contains(c.CustomerCode))
                             .ToListAsync()
+                            .ConfigureAwait(false)
                         : new List<Customer>();
 
                     var customersByCode = new Dictionary<string, Customer>(StringComparer.OrdinalIgnoreCase);
@@ -698,8 +712,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         }
                     }
 
-                    await context.SaveChangesAsync();
-                    await transaction.CommitAsync();
+                    await context.SaveChangesAsync().ConfigureAwait(false);
+                    await transaction.CommitAsync().ConfigureAwait(false);
 
                     var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>();
 
@@ -790,7 +804,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                 }
                 catch
                 {
-                    await transaction.RollbackAsync();
+                    await transaction.RollbackAsync().ConfigureAwait(false);
                     throw;
                 }
             });
@@ -986,19 +1000,35 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
         private static int? GetOptionalColumnIndex(Dictionary<int, string> headerMap, string[] candidates)
         {
-            foreach (var candidate in candidates)
+            // First pass: exact match (optimized with direct lookup via values)
+            var headerValues = headerMap.Values.ToList();
+            for (var i = 0; i < candidates.Length; i++)
             {
-                foreach (var kvp in headerMap)
+                var candidate = candidates[i];
+                for (var j = 0; j < headerValues.Count; j++)
                 {
-                    if (string.Equals(kvp.Value, candidate, StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(headerValues[j], candidate, StringComparison.OrdinalIgnoreCase))
                     {
-                        return kvp.Key;
+                        // Find the key for this value
+                        foreach (var kvp in headerMap)
+                        {
+                            if (string.Equals(kvp.Value, candidate, StringComparison.OrdinalIgnoreCase))
+                            {
+                                return kvp.Key;
+                            }
+                        }
                     }
                 }
             }
 
-            foreach (var candidate in candidates)
+            // Second pass: partial match with exclusions
+            for (var i = 0; i < candidates.Length; i++)
             {
+                var candidate = candidates[i];
+                var candidateLower = candidate.ToLowerInvariant();
+                var isEngagement = candidateLower.Contains("engagement");
+                var isDescription = string.Equals(candidate, "description", StringComparison.OrdinalIgnoreCase);
+
                 foreach (var kvp in headerMap)
                 {
                     var header = kvp.Value;
@@ -1012,12 +1042,12 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         continue;
                     }
 
-                    if (candidate.Contains("engagement", StringComparison.OrdinalIgnoreCase) && header.Contains("id", StringComparison.OrdinalIgnoreCase))
+                    if (isEngagement && header.Contains("id", StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
                     }
 
-                    if (string.Equals(candidate, "description", StringComparison.OrdinalIgnoreCase) &&
+                    if (isDescription &&
                         (header.Contains("customer", StringComparison.OrdinalIgnoreCase) || header.Contains("client", StringComparison.OrdinalIgnoreCase)))
                     {
                         continue;
@@ -1582,6 +1612,15 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             }
         }
 
+        /// <summary>
+        /// Creates or updates a FinancialEvolution snapshot for the given engagement and closing period.
+        /// Uses composite key (EngagementId, ClosingPeriodId) to upsert: existing snapshots are updated,
+        /// new ones are inserted.
+        /// 
+        /// Design rationale: Budget values (budgetHours, budgetMargin, expenseBudget) are constant
+        /// across snapshots. ETD and FYTD values reflect period-specific actuals. This allows
+        /// time-series analysis while keeping baseline budget data consistent.
+        /// </summary>
         private static int UpsertFinancialEvolution(
             ApplicationDbContext context,
             Engagement engagement,

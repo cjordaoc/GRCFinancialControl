@@ -12,6 +12,13 @@ using static GRCFinancialControl.Persistence.Services.ClosingPeriodIdHelper;
 
 namespace GRCFinancialControl.Persistence.Services
 {
+    /// <summary>
+    /// Provides reporting and analytics data by aggregating financial snapshots.
+    /// Reads from FinancialEvolution to generate time-series charts and PAPD contribution reports.
+    /// 
+    /// Performance: Uses AsNoTracking queries, dictionary-based lookups, and ConfigureAwait(false)
+    /// for async operations to minimize memory overhead and prevent deadlocks.
+    /// </summary>
     public class ReportService : IReportService
     {
         private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
@@ -23,12 +30,13 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task<List<PapdContributionData>> GetPapdContributionDataAsync()
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
             var papds = await context.Papds
                 .AsNoTracking()
                 .Select(p => new { p.Id, p.Name })
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
 
             var assignments = await context.EngagementPapds
                 .AsNoTracking()
@@ -37,7 +45,8 @@ namespace GRCFinancialControl.Persistence.Services
                     ep => ep.EngagementId,
                     e => e.Id,
                     (ep, engagement) => new { ep.PapdId, EngagementId = engagement.Id })
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
 
             var papdToEngagementIds = assignments
                 .GroupBy(a => a.PapdId)
@@ -56,7 +65,8 @@ namespace GRCFinancialControl.Persistence.Services
 
             var closingPeriodRecords = await context.ClosingPeriods
                 .AsNoTracking()
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
 
             var closingPeriodLookup = BuildClosingPeriodLookup(closingPeriodRecords);
 
@@ -79,7 +89,8 @@ namespace GRCFinancialControl.Persistence.Services
                 : await context.FinancialEvolutions
                     .AsNoTracking()
                     .Where(fe => relevantEngagementIds.Contains(fe.EngagementId))
-                    .ToListAsync();
+                    .ToListAsync()
+                    .ConfigureAwait(false);
 
             var evolutionsByEngagement = evolutions
                 .GroupBy(fe => fe.EngagementId)
@@ -233,13 +244,14 @@ namespace GRCFinancialControl.Persistence.Services
 
             var normalizedKey = engagementId.Trim();
 
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
             var engagementDbId = await context.Engagements
                 .AsNoTracking()
                 .Where(e => e.EngagementId == normalizedKey)
                 .Select(e => (int?)e.Id)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync()
+                .ConfigureAwait(false);
 
             if (!engagementDbId.HasValue)
             {
@@ -248,7 +260,8 @@ namespace GRCFinancialControl.Persistence.Services
 
             var closingPeriodRecords = await context.ClosingPeriods
                 .AsNoTracking()
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
 
             var closingPeriodLookup = BuildClosingPeriodLookup(closingPeriodRecords);
 
@@ -256,7 +269,8 @@ namespace GRCFinancialControl.Persistence.Services
                 .AsNoTracking()
                 .Where(fe => fe.EngagementId == engagementDbId.Value)
                 .Where(HasRelevantMetricsExpression())
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
 
             var points = entries
                 .Select(evolution => new

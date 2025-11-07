@@ -715,22 +715,21 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return int.MaxValue;
             }
 
-            if (int.TryParse(closingPeriodId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var identifier))
+            // Optimize: Parse once and search based on type
+            var isNumericId = int.TryParse(closingPeriodId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var identifier);
+
+            // Single pass through ClosingPeriods collection
+            for (var i = 0; i < ClosingPeriods.Count; i++)
             {
-                for (var i = 0; i < ClosingPeriods.Count; i++)
+                var period = ClosingPeriods[i];
+                if (isNumericId)
                 {
-                    if (ClosingPeriods[i].Id == identifier)
+                    if (period.Id == identifier)
                     {
                         return i;
                     }
                 }
-
-                return int.MaxValue;
-            }
-
-            for (var i = 0; i < ClosingPeriods.Count; i++)
-            {
-                if (string.Equals(ClosingPeriods[i].Name, closingPeriodId, StringComparison.OrdinalIgnoreCase))
+                else if (string.Equals(period.Name, closingPeriodId, StringComparison.OrdinalIgnoreCase))
                 {
                     return i;
                 }
@@ -781,29 +780,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            if (int.TryParse(target.normalizedId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var identifier))
+            // Reuse the already-computed index from target to avoid duplicate search
+            if (target.index != int.MaxValue && target.index < ClosingPeriods.Count)
             {
-                var matched = ClosingPeriods.FirstOrDefault(p => p.Id == identifier);
-                if (matched is not null)
-                {
-                    LastClosingPeriod = matched;
-                    LastClosingPeriodFallbackName = matched.Name;
-                    return;
-                }
+                var matched = ClosingPeriods[target.index];
+                LastClosingPeriod = matched;
+                LastClosingPeriodFallbackName = matched.Name;
             }
             else
             {
-                var matchedByName = ClosingPeriods.FirstOrDefault(p => string.Equals(p.Name, target.normalizedId, StringComparison.OrdinalIgnoreCase));
-                if (matchedByName is not null)
-                {
-                    LastClosingPeriod = matchedByName;
-                    LastClosingPeriodFallbackName = matchedByName.Name;
-                    return;
-                }
+                LastClosingPeriod = null;
+                LastClosingPeriodFallbackName = target.normalizedId;
             }
-
-            LastClosingPeriod = null;
-            LastClosingPeriodFallbackName = target.normalizedId;
         }
         
         private void SubscribeToPropertyChanges()

@@ -106,7 +106,80 @@ All UI strings for both desktop applications are centralized under `GRC.Shared.R
 
 ---
 
-## 6 · Excel Importers & Data Integrity
+## 6 · Financial Evolution Tracking
+
+**Happy Path**
+1. The Full Management Data importer populates engagement financial snapshots for each closing period.
+2. The system stores granular time-series data in `FinancialEvolution` with 13 separate columns for hours, revenue, margin, and expense metrics.
+3. Services read the latest snapshot to populate engagement dashboards and reports.
+4. Users can manually edit historical snapshots through the Engagement Editor's Financial Evolution tab.
+5. All financial data is timestamped to the closing period for accurate trend analysis.
+
+**Column Structure**
+The `FinancialEvolution` table captures point-in-time engagement financials across four metric categories:
+
+**Hours Metrics:**
+- **BudgetHours** – Original budget hours allocated to the engagement (constant baseline)
+- **ChargedHours** – Estimate To Date (ETD) hours that have been charged
+- **FYTDHours** – Fiscal Year To Date total hours accumulated
+- **AdditionalHours** – Extra hours allocated beyond the original budget (reserved for future Hours Allocation View)
+
+**Revenue Metrics:**
+- **ValueData** – Total engagement value (TER/revenue)
+- **RevenueToGoValue** – Remaining revenue to be realized (from backlog)
+- **RevenueToDateValue** – Revenue already realized
+
+**Margin Metrics:**
+- **BudgetMargin** – Baseline margin percentage from original budget
+- **ToDateMargin** – Current margin percentage (ETD)
+- **FYTDMargin** – Fiscal year cumulative margin percentage
+
+**Expense Metrics:**
+- **ExpenseBudget** – Original budgeted expenses
+- **ExpensesToDate** – Expenses incurred to date (ETD)
+- **FYTDExpenses** – Fiscal year cumulative expenses
+
+**Data Flow – Excel to Database**
+
+1. **Budget File Import:**
+   - Original budget values (hours, value, margin, expenses) populate the baseline columns
+   - These values remain constant across all snapshots for the same engagement
+
+2. **Full Management Data Import:**
+   - Each row represents a snapshot at a specific closing period
+   - Excel columns map to database fields:
+     - "Original Budget Hours" → `BudgetHours`
+     - "Charged Hours ETD" → `ChargedHours`
+     - "Charged Hours FYTD" → `FYTDHours`
+     - "Ter Mercury Projected" → `ValueData`
+     - "FYTG Backlog" → `RevenueToGoValue`
+     - "Revenue To Date" (calculated) → `RevenueToDateValue`
+     - "Original Budget Margin %" → `BudgetMargin`
+     - "Margin % ETD" → `ToDateMargin`
+     - "Margin % FYTD" → `FYTDMargin`
+     - "Original Budget Expenses" → `ExpenseBudget`
+     - "Expenses ETD" → `ExpensesToDate`
+     - "Expenses FYTD" → `FYTDExpenses`
+
+3. **Snapshot Reading Logic:**
+   - Services read **only the latest snapshot** per engagement
+   - Budget values (BudgetHours, BudgetMargin, ExpenseBudget) are the same across all snapshots
+   - ETD values (ChargedHours, ToDateMargin, ExpensesToDate) reflect the most recent period
+   - FYTD values provide fiscal-year-to-date accumulation
+
+**Validation & Consolidation Rules**
+- Each snapshot is keyed by `EngagementId` + `ClosingPeriodId` to maintain time-series integrity.
+- Missing closing periods skip period-specific metrics but preserve budget baseline values.
+- The importer upserts snapshots: existing records for the same engagement + period are updated rather than duplicated.
+- Decimal precision is enforced at 18,2 to match MySQL storage and prevent rounding inconsistencies.
+- Revenue calculations derive from backlog: `RevenueToDate = ValueToAllocate − CurrentBacklog − FutureBacklog`.
+- All nullable fields gracefully handle missing Excel data without blocking the import.
+
+[See Technical Spec →](readme_specs.md#financial-evolution-tracking)
+
+---
+
+## 7 · Excel Importers & Data Integrity
 **Happy Path**
 1. Users choose the desired importer (Full Management Data, Revenue Allocation, Invoice Plan).
 2. The system loads the Excel workbook into memory, auto-detects header rows, and validates required columns for the selected importer.
@@ -127,7 +200,7 @@ All UI strings for both desktop applications are centralized under `GRC.Shared.R
 
 ---
 
-## 7 · Retain Template Generation
+## 8 · Retain Template Generation
 **Happy Path**
 1. Staffing teams request a Retain template based on the latest allocation planning workbook.
 2. The generator clones the sanitized template asset (mirroring `DataTemplate/Retain_Template.xlsx`) into the user-selected destination and seeds cell `E1` with the Saturday that precedes the first planned week while preserving the workbook instructions.
@@ -146,7 +219,7 @@ All UI strings for both desktop applications are centralized under `GRC.Shared.R
 
 ---
 
-## 8 · Power Automate Tasks Export
+## 9 · Power Automate Tasks Export
 **Happy Path**
 1. Controllers choose **Generate Tasks File** in the Tasks workspace and select the destination XML file (the dialog defaults to the last-used folder).
 2. The exporter resolves the upcoming Monday at 10:00 (America/Sao_Paulo) and queries invoice plans that notify on that date.
@@ -164,7 +237,7 @@ All UI strings for both desktop applications are centralized under `GRC.Shared.R
 
 ---
 
-## 9 · Reporting Dashboards
+## 10 · Reporting Dashboards
 **Happy Path**
 1. Users open the reporting dashboards within the Avalonia client.
 2. KPI widgets query MySQL views for budgets, allocation by rank, and invoice status.
@@ -179,7 +252,7 @@ All UI strings for both desktop applications are centralized under `GRC.Shared.R
 
 ---
 
-## 10 · UI Architecture
+## 11 · UI Architecture
 - Avalonia + MVVM pattern with one View ↔ one ViewModel.
 - All view work must align with the shared [Unified GUI Design Guidelines](GRC.Shared.UI/Documentation/GuiDesignGuidelines.md); consult the document before creating or modifying layouts in either desktop app.
 - Commands leverage `RelayCommand`/`AsyncRelayCommand` to encapsulate interactions.
@@ -199,7 +272,7 @@ All UI strings for both desktop applications are centralized under `GRC.Shared.R
 
 ---
 
-## 11 · Master Data Editors
+## 12 · Master Data Editors
 **Happy Path**
 1. Administrators open the master data workspace to maintain supporting catalog entries.
 2. Customer records expose a dialog editor with inline validation cues for required fields.
@@ -215,7 +288,7 @@ All UI strings for both desktop applications are centralized under `GRC.Shared.R
 
 ---
 
-## 12 · Settings & Application Data Backup
+## 13 · Settings & Application Data Backup
 **Happy Path**
 1. Administrators open the Settings view and switch to the Application Data tab after validating the database connection.
 2. Selecting **Export data** prompts for a destination and writes an XML snapshot of every table in the connected database.
@@ -233,7 +306,7 @@ All UI strings for both desktop applications are centralized under `GRC.Shared.R
 
 ---
 
-## 13 · Global Compliance & Verification
+## 14 · Global Compliance & Verification
 - Import pipelines record skip reasons for S/4 Projects and Closed engagements, emitting the localized warnings `⚠ Values for S/4 Projects must be inserted manually. Data import was skipped for Engagement {EngagementID}.` and `⚠ Engagement {EngagementID} skipped – status is Closed.` in both the console and the persisted import summary.
 - Automatic restarts triggered by language changes, connection package imports, or data restores now record structured log entries that capture the restored language, default currency, and whether secure connection settings were detected before relaunching.
 - View-mode dialogs continue to load in read-only state, while Closed engagements lock every editable field except Status so reopening flows remain intentional and auditable.

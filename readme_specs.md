@@ -76,6 +76,106 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
 
 ---
 
+## Financial Evolution Tracking
+- **Primary Services:** `FullManagementDataImporter`, `EngagementService`, `ReportService`
+- **Domain Models:** `FinancialEvolution`, `Engagement`, `ClosingPeriod`, `FiscalYear`
+- **Persistence:** Table `FinancialEvolution` with 13 metric columns plus foreign keys
+- **Database Schema:**
+  ```sql
+  CREATE TABLE FinancialEvolution (
+      Id INT PRIMARY KEY AUTO_INCREMENT,
+      ClosingPeriodId VARCHAR(50) NOT NULL,
+      EngagementId INT NOT NULL,
+      -- Hours Metrics
+      BudgetHours DECIMAL(18,2) NULL,
+      ChargedHours DECIMAL(18,2) NULL,
+      FYTDHours DECIMAL(18,2) NULL,
+      AdditionalHours DECIMAL(18,2) NULL,
+      -- Revenue Metrics
+      ValueData DECIMAL(18,2) NULL,
+      RevenueToGoValue DECIMAL(18,2) NULL,
+      RevenueToDateValue DECIMAL(18,2) NULL,
+      -- Margin Metrics
+      BudgetMargin DECIMAL(18,2) NULL,
+      ToDateMargin DECIMAL(18,2) NULL,
+      FYTDMargin DECIMAL(18,2) NULL,
+      -- Expense Metrics
+      ExpenseBudget DECIMAL(18,2) NULL,
+      ExpensesToDate DECIMAL(18,2) NULL,
+      FYTDExpenses DECIMAL(18,2) NULL,
+      -- Foreign Keys
+      FiscalYearId INT NULL,
+      FOREIGN KEY (EngagementId) REFERENCES Engagements(Id),
+      FOREIGN KEY (FiscalYearId) REFERENCES FiscalYears(Id),
+      UNIQUE KEY uk_engagement_period (EngagementId, ClosingPeriodId)
+  );
+  ```
+
+- **Import Pipeline (FullManagementDataImporter):**
+  1. `ParseRows` extracts Full Management Data rows and maps Excel headers to domain fields:
+     - "Original Budget Hours" / "Budget Hours" → `OriginalBudgetHours` → `BudgetHours`
+     - "Charged Hours ETD" / "ETD Hours" → `ChargedHours`
+     - "Charged Hours FYTD" / "FYTD Hours" → `FYTDHours`
+     - "Ter Mercury Projected" / "ETC-P Value" → `TERMercuryProjectedOppCurrency` → `ValueData`
+     - "FYTG Backlog" / "Current FY Backlog" → `CurrentFiscalYearBacklog` → `RevenueToGoValue`
+     - (calculated) `ValueToAllocate − CurrentBacklog − FutureBacklog` → `RevenueToDateValue`
+     - "Original Budget Margin %" → `OriginalBudgetMarginPercent` → `BudgetMargin`
+     - "Margin % ETD" → `ToDateMargin`
+     - "Margin % FYTD" → `FYTDMargin`
+     - "Original Budget Expenses" → `OriginalBudgetExpenses` → `ExpenseBudget`
+     - "Expenses ETD" → `ExpensesToDate`
+     - "Expenses FYTD" → `FYTDExpenses`
+  2. `UpsertFinancialEvolution` creates or updates snapshots using composite key `(EngagementId, ClosingPeriodId)`.
+  3. Missing closing periods skip period-specific metrics but preserve budget baseline columns.
+  4. All decimals are stored with precision 18,2 matching MySQL schema.
+
+- **Snapshot Reading (EngagementService):**
+  1. `ApplyFinancialControlSnapshot` loads all `FinancialEvolutions` for an engagement.
+  2. `BuildFinancialEvolutionSortKey` orders snapshots by closing period (resolved date or numeric ID).
+  3. **Only the latest snapshot is applied** to the engagement entity:
+     - `InitialHoursBudget = latest.BudgetHours`
+     - `OpeningValue = latest.ValueData`
+     - `OpeningExpenses = latest.ExpenseBudget`
+     - `MarginPctBudget = latest.BudgetMargin`
+     - `EstimatedToCompleteHours = latest.ChargedHours`
+     - `ValueEtcp = latest.ValueData`
+     - `ExpensesEtcp = latest.ExpensesToDate`
+     - `MarginPctEtcp = latest.ToDateMargin`
+  4. Budget values (BudgetHours, BudgetMargin, ExpenseBudget) are constant across snapshots, so reading latest vs first produces identical baseline data.
+  5. ETD values (ChargedHours, ToDateMargin, ExpensesToDate) reflect the most recent period's actuals.
+
+- **Reporting (ReportService):**
+  1. `GetPapdContributionDataAsync` aggregates `ChargedHours` and `ValueData` from snapshots per PAPD assignment.
+  2. `GetFinancialEvolutionPointsAsync` returns time-series data for a single engagement, ordered by closing period.
+  3. Each point includes `ChargedHours`, `ValueData`, `ToDateMargin`, and `ExpensesToDate` for charting financial trends.
+
+- **Manual Editing (EngagementEditorViewModel):**
+  1. The Financial Evolution tab displays existing snapshots in a grid.
+  2. Users can add new snapshots, select a closing period, and enter ETD metrics manually.
+  3. `SaveAsync` persists changes via `EngagementService.UpdateAsync`, which rebuilds the `FinancialEvolutions` collection.
+  4. Manual entries follow the same upsert logic: duplicate closing periods overwrite existing snapshots.
+
+- **Validation Mechanics:**
+  - Decimal parsing uses `ParseDecimal(value, 2)` with pt-BR and invariant culture fallback, rounding to 2 decimals via `MidpointRounding.AwayFromZero`.
+  - Percent fields are normalized: values <= 1 are multiplied by 100 and stored as percentages.
+  - Revenue calculations validate that `ValueToAllocate` is set before deriving `RevenueToDateValue`.
+  - Missing Excel columns result in null database values; imports never fail due to absent optional metrics.
+  - Snapshots without a closing period (e.g., metadata-only S/4 imports) are logged as warnings and skipped for period-specific metrics.
+
+- **Performance Optimizations:**
+  - `ConfigureAwait(false)` applied to all async database operations to prevent deadlocks in library code.
+  - Dictionary lookups replace nested loops for closing period resolution (`BuildClosingPeriodLookup`).
+  - Snapshot ordering uses cached sort keys to avoid repeated date parsing.
+  - Reports use `AsNoTracking()` queries with `ToListAsync()` to minimize memory overhead.
+
+- **Data Integrity:**
+  - Foreign key to `FiscalYears` ensures revenue allocations link to valid fiscal periods.
+  - Unique constraint `(EngagementId, ClosingPeriodId)` prevents duplicate snapshots per period.
+  - EF Core navigation properties maintain referential integrity between `Engagement` and `FinancialEvolution`.
+  - Snapshot deletion cascades when engagements are removed via `DeleteDataAsync`.
+
+---
+
 ## Closing Period Management
 - **Primary Components:** `ClosingPeriodService`, `ClosingPeriodsViewModel`, `ClosingPeriodEditorViewModel`
 - **Domain Models:** `ClosingPeriod`, `FiscalYear`
