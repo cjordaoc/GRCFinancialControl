@@ -7,7 +7,10 @@ using Avalonia.Styling;
 
 namespace App.Presentation.Converters;
 
-public sealed class BoolToBrushConverter : IValueConverter
+/// <summary>
+/// Converts boolean values to theme-aware brushes via resource key lookup.
+/// </summary>
+public sealed class BoolToThemeResourceBrushConverter : IValueConverter
 {
     public string TrueResourceKey { get; set; } = "ThemeErrorBrush";
 
