@@ -223,7 +223,7 @@ namespace GRCFinancialControl.Persistence.Services
         /// <summary>
         /// Wrapper around Excel DataSet for simplified access.
         /// </summary>
-        protected class WorkbookData
+        protected class WorkbookData : IDisposable
         {
             private readonly DataSet _dataSet;
 
@@ -236,6 +236,11 @@ namespace GRCFinancialControl.Persistence.Services
             {
                 var table = _dataSet.Tables[name];
                 return table != null ? new WorksheetAdapter(table) : null;
+            }
+
+            public void Dispose()
+            {
+                _dataSet?.Dispose();
             }
 
             public IWorksheet? FirstWorksheet
