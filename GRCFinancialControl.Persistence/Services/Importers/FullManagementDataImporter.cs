@@ -425,17 +425,26 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         {
                             var closingPeriodFound = closingPeriodLookup.TryGetValue(row.ClosingPeriodName, out var closingPeriod);
 
+                            // If closing period not found, log detailed error with available periods
                             if (!closingPeriodFound)
                             {
                                 var missingLabel = string.IsNullOrWhiteSpace(row.ClosingPeriodName)
                                     ? "<blank>"
                                     : row.ClosingPeriodName;
                                 missingClosingPeriodSkips.Add($"{missingLabel} (row {row.RowNumber})");
-                                Logger.LogWarning(
-                                    "Closing period '{ClosingPeriod}' not found for Full Management Data row {RowNumber} (Engagement {EngagementId}). Period-specific metrics will be skipped.",
+                                
+                                var availablePeriods = string.Join(", ", closingPeriodLookup.Keys.Take(10));
+                                var periodInfo = closingPeriodLookup.Count > 0 
+                                    ? $" Available periods: {availablePeriods}{(closingPeriodLookup.Count > 10 ? "..." : "")}"
+                                    : " No closing periods found in database.";
+                                    
+                                Logger.LogError(
+                                    "CRITICAL: Closing period '{ClosingPeriod}' not found for row {RowNumber} (Engagement {EngagementId}). " +
+                                    "FinancialEvolution and Revenue Allocations will NOT be created for this engagement.{PeriodInfo}",
                                     missingLabel,
                                     row.RowNumber,
-                                    row.EngagementId);
+                                    row.EngagementId,
+                                    periodInfo);
                             }
 
                             if (!engagementLookup.TryGetValue(row.EngagementId, out var engagement))
@@ -698,6 +707,16 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                         row.FutureFiscalYearBacklog ?? 0m,
                                         Logger);
                                 }
+                            }
+                            else
+                            {
+                                // Closing period not found - log critical issue
+                                Logger.LogError(
+                                    "Row {RowNumber} for engagement {EngagementId}: FinancialEvolution and RevenueAllocation data NOT imported due to missing closing period '{ClosingPeriod}'. " +
+                                    "Please create this closing period in the system or correct the closing period name in the import file.",
+                                    row.RowNumber,
+                                    row.EngagementId,
+                                    row.ClosingPeriodName);
                             }
                         }
                         catch (Exception ex)
