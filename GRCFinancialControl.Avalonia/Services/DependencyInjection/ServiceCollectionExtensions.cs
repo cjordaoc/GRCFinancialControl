@@ -66,6 +66,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IEngagementService, EngagementService>();
         services.AddTransient<IFiscalYearService, FiscalYearService>();
         services.AddTransient<IFullManagementDataImporter, FullManagementDataImporter>();
+        services.AddTransient<BudgetImporter>();
+        services.AddTransient<AllocationPlanningImporter>();
         services.AddTransient<IFiscalCalendarConsistencyService, FiscalCalendarConsistencyService>();
         services.AddTransient<IHoursAllocationService, HoursAllocationService>();
         services.AddTransient<IImportService, ImportService>();

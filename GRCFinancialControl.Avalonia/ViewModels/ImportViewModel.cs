@@ -20,7 +20,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private const string AllocationPlanningType = "AllocationPlanning";
 
         private readonly FilePickerService _filePickerService;
-        private readonly IImportService _importService;
+        private readonly BudgetImporter _budgetImporter;
+        private readonly IFullManagementDataImporter _fullManagementImporter;
+        private readonly AllocationPlanningImporter _allocationPlanningImporter;
         private readonly LoggingService _loggingService;
         private readonly ISettingsService _settingsService;
         private readonly Action<string> _logHandler;
@@ -56,12 +58,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             : LocalizationRegistry.Format("FINC_Import_Section_Selected_TitleFormat", FileTypeDisplayName);
 
         public ImportViewModel(FilePickerService filePickerService,
-                               IImportService importService,
+                               BudgetImporter budgetImporter,
+                               IFullManagementDataImporter fullManagementImporter,
+                               AllocationPlanningImporter allocationPlanningImporter,
                                LoggingService loggingService,
                                ISettingsService settingsService)
         {
             _filePickerService = filePickerService;
-            _importService = importService;
+            _budgetImporter = budgetImporter ?? throw new ArgumentNullException(nameof(budgetImporter));
+            _fullManagementImporter = fullManagementImporter ?? throw new ArgumentNullException(nameof(fullManagementImporter));
+            _allocationPlanningImporter = allocationPlanningImporter ?? throw new ArgumentNullException(nameof(allocationPlanningImporter));
             _loggingService = loggingService;
             _settingsService = settingsService;
             _logHandler = message =>
@@ -124,7 +130,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _loggingService.LogInfo(LocalizationRegistry.Format("FINC_Import_Status_InProgress", displayName));
 
             string? resultSummary = null;
-            string? backlogSummary = null;
             FullManagementDataImportResult? managementResult = null;
 
             try
@@ -134,28 +139,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 switch (FileType)
                 {
                     case BudgetType:
-                        resultSummary = await Task.Run(() => _importService.ImportBudgetAsync(filePath));
+                        resultSummary = await Task.Run(() => _budgetImporter.ImportAsync(filePath));
                         break;
                     case FullManagementType:
-                        backlogSummary = await Task.Run(() => _importService.ImportFcsRevenueBacklogAsync(filePath));
-                        managementResult = await Task.Run(() => _importService.ImportFullManagementDataAsync(filePath));
-
-                        var managementSummary = managementResult?.Summary;
-                        if (!string.IsNullOrWhiteSpace(backlogSummary) && !string.IsNullOrWhiteSpace(managementSummary))
-                        {
-                            resultSummary = string.Join(Environment.NewLine + Environment.NewLine, backlogSummary, managementSummary);
-                        }
-                        else if (!string.IsNullOrWhiteSpace(backlogSummary))
-                        {
-                            resultSummary = backlogSummary;
-                        }
-                        else
-                        {
-                            resultSummary = managementSummary;
-                        }
+                        managementResult = await Task.Run(() => _fullManagementImporter.ImportAsync(filePath));
+                        resultSummary = managementResult?.Summary;
                         break;
                     case AllocationPlanningType:
-                        resultSummary = await Task.Run(() => _importService.ImportAllocationPlanningAsync(filePath));
+                        resultSummary = await Task.Run(() => _allocationPlanningImporter.ImportAsync(filePath));
                         break;
                     default:
                         resultSummary = LocalizationRegistry.Get("FINC_Import_Status_InvalidType");

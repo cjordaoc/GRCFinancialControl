@@ -21,16 +21,16 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 {
     /// <summary>
     /// Imports Full Management Data Excel workbooks and populates engagement financial snapshots.
-    /// Maps 6 Excel data sources to the granular FinancialEvolution structure:
-    /// - Original Budget (Hours, Value, Margin, Expenses)
-    /// - ETD (Estimate To Date) metrics
-    /// - FYTD (Fiscal Year To Date) metrics  
-    /// - Backlog data for revenue allocation
+    /// Inherits from ImportServiceBase for common Excel loading and transaction management.
     /// 
-    /// Performance: Uses dictionary lookups for engagement/closing period resolution
-    /// and applies ConfigureAwait(false) to all async operations.
+    /// Updates three tables:
+    /// - Engagements: Description, Currency, Status, Budget/ETC-P values
+    /// - FinancialEvolution: Budget/ETD/FYTD metrics for hours, margin, expenses, revenue
+    /// - RevenueAllocations: ToGo/ToDate values for current + future fiscal years
+    /// 
+    /// Performance: Uses dictionary lookups and applies ConfigureAwait(false) to all async operations.
     /// </summary>
-    public sealed class FullManagementDataImporter : IFullManagementDataImporter
+    public sealed class FullManagementDataImporter : ImportServiceBase, IFullManagementDataImporter
     {
         private static readonly CultureInfo PtBrCulture = CultureInfo.GetCultureInfo("pt-BR");
 
@@ -251,15 +251,11 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             "fytd expenses"
         };
 
-        private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
-        private readonly ILogger<FullManagementDataImporter> _logger;
-
         public FullManagementDataImporter(
             IDbContextFactory<ApplicationDbContext> contextFactory,
             ILogger<FullManagementDataImporter> logger)
+            : base(contextFactory, logger)
         {
-            _contextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         private static readonly IReadOnlyList<string[]> HeaderGroups = new[]
@@ -341,12 +337,12 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     Array.Empty<string>());
             }
 
-            await using var strategyContext = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+            await using var strategyContext = await ContextFactory.CreateDbContextAsync().ConfigureAwait(false);
             var strategy = strategyContext.Database.CreateExecutionStrategy();
 
             return await strategy.ExecuteAsync(async () =>
             {
-                await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+                await using var context = await ContextFactory.CreateDbContextAsync().ConfigureAwait(false);
                 await using var transaction = await context.Database.BeginTransactionAsync().ConfigureAwait(false);
 
                 try
@@ -435,7 +431,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                     ? "<blank>"
                                     : row.ClosingPeriodName;
                                 missingClosingPeriodSkips.Add($"{missingLabel} (row {row.RowNumber})");
-                                _logger.LogWarning(
+                                Logger.LogWarning(
                                     "Closing period '{ClosingPeriod}' not found for Full Management Data row {RowNumber} (Engagement {EngagementId}). Period-specific metrics will be skipped.",
                                     missingLabel,
                                     row.RowNumber,
@@ -446,7 +442,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                             {
                                 var missingDetail = $"{row.EngagementId} (row {row.RowNumber})";
                                 missingEngagementSkips.Add(missingDetail);
-                                _logger.LogWarning(
+                                Logger.LogWarning(
                                     "Engagement not found for Full Management Data row {RowNumber} (Engagement ID {EngagementId}).",
                                     row.RowNumber,
                                     row.EngagementId);
@@ -524,7 +520,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                 {
                                     manualOnlySkips.Add(detail);
                                     warningMessages.Add(manualMetadata.WarningMessage);
-                                    _logger.LogWarning(manualMetadata.WarningMessage);
+                                    Logger.LogWarning(manualMetadata.WarningMessage);
                                 }
 
                                 continue;
@@ -535,7 +531,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                             {
                                 closedEngagementSkips.Add(detail);
                                 warningMessages.Add(closedMetadata.WarningMessage);
-                                _logger.LogWarning(closedMetadata.WarningMessage);
+                                Logger.LogWarning(closedMetadata.WarningMessage);
                                 continue;
                             }
 
@@ -545,7 +541,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                     ? $"Id={closingPeriod.FiscalYear.Id}"
                                     : closingPeriod.FiscalYear.Name;
                                 lockedFiscalYearSkips.Add($"{row.EngagementId} ({fiscalYearName}, row {row.RowNumber})");
-                                _logger.LogInformation(
+                                Logger.LogInformation(
                                     "Skipping row {RowNumber} for engagement {EngagementId} because fiscal year '{FiscalYear}' is locked.",
                                     row.RowNumber,
                                     row.EngagementId,
@@ -700,7 +696,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                         closingPeriod,
                                         row.CurrentFiscalYearBacklog ?? 0m,
                                         row.FutureFiscalYearBacklog ?? 0m,
-                                        _logger);
+                                        Logger);
                                 }
                             }
                         }
@@ -708,7 +704,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         {
                             var errorMessage = $"Row {row.RowNumber}: {ex.Message}";
                             errors.Add(errorMessage);
-                            _logger.LogError(ex, "Error processing Full Management Data row {RowNumber} for engagement {EngagementId}.", row.RowNumber, row.EngagementId);
+                            Logger.LogError(ex, "Error processing Full Management Data row {RowNumber} for engagement {EngagementId}.", row.RowNumber, row.EngagementId);
                         }
                     }
 
@@ -785,7 +781,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         skipReasons,
                         notes,
                         parsedRows.Count);
-                    _logger.LogInformation(summary);
+                    Logger.LogInformation(summary);
 
                     return new FullManagementDataImportResult(
                         summary,
@@ -1197,7 +1193,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             return new FullManagementReportMetadata(closingPeriod, lastUpdate);
         }
 
-        private static decimal? ParseDecimal(object? value, int? decimals)
+        private new static decimal? ParseDecimal(object? value, int? decimals)
         {
             if (value == null || value == DBNull.Value)
             {
@@ -1832,7 +1828,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             }
         }
 
-        private static decimal RoundMoney(decimal value) => Math.Round(value, 2, MidpointRounding.AwayFromZero);
 
         private static string IncrementFiscalYearName(string fiscalYearName)
         {
