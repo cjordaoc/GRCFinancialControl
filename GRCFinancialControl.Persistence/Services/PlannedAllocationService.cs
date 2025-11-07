@@ -9,6 +9,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GRCFinancialControl.Persistence.Services
 {
+    /// <summary>
+    /// Manages planned hour allocations per engagement with fiscal year lock enforcement.
+    /// </summary>
     public class PlannedAllocationService : IPlannedAllocationService
     {
         private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
@@ -20,30 +23,30 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task<List<PlannedAllocation>> GetAllocationsForEngagementAsync(int engagementId)
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
             return await context.PlannedAllocations
                 .AsNoTracking()
                 .Where(pa => pa.EngagementId == engagementId)
                 .Include(pa => pa.ClosingPeriod)
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
         }
 
         public async Task SaveAllocationsForEngagementAsync(int engagementId, List<PlannedAllocation> allocations)
         {
             ArgumentNullException.ThrowIfNull(allocations);
 
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
             await EngagementMutationGuard.EnsureCanMutateAsync(
                 context,
                 engagementId,
-                "Saving planned allocations");
+                "Saving planned allocations").ConfigureAwait(false);
 
             var existingAllocations = await context.PlannedAllocations
                 .Where(pa => pa.EngagementId == engagementId)
                 .Include(pa => pa.ClosingPeriod)
                     .ThenInclude(cp => cp.FiscalYear)
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             var relevantClosingPeriodIds = existingAllocations
                 .Select(a => a.ClosingPeriodId)
@@ -54,7 +57,7 @@ namespace GRCFinancialControl.Persistence.Services
             var closingPeriods = await context.ClosingPeriods
                 .Include(cp => cp.FiscalYear)
                 .Where(cp => relevantClosingPeriodIds.Contains(cp.Id))
-                .ToDictionaryAsync(cp => cp.Id);
+                .ToDictionaryAsync(cp => cp.Id).ConfigureAwait(false);
 
             var lockedPeriods = closingPeriods.Values
                 .Where(cp => cp.FiscalYear is not null && cp.FiscalYear.IsLocked)
@@ -102,7 +105,7 @@ namespace GRCFinancialControl.Persistence.Services
 
             await context.PlannedAllocations
                 .Where(pa => pa.EngagementId == engagementId && unlockedPeriodIds.Contains(pa.ClosingPeriodId))
-                .ExecuteDeleteAsync();
+                .ExecuteDeleteAsync().ConfigureAwait(false);
 
             foreach (var allocation in allocations.Where(a => unlockedPeriodIds.Contains(a.ClosingPeriodId)))
             {
@@ -117,10 +120,10 @@ namespace GRCFinancialControl.Persistence.Services
                     EngagementId = engagementId,
                     ClosingPeriodId = allocation.ClosingPeriodId,
                     AllocatedHours = allocation.AllocatedHours
-                });
+                }).ConfigureAwait(false);
             }
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
     }
 }
