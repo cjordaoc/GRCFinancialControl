@@ -5,6 +5,6 @@ namespace GRCFinancialControl.Persistence.Services.Interfaces
 {
     public interface IFullManagementDataImporter
     {
-        Task<FullManagementDataImportResult> ImportAsync(string filePath);
+        Task<FullManagementDataImportResult> ImportAsync(string filePath, int closingPeriodId);
     }
 }

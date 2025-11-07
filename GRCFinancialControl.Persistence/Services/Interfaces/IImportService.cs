@@ -17,7 +17,9 @@ namespace GRCFinancialControl.Persistence.Services.Interfaces
         /// Imports Full Management Data workbook (updates Engagements, FinancialEvolution, RevenueAllocations).
         /// This import combines engagement updates, financial snapshots, and revenue backlog data.
         /// </summary>
-        Task<Importers.FullManagementDataImportResult> ImportFullManagementDataAsync(string filePath);
+        /// <param name="filePath">Path to the Excel file to import</param>
+        /// <param name="closingPeriodId">The closing period ID selected by the user for this import</param>
+        Task<Importers.FullManagementDataImportResult> ImportFullManagementDataAsync(string filePath, int closingPeriodId);
 
         /// <summary>
         /// Imports allocation planning workbook (creates/updates HoursAllocations, PlannedAllocations).

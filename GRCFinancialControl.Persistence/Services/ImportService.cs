@@ -583,15 +583,20 @@ namespace GRCFinancialControl.Persistence.Services
         }
 
 
-        public async Task<FullManagementDataImportResult> ImportFullManagementDataAsync(string filePath)
+        public async Task<FullManagementDataImportResult> ImportFullManagementDataAsync(string filePath, int closingPeriodId)
         {
             if (string.IsNullOrWhiteSpace(filePath))
             {
                 throw new ArgumentException("File path must be provided.", nameof(filePath));
             }
 
+            if (closingPeriodId <= 0)
+            {
+                throw new ArgumentException("Valid closing period ID must be provided.", nameof(closingPeriodId));
+            }
+
             return await _fullManagementDataImporter
-                .ImportAsync(filePath)
+                .ImportAsync(filePath, closingPeriodId)
                 .ConfigureAwait(false);
         }
 
