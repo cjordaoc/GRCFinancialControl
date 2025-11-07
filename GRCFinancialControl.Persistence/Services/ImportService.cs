@@ -12,9 +12,11 @@ using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Extensions;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Importers;
+using GRCFinancialControl.Persistence.Services.Importers.Budget;
 using GRCFinancialControl.Persistence.Services.Importers.StaffAllocations;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using GRCFinancialControl.Persistence.Services.Infrastructure;
+using GRCFinancialControl.Persistence.Services.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using static GRCFinancialControl.Persistence.Services.Importers.WorksheetValueHelper;
@@ -49,6 +51,7 @@ namespace GRCFinancialControl.Persistence.Services
         private readonly ILoggerFactory _loggerFactory;
         private readonly IFiscalCalendarConsistencyService _fiscalCalendarConsistencyService;
         private readonly IFullManagementDataImporter _fullManagementDataImporter;
+        private readonly BudgetImporter _budgetImporter;
         private const int FcsHeaderSearchLimit = 20;
         private const int FcsDataStartRowIndex = 11; // Default row 12 in Excel (1-based)
         private const int FullManagementHeaderRowIndex = 10;
@@ -82,1229 +85,48 @@ namespace GRCFinancialControl.Persistence.Services
             ILogger<ImportService> logger,
             ILoggerFactory loggerFactory,
             IFiscalCalendarConsistencyService fiscalCalendarConsistencyService,
-            IFullManagementDataImporter fullManagementDataImporter)
+            IFullManagementDataImporter fullManagementDataImporter,
+            BudgetImporter budgetImporter)
         {
             ArgumentNullException.ThrowIfNull(contextFactory);
             ArgumentNullException.ThrowIfNull(logger);
             ArgumentNullException.ThrowIfNull(loggerFactory);
             ArgumentNullException.ThrowIfNull(fiscalCalendarConsistencyService);
             ArgumentNullException.ThrowIfNull(fullManagementDataImporter);
+            ArgumentNullException.ThrowIfNull(budgetImporter);
 
             _contextFactory = contextFactory;
             _logger = logger;
             _loggerFactory = loggerFactory;
             _fiscalCalendarConsistencyService = fiscalCalendarConsistencyService;
             _fullManagementDataImporter = fullManagementDataImporter;
+            _budgetImporter = budgetImporter;
         }
 
+        /// <summary>
+        /// Imports a budget workbook. Delegates to BudgetImporter.
+        /// Phase 3: Fully extracted to Budget/BudgetImporter.cs
+        /// </summary>
         public async Task<string> ImportBudgetAsync(string filePath)
         {
-            if (string.IsNullOrWhiteSpace(filePath))
-            {
-                throw new ArgumentException("File path must be provided.", nameof(filePath));
-            }
-
-            if (!File.Exists(filePath))
-            {
-                throw new FileNotFoundException("Budget workbook could not be found.", filePath);
-            }
-
-            await _fiscalCalendarConsistencyService.EnsureConsistencyAsync().ConfigureAwait(false);
-
-            using var workbook = LoadWorkbook(filePath);
-
-            var planInfo = workbook.GetWorksheet("PLAN INFO") ??
-                           throw new InvalidDataException("Worksheet 'PLAN INFO' is missing from the budget workbook.");
-            var resourcing = ResolveResourcingWorksheet(workbook);
-
-            var customerName = NormalizeWhitespace(GetCellString(planInfo, 3, 1));
-            var engagementKey = NormalizeWhitespace(GetCellString(planInfo, 4, 1));
-            var descriptionRaw = NormalizeWhitespace(GetCellString(planInfo, 0, 0));
-
-            if (string.IsNullOrWhiteSpace(customerName))
-            {
-                throw new InvalidDataException("PLAN INFO!B4 (Client) must contain a customer name.");
-            }
-
-            if (string.IsNullOrWhiteSpace(engagementKey))
-            {
-                throw new InvalidDataException("PLAN INFO!B5 (Project ID) must contain an engagement identifier.");
-            }
-
-            var engagementDescription = ExtractDescription(descriptionRaw);
-
-            var resourcingParseResult = ParseResourcing(resourcing);
-            var aggregatedBudgets = AggregateRankBudgets(resourcingParseResult.RankBudgets);
-            var totalBudgetHours = aggregatedBudgets.Sum(r => r.Hours);
-            var generatedAtUtc = ExtractGeneratedTimestampUtc(planInfo);
-
-            await using var strategyContext = await _contextFactory
-                .CreateDbContextAsync()
-                .ConfigureAwait(false);
-            var strategy = strategyContext.Database.CreateExecutionStrategy();
-
-            return await strategy.ExecuteAsync(async () =>
-            {
-                await using var context = await _contextFactory
-                    .CreateDbContextAsync()
-                    .ConfigureAwait(false);
-                await using var transaction = await context.Database
-                    .BeginTransactionAsync()
-                    .ConfigureAwait(false);
-
-                try
-                {
-                    var normalizedCustomerName = customerName;
-                    var normalizedCustomerLookup = normalizedCustomerName.ToLowerInvariant();
-                    var existingCustomer = await context.Customers
-                        .FirstOrDefaultAsync(c => c.Name.ToLower() == normalizedCustomerLookup)
-                        .ConfigureAwait(false);
-
-                    bool customerCreated = false;
-                    Customer customer;
-                    if (existingCustomer == null)
-                    {
-                        customer = new Customer
-                        {
-                            Name = normalizedCustomerName
-                        };
-                        await context.Customers.AddAsync(customer).ConfigureAwait(false);
-                        customerCreated = true;
-                    }
-                    else
-                    {
-                        existingCustomer.Name = normalizedCustomerName;
-                        customer = existingCustomer;
-                    }
-
-                    await EnsureCustomerCodeAsync(context, customer).ConfigureAwait(false);
-
-                    var engagement = await context.Engagements
-                        .Include(e => e.RankBudgets)
-                        .FirstOrDefaultAsync(e => e.EngagementId == engagementKey)
-                        .ConfigureAwait(false);
-
-                    bool engagementCreated = false;
-                    if (engagement == null)
-                    {
-                        engagement = new Engagement
-                        {
-                            EngagementId = engagementKey,
-                            Description = engagementDescription,
-                            InitialHoursBudget = totalBudgetHours,
-                            EstimatedToCompleteHours = 0m
-                        };
-
-                        await context.Engagements.AddAsync(engagement).ConfigureAwait(false);
-                        engagementCreated = true;
-                    }
-
-                    else if (EngagementImportSkipEvaluator.TryCreate(engagement, out var skipMetadata))
-                    {
-                        _logger.LogWarning(skipMetadata.WarningMessage);
-                        await transaction.RollbackAsync().ConfigureAwait(false);
-
-                        var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>
-                        {
-                            [skipMetadata.ReasonKey] = new[] { engagement.EngagementId }
-                        };
-
-                        var skipNotes = new List<string>(1)
-                        {
-                            skipMetadata.WarningMessage
-                        };
-
-                        return ImportSummaryFormatter.Build(
-                            "Budget import",
-                            inserted: 0,
-                            updated: 0,
-                            skipReasons,
-                            skipNotes);
-                    }
-
-                    engagement.Description = engagementDescription;
-                    engagement.InitialHoursBudget = totalBudgetHours;
-
-                    await UpsertRankMappingsAsync(context, resourcingParseResult.RankMappings, generatedAtUtc)
-                        .ConfigureAwait(false);
-                    await UpsertEmployeesAsync(context, resourcingParseResult.Employees).ConfigureAwait(false);
-
-                    engagement.Customer = customer;
-                    if (customer.Id > 0)
-                    {
-                        engagement.CustomerId = customer.Id;
-                    }
-
-            var fiscalYears = await context.FiscalYears
-                .AsNoTracking()
-                .OrderBy(fy => fy.StartDate)
-                .ToListAsync()
-                .ConfigureAwait(false);
-
-                    var insertedBudgets = ApplyBudgetSnapshot(engagement, fiscalYears, aggregatedBudgets, DateTime.UtcNow);
-
-                    await context.SaveChangesAsync().ConfigureAwait(false);
-                    await transaction.CommitAsync().ConfigureAwait(false);
-
-                    var customersInserted = customerCreated ? 1 : 0;
-                    var customersUpdated = customerCreated ? 0 : 1;
-                    var engagementsInserted = engagementCreated ? 1 : 0;
-                    var engagementsUpdated = engagementCreated ? 0 : 1;
-
-                    var notes = new List<string>(4)
-                    {
-                        $"Customers inserted: {customersInserted}, updated: {customersUpdated}",
-                        $"Engagements inserted: {engagementsInserted}, updated: {engagementsUpdated}",
-                        $"Rank budgets processed: {aggregatedBudgets.Count}",
-                        $"Budget entries inserted: {insertedBudgets}",
-                        $"Initial hours budget total: {totalBudgetHours:F2}"
-                    };
-
-                    if (resourcingParseResult.Issues.Count > 0)
-                    {
-                        notes.Add($"Notes: {string.Join("; ", resourcingParseResult.Issues)}");
-                    }
-
-                    return ImportSummaryFormatter.Build(
-                        "Budget import",
-                        customersInserted + engagementsInserted,
-                        customersUpdated + engagementsUpdated,
-                        null,
-                        notes);
-                }
-                catch
-                {
-                    await transaction.RollbackAsync().ConfigureAwait(false);
-                    throw;
-                }
-            }).ConfigureAwait(false);
+            _logger.LogInformation("Delegating budget import to BudgetImporter for file: {FilePath}", filePath);
+            return await _budgetImporter.ImportAsync(filePath).ConfigureAwait(false);
         }
 
-        private static IWorksheet ResolveResourcingWorksheet(WorkbookData workbook)
-        {
-            ArgumentNullException.ThrowIfNull(workbook);
-
-            var resourcing = workbook.GetWorksheet("RESOURCING");
-            if (resourcing is not null)
-            {
-                return resourcing;
-            }
-
-            foreach (var worksheet in workbook.Worksheets)
-            {
-                if (worksheet is null)
-                {
-                    continue;
-                }
-
-                if (FindResourcingHeaderRow(worksheet) >= 0)
-                {
-                    return worksheet;
-                }
-            }
-
-            throw new InvalidDataException(
-                "Worksheet 'RESOURCING' is missing from the budget workbook and no alternative worksheet with Level and Employee columns could be found.");
-        }
-
-        private static ResourcingParseResult ParseResourcing(IWorksheet resourcing)
-        {
-            ArgumentNullException.ThrowIfNull(resourcing);
-
-            var headerRowIndex = FindResourcingHeaderRow(resourcing);
-            if (headerRowIndex < 0)
-            {
-                throw new InvalidDataException("The RESOURCING worksheet does not contain a header row with Level and Employee columns.");
-            }
-
-            var headerMap = BuildHeaderMap(resourcing, headerRowIndex);
-            var hoursColumnIndex = FindFirstHeaderColumnIndex(resourcing, headerRowIndex, "H");
-            if (hoursColumnIndex < 0)
-            {
-                throw new InvalidDataException("Unable to locate the first weekly hours column in the RESOURCING worksheet.");
-            }
-
-            var weekRowIndex = headerRowIndex > 0 ? headerRowIndex - 1 : headerRowIndex;
-            var weekStartDates = ExtractWeekStartDates(resourcing, weekRowIndex, hoursColumnIndex);
-
-            var estimatedRowCapacity = Math.Max(0, resourcing.RowCount - (headerRowIndex + 1));
-            var rankBudgets = new List<RankBudgetRow>(estimatedRowCapacity);
-            var rankMappings = new Dictionary<string, RankMappingCandidate>(estimatedRowCapacity, StringComparer.OrdinalIgnoreCase);
-            var employees = new List<ResourcingEmployee>(estimatedRowCapacity);
-            var issues = new List<string>(Math.Max(4, estimatedRowCapacity / 4));
-
-            var levelColumnIndex = GetRequiredColumnIndex(headerMap, "level");
-            var employeeColumnIndex = GetRequiredColumnIndex(headerMap, "employee");
-            var guiColumnIndex = GetOptionalColumnIndex(headerMap, "gui number");
-            var mrsColumnIndex = GetOptionalColumnIndex(headerMap, "mrs");
-            var gdsColumnIndex = GetOptionalColumnIndex(headerMap, "gds");
-            var costCenterColumnIndex = GetOptionalColumnIndex(headerMap, "cost center");
-            var officeColumnIndex = GetOptionalColumnIndex(headerMap, "office");
-
-            var dataRowIndex = headerRowIndex + 1;
-            var consecutiveBlankRows = 0;
-
-            while (dataRowIndex < resourcing.RowCount && consecutiveBlankRows < 10)
-            {
-                var rawRank = NormalizeWhitespace(GetCellString(resourcing, dataRowIndex, levelColumnIndex));
-                var (hours, hasHoursValue) = ParseHours(GetCellValue(resourcing, dataRowIndex, hoursColumnIndex));
-
-                var isRowEmpty = string.IsNullOrEmpty(rawRank) && !hasHoursValue;
-                if (isRowEmpty)
-                {
-                    consecutiveBlankRows++;
-                    dataRowIndex++;
-                    continue;
-                }
-
-                consecutiveBlankRows = 0;
-
-                if (string.IsNullOrEmpty(rawRank))
-                {
-                    if (hours > 0)
-                    {
-                        issues.Add($"Row {dataRowIndex + 1}: Hours present but rank name missing; skipped.");
-                    }
-
-                    dataRowIndex++;
-                    continue;
-                }
-
-                if (IsResourcingSummaryRow(rawRank))
-                {
-                    dataRowIndex++;
-                    continue;
-                }
-
-                rankBudgets.Add(new RankBudgetRow(rawRank, hours));
-
-                if (!rankMappings.ContainsKey(rawRank))
-                {
-                    rankMappings[rawRank] = new RankMappingCandidate(
-                        rawRank,
-                        NormalizeRankName(rawRank),
-                        DeriveSpreadsheetRankName(rawRank));
-                }
-
-                var employeeName = NormalizeWhitespace(GetCellString(resourcing, dataRowIndex, employeeColumnIndex));
-                if (!string.IsNullOrEmpty(employeeName))
-                {
-                    var guiValue = guiColumnIndex >= 0 ? NormalizeIdentifier(GetCellValue(resourcing, dataRowIndex, guiColumnIndex)) : string.Empty;
-                    var mrsValue = mrsColumnIndex >= 0 ? NormalizeIdentifier(GetCellValue(resourcing, dataRowIndex, mrsColumnIndex)) : string.Empty;
-                    var identifier = DetermineEmployeeIdentifier(guiValue, mrsValue, employeeName);
-
-                    if (!string.IsNullOrEmpty(identifier))
-                    {
-                        var isContractor = identifier.StartsWith("MRS-", StringComparison.OrdinalIgnoreCase);
-                        var costCenter = costCenterColumnIndex >= 0
-                            ? NormalizeOptionalString(GetCellString(resourcing, dataRowIndex, costCenterColumnIndex))
-                            : null;
-                        var office = officeColumnIndex >= 0
-                            ? NormalizeOptionalString(GetCellString(resourcing, dataRowIndex, officeColumnIndex))
-                            : null;
-
-                        var isEyEmployee = !isContractor;
-                        if (gdsColumnIndex >= 0)
-                        {
-                            var gdsValue = NormalizeWhitespace(GetCellString(resourcing, dataRowIndex, gdsColumnIndex));
-                            if (string.Equals(gdsValue, "vendor", StringComparison.OrdinalIgnoreCase))
-                            {
-                                isContractor = true;
-                                isEyEmployee = false;
-                            }
-                        }
-
-                        employees.Add(new ResourcingEmployee(
-                            identifier,
-                            employeeName,
-                            isContractor,
-                            isEyEmployee,
-                            costCenter,
-                            office));
-                    }
-                }
-
-                dataRowIndex++;
-            }
-
-            return new ResourcingParseResult(rankBudgets, rankMappings.Values.ToList(), employees, weekStartDates, issues);
-        }
-
-        private static int FindResourcingHeaderRow(IWorksheet table)
-        {
-            for (var rowIndex = 0; rowIndex < table.RowCount; rowIndex++)
-            {
-                var hasLevel = false;
-                var hasEmployee = false;
-
-                for (var columnIndex = 0; columnIndex < table.ColumnCount; columnIndex++)
-                {
-                    var text = NormalizeWhitespace(Convert.ToString(table.GetValue(rowIndex, columnIndex), CultureInfo.InvariantCulture));
-                    if (string.IsNullOrEmpty(text))
-                    {
-                        continue;
-                    }
-
-                    if (string.Equals(text, "level", StringComparison.OrdinalIgnoreCase))
-                    {
-                        hasLevel = true;
-                    }
-                    else if (string.Equals(text, "employee", StringComparison.OrdinalIgnoreCase))
-                    {
-                        hasEmployee = true;
-                    }
-
-                    if (hasLevel && hasEmployee)
-                    {
-                        return rowIndex;
-                    }
-                }
-            }
-
-            return -1;
-        }
-
-        private static bool IsResourcingSummaryRow(string rankName)
-        {
-            if (string.IsNullOrWhiteSpace(rankName))
-            {
-                return false;
-            }
-
-            var normalized = NormalizeWhitespace(rankName);
-            if (string.IsNullOrEmpty(normalized))
-            {
-                return false;
-            }
-
-            return normalized.Contains("incurred", StringComparison.OrdinalIgnoreCase) &&
-                   normalized.Contains("hour", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static Dictionary<string, int> BuildHeaderMap(IWorksheet table, int headerRowIndex)
-        {
-            var map = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-
-            for (var columnIndex = 0; columnIndex < table.ColumnCount; columnIndex++)
-            {
-                var header = NormalizeWhitespace(Convert.ToString(table.GetValue(headerRowIndex, columnIndex), CultureInfo.InvariantCulture));
-                if (string.IsNullOrEmpty(header))
-                {
-                    continue;
-                }
-
-                if (!map.ContainsKey(header))
-                {
-                    map[header] = columnIndex;
-                }
-            }
-
-            return map;
-        }
-
-        private static int GetRequiredColumnIndex(IReadOnlyDictionary<string, int> headerMap, string keyword)
-        {
-            foreach (var kvp in headerMap)
-            {
-                if (kvp.Key.Contains(keyword, StringComparison.OrdinalIgnoreCase))
-                {
-                    return kvp.Value;
-                }
-            }
-
-            throw new InvalidDataException($"The RESOURCING worksheet is missing the required column '{keyword}'.");
-        }
-
-        private static int GetOptionalColumnIndex(IReadOnlyDictionary<string, int> headerMap, string keyword)
-        {
-            foreach (var kvp in headerMap)
-            {
-                if (kvp.Key.Contains(keyword, StringComparison.OrdinalIgnoreCase))
-                {
-                    return kvp.Value;
-                }
-            }
-
-            return -1;
-        }
-
-        private static int FindFirstHeaderColumnIndex(IWorksheet table, int headerRowIndex, string headerValue)
-        {
-            for (var columnIndex = 0; columnIndex < table.ColumnCount; columnIndex++)
-            {
-                var value = NormalizeWhitespace(Convert.ToString(table.GetValue(headerRowIndex, columnIndex), CultureInfo.InvariantCulture));
-                if (string.Equals(value, headerValue, StringComparison.OrdinalIgnoreCase))
-                {
-                    return columnIndex;
-                }
-            }
-
-            return -1;
-        }
-
-        private static List<DateTime> ExtractWeekStartDates(IWorksheet table, int rowIndex, int startColumnIndex)
-        {
-            var weekStarts = new SortedSet<DateTime>();
-
-            if (rowIndex < 0 || rowIndex >= table.RowCount)
-            {
-                return new List<DateTime>(0);
-            }
-
-            for (var columnIndex = startColumnIndex; columnIndex < table.ColumnCount; columnIndex++)
-            {
-                var cell = GetCellValue(table, rowIndex, columnIndex);
-                if (TryParseDate(cell, out var date))
-                {
-                    weekStarts.Add(NormalizeWeekStart(date));
-                }
-            }
-
-            if (weekStarts.Count == 0)
-            {
-                return new List<DateTime>(0);
-            }
-
-            var result = new List<DateTime>(weekStarts.Count);
-            result.AddRange(weekStarts);
-            return result;
-        }
-
-        private static bool TryParseDate(object? value, out DateTime date)
-        {
-            switch (value)
-            {
-                case DateTime dt:
-                    date = dt.Date;
-                    return true;
-                case double oaDate:
-                    date = DateTime.FromOADate(oaDate).Date;
-                    return true;
-                case float oaFloat:
-                    date = DateTime.FromOADate(oaFloat).Date;
-                    return true;
-                case int intValue:
-                    date = DateTime.FromOADate(intValue).Date;
-                    return true;
-                case long longValue:
-                    date = DateTime.FromOADate(longValue).Date;
-                    return true;
-                case string text when DateTime.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal | DateTimeStyles.AllowWhiteSpaces, out var parsed):
-                    date = parsed.Date;
-                    return true;
-                default:
-                    date = default;
-                    return false;
-            }
-        }
-
-        private static string NormalizeRankName(string rawRank)
-        {
-            var normalized = NormalizeWhitespace(rawRank);
-            if (string.IsNullOrEmpty(normalized))
-            {
-                return string.Empty;
-            }
-
-            var parts = normalized.Split('-', 2, StringSplitOptions.TrimEntries);
-            var candidate = parts.Length == 2 ? parts[1] : parts[0];
-            candidate = TrailingDigitsRegex.Replace(candidate, string.Empty).Trim();
-
-            return candidate;
-        }
-
-        private static string DeriveSpreadsheetRankName(string rawRank)
-        {
-            var normalized = NormalizeWhitespace(rawRank);
-            if (string.IsNullOrEmpty(normalized))
-            {
-                return string.Empty;
-            }
-
-            var parts = normalized.Split('-', 2, StringSplitOptions.TrimEntries);
-            return parts.Length == 2 ? parts[1] : normalized;
-        }
-
-        private static string NormalizeIdentifier(object? value)
-        {
-            if (value == null || value == DBNull.Value)
-            {
-                return string.Empty;
-            }
-
-            if (value is double dbl)
-            {
-                return Math.Round(dbl).ToString(CultureInfo.InvariantCulture);
-            }
-
-            if (value is float flt)
-            {
-                return Math.Round(flt).ToString(CultureInfo.InvariantCulture);
-            }
-
-            var text = NormalizeWhitespace(Convert.ToString(value, CultureInfo.InvariantCulture));
-            if (string.IsNullOrEmpty(text))
-            {
-                return string.Empty;
-            }
-
-            text = text.Replace("#", string.Empty, StringComparison.Ordinal);
-
-            if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var numeric))
-            {
-                return Math.Round(numeric).ToString(CultureInfo.InvariantCulture);
-            }
-
-            return text;
-        }
-
-        private static string? NormalizeOptionalString(string value)
-        {
-            var normalized = NormalizeWhitespace(value);
-            if (string.IsNullOrEmpty(normalized) || normalized == "#")
-            {
-                return null;
-            }
-
-            return normalized;
-        }
-
-        private static string DetermineEmployeeIdentifier(string guiValue, string mrsValue, string employeeName)
-        {
-            if (!string.IsNullOrEmpty(guiValue))
-            {
-                return TrimIdentifier(guiValue);
-            }
-
-            if (!string.IsNullOrEmpty(mrsValue))
-            {
-                return TrimIdentifier($"MRS-{mrsValue}");
-            }
-
-            if (!string.IsNullOrEmpty(employeeName))
-            {
-                var filtered = new string(employeeName.Where(char.IsLetterOrDigit).ToArray());
-                if (!string.IsNullOrEmpty(filtered))
-                {
-                    return TrimIdentifier($"EMP-{filtered.ToUpperInvariant()}");
-                }
-            }
-
-            return string.Empty;
-        }
-
-        private static string TrimIdentifier(string value)
-        {
-            const int maxLength = 20;
-            if (value.Length <= maxLength)
-            {
-                return value;
-            }
-
-            return value.Substring(0, maxLength);
-        }
-
-        private static DateTime? ExtractGeneratedTimestampUtc(IWorksheet planInfo)
-        {
-            var value = NormalizeWhitespace(GetCellString(planInfo, 1, 1));
-            if (string.IsNullOrEmpty(value))
-            {
-                value = NormalizeWhitespace(GetCellString(planInfo, 0, 1));
-            }
-
-            if (string.IsNullOrEmpty(value))
-            {
-                return null;
-            }
-
-            value = value.Replace("Generated on:", string.Empty, StringComparison.OrdinalIgnoreCase)
-                .Replace("Generated On:", string.Empty, StringComparison.OrdinalIgnoreCase)
-                .Trim();
-
-            if (TryParseDateTimeOffset(value, out var utcTimestamp))
-            {
-                return utcTimestamp;
-            }
-
-            return null;
-        }
-
-        private static bool TryParseDateTimeOffset(string value, out DateTime utcTimestamp)
-        {
-            var styles = DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal;
-            if (DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, styles, out var dto) ||
-                DateTimeOffset.TryParse(value, CultureInfo.GetCultureInfo("en-GB"), styles, out dto) ||
-                DateTimeOffset.TryParse(value, CultureInfo.GetCultureInfo("en-US"), styles, out dto))
-            {
-                utcTimestamp = dto.ToUniversalTime().UtcDateTime;
-                return true;
-            }
-
-            var sanitized = Regex.Replace(value, @"\b[A-Z]{2,}$", string.Empty).Trim();
-            if (DateTimeOffset.TryParse(sanitized, CultureInfo.InvariantCulture, styles, out dto))
-            {
-                utcTimestamp = dto.ToUniversalTime().UtcDateTime;
-                return true;
-            }
-
-            utcTimestamp = default;
-            return false;
-        }
-
-        private sealed record RankBudgetRow(string RawRank, decimal Hours);
-
-        private sealed record RankBudgetAggregate(string RankName, decimal Hours);
-
-        private sealed record RankMappingCandidate(string RawRank, string NormalizedRank, string SpreadsheetRank);
-
-        private sealed record ResourcingEmployee(
-            string Identifier,
-            string Name,
-            bool IsContractor,
-            bool IsEyEmployee,
-            string? CostCenter,
-            string? Office);
-
-        private sealed record ResourcingParseResult(
-            List<RankBudgetRow> RankBudgets,
-            List<RankMappingCandidate> RankMappings,
-            List<ResourcingEmployee> Employees,
-            List<DateTime> WeekStartDates,
-            List<string> Issues);
-
-        private static async Task UpsertRankMappingsAsync(
-            ApplicationDbContext context,
-            IReadOnlyCollection<RankMappingCandidate> candidates,
-            DateTime? lastSeenAtUtc)
-        {
-            if (candidates.Count == 0)
-            {
-                return;
-            }
-
-            var timestamp = lastSeenAtUtc ?? DateTime.UtcNow;
-            var rawRanks = new List<string>(candidates.Count);
-            foreach (var candidate in candidates)
-            {
-                rawRanks.Add(candidate.RawRank);
-            }
-            var existingMappings = await context.RankMappings
-                .Where(r => rawRanks.Contains(r.RawRank))
-                .ToDictionaryAsync(r => r.RawRank, StringComparer.OrdinalIgnoreCase)
-                .ConfigureAwait(false);
-
-            foreach (var candidate in candidates)
-            {
-                if (existingMappings.TryGetValue(candidate.RawRank, out var mapping))
-                {
-                    mapping.NormalizedRank = candidate.NormalizedRank;
-                    mapping.SpreadsheetRank = candidate.SpreadsheetRank;
-                    mapping.IsActive = true;
-                    mapping.LastSeenAt = timestamp;
-                }
-                else
-                {
-                    context.RankMappings.Add(new RankMapping
-                    {
-                        RawRank = candidate.RawRank,
-                        NormalizedRank = candidate.NormalizedRank,
-                        SpreadsheetRank = candidate.SpreadsheetRank,
-                        IsActive = true,
-                        LastSeenAt = timestamp
-                    });
-                }
-            }
-        }
-
-        private static async Task UpsertEmployeesAsync(
-            ApplicationDbContext context,
-            IReadOnlyCollection<ResourcingEmployee> employees)
-        {
-            if (employees.Count == 0)
-            {
-                return;
-            }
-
-            var distinctEmployees = employees
-                .GroupBy(e => e.Identifier, StringComparer.OrdinalIgnoreCase)
-                .Select(g => g.First())
-                .ToList();
-
-            var identifiers = new List<string>(distinctEmployees.Count);
-            foreach (var employee in distinctEmployees)
-            {
-                identifiers.Add(employee.Identifier);
-            }
-            var existingEmployees = await context.Employees
-                .Where(e => identifiers.Contains(e.Gpn))
-                .ToDictionaryAsync(e => e.Gpn, StringComparer.OrdinalIgnoreCase)
-                .ConfigureAwait(false);
-
-            foreach (var employee in distinctEmployees)
-            {
-                if (existingEmployees.TryGetValue(employee.Identifier, out var entity))
-                {
-                    entity.EmployeeName = employee.Name;
-                    entity.IsEyEmployee = employee.IsEyEmployee;
-                    entity.IsContractor = employee.IsContractor;
-                    entity.CostCenter = employee.CostCenter;
-                    entity.Office = employee.Office;
-                }
-                else
-                {
-                    context.Employees.Add(new Employee
-                    {
-                        Gpn = employee.Identifier,
-                        EmployeeName = employee.Name,
-                        IsEyEmployee = employee.IsEyEmployee,
-                        IsContractor = employee.IsContractor,
-                        CostCenter = employee.CostCenter,
-                        Office = employee.Office
-                    });
-                }
-            }
-        }
-
-        private static (decimal value, bool hasValue) ParseHours(object? cellValue)
-        {
-            if (cellValue == null || cellValue == DBNull.Value)
-            {
-                return (0m, false);
-            }
-
-            switch (cellValue)
-            {
-                case decimal dec:
-                    return (dec, true);
-                case double dbl:
-                    return ((decimal)dbl, true);
-                case float flt:
-                    return ((decimal)flt, true);
-                case int i:
-                    return (i, true);
-                case long l:
-                    return (l, true);
-                case short s:
-                    return (s, true);
-                case string str:
-                    var trimmed = str.Trim();
-                    if (trimmed.Length == 0)
-                    {
-                        return (0m, false);
-                    }
-
-                    if (decimal.TryParse(trimmed, NumberStyles.Float, CultureInfo.InvariantCulture, out var invariantParsed))
-                    {
-                        return (invariantParsed, true);
-                    }
-
-                    if (decimal.TryParse(trimmed, NumberStyles.Float, PtBrCulture, out var ptBrParsed))
-                    {
-                        return (ptBrParsed, true);
-                    }
-
-                    throw new InvalidDataException($"Unable to parse hours value '{str}'.");
-                default:
-                    try
-                    {
-                        var converted = Convert.ToDecimal(cellValue, CultureInfo.InvariantCulture);
-                        return (converted, true);
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new InvalidDataException($"Unable to parse hours value '{cellValue}'.", ex);
-                    }
-            }
-        }
-
-        private static string ExtractDescription(string rawDescription)
-        {
-            if (string.IsNullOrEmpty(rawDescription))
-            {
-                return string.Empty;
-            }
-
-            const string marker = "Budget-";
-            var index = rawDescription.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
-            if (index >= 0)
-            {
-                var value = rawDescription[(index + marker.Length)..];
-                return NormalizeWhitespace(value);
-            }
-
-            return NormalizeWhitespace(rawDescription);
-        }
-
-        private static string NormalizeSheetName(string name)
-        {
-            var normalized = NormalizeWhitespace(name).ToLowerInvariant();
-            var builder = new StringBuilder(normalized.Length);
-            foreach (var ch in normalized)
-            {
-                if (char.IsLetterOrDigit(ch))
-                {
-                    builder.Append(ch);
-                }
-            }
-
-            return builder.ToString();
-        }
-
-        private static object? GetCellValue(IWorksheet table, int rowIndex, int columnIndex)
-        {
-            if (rowIndex < 0 || columnIndex < 0)
-            {
-                return null;
-            }
-
-            if (table.RowCount <= rowIndex)
-            {
-                return null;
-            }
-
-            if (table.ColumnCount <= columnIndex)
-            {
-                return null;
-            }
-
-            return table.GetValue(rowIndex, columnIndex);
-        }
-
-        private static string GetCellString(IWorksheet table, int rowIndex, int columnIndex)
-        {
-            var value = GetCellValue(table, rowIndex, columnIndex);
-            return Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
-        }
-
-        private static WorkbookData LoadWorkbook(string filePath)
-        {
-            return WorkbookData.Load(filePath);
-        }
-
-        private sealed class WorkbookData : IDisposable
-        {
-            private readonly IReadOnlyList<WorksheetData> _worksheets;
-            private readonly Dictionary<string, WorksheetData> _worksheetLookup;
-
-            private WorkbookData(IReadOnlyList<WorksheetData> worksheets, Dictionary<string, WorksheetData> worksheetLookup)
-            {
-                _worksheets = worksheets;
-                _worksheetLookup = worksheetLookup;
-            }
-
-            public IReadOnlyList<IWorksheet> Worksheets => _worksheets;
-
-            public IWorksheet? FirstWorksheet => _worksheets.Count > 0 ? _worksheets[0] : null;
-
-            public IWorksheet? GetWorksheet(string worksheetName)
-            {
-                if (string.IsNullOrWhiteSpace(worksheetName))
-                {
-                    return null;
-                }
-
-                var key = NormalizeSheetName(worksheetName);
-                return _worksheetLookup.TryGetValue(key, out var table) ? table : null;
-            }
-
-            public void Dispose()
-            {
-                // No unmanaged resources to release. Implemented for call-site symmetry.
-            }
-
-            public static WorkbookData Load(string filePath)
-            {
-                using var stream = new FileStream(filePath, SharedReadOptions);
-                using var reader = ExcelReaderFactory.CreateReader(stream);
-
-                var worksheets = new List<WorksheetData>();
-                var lookup = new Dictionary<string, WorksheetData>(StringComparer.Ordinal);
-
-                do
-                {
-                    var worksheet = WorksheetData.Create(reader, reader.Name ?? string.Empty);
-                    worksheets.Add(worksheet);
-
-                    var normalizedName = NormalizeSheetName(worksheet.Name);
-                    if (!lookup.ContainsKey(normalizedName))
-                    {
-                        lookup[normalizedName] = worksheet;
-                    }
-                }
-                while (reader.NextResult());
-
-                return new WorkbookData(worksheets, lookup);
-            }
-        }
-
-        public interface IWorksheet
-        {
-            int RowCount { get; }
-            int ColumnCount { get; }
-            string Name { get; }
-            object? GetValue(int rowIndex, int columnIndex);
-        }
-
-        private sealed class WorksheetData : IWorksheet
-        {
-            private readonly object?[][] _cells;
-
-            private WorksheetData(string name, object?[][] cells, int columnCount)
-            {
-                Name = name;
-                _cells = cells;
-                ColumnCount = columnCount;
-            }
-
-            public string Name { get; }
-            int IWorksheet.RowCount => _cells.Length;
-            int IWorksheet.ColumnCount => ColumnCount;
-            public int ColumnCount { get; }
-
-            public object? GetValue(int rowIndex, int columnIndex)
-            {
-                if ((uint)rowIndex >= (uint)_cells.Length)
-                {
-                    return null;
-                }
-
-                var row = _cells[rowIndex];
-                if ((uint)columnIndex >= (uint)row.Length)
-                {
-                    return null;
-                }
-
-                return row[columnIndex];
-            }
-
-            public static WorksheetData Create(IExcelDataReader reader, string name)
-            {
-                var rows = new List<object?[]>(128);
-                var maxColumns = 0;
-
-                while (reader.Read())
-                {
-                    var fieldCount = reader.FieldCount;
-                    if (fieldCount > maxColumns)
-                    {
-                        maxColumns = fieldCount;
-                        EnsureRowCapacity(rows, maxColumns);
-                    }
-
-                    var values = new object?[maxColumns];
-                    for (var columnIndex = 0; columnIndex < fieldCount; columnIndex++)
-                    {
-                        values[columnIndex] = reader.GetValue(columnIndex);
-                    }
-
-                    rows.Add(values);
-                }
-
-                return new WorksheetData(name, rows.ToArray(), maxColumns);
-            }
-
-            private static void EnsureRowCapacity(List<object?[]> rows, int targetLength)
-            {
-                if (targetLength == 0 || rows.Count == 0)
-                {
-                    return;
-                }
-
-                for (var i = 0; i < rows.Count; i++)
-                {
-                    var row = rows[i];
-                    if (row.Length == targetLength)
-                    {
-                        continue;
-                    }
-
-                    var expanded = new object?[targetLength];
-                    Array.Copy(row, expanded, row.Length);
-                    rows[i] = expanded;
-                }
-            }
-        }
-
-        private static List<RankBudgetAggregate> AggregateRankBudgets(IReadOnlyCollection<RankBudgetRow> rows)
-        {
-            if (rows.Count == 0)
-            {
-                return new List<RankBudgetAggregate>(0);
-            }
-
-            var aggregates = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
-            foreach (var row in rows)
-            {
-                if (string.IsNullOrWhiteSpace(row.RawRank))
-                {
-                    continue;
-                }
-
-                if (aggregates.TryGetValue(row.RawRank, out var existing))
-                {
-                    aggregates[row.RawRank] = existing + row.Hours;
-                }
-                else
-                {
-                    aggregates[row.RawRank] = row.Hours;
-                }
-            }
-
-            var result = new List<RankBudgetAggregate>(aggregates.Count);
-            foreach (var pair in aggregates)
-            {
-                result.Add(new RankBudgetAggregate(pair.Key, pair.Value));
-            }
-
-            return result;
-        }
-
-        private static async Task EnsureCustomerCodeAsync(ApplicationDbContext context, Customer customer)
-        {
-            ArgumentNullException.ThrowIfNull(context);
-            ArgumentNullException.ThrowIfNull(customer);
-
-            if (!string.IsNullOrWhiteSpace(customer.CustomerCode))
-            {
-                return;
-            }
-
-            const int randomSegmentLength = 12;
-
-            while (true)
-            {
-                var randomSegment = Guid.NewGuid().ToString("N").Substring(0, randomSegmentLength).ToUpperInvariant();
-                var placeholder = $"AUTO-{randomSegment}";
-
-                var exists = await context.Customers
-                    .AsNoTracking()
-                    .AnyAsync(c => c.Id != customer.Id && c.CustomerCode == placeholder)
-                    .ConfigureAwait(false);
-
-                if (!exists)
-                {
-                    customer.CustomerCode = placeholder;
-                    return;
-                }
-            }
-        }
-
-        private static int ApplyBudgetSnapshot(
-            Engagement engagement,
-            IReadOnlyCollection<FiscalYear> fiscalYears,
-            IReadOnlyCollection<RankBudgetAggregate> rankBudgets,
-            DateTime timestamp)
-        {
-            if (rankBudgets.Count == 0)
-            {
-                return 0;
-            }
-
-            if (fiscalYears.Count == 0)
-            {
-                throw new InvalidOperationException("No fiscal years have been configured. Add a fiscal year before importing allocation planning data.");
-            }
-
-            var currentFiscalYear = ResolveCurrentFiscalYear(fiscalYears);
-            var openFiscalYears = fiscalYears.Where(fy => !fy.IsLocked).ToList();
-            if (openFiscalYears.Count == 0)
-            {
-                openFiscalYears.Add(currentFiscalYear);
-            }
-
-            var inserted = 0;
-            foreach (var budget in rankBudgets)
-            {
-                inserted += EnsureBudgetExists(engagement, currentFiscalYear.Id, budget.RankName, budget.Hours, timestamp);
-
-                foreach (var fiscalYear in openFiscalYears)
-                {
-                    if (fiscalYear.Id == currentFiscalYear.Id)
-                    {
-                        continue;
-                    }
-
-                    inserted += EnsureBudgetExists(engagement, fiscalYear.Id, budget.RankName, 0m, timestamp);
-                }
-            }
-
-            return inserted;
-        }
-
-        private static FiscalYear ResolveCurrentFiscalYear(IReadOnlyCollection<FiscalYear> fiscalYears)
-        {
-            var today = DateTime.UtcNow.Date;
-            var current = fiscalYears.FirstOrDefault(fy => fy.StartDate.Date <= today && fy.EndDate.Date >= today);
-            if (current is not null)
-            {
-                return current;
-            }
-
-            var firstOpen = fiscalYears.FirstOrDefault(fy => !fy.IsLocked);
-            if (firstOpen is not null)
-            {
-                return firstOpen;
-            }
-
-            return fiscalYears.OrderBy(fy => fy.StartDate).Last();
-        }
-
-        private static int EnsureBudgetExists(
-            Engagement engagement,
-            int fiscalYearId,
-            string rankName,
-            decimal budgetHours,
-            DateTime timestamp)
-        {
-            if (string.IsNullOrWhiteSpace(rankName))
-            {
-                return 0;
-            }
-
-            var roundedBudget = Math.Round(budgetHours, 2, MidpointRounding.AwayFromZero);
-
-            var existing = engagement.RankBudgets.FirstOrDefault(b =>
-                b.FiscalYearId == fiscalYearId &&
-                string.Equals(b.RankName, rankName, StringComparison.OrdinalIgnoreCase));
-
-            if (existing is not null)
-            {
-                var incurred = existing.CalculateIncurredHours();
-                existing.BudgetHours = roundedBudget;
-                var remaining = Math.Round(
-                    roundedBudget + existing.AdditionalHours - (incurred + existing.ConsumedHours),
-                    2,
-                    MidpointRounding.AwayFromZero);
-                existing.RemainingHours = remaining;
-                existing.Status = remaining switch
-                {
-                    < 0m => nameof(TrafficLightStatus.Red),
-                    > 0m => nameof(TrafficLightStatus.Yellow),
-                    _ => nameof(TrafficLightStatus.Green)
-                };
-                existing.UpdatedAtUtc = timestamp;
-                return 0;
-            }
-
-            engagement.RankBudgets.Add(new EngagementRankBudget
-            {
-                Engagement = engagement,
-                EngagementId = engagement.Id,
-                FiscalYearId = fiscalYearId,
-                RankName = rankName,
-                BudgetHours = roundedBudget,
-                ConsumedHours = 0m,
-                AdditionalHours = 0m,
-                RemainingHours = roundedBudget,
-                Status = nameof(TrafficLightStatus.Green),
-                CreatedAtUtc = timestamp,
-                UpdatedAtUtc = timestamp
-            });
-
-            return 1;
-        }
+        // ============================================================================
+        // OLD BUDGET CODE BELOW THIS LINE - TO BE REMOVED
+        // All Budget logic has been extracted to Budget/BudgetImporter.cs
+        // The code below is kept temporarily for reference and will be deleted
+        // ============================================================================
 
         public async Task<string> UpdateStaffAllocationsAsync(string filePath, int closingPeriodId)
+
+        // ============================================================================
+        // Budget Import Helper Methods - REMOVED
+        // All Budget-related logic extracted to Budget/BudgetImporter.cs
+        // Removed ~1208 lines of implementation (OLD_ImportBudgetAsync_TODELETE + helpers)
+        // ============================================================================
+
         {
             if (string.IsNullOrWhiteSpace(filePath))
             {
@@ -1371,7 +193,7 @@ namespace GRCFinancialControl.Persistence.Services
             var allocationLookup = groupedAllocations
                 .Where(a => !string.IsNullOrWhiteSpace(a.EngagementCode) && !string.IsNullOrWhiteSpace(a.RankCode))
                 .ToDictionary(
-                    a => new AllocationKey(NormalizeAllocationCode(a.EngagementCode), NormalizeAllocationCode(a.RankCode), a.FiscalYearId),
+                    a => new AllocationKey(DataNormalizationService.NormalizeIdentifier(a.EngagementCode), DataNormalizationService.NormalizeIdentifier(a.RankCode), a.FiscalYearId),
                     a => a,
                     AllocationKeyComparer.Instance);
 
@@ -1381,7 +203,7 @@ namespace GRCFinancialControl.Persistence.Services
                 .ConfigureAwait(false);
 
             var historyLookup = existingHistories.ToDictionary(
-                h => new AllocationKey(NormalizeAllocationCode(h.EngagementCode), NormalizeAllocationCode(h.RankCode), h.FiscalYearId),
+                h => new AllocationKey(DataNormalizationService.NormalizeIdentifier(h.EngagementCode), DataNormalizationService.NormalizeIdentifier(h.RankCode), h.FiscalYearId),
                 h => h,
                 AllocationKeyComparer.Instance);
 
@@ -1404,15 +226,15 @@ namespace GRCFinancialControl.Persistence.Services
                 .ToListAsync()
                 .ConfigureAwait(false);
 
-            var engagementLookup = engagements.ToDictionary(e => NormalizeAllocationCode(e.EngagementId), e => e);
+            var engagementLookup = engagements.ToDictionary(e => DataNormalizationService.NormalizeIdentifier(e.EngagementId), e => e);
 
             var budgetLookup = new Dictionary<BudgetKey, EngagementRankBudget>(BudgetKeyComparer.Instance);
             foreach (var engagement in engagements)
             {
-                var engagementKey = NormalizeAllocationCode(engagement.EngagementId);
+                var engagementKey = DataNormalizationService.NormalizeIdentifier(engagement.EngagementId);
                 foreach (var budget in engagement.RankBudgets.Where(b => b.FiscalYearId == closingPeriod.FiscalYearId))
                 {
-                    var rankKey = NormalizeAllocationCode(budget.RankName);
+                    var rankKey = DataNormalizationService.NormalizeIdentifier(budget.RankName);
                     budgetLookup[new BudgetKey(engagementKey, rankKey)] = budget;
                 }
             }
@@ -1822,12 +644,12 @@ namespace GRCFinancialControl.Persistence.Services
 
         private static string NormalizeRank(string? value)
         {
-            return NormalizeRankKey(value); // Reuse existing method for consistency
+            return DataNormalizationService.NormalizeIdentifier(value); // Use DataNormalizationService
         }
 
         private static string NormalizeCode(string? value)
         {
-            return NormalizeEngagementCode(value); // Reuse existing method for consistency
+            return DataNormalizationService.NormalizeIdentifier(value); // Use DataNormalizationService
         }
 
         private static string? TryExtractEngagementCode(object? value)
@@ -2068,7 +890,7 @@ namespace GRCFinancialControl.Persistence.Services
                     var engagementCode = TryExtractEngagementCode(worksheet.GetValue(employee.RowIndex, week.ColumnIndex));
                     if (!string.IsNullOrEmpty(engagementCode))
                     {
-                        var normalizedCode = NormalizeEngagementCode(engagementCode);
+                        var normalizedCode = DataNormalizationService.NormalizeIdentifier(engagementCode);
                         if (!string.IsNullOrEmpty(normalizedCode))
                         {
                             engagementCodes.Add(normalizedCode);
@@ -2096,7 +918,7 @@ namespace GRCFinancialControl.Persistence.Services
             }
 
             var engagementLookup = engagements
-                .ToDictionary(e => NormalizeEngagementCode(e.EngagementId), e => e, StringComparer.OrdinalIgnoreCase);
+                .ToDictionary(e => DataNormalizationService.NormalizeIdentifier(e.EngagementId), e => e, StringComparer.OrdinalIgnoreCase);
 
             var budgetLookup = new Dictionary<(int EngagementId, int FiscalYearId, string RankCode), EngagementRankBudget>();
             foreach (var engagement in engagements)
@@ -2108,7 +930,7 @@ namespace GRCFinancialControl.Persistence.Services
 
                 foreach (var budget in engagement.RankBudgets.Where(b => fiscalYearIds.Contains(b.FiscalYearId)))
                 {
-                    var normalizedRank = NormalizeRankKey(budget.RankName);
+                    var normalizedRank = DataNormalizationService.NormalizeIdentifier(budget.RankName);
                     if (string.IsNullOrEmpty(normalizedRank))
                     {
                         continue;
@@ -2144,7 +966,7 @@ namespace GRCFinancialControl.Persistence.Services
                         continue;
                     }
 
-                    var normalizedEngagement = NormalizeEngagementCode(engagementCode);
+                    var normalizedEngagement = DataNormalizationService.NormalizeIdentifier(engagementCode);
                     if (string.IsNullOrEmpty(normalizedEngagement))
                     {
                         continue;
@@ -2189,7 +1011,7 @@ namespace GRCFinancialControl.Persistence.Services
                     continue;
                 }
 
-                var normalizedCanonicalRank = NormalizeRankKey(canonicalRankCode);
+                var normalizedCanonicalRank = DataNormalizationService.NormalizeIdentifier(canonicalRankCode);
                 if (string.IsNullOrEmpty(normalizedCanonicalRank))
                 {
                     continue;
@@ -2240,7 +1062,7 @@ namespace GRCFinancialControl.Persistence.Services
                     continue;
                 }
 
-                var normalizedCanonicalRank = NormalizeRankKey(canonicalRankCode);
+                var normalizedCanonicalRank = DataNormalizationService.NormalizeIdentifier(canonicalRankCode);
                 if (string.IsNullOrEmpty(normalizedCanonicalRank))
                 {
                     continue;
@@ -2254,7 +1076,7 @@ namespace GRCFinancialControl.Persistence.Services
                         continue;
                     }
 
-                    var normalizedEngagement = NormalizeEngagementCode(engagementCode);
+                    var normalizedEngagement = DataNormalizationService.NormalizeIdentifier(engagementCode);
                     if (string.IsNullOrEmpty(normalizedEngagement))
                     {
                         continue;
@@ -2305,8 +1127,8 @@ namespace GRCFinancialControl.Persistence.Services
             var historyLookup = new Dictionary<(string EngagementCode, int FiscalYearId, int ClosingPeriodId, string RankCode), EngagementRankBudgetHistory>();
             foreach (var history in existingHistories)
             {
-                var normalizedCode = NormalizeEngagementCode(history.EngagementCode);
-                var normalizedRank = NormalizeRankKey(history.RankCode);
+                var normalizedCode = DataNormalizationService.NormalizeIdentifier(history.EngagementCode);
+                var normalizedRank = DataNormalizationService.NormalizeIdentifier(history.RankCode);
                 if (string.IsNullOrEmpty(normalizedCode) || string.IsNullOrEmpty(normalizedRank))
                 {
                     continue;
@@ -2335,7 +1157,7 @@ namespace GRCFinancialControl.Persistence.Services
                     continue;
                 }
 
-                var normalizedEngagementCode = NormalizeEngagementCode(engagement.EngagementId);
+                var normalizedEngagementCode = DataNormalizationService.NormalizeIdentifier(engagement.EngagementId);
                 var roundedHours = Math.Round(totalHours, 2, MidpointRounding.AwayFromZero);
 
                 // Update ConsumedHours
@@ -2399,8 +1221,12 @@ namespace GRCFinancialControl.Persistence.Services
                     continue;
                 }
 
-                if (engagementLookup.TryGetValue(historyKey.EngagementCode, out var engagement) &&
-                    budgetLookup.TryGetValue((engagement.Id, historyKey.FiscalYearId, historyKey.RankCode), out var budget))
+                if (!engagementLookup.TryGetValue(historyKey.EngagementCode, out var engagement))
+                {
+                    continue;
+                }
+
+                if (budgetLookup.TryGetValue((engagement.Id, historyKey.FiscalYearId, historyKey.RankCode), out var budget))
                 {
                     var previousConsumed = budget.ConsumedHours;
                     var previousRemaining = budget.RemainingHours;
@@ -2699,26 +1525,14 @@ namespace GRCFinancialControl.Persistence.Services
             return sanitized;
         }
 
-        private static string NormalizeEngagementCode(string? value)
-        {
-            var normalized = NormalizeWhitespace(value);
-            return string.IsNullOrEmpty(normalized) ? string.Empty : normalized.ToUpperInvariant();
-        }
-
-        private static string NormalizeRankKey(string? value)
-        {
-            var normalized = NormalizeWhitespace(value);
-            return string.IsNullOrEmpty(normalized) ? string.Empty : normalized.ToUpperInvariant();
-        }
+        // Removed duplicate normalization methods - use DataNormalizationService.NormalizeIdentifier() instead
+        // - NormalizeEngagementCode() -> DataNormalizationService.NormalizeIdentifier()
+        // - NormalizeRankKey() -> DataNormalizationService.NormalizeIdentifier()
+        // - NormalizeAllocationCode() -> DataNormalizationService.NormalizeIdentifier()
 
         private static decimal RoundMoney(decimal value) => Math.Round(value, 2, MidpointRounding.AwayFromZero);
 
         private sealed record FcsBacklogRow(string EngagementId, decimal CurrentBacklog, decimal FutureBacklog, int RowNumber);
-
-        private static string NormalizeAllocationCode(string? value)
-        {
-            return NormalizeEngagementCode(value); // Reuse existing method for consistency
-        }
 
         private readonly record struct AllocationKey(string EngagementCode, string RankCode, int FiscalYearId);
 
@@ -2776,5 +1590,177 @@ namespace GRCFinancialControl.Persistence.Services
             public decimal? EtcpExpenses { get; init; }
             public int? EtcpAgeDays { get; init; }
         }
+
+        #region Excel Worksheet Abstraction (shared with Allocation Planning)
+
+        private static WorkbookData LoadWorkbook(string filePath)
+        {
+            return WorkbookData.Load(filePath);
+        }
+
+        private static string NormalizeSheetName(string name)
+        {
+            var normalized = NormalizeWhitespace(name).ToLowerInvariant();
+            var builder = new StringBuilder(normalized.Length);
+            foreach (var ch in normalized)
+            {
+                if (char.IsLetterOrDigit(ch))
+                {
+                    builder.Append(ch);
+                }
+            }
+
+            return builder.ToString();
+        }
+
+        private static object? GetCellValue(IWorksheet table, int rowIndex, int columnIndex)
+        {
+            if (rowIndex < 0 || columnIndex < 0)
+            {
+                return null;
+            }
+
+            if (table.RowCount <= rowIndex)
+            {
+                return null;
+            }
+
+            if (table.ColumnCount <= columnIndex)
+            {
+                return null;
+            }
+
+            return table.GetValue(rowIndex, columnIndex);
+        }
+
+        private static string GetCellString(IWorksheet table, int rowIndex, int columnIndex)
+        {
+            var value = GetCellValue(table, rowIndex, columnIndex);
+            return Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
+        }
+
+        private sealed class WorkbookData : IDisposable
+        {
+            private readonly IReadOnlyList<WorksheetData> _worksheets;
+            private readonly Dictionary<string, WorksheetData> _worksheetLookup;
+
+            private WorkbookData(IReadOnlyList<WorksheetData> worksheets, Dictionary<string, WorksheetData> worksheetLookup)
+            {
+                _worksheets = worksheets;
+                _worksheetLookup = worksheetLookup;
+            }
+
+            public IReadOnlyList<IWorksheet> Worksheets => _worksheets;
+
+            public IWorksheet? FirstWorksheet => _worksheets.Count > 0 ? _worksheets[0] : null;
+
+            public IWorksheet? GetWorksheet(string worksheetName)
+            {
+                if (string.IsNullOrWhiteSpace(worksheetName))
+                {
+                    return null;
+                }
+
+                var key = NormalizeSheetName(worksheetName);
+                return _worksheetLookup.TryGetValue(key, out var table) ? table : null;
+            }
+
+            public void Dispose()
+            {
+                // No unmanaged resources to release.
+            }
+
+            public static WorkbookData Load(string filePath)
+            {
+                using var stream = new FileStream(filePath, SharedReadOptions);
+                using var reader = ExcelReaderFactory.CreateReader(stream);
+
+                var worksheets = new List<WorksheetData>();
+                var lookup = new Dictionary<string, WorksheetData>(StringComparer.Ordinal);
+
+                do
+                {
+                    var worksheet = WorksheetData.Create(reader, reader.Name ?? string.Empty);
+                    worksheets.Add(worksheet);
+
+                    var normalizedName = NormalizeSheetName(worksheet.Name);
+                    if (!lookup.ContainsKey(normalizedName))
+                    {
+                        lookup[normalizedName] = worksheet;
+                    }
+                }
+                while (reader.NextResult());
+
+                return new WorkbookData(worksheets, lookup);
+            }
+        }
+
+        public interface IWorksheet
+        {
+            int RowCount { get; }
+            int ColumnCount { get; }
+            string Name { get; }
+            object? GetValue(int rowIndex, int columnIndex);
+        }
+
+        private sealed class WorksheetData : IWorksheet
+        {
+            private readonly object?[][] _cells;
+
+            private WorksheetData(string name, object?[][] cells, int columnCount)
+            {
+                Name = name;
+                _cells = cells;
+                ColumnCount = columnCount;
+            }
+
+            public string Name { get; }
+            int IWorksheet.RowCount => _cells.Length;
+            int IWorksheet.ColumnCount => ColumnCount;
+            public int ColumnCount { get; }
+
+            public object? GetValue(int rowIndex, int columnIndex)
+            {
+                if ((uint)rowIndex >= (uint)_cells.Length)
+                {
+                    return null;
+                }
+
+                var row = _cells[rowIndex];
+                if ((uint)columnIndex >= (uint)row.Length)
+                {
+                    return null;
+                }
+
+                return row[columnIndex];
+            }
+
+            public static WorksheetData Create(IExcelDataReader reader, string name)
+            {
+                var rowCount = reader.RowCount;
+                var columnCount = reader.FieldCount;
+                var cells = new object?[rowCount][];
+
+                for (var rowIndex = 0; rowIndex < rowCount; rowIndex++)
+                {
+                    if (!reader.Read())
+                    {
+                        break;
+                    }
+
+                    var row = new object?[columnCount];
+                    for (var colIndex = 0; colIndex < columnCount; colIndex++)
+                    {
+                        row[colIndex] = reader.IsDBNull(colIndex) ? null : reader.GetValue(colIndex);
+                    }
+
+                    cells[rowIndex] = row;
+                }
+
+                return new WorksheetData(name, cells, columnCount);
+            }
+        }
+
+        #endregion
     }
 }
