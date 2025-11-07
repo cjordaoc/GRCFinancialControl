@@ -9,6 +9,9 @@ using Microsoft.Extensions.Logging;
 
 namespace InvoicePlanner.Avalonia.Services;
 
+/// <summary>
+/// Resolves user-specific engagement access scope based on Windows login and assignments.
+/// </summary>
 public sealed class InvoiceAccessScope : IInvoiceAccessScope
 {
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;

@@ -12,6 +12,9 @@ using QuestPDF.Infrastructure;
 
 namespace InvoicePlanner.Avalonia.Services;
 
+/// <summary>
+/// Exports invoice summaries to Excel and PDF formats with formatted headers.
+/// </summary>
 public class InvoiceSummaryExporter
 {
     public byte[] CreateExcel(InvoiceSummaryResult result)

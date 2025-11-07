@@ -3,6 +3,9 @@ using App.Presentation.Localization;
 
 namespace InvoicePlanner.Avalonia.Services;
 
+/// <summary>
+/// Formats database connection error messages with localization support.
+/// </summary>
 public static class ConnectionErrorMessageFormatter
 {
     private const string MissingProviderFragment = "No database provider has been configured";
