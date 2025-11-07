@@ -11,7 +11,7 @@ namespace GRCFinancialControl.Persistence.Services.Interfaces
         /// <summary>
         /// Imports a budget workbook (creates/updates Engagements, Customers, RankBudgets, Employees).
         /// </summary>
-        Task<string> ImportBudgetAsync(string filePath);
+        Task<string> ImportBudgetAsync(string filePath, int? closingPeriodId = null);
 
         /// <summary>
         /// Imports Full Management Data workbook (updates Engagements, FinancialEvolution, RevenueAllocations).

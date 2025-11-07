@@ -54,7 +54,9 @@ namespace GRCFinancialControl.Persistence.Services.Importers.Budget
         /// <summary>
         /// Imports a budget workbook and creates/updates engagement with rank budgets.
         /// </summary>
-        public async Task<string> ImportAsync(string filePath)
+        /// <param name="filePath">Path to the budget Excel workbook.</param>
+        /// <param name="closingPeriodId">Optional closing period ID. If not provided, uses the latest closing period.</param>
+        public async Task<string> ImportAsync(string filePath, int? closingPeriodId = null)
         {
             if (string.IsNullOrWhiteSpace(filePath))
             {
@@ -100,6 +102,30 @@ namespace GRCFinancialControl.Persistence.Services.Importers.Budget
             await using var strategyContext = await ContextFactory
                 .CreateDbContextAsync()
                 .ConfigureAwait(false);
+            
+            // Resolve closing period: use provided ID or get latest
+            var targetClosingPeriod = closingPeriodId.HasValue
+                ? await strategyContext.ClosingPeriods
+                    .FirstOrDefaultAsync(cp => cp.Id == closingPeriodId.Value)
+                    .ConfigureAwait(false)
+                : await strategyContext.ClosingPeriods
+                    .OrderByDescending(cp => cp.PeriodEnd)
+                    .FirstOrDefaultAsync()
+                    .ConfigureAwait(false);
+
+            if (targetClosingPeriod == null)
+            {
+                throw new InvalidOperationException(
+                    closingPeriodId.HasValue
+                        ? $"Closing period with ID {closingPeriodId.Value} not found."
+                        : "No closing periods exist. Please create at least one closing period before importing budgets.");
+            }
+
+            Logger.LogInformation(
+                "Budget import will use closing period: {ClosingPeriodName} (ID: {ClosingPeriodId})",
+                targetClosingPeriod.Name,
+                targetClosingPeriod.Id);
+
             var strategy = strategyContext.Database.CreateExecutionStrategy();
 
             var result = await strategy.ExecuteAsync(async () =>
@@ -199,7 +225,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers.Budget
                         .ToListAsync()
                         .ConfigureAwait(false);
 
-                    var insertedBudgets = ApplyBudgetSnapshot(engagement, fiscalYears, aggregatedBudgets, DateTime.UtcNow);
+                    var insertedBudgets = ApplyBudgetSnapshot(engagement, fiscalYears, aggregatedBudgets, targetClosingPeriod.Id, DateTime.UtcNow);
 
                     await context.SaveChangesAsync().ConfigureAwait(false);
                     await transaction.CommitAsync().ConfigureAwait(false);
@@ -930,6 +956,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers.Budget
             Engagement engagement,
             IReadOnlyList<FiscalYear> fiscalYears,
             IReadOnlyCollection<RankBudgetAggregate> aggregatedBudgets,
+            int closingPeriodId,
             DateTime snapshotTimestamp)
         {
             if (engagement == null)
@@ -947,10 +974,12 @@ namespace GRCFinancialControl.Persistence.Services.Importers.Budget
 
             foreach (var budget in aggregatedBudgets)
             {
+                // Snapshot-based: Find budget for specific closing period
                 var existing = engagement.RankBudgets
                     .FirstOrDefault(r =>
                         string.Equals(r.RankName, budget.RankName, StringComparison.OrdinalIgnoreCase) &&
-                        r.FiscalYearId == firstFiscalYear.Id);
+                        r.FiscalYearId == firstFiscalYear.Id &&
+                        r.ClosingPeriodId == closingPeriodId);
 
                 if (existing != null)
                 {
@@ -964,6 +993,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers.Budget
                         RankName = budget.RankName,
                         BudgetHours = budget.Hours,
                         FiscalYearId = firstFiscalYear.Id,
+                        ClosingPeriodId = closingPeriodId,
                         CreatedAtUtc = snapshotTimestamp,
                         UpdatedAtUtc = snapshotTimestamp
                     });
