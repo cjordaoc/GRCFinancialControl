@@ -453,15 +453,32 @@ namespace GRCFinancialControl.Persistence
                 .Property(rb => rb.UpdatedAtUtc)
                 .HasMySqlColumnType("datetime(6)", isMySql);
 
-            modelBuilder.Entity<EngagementRankBudget>()
-                .HasIndex(rb => new { rb.EngagementId, rb.FiscalYearId, rb.RankName })
-                .IsUnique();
-
+            // Snapshot-based Hours Allocation configuration
             modelBuilder.Entity<EngagementRankBudget>()
                 .HasOne(rb => rb.FiscalYear)
                 .WithMany(fy => fy.RankBudgets)
                 .HasForeignKey(rb => rb.FiscalYearId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<EngagementRankBudget>()
+                .HasOne(rb => rb.ClosingPeriod)
+                .WithMany()
+                .HasForeignKey(rb => rb.ClosingPeriodId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Unique constraint for snapshot: (EngagementId, FiscalYearId, RankName, ClosingPeriodId)
+            modelBuilder.Entity<EngagementRankBudget>()
+                .HasIndex(rb => new { rb.EngagementId, rb.FiscalYearId, rb.RankName, rb.ClosingPeriodId })
+                .IsUnique()
+                .HasDatabaseName("UX_EngagementRankBudgets_Snapshot");
+
+            // Index for efficiently finding latest snapshots
+            modelBuilder.Entity<EngagementRankBudget>()
+                .HasIndex(rb => new { rb.EngagementId, rb.FiscalYearId, rb.RankName, rb.ClosingPeriodId })
+                .HasDatabaseName("IX_EngagementRankBudgets_Latest");
+
+            modelBuilder.Entity<EngagementRankBudget>()
+                .HasIndex(rb => rb.ClosingPeriodId);
 
             var historyBuilder = modelBuilder.Entity<EngagementRankBudgetHistory>();
             historyBuilder.ToTable("EngagementRankBudgetHistory");
@@ -615,8 +632,29 @@ namespace GRCFinancialControl.Persistence
                 updatedAtProperty.HasDefaultValueSql("CURRENT_TIMESTAMP");
             }
 
+            // Snapshot-based Revenue Allocation configuration
+            modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
+                .HasOne(e => e.ClosingPeriod)
+                .WithMany()
+                .HasForeignKey(e => e.ClosingPeriodId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Unique constraint for snapshot: (EngagementId, FiscalYearId, ClosingPeriodId)
+            modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
+                .HasIndex(e => new { e.EngagementId, e.FiscalYearId, e.ClosingPeriodId })
+                .IsUnique()
+                .HasDatabaseName("UX_EngagementFiscalYearRevenueAllocations_Snapshot");
+
+            // Index for efficiently finding latest snapshots
+            modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
+                .HasIndex(e => new { e.EngagementId, e.FiscalYearId, e.ClosingPeriodId })
+                .HasDatabaseName("IX_EngagementFiscalYearRevenueAllocations_Latest");
+
             modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
                 .HasIndex(e => e.FiscalYearId);
+
+            modelBuilder.Entity<EngagementFiscalYearRevenueAllocation>()
+                .HasIndex(e => e.ClosingPeriodId);
 
             modelBuilder.Entity<EngagementAdditionalSale>()
                 .HasOne(s => s.Engagement)
