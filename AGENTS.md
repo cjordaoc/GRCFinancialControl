@@ -60,6 +60,19 @@ Confirm .NET 8, restore dependencies, and ensure `dotnet build -c Release` passe
 
 ---
 
+## 8 Â· Allocation Snapshot Architecture
+- **Snapshot-Based Historical Tracking**: All revenue and hours allocations are now tied to specific closing periods, creating historical snapshots instead of mutable "current" values.
+- **Unique Constraints**:
+  - Revenue: `(EngagementId, FiscalYearId, ClosingPeriodId)`
+  - Hours: `(EngagementId, FiscalYearId, RankName, ClosingPeriodId)`
+- **Auto-Sync to Financial Evolution**: Whenever allocations are saved via `IAllocationSnapshotService`, the corresponding Financial Evolution snapshot is automatically updated.
+- **Copy-From-Previous Feature**: Users can replicate allocations from the latest previous closing period for productivity.
+- **Discrepancy Detection**: After each save, the system compares allocation totals against imported values and surfaces variances in the UI.
+- **Fiscal Year Locking**: Allocations for locked fiscal years cannot be modified; service methods throw `InvalidOperationException` with descriptive messages.
+- **Service Contract**: Use `IAllocationSnapshotService` for all allocation CRUD operations; avoid direct repository access to ensure sync consistency.
+
+---
+
 ✅ **Core Mantra**
 > Make it work → Make it simple → Keep it consistent → **Make it perform.**
 
