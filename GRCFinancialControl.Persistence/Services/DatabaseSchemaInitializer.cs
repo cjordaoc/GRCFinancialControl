@@ -12,6 +12,9 @@ using MySqlConnector;
 
 namespace GRCFinancialControl.Persistence.Services
 {
+    /// <summary>
+    /// Ensures database schema creation and handles legacy table migrations.
+    /// </summary>
     public class DatabaseSchemaInitializer : IDatabaseSchemaInitializer
     {
         private const string DisableForeignKeyChecksSql = "SET FOREIGN_KEY_CHECKS = 0;";
