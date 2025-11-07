@@ -2,6 +2,9 @@ using System;
 
 namespace GRCFinancialControl.Persistence.Services.Importers
 {
+    /// <summary>
+    /// Exception thrown for non-critical import warnings.
+    /// </summary>
     public class ImportWarningException : Exception
     {
         public ImportWarningException()

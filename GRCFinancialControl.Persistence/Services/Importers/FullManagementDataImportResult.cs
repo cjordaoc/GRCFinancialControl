@@ -2,6 +2,9 @@ using System.Collections.Generic;
 
 namespace GRCFinancialControl.Persistence.Services.Importers
 {
+    /// <summary>
+    /// Encapsulates Full Management Data import operation results with detailed categorization.
+    /// </summary>
     public sealed class FullManagementDataImportResult
     {
         public FullManagementDataImportResult(
