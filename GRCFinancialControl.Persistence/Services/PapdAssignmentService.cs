@@ -8,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GRCFinancialControl.Persistence.Services
 {
+    /// <summary>
+    /// Manages PAPD-to-engagement assignment relationships.
+    /// </summary>
     public class PapdAssignmentService : IPapdAssignmentService
     {
         private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
@@ -19,16 +22,16 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task<List<EngagementPapd>> GetByEngagementIdAsync(int engagementId)
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
             return await context.EngagementPapds
                 .AsNoTracking()
                 .Where(a => a.EngagementId == engagementId)
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
         }
 
         public async Task<List<EngagementPapd>> GetByPapdIdAsync(int papdId)
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
             return await context.EngagementPapds
                 .AsNoTracking()
                 .AsSplitQuery()
@@ -37,13 +40,13 @@ namespace GRCFinancialControl.Persistence.Services
                 .Where(a => a.PapdId == papdId)
                 .OrderBy(a => a.Engagement.EngagementId)
                 .ThenBy(a => a.Engagement.Description)
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
         }
 
         public async Task DeleteAsync(int id)
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
-            var existingAssignment = await context.EngagementPapds.FirstOrDefaultAsync(a => a.Id == id);
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+            var existingAssignment = await context.EngagementPapds.FirstOrDefaultAsync(a => a.Id == id).ConfigureAwait(false);
             if (existingAssignment is null)
             {
                 return;
@@ -53,25 +56,25 @@ namespace GRCFinancialControl.Persistence.Services
                 context,
                 existingAssignment.EngagementId,
                 "Deleting PAPD assignments",
-                allowManualSources: true);
+                allowManualSources: true).ConfigureAwait(false);
 
             context.EngagementPapds.Remove(existingAssignment);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
 
         public async Task UpdateAssignmentsForEngagementAsync(int engagementId, IEnumerable<int> papdIds)
         {
-            await using var context = await _contextFactory.CreateDbContextAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
             await EngagementMutationGuard.EnsureCanMutateAsync(
                 context,
                 engagementId,
                 "Updating PAPD assignments",
-                allowManualSources: true);
+                allowManualSources: true).ConfigureAwait(false);
 
             var existingAssignments = await context.EngagementPapds
                 .Where(a => a.EngagementId == engagementId)
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             var existingPapdIds = existingAssignments.Select(a => a.PapdId).ToHashSet();
             var incomingPapdIds = papdIds.ToHashSet();
@@ -96,12 +99,12 @@ namespace GRCFinancialControl.Persistence.Services
                     EngagementId = engagementId,
                     PapdId = papdId
                 });
-                await context.EngagementPapds.AddRangeAsync(newAssignments);
+                await context.EngagementPapds.AddRangeAsync(newAssignments).ConfigureAwait(false);
             }
 
             if (assignmentsToRemove.Any() || papdIdsToAdd.Any())
             {
-                await context.SaveChangesAsync();
+                await context.SaveChangesAsync().ConfigureAwait(false);
             }
         }
     }
