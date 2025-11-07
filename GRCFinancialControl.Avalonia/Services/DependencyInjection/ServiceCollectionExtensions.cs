@@ -21,6 +21,9 @@ using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
 namespace GRCFinancialControl.Avalonia.Services.DependencyInjection;
 
+/// <summary>
+/// Configures application services for GRC Financial Control Avalonia app.
+/// </summary>
 public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddAvaloniaAppServices(this IServiceCollection services)

@@ -5,6 +5,9 @@ using System.Threading;
 
 namespace GRCFinancialControl.Avalonia.Services
 {
+    /// <summary>
+    /// Provides simple logging with caller info and event broadcasting.
+    /// </summary>
     public sealed class LoggingService
     {
         private const string InfoLevel = "INFO";
