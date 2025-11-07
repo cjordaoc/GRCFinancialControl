@@ -20,6 +20,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private const decimal VarianceTolerance = 0.01m;
 
         private readonly IEngagementService _engagementService;
+        private readonly IAllocationSnapshotService _allocationSnapshotService;
+        private readonly ClosingPeriod _closingPeriod;
 
         [ObservableProperty]
         private Engagement _engagement;
@@ -60,19 +62,35 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private bool _isReadOnlyMode;
 
+        [ObservableProperty]
+        private AllocationDiscrepancyReport? _discrepancies;
+
+        [ObservableProperty]
+        private bool _hasPreviousSnapshot = true;
+
+        public bool HasDiscrepancies => Discrepancies?.HasDiscrepancies ?? false;
+
+        public string ClosingPeriodName => _closingPeriod.Name;
+
         public AllocationEditorViewModel(Engagement engagement,
+                                         ClosingPeriod closingPeriod,
                                          List<FiscalYear> fiscalYears,
                                          IEngagementService engagementService,
+                                         IAllocationSnapshotService allocationSnapshotService,
                                          IMessenger messenger,
                                          bool isReadOnlyMode = false)
             : base(messenger ?? throw new ArgumentNullException(nameof(messenger)))
         {
             ArgumentNullException.ThrowIfNull(engagement);
+            ArgumentNullException.ThrowIfNull(closingPeriod);
             ArgumentNullException.ThrowIfNull(fiscalYears);
             ArgumentNullException.ThrowIfNull(engagementService);
+            ArgumentNullException.ThrowIfNull(allocationSnapshotService);
 
             _engagement = engagement;
+            _closingPeriod = closingPeriod;
             _engagementService = engagementService;
+            _allocationSnapshotService = allocationSnapshotService;
 
             TargetAmount = GetTargetAmount(engagement);
 
@@ -123,27 +141,74 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
 
             StatusMessage = null;
+            Discrepancies = null;
 
-            Engagement.RevenueAllocations.Clear();
-            foreach (var allocation in Allocations)
+            var allocationsToSave = Allocations.Select(a => new EngagementFiscalYearRevenueAllocation
             {
-                Engagement.RevenueAllocations.Add(new EngagementFiscalYearRevenueAllocation
-                {
-                    EngagementId = Engagement.Id,
-                    FiscalYearId = allocation.FiscalYear.Id,
-                    ToGoValue = decimal.Round(allocation.ToGoAmount, 2),
-                    ToDateValue = decimal.Round(allocation.ToDateAmount, 2)
-                });
-            }
+                EngagementId = Engagement.Id,
+                FiscalYearId = a.FiscalYear.Id,
+                ClosingPeriodId = _closingPeriod.Id,
+                ToGoValue = decimal.Round(a.ToGoAmount, 2),
+                ToDateValue = decimal.Round(a.ToDateAmount, 2)
+            }).ToList();
 
             try
             {
-                await _engagementService.UpdateAsync(Engagement);
-                Messenger.Send(new CloseDialogMessage(true));
+                // Save using snapshot service (auto-syncs to Financial Evolution)
+                await _allocationSnapshotService.SaveRevenueAllocationSnapshotAsync(
+                    Engagement.Id,
+                    _closingPeriod.Id,
+                    allocationsToSave);
+
+                // Detect discrepancies
+                var discrepancyReport = await _allocationSnapshotService.DetectDiscrepanciesAsync(
+                    Engagement.Id,
+                    _closingPeriod.Id);
+
+                if (discrepancyReport.HasDiscrepancies)
+                {
+                    Discrepancies = discrepancyReport;
+                    OnPropertyChanged(nameof(HasDiscrepancies));
+                    StatusMessage = "Saved successfully. Please review discrepancies below.";
+                }
+                else
+                {
+                    Messenger.Send(new CloseDialogMessage(true));
+                }
             }
             catch (InvalidOperationException ex)
             {
                 StatusMessage = ex.Message;
+            }
+        }
+
+        [RelayCommand]
+        private async Task CopyFromPreviousPeriod()
+        {
+            try
+            {
+                var copiedAllocations = await _allocationSnapshotService
+                    .CreateRevenueSnapshotFromPreviousPeriodAsync(
+                        Engagement.Id,
+                        _closingPeriod.Id);
+
+                // Update UI with copied values
+                foreach (var copiedAllocation in copiedAllocations)
+                {
+                    var entry = Allocations.FirstOrDefault(a => a.FiscalYear.Id == copiedAllocation.FiscalYearId);
+                    if (entry != null)
+                    {
+                        entry.ToGoAmount = copiedAllocation.ToGoValue;
+                        entry.ToDateAmount = copiedAllocation.ToDateValue;
+                    }
+                }
+
+                HasPreviousSnapshot = copiedAllocations.Count > 0;
+                StatusMessage = $"Copied allocations from previous period ({copiedAllocations.Count} fiscal years).";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Error copying from previous period: {ex.Message}";
             }
         }
 

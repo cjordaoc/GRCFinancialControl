@@ -24,6 +24,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         private readonly IEngagementService _engagementService;
         private readonly IHoursAllocationService _hoursAllocationService;
+        private readonly IAllocationSnapshotService _allocationSnapshotService;
         private readonly AllocationPlanningImporter _allocationImporter;
         private readonly FilePickerService _filePickerService;
         private readonly LoggingService _loggingService;
@@ -133,10 +134,22 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private string _newRankName = string.Empty;
 
         /// <summary>
+        /// Gets or sets the discrepancy report from allocation vs imported values.
+        /// </summary>
+        [ObservableProperty]
+        private AllocationDiscrepancyReport? _discrepancies;
+
+        /// <summary>
+        /// Gets a value indicating whether discrepancies exist between allocations and imported values.
+        /// </summary>
+        public bool HasDiscrepancies => Discrepancies?.HasDiscrepancies ?? false;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="HoursAllocationDetailViewModel"/> class.
         /// </summary>
         /// <param name="engagementService">Provides engagement retrieval operations.</param>
         /// <param name="hoursAllocationService">Persists hours allocation edits.</param>
+        /// <param name="allocationSnapshotService">Manages allocation snapshots per closing period.</param>
         /// <param name="allocationImporter">Handles allocation planning and history imports.</param>
         /// <param name="filePickerService">Supplies file picking dialogs.</param>
         /// <param name="loggingService">Records error and information logs.</param>
@@ -147,6 +160,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public HoursAllocationDetailViewModel(
             IEngagementService engagementService,
             IHoursAllocationService hoursAllocationService,
+            IAllocationSnapshotService allocationSnapshotService,
             AllocationPlanningImporter allocationImporter,
             FilePickerService filePickerService,
             LoggingService loggingService,
@@ -158,6 +172,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             _engagementService = engagementService ?? throw new ArgumentNullException(nameof(engagementService));
             _hoursAllocationService = hoursAllocationService ?? throw new ArgumentNullException(nameof(hoursAllocationService));
+            _allocationSnapshotService = allocationSnapshotService ?? throw new ArgumentNullException(nameof(allocationSnapshotService));
             _allocationImporter = allocationImporter ?? throw new ArgumentNullException(nameof(allocationImporter));
             _filePickerService = filePickerService ?? throw new ArgumentNullException(nameof(filePickerService));
             _loggingService = loggingService ?? throw new ArgumentNullException(nameof(loggingService));
@@ -304,8 +319,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 IsBusy = true;
                 StatusMessage = null;
 
+                if (SelectedClosingPeriod == null)
+                {
+                    StatusMessage = "Please select a closing period first.";
+                    return;
+                }
+
                 var snapshot = await _hoursAllocationService
-                    .AddRankAsync(SelectedEngagement.Id, rankOption.Code)
+                    .AddRankAsync(SelectedEngagement.Id, SelectedClosingPeriod.Id, rankOption.Code)
                     .ConfigureAwait(false);
 
                 ApplySnapshot(snapshot);
@@ -390,6 +411,46 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             else
             {
                 _ = LoadClosingPeriodsAsync();
+            }
+        }
+
+        /// <summary>
+        /// Copies hours allocation from the previous closing period to the currently selected period.
+        /// </summary>
+        [RelayCommand]
+        private async Task CopyFromPreviousPeriodAsync()
+        {
+            if (SelectedEngagement is null || SelectedClosingPeriod is null || IsBusy)
+            {
+                return;
+            }
+
+            try
+            {
+                IsBusy = true;
+                StatusMessage = null;
+
+                var copiedBudgets = await _allocationSnapshotService
+                    .CreateHoursSnapshotFromPreviousPeriodAsync(
+                        SelectedEngagement.Id,
+                        SelectedClosingPeriod.Id)
+                    .ConfigureAwait(false);
+
+                // Reload allocation with copied data
+                await LoadSnapshotAsync(SelectedEngagement.Id).ConfigureAwait(false);
+
+                StatusMessage = copiedBudgets.Count > 0
+                    ? $"Copied {copiedBudgets.Count} allocations from previous period."
+                    : "No previous period allocations found to copy.";
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogError(ex.Message);
+                StatusMessage = $"Error copying from previous period: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
             }
         }
 
@@ -482,13 +543,36 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             try
             {
+                if (SelectedClosingPeriod == null)
+                {
+                    StatusMessage = "Please select a closing period first.";
+                    return;
+                }
+
                 IsBusy = true;
                 StatusMessage = null;
+                Discrepancies = null;
                 var snapshot = await _hoursAllocationService
-                    .SaveAsync(SelectedEngagement.Id, updates, Array.Empty<HoursAllocationRowAdjustment>())
+                    .SaveAsync(SelectedEngagement.Id, SelectedClosingPeriod.Id, updates, Array.Empty<HoursAllocationRowAdjustment>())
                     .ConfigureAwait(false);
                 ApplySnapshot(snapshot);
-                StatusMessage = "Changes saved successfully.";
+
+                // Detect discrepancies after save
+                var discrepancyReport = await _allocationSnapshotService
+                    .DetectDiscrepanciesAsync(SelectedEngagement.Id, SelectedClosingPeriod.Id)
+                    .ConfigureAwait(false);
+
+                if (discrepancyReport.HasDiscrepancies)
+                {
+                    Discrepancies = discrepancyReport;
+                    OnPropertyChanged(nameof(HasDiscrepancies));
+                    StatusMessage = "Changes saved successfully. Please review discrepancies.";
+                }
+                else
+                {
+                    StatusMessage = "Changes saved successfully.";
+                }
+
                 Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (Exception ex)
@@ -524,9 +608,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             try
             {
+                if (SelectedClosingPeriod == null)
+                {
+                    StatusMessage = "Please select a closing period first.";
+                    return;
+                }
+
                 IsBusy = true;
                 StatusMessage = null;
-                var snapshot = await _hoursAllocationService.AddRankAsync(SelectedEngagement.Id, rankName).ConfigureAwait(false);
+                var snapshot = await _hoursAllocationService.AddRankAsync(SelectedEngagement.Id, SelectedClosingPeriod.Id, rankName).ConfigureAwait(false);
                 ApplySnapshot(snapshot);
                 SelectedRow = Rows.FirstOrDefault(row => string.Equals(row.RankName, rankName, StringComparison.OrdinalIgnoreCase));
                 StatusMessage = $"Rank '{rankName}' created for open fiscal years.";
@@ -562,10 +652,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             try
             {
+                if (SelectedClosingPeriod == null)
+                {
+                    StatusMessage = "Please select a closing period first.";
+                    return;
+                }
+
                 IsBusy = true;
                 StatusMessage = null;
-                await _hoursAllocationService.DeleteRankAsync(SelectedEngagement.Id, SelectedRow.RankName).ConfigureAwait(false);
-                var snapshot = await _hoursAllocationService.GetAllocationAsync(SelectedEngagement.Id).ConfigureAwait(false);
+                await _hoursAllocationService.DeleteRankAsync(SelectedEngagement.Id, SelectedClosingPeriod.Id, SelectedRow.RankName).ConfigureAwait(false);
+                var snapshot = await _hoursAllocationService.GetAllocationAsync(SelectedEngagement.Id, SelectedClosingPeriod.Id).ConfigureAwait(false);
                 ApplySnapshot(snapshot);
                 SelectedRow = null;
                 StatusMessage = "Rank removed.";
@@ -653,7 +749,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private async Task LoadSnapshotAsync(int engagementId)
         {
-            var snapshot = await _hoursAllocationService.GetAllocationAsync(engagementId).ConfigureAwait(false);
+            if (SelectedClosingPeriod == null)
+            {
+                StatusMessage = "Please select a closing period first.";
+                return;
+            }
+
+            var snapshot = await _hoursAllocationService.GetAllocationAsync(engagementId, SelectedClosingPeriod.Id).ConfigureAwait(false);
             ApplySnapshot(snapshot);
         }
 

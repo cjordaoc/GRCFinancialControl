@@ -10,9 +10,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                                            IFiscalYearService fiscalYearService,
                                            ICustomerService customerService,
                                            IClosingPeriodService closingPeriodService,
+                                           IAllocationSnapshotService allocationSnapshotService,
                                            DialogService dialogService,
                                            IMessenger messenger)
-            : base(engagementService, fiscalYearService, customerService, closingPeriodService, dialogService, messenger)
+            : base(engagementService, fiscalYearService, customerService, closingPeriodService, allocationSnapshotService, dialogService, messenger)
         {
         }
 
