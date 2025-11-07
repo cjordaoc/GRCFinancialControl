@@ -30,11 +30,6 @@
             <ComboBox Width="280"
                       ItemsSource="{Binding Engagements}"
                       SelectedItem="{Binding SelectedEngagement}"/>
-            <ComboBox Width="250"
-                      ItemsSource="{Binding ClosingPeriods}"
-                      SelectedItem="{Binding SelectedClosingPeriod}"
-                      DisplayMemberBinding="{Binding Name}"
-                      ToolTip.Tip="Select the closing period for this allocation snapshot"/>
             <Button Content="Refresh"
                     Command="{Binding RefreshCommand}"/>
         </StackPanel>

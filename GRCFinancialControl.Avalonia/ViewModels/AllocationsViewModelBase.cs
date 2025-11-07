@@ -20,6 +20,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly ICustomerService _customerService;
         private readonly IClosingPeriodService _closingPeriodService;
         private readonly IAllocationSnapshotService _allocationSnapshotService;
+        private readonly ISettingsService _settingsService;
 
         [ObservableProperty]
         private ObservableCollection<Engagement> _engagements = new();
@@ -28,19 +29,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private ObservableCollection<FiscalYear> _fiscalYears = new();
 
         [ObservableProperty]
-        private ObservableCollection<ClosingPeriod> _closingPeriods = new();
-
-        [ObservableProperty]
         private Engagement? _selectedEngagement;
-
-        [ObservableProperty]
-        private ClosingPeriod? _selectedClosingPeriod;
 
         protected AllocationsViewModelBase(IEngagementService engagementService,
                                            IFiscalYearService fiscalYearService,
                                            ICustomerService customerService,
                                            IClosingPeriodService closingPeriodService,
                                            IAllocationSnapshotService allocationSnapshotService,
+                                           ISettingsService settingsService,
                                            DialogService dialogService,
                                            IMessenger messenger)
             : base(messenger)
@@ -50,6 +46,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _customerService = customerService;
             _closingPeriodService = closingPeriodService;
             _allocationSnapshotService = allocationSnapshotService;
+            _settingsService = settingsService;
             _dialogService = dialogService;
         }
 
@@ -59,23 +56,33 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             Engagements = new ObservableCollection<Engagement>(await _engagementService.GetAllAsync());
             FiscalYears = new ObservableCollection<FiscalYear>(await _fiscalYearService.GetAllAsync());
-            ClosingPeriods = new ObservableCollection<ClosingPeriod>(await _closingPeriodService.GetAllAsync());
-            
-            // Select latest closing period by default
-            SelectedClosingPeriod = ClosingPeriods.OrderByDescending(cp => cp.PeriodEnd).FirstOrDefault();
         }
 
         [RelayCommand]
         private async Task EditAllocation(Engagement engagement)
         {
-            if (engagement == null || SelectedClosingPeriod == null)
+            if (engagement == null)
+            {
+                return;
+            }
+
+            // Get the global closing period from settings (set in Home view)
+            var closingPeriodId = await _settingsService.GetDefaultClosingPeriodIdAsync().ConfigureAwait(false);
+            if (!closingPeriodId.HasValue)
+            {
+                // TODO: Show user-friendly message via dialog or status bar
+                return;
+            }
+
+            var closingPeriod = await _closingPeriodService.GetByIdAsync(closingPeriodId.Value).ConfigureAwait(false);
+            if (closingPeriod == null)
             {
                 return;
             }
 
             var editorViewModel = new AllocationEditorViewModel(
                 engagement,
-                SelectedClosingPeriod,
+                closingPeriod,
                 FiscalYears.ToList(),
                 _engagementService,
                 _allocationSnapshotService,
@@ -87,14 +94,27 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand]
         private async Task ViewAllocation(Engagement engagement)
         {
-            if (engagement == null || SelectedClosingPeriod == null)
+            if (engagement == null)
+            {
+                return;
+            }
+
+            // Get the global closing period from settings (set in Home view)
+            var closingPeriodId = await _settingsService.GetDefaultClosingPeriodIdAsync().ConfigureAwait(false);
+            if (!closingPeriodId.HasValue)
+            {
+                return;
+            }
+
+            var closingPeriod = await _closingPeriodService.GetByIdAsync(closingPeriodId.Value).ConfigureAwait(false);
+            if (closingPeriod == null)
             {
                 return;
             }
 
             var editorViewModel = new AllocationEditorViewModel(
                 engagement,
-                SelectedClosingPeriod,
+                closingPeriod,
                 FiscalYears.ToList(),
                 _engagementService,
                 _allocationSnapshotService,
