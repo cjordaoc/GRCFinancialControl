@@ -7,11 +7,14 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using ExcelDataReader;
+using GRCFinancialControl.Persistence.Services.Utilities;
+using static GRCFinancialControl.Persistence.Services.Utilities.DataNormalizationService;
 
 namespace GRCFinancialControl.Persistence.Services.Exporters;
 
 /// <summary>
 /// Loads and parses planning workbooks for Retain template generation.
+/// Refactored to use DataNormalizationService - eliminates duplicate code.
 /// </summary>
 internal static class RetainTemplatePlanningWorkbook
 {
@@ -32,22 +35,6 @@ internal static class RetainTemplatePlanningWorkbook
         "Emp Resource  GPN",
         "Resource Gpn",
         "Resource GPN"
-    };
-
-    private static readonly Regex EngagementCodeRegex = new("E-\\d+", RegexOptions.Compiled | RegexOptions.CultureInvariant);
-    private static readonly string[] ExplicitDateFormats =
-    {
-        "dd/MM/yyyy",
-        "d/M/yyyy",
-        "yyyy-MM-dd",
-        "yyyy-MM-dd HH:mm:ss",
-        "MM/dd/yyyy"
-    };
-
-    private static readonly CultureInfo[] DateCultures =
-    {
-        CultureInfo.InvariantCulture,
-        new("pt-BR")
     };
 
     private static bool _encodingRegistered;
@@ -106,7 +93,7 @@ internal static class RetainTemplatePlanningWorkbook
         EnsureEncodingRegistered();
 
         using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-        using var reader = ExcelReaderFactory.CreateReader(stream);
+        using var reader = ExcelDataReader.ExcelReaderFactory.CreateReader(stream);
         using var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration
         {
             UseColumnDataType = true
@@ -114,6 +101,7 @@ internal static class RetainTemplatePlanningWorkbook
 
         WorksheetData? target = null;
 
+        // First: Look for allocation worksheet by name
         foreach (DataTable? table in dataSet.Tables)
         {
             if (table is null || table.Rows.Count == 0 || table.Columns.Count == 0)
@@ -122,13 +110,14 @@ internal static class RetainTemplatePlanningWorkbook
             }
 
             var name = table.TableName?.Trim() ?? string.Empty;
-            if (IsAllocationWorksheet(name))
+            if (IsAllocationWorksheetName(name))
             {
                 target = WorksheetData.From(table);
                 break;
             }
         }
 
+        // Second: Look for worksheet with GPN header
         if (target is null)
         {
             foreach (DataTable? table in dataSet.Tables)
@@ -139,6 +128,7 @@ internal static class RetainTemplatePlanningWorkbook
                 }
 
                 var headerRow = table.Rows[0];
+                // Use DataNormalizationService.GetString() instead of local GetString()
                 if (headerRow.ItemArray.Any(value => string.Equals(GetString(value), "GPN", StringComparison.OrdinalIgnoreCase)))
                 {
                     target = WorksheetData.From(table);
@@ -161,6 +151,7 @@ internal static class RetainTemplatePlanningWorkbook
         {
             for (var columnIndex = 0; columnIndex < worksheet.ColumnCount; columnIndex++)
             {
+                // Use DataNormalizationService.GetString()
                 if (!string.IsNullOrWhiteSpace(GetString(worksheet.GetValue(rowIndex, columnIndex))))
                 {
                     return rowIndex;
@@ -179,7 +170,7 @@ internal static class RetainTemplatePlanningWorkbook
         }
 
         var normalizedCandidates = headerCandidates
-            .Select(NormalizeHeader)
+            .Select(NormalizeHeader) // Use DataNormalizationService.NormalizeHeader()
             .Where(candidate => !string.IsNullOrEmpty(candidate))
             .ToArray();
 
@@ -190,6 +181,7 @@ internal static class RetainTemplatePlanningWorkbook
 
         for (var columnIndex = 0; columnIndex < worksheet.ColumnCount; columnIndex++)
         {
+            // Use DataNormalizationService.NormalizeHeader() and GetString()
             var header = NormalizeHeader(GetString(worksheet.GetValue(headerRowIndex, columnIndex)));
             if (string.IsNullOrEmpty(header))
             {
@@ -211,7 +203,8 @@ internal static class RetainTemplatePlanningWorkbook
 
         for (var columnIndex = 0; columnIndex < worksheet.ColumnCount; columnIndex++)
         {
-            var weekDate = TryParseWeekDate(worksheet.GetValue(headerRowIndex, columnIndex));
+            // Use DataNormalizationService.TryParseDate()
+            var weekDate = TryParseDate(worksheet.GetValue(headerRowIndex, columnIndex));
             if (!weekDate.HasValue)
             {
                 continue;
@@ -235,6 +228,7 @@ internal static class RetainTemplatePlanningWorkbook
 
         for (var rowIndex = firstDataRowIndex; rowIndex < worksheet.RowCount; rowIndex++)
         {
+            // Use DataNormalizationService.GetString()
             var resourceId = resourceIdColumnIndex >= 0
                 ? GetString(worksheet.GetValue(rowIndex, resourceIdColumnIndex))
                 : string.Empty;
@@ -298,21 +292,23 @@ internal static class RetainTemplatePlanningWorkbook
         engagementName = string.Empty;
         engagementCode = string.Empty;
 
+        // Use DataNormalizationService.GetString()
         var text = GetString(value);
         if (string.IsNullOrWhiteSpace(text))
         {
             return false;
         }
 
-        var match = EngagementCodeRegex.Match(text);
-        if (!match.Success)
+        // Use DataNormalizationService.ExtractEngagementCode()
+        engagementCode = ExtractEngagementCode(text);
+        if (string.IsNullOrEmpty(engagementCode))
         {
             return false;
         }
 
-        engagementCode = match.Value.ToUpperInvariant();
-
-        var nameWithoutCode = EngagementCodeRegex.Replace(text, string.Empty, 1);
+        // Extract engagement name by removing code
+        var engagementCodeRegex = new Regex(@"\bE-\d+\b", RegexOptions.IgnoreCase);
+        var nameWithoutCode = engagementCodeRegex.Replace(text, string.Empty, 1);
         var builder = new StringBuilder(nameWithoutCode.Length);
 
         foreach (var ch in nameWithoutCode)
@@ -352,87 +348,31 @@ internal static class RetainTemplatePlanningWorkbook
                 return Convert.ToDecimal(floatValue);
         }
 
+        // Use DataNormalizationService.GetString()
         var text = GetString(value);
         if (string.IsNullOrEmpty(text))
         {
             return 0m;
         }
 
-        var sanitized = EngagementCodeRegex.Replace(text, string.Empty);
+        // Remove engagement code pattern from text
+        var engagementCodeRegex = new Regex(@"\bE-\d+\b", RegexOptions.IgnoreCase);
+        var sanitized = engagementCodeRegex.Replace(text, string.Empty);
         sanitized = sanitized.Replace("(", string.Empty, StringComparison.Ordinal)
             .Replace(")", string.Empty, StringComparison.Ordinal)
             .Trim();
 
-        if (decimal.TryParse(sanitized, NumberStyles.Number, CultureInfo.InvariantCulture, out var invariantParsed))
+        // Use DataNormalizationService.TryParseDecimal()
+        var parsed = TryParseDecimal(sanitized);
+        if (parsed.HasValue)
         {
-            return invariantParsed;
-        }
-
-        if (decimal.TryParse(sanitized, NumberStyles.Number, new CultureInfo("pt-BR"), out var ptParsed))
-        {
-            return ptParsed;
+            return parsed.Value;
         }
 
         return DefaultWeeklyHours;
     }
 
-    private static DateTime? TryParseWeekDate(object? value)
-    {
-        if (value is null)
-        {
-            return null;
-        }
-
-        if (value is DateTime dateTime)
-        {
-            return dateTime.Date;
-        }
-
-        if (value is double serialDate)
-        {
-            return DateTime.FromOADate(serialDate).Date;
-        }
-
-        var text = GetString(value);
-        if (string.IsNullOrEmpty(text))
-        {
-            return null;
-        }
-
-        foreach (var culture in DateCultures)
-        {
-            if (DateTime.TryParse(text, culture, DateTimeStyles.AssumeLocal, out var parsed))
-            {
-                return parsed.Date;
-            }
-        }
-
-        foreach (var format in ExplicitDateFormats)
-        {
-            foreach (var culture in DateCultures)
-            {
-                if (DateTime.TryParseExact(text, format, culture, DateTimeStyles.AssumeLocal, out var parsed))
-                {
-                    return parsed.Date;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private static string GetString(object? value)
-    {
-        return value switch
-        {
-            null => string.Empty,
-            string s => s.Trim(),
-            IFormattable formattable => formattable.ToString(null, CultureInfo.InvariantCulture).Trim(),
-            _ => value.ToString()?.Trim() ?? string.Empty
-        };
-    }
-
-    private static bool IsAllocationWorksheet(string name)
+    private static bool IsAllocationWorksheetName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -441,22 +381,6 @@ internal static class RetainTemplatePlanningWorkbook
 
         return string.Equals(name, "Alocações_Staff", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(name, "Alocacoes_Staff", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string NormalizeHeader(string header)
-    {
-        if (string.IsNullOrWhiteSpace(header))
-        {
-            return string.Empty;
-        }
-
-        var normalized = header
-            .Replace("_", " ", StringComparison.Ordinal)
-            .Replace("-", " ", StringComparison.Ordinal)
-            .Replace("  ", " ", StringComparison.Ordinal)
-            .Trim();
-
-        return normalized.ToLowerInvariant();
     }
 
     private static DateTime StartOfWeek(DateTime date)
@@ -485,7 +409,7 @@ internal static class RetainTemplatePlanningWorkbook
                 return;
             }
 
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
             _encodingRegistered = true;
         }
     }

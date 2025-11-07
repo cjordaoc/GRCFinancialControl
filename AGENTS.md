@@ -1,7 +1,7 @@
-﻿# GRC Financial Control â€” Agent Guide (vNext Refactored)
+# GRC Financial Control â€" Agent Guide (vNext Refactored)
 
 These instructions keep contributors consistent across tooling, architecture, and workflow.
-All work must follow the **â€œas simple as it can beâ€** rule â€” every change should reduce complexity, not add it.
+All work must follow the **â€œas simple as it can beâ€** rule â€" every change should reduce complexity, not add it.
 
 ---
 
@@ -16,7 +16,7 @@ Confirm .NET 8, restore dependencies, and ensure `dotnet build -c Release` passe
 - ViewModels = interaction/state handling.
 - Models = domain entities inside *.Core.
 - Register all services through Host Builder; no custom factories.
-- Simplicity First â†’ reuse > abstraction.
+- Simplicity First â†' reuse > abstraction.
 
 ---
 
@@ -54,9 +54,9 @@ Confirm .NET 8, restore dependencies, and ensure `dotnet build -c Release` passe
 ---
 
 ## 7 Â· Tasks Export Conventions
-- Weekly tasks exports must target the XML schema `WeeklyTasks.xsd` (version 1.3) â€” legacy JSON payloads are no longer supported.
+- Weekly tasks exports must target the XML schema `WeeklyTasks.xsd` (version 1.3) â€" legacy JSON payloads are no longer supported.
 - Planner payment types surface through `PaymentTypeCatalog` (`TRANSFERENCIA_BANCARIA`, `BOLETOS`); do not introduce free-form values.
-- Invoice descriptions are generated at runtime following the Excel â€œTexto de Faturamentoâ€ pattern and must not be persisted in the database.
+- Invoice descriptions are generated at runtime following the Excel â€œTexto de Faturamentoâ€ pattern and must not be persisted in the database.
 
 ---
 
@@ -68,23 +68,17 @@ Confirm .NET 8, restore dependencies, and ensure `dotnet build -c Release` passe
 
 After cloning this repository, run:
 
-<<<<<<< HEAD
-\\\ash
+```bash
 git submodule update --init --recursive
-\\\
+```
 
 This ensures GRC.Shared is available before building.
-=======
-`ash
-git submodule update --init --recursive
-`
 
 If the submodule breaks, fix it with:
 
-`ash
+```bash
 git submodule deinit -f --all
 git rm -rf --cached GRC.Shared
 git submodule add https://github.com/cjordaoc/GRC.Shared.git GRC.Shared
 git submodule update --init --recursive
-`
-
+```

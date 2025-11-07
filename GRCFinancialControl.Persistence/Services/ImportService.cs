@@ -1371,7 +1371,7 @@ namespace GRCFinancialControl.Persistence.Services
             var allocationLookup = groupedAllocations
                 .Where(a => !string.IsNullOrWhiteSpace(a.EngagementCode) && !string.IsNullOrWhiteSpace(a.RankCode))
                 .ToDictionary(
-                    a => new AllocationKey(NormalizeAllocationCode(a.EngagementCode), NormalizeAllocationCode(a.RankCode), a.FiscalYearId),
+                    a => new AllocationKey(NormalizeIdentifier(a.EngagementCode), NormalizeIdentifier(a.RankCode), a.FiscalYearId),
                     a => a,
                     AllocationKeyComparer.Instance);
 
@@ -1381,7 +1381,7 @@ namespace GRCFinancialControl.Persistence.Services
                 .ConfigureAwait(false);
 
             var historyLookup = existingHistories.ToDictionary(
-                h => new AllocationKey(NormalizeAllocationCode(h.EngagementCode), NormalizeAllocationCode(h.RankCode), h.FiscalYearId),
+                h => new AllocationKey(NormalizeIdentifier(h.EngagementCode), NormalizeIdentifier(h.RankCode), h.FiscalYearId),
                 h => h,
                 AllocationKeyComparer.Instance);
 
@@ -1404,15 +1404,15 @@ namespace GRCFinancialControl.Persistence.Services
                 .ToListAsync()
                 .ConfigureAwait(false);
 
-            var engagementLookup = engagements.ToDictionary(e => NormalizeAllocationCode(e.EngagementId), e => e);
+            var engagementLookup = engagements.ToDictionary(e => NormalizeIdentifier(e.EngagementId), e => e);
 
             var budgetLookup = new Dictionary<BudgetKey, EngagementRankBudget>(BudgetKeyComparer.Instance);
             foreach (var engagement in engagements)
             {
-                var engagementKey = NormalizeAllocationCode(engagement.EngagementId);
+                var engagementKey = NormalizeIdentifier(engagement.EngagementId);
                 foreach (var budget in engagement.RankBudgets.Where(b => b.FiscalYearId == closingPeriod.FiscalYearId))
                 {
-                    var rankKey = NormalizeAllocationCode(budget.RankName);
+                    var rankKey = NormalizeIdentifier(budget.RankName);
                     budgetLookup[new BudgetKey(engagementKey, rankKey)] = budget;
                 }
             }
@@ -1822,12 +1822,12 @@ namespace GRCFinancialControl.Persistence.Services
 
         private static string NormalizeRank(string? value)
         {
-            return NormalizeRankKey(value); // Reuse existing method for consistency
+            return NormalizeIdentifier(value); // Use DataNormalizationService
         }
 
         private static string NormalizeCode(string? value)
         {
-            return NormalizeEngagementCode(value); // Reuse existing method for consistency
+            return NormalizeIdentifier(value); // Use DataNormalizationService
         }
 
         private static string? TryExtractEngagementCode(object? value)
@@ -2068,7 +2068,7 @@ namespace GRCFinancialControl.Persistence.Services
                     var engagementCode = TryExtractEngagementCode(worksheet.GetValue(employee.RowIndex, week.ColumnIndex));
                     if (!string.IsNullOrEmpty(engagementCode))
                     {
-                        var normalizedCode = NormalizeEngagementCode(engagementCode);
+                        var normalizedCode = NormalizeIdentifier(engagementCode);
                         if (!string.IsNullOrEmpty(normalizedCode))
                         {
                             engagementCodes.Add(normalizedCode);
@@ -2096,7 +2096,7 @@ namespace GRCFinancialControl.Persistence.Services
             }
 
             var engagementLookup = engagements
-                .ToDictionary(e => NormalizeEngagementCode(e.EngagementId), e => e, StringComparer.OrdinalIgnoreCase);
+                .ToDictionary(e => NormalizeIdentifier(e.EngagementId), e => e, StringComparer.OrdinalIgnoreCase);
 
             var budgetLookup = new Dictionary<(int EngagementId, int FiscalYearId, string RankCode), EngagementRankBudget>();
             foreach (var engagement in engagements)
@@ -2108,7 +2108,7 @@ namespace GRCFinancialControl.Persistence.Services
 
                 foreach (var budget in engagement.RankBudgets.Where(b => fiscalYearIds.Contains(b.FiscalYearId)))
                 {
-                    var normalizedRank = NormalizeRankKey(budget.RankName);
+                    var normalizedRank = NormalizeIdentifier(budget.RankName);
                     if (string.IsNullOrEmpty(normalizedRank))
                     {
                         continue;
@@ -2144,7 +2144,7 @@ namespace GRCFinancialControl.Persistence.Services
                         continue;
                     }
 
-                    var normalizedEngagement = NormalizeEngagementCode(engagementCode);
+                    var normalizedEngagement = NormalizeIdentifier(engagementCode);
                     if (string.IsNullOrEmpty(normalizedEngagement))
                     {
                         continue;
@@ -2189,7 +2189,7 @@ namespace GRCFinancialControl.Persistence.Services
                     continue;
                 }
 
-                var normalizedCanonicalRank = NormalizeRankKey(canonicalRankCode);
+                var normalizedCanonicalRank = NormalizeIdentifier(canonicalRankCode);
                 if (string.IsNullOrEmpty(normalizedCanonicalRank))
                 {
                     continue;
@@ -2240,7 +2240,7 @@ namespace GRCFinancialControl.Persistence.Services
                     continue;
                 }
 
-                var normalizedCanonicalRank = NormalizeRankKey(canonicalRankCode);
+                var normalizedCanonicalRank = NormalizeIdentifier(canonicalRankCode);
                 if (string.IsNullOrEmpty(normalizedCanonicalRank))
                 {
                     continue;
@@ -2254,7 +2254,7 @@ namespace GRCFinancialControl.Persistence.Services
                         continue;
                     }
 
-                    var normalizedEngagement = NormalizeEngagementCode(engagementCode);
+                    var normalizedEngagement = NormalizeIdentifier(engagementCode);
                     if (string.IsNullOrEmpty(normalizedEngagement))
                     {
                         continue;
@@ -2305,8 +2305,8 @@ namespace GRCFinancialControl.Persistence.Services
             var historyLookup = new Dictionary<(string EngagementCode, int FiscalYearId, int ClosingPeriodId, string RankCode), EngagementRankBudgetHistory>();
             foreach (var history in existingHistories)
             {
-                var normalizedCode = NormalizeEngagementCode(history.EngagementCode);
-                var normalizedRank = NormalizeRankKey(history.RankCode);
+                var normalizedCode = NormalizeIdentifier(history.EngagementCode);
+                var normalizedRank = NormalizeIdentifier(history.RankCode);
                 if (string.IsNullOrEmpty(normalizedCode) || string.IsNullOrEmpty(normalizedRank))
                 {
                     continue;
@@ -2335,7 +2335,7 @@ namespace GRCFinancialControl.Persistence.Services
                     continue;
                 }
 
-                var normalizedEngagementCode = NormalizeEngagementCode(engagement.EngagementId);
+                var normalizedEngagementCode = NormalizeIdentifier(engagement.EngagementId);
                 var roundedHours = Math.Round(totalHours, 2, MidpointRounding.AwayFromZero);
 
                 // Update ConsumedHours
@@ -2699,26 +2699,14 @@ namespace GRCFinancialControl.Persistence.Services
             return sanitized;
         }
 
-        private static string NormalizeEngagementCode(string? value)
-        {
-            var normalized = NormalizeWhitespace(value);
-            return string.IsNullOrEmpty(normalized) ? string.Empty : normalized.ToUpperInvariant();
-        }
-
-        private static string NormalizeRankKey(string? value)
-        {
-            var normalized = NormalizeWhitespace(value);
-            return string.IsNullOrEmpty(normalized) ? string.Empty : normalized.ToUpperInvariant();
-        }
+        // Removed duplicate normalization methods - use DataNormalizationService.NormalizeIdentifier() instead
+        // - NormalizeEngagementCode() -> NormalizeIdentifier()
+        // - NormalizeRankKey() -> NormalizeIdentifier()
+        // - NormalizeAllocationCode() -> NormalizeIdentifier()
 
         private static decimal RoundMoney(decimal value) => Math.Round(value, 2, MidpointRounding.AwayFromZero);
 
         private sealed record FcsBacklogRow(string EngagementId, decimal CurrentBacklog, decimal FutureBacklog, int RowNumber);
-
-        private static string NormalizeAllocationCode(string? value)
-        {
-            return NormalizeEngagementCode(value); // Reuse existing method for consistency
-        }
 
         private readonly record struct AllocationKey(string EngagementCode, string RankCode, int FiscalYearId);
 
