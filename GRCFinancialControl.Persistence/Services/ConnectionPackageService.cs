@@ -11,6 +11,9 @@ using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Persistence.Services;
 
+/// <summary>
+/// Exports and imports encrypted connection packages with AES-256 encryption.
+/// </summary>
 public sealed class ConnectionPackageService : IConnectionPackageService
 {
     private const int CurrentVersion = 1;

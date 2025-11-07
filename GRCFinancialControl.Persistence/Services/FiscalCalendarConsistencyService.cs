@@ -9,6 +9,9 @@ using Microsoft.Extensions.Logging;
 
 namespace GRCFinancialControl.Persistence.Services
 {
+    /// <summary>
+    /// Validates and corrects fiscal calendar inconsistencies across fiscal years and closing periods.
+    /// </summary>
     public class FiscalCalendarConsistencyService : IFiscalCalendarConsistencyService
     {
         private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
