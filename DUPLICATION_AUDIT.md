@@ -147,13 +147,13 @@ public string FalseResourceKey { get; set; } = "ThemeForegroundBrush";
 |------|------|--------|--------|----------|--------|-------------|
 | PercentageOfSizeConverter | Converter | ✅ **COMPLETE** | Deleted 2 copies | **HIGH** | 15 min | **88 lines** |
 | BoolToBrushConverter | Converter | ✅ **COMPLETE** | Renamed for clarity | **LOW** | 5 min | 0 lines |
-| DialogService | Service | 🟡 Near-duplicate | Merge or extract base | **MEDIUM** | 1-2 hours | 85 lines |
+| DialogService | Service | ✅ **COMPLETE** | Extracted BaseDialogService | **MEDIUM** | 1.5 hours | **85 lines** |
 | FilePickerService | Service | ✅ Shared | No action | — | — | — |
 | ToastService | Service | ✅ Shared | No action | — | — | — |
 
-**Total Potential Savings:** ~173 lines  
-**Completed:** 88 lines (51%)  
-**Remaining:** 85 lines (DialogService consolidation deferred)
+**Total Savings:** ~173 lines ✅  
+**Phase 1 (Converters):** 88 lines  
+**Phase 2 (DialogService):** 85 lines
 
 ---
 

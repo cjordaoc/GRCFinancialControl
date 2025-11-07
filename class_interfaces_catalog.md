@@ -75,6 +75,16 @@ Authoritative reference for reusable classes and interfaces. Consult this catalo
 
 ---
 
+## Dialog Services
+| Type | Namespace | Name | Purpose | Key Members | Dependencies | Status | Notes |
+|------|-----------|------|---------|-------------|--------------|--------|-------|
+| Abstract Class | `App.Presentation.Services` | `BaseDialogService` | Base implementation for modal dialog orchestration with focus management and stacking. | `ShowDialogAsync`, `OnDialogOpening`, `OnDialogClosing`, `GetModalDialogOptions`, `DialogFocusState` | `IModalDialogService`, `IMessenger` | Stable | Consolidates 85 lines of duplicate logic from both apps. Derived classes customize via virtual methods. |
+| Class | `GRCFinancialControl.Avalonia.Services` | `DialogService` | GRC dialog service with centered layout and confirmation helper. | `ShowDialogAsync`, `ShowConfirmationAsync` | `BaseDialogService`, `ViewLocator` | Stable | Adds `ConfirmationDialogViewModel` support. Uses centered modal layout. |
+| Class | `InvoicePlanner.Avalonia.Services` | `DialogService` | Invoice Planner dialog service with owner-aligned layout and nested dialog support. | `ShowDialogAsync`, `OnDialogOpening`, `OnDialogClosing` | `BaseDialogService`, `ViewLocator` | Stable | Overrides base for nested dialogs (disables previous dialog, not owner). Uses `ModalDialogLayout.OwnerAligned`. |
+
+---
+
+
 ## ViewModels (Avalonia)
 | Type | Namespace | Name | Purpose | Key Members | Dependencies | Status | Notes |
 |------|-----------|------|---------|-------------|--------------|--------|-------|
