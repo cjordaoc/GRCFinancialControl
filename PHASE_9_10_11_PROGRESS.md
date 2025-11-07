@@ -34,28 +34,26 @@ Apply performance optimization (ConfigureAwait) and documentation to **service/l
 2. ✅ EngagementService.cs - ConfigureAwait + ApplyFinancialControlSnapshot docs
 3. ✅ ReportService.cs - ConfigureAwait + class docs
 4. ✅ CustomerService.cs - ConfigureAwait + DeleteDataAsync docs
+5. ✅ FiscalYearService.cs - Class docs (ConfigureAwait partial from Session 1)
+6. ✅ ClosingPeriodService.cs - ConfigureAwait (17 calls) + class docs
+7. ✅ HoursAllocationService.cs - Class docs (ConfigureAwait from Session 1)
+8. ✅ PlannedAllocationService.cs - ConfigureAwait (7 calls) + class docs
+9. ✅ PapdService.cs - ConfigureAwait (5 calls) + class docs
+10. ✅ ManagerService.cs - ConfigureAwait (2 calls) + class docs
+11. ✅ RankMappingService.cs - Class docs (ConfigureAwait from Session 1)
+12. ✅ SettingsService.cs - Already complete from Session 1 ✅
 
-#### In Progress 🔄
-5. 🔄 FiscalYearService.cs - Next target
-6. 🔄 ClosingPeriodService.cs - Next target
-
-#### Pending ⏳
-7. ⏳ HoursAllocationService.cs
-8. ⏳ ImportService.cs
-9. ⏳ PlannedAllocationService.cs
-10. ⏳ PapdService.cs
-11. ⏳ ManagerService.cs
-12. ⏳ RankMappingService.cs
-13. ⏳ SettingsService.cs
-14. ⏳ ExceptionService.cs
-15. ⏳ PapdAssignmentService.cs
-16. ⏳ ManagerAssignmentService.cs
-17. ⏳ FiscalCalendarConsistencyService.cs
-18. ⏳ ConnectionPackageService.cs
-19. ⏳ ApplicationDataBackupService.cs
-20. ⏳ DatabaseSchemaInitializer.cs
-21. ⏳ DatabaseConnectionAvailability.cs
-22-57. ⏳ Infrastructure/, Importers/, Exporters/ subfolders
+#### Pending ⏳ (45 remaining)
+13. ⏳ ExceptionService.cs
+14. ⏳ PapdAssignmentService.cs
+15. ⏳ ManagerAssignmentService.cs
+16. ⏳ FiscalCalendarConsistencyService.cs
+17. ⏳ ConnectionPackageService.cs
+18. ⏳ ApplicationDataBackupService.cs
+19. ⏳ DatabaseSchemaInitializer.cs
+20. ⏳ DatabaseConnectionAvailability.cs
+21. ⏳ ImportService.cs (large, complex)
+22-57. ⏳ Infrastructure/, Importers/, Exporters/ subfolders (~36 files)
 
 ### GRCFinancialControl.Avalonia/ViewModels (42 files) - ⚠️ OPTIONAL
 
@@ -102,18 +100,19 @@ Documentation optional (lower priority than services).
 ## Completion Status
 
 **Core Scope (Services/Library Code):**
-- **Phase 9 (ConfigureAwait)**: 5/88 files (6% complete)
+- **Phase 9 (ConfigureAwait)**: 12/88 files (14% complete)
 - **Phase 10 (Documentation)**: 2/2 files (100% complete) ✅
-- **Phase 11 (XML Docs)**: 5/88 files (6% complete)
+- **Phase 11 (XML Docs)**: 12/88 files (14% complete)
 
 **Optional Scope (ViewModels - Docs Only):**
 - **Phase 11 (XML Docs)**: 0/64 files (deferred, lower priority)
 
-**Overall Core Progress**: ~6% complete (5/88 files)
+**Overall Core Progress**: 14% complete (12/88 files)
 
 **Estimated Remaining Time**: 
-- Core scope: **6-8 hours** (83 service/library files)
+- Core scope: **5-7 hours** (76 service/library files)
 - Optional ViewModels: **3-4 hours** (if pursued)
+- Current pace: ~12 files per 1.5-2 hours
 
 ---
 
