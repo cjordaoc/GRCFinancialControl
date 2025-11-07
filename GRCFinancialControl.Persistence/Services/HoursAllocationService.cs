@@ -22,14 +22,12 @@ namespace GRCFinancialControl.Persistence.Services
             _contextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
         }
 
-        public async Task<HoursAllocationSnapshot> GetAllocationAsync(int engagementId)
+        public async Task<HoursAllocationSnapshot> GetAllocationAsync(int engagementId, int closingPeriodId)
         {
             await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
             var engagement = await context.Engagements
                 .AsNoTracking()
-                .Include(e => e.RankBudgets)
-                    .ThenInclude(b => b.FiscalYear)
                 .FirstOrDefaultAsync(e => e.Id == engagementId)
                 .ConfigureAwait(false);
 
@@ -37,6 +35,15 @@ namespace GRCFinancialControl.Persistence.Services
             {
                 throw new InvalidOperationException($"Engagement {engagementId} was not found.");
             }
+
+            // Snapshot-based: Get budgets for specific closing period
+            var rankBudgets = await context.EngagementRankBudgets
+                .AsNoTracking()
+                .Include(b => b.FiscalYear)
+                .Include(b => b.ClosingPeriod)
+                .Where(b => b.EngagementId == engagementId && b.ClosingPeriodId == closingPeriodId)
+                .ToListAsync()
+                .ConfigureAwait(false);
 
             var fiscalYears = await context.FiscalYears
                 .AsNoTracking()
@@ -49,7 +56,7 @@ namespace GRCFinancialControl.Persistence.Services
                 .Select(fy => new FiscalYearAllocationInfo(fy.Id, fy.Name, fy.IsLocked))
                 .ToList();
 
-            var rows = BuildRows(fiscalYears, engagement.RankBudgets);
+            var rows = BuildRows(fiscalYears, rankBudgets);
 
             var rankOptions = await context.RankMappings
                 .AsNoTracking()
@@ -61,7 +68,7 @@ namespace GRCFinancialControl.Persistence.Services
                 .ToListAsync()
                 .ConfigureAwait(false);
 
-            var consumedInOpenYears = engagement.RankBudgets
+            var consumedInOpenYears = rankBudgets
                 .Where(budget => !(budget.FiscalYear?.IsLocked ?? false))
                 .Sum(budget => budget.ConsumedHours);
 
@@ -82,6 +89,7 @@ namespace GRCFinancialControl.Persistence.Services
 
         public async Task<HoursAllocationSnapshot> SaveAsync(
             int engagementId,
+            int closingPeriodId,
             IEnumerable<HoursAllocationCellUpdate> updates,
             IEnumerable<HoursAllocationRowAdjustment> rowAdjustments)
         {
@@ -100,14 +108,16 @@ namespace GRCFinancialControl.Persistence.Services
 
             if (updateList.Count == 0 && adjustmentList.Count == 0)
             {
-                return await GetAllocationAsync(engagementId).ConfigureAwait(false);
+                return await GetAllocationAsync(engagementId, closingPeriodId).ConfigureAwait(false);
             }
 
             await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
+            // Snapshot-based: Get budgets for specific closing period
             var budgets = await context.EngagementRankBudgets
                 .Include(b => b.FiscalYear)
-                .Where(b => b.EngagementId == engagementId)
+                .Include(b => b.ClosingPeriod)
+                .Where(b => b.EngagementId == engagementId && b.ClosingPeriodId == closingPeriodId)
                 .ToListAsync()
                 .ConfigureAwait(false);
 
@@ -213,10 +223,10 @@ namespace GRCFinancialControl.Persistence.Services
 
             await context.SaveChangesAsync().ConfigureAwait(false);
 
-            return await GetAllocationAsync(engagementId).ConfigureAwait(false);
+            return await GetAllocationAsync(engagementId, closingPeriodId).ConfigureAwait(false);
         }
 
-        public async Task<HoursAllocationSnapshot> AddRankAsync(int engagementId, string rankName)
+        public async Task<HoursAllocationSnapshot> AddRankAsync(int engagementId, int closingPeriodId, string rankName)
         {
             var normalizedRank = NormalizeRank(rankName);
             if (string.IsNullOrEmpty(normalizedRank))
@@ -226,8 +236,9 @@ namespace GRCFinancialControl.Persistence.Services
 
             await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
+            // Snapshot-based: Check existing ranks for this closing period
             var existingRanks = await context.EngagementRankBudgets
-                .Where(b => b.EngagementId == engagementId)
+                .Where(b => b.EngagementId == engagementId && b.ClosingPeriodId == closingPeriodId)
                 .Select(b => b.RankName)
                 .ToListAsync()
                 .ConfigureAwait(false);
@@ -257,6 +268,7 @@ namespace GRCFinancialControl.Persistence.Services
                 {
                     EngagementId = engagementId,
                     FiscalYearId = fiscalYearId,
+                    ClosingPeriodId = closingPeriodId,
                     RankName = normalizedRank,
                     BudgetHours = 0m,
                     ConsumedHours = 0m,
@@ -270,10 +282,10 @@ namespace GRCFinancialControl.Persistence.Services
 
             await context.SaveChangesAsync().ConfigureAwait(false);
 
-            return await GetAllocationAsync(engagementId).ConfigureAwait(false);
+            return await GetAllocationAsync(engagementId, closingPeriodId).ConfigureAwait(false);
         }
 
-        public async Task DeleteRankAsync(int engagementId, string rankName)
+        public async Task DeleteRankAsync(int engagementId, int closingPeriodId, string rankName)
         {
             var normalizedRank = NormalizeRank(rankName);
             if (string.IsNullOrEmpty(normalizedRank))
@@ -283,9 +295,11 @@ namespace GRCFinancialControl.Persistence.Services
 
             await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
+            // Snapshot-based: Get budgets for specific closing period
             var rankBudgets = await context.EngagementRankBudgets
                 .Include(b => b.FiscalYear)
-                .Where(b => b.EngagementId == engagementId)
+                .Include(b => b.ClosingPeriod)
+                .Where(b => b.EngagementId == engagementId && b.ClosingPeriodId == closingPeriodId)
                 .ToListAsync()
                 .ConfigureAwait(false);
 

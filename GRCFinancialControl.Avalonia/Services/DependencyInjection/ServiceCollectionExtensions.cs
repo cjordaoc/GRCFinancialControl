@@ -71,6 +71,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<AllocationPlanningImporter>();
         services.AddTransient<IFiscalCalendarConsistencyService, FiscalCalendarConsistencyService>();
         services.AddTransient<IHoursAllocationService, HoursAllocationService>();
+        services.AddTransient<IAllocationSnapshotService, AllocationSnapshotService>();
         services.AddTransient<IImportService, ImportService>();
         services.AddTransient<IClosingPeriodService, ClosingPeriodService>();
         services.AddTransient<IPlannedAllocationService, PlannedAllocationService>();

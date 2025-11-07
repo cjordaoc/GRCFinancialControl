@@ -19,6 +19,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly DialogService _dialogService;
         private readonly ICustomerService _customerService;
         private readonly IClosingPeriodService _closingPeriodService;
+        private readonly IAllocationSnapshotService _allocationSnapshotService;
 
         [ObservableProperty]
         private ObservableCollection<Engagement> _engagements = new();
@@ -27,12 +28,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private ObservableCollection<FiscalYear> _fiscalYears = new();
 
         [ObservableProperty]
+        private ObservableCollection<ClosingPeriod> _closingPeriods = new();
+
+        [ObservableProperty]
         private Engagement? _selectedEngagement;
+
+        [ObservableProperty]
+        private ClosingPeriod? _selectedClosingPeriod;
 
         protected AllocationsViewModelBase(IEngagementService engagementService,
                                            IFiscalYearService fiscalYearService,
                                            ICustomerService customerService,
                                            IClosingPeriodService closingPeriodService,
+                                           IAllocationSnapshotService allocationSnapshotService,
                                            DialogService dialogService,
                                            IMessenger messenger)
             : base(messenger)
@@ -41,6 +49,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _fiscalYearService = fiscalYearService;
             _customerService = customerService;
             _closingPeriodService = closingPeriodService;
+            _allocationSnapshotService = allocationSnapshotService;
             _dialogService = dialogService;
         }
 
@@ -50,20 +59,27 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             Engagements = new ObservableCollection<Engagement>(await _engagementService.GetAllAsync());
             FiscalYears = new ObservableCollection<FiscalYear>(await _fiscalYearService.GetAllAsync());
+            ClosingPeriods = new ObservableCollection<ClosingPeriod>(await _closingPeriodService.GetAllAsync());
+            
+            // Select latest closing period by default
+            SelectedClosingPeriod = ClosingPeriods.OrderByDescending(cp => cp.PeriodEnd).FirstOrDefault();
         }
 
         [RelayCommand]
         private async Task EditAllocation(Engagement engagement)
         {
-            if (engagement == null)
+            if (engagement == null || SelectedClosingPeriod == null)
             {
                 return;
             }
 
-            var editorViewModel = new AllocationEditorViewModel(engagement,
-                                                                FiscalYears.ToList(),
-                                                                _engagementService,
-                                                                Messenger);
+            var editorViewModel = new AllocationEditorViewModel(
+                engagement,
+                SelectedClosingPeriod,
+                FiscalYears.ToList(),
+                _engagementService,
+                _allocationSnapshotService,
+                Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
             Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
@@ -71,16 +87,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand]
         private async Task ViewAllocation(Engagement engagement)
         {
-            if (engagement == null)
+            if (engagement == null || SelectedClosingPeriod == null)
             {
                 return;
             }
 
-            var editorViewModel = new AllocationEditorViewModel(engagement,
-                                                                FiscalYears.ToList(),
-                                                                _engagementService,
-                                                                Messenger,
-                                                                isReadOnlyMode: true);
+            var editorViewModel = new AllocationEditorViewModel(
+                engagement,
+                SelectedClosingPeriod,
+                FiscalYears.ToList(),
+                _engagementService,
+                _allocationSnapshotService,
+                Messenger,
+                isReadOnlyMode: true);
             await _dialogService.ShowDialogAsync(editorViewModel);
         }
 
