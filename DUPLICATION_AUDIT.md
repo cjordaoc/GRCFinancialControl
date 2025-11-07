@@ -167,21 +167,21 @@ public string FalseResourceKey { get; set; } = "ThemeForegroundBrush";
 5. ✅ Updated class_interfaces_catalog.md
 6. ✅ Committed: `81947f8` - "refactor: Consolidate duplicate converters"
 
-### Phase 2: DialogService Consolidation (1-2 hours)
-**Option A: Base Class Extraction (Recommended)**
-1. Create `App.Presentation/Services/BaseDialogService.cs` with:
-   - Core dialog lifecycle (open, close, stack management)
-   - Focus restoration logic
-   - Virtual methods for customization (`OnDialogOpening`, `OnDialogClosing`)
-2. Derive both app-specific `DialogService` classes from base
-3. Move nested dialog support to base class (InvoicePlanner needs it)
-4. Test both apps thoroughly (dialog workflows are critical)
-
-**Option B: Feature Parity Enhancement**
-1. Enhance `GRCFinancialControl.Avalonia/Services/DialogService.cs` with nested dialog support
-2. Add `ModalDialogOptions` parameter to `ShowDialogAsync`
-3. Copy InvoicePlanner version to GRC, delete InvoicePlanner version
-4. Update InvoicePlanner to use GRC version (add project reference if needed)
+### Phase 2: DialogService Consolidation ✅ **COMPLETE**
+1. ✅ Created `App.Presentation/Services/BaseDialogService.cs` (149 lines)
+   - Dialog lifecycle management (stack, session, focus)
+   - Virtual methods: `GetModalDialogOptions`, `OnDialogOpening`, `OnDialogClosing`
+   - `DialogFocusState` helper class for state restoration
+   - `CloseDialogMessage` registration
+2. ✅ Updated `GRCFinancialControl.Avalonia/Services/DialogService.cs`
+   - 100 → 42 lines (58% reduction)
+   - Extends `BaseDialogService`
+   - Retains `ShowConfirmationAsync` helper
+3. ✅ Updated `InvoicePlanner.Avalonia/Services/DialogService.cs`
+   - 120 → 87 lines (27% reduction)
+   - Overrides for nested dialog support + owner-aligned layout
+4. ✅ Updated class_interfaces_catalog.md (Dialog Services section)
+5. ✅ Committed: `70ccf18` - "refactor: Extract BaseDialogService"
 
 ---
 
