@@ -128,8 +128,11 @@ public abstract class BaseDialogService
     /// </summary>
     protected virtual void OnDialogClosing(Window dialog, Window owner, DialogFocusState focusState)
     {
-        owner.IsEnabled = true;
-        Dispatcher.UIThread.Post(() => focusState.PreviousFocus?.Focus(), DispatcherPriority.Background);
+        Dispatcher.UIThread.Post(() =>
+        {
+            owner.IsEnabled = true;
+            focusState.PreviousFocus?.Focus();
+        }, DispatcherPriority.Background);
     }
 
     /// <summary>
