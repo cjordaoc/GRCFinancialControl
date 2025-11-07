@@ -200,6 +200,46 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             "future backlog"
         };
 
+        private static readonly string[] ChargedHoursETDHeaders =
+        {
+            "charged hours etd",
+            "etd hours",
+            "hours etd"
+        };
+
+        private static readonly string[] ChargedHoursFYTDHeaders =
+        {
+            "charged hours fytd",
+            "fytd hours",
+            "hours fytd"
+        };
+
+        private static readonly string[] MarginPercentETDHeaders =
+        {
+            "margin % etd",
+            "etd margin %",
+            "margin etd"
+        };
+
+        private static readonly string[] MarginPercentFYTDHeaders =
+        {
+            "margin % fytd",
+            "fytd margin %",
+            "margin fytd"
+        };
+
+        private static readonly string[] ExpensesETDHeaders =
+        {
+            "expenses etd",
+            "etd expenses"
+        };
+
+        private static readonly string[] ExpensesFYTDHeaders =
+        {
+            "expenses fytd",
+            "fytd expenses"
+        };
+
         private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
         private readonly ILogger<FullManagementDataImporter> _logger;
 
@@ -623,10 +663,16 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                     context,
                                     engagement,
                                     closingPeriod!.Id.ToString(CultureInfo.InvariantCulture),
-                                    row.ChargedHoursMercuryProjected,
+                                    row.OriginalBudgetHours,
+                                    row.ChargedHours,
+                                    row.FYTDHours,
                                     row.TERMercuryProjectedOppCurrency,
-                                    row.MarginPercentMercuryProjected,
-                                    row.ExpensesMercuryProjected,
+                                    row.OriginalBudgetMarginPercent,
+                                    row.ToDateMargin,
+                                    row.FYTDMargin,
+                                    row.OriginalBudgetExpenses,
+                                    row.ExpensesToDate,
+                                    row.FYTDExpenses,
                                     closingPeriod.FiscalYearId,
                                     revenueToGo,
                                     revenueToDate);
@@ -790,6 +836,12 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             var nextEtcDateIndex = GetOptionalColumnIndex(headerMap, NextEtcDateHeaders);
             var currentFiscalYearBacklogIndex = GetOptionalColumnIndex(headerMap, CurrentFiscalYearBacklogHeaders);
             var futureFiscalYearBacklogIndex = GetOptionalColumnIndex(headerMap, FutureFiscalYearBacklogHeaders);
+            var chargedHoursETDIndex = GetOptionalColumnIndex(headerMap, ChargedHoursETDHeaders);
+            var chargedHoursFYTDIndex = GetOptionalColumnIndex(headerMap, ChargedHoursFYTDHeaders);
+            var marginPercentETDIndex = GetOptionalColumnIndex(headerMap, MarginPercentETDHeaders);
+            var marginPercentFYTDIndex = GetOptionalColumnIndex(headerMap, MarginPercentFYTDHeaders);
+            var expensesETDIndex = GetOptionalColumnIndex(headerMap, ExpensesETDHeaders);
+            var expensesFYTDIndex = GetOptionalColumnIndex(headerMap, ExpensesFYTDHeaders);
 
             var isS4MetadataWorkbook = IsS4MetadataWorkbook(headerMap);
 
@@ -838,10 +890,13 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     OriginalBudgetTer = originalBudgetTerIndex.HasValue ? ParseDecimal(row[originalBudgetTerIndex.Value], 2) : null,
                     OriginalBudgetMarginPercent = originalBudgetMarginPercentIndex.HasValue ? ParsePercent(row[originalBudgetMarginPercentIndex.Value]) : null,
                     OriginalBudgetExpenses = originalBudgetExpensesIndex.HasValue ? ParseDecimal(row[originalBudgetExpensesIndex.Value], 2) : null,
-                    ChargedHoursMercuryProjected = chargedHoursMercuryProjectedIndex.HasValue ? ParseDecimal(row[chargedHoursMercuryProjectedIndex.Value], 2) : null,
+                    ChargedHours = chargedHoursETDIndex.HasValue ? ParseDecimal(row[chargedHoursETDIndex.Value], 2) : null,
+                    FYTDHours = chargedHoursFYTDIndex.HasValue ? ParseDecimal(row[chargedHoursFYTDIndex.Value], 2) : null,
                     TERMercuryProjectedOppCurrency = termMercuryProjectedIndex.HasValue ? ParseDecimal(row[termMercuryProjectedIndex.Value], 2) : null,
-                    MarginPercentMercuryProjected = marginPercentMercuryProjectedIndex.HasValue ? ParsePercent(row[marginPercentMercuryProjectedIndex.Value]) : null,
-                    ExpensesMercuryProjected = expensesMercuryProjectedIndex.HasValue ? ParseDecimal(row[expensesMercuryProjectedIndex.Value], 2) : null,
+                    ToDateMargin = marginPercentETDIndex.HasValue ? ParsePercent(row[marginPercentETDIndex.Value]) : null,
+                    FYTDMargin = marginPercentFYTDIndex.HasValue ? ParsePercent(row[marginPercentFYTDIndex.Value]) : null,
+                    ExpensesToDate = expensesETDIndex.HasValue ? ParseDecimal(row[expensesETDIndex.Value], 2) : null,
+                    FYTDExpenses = expensesFYTDIndex.HasValue ? ParseDecimal(row[expensesFYTDIndex.Value], 2) : null,
                     StatusText = statusIndex.HasValue ? NormalizeWhitespace(Convert.ToString(row[statusIndex.Value], CultureInfo.InvariantCulture)) : string.Empty,
                     EtcpAgeDays = etcAgeDaysIndex.HasValue ? ParseInt(row[etcAgeDaysIndex.Value]) : null,
                     UnbilledRevenueDays = unbilledRevenueDaysIndex.HasValue ? ParseInt(row[unbilledRevenueDaysIndex.Value]) : null,
@@ -1531,15 +1586,23 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             ApplicationDbContext context,
             Engagement engagement,
             string closingPeriodId,
-            decimal? hours,
+            decimal? budgetHours,
+            decimal? chargedHours,
+            decimal? fytdHours,
             decimal? value,
-            decimal? margin,
-            decimal? expenses,
+            decimal? budgetMargin,
+            decimal? toDateMargin,
+            decimal? fytdMargin,
+            decimal? expenseBudget,
+            decimal? expensesToDate,
+            decimal? fytdExpenses,
             int? fiscalYearId = null,
             decimal? revenueToGoValue = null,
             decimal? revenueToDateValue = null)
         {
-            if (!hours.HasValue && !value.HasValue && !margin.HasValue && !expenses.HasValue && 
+            if (!budgetHours.HasValue && !chargedHours.HasValue && !fytdHours.HasValue &&
+                !value.HasValue && !budgetMargin.HasValue && !toDateMargin.HasValue && !fytdMargin.HasValue &&
+                !expenseBudget.HasValue && !expensesToDate.HasValue && !fytdExpenses.HasValue &&
                 !revenueToGoValue.HasValue && !revenueToDateValue.HasValue)
             {
                 return 0;
@@ -1561,10 +1624,17 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             }
 
             evolution.EngagementId = engagement.Id;
-            evolution.HoursData = hours;
+            evolution.BudgetHours = budgetHours;
+            evolution.ChargedHours = chargedHours;
+            evolution.FYTDHours = fytdHours;
+            evolution.AdditionalHours = null;
             evolution.ValueData = value;
-            evolution.MarginData = margin;
-            evolution.ExpenseData = expenses;
+            evolution.BudgetMargin = budgetMargin;
+            evolution.ToDateMargin = toDateMargin;
+            evolution.FYTDMargin = fytdMargin;
+            evolution.ExpenseBudget = expenseBudget;
+            evolution.ExpensesToDate = expensesToDate;
+            evolution.FYTDExpenses = fytdExpenses;
             evolution.FiscalYearId = fiscalYearId;
             evolution.RevenueToGoValue = revenueToGoValue;
             evolution.RevenueToDateValue = revenueToDateValue;
@@ -1587,10 +1657,13 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             public decimal? OriginalBudgetTer { get; init; }
             public decimal? OriginalBudgetMarginPercent { get; init; }
             public decimal? OriginalBudgetExpenses { get; init; }
-            public decimal? ChargedHoursMercuryProjected { get; init; }
+            public decimal? ChargedHours { get; init; }
+            public decimal? FYTDHours { get; init; }
             public decimal? TERMercuryProjectedOppCurrency { get; init; }
-            public decimal? MarginPercentMercuryProjected { get; init; }
-            public decimal? ExpensesMercuryProjected { get; init; }
+            public decimal? ToDateMargin { get; init; }
+            public decimal? FYTDMargin { get; init; }
+            public decimal? ExpensesToDate { get; init; }
+            public decimal? FYTDExpenses { get; init; }
             public string StatusText { get; init; } = string.Empty;
             public int? EtcpAgeDays { get; init; }
             public int? UnbilledRevenueDays { get; init; }
