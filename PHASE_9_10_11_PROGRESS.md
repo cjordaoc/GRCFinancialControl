@@ -1,9 +1,13 @@
 # Phase 9, 10, 11 - Comprehensive Solution Refactoring Progress
 
-## Scope
-Apply performance optimization (ConfigureAwait), documentation updates, and comprehensive code comments to the **entire solution** (excluding models and views) for both applications.
+## Scope (REVISED)
+Apply performance optimization (ConfigureAwait) and documentation to **service/library code only**.
 
-## Total Files to Process: 122+
+**Technical Rationale:** ConfigureAwait(false) should NOT be used in ViewModels/UI code as it breaks the UI synchronization context needed for ObservableProperty updates.
+
+## Total Files to Process: 88 (Core) + 64 (Optional)
+- **Core (ConfigureAwait + Docs):** 88 service/library files
+- **Optional (Docs only):** 64 ViewModels (lower priority)
 
 ### Phase 9: Performance Optimization
 - Add `ConfigureAwait(false)` to all async operations
@@ -53,22 +57,16 @@ Apply performance optimization (ConfigureAwait), documentation updates, and comp
 21. ⏳ DatabaseConnectionAvailability.cs
 22-57. ⏳ Infrastructure/, Importers/, Exporters/ subfolders
 
-### GRCFinancialControl.Avalonia/ViewModels (42 files)
+### GRCFinancialControl.Avalonia/ViewModels (42 files) - ⚠️ OPTIONAL
+
+**Decision:** Skip ConfigureAwait in ViewModels (breaks UI synchronization context).
+Documentation optional (lower priority than services).
 
 #### Completed ✅
-1. ✅ EngagementEditorViewModel.cs - Optimized UpdateLastClosingPeriodFromEntries
+1. ✅ EngagementEditorViewModel.cs - Optimized duplicate lookup (no ConfigureAwait)
 
-#### Pending ⏳
-2. ⏳ HomeViewModel.cs
-3. ⏳ ImportViewModel.cs
-4. ⏳ EngagementsViewModel.cs
-5. ⏳ CustomersViewModel.cs
-6. ⏳ FiscalYearsViewModel.cs
-7. ⏳ ClosingPeriodsViewModel.cs
-8. ⏳ PapdViewModel.cs
-9. ⏳ ManagersViewModel.cs
-10. ⏳ SettingsViewModel.cs
-11-42. ⏳ Remaining ViewModels
+#### Optional (Docs Only) ⏳
+2-42. ⏳ All ViewModels - Add XML docs if time permits (ConfigureAwait NOT applicable)
 
 ### GRCFinancialControl.Avalonia/Services (5 files)
 
@@ -79,14 +77,13 @@ Apply performance optimization (ConfigureAwait), documentation updates, and comp
 4. ⏳ ToastService.cs
 5. ⏳ ViewLocator.cs
 
-### InvoicePlanner.Avalonia/ViewModels (23 files)
+### InvoicePlanner.Avalonia/ViewModels (23 files) - ⚠️ OPTIONAL
 
-#### Pending ⏳
-1. ⏳ MainWindowViewModel.cs
-2. ⏳ PlanEditorViewModel.cs
-3. ⏳ RequestConfirmationViewModel.cs
-4. ⏳ EmissionConfirmationViewModel.cs
-5-23. ⏳ Remaining ViewModels
+**Decision:** Skip ConfigureAwait in ViewModels (breaks UI synchronization context).
+Documentation optional (lower priority than services).
+
+#### Optional (Docs Only) ⏳
+1-23. ⏳ All ViewModels - Add XML docs if time permits (ConfigureAwait NOT applicable)
 
 ### InvoicePlanner.Avalonia/Services (5 files)
 
@@ -104,13 +101,19 @@ Apply performance optimization (ConfigureAwait), documentation updates, and comp
 
 ## Completion Status
 
-- **Phase 9**: 4/122 files (3% complete)
-- **Phase 10**: 2/2 files (100% complete) ✅
-- **Phase 11**: 4/122 files (3% complete)
+**Core Scope (Services/Library Code):**
+- **Phase 9 (ConfigureAwait)**: 5/88 files (6% complete)
+- **Phase 10 (Documentation)**: 2/2 files (100% complete) ✅
+- **Phase 11 (XML Docs)**: 5/88 files (6% complete)
 
-**Overall Progress**: ~7% complete
+**Optional Scope (ViewModels - Docs Only):**
+- **Phase 11 (XML Docs)**: 0/64 files (deferred, lower priority)
 
-**Estimated Remaining Time**: 10-15 hours of systematic refactoring across remaining 118 files
+**Overall Core Progress**: ~6% complete (5/88 files)
+
+**Estimated Remaining Time**: 
+- Core scope: **6-8 hours** (83 service/library files)
+- Optional ViewModels: **3-4 hours** (if pursued)
 
 ---
 
