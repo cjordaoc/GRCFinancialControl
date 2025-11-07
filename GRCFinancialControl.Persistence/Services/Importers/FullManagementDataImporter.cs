@@ -598,9 +598,9 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
                             if (closingPeriodFound)
                             {
-                                if (row.ChargedHoursMercuryProjected.HasValue)
+                                if (row.ChargedHours.HasValue)
                                 {
-                                    engagement.EstimatedToCompleteHours = row.ChargedHoursMercuryProjected.Value;
+                                    engagement.EstimatedToCompleteHours = row.ChargedHours.Value;
                                 }
 
                                 if (row.TERMercuryProjectedOppCurrency.HasValue)
@@ -608,14 +608,14 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                     engagement.ValueEtcp = row.TERMercuryProjectedOppCurrency.Value;
                                 }
 
-                                if (row.MarginPercentMercuryProjected.HasValue)
+                                if (row.ToDateMargin.HasValue)
                                 {
-                                    engagement.MarginPctEtcp = row.MarginPercentMercuryProjected;
+                                    engagement.MarginPctEtcp = row.ToDateMargin;
                                 }
 
-                                if (row.ExpensesMercuryProjected.HasValue)
+                                if (row.ExpensesToDate.HasValue)
                                 {
-                                    engagement.ExpensesEtcp = row.ExpensesMercuryProjected.Value;
+                                    engagement.ExpensesEtcp = row.ExpensesToDate.Value;
                                 }
 
                                 if (row.UnbilledRevenueDays.HasValue)
