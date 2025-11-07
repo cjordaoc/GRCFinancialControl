@@ -22,6 +22,15 @@
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
             <StackPanel Spacing="{StaticResource SectionSpacing}">
                 <TextBlock Text="{Binding Engagement.Description}" Classes="TitleMedium"/>
+                
+                <!-- Closing Period Display -->
+                <StackPanel Orientation="Horizontal" Spacing="{StaticResource SpacingUnit}">
+                    <TextBlock Text="Closing Period:" 
+                               FontWeight="{StaticResource FontWeightSemiBold}"
+                               VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding ClosingPeriodName}" 
+                               VerticalAlignment="Center"/>
+                </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Spacing="{StaticResource ControlSpacing}" VerticalAlignment="Center">
                     <TextBlock Text="{Binding TargetLabel}" FontWeight="{StaticResource FontWeightSemiBold}"/>
@@ -43,6 +52,13 @@
                            Foreground="{StaticResource BrushWarning}"
                            FontWeight="{StaticResource FontWeightSemiBold}"
                            IsVisible="{Binding HasAllocationVariance}"/>
+                
+                <!-- Copy from Previous Button -->
+                <Button Content="Copy from Previous Period"
+                        Command="{Binding CopyFromPreviousPeriodCommand}"
+                        IsVisible="{Binding AllowEditing}"
+                        ToolTip.Tip="Copy allocation values from the latest previous closing period"
+                        HorizontalAlignment="Left"/>
 
                 <DataGrid ItemsSource="{Binding Allocations}"
                           AutoGenerateColumns="False"
@@ -89,7 +105,46 @@
                         </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
-                <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource BrushWarning}"/>
+                
+                <TextBlock Text="{Binding StatusMessage}" 
+                           Foreground="{StaticResource BrushWarning}"
+                           IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                
+                <!-- Discrepancy Display -->
+                <Border IsVisible="{Binding HasDiscrepancies}"
+                        Background="{StaticResource BrushWarningHighlight}"
+                        BorderBrush="{StaticResource BrushWarning}"
+                        BorderThickness="1"
+                        CornerRadius="4"
+                        Padding="{StaticResource ControlPadding}">
+                    <StackPanel Spacing="{StaticResource SpacingUnit}">
+                        <TextBlock Text="⚠️ Revenue Allocation Discrepancies"
+                                   FontWeight="{StaticResource FontWeightSemiBold}"
+                                   Foreground="{StaticResource BrushWarning}"/>
+                        <TextBlock Text="Your allocations differ from imported values. Please review:"
+                                   TextWrapping="Wrap"/>
+                        <ItemsControl ItemsSource="{Binding Discrepancies.RevenueDiscrepancies}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Spacing="2" Margin="0,4">
+                                        <TextBlock FontWeight="{StaticResource FontWeightSemiBold}">
+                                            <Run Text="{Binding Category}"/>
+                                            <Run Text=" - "/>
+                                            <Run Text="{Binding FiscalYearName}"/>
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding Message}" TextWrapping="Wrap"/>
+                                        <TextBlock>
+                                            <Run Text="Variance: "/>
+                                            <Run Text="{Binding Variance, StringFormat='{}{0:N2}'}" 
+                                                 Foreground="{StaticResource BrushWarning}"
+                                                 FontWeight="{StaticResource FontWeightSemiBold}"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </ScrollViewer>
         <StackPanel Grid.Row="1"

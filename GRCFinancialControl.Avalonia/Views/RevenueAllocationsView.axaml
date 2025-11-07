@@ -20,11 +20,27 @@
                                       FalseBrush="{StaticResource BrushSuccessDark}"/>
         <appConv:CurrencyDisplayConverter x:Key="CurrencyDisplayConverter"/>
     </UserControl.Resources>
-    <Grid RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,Auto,*">
         <TextBlock Text="{Binding Header}"
                    Classes="TitleMedium"
                    Margin="{StaticResource CardPaddingThickness}"/>
-        <DataGrid Grid.Row="1" ItemsSource="{Binding Engagements}" AutoGenerateColumns="False" IsReadOnly="True" CanUserResizeColumns="True" CanUserSortColumns="True">
+        
+        <!-- Closing Period Selector -->
+        <StackPanel Grid.Row="1" 
+                    Orientation="Horizontal" 
+                    Spacing="{StaticResource ControlSpacing}"
+                    Margin="{StaticResource CardPaddingThickness}">
+            <TextBlock Text="Closing Period:" 
+                       VerticalAlignment="Center"
+                       FontWeight="{StaticResource FontWeightSemiBold}"/>
+            <ComboBox Width="250"
+                      ItemsSource="{Binding ClosingPeriods}"
+                      SelectedItem="{Binding SelectedClosingPeriod}"
+                      DisplayMemberBinding="{Binding Name}"
+                      ToolTip.Tip="Select the closing period to view/edit allocations"/>
+        </StackPanel>
+        
+        <DataGrid Grid.Row="2" ItemsSource="{Binding Engagements}" AutoGenerateColumns="False" IsReadOnly="True" CanUserResizeColumns="True" CanUserSortColumns="True">
             <DataGrid.Columns>
                 <DataGridTemplateColumn Header="Engagement ID" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
