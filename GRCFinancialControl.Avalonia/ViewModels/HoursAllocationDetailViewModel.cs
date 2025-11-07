@@ -12,6 +12,7 @@ using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
+using GRCFinancialControl.Persistence.Services.Importers;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
@@ -23,7 +24,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         private readonly IEngagementService _engagementService;
         private readonly IHoursAllocationService _hoursAllocationService;
-        private readonly IImportService _importService;
+        private readonly AllocationPlanningImporter _allocationImporter;
         private readonly FilePickerService _filePickerService;
         private readonly LoggingService _loggingService;
         private readonly DialogService _dialogService;
@@ -136,7 +137,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         /// </summary>
         /// <param name="engagementService">Provides engagement retrieval operations.</param>
         /// <param name="hoursAllocationService">Persists hours allocation edits.</param>
-        /// <param name="importService">Manages import scenarios triggered by the view.</param>
+        /// <param name="allocationImporter">Handles allocation planning and history imports.</param>
         /// <param name="filePickerService">Supplies file picking dialogs.</param>
         /// <param name="loggingService">Records error and information logs.</param>
         /// <param name="dialogService">Shows user confirmation dialogs.</param>
@@ -146,7 +147,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public HoursAllocationDetailViewModel(
             IEngagementService engagementService,
             IHoursAllocationService hoursAllocationService,
-            IImportService importService,
+            AllocationPlanningImporter allocationImporter,
             FilePickerService filePickerService,
             LoggingService loggingService,
             DialogService dialogService,
@@ -157,7 +158,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             _engagementService = engagementService ?? throw new ArgumentNullException(nameof(engagementService));
             _hoursAllocationService = hoursAllocationService ?? throw new ArgumentNullException(nameof(hoursAllocationService));
-            _importService = importService ?? throw new ArgumentNullException(nameof(importService));
+            _allocationImporter = allocationImporter ?? throw new ArgumentNullException(nameof(allocationImporter));
             _filePickerService = filePickerService ?? throw new ArgumentNullException(nameof(filePickerService));
             _loggingService = loggingService ?? throw new ArgumentNullException(nameof(loggingService));
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
@@ -428,7 +429,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 StatusMessage = null;
 
                 var closingPeriodId = SelectedClosingPeriod.Id;
-                var summary = await Task.Run(() => _importService.UpdateStaffAllocationsAsync(filePath, closingPeriodId)).ConfigureAwait(false);
+                var summary = await Task.Run(() => _allocationImporter.UpdateHistoryAsync(filePath, closingPeriodId)).ConfigureAwait(false);
 
                 if (selectedId.HasValue)
                 {

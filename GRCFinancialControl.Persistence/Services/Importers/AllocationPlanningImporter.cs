@@ -8,13 +8,15 @@ using Microsoft.Extensions.Logging;
 namespace GRCFinancialControl.Persistence.Services.Importers
 {
     /// <summary>
-    /// Imports allocation planning Excel workbooks for staff assignment forecasts.
+    /// Imports allocation planning and staff allocation workbooks.
+    /// Handles BOTH allocation planning (live budgets) and historical snapshots.
     /// Inherits from ImportServiceBase for common Excel loading functionality.
     /// 
-    /// Updates:
-    /// - SimplifiedStaffAllocation (planned assignments per engagement/week)
+    /// Processes "Alocações_Staff" worksheet for:
+    /// 1. ImportAsync(filePath) - Updates EngagementRankBudgets (live planning data)
+    /// 2. UpdateHistoryAsync(filePath, closingPeriodId) - Updates EngagementRankBudgetHistory (period snapshots)
     /// 
-    /// TODO: Extract full Allocation Planning import logic from ImportService (currently delegates)
+    /// TODO: Extract full logic from ImportService (currently delegates for Phase 1)
     /// </summary>
     public sealed class AllocationPlanningImporter : ImportServiceBase
     {
@@ -31,9 +33,11 @@ namespace GRCFinancialControl.Persistence.Services.Importers
         }
 
         /// <summary>
-        /// Imports allocation planning data from Excel workbook.
-        /// Currently delegates to legacy ImportService for full implementation.
+        /// Imports allocation planning data and updates live EngagementRankBudgets.
+        /// Processes "Alocações_Staff" worksheet.
         /// </summary>
+        /// <param name="filePath">Path to Excel workbook</param>
+        /// <returns>Import summary message</returns>
         public async Task<string> ImportAsync(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
@@ -49,10 +53,47 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             Logger.LogInformation("Allocation Planning import started for file: {FilePath}", filePath);
 
             // Delegate to legacy ImportService  
-            // TODO: Extract and implement Allocation Planning logic directly here
+            // TODO: Extract and implement full logic directly here
             var result = await _legacyImportService.ImportAllocationPlanningAsync(filePath).ConfigureAwait(false);
 
             Logger.LogInformation("Allocation Planning import completed successfully");
+            return result;
+        }
+
+        /// <summary>
+        /// Updates staff allocation history for a specific closing period.
+        /// Processes "Alocações_Staff" worksheet and creates historical snapshots.
+        /// </summary>
+        /// <param name="filePath">Path to Excel workbook</param>
+        /// <param name="closingPeriodId">Closing period identifier for historical snapshot</param>
+        /// <returns>Update summary message</returns>
+        public async Task<string> UpdateHistoryAsync(string filePath, int closingPeriodId)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                throw new ArgumentException("File path must be provided.", nameof(filePath));
+            }
+
+            if (!File.Exists(filePath))
+            {
+                throw new FileNotFoundException("Staff allocation workbook could not be found.", filePath);
+            }
+
+            if (closingPeriodId <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(closingPeriodId), closingPeriodId, 
+                    "Closing period identifier must be positive.");
+            }
+
+            Logger.LogInformation(
+                "Staff Allocation history update started for file: {FilePath}, closing period: {ClosingPeriodId}", 
+                filePath, closingPeriodId);
+
+            // Delegate to legacy ImportService
+            // TODO: Extract and implement UpdateStaffAllocationsAsync logic directly here
+            var result = await _legacyImportService.UpdateStaffAllocationsAsync(filePath, closingPeriodId).ConfigureAwait(false);
+
+            Logger.LogInformation("Staff Allocation history update completed successfully");
             return result;
         }
     }
