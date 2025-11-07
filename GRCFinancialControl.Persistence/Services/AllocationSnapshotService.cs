@@ -441,14 +441,17 @@ namespace GRCFinancialControl.Persistence.Services
         }
 
         /// <summary>
-        /// Synchronizes revenue allocations to Financial Evolution snapshot.
-        /// Updates RevenueToGoValue and RevenueToDateValue fields.
+        /// Gets or creates a FinancialEvolution snapshot for the given engagement and closing period.
+        /// Implements the "get or create" pattern to avoid code duplication.
         /// </summary>
-        private static async Task SyncRevenueToFinancialEvolutionAsync(
+        /// <param name="context">Database context</param>
+        /// <param name="engagementId">Engagement identifier</param>
+        /// <param name="closingPeriodId">Closing period identifier</param>
+        /// <returns>Existing or newly created FinancialEvolution entity</returns>
+        private static async Task<FinancialEvolution> GetOrCreateFinancialEvolutionAsync(
             ApplicationDbContext context,
             int engagementId,
-            int closingPeriodId,
-            List<EngagementFiscalYearRevenueAllocation> allocations)
+            int closingPeriodId)
         {
             var closingPeriodIdStr = closingPeriodId.ToString();
 
@@ -459,7 +462,6 @@ namespace GRCFinancialControl.Persistence.Services
 
             if (evolution == null)
             {
-                // Create new Financial Evolution snapshot if it doesn't exist
                 evolution = new FinancialEvolution
                 {
                     EngagementId = engagementId,
@@ -467,6 +469,22 @@ namespace GRCFinancialControl.Persistence.Services
                 };
                 context.FinancialEvolutions.Add(evolution);
             }
+
+            return evolution;
+        }
+
+        /// <summary>
+        /// Synchronizes revenue allocations to Financial Evolution snapshot.
+        /// Updates RevenueToGoValue and RevenueToDateValue fields.
+        /// </summary>
+        private static async Task SyncRevenueToFinancialEvolutionAsync(
+            ApplicationDbContext context,
+            int engagementId,
+            int closingPeriodId,
+            List<EngagementFiscalYearRevenueAllocation> allocations)
+        {
+            var evolution = await GetOrCreateFinancialEvolutionAsync(context, engagementId, closingPeriodId)
+                .ConfigureAwait(false);
 
             // Update revenue fields
             evolution.RevenueToGoValue = allocations.Sum(a => a.ToGoValue);
@@ -483,23 +501,8 @@ namespace GRCFinancialControl.Persistence.Services
             int closingPeriodId,
             List<EngagementRankBudget> budgets)
         {
-            var closingPeriodIdStr = closingPeriodId.ToString();
-
-            var evolution = await context.FinancialEvolutions
-                .FirstOrDefaultAsync(fe => fe.EngagementId == engagementId &&
-                                          fe.ClosingPeriodId == closingPeriodIdStr)
+            var evolution = await GetOrCreateFinancialEvolutionAsync(context, engagementId, closingPeriodId)
                 .ConfigureAwait(false);
-
-            if (evolution == null)
-            {
-                // Create new Financial Evolution snapshot if it doesn't exist
-                evolution = new FinancialEvolution
-                {
-                    EngagementId = engagementId,
-                    ClosingPeriodId = closingPeriodIdStr
-                };
-                context.FinancialEvolutions.Add(evolution);
-            }
 
             // Update hours fields
             evolution.BudgetHours = budgets.Sum(b => b.BudgetHours);

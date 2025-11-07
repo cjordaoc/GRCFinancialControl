@@ -53,6 +53,9 @@
                     </MenuFlyout>
                 </SplitButton.Flyout>
             </SplitButton>
+            <Button Content="Copy from Previous Period"
+                    Command="{Binding CopyFromPreviousPeriodAsyncCommand}"
+                    ToolTip.Tip="Copy hours allocations from the latest previous closing period"/>
         </StackPanel>
 
         <StackPanel Grid.Row="3"
@@ -64,11 +67,34 @@
             <TextBlock Text="{Binding ToBeConsumedHours, StringFormat='Remaining Hours: {0:N2} h'}"/>
         </StackPanel>
 
-        <TextBlock Grid.Row="4"
-                   Text="{Binding StatusMessage}"
-                   Foreground="{StaticResource BrushWarning}"
-                   FontWeight="{StaticResource FontWeightSemiBold}"
-                   Margin="{StaticResource CardPaddingThickness}"/>
+        <StackPanel Grid.Row="4" Margin="{StaticResource CardPaddingThickness}" Spacing="{StaticResource SpacingUnit}">
+            <TextBlock Text="{Binding StatusMessage}"
+                       Foreground="{StaticResource BrushWarning}"
+                       FontWeight="{StaticResource FontWeightSemiBold}"/>
+            
+            <!-- Discrepancy Display -->
+            <Border IsVisible="{Binding HasDiscrepancies}"
+                    Background="{StaticResource BrushWarningHighlight}"
+                    BorderBrush="{StaticResource BrushWarning}"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Padding="{StaticResource ControlPadding}">
+                <StackPanel Spacing="{StaticResource SpacingUnit}">
+                    <TextBlock Text="⚠️ Allocation Discrepancies Detected"
+                               FontWeight="{StaticResource FontWeightSemiBold}"
+                               Foreground="{StaticResource BrushWarning}"/>
+                    <ItemsControl ItemsSource="{Binding Discrepancies.HoursDiscrepancies}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Message}" 
+                                           TextWrapping="Wrap"
+                                           Margin="0,2"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </StackPanel>
 
         <DataGrid x:Name="HoursAllocationsGrid"
                   Grid.Row="5"

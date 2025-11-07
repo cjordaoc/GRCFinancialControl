@@ -107,10 +107,12 @@ namespace GRCFinancialControl.Persistence.Services
         /// Imports a budget workbook. Delegates to BudgetImporter.
         /// Phase 3: Fully extracted to Budget/BudgetImporter.cs
         /// </summary>
-        public async Task<string> ImportBudgetAsync(string filePath)
+        /// <param name="filePath">Path to the budget workbook.</param>
+        /// <param name="closingPeriodId">Optional closing period ID. If not provided, uses the latest closing period.</param>
+        public async Task<string> ImportBudgetAsync(string filePath, int? closingPeriodId = null)
         {
             _logger.LogInformation("Delegating budget import to BudgetImporter for file: {FilePath}", filePath);
-            return await _budgetImporter.ImportAsync(filePath).ConfigureAwait(false);
+            return await _budgetImporter.ImportAsync(filePath, closingPeriodId).ConfigureAwait(false);
         }
 
         // ============================================================================
