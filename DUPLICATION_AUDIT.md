@@ -145,23 +145,27 @@ public string FalseResourceKey { get; set; } = "ThemeForegroundBrush";
 
 | Item | Type | Status | Action | Priority | Effort | Lines Saved |
 |------|------|--------|--------|----------|--------|-------------|
-| PercentageOfSizeConverter | Converter | 🔴 Triplicate | Delete 2 copies | **HIGH** | 15 min | 88 lines |
+| PercentageOfSizeConverter | Converter | ✅ **COMPLETE** | Deleted 2 copies | **HIGH** | 15 min | **88 lines** |
+| BoolToBrushConverter | Converter | ✅ **COMPLETE** | Renamed for clarity | **LOW** | 5 min | 0 lines |
 | DialogService | Service | 🟡 Near-duplicate | Merge or extract base | **MEDIUM** | 1-2 hours | 85 lines |
-| BoolToBrushConverter | Converter | 🟠 Different impls | Rename for clarity | **LOW** | 5 min | 0 lines |
 | FilePickerService | Service | ✅ Shared | No action | — | — | — |
 | ToastService | Service | ✅ Shared | No action | — | — | — |
 
-**Total Potential Savings:** ~173 lines of duplicate code
+**Total Potential Savings:** ~173 lines  
+**Completed:** 88 lines (51%)  
+**Remaining:** 85 lines (DialogService consolidation deferred)
 
 ---
 
 ## 🎯 Recommended Execution Order
 
-### Phase 1: Quick Wins (30 minutes)
-1. ✅ Consolidate `PercentageOfSizeConverter` → App.Presentation only
-2. ✅ Update XAML references in both apps to use shared converter
-3. ✅ Delete duplicate converter files
-4. ✅ Rename `BoolToBrushConverter` → `BoolToThemeResourceBrushConverter` for clarity
+### Phase 1: Quick Wins ✅ **COMPLETE**
+1. ✅ Consolidated `PercentageOfSizeConverter` → App.Presentation only
+2. ✅ XAML already referenced App.Presentation (no changes needed)
+3. ✅ Deleted 2 duplicate converter files (88 lines saved)
+4. ✅ Renamed `BoolToBrushConverter` → `BoolToThemeResourceBrushConverter`
+5. ✅ Updated class_interfaces_catalog.md
+6. ✅ Committed: `81947f8` - "refactor: Consolidate duplicate converters"
 
 ### Phase 2: DialogService Consolidation (1-2 hours)
 **Option A: Base Class Extraction (Recommended)**
