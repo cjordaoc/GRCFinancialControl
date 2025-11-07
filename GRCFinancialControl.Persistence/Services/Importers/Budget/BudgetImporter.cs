@@ -955,7 +955,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers.Budget
                 if (existing != null)
                 {
                     existing.BudgetHours = budget.Hours;
-                    existing.UpdatedAt = snapshotTimestamp;
+                    existing.UpdatedAtUtc = snapshotTimestamp;
                 }
                 else
                 {
@@ -964,8 +964,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers.Budget
                         RankName = budget.RankName,
                         BudgetHours = budget.Hours,
                         FiscalYearId = firstFiscalYear.Id,
-                        CreatedAt = snapshotTimestamp,
-                        UpdatedAt = snapshotTimestamp
+                        CreatedAtUtc = snapshotTimestamp,
+                        UpdatedAtUtc = snapshotTimestamp
                     });
                     insertedCount++;
                 }

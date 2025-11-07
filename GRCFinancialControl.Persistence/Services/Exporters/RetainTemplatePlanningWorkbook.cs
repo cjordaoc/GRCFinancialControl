@@ -299,8 +299,8 @@ internal static class RetainTemplatePlanningWorkbook
             return false;
         }
 
-        // Use DataNormalizationService.ExtractEngagementCode()
-        engagementCode = ExtractEngagementCode(text);
+        // Use DataNormalizationService.TryExtractEngagementCode()
+        engagementCode = TryExtractEngagementCode(text) ?? string.Empty;
         if (string.IsNullOrEmpty(engagementCode))
         {
             return false;

@@ -12,6 +12,7 @@ using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Extensions;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Importers;
+using GRCFinancialControl.Persistence.Services.Importers.Budget;
 using GRCFinancialControl.Persistence.Services.Importers.StaffAllocations;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using GRCFinancialControl.Persistence.Services.Infrastructure;
@@ -49,6 +50,7 @@ namespace GRCFinancialControl.Persistence.Services
         private readonly ILoggerFactory _loggerFactory;
         private readonly IFiscalCalendarConsistencyService _fiscalCalendarConsistencyService;
         private readonly IFullManagementDataImporter _fullManagementDataImporter;
+        private readonly BudgetImporter _budgetImporter;
         private const int FcsHeaderSearchLimit = 20;
         private const int FcsDataStartRowIndex = 11; // Default row 12 in Excel (1-based)
         private const int FullManagementHeaderRowIndex = 10;
@@ -82,36 +84,43 @@ namespace GRCFinancialControl.Persistence.Services
             ILogger<ImportService> logger,
             ILoggerFactory loggerFactory,
             IFiscalCalendarConsistencyService fiscalCalendarConsistencyService,
-            IFullManagementDataImporter fullManagementDataImporter)
+            IFullManagementDataImporter fullManagementDataImporter,
+            BudgetImporter budgetImporter)
         {
             ArgumentNullException.ThrowIfNull(contextFactory);
             ArgumentNullException.ThrowIfNull(logger);
             ArgumentNullException.ThrowIfNull(loggerFactory);
             ArgumentNullException.ThrowIfNull(fiscalCalendarConsistencyService);
             ArgumentNullException.ThrowIfNull(fullManagementDataImporter);
+            ArgumentNullException.ThrowIfNull(budgetImporter);
 
             _contextFactory = contextFactory;
             _logger = logger;
             _loggerFactory = loggerFactory;
             _fiscalCalendarConsistencyService = fiscalCalendarConsistencyService;
             _fullManagementDataImporter = fullManagementDataImporter;
+            _budgetImporter = budgetImporter;
         }
 
+        /// <summary>
+        /// Imports a budget workbook. Delegates to BudgetImporter.
+        /// Phase 2: Fully extracted - no longer embedded in ImportService.
+        /// </summary>
         public async Task<string> ImportBudgetAsync(string filePath)
         {
-            if (string.IsNullOrWhiteSpace(filePath))
-            {
-                throw new ArgumentException("File path must be provided.", nameof(filePath));
-            }
+            _logger.LogInformation("Delegating budget import to BudgetImporter");
+            return await _budgetImporter.ImportAsync(filePath).ConfigureAwait(false);
+        }
 
-            if (!File.Exists(filePath))
-            {
-                throw new FileNotFoundException("Budget workbook could not be found.", filePath);
-            }
+        // All Budget-related helper methods extracted to BudgetImporter class
 
-            await _fiscalCalendarConsistencyService.EnsureConsistencyAsync().ConfigureAwait(false);
+        private static IWorksheet ResolveResourcingWorksheet_OLD_REMOVED(WorkbookData workbook)
+        {
+            // REMOVED: Extracted to BudgetImporter
+            throw new NotImplementedException("Extracted to BudgetImporter");
+        }
 
-            using var workbook = LoadWorkbook(filePath);
+        private static IWorksheet ResolveResourcingWorksheet_TO_DELETE_OLD(WorkbookData workbook)
 
             var planInfo = workbook.GetWorksheet("PLAN INFO") ??
                            throw new InvalidDataException("Worksheet 'PLAN INFO' is missing from the budget workbook.");
