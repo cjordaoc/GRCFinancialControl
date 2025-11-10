@@ -74,8 +74,10 @@ CREATE TABLE `Papds`
     `Name`  VARCHAR(200) NOT NULL,
     `Level` VARCHAR(100) NOT NULL,
     `WindowsLogin` VARCHAR(200) NULL,
+    `EngagementPapdGUI` VARCHAR(100) NULL,
     CONSTRAINT `PK_Papds` PRIMARY KEY (`Id`),
-    CONSTRAINT `UQ_Papds_WindowsLogin` UNIQUE (`WindowsLogin`)
+    CONSTRAINT `UQ_Papds_WindowsLogin` UNIQUE (`WindowsLogin`),
+    CONSTRAINT `UQ_Papds_EngagementPapdGUI` UNIQUE (`EngagementPapdGUI`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 CREATE TABLE `Managers`
@@ -85,9 +87,11 @@ CREATE TABLE `Managers`
     `Email`    VARCHAR(254)  NOT NULL,
     `Position` VARCHAR(50)   NOT NULL,
     `WindowsLogin` VARCHAR(200) NULL,
+    `EngagementManagerGUI` VARCHAR(100) NULL,
     CONSTRAINT `PK_Managers` PRIMARY KEY (`Id`),
     CONSTRAINT `UQ_Managers_Email` UNIQUE (`Email`),
-    CONSTRAINT `UQ_Managers_WindowsLogin` UNIQUE (`WindowsLogin`)
+    CONSTRAINT `UQ_Managers_WindowsLogin` UNIQUE (`WindowsLogin`),
+    CONSTRAINT `UQ_Managers_EngagementManagerGUI` UNIQUE (`EngagementManagerGUI`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `RankMappings`
