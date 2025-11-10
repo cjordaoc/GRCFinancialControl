@@ -129,6 +129,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<Func<EngagementAssignmentViewModel>>(provider => () => provider.GetRequiredService<EngagementAssignmentViewModel>());
         services.AddTransient<PapdSelectionViewModel>();
         services.AddTransient<PapdEngagementAssignmentViewModel>();
+        services.AddTransient<ManagerSelectionViewModel>();
 
         return services;
     }

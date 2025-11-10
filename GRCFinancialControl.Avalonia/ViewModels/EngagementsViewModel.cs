@@ -216,6 +216,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 fullEngagement,
                 _engagementService,
                 _managerService,
+                _managerAssignmentService,
                 Messenger);
 
             await selectionViewModel.LoadDataAsync();
