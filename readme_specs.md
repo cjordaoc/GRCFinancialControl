@@ -134,7 +134,7 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
   2. `BuildFinancialEvolutionSortKey` orders snapshots by closing period (resolved date or numeric ID).
   3. **Only the latest snapshot is applied** to the engagement entity:
      - `InitialHoursBudget = latest.BudgetHours`
-     - `OpeningValue = latest.ValueData`
+     - `OpeningValue` is preserved from the Full Allocation Data import (column JO) and is not overwritten by Full Management snapshots
      - `OpeningExpenses = latest.ExpenseBudget`
      - `MarginPctBudget = latest.BudgetMargin`
      - `EstimatedToCompleteHours = latest.ChargedHours`
