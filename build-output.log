@@ -1,0 +1,22 @@
+  Determining projects to restore...
+  Restored /workspace/App.Presentation/App.Presentation.csproj (in 267 ms).
+  Restored /workspace/InvoicePlanner.Avalonia/InvoicePlanner.Avalonia.csproj (in 188 ms).
+  Restored /workspace/GRCFinancialControl.Avalonia.Tests/GRCFinancialControl.Avalonia.Tests.csproj (in 258 ms).
+  Restored /workspace/GRCFinancialControl.Avalonia/GRCFinancialControl.Avalonia.csproj (in 312 ms).
+  6 of 10 projects are up-to-date for restore.
+  GRCFinancialControl.Core -> /workspace/GRCFinancialControl.Core/bin/Release/net8.0/GRCFinancialControl.Core.dll
+  GRC.Shared.Resources -> /workspace/GRC.Shared/GRC.Shared.Resources/bin/Release/net8.0/GRC.Shared.Resources.dll
+  GRC.Shared.UI -> /workspace/GRC.Shared/GRC.Shared.UI/bin/Release/net8.0/GRC.Shared.UI.dll
+  Invoices.Core -> /workspace/Invoices.Core/bin/Release/net8.0/Invoices.Core.dll
+  GRCFinancialControl.Persistence -> /workspace/GRCFinancialControl.Persistence/bin/Release/net8.0/GRCFinancialControl.Persistence.dll
+  App.Presentation -> /workspace/App.Presentation/bin/Release/net8.0/App.Presentation.dll
+  Invoices.Data -> /workspace/Invoices.Data/bin/Release/net8.0/Invoices.Data.dll
+  GRCFinancialControl.Avalonia -> /workspace/GRCFinancialControl.Avalonia/bin/Release/net8.0/GRCFinancialControl.Avalonia.dll
+  InvoicePlanner.Avalonia -> /workspace/InvoicePlanner.Avalonia/bin/Release/net8.0/InvoicePlanner.Avalonia.dll
+  GRCFinancialControl.Avalonia.Tests -> /workspace/GRCFinancialControl.Avalonia.Tests/bin/Release/net8.0/GRCFinancialControl.Avalonia.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:23.40

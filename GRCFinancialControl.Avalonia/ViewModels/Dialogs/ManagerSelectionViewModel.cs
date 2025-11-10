@@ -17,6 +17,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
     {
         private readonly IEngagementService _engagementService;
         private readonly IManagerService _managerService;
+        private readonly IManagerAssignmentService _managerAssignmentService;
         private readonly Engagement _engagement;
 
         [ObservableProperty]
@@ -28,12 +29,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             Engagement engagement,
             IEngagementService engagementService,
             IManagerService managerService,
+            IManagerAssignmentService managerAssignmentService,
             IMessenger messenger)
             : base(messenger)
         {
             _engagement = engagement ?? throw new ArgumentNullException(nameof(engagement));
             _engagementService = engagementService ?? throw new ArgumentNullException(nameof(engagementService));
             _managerService = managerService ?? throw new ArgumentNullException(nameof(managerService));
+            _managerAssignmentService = managerAssignmentService ?? throw new ArgumentNullException(nameof(managerAssignmentService));
         }
 
         public override async Task LoadDataAsync()
@@ -64,67 +67,23 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             var selectedManagerIds = AvailableManagers
                 .Where(m => m.IsSelected)
                 .Select(m => m.Manager.Id)
-                .ToHashSet();
-
-            var fullEngagement = await _engagementService.GetByIdAsync(_engagement.Id);
-            if (fullEngagement is null)
-            {
-                ToastService.ShowError(
-                    "FINC_Admin_ManagerAssignments_Toast_OperationFailed",
-                    LocalizationRegistry.Get("FINC_Admin_ManagerAssignments_Error_EngagementMissing"));
-                return;
-            }
-
-            var assignedManagerIds = fullEngagement.ManagerAssignments.Select(a => a.ManagerId).ToHashSet();
-            var newAssignments = selectedManagerIds.Except(assignedManagerIds).ToList();
-            var removedAssignments = fullEngagement.ManagerAssignments
-                .Where(a => !selectedManagerIds.Contains(a.ManagerId))
                 .ToList();
-
-            if (newAssignments.Count == 0 && removedAssignments.Count == 0)
-            {
-                Messenger.Send(new CloseDialogMessage(false));
-                return;
-            }
-
-            foreach (var managerId in newAssignments)
-            {
-                fullEngagement.ManagerAssignments.Add(new EngagementManagerAssignment
-                {
-                    EngagementId = fullEngagement.Id,
-                    ManagerId = managerId
-                });
-            }
-
-            foreach (var assignment in removedAssignments)
-            {
-                fullEngagement.ManagerAssignments.Remove(assignment);
-            }
 
             try
             {
-                await _engagementService.UpdateAsync(fullEngagement);
-                var engagementDisplay = fullEngagement.EngagementId ?? fullEngagement.Description;
+                // Use the dedicated service for updating manager assignments
+                await _managerAssignmentService.UpdateAssignmentsForEngagementAsync(_engagement.Id, selectedManagerIds);
 
-                if (newAssignments.Count > 0)
-                {
-                    ToastService.ShowSuccess(
-                        "FINC_Admin_ManagerAssignments_Toast_SaveSuccess",
-                        string.Join(", ", AvailableManagers
-                            .Where(m => newAssignments.Contains(m.Manager.Id))
-                            .Select(m => m.Manager.Name)),
-                        engagementDisplay);
-                }
+                var engagement = await _engagementService.GetByIdAsync(_engagement.Id);
+                var engagementDisplay = engagement?.EngagementId ?? engagement?.Description ?? _engagement.Description;
 
-                if (removedAssignments.Count > 0)
-                {
-                    ToastService.ShowSuccess(
-                        "FINC_Admin_ManagerAssignments_Toast_DeleteSuccess",
-                        string.Join(", ", removedAssignments
-                            .Select(a => AvailableManagers.FirstOrDefault(m => m.Manager.Id == a.ManagerId)?.Manager.Name)
-                            .Where(name => !string.IsNullOrWhiteSpace(name))),
-                        engagementDisplay);
-                }
+                ToastService.ShowSuccess(
+                    "FINC_Admin_ManagerAssignments_Toast_SaveSuccess",
+                    string.Join(", ", AvailableManagers
+                        .Where(m => m.IsSelected)
+                        .Select(m => m.Manager.Name)),
+                    engagementDisplay);
+
                 Messenger.Send(new CloseDialogMessage(true));
             }
             catch (Exception ex)

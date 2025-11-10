@@ -17,6 +17,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
     {
         private readonly IEngagementService _engagementService;
         private readonly IPapdService _papdService;
+        private readonly IPapdAssignmentService _papdAssignmentService;
         private readonly Engagement _engagement;
 
         [ObservableProperty]
@@ -28,12 +29,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             Engagement engagement,
             IEngagementService engagementService,
             IPapdService papdService,
+            IPapdAssignmentService papdAssignmentService,
             IMessenger messenger)
             : base(messenger)
         {
             _engagement = engagement ?? throw new ArgumentNullException(nameof(engagement));
             _engagementService = engagementService ?? throw new ArgumentNullException(nameof(engagementService));
             _papdService = papdService ?? throw new ArgumentNullException(nameof(papdService));
+            _papdAssignmentService = papdAssignmentService ?? throw new ArgumentNullException(nameof(papdAssignmentService));
         }
 
         public override async Task LoadDataAsync()
@@ -64,67 +67,23 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             var selectedPapdIds = AvailablePapds
                 .Where(p => p.IsSelected)
                 .Select(p => p.Papd.Id)
-                .ToHashSet();
-
-            var fullEngagement = await _engagementService.GetByIdAsync(_engagement.Id);
-            if (fullEngagement is null)
-            {
-                ToastService.ShowError(
-                    "FINC_Admin_PapdAssignments_Toast_OperationFailed",
-                    LocalizationRegistry.Get("FINC_Admin_PapdAssignments_Error_EngagementMissing"));
-                return;
-            }
-
-            var assignedPapdIds = fullEngagement.EngagementPapds.Select(a => a.PapdId).ToHashSet();
-            var newAssignments = selectedPapdIds.Except(assignedPapdIds).ToList();
-            var removedAssignments = fullEngagement.EngagementPapds
-                .Where(a => !selectedPapdIds.Contains(a.PapdId))
                 .ToList();
-
-            if (newAssignments.Count == 0 && removedAssignments.Count == 0)
-            {
-                Messenger.Send(new CloseDialogMessage(false));
-                return;
-            }
-
-            foreach (var papdId in newAssignments)
-            {
-                fullEngagement.EngagementPapds.Add(new EngagementPapd
-                {
-                    EngagementId = fullEngagement.Id,
-                    PapdId = papdId
-                });
-            }
-
-            foreach (var assignment in removedAssignments)
-            {
-                fullEngagement.EngagementPapds.Remove(assignment);
-            }
 
             try
             {
-                await _engagementService.UpdateAsync(fullEngagement);
-                var engagementDisplay = fullEngagement.EngagementId ?? fullEngagement.Description;
+                // Use the dedicated service for updating PAPD assignments
+                await _papdAssignmentService.UpdateAssignmentsForEngagementAsync(_engagement.Id, selectedPapdIds);
 
-                if (newAssignments.Count > 0)
-                {
-                    ToastService.ShowSuccess(
-                        "FINC_Admin_PapdAssignments_Toast_SaveSuccess",
-                        string.Join(", ", AvailablePapds
-                            .Where(p => newAssignments.Contains(p.Papd.Id))
-                            .Select(p => p.Papd.Name)),
-                        engagementDisplay);
-                }
+                var engagement = await _engagementService.GetByIdAsync(_engagement.Id);
+                var engagementDisplay = engagement?.EngagementId ?? engagement?.Description ?? _engagement.Description;
 
-                if (removedAssignments.Count > 0)
-                {
-                    ToastService.ShowSuccess(
-                        "FINC_Admin_PapdAssignments_Toast_DeleteSuccess",
-                        string.Join(", ", removedAssignments
-                            .Select(a => AvailablePapds.FirstOrDefault(p => p.Papd.Id == a.PapdId)?.Papd.Name)
-                            .Where(name => !string.IsNullOrWhiteSpace(name))),
-                        engagementDisplay);
-                }
+                ToastService.ShowSuccess(
+                    "FINC_Admin_PapdAssignments_Toast_SaveSuccess",
+                    string.Join(", ", AvailablePapds
+                        .Where(p => p.IsSelected)
+                        .Select(p => p.Papd.Name)),
+                    engagementDisplay);
+
                 Messenger.Send(new CloseDialogMessage(true));
             }
             catch (Exception ex)
