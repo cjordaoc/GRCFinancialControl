@@ -73,8 +73,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return null;
             }
 
-            return await _closingPeriodService.GetByIdAsync(closingPeriodId.Value)
+            var allPeriods = await _closingPeriodService.GetAllAsync()
                 .ConfigureAwait(false);
+            
+            return allPeriods.FirstOrDefault(p => p.Id == closingPeriodId.Value);
         }
 
         [RelayCommand]

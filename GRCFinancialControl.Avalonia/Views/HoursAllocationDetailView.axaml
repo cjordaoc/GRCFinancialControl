@@ -54,7 +54,7 @@
                 </SplitButton.Flyout>
             </SplitButton>
             <Button Content="Copy from Previous Period"
-                    Command="{Binding CopyFromPreviousPeriodAsyncCommand}"
+                    Command="{Binding CopyFromPreviousPeriodCommand}"
                     ToolTip.Tip="Copy hours allocations from the latest previous closing period"/>
         </StackPanel>
 
