@@ -12,6 +12,7 @@ namespace GRCFinancialControl.Core.Models
         public string Name { get; set; } = string.Empty;
         public PapdLevel Level { get; set; } // e.g., "Partner", "Director"
         public string? WindowsLogin { get; set; }
+        public string? EngagementPapdGui { get; set; }
         public ICollection<EngagementPapd> EngagementPapds { get; set; } = new List<EngagementPapd>();
     }
 }

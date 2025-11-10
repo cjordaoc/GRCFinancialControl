@@ -23,6 +23,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private string? _windowsLogin;
 
+        [ObservableProperty]
+        private string? _engagementPapdGui;
+
         public IEnumerable<PapdLevel> LevelOptions => System.Enum.GetValues<PapdLevel>();
 
         public Papd Papd { get; }
@@ -40,6 +43,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Name = papd.Name;
             Level = papd.Level;
             WindowsLogin = papd.WindowsLogin;
+            EngagementPapdGui = papd.EngagementPapdGui;
         }
 
         protected override async Task PersistChangesAsync()
@@ -49,6 +53,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Papd.WindowsLogin = string.IsNullOrWhiteSpace(WindowsLogin)
                 ? null
                 : WindowsLogin.Trim();
+            Papd.EngagementPapdGui = string.IsNullOrWhiteSpace(EngagementPapdGui)
+                ? null
+                : EngagementPapdGui.Trim();
 
             if (Papd.Id == 0)
             {
