@@ -171,6 +171,16 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             "status"
         };
 
+        private static readonly string[] EngagementPartnerGuiHeaders =
+        {
+            "engagement partner gui"
+        };
+
+        private static readonly string[] EngagementManagerGuiHeaders =
+        {
+            "engagement manager gui"
+        };
+
         private static readonly string[] EtcAgeDaysHeaders =
         {
             "etc age days",
@@ -354,6 +364,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         .Include(e => e.FinancialEvolutions)
                         .Include(e => e.Customer)
                         .Include(e => e.RevenueAllocations)
+                        .Include(e => e.ManagerAssignments)
+                        .Include(e => e.EngagementPapds)
                         .Where(e => engagementIds.Contains(e.EngagementId))
                         .ToListAsync()
                         .ConfigureAwait(false);
@@ -411,6 +423,20 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         }
                     }
 
+                    var managers = await context.Managers
+                        .AsNoTracking()
+                        .Where(m => m.EngagementManagerGui != null)
+                        .ToListAsync()
+                        .ConfigureAwait(false);
+                    var managersByGui = managers.ToDictionary(m => m.EngagementManagerGui!, StringComparer.OrdinalIgnoreCase);
+
+                    var papds = await context.Papds
+                        .AsNoTracking()
+                        .Where(p => p.EngagementPapdGui != null)
+                        .ToListAsync()
+                        .ConfigureAwait(false);
+                    var papdsByGui = papds.ToDictionary(p => p.EngagementPapdGui!, StringComparer.OrdinalIgnoreCase);
+
                     var updatedEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                     var manualOnlySkips = new List<string>();
                     var closedEngagementSkips = new List<string>();
@@ -418,8 +444,13 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     var errors = new List<string>();
                     var warningMessages = new HashSet<string>(StringComparer.Ordinal);
 
+                    var missingManagerGuis = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    var missingPapdGuis = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
                     var financialEvolutionUpserts = 0;
                     var s4MetadataRefreshes = 0;
+                    var managerAssignmentChanges = 0;
+                    var papdAssignmentChanges = 0;
 
                     foreach (var row in parsedRows)
                     {
@@ -560,6 +591,26 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                 engagement.Status = ParseStatus(row.StatusText);
                             }
 
+                            if (row.ManagerGuiIds.Count > 0)
+                            {
+                                managerAssignmentChanges += SyncManagerAssignments(
+                                    context,
+                                    engagement,
+                                    row.ManagerGuiIds,
+                                    managersByGui,
+                                    missingManagerGuis);
+                            }
+
+                            if (row.PartnerGuiIds.Count > 0)
+                            {
+                                papdAssignmentChanges += SyncPapdAssignments(
+                                    context,
+                                    engagement,
+                                    row.PartnerGuiIds,
+                                    papdsByGui,
+                                    missingPapdGuis);
+                            }
+
                             if (row.OriginalBudgetHours.HasValue)
                             {
                                 engagement.InitialHoursBudget = row.OriginalBudgetHours.Value;
@@ -690,12 +741,38 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         skipReasons["Error"] = errors;
                     }
 
+                    if (missingManagerGuis.Count > 0)
+                    {
+                        var sortedManagers = missingManagerGuis
+                            .OrderBy(gui => gui, StringComparer.OrdinalIgnoreCase)
+                            .ToArray();
+                        warningMessages.Add($"Manager GUI identifiers not found: {string.Join(", ", sortedManagers)}.");
+                    }
+
+                    if (missingPapdGuis.Count > 0)
+                    {
+                        var sortedPapds = missingPapdGuis
+                            .OrderBy(gui => gui, StringComparer.OrdinalIgnoreCase)
+                            .ToArray();
+                        warningMessages.Add($"PAPD GUI identifiers not found: {string.Join(", ", sortedPapds)}.");
+                    }
+
                     var notes = new List<string>
                     {
                         $"Financial evolution entries upserted: {financialEvolutionUpserts}",
                         $"Distinct engagements updated: {updatedEngagements.Count}",
                         $"Closing period used: {closingPeriod.Name} (ID: {closingPeriod.Id})"
                     };
+
+                    if (managerAssignmentChanges > 0)
+                    {
+                        notes.Add($"Manager assignments synchronized: {managerAssignmentChanges}");
+                    }
+
+                    if (papdAssignmentChanges > 0)
+                    {
+                        notes.Add($"PAPD assignments synchronized: {papdAssignmentChanges}");
+                    }
 
                     if (warningMessages.Count > 0)
                     {
@@ -775,6 +852,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             var marginPercentMercuryProjectedIndex = GetOptionalColumnIndex(headerMap, MarginPercentMercuryProjectedHeaders);
             var expensesMercuryProjectedIndex = GetOptionalColumnIndex(headerMap, ExpensesMercuryProjectedHeaders);
             var statusIndex = GetOptionalColumnIndex(headerMap, StatusHeaders);
+            var engagementPartnerGuiIndex = GetOptionalColumnIndex(headerMap, EngagementPartnerGuiHeaders);
+            var engagementManagerGuiIndex = GetOptionalColumnIndex(headerMap, EngagementManagerGuiHeaders);
             var etcAgeDaysIndex = GetOptionalColumnIndex(headerMap, EtcAgeDaysHeaders);
             var unbilledRevenueDaysIndex = GetOptionalColumnIndex(headerMap, UnbilledRevenueDaysHeaders);
             var lastActiveEtcPDateIndex = GetOptionalColumnIndex(headerMap, LastActiveEtcPDateHeaders);
@@ -826,6 +905,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     ExpensesToDate = expensesETDIndex.HasValue ? ParseDecimal(row[expensesETDIndex.Value], 2) : null,
                     FYTDExpenses = expensesFYTDIndex.HasValue ? ParseDecimal(row[expensesFYTDIndex.Value], 2) : null,
                     StatusText = statusIndex.HasValue ? NormalizeWhitespace(Convert.ToString(row[statusIndex.Value], CultureInfo.InvariantCulture)) : string.Empty,
+                    PartnerGuiIds = engagementPartnerGuiIndex.HasValue ? ParseGuiIdentifiers(row[engagementPartnerGuiIndex.Value]) : Array.Empty<string>(),
+                    ManagerGuiIds = engagementManagerGuiIndex.HasValue ? ParseGuiIdentifiers(row[engagementManagerGuiIndex.Value]) : Array.Empty<string>(),
                     EtcpAgeDays = etcAgeDaysIndex.HasValue ? ParseInt(row[etcAgeDaysIndex.Value]) : null,
                     UnbilledRevenueDays = unbilledRevenueDaysIndex.HasValue ? ParseInt(row[unbilledRevenueDaysIndex.Value]) : null,
                     LastActiveEtcPDate = lastActiveEtcPDateIndex.HasValue ? ParseDate(row[lastActiveEtcPDateIndex.Value]) : null,
@@ -1338,6 +1419,44 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             return null;
         }
 
+        private static IReadOnlyList<string> ParseGuiIdentifiers(object? value)
+        {
+            if (value == null || value == DBNull.Value)
+            {
+                return Array.Empty<string>();
+            }
+
+            var rawValue = NormalizeWhitespace(Convert.ToString(value, CultureInfo.InvariantCulture));
+            if (string.IsNullOrWhiteSpace(rawValue))
+            {
+                return Array.Empty<string>();
+            }
+
+            var separators = new[] { ';', ',', '|', '\n', '\r' };
+            var segments = rawValue.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+            if (segments.Length == 0)
+            {
+                return Array.Empty<string>();
+            }
+
+            var identifiers = new List<string>();
+            foreach (var segment in segments)
+            {
+                var normalized = NormalizeWhitespace(segment);
+                if (string.IsNullOrWhiteSpace(normalized))
+                {
+                    continue;
+                }
+
+                if (!identifiers.Contains(normalized, StringComparer.OrdinalIgnoreCase))
+                {
+                    identifiers.Add(normalized);
+                }
+            }
+
+            return identifiers;
+        }
+
         private static DateTime? CalculateProposedNextEtcDate(DateTime? lastEtcDate)
         {
             if (!lastEtcDate.HasValue)
@@ -1617,12 +1736,144 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             public decimal? ExpensesToDate { get; init; }
             public decimal? FYTDExpenses { get; init; }
             public string StatusText { get; init; } = string.Empty;
+            public IReadOnlyList<string> PartnerGuiIds { get; init; } = Array.Empty<string>();
+            public IReadOnlyList<string> ManagerGuiIds { get; init; } = Array.Empty<string>();
             public int? EtcpAgeDays { get; init; }
             public int? UnbilledRevenueDays { get; init; }
             public DateTime? LastActiveEtcPDate { get; init; }
             public DateTime? NextEtcDate { get; init; }
             public decimal? CurrentFiscalYearBacklog { get; init; }
             public decimal? FutureFiscalYearBacklog { get; init; }
+        }
+
+        private static int SyncManagerAssignments(
+            ApplicationDbContext context,
+            Engagement engagement,
+            IReadOnlyCollection<string> managerGuiIds,
+            IReadOnlyDictionary<string, Manager> managersByGui,
+            ISet<string> missingManagerGuis)
+        {
+            if (managerGuiIds.Count == 0)
+            {
+                return 0;
+            }
+
+            var desiredManagerIds = new HashSet<int>();
+            foreach (var gui in managerGuiIds)
+            {
+                if (managersByGui.TryGetValue(gui, out var manager))
+                {
+                    desiredManagerIds.Add(manager.Id);
+                }
+                else
+                {
+                    missingManagerGuis.Add(gui);
+                }
+            }
+
+            if (desiredManagerIds.Count == 0)
+            {
+                return 0;
+            }
+
+            var changes = 0;
+            var existingAssignments = engagement.ManagerAssignments.ToList();
+
+            foreach (var assignment in existingAssignments)
+            {
+                if (!desiredManagerIds.Contains(assignment.ManagerId))
+                {
+                    context.EngagementManagerAssignments.Remove(assignment);
+                    engagement.ManagerAssignments.Remove(assignment);
+                    changes++;
+                }
+            }
+
+            var currentManagerIds = engagement.ManagerAssignments.Select(a => a.ManagerId).ToHashSet();
+            foreach (var managerId in desiredManagerIds)
+            {
+                if (currentManagerIds.Contains(managerId))
+                {
+                    continue;
+                }
+
+                var assignment = new EngagementManagerAssignment
+                {
+                    EngagementId = engagement.Id,
+                    ManagerId = managerId
+                };
+
+                engagement.ManagerAssignments.Add(assignment);
+                context.EngagementManagerAssignments.Add(assignment);
+                changes++;
+            }
+
+            return changes;
+        }
+
+        private static int SyncPapdAssignments(
+            ApplicationDbContext context,
+            Engagement engagement,
+            IReadOnlyCollection<string> papdGuiIds,
+            IReadOnlyDictionary<string, Papd> papdsByGui,
+            ISet<string> missingPapdGuis)
+        {
+            if (papdGuiIds.Count == 0)
+            {
+                return 0;
+            }
+
+            var desiredPapdIds = new HashSet<int>();
+            foreach (var gui in papdGuiIds)
+            {
+                if (papdsByGui.TryGetValue(gui, out var papd))
+                {
+                    desiredPapdIds.Add(papd.Id);
+                }
+                else
+                {
+                    missingPapdGuis.Add(gui);
+                }
+            }
+
+            if (desiredPapdIds.Count == 0)
+            {
+                return 0;
+            }
+
+            var changes = 0;
+            var existingAssignments = engagement.EngagementPapds.ToList();
+
+            foreach (var assignment in existingAssignments)
+            {
+                if (!desiredPapdIds.Contains(assignment.PapdId))
+                {
+                    context.EngagementPapds.Remove(assignment);
+                    engagement.EngagementPapds.Remove(assignment);
+                    changes++;
+                }
+            }
+
+            var currentPapdIds = engagement.EngagementPapds.Select(a => a.PapdId).ToHashSet();
+            foreach (var papdId in desiredPapdIds)
+            {
+                if (currentPapdIds.Contains(papdId))
+                {
+                    continue;
+                }
+
+                var assignment = new EngagementPapd
+                {
+                    EngagementId = engagement.Id,
+                    PapdId = papdId
+                };
+
+                engagement.EngagementPapds.Add(assignment);
+                context.EngagementPapds.Add(assignment);
+                changes++;
+            }
+
+            return changes;
         }
 
         private static void ProcessBacklogData(

@@ -10,6 +10,8 @@ namespace GRCFinancialControl.Core.Models
         public string Email { get; set; } = string.Empty;
         public ManagerPosition Position { get; set; }
         public string? WindowsLogin { get; set; }
+        public string? EngagementManagerGui { get; set; }
         public ICollection<EngagementManagerAssignment> EngagementAssignments { get; } = new List<EngagementManagerAssignment>();
     }
 }
+
