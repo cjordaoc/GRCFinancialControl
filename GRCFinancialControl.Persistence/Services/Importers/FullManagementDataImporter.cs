@@ -149,6 +149,11 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             "etc value"
         };
 
+        private static readonly string[] TerFiscalYearToDateHeaders =
+        {
+            "ter fytd"
+        };
+
         private static readonly string[] ValueDataHeaders =
         {
             "valuedata",
@@ -677,9 +682,10 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                             // Always create FinancialEvolution and process RevenueAllocations
                             // Calculate revenue to-go and to-date values from backlog data
                             var revenueToGo = row.CurrentFiscalYearBacklog;
-                            var revenueToDate = (row.CurrentFiscalYearBacklog.HasValue || row.FutureFiscalYearBacklog.HasValue)
-                                ? engagement.ValueToAllocate - (row.CurrentFiscalYearBacklog ?? 0m) - (row.FutureFiscalYearBacklog ?? 0m)
-                                : (decimal?)null;
+                            var revenueToDate = row.CurrentFiscalYearToDate ??
+                                ((row.CurrentFiscalYearBacklog.HasValue || row.FutureFiscalYearBacklog.HasValue)
+                                    ? engagement.ValueToAllocate - (row.CurrentFiscalYearBacklog ?? 0m) - (row.FutureFiscalYearBacklog ?? 0m)
+                                    : (decimal?)null);
 
                             financialEvolutionUpserts += UpsertFinancialEvolution(
                                 context,
@@ -853,6 +859,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             var chargedHoursMercuryProjectedIndex = GetOptionalColumnIndex(headerMap, ChargedHoursMercuryProjectedHeaders);
             var termMercuryProjectedIndex = GetOptionalColumnIndex(headerMap, TermMercuryProjectedHeaders);
             var valueDataIndex = GetOptionalColumnIndex(headerMap, ValueDataHeaders);
+            var terFiscalYearToDateIndex = GetOptionalColumnIndex(headerMap, TerFiscalYearToDateHeaders);
             var marginPercentMercuryProjectedIndex = GetOptionalColumnIndex(headerMap, MarginPercentMercuryProjectedHeaders);
             var expensesMercuryProjectedIndex = GetOptionalColumnIndex(headerMap, ExpensesMercuryProjectedHeaders);
             var statusIndex = GetOptionalColumnIndex(headerMap, StatusHeaders);
@@ -905,6 +912,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     FYTDHours = chargedHoursFYTDIndex.HasValue ? ParseDecimal(row[chargedHoursFYTDIndex.Value], 2) : null,
                     TERMercuryProjectedOppCurrency = termMercuryProjectedIndex.HasValue ? ParseDecimal(row[termMercuryProjectedIndex.Value], 2) : null,
                     ValueData = valueDataIndex.HasValue ? ParseDecimal(row[valueDataIndex.Value], 2) : null,
+                    CurrentFiscalYearToDate = terFiscalYearToDateIndex.HasValue ? ParseDecimal(row[terFiscalYearToDateIndex.Value], 2) : null,
                     ToDateMargin = marginPercentETDIndex.HasValue ? ParsePercent(row[marginPercentETDIndex.Value]) : null,
                     FYTDMargin = marginPercentFYTDIndex.HasValue ? ParsePercent(row[marginPercentFYTDIndex.Value]) : null,
                     ExpensesToDate = expensesETDIndex.HasValue ? ParseDecimal(row[expensesETDIndex.Value], 2) : null,
@@ -1737,6 +1745,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             public decimal? FYTDHours { get; init; }
             public decimal? TERMercuryProjectedOppCurrency { get; init; }
             public decimal? ValueData { get; init; }
+            public decimal? CurrentFiscalYearToDate { get; init; }
             public decimal? ToDateMargin { get; init; }
             public decimal? FYTDMargin { get; init; }
             public decimal? ExpensesToDate { get; init; }

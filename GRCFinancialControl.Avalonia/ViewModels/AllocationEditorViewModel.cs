@@ -124,7 +124,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public string ToGoColumnHeader => LocalizationRegistry.Get("FINC_Allocations_Header_ToGoValue");
 
-        public string ValidationErrorMessage => LocalizationRegistry.Get("FINC_Allocations_Validation_ValueMatchTarget");
+        private const string VarianceWarningMessage = "Warning: allocations differ from the target value. Saving will keep the discrepancy highlighted.";
 
         public bool AllowEditing => !IsReadOnlyMode;
 
@@ -248,10 +248,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             AllocationVariance = CurrentAllocation - TargetAmount;
             HasAllocationVariance = Math.Abs(AllocationVariance) > VarianceTolerance;
-            ValidationMessage = HasAllocationVariance ? ValidationErrorMessage : null;
+            ValidationMessage = HasAllocationVariance ? VarianceWarningMessage : null;
         }
 
-        private bool CanSave() => !HasAllocationVariance && !IsReadOnlyMode;
+        private bool CanSave() => !IsReadOnlyMode;
 
         partial void OnHasAllocationVarianceChanged(bool value)
         {

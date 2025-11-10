@@ -116,9 +116,9 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
      - "Original Budget Hours" / "Budget Hours" → `OriginalBudgetHours` → `BudgetHours`
      - "Charged Hours ETD" / "ETD Hours" → `ChargedHours`
      - "Charged Hours FYTD" / "FYTD Hours" → `FYTDHours`
-     - "Ter Mercury Projected" / "ETC-P Value" → `TERMercuryProjectedOppCurrency` → `ValueData`
-     - "FYTG Backlog" / "Current FY Backlog" → `CurrentFiscalYearBacklog` → `RevenueToGoValue`
-     - (calculated) `ValueToAllocate − CurrentBacklog − FutureBacklog` → `RevenueToDateValue`
+    - "Ter Mercury Projected" / "ETC-P Value" → `TERMercuryProjectedOppCurrency` → `ValueData`
+    - "FYTG Backlog" / "Current FY Backlog" → `CurrentFiscalYearBacklog` → `RevenueToGoValue`
+    - "TER FYTD" → `CurrentFiscalYearToDate` → `RevenueToDateValue` (falls back to backlog calculation when the column is missing)
      - "Original Budget Margin %" → `OriginalBudgetMarginPercent` → `BudgetMargin`
      - "Margin % ETD" → `ToDateMargin`
      - "Margin % FYTD" → `FYTDMargin`
@@ -158,7 +158,7 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
 - **Validation Mechanics:**
   - Decimal parsing uses `ParseDecimal(value, 2)` with pt-BR and invariant culture fallback, rounding to 2 decimals via `MidpointRounding.AwayFromZero`.
   - Percent fields are normalized: values <= 1 are multiplied by 100 and stored as percentages.
-  - Revenue calculations validate that `ValueToAllocate` is set before deriving `RevenueToDateValue`.
+  - Revenue calculations prefer the imported `TER FYTD` value and only derive `RevenueToDateValue` from backlog when that column is absent; `ValueToAllocate` must be set before performing the fallback calculation.
   - Missing Excel columns result in null database values; imports never fail due to absent optional metrics.
   - Snapshots without a closing period (e.g., metadata-only S/4 imports) are logged as warnings and skipped for period-specific metrics.
 
