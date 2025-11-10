@@ -137,7 +137,7 @@ CREATE TABLE `Papds`
     `Id`    INT          NOT NULL AUTO_INCREMENT,
     `Name`  VARCHAR(200) NOT NULL,
     `Level` VARCHAR(100) NOT NULL,
-    `EngagementPartnerGui` VARCHAR(10) NOT NULL,
+    `EngagementPapdGui` VARCHAR(10) NOT NULL,
     `WindowsLogin` VARCHAR(200) NULL,
     `EngagementPapdGUI` VARCHAR(100) NULL,
     CONSTRAINT `PK_Papds` PRIMARY KEY (`Id`),
@@ -759,6 +759,54 @@ ANALYZE TABLE ActualsEntries;
 ANALYZE TABLE EngagementFiscalYearRevenueAllocations;
 
 SET FOREIGN_KEY_CHECKS = 1;
+CREATE OR REPLACE ALGORITHM=UNDEFINED 
+DEFINER=`blac3289_GRCFinControl`@`%` 
+SQL SECURITY DEFINER 
+VIEW `vw_PapdRevenueSummary` AS
+SELECT 
+    fy.Id AS FiscalYearId,
+    fy.Name AS FiscalYearName,
+    p.Id AS PapdId,
+    p.Name AS PapdName,
+    SUM(fe.RevenueToDateValue) AS TotalToDateValue,
+    SUM(fe.RevenueToGoValue)   AS TotalToGoValue,
+    SUM(fe.RevenueToDateValue + fe.RevenueToGoValue) AS TotalValue
+FROM `blac3289_GRCFinancialControl`.`FinancialEvolution` fe
+INNER JOIN (
+    -- ✅ Latest ClosingPeriod per Engagement based on chronological EndDate
+    SELECT 
+        fe2.EngagementId,
+        cp2.Id AS LatestClosingPeriodId
+    FROM `blac3289_GRCFinancialControl`.`FinancialEvolution` fe2
+    INNER JOIN `blac3289_GRCFinancialControl`.`ClosingPeriods` cp2 
+        ON cp2.Id = fe2.ClosingPeriodId
+    INNER JOIN (
+        SELECT 
+            fe3.EngagementId,
+            MAX(cp3.PeriodEnd) AS MaxEndDate
+        FROM `blac3289_GRCFinancialControl`.`FinancialEvolution` fe3
+        INNER JOIN `blac3289_GRCFinancialControl`.`ClosingPeriods` cp3 
+            ON cp3.Id = fe3.ClosingPeriodId
+        GROUP BY fe3.EngagementId
+    ) latest_dates
+        ON latest_dates.EngagementId = fe2.EngagementId
+       AND cp2.PeriodEnd = latest_dates.MaxEndDate
+) latest
+    ON latest.EngagementId = fe.EngagementId
+   AND latest.LatestClosingPeriodId = fe.ClosingPeriodId
+INNER JOIN `blac3289_GRCFinancialControl`.`Engagements` e 
+    ON e.Id = fe.EngagementId
+INNER JOIN `blac3289_GRCFinancialControl`.`EngagementPapds` ep 
+    ON ep.EngagementId = e.Id
+INNER JOIN `blac3289_GRCFinancialControl`.`Papds` p 
+    ON p.Id = ep.PapdId
+INNER JOIN `blac3289_GRCFinancialControl`.`FiscalYears` fy 
+    ON fy.Id = fe.FiscalYearId
+GROUP BY 
+    fy.Id,
+    fy.Name,
+    p.Id,
+    p.Name;
 
 SELECT 'Database recreation complete with all optimizations!' AS Status;
 SELECT 'Total tables created:' AS Info, COUNT(*) AS Count FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE';
