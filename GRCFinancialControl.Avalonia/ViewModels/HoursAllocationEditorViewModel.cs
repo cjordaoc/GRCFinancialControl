@@ -21,6 +21,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly IHoursAllocationService _hoursAllocationService;
         private readonly LoggingService _loggingService;
         private readonly int _engagementId;
+        private readonly int _closingPeriodId;
 
         [ObservableProperty]
         private string _engagementCode = string.Empty;
@@ -63,6 +64,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public HoursAllocationEditorViewModel(
             HoursAllocationSnapshot snapshot,
+            int closingPeriodId,
             IHoursAllocationService hoursAllocationService,
             LoggingService loggingService,
             IMessenger messenger,
@@ -74,6 +76,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _loggingService = loggingService ?? throw new ArgumentNullException(nameof(loggingService));
 
             _engagementId = snapshot.EngagementId;
+            _closingPeriodId = closingPeriodId;
 
             InitialRank = initialRank;
 
@@ -117,7 +120,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 IsBusy = true;
                 StatusMessage = null;
                 var snapshot = await _hoursAllocationService
-                    .SaveAsync(_engagementId, updates, rowAdjustments);
+                    .SaveAsync(_engagementId, _closingPeriodId, updates, rowAdjustments);
                 ApplySnapshot(snapshot);
                 StatusMessage = "Changes saved successfully.";
                 Messenger.Send(new CloseDialogMessage(true));

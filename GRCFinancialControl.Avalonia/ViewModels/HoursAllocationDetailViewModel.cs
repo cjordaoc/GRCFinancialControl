@@ -683,13 +683,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand]
         private async Task EditRowAsync(HoursAllocationRowViewModel? row)
         {
-            if (_currentSnapshot is null || SelectedEngagement is null)
+            if (_currentSnapshot is null || SelectedEngagement is null || SelectedClosingPeriod is null)
             {
                 return;
             }
 
             var editor = new HoursAllocationEditorViewModel(
                 _currentSnapshot,
+                SelectedClosingPeriod.Id,
                 _hoursAllocationService,
                 _loggingService,
                 Messenger,
