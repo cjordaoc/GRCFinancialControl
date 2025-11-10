@@ -23,6 +23,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly IPapdService _papdService;
         private readonly IManagerService _managerService;
         private readonly IManagerAssignmentService _managerAssignmentService;
+        private readonly IPapdAssignmentService _papdAssignmentService;
         private readonly DialogService _dialogService;
 
         [ObservableProperty]
@@ -35,6 +36,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             IPapdService papdService,
             IManagerService managerService,
             IManagerAssignmentService managerAssignmentService,
+            IPapdAssignmentService papdAssignmentService,
             DialogService dialogService, 
             IMessenger messenger)
             : base(messenger)
@@ -45,6 +47,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _papdService = papdService;
             _managerService = managerService;
             _managerAssignmentService = managerAssignmentService;
+            _papdAssignmentService = papdAssignmentService;
             _dialogService = dialogService;
         }
 
@@ -177,6 +180,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 fullEngagement,
                 _engagementService,
                 _papdService,
+                _papdAssignmentService,
                 Messenger);
 
             await selectionViewModel.LoadDataAsync();
