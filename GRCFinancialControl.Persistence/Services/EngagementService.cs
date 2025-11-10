@@ -283,7 +283,9 @@ namespace GRCFinancialControl.Persistence.Services
             }
 
             var papdLookup = papds.ToDictionary(p => p.Id);
-            var engagementLookup = engagementList.ToDictionary(e => e.Id);
+            var engagementLookup = engagementList
+                .GroupBy(e => e.Id)
+                .ToDictionary(g => g.Key, g => g.First());
 
             foreach (var assignment in assignments)
             {
