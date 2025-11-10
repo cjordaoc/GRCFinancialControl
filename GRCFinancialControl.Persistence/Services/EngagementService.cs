@@ -197,7 +197,6 @@ namespace GRCFinancialControl.Persistence.Services
             
             // Budget values (baseline, constant across snapshots)
             engagement.InitialHoursBudget = latest.BudgetHours ?? 0m;
-            engagement.OpeningValue = latest.ValueData ?? 0m;
             engagement.OpeningExpenses = latest.ExpenseBudget ?? 0m;
             engagement.MarginPctBudget = latest.BudgetMargin;
 
@@ -225,7 +224,6 @@ namespace GRCFinancialControl.Persistence.Services
         private static void ResetFinancialSnapshot(Engagement engagement)
         {
             engagement.InitialHoursBudget = 0m;
-            engagement.OpeningValue = 0m;
             engagement.OpeningExpenses = 0m;
             engagement.MarginPctBudget = null;
             engagement.EstimatedToCompleteHours = 0m;

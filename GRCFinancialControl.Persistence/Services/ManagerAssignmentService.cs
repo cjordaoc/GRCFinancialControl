@@ -28,6 +28,7 @@ namespace GRCFinancialControl.Persistence.Services
                 .AsSplitQuery()
                 .Include(a => a.Manager)
                 .Include(a => a.Engagement)
+                    .ThenInclude(e => e.Customer)
                 .OrderBy(a => a.Engagement.EngagementId)
                 .ThenBy(a => a.Manager.Name)
                 .ToListAsync().ConfigureAwait(false);
@@ -41,6 +42,7 @@ namespace GRCFinancialControl.Persistence.Services
                 .AsSplitQuery()
                 .Include(a => a.Manager)
                 .Include(a => a.Engagement)
+                    .ThenInclude(e => e.Customer)
                 .Where(a => a.EngagementId == engagementId)
                 .OrderBy(a => a.Manager.Name)
                 .ToListAsync().ConfigureAwait(false);
@@ -54,6 +56,7 @@ namespace GRCFinancialControl.Persistence.Services
                 .AsSplitQuery()
                 .Include(a => a.Manager)
                 .Include(a => a.Engagement)
+                    .ThenInclude(e => e.Customer)
                 .Where(a => a.ManagerId == managerId)
                 .OrderBy(a => a.Engagement.EngagementId)
                 .ThenBy(a => a.Engagement.Description)
@@ -68,6 +71,7 @@ namespace GRCFinancialControl.Persistence.Services
                 .AsSplitQuery()
                 .Include(a => a.Manager)
                 .Include(a => a.Engagement)
+                    .ThenInclude(e => e.Customer)
                 .FirstOrDefaultAsync(a => a.Id == id).ConfigureAwait(false);
         }
 

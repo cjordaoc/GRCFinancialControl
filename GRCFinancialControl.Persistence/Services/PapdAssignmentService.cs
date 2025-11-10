@@ -37,6 +37,7 @@ namespace GRCFinancialControl.Persistence.Services
                 .AsSplitQuery()
                 .Include(a => a.Papd)
                 .Include(a => a.Engagement)
+                    .ThenInclude(e => e.Customer)
                 .Where(a => a.PapdId == papdId)
                 .OrderBy(a => a.Engagement.EngagementId)
                 .ThenBy(a => a.Engagement.Description)

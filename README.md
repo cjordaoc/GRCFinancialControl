@@ -166,6 +166,7 @@ The `FinancialEvolution` table captures point-in-time engagement financials acro
    - Budget values (BudgetHours, BudgetMargin, ExpenseBudget) are the same across all snapshots
    - ETD values (ChargedHours, ToDateMargin, ExpensesToDate) reflect the most recent period
    - FYTD values provide fiscal-year-to-date accumulation
+   - `OpeningValue` remains sourced from the Full Allocation Data import (column JO) and is not overwritten when applying Full Management snapshots
 
 **Validation & Consolidation Rules**
 - Each snapshot is keyed by `EngagementId` + `ClosingPeriodId` to maintain time-series integrity.
