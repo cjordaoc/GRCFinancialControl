@@ -355,8 +355,11 @@ namespace GRCFinancialControl.Persistence.Services
 
             var lockedRevenueAllocations = existingEngagement.RevenueAllocations
                 .Where(a => a.FiscalYear?.IsLocked ?? false)
-                .ToDictionary(a => a.FiscalYearId, a => a.FiscalYear!);
-            var incomingRevenueAllocations = engagement.RevenueAllocations.ToDictionary(a => a.FiscalYearId, a => a);
+                .GroupBy(a => a.FiscalYearId)
+                .ToDictionary(g => g.Key, g => g.First().FiscalYear!);
+            var incomingRevenueAllocations = engagement.RevenueAllocations
+                .GroupBy(a => a.FiscalYearId)
+                .ToDictionary(g => g.Key, g => g.First());
             foreach (var (fiscalYearId, fiscalYear) in lockedRevenueAllocations)
             {
                 if (!incomingRevenueAllocations.TryGetValue(fiscalYearId, out var incomingAllocation))
