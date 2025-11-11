@@ -66,7 +66,31 @@ namespace GRCFinancialControl.Core.Models
         }
 
         [NotMapped]
-        public decimal CurrentRevenueAllocation => RevenueAllocations.Sum(a => a.ToGoValue + a.ToDateValue);
+        public decimal CurrentRevenueAllocation => ValueEtcp > 0m ? ValueEtcp : OpeningValue;
+
+        private decimal GetLatestRevenueAllocationSnapshotTotal()
+        {
+            if (RevenueAllocations is null || RevenueAllocations.Count == 0)
+            {
+                return 0m;
+            }
+
+            int? targetClosingPeriodId = LastClosingPeriodId;
+
+            if (!targetClosingPeriodId.HasValue)
+            {
+                targetClosingPeriodId = RevenueAllocations
+                    .OrderByDescending(a => a.UpdatedAt)
+                    .Select(a => (int?)a.ClosingPeriodId)
+                    .FirstOrDefault();
+            }
+
+            var allocations = targetClosingPeriodId.HasValue
+                ? RevenueAllocations.Where(a => a.ClosingPeriodId == targetClosingPeriodId.Value)
+                : RevenueAllocations;
+
+            return allocations.Sum(a => a.ToGoValue + a.ToDateValue);
+        }
 
         [NotMapped]
         public decimal ValueToAllocate
@@ -82,7 +106,7 @@ namespace GRCFinancialControl.Core.Models
         }
 
         [NotMapped]
-        public decimal RevenueAllocationVariance => CurrentRevenueAllocation - ValueToAllocate;
+        public decimal RevenueAllocationVariance => GetLatestRevenueAllocationSnapshotTotal() - CurrentRevenueAllocation;
 
         [NotMapped]
         public bool RequiresRevenueAllocationReview => Math.Abs(RevenueAllocationVariance) > 0.01m;

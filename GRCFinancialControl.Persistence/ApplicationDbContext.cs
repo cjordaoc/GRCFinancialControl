@@ -264,6 +264,14 @@ namespace GRCFinancialControl.Persistence
                 .HasIndex(p => p.WindowsLogin)
                 .IsUnique();
 
+            modelBuilder.Entity<Papd>()
+                .Property(p => p.EngagementPapdGui)
+                .HasMaxLength(100);
+
+            modelBuilder.Entity<Papd>()
+                .HasIndex(p => p.EngagementPapdGui)
+                .IsUnique();
+
             modelBuilder.Entity<Manager>()
                 .Property(m => m.Name)
                 .HasMaxLength(200);
@@ -275,6 +283,14 @@ namespace GRCFinancialControl.Persistence
             modelBuilder.Entity<Manager>()
                 .Property(m => m.WindowsLogin)
                 .HasMaxLength(200);
+
+            modelBuilder.Entity<Manager>()
+                .Property(m => m.EngagementManagerGui)
+                .HasMaxLength(100);
+
+            modelBuilder.Entity<Manager>()
+                .HasIndex(m => m.EngagementManagerGui)
+                .IsUnique();
 
             modelBuilder.Entity<Manager>()
                 .Property(m => m.Position)

@@ -26,6 +26,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private string? _windowsLogin;
 
+        [ObservableProperty]
+        private string? _engagementManagerGui;
+
         public IEnumerable<ManagerPosition> PositionOptions => System.Enum.GetValues<ManagerPosition>();
 
         public Manager Manager { get; }
@@ -44,6 +47,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Email = manager.Email;
             Position = manager.Position;
             WindowsLogin = manager.WindowsLogin;
+            EngagementManagerGui = manager.EngagementManagerGui;
         }
 
         protected override async Task PersistChangesAsync()
@@ -54,6 +58,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Manager.WindowsLogin = string.IsNullOrWhiteSpace(WindowsLogin)
                 ? null
                 : WindowsLogin.Trim();
+            Manager.EngagementManagerGui = string.IsNullOrWhiteSpace(EngagementManagerGui)
+                ? null
+                : EngagementManagerGui.Trim();
 
             if (Manager.Id == 0)
             {
