@@ -172,6 +172,7 @@ The `FinancialEvolution` table captures point-in-time engagement financials acro
 - Each snapshot is keyed by `EngagementId` + `ClosingPeriodId` to maintain time-series integrity.
 - Missing closing periods skip period-specific metrics but preserve budget baseline values.
 - The importer upserts snapshots: existing records for the same engagement + period are updated rather than duplicated.
+- Re-importing a closing period clears prior Financial Evolution snapshots for that period before applying the new rows, preventing cumulative totals across uploads.
 - Decimal precision is enforced at 18,2 to match MySQL storage and prevent rounding inconsistencies.
 - Revenue to-date values primarily use the imported `TER FYTD` column; when unavailable, the importer falls back to `ValueToAllocate − CurrentBacklog − FutureBacklog`.
 - All nullable fields gracefully handle missing Excel data without blocking the import.

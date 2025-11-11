@@ -409,7 +409,8 @@ namespace GRCFinancialControl.Persistence.Services
             IEnumerable<string> candidates,
             string friendlyName)
         {
-            int? firstPartialMatch = null;
+            int? preferredPartialMatch = null;
+            int? fallbackPartialMatch = null;
 
             foreach (var candidate in candidates)
             {
@@ -427,13 +428,24 @@ namespace GRCFinancialControl.Persistence.Services
                         return kvp.Key;
                     }
 
-                    firstPartialMatch ??= kvp.Key;
+                    var isOppCurrency = header.Contains("opp currency", StringComparison.Ordinal);
+                    if (!isOppCurrency && !preferredPartialMatch.HasValue)
+                    {
+                        preferredPartialMatch = kvp.Key;
+                    }
+
+                    fallbackPartialMatch ??= kvp.Key;
                 }
             }
 
-            if (firstPartialMatch.HasValue)
+            if (preferredPartialMatch.HasValue)
             {
-                return firstPartialMatch.Value;
+                return preferredPartialMatch.Value;
+            }
+
+            if (fallbackPartialMatch.HasValue)
+            {
+                return fallbackPartialMatch.Value;
             }
 
             throw new InvalidDataException($"The FCS backlog worksheet is missing required column '{friendlyName}'. Ensure the first sheet is selected and filters are cleared before importing.");

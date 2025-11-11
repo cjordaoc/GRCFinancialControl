@@ -151,7 +151,24 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
         private static readonly string[] TerFiscalYearToDateHeaders =
         {
-            "ter fytd"
+            "ter fytd",
+            "ter fytd (r$)",
+            "ter fytd (brl)",
+            "ter fytd value",
+            "ter fytd (local currency)",
+            "ter fytd local currency",
+            "ter fytd (lc)",
+            "ter fytd (opp currency)",
+            "ter fytd opp currency",
+            "ter fytd (opportunity currency)",
+            "ter fytd opportunity currency",
+            "ter fytd (moeda da oportunidade)",
+            "ter fytd moeda da oportunidade",
+            "ter fytd (moeda oportunidade)",
+            "ter fytd (moeda local)",
+            "ter fytd moeda local",
+            "ter fiscal year to date",
+            "fytd ter"
         };
 
         private static readonly string[] ValueDataHeaders =
@@ -397,6 +414,58 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     if (closingPeriod.FiscalYear?.IsLocked ?? false)
                     {
                         throw new InvalidOperationException($"Cannot import data for closing period '{closingPeriod.Name}' because its fiscal year '{closingPeriod.FiscalYear.Name}' is locked.");
+                    }
+
+                    var closingPeriodRemovalKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        closingPeriod.Id.ToString(CultureInfo.InvariantCulture).Trim()
+                    };
+
+                    if (!string.IsNullOrWhiteSpace(closingPeriod.Name))
+                    {
+                        closingPeriodRemovalKeys.Add(closingPeriod.Name.Trim());
+                    }
+
+                    var closingPeriodIdLower = closingPeriod.Id
+                        .ToString(CultureInfo.InvariantCulture)
+                        .Trim()
+                        .ToLowerInvariant();
+                    var closingPeriodNameLower = string.IsNullOrWhiteSpace(closingPeriod.Name)
+                        ? null
+                        : closingPeriod.Name.Trim().ToLowerInvariant();
+
+                    var evolutionsToRemove = await context.FinancialEvolutions
+                        .Where(fe => fe.ClosingPeriodId != null &&
+                            (string.Equals(fe.ClosingPeriodId!.Trim(), closingPeriodIdLower, StringComparison.OrdinalIgnoreCase) ||
+                             (closingPeriodNameLower != null &&
+                                 string.Equals(fe.ClosingPeriodId!.Trim(), closingPeriodNameLower, StringComparison.OrdinalIgnoreCase))))
+                        .ToListAsync()
+                        .ConfigureAwait(false);
+
+                    if (evolutionsToRemove.Count > 0)
+                    {
+                        context.FinancialEvolutions.RemoveRange(evolutionsToRemove);
+                    }
+
+                    if (closingPeriodRemovalKeys.Count > 0)
+                    {
+                        foreach (var engagement in engagements)
+                        {
+                            var snapshotsToDetach = engagement.FinancialEvolutions
+                                .Where(fe => !string.IsNullOrWhiteSpace(fe.ClosingPeriodId) &&
+                                    closingPeriodRemovalKeys.Contains(fe.ClosingPeriodId!.Trim()))
+                                .ToList();
+
+                            if (snapshotsToDetach.Count == 0)
+                            {
+                                continue;
+                            }
+
+                            foreach (var snapshot in snapshotsToDetach)
+                            {
+                                engagement.FinancialEvolutions.Remove(snapshot);
+                            }
+                        }
                     }
 
                     var customerNames = new HashSet<string>(

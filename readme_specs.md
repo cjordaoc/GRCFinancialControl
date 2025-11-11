@@ -125,9 +125,10 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
      - "Original Budget Expenses" → `OriginalBudgetExpenses` → `ExpenseBudget`
      - "Expenses ETD" → `ExpensesToDate`
      - "Expenses FYTD" → `FYTDExpenses`
-  2. `UpsertFinancialEvolution` creates or updates snapshots using composite key `(EngagementId, ClosingPeriodId)`.
-  3. Missing closing periods skip period-specific metrics but preserve budget baseline columns.
-  4. All decimals are stored with precision 18,2 matching MySQL schema.
+  2. Existing `FinancialEvolution` rows for the selected closing period are removed (matching both numeric IDs and legacy names) before applying new data to prevent cumulative totals.
+  3. `UpsertFinancialEvolution` creates or updates snapshots using composite key `(EngagementId, ClosingPeriodId)`.
+  4. Missing closing periods skip period-specific metrics but preserve budget baseline columns.
+  5. All decimals are stored with precision 18,2 matching MySQL schema.
 
 - **Snapshot Reading (EngagementService):**
   1. `ApplyFinancialControlSnapshot` loads all `FinancialEvolutions` for an engagement.
