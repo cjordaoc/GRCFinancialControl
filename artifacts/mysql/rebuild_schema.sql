@@ -691,6 +691,27 @@ DELIMITER ;
 -- ================================================================
 -- SECTION 7: SEED DATA
 -- ================================================================
+INSERT INTO RankMappings (Id, RankCode, RankName, SpreadsheetRank, CreatedAt, IsActive, LastSeenAt)
+VALUES (1, '05-EXEC DIRECTOR 1', 'EXEC DIRECTOR', 'EXEC DIRECTOR 1', '2025-11-04T15:32:31', 1, '2025-11-04T18:32:49.728508');
+
+INSERT INTO RankMappings (Id, RankCode, RankName, SpreadsheetRank, CreatedAt, IsActive, LastSeenAt)
+VALUES (2, '06-SENIOR MANAGER 2', 'SENIOR MANAGER', 'SENIOR MANAGER 2', '2025-11-04T15:32:31', 1, '2025-11-04T18:32:41.58033');
+
+INSERT INTO RankMappings (Id, RankCode, RankName, SpreadsheetRank, CreatedAt, IsActive, LastSeenAt)
+VALUES (3, '07-SENIOR MANAGER 1', 'SENIOR MANAGER', 'SENIOR MANAGER 1', '2025-11-04T15:32:31', 1, '2025-11-04T18:32:49.728508');
+
+INSERT INTO RankMappings (Id, RankCode, RankName, SpreadsheetRank, CreatedAt, IsActive, LastSeenAt)
+VALUES (4, '11-SENIOR 3', 'SENIOR', 'SENIOR 3', '2025-11-04T15:32:31', 1, '2025-11-04T18:32:49.728508');
+
+INSERT INTO RankMappings (Id, RankCode, RankName, SpreadsheetRank, CreatedAt, IsActive, LastSeenAt)
+VALUES (5, '12-SENIOR 2', 'SENIOR', 'SENIOR 2', '2025-11-04T15:32:31', 1, '2025-11-04T18:32:41.58033');
+
+INSERT INTO RankMappings (Id, RankCode, RankName, SpreadsheetRank, CreatedAt, IsActive, LastSeenAt)
+VALUES (6, '15-STAFF 2', 'STAFF', 'STAFF 2', '2025-11-04T15:32:31', 1, '2025-11-04T18:32:41.58033');
+
+
+
+
 
 INSERT INTO `FiscalYears` (`Name`, `StartDate`, `EndDate`, `AreaSalesTarget`, `AreaRevenueTarget`) VALUES
     ('FY25', '2024-07-01 00:00:00', '2025-06-30 23:59:59', 20000000, 23000000),
