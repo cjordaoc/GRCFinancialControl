@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using GRCFinancialControl.Core.Configuration;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using MySqlConnector;
 
@@ -92,10 +93,12 @@ namespace GRCFinancialControl.Persistence.Services
                 try
                 {
                     var connection = context.Database.GetDbConnection();
+                    var dbTransaction = transaction.GetDbTransaction();
 
                     foreach (var tableName in TablesToClear)
                     {
-                        await DeleteAllRowsIfTableExistsAsync(context, connection, tableName).ConfigureAwait(false);
+                        await DeleteAllRowsIfTableExistsAsync(connection, dbTransaction, tableName)
+                            .ConfigureAwait(false);
                     }
 
                     await context.Database.ExecuteSqlRawAsync(EnableForeignKeyChecksSql).ConfigureAwait(false);
@@ -111,23 +114,38 @@ namespace GRCFinancialControl.Persistence.Services
         }
 
         private static async Task DeleteAllRowsIfTableExistsAsync(
-            ApplicationDbContext context,
             DbConnection connection,
+            DbTransaction? transaction,
             string tableName)
         {
-            if (!await TableExistsAsync(connection, tableName).ConfigureAwait(false))
+            if (!await TableExistsAsync(connection, tableName, transaction).ConfigureAwait(false))
             {
                 return;
             }
 
-            var statement = $"DELETE FROM `{tableName}`;";
-            await context.Database.ExecuteSqlRawAsync(statement).ConfigureAwait(false);
+            await using var command = connection.CreateCommand();
+            command.CommandText = $"DELETE FROM `{tableName}`;";
+
+            if (transaction != null)
+            {
+                command.Transaction = transaction;
+            }
+
+            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
         }
 
-        private static async Task<bool> TableExistsAsync(DbConnection connection, string tableName)
+        private static async Task<bool> TableExistsAsync(
+            DbConnection connection,
+            string tableName,
+            DbTransaction? transaction = null)
         {
             await using var command = connection.CreateCommand();
             command.CommandText = TableExistsSql;
+
+            if (transaction != null)
+            {
+                command.Transaction = transaction;
+            }
 
             var parameter = command.CreateParameter();
             parameter.ParameterName = "@tableName";

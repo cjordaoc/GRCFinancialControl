@@ -435,10 +435,10 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         : closingPeriod.Name.Trim().ToLowerInvariant();
 
                     var evolutionsToRemove = await context.FinancialEvolutions
-                        .Where(fe => fe.ClosingPeriodId != null &&
-                            (string.Equals(fe.ClosingPeriodId!.Trim(), closingPeriodIdLower, StringComparison.OrdinalIgnoreCase) ||
-                             (closingPeriodNameLower != null &&
-                                 string.Equals(fe.ClosingPeriodId!.Trim(), closingPeriodNameLower, StringComparison.OrdinalIgnoreCase))))
+                        .Where(fe => fe.ClosingPeriodId != null)
+                        .Where(fe => fe.ClosingPeriodId!.Trim().ToLower() == closingPeriodIdLower ||
+                                     (closingPeriodNameLower != null &&
+                                      fe.ClosingPeriodId!.Trim().ToLower() == closingPeriodNameLower))
                         .ToListAsync()
                         .ConfigureAwait(false);
 
