@@ -21,10 +21,9 @@
 -- SECTION 1: DROP AND RECREATE DATABASE (OPTIONAL)
 -- ================================================================
 
--- Uncomment these lines if you want to recreate the database completely
 -- DROP DATABASE IF EXISTS blac3289_GRCFinancialControl;
 -- CREATE DATABASE blac3289_GRCFinancialControl CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
--- USE blac3289_GRCFinancialControl;
+USE blac3289_GRCFinancialControl;
 
 -- If not recreating, just use the database
 -- USE blac3289_GRCFinancialControl;
@@ -33,36 +32,16 @@
 -- SECTION 2: DROP ALL EXISTING TABLES
 -- ================================================================
 
-SET SESSION group_concat_max_len = 1024 * 1024;
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Drop views first
+-- Drop objects recreated by this script
 DROP VIEW IF EXISTS vw_PapdRevenueSummary;
-DROP VIEW IF EXISTS vw_ExecutiveDashboard;
-DROP VIEW IF EXISTS vw_EngagementDetails;
-DROP VIEW IF EXISTS vw_BudgetUtilization;
-DROP VIEW IF EXISTS vw_InvoicePipeline;
-DROP VIEW IF EXISTS vw_ManagerRevenueSummary;
-DROP VIEW IF EXISTS vw_EngagementHoursSummary;
-DROP VIEW IF EXISTS vw_FinancialEvolutionSummary;
-DROP VIEW IF EXISTS vw_TableSizeMonitoring;
 
--- Drop procedures
 DROP PROCEDURE IF EXISTS sp_RefreshEngagementLatestFinancials;
-DROP PROCEDURE IF EXISTS sp_RefreshEngagementSummaryCache;
 DROP PROCEDURE IF EXISTS sp_RefreshPapdRevenueSummary;
 DROP PROCEDURE IF EXISTS sp_RefreshManagerRevenueSummary;
 DROP PROCEDURE IF EXISTS sp_RefreshCustomerSummaryCache;
 DROP PROCEDURE IF EXISTS sp_RefreshAllMaterializedTables;
-DROP PROCEDURE IF EXISTS sp_GetEngagementSummary;
-DROP PROCEDURE IF EXISTS sp_GetFiscalYearSummary;
-
--- Drop materialized tables
-DROP TABLE IF EXISTS EngagementLatestFinancials;
-DROP TABLE IF EXISTS EngagementSummaryCache;
-DROP TABLE IF EXISTS PapdRevenueSummaryMaterialized;
-DROP TABLE IF EXISTS ManagerRevenueSummaryMaterialized;
-DROP TABLE IF EXISTS CustomerSummaryCache;
 
 -- 1) Allow a big enough GROUP_CONCAT so the list of tables isn't cut off
 SET SESSION group_concat_max_len = 1024 * 1024;  -- 1 MB
@@ -81,9 +60,6 @@ FROM information_schema.tables
 WHERE TABLE_SCHEMA = DATABASE()
   AND TABLE_TYPE = 'BASE TABLE';
 
--- 3) (Optional) Disable FK checks to avoid dependency issues
-SET FOREIGN_KEY_CHECKS = 0;
-
 -- 4) Run it
 PREPARE stmt FROM @drop_sql;
 EXECUTE stmt;
@@ -95,6 +71,7 @@ DEALLOCATE PREPARE stmt;
    Core reference tables
    ============================ */
 
+-- Table: Customers - master records for client organizations served by the firm.
 CREATE TABLE `Customers`
 (
     `Id`           INT           NOT NULL AUTO_INCREMENT,
@@ -104,6 +81,7 @@ CREATE TABLE `Customers`
     CONSTRAINT `UX_Customers_CustomerCode` UNIQUE (`CustomerCode`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
+-- Table: FiscalYears - defines yearly planning windows with lock state and targets.
 CREATE TABLE `FiscalYears`
 (
     `Id`                INT             NOT NULL AUTO_INCREMENT,
@@ -119,6 +97,7 @@ CREATE TABLE `FiscalYears`
     CONSTRAINT `UX_FiscalYears_Name` UNIQUE (`Name`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
+-- Table: ClosingPeriods - monthly/periodic snapshots mapped to a fiscal year.
 CREATE TABLE `ClosingPeriods`
 (
     `Id`           INT           NOT NULL AUTO_INCREMENT,
@@ -132,6 +111,7 @@ CREATE TABLE `ClosingPeriods`
     CONSTRAINT `FK_ClosingPeriods_FiscalYears` FOREIGN KEY (`FiscalYearId`) REFERENCES `FiscalYears` (`Id`) ON DELETE RESTRICT
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
+-- Table: Papds - partner/associate partner directory used for portfolio slicing.
 CREATE TABLE `Papds`
 (
     `Id`    INT          NOT NULL AUTO_INCREMENT,
@@ -144,6 +124,7 @@ CREATE TABLE `Papds`
     CONSTRAINT `UQ_Papds_EngagementPapdGUI` UNIQUE (`EngagementPapdGUI`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
+-- Table: Managers - engagement managers with contact metadata for allocations.
 CREATE TABLE `Managers`
 (
     `Id`       INT           NOT NULL AUTO_INCREMENT,
@@ -158,6 +139,7 @@ CREATE TABLE `Managers`
     CONSTRAINT `UQ_Managers_EngagementManagerGUI` UNIQUE (`EngagementManagerGUI`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
+-- Table: RankMappings - normalizes spreadsheet rank labels to internal catalog.
 CREATE TABLE IF NOT EXISTS `RankMappings`
 (
     `Id`              INT             NOT NULL AUTO_INCREMENT,
@@ -175,6 +157,7 @@ CREATE TABLE IF NOT EXISTS `RankMappings`
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 
+-- Table: Employees - resource roster keyed by GPN for hours attribution.
 CREATE TABLE `Employees`
 (
     `Gpn`           VARCHAR(20)    NOT NULL,
@@ -195,6 +178,7 @@ CREATE TABLE `Employees`
    Engagements & assignments
    ============================ */
 
+-- Table: Engagements - core project records including financial metadata.
 CREATE TABLE `Engagements`
 (
     `Id`                   INT            NOT NULL AUTO_INCREMENT,
@@ -223,6 +207,7 @@ CREATE TABLE `Engagements`
     CONSTRAINT `FK_Engagements_LastCP` FOREIGN KEY (`LastClosingPeriodId`) REFERENCES `ClosingPeriods` (`Id`) ON DELETE SET NULL
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
+-- Table: EngagementPapds - relationship bridge between engagements and PAPDs.
 CREATE TABLE `EngagementPapds`
 (
     `Id`           INT         NOT NULL AUTO_INCREMENT,
@@ -234,6 +219,7 @@ CREATE TABLE `EngagementPapds`
     CONSTRAINT `UX_EngagementPapds_Assignment` UNIQUE (`EngagementId`, `PapdId`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
+-- Table: EngagementManagerAssignments - links engagements to responsible managers.
 CREATE TABLE `EngagementManagerAssignments`
 (
     `Id`           INT         NOT NULL AUTO_INCREMENT,
@@ -245,6 +231,7 @@ CREATE TABLE `EngagementManagerAssignments`
     CONSTRAINT `UX_EngagementManagerAssignments_Assignment` UNIQUE (`EngagementId`, `ManagerId`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
+-- Table: EngagementAdditionalSales - captures upsell opportunities tied to an engagement.
 CREATE TABLE `EngagementAdditionalSales`
 (
     `Id`            INT             NOT NULL AUTO_INCREMENT,
@@ -262,6 +249,7 @@ CREATE TABLE `EngagementAdditionalSales`
    Budgets & financial evolution
    ============================ */
 
+-- Table: EngagementRankBudgets - latest hours budget snapshot per engagement/rank/period.
 CREATE TABLE `EngagementRankBudgets`
 (
     `Id`             BIGINT         NOT NULL AUTO_INCREMENT,
@@ -286,6 +274,7 @@ CREATE TABLE `EngagementRankBudgets`
     INDEX `IX_EngagementRankBudgets_Latest` (`EngagementId`, `FiscalYearId`, `RankName`, `ClosingPeriodId` DESC)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
+-- Table: EngagementRankBudgetHistory - raw history imports for audit and replay.
 CREATE TABLE `EngagementRankBudgetHistory`
 (
     `Id`               INT             NOT NULL AUTO_INCREMENT,
@@ -302,10 +291,11 @@ CREATE UNIQUE INDEX `IX_History_Key`
     ON `EngagementRankBudgetHistory` (`EngagementCode`, `RankCode`, `FiscalYearId`, `ClosingPeriodId`);
 
 -- Financial Evolution: Granular metrics per closing period (Budget/ETD/FYTD breakdowns)
+-- Table: FinancialEvolution - monthly financial rollups feeding dashboards.
 CREATE TABLE `FinancialEvolution`
 (
     `Id`                   INT            NOT NULL AUTO_INCREMENT,
-    `ClosingPeriodId`      VARCHAR(100)   NOT NULL,
+    `ClosingPeriodId`      INT            NOT NULL,
     `EngagementId`         INT            NOT NULL,
     -- Hours Metrics
     `BudgetHours`          DECIMAL(18, 2) NULL,
@@ -328,8 +318,10 @@ CREATE TABLE `FinancialEvolution`
     CONSTRAINT `PK_FinancialEvolution` PRIMARY KEY (`Id`),
     CONSTRAINT `UX_FinancialEvolution_Key` UNIQUE (`EngagementId`, `ClosingPeriodId`),
     CONSTRAINT `FK_FinancialEvolution_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
-    CONSTRAINT `FK_FinancialEvolution_FiscalYears` FOREIGN KEY (`FiscalYearId`) REFERENCES `FiscalYears` (`Id`) ON DELETE SET NULL
-    -- NOTE: Keeping ClosingPeriodId as VARCHAR(100) to preserve your current external key format.
+    CONSTRAINT `FK_FinancialEvolution_ClosingPeriods` FOREIGN KEY (`ClosingPeriodId`) REFERENCES `ClosingPeriods` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_FinancialEvolution_FiscalYears` FOREIGN KEY (`FiscalYearId`) REFERENCES `FiscalYears` (`Id`) ON DELETE SET NULL,
+    INDEX `IX_FinancialEvolution_FiscalYear` (`FiscalYearId`),
+    INDEX `IX_FinancialEvolution_ClosingPeriod` (`ClosingPeriodId`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 
@@ -337,6 +329,7 @@ CREATE TABLE `FinancialEvolution`
    Allocations (hours & revenue)
    ============================ */
 
+-- Table: PlannedAllocations - planned hours per engagement and closing period.
 CREATE TABLE `PlannedAllocations`
 (
     `Id`              INT            NOT NULL AUTO_INCREMENT,
@@ -350,6 +343,7 @@ CREATE TABLE `PlannedAllocations`
     INDEX `IX_PlannedAllocations_ClosingPeriodId` (`ClosingPeriodId`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
+-- Table: ActualsEntries - time tracking entries imported from source systems.
 CREATE TABLE `ActualsEntries`
 (
     `Id`              INT            NOT NULL AUTO_INCREMENT,
@@ -369,6 +363,7 @@ CREATE TABLE `ActualsEntries`
     INDEX `IX_ActualsEntries_ImportBatch` (`ImportBatchId`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
+-- Table: Exceptions - captures rejected import rows with diagnostic info.
 CREATE TABLE `Exceptions`
 (
     `Id`         INT           NOT NULL AUTO_INCREMENT,
@@ -380,6 +375,7 @@ CREATE TABLE `Exceptions`
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- Snapshot-based Revenue Allocations (aligned with Financial Evolution closing periods)
+-- Table: EngagementFiscalYearRevenueAllocations - FY revenue snapshots aligned to closing periods.
 CREATE TABLE `EngagementFiscalYearRevenueAllocations`
 (
     `Id`             INT            NOT NULL AUTO_INCREMENT,
@@ -413,6 +409,7 @@ CREATE TABLE `EngagementFiscalYearRevenueAllocations`
    (unchanged behavior; TIMESTAMP where auto-defaults are desired)
    =========================================================== */
 
+-- Table: InvoicePlan - header for invoice scheduling scenarios imported from Excel.
 CREATE TABLE `InvoicePlan` (
   `Id`                      INT NOT NULL AUTO_INCREMENT,
   `EngagementId`            VARCHAR(64) NOT NULL,
@@ -430,6 +427,7 @@ CREATE TABLE `InvoicePlan` (
   KEY `IX_InvoicePlan_Engagement` (`EngagementId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Table: InvoicePlanEmail - distribution list for invoice plan notifications.
 CREATE TABLE `InvoicePlanEmail` (
   `Id`        INT NOT NULL AUTO_INCREMENT,
   `PlanId`    INT NOT NULL,
@@ -440,6 +438,7 @@ CREATE TABLE `InvoicePlanEmail` (
   CONSTRAINT `FK_InvoicePlanEmail_Plan` FOREIGN KEY (`PlanId`) REFERENCES `InvoicePlan`(`Id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Table: InvoiceItem - planned invoice installments with financial metadata.
 CREATE TABLE `InvoiceItem` (
   `Id`                  INT NOT NULL AUTO_INCREMENT,
   `PlanId`              INT NOT NULL,
@@ -468,6 +467,7 @@ CREATE TABLE `InvoiceItem` (
   KEY `IX_InvoiceItem_Status` (`Status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Table: InvoiceEmission - tracks actual invoice emissions synced back from S4.
 CREATE TABLE `InvoiceEmission` (
   `Id`            INT NOT NULL AUTO_INCREMENT,
   `InvoiceItemId` INT NOT NULL,
@@ -483,60 +483,60 @@ CREATE TABLE `InvoiceEmission` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
-DELIMITER $$
-CREATE PROCEDURE sp_RefreshPapdRevenueSummary()
-BEGIN
-    TRUNCATE TABLE PapdRevenueSummaryMaterialized;
-    INSERT INTO PapdRevenueSummaryMaterialized (
-        FiscalYearId, FiscalYearName, PapdId, PapdName, PapdLevel,
-        TotalToGoValue, TotalToDateValue, TotalValue, EngagementCount, ActiveEngagementCount
-    )
-    SELECT 
-        fy.Id, fy.Name, p.Id, p.Name, p.Level,
-        COALESCE(SUM(ea.ToGoValue), 0),
-        COALESCE(SUM(ea.ToDateValue), 0),
-        COALESCE(SUM(ea.ToGoValue), 0) + COALESCE(SUM(ea.ToDateValue), 0),
-        COUNT(DISTINCT ep.EngagementId),
-        COUNT(DISTINCT CASE WHEN e.Status = 1 THEN ep.EngagementId END)
-    FROM FiscalYears fy
-    CROSS JOIN Papds p
-    LEFT JOIN EngagementPapds ep ON ep.PapdId = p.Id
-    LEFT JOIN Engagements e ON e.Id = ep.EngagementId
-    LEFT JOIN EngagementFiscalYearRevenueAllocations ea 
-        ON ea.EngagementId = ep.EngagementId AND ea.FiscalYearId = fy.Id
-    GROUP BY fy.Id, fy.Name, p.Id, p.Name, p.Level;
-END$$
-DELIMITER ;
+DROP PROCEDURE IF EXISTS sp_RefreshManagerRevenueSummary;
 DELIMITER $$
 CREATE PROCEDURE sp_RefreshManagerRevenueSummary()
 BEGIN
+    CREATE TABLE IF NOT EXISTS ManagerRevenueSummaryMaterialized (
+        FiscalYearId INT NOT NULL,
+        FiscalYearName VARCHAR(100) NOT NULL,
+        ManagerId INT NOT NULL,
+        ManagerName VARCHAR(200) NOT NULL,
+        ManagerPosition VARCHAR(50) NOT NULL,
+        TotalToGoValue DECIMAL(18,2) DEFAULT 0,
+        TotalToDateValue DECIMAL(18,2) DEFAULT 0,
+        TotalValue DECIMAL(18,2) DEFAULT 0,
+        ChargedHours DECIMAL(18,2) DEFAULT 0,
+        FYTDHours DECIMAL(18,2) DEFAULT 0,
+        FYTDExpenses DECIMAL(18,2) DEFAULT 0,
+        FYTDMargin DECIMAL(18,2) DEFAULT 0,
+        LatestClosingPeriodEnd DATETIME(6) NULL,
+        EngagementCount INT DEFAULT 0,
+        ActiveEngagementCount INT DEFAULT 0,
+        PRIMARY KEY (FiscalYearId, ManagerId)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
     TRUNCATE TABLE ManagerRevenueSummaryMaterialized;
     INSERT INTO ManagerRevenueSummaryMaterialized (
         FiscalYearId, FiscalYearName, ManagerId, ManagerName, ManagerPosition,
-        TotalToGoValue, TotalToDateValue, TotalValue, EngagementCount, ActiveEngagementCount
+        TotalToGoValue, TotalToDateValue, TotalValue,
+        ChargedHours, FYTDHours, FYTDExpenses, FYTDMargin,
+        LatestClosingPeriodEnd, EngagementCount, ActiveEngagementCount
     )
-    SELECT 
-        fy.Id, fy.Name, m.Id, m.Name, m.Position,
-        COALESCE(SUM(ea.ToGoValue), 0),
-        COALESCE(SUM(ea.ToDateValue), 0),
-        COALESCE(SUM(ea.ToGoValue), 0) + COALESCE(SUM(ea.ToDateValue), 0),
-        COUNT(DISTINCT ema.EngagementId),
-        COUNT(DISTINCT CASE WHEN e.Status = 1 THEN ema.EngagementId END)
-    FROM FiscalYears fy
-    CROSS JOIN Managers m
-    LEFT JOIN EngagementManagerAssignments ema ON ema.ManagerId = m.Id
-    LEFT JOIN Engagements e ON e.Id = ema.EngagementId
-    LEFT JOIN EngagementFiscalYearRevenueAllocations ea 
-        ON ea.EngagementId = ema.EngagementId AND ea.FiscalYearId = fy.Id
-    GROUP BY fy.Id, fy.Name, m.Id, m.Name, m.Position;
+    SELECT
+        elf.FiscalYearId,
+        elf.FiscalYearName,
+        m.Id,
+        m.Name,
+        m.Position,
+        COALESCE(SUM(elf.RevenueToGoValue), 0) AS TotalToGoValue,
+        COALESCE(SUM(elf.RevenueToDateValue), 0) AS TotalToDateValue,
+        COALESCE(SUM(elf.TotalRevenue), 0) AS TotalValue,
+        COALESCE(SUM(elf.ChargedHours), 0) AS ChargedHours,
+        COALESCE(SUM(elf.FYTDHours), 0) AS FYTDHours,
+        COALESCE(SUM(elf.FYTDExpenses), 0) AS FYTDExpenses,
+        COALESCE(SUM(elf.FYTDMargin), 0) AS FYTDMargin,
+        MAX(elf.ClosingPeriodEnd) AS LatestClosingPeriodEnd,
+        COUNT(DISTINCT elf.EngagementId) AS EngagementCount,
+        COUNT(DISTINCT CASE WHEN e.Status = 1 THEN elf.EngagementId END) AS ActiveEngagementCount
+    FROM EngagementLatestFinancials elf
+    INNER JOIN EngagementManagerAssignments ema ON ema.EngagementId = elf.EngagementId
+    INNER JOIN Managers m ON m.Id = ema.ManagerId
+    INNER JOIN Engagements e ON e.Id = elf.EngagementId
+    WHERE elf.FiscalYearId IS NOT NULL
+    GROUP BY elf.FiscalYearId, elf.FiscalYearName, m.Id, m.Name, m.Position;
 END$$
 DELIMITER ;
-USE blac3289_GRCFinancialControl;
-
-
-USE blac3289_GRCFinancialControl;
-
-USE blac3289_GRCFinancialControl;
 
 -- ===========================================================
 -- Procedure: sp_RefreshPapdRevenueSummary
@@ -557,6 +557,11 @@ BEGIN
         TotalToGoValue DECIMAL(18,2) DEFAULT 0,
         TotalToDateValue DECIMAL(18,2) DEFAULT 0,
         TotalValue DECIMAL(18,2) DEFAULT 0,
+        ChargedHours DECIMAL(18,2) DEFAULT 0,
+        FYTDHours DECIMAL(18,2) DEFAULT 0,
+        FYTDExpenses DECIMAL(18,2) DEFAULT 0,
+        FYTDMargin DECIMAL(18,2) DEFAULT 0,
+        LatestClosingPeriodEnd DATETIME(6) NULL,
         PRIMARY KEY (FiscalYearId, PapdId),
         INDEX IX_PapdRevenueSummary_FY (FiscalYearId),
         INDEX IX_PapdRevenueSummary_Papd (PapdId)
@@ -566,24 +571,30 @@ BEGIN
     TRUNCATE TABLE PapdRevenueSummary;
 
     INSERT INTO PapdRevenueSummary (
-        FiscalYearId, FiscalYearName, PapdId, PapdName, 
-        TotalToGoValue, TotalToDateValue, TotalValue
+        FiscalYearId, FiscalYearName, PapdId, PapdName,
+        TotalToGoValue, TotalToDateValue, TotalValue,
+        ChargedHours, FYTDHours, FYTDExpenses, FYTDMargin,
+        LatestClosingPeriodEnd
     )
-    SELECT 
-        fy.Id AS FiscalYearId,
-        fy.Name AS FiscalYearName,
+    SELECT
+        elf.FiscalYearId AS FiscalYearId,
+        elf.FiscalYearName AS FiscalYearName,
         p.Id AS PapdId,
         p.Name AS PapdName,
-        COALESCE(SUM(ea.ToGoValue),0) AS TotalToGoValue,
-        COALESCE(SUM(ea.ToDateValue),0) AS TotalToDateValue,
-        COALESCE(SUM(ea.ToGoValue),0) + COALESCE(SUM(ea.ToDateValue),0) AS TotalValue
-    FROM Papds p
-    LEFT JOIN EngagementPapds ep ON ep.PapdId = p.Id
-    LEFT JOIN Engagements e ON e.Id = ep.EngagementId
-    LEFT JOIN EngagementFiscalYearRevenueAllocations ea ON ea.EngagementId = e.Id
-    LEFT JOIN FiscalYears fy ON fy.Id = ea.FiscalYearId
-    GROUP BY fy.Id, fy.Name, p.Id, p.Name
-    ORDER BY fy.Name, p.Name;
+        COALESCE(SUM(elf.RevenueToGoValue),0) AS TotalToGoValue,
+        COALESCE(SUM(elf.RevenueToDateValue),0) AS TotalToDateValue,
+        COALESCE(SUM(elf.TotalRevenue),0) AS TotalValue,
+        COALESCE(SUM(elf.ChargedHours),0) AS ChargedHours,
+        COALESCE(SUM(elf.FYTDHours),0) AS FYTDHours,
+        COALESCE(SUM(elf.FYTDExpenses),0) AS FYTDExpenses,
+        COALESCE(SUM(elf.FYTDMargin),0) AS FYTDMargin,
+        MAX(elf.ClosingPeriodEnd) AS LatestClosingPeriodEnd
+    FROM EngagementLatestFinancials elf
+    INNER JOIN EngagementPapds ep ON ep.EngagementId = elf.EngagementId
+    INNER JOIN Papds p ON p.Id = ep.PapdId
+    WHERE elf.FiscalYearId IS NOT NULL
+    GROUP BY elf.FiscalYearId, elf.FiscalYearName, p.Id, p.Name
+    ORDER BY elf.FiscalYearName, p.Name;
 END$$
 DELIMITER ;
 
@@ -599,38 +610,122 @@ CREATE PROCEDURE sp_RefreshEngagementLatestFinancials()
 BEGIN
     CREATE TABLE IF NOT EXISTS EngagementLatestFinancials (
         EngagementId INT NOT NULL,
+        EngagementCode VARCHAR(64) NOT NULL,
+        EngagementDescription VARCHAR(255) NOT NULL,
+        Source VARCHAR(20) NOT NULL,
+        CustomerId INT NULL,
+        CustomerName VARCHAR(200) NULL,
         FiscalYearId INT NOT NULL,
+        FiscalYearName VARCHAR(100) NOT NULL,
         ClosingPeriodId INT NOT NULL,
+        ClosingPeriodName VARCHAR(100) NOT NULL,
+        ClosingPeriodEnd DATETIME(6) NOT NULL,
+        RevenueToGoValue DECIMAL(18,2) DEFAULT 0,
+        RevenueToDateValue DECIMAL(18,2) DEFAULT 0,
         TotalRevenue DECIMAL(18,2) DEFAULT 0,
-        TotalHours DECIMAL(18,2) DEFAULT 0,
+        ValueData DECIMAL(18,2) DEFAULT 0,
+        BudgetHours DECIMAL(18,2) DEFAULT 0,
+        ChargedHours DECIMAL(18,2) DEFAULT 0,
+        FYTDHours DECIMAL(18,2) DEFAULT 0,
+        AdditionalHours DECIMAL(18,2) DEFAULT 0,
+        ExpenseBudget DECIMAL(18,2) DEFAULT 0,
+        ExpensesToDate DECIMAL(18,2) DEFAULT 0,
+        FYTDExpenses DECIMAL(18,2) DEFAULT 0,
+        ToDateMargin DECIMAL(18,2) DEFAULT 0,
+        FYTDMargin DECIMAL(18,2) DEFAULT 0,
         MarginPercentage DECIMAL(9,4) DEFAULT 0,
+        PrimaryManagerId INT NULL,
+        PrimaryManagerName VARCHAR(200) NULL,
+        PrimaryPapdId INT NULL,
+        PrimaryPapdName VARCHAR(200) NULL,
         LastRefresh TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (EngagementId, ClosingPeriodId),
         INDEX IX_ELF_FY (FiscalYearId),
-        INDEX IX_ELF_CP (ClosingPeriodId)
+        INDEX IX_ELF_CP (ClosingPeriodId),
+        INDEX IX_ELF_Customer (CustomerId),
+        INDEX IX_ELF_PrimaryManager (PrimaryManagerId),
+        INDEX IX_ELF_PrimaryPapd (PrimaryPapdId)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
     TRUNCATE TABLE EngagementLatestFinancials;
 
     INSERT INTO EngagementLatestFinancials (
-        EngagementId, FiscalYearId, ClosingPeriodId, TotalRevenue, TotalHours, MarginPercentage
+        EngagementId, EngagementCode, EngagementDescription, Source,
+        CustomerId, CustomerName,
+        FiscalYearId, FiscalYearName,
+        ClosingPeriodId, ClosingPeriodName, ClosingPeriodEnd,
+        RevenueToGoValue, RevenueToDateValue, TotalRevenue, ValueData,
+        BudgetHours, ChargedHours, FYTDHours, AdditionalHours,
+        ExpenseBudget, ExpensesToDate, FYTDExpenses,
+        ToDateMargin, FYTDMargin, MarginPercentage,
+        PrimaryManagerId, PrimaryManagerName,
+        PrimaryPapdId, PrimaryPapdName,
+        LastRefresh
     )
-    SELECT 
-        fe.EngagementId,
-        fe.FiscalYearId,
+    SELECT
+        e.Id AS EngagementId,
+        e.EngagementId AS EngagementCode,
+        e.Description AS EngagementDescription,
+        e.Source,
+        e.CustomerId,
+        c.Name AS CustomerName,
+        fy.Id AS FiscalYearId,
+        fy.Name AS FiscalYearName,
         fe.ClosingPeriodId,
-        COALESCE(MAX(IFNULL(fe.RevenueToGoValue,0) + IFNULL(fe.RevenueToDateValue,0)),0) AS TotalRevenue,
-        COALESCE(MAX(IFNULL(fe.BudgetHours,0) + IFNULL(fe.AdditionalHours,0)),0) AS TotalHours,
-        COALESCE(MAX((fe.ToDateMargin / NULLIF(fe.RevenueToDateValue,0)) * 100),0) AS MarginPercentage
+        cp.Name AS ClosingPeriodName,
+        cp.PeriodEnd AS ClosingPeriodEnd,
+        COALESCE(fe.RevenueToGoValue,0) AS RevenueToGoValue,
+        COALESCE(fe.RevenueToDateValue,0) AS RevenueToDateValue,
+        COALESCE(fe.RevenueToGoValue,0) + COALESCE(fe.RevenueToDateValue,0) AS TotalRevenue,
+        COALESCE(fe.ValueData,0) AS ValueData,
+        COALESCE(fe.BudgetHours,0) AS BudgetHours,
+        COALESCE(fe.ChargedHours,0) AS ChargedHours,
+        COALESCE(fe.FYTDHours,0) AS FYTDHours,
+        COALESCE(fe.AdditionalHours,0) AS AdditionalHours,
+        COALESCE(fe.ExpenseBudget,0) AS ExpenseBudget,
+        COALESCE(fe.ExpensesToDate,0) AS ExpensesToDate,
+        COALESCE(fe.FYTDExpenses,0) AS FYTDExpenses,
+        COALESCE(fe.ToDateMargin,0) AS ToDateMargin,
+        COALESCE(fe.FYTDMargin,0) AS FYTDMargin,
+        COALESCE(ROUND(COALESCE(fe.ToDateMargin,0) / NULLIF(fe.RevenueToDateValue,0) * 100, 4), 0) AS MarginPercentage,
+        mgr.PrimaryManagerId,
+        mgr.PrimaryManagerName,
+        papd.PrimaryPapdId,
+        papd.PrimaryPapdName,
+        CURRENT_TIMESTAMP AS LastRefresh
     FROM FinancialEvolution fe
+    INNER JOIN ClosingPeriods cp ON cp.Id = fe.ClosingPeriodId
+    INNER JOIN FiscalYears fy ON fy.Id = COALESCE(fe.FiscalYearId, cp.FiscalYearId)
+    INNER JOIN Engagements e ON e.Id = fe.EngagementId
+    LEFT JOIN Customers c ON c.Id = e.CustomerId
+    LEFT JOIN (
+        SELECT ema.EngagementId,
+               MIN(m.Id) AS PrimaryManagerId,
+               GROUP_CONCAT(DISTINCT m.Name ORDER BY m.Name SEPARATOR ', ') AS PrimaryManagerName
+        FROM EngagementManagerAssignments ema
+        INNER JOIN Managers m ON m.Id = ema.ManagerId
+        GROUP BY ema.EngagementId
+    ) mgr ON mgr.EngagementId = e.Id
+    LEFT JOIN (
+        SELECT ep.EngagementId,
+               MIN(p.Id) AS PrimaryPapdId,
+               GROUP_CONCAT(DISTINCT p.Name ORDER BY p.Name SEPARATOR ', ') AS PrimaryPapdName
+        FROM EngagementPapds ep
+        INNER JOIN Papds p ON p.Id = ep.PapdId
+        GROUP BY ep.EngagementId
+    ) papd ON papd.EngagementId = e.Id
     INNER JOIN (
-        SELECT EngagementId, MAX(ClosingPeriodId) AS LatestCP
-        FROM FinancialEvolution
-        GROUP BY EngagementId
-    ) latest 
-        ON latest.EngagementId = fe.EngagementId 
-       AND latest.LatestCP = fe.ClosingPeriodId
-    GROUP BY fe.EngagementId, fe.FiscalYearId, fe.ClosingPeriodId;
+        SELECT fe3.EngagementId,
+               COALESCE(fe3.FiscalYearId, cp3.FiscalYearId) AS FiscalYearId,
+               MAX(cp3.PeriodEnd) AS MaxPeriodEnd
+        FROM FinancialEvolution fe3
+        INNER JOIN ClosingPeriods cp3 ON cp3.Id = fe3.ClosingPeriodId
+        GROUP BY fe3.EngagementId, COALESCE(fe3.FiscalYearId, cp3.FiscalYearId)
+    ) latest
+        ON latest.EngagementId = fe.EngagementId
+       AND latest.FiscalYearId = COALESCE(fe.FiscalYearId, cp.FiscalYearId)
+       AND latest.MaxPeriodEnd = cp.PeriodEnd
+    WHERE fy.Id IS NOT NULL;
 END$$
 DELIMITER ;
 
@@ -646,6 +741,8 @@ CREATE PROCEDURE sp_RefreshAllMaterializedTables()
 BEGIN
     CALL sp_RefreshEngagementLatestFinancials();
     CALL sp_RefreshPapdRevenueSummary();
+    CALL sp_RefreshManagerRevenueSummary();
+    CALL sp_RefreshCustomerSummaryCache();
 END$$
 DELIMITER ;
 
@@ -654,36 +751,125 @@ DELIMITER ;
 DELIMITER $$
 CREATE PROCEDURE sp_RefreshCustomerSummaryCache()
 BEGIN
+    CREATE TABLE IF NOT EXISTS CustomerSummaryCache (
+        CustomerId INT NOT NULL,
+        CustomerName VARCHAR(200) NOT NULL,
+        CustomerCode VARCHAR(20) NOT NULL,
+        TotalEngagements INT DEFAULT 0,
+        ActiveEngagements INT DEFAULT 0,
+        RevenueToGoValue DECIMAL(18,2) DEFAULT 0,
+        RevenueToDateValue DECIMAL(18,2) DEFAULT 0,
+        TotalRevenue DECIMAL(18,2) DEFAULT 0,
+        ValueData DECIMAL(18,2) DEFAULT 0,
+        ChargedHours DECIMAL(18,2) DEFAULT 0,
+        FYTDHours DECIMAL(18,2) DEFAULT 0,
+        FYTDExpenses DECIMAL(18,2) DEFAULT 0,
+        FYTDMargin DECIMAL(18,2) DEFAULT 0,
+        TotalInvoiced DECIMAL(18,2) DEFAULT 0,
+        OutstandingInvoices INT DEFAULT 0,
+        LastActivityDate DATETIME NULL,
+        LatestClosingPeriodEnd DATETIME(6) NULL,
+        PRIMARY KEY (CustomerId),
+        INDEX IX_CustomerSummaryCache_Code (CustomerCode)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
     TRUNCATE TABLE CustomerSummaryCache;
     INSERT INTO CustomerSummaryCache (
         CustomerId, CustomerName, CustomerCode, TotalEngagements, ActiveEngagements,
-        TotalRevenue, TotalInvoiced, OutstandingInvoices, LastActivityDate
+        RevenueToGoValue, RevenueToDateValue, TotalRevenue, ValueData,
+        ChargedHours, FYTDHours, FYTDExpenses, FYTDMargin,
+        TotalInvoiced, OutstandingInvoices, LastActivityDate, LatestClosingPeriodEnd
     )
-    SELECT 
-        c.Id, c.Name, c.CustomerCode,
-        COUNT(DISTINCT e.Id),
-        COUNT(DISTINCT CASE WHEN e.Status = 1 THEN e.Id END),
-        COALESCE((SELECT SUM(TotalValue) FROM EngagementFiscalYearRevenueAllocations ea
-                  INNER JOIN Engagements e2 ON e2.Id = ea.EngagementId WHERE e2.CustomerId = c.Id), 0),
-        COALESCE((SELECT SUM(ii.Amount) FROM InvoicePlan ip
-                  INNER JOIN InvoiceItem ii ON ii.PlanId = ip.Id
-                  INNER JOIN Engagements e3 ON e3.EngagementId = ip.EngagementId
-                  WHERE e3.CustomerId = c.Id AND ii.Status = 'Emitted'), 0),
-        COALESCE((SELECT COUNT(*) FROM InvoicePlan ip
-                  INNER JOIN InvoiceItem ii ON ii.PlanId = ip.Id
-                  INNER JOIN Engagements e4 ON e4.EngagementId = ip.EngagementId
-                  WHERE e4.CustomerId = c.Id AND ii.Status NOT IN ('Emitted', 'Canceled')), 0),
+    SELECT
+        c.Id,
+        c.Name,
+        c.CustomerCode,
+        COUNT(DISTINCT e.Id) AS TotalEngagements,
+        COUNT(DISTINCT CASE WHEN e.Status = 1 THEN e.Id END) AS ActiveEngagements,
+        COALESCE(SUM(elf_summary.RevenueToGoValue), 0) AS RevenueToGoValue,
+        COALESCE(SUM(elf_summary.RevenueToDateValue), 0) AS RevenueToDateValue,
+        COALESCE(SUM(elf_summary.TotalRevenue), 0) AS TotalRevenue,
+        COALESCE(SUM(elf_summary.ValueData), 0) AS ValueData,
+        COALESCE(SUM(elf_summary.ChargedHours), 0) AS ChargedHours,
+        COALESCE(SUM(elf_summary.FYTDHours), 0) AS FYTDHours,
+        COALESCE(SUM(elf_summary.FYTDExpenses), 0) AS FYTDExpenses,
+        COALESCE(SUM(elf_summary.FYTDMargin), 0) AS FYTDMargin,
+        COALESCE(SUM(inv_totals.TotalInvoiced), 0) AS TotalInvoiced,
+        COALESCE(SUM(inv_totals.OutstandingInvoices), 0) AS OutstandingInvoices,
         GREATEST(
-            COALESCE((SELECT MAX(Date) FROM ActualsEntries ae 
-                      INNER JOIN Engagements e5 ON e5.Id = ae.EngagementId 
-                      WHERE e5.CustomerId = c.Id), '1900-01-01'),
-            COALESCE((SELECT MAX(UpdatedAt) FROM InvoicePlan ip
-                      INNER JOIN Engagements e6 ON e6.EngagementId = ip.EngagementId
-                      WHERE e6.CustomerId = c.Id), '1900-01-01')
-        )
+            COALESCE(MAX(ae.MaxActualDate), '1900-01-01 00:00:00'),
+            COALESCE(MAX(inv_totals.MaxPlanUpdate), '1900-01-01 00:00:00'),
+            COALESCE(MAX(elf_summary.LatestClosingPeriodEnd), '1900-01-01 00:00:00')
+        ) AS LastActivityDate,
+        MAX(elf_summary.LatestClosingPeriodEnd) AS LatestClosingPeriodEnd
     FROM Customers c
     LEFT JOIN Engagements e ON e.CustomerId = c.Id
+    LEFT JOIN (
+        SELECT
+            EngagementId,
+            SUM(RevenueToGoValue) AS RevenueToGoValue,
+            SUM(RevenueToDateValue) AS RevenueToDateValue,
+            SUM(TotalRevenue) AS TotalRevenue,
+            SUM(ValueData) AS ValueData,
+            SUM(ChargedHours) AS ChargedHours,
+            SUM(FYTDHours) AS FYTDHours,
+            SUM(FYTDExpenses) AS FYTDExpenses,
+            SUM(FYTDMargin) AS FYTDMargin,
+            MAX(ClosingPeriodEnd) AS LatestClosingPeriodEnd
+        FROM EngagementLatestFinancials
+        GROUP BY EngagementId
+    ) elf_summary ON elf_summary.EngagementId = e.Id
+    LEFT JOIN (
+        SELECT EngagementId, MAX(Date) AS MaxActualDate
+        FROM ActualsEntries
+        GROUP BY EngagementId
+    ) ae ON ae.EngagementId = e.Id
+    LEFT JOIN (
+        SELECT e2.Id AS EngagementId,
+               SUM(CASE WHEN ii.Status = 'Emitted' THEN ii.Amount ELSE 0 END) AS TotalInvoiced,
+               SUM(CASE WHEN ii.Status NOT IN ('Emitted','Canceled') THEN 1 ELSE 0 END) AS OutstandingInvoices,
+               MAX(ip.UpdatedAt) AS MaxPlanUpdate
+        FROM Engagements e2
+        LEFT JOIN InvoicePlan ip ON ip.EngagementId = e2.EngagementId
+        LEFT JOIN InvoiceItem ii ON ii.PlanId = ip.Id
+        GROUP BY e2.Id
+    ) inv_totals ON inv_totals.EngagementId = e.Id
     GROUP BY c.Id, c.Name, c.CustomerCode;
+END$$
+DELIMITER ;
+
+
+-- ===========================================================
+-- Triggers: keep dashboard materializations in sync with FinancialEvolution changes
+-- ===========================================================
+
+DROP TRIGGER IF EXISTS trg_FinancialEvolution_AfterInsert;
+DELIMITER $$
+CREATE TRIGGER trg_FinancialEvolution_AfterInsert
+AFTER INSERT ON FinancialEvolution
+FOR EACH ROW
+BEGIN
+    CALL sp_RefreshAllMaterializedTables();
+END$$
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS trg_FinancialEvolution_AfterUpdate;
+DELIMITER $$
+CREATE TRIGGER trg_FinancialEvolution_AfterUpdate
+AFTER UPDATE ON FinancialEvolution
+FOR EACH ROW
+BEGIN
+    CALL sp_RefreshAllMaterializedTables();
+END$$
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS trg_FinancialEvolution_AfterDelete;
+DELIMITER $$
+CREATE TRIGGER trg_FinancialEvolution_AfterDelete
+AFTER DELETE ON FinancialEvolution
+FOR EACH ROW
+BEGIN
+    CALL sp_RefreshAllMaterializedTables();
 END$$
 DELIMITER ;
 
@@ -691,26 +877,24 @@ DELIMITER ;
 -- ================================================================
 -- SECTION 7: SEED DATA
 -- ================================================================
-INSERT INTO RankMappings (Id, RankCode, RankName, SpreadsheetRank, CreatedAt, IsActive, LastSeenAt)
-VALUES (1, '05-EXEC DIRECTOR 1', 'EXEC DIRECTOR', 'EXEC DIRECTOR 1', '2025-11-04T15:32:31', 1, '2025-11-04T18:32:49.728508');
+TRUNCATE TABLE RankMappings;
 
-INSERT INTO RankMappings (Id, RankCode, RankName, SpreadsheetRank, CreatedAt, IsActive, LastSeenAt)
-VALUES (2, '06-SENIOR MANAGER 2', 'SENIOR MANAGER', 'SENIOR MANAGER 2', '2025-11-04T15:32:31', 1, '2025-11-04T18:32:41.58033');
-
-INSERT INTO RankMappings (Id, RankCode, RankName, SpreadsheetRank, CreatedAt, IsActive, LastSeenAt)
-VALUES (3, '07-SENIOR MANAGER 1', 'SENIOR MANAGER', 'SENIOR MANAGER 1', '2025-11-04T15:32:31', 1, '2025-11-04T18:32:49.728508');
-
-INSERT INTO RankMappings (Id, RankCode, RankName, SpreadsheetRank, CreatedAt, IsActive, LastSeenAt)
-VALUES (4, '11-SENIOR 3', 'SENIOR', 'SENIOR 3', '2025-11-04T15:32:31', 1, '2025-11-04T18:32:49.728508');
-
-INSERT INTO RankMappings (Id, RankCode, RankName, SpreadsheetRank, CreatedAt, IsActive, LastSeenAt)
-VALUES (5, '12-SENIOR 2', 'SENIOR', 'SENIOR 2', '2025-11-04T15:32:31', 1, '2025-11-04T18:32:41.58033');
-
-INSERT INTO RankMappings (Id, RankCode, RankName, SpreadsheetRank, CreatedAt, IsActive, LastSeenAt)
-VALUES (6, '15-STAFF 2', 'STAFF', 'STAFF 2', '2025-11-04T15:32:31', 1, '2025-11-04T18:32:41.58033');
-
-
-
+INSERT INTO RankMappings (RankCode, RankName, SpreadsheetRank, CreatedAt, IsActive, LastSeenAt)
+VALUES
+    ('04-PARTNER', 'PARTNER', 'PARTNER', '2024-01-01 00:00:00', 1, '2024-01-01 00:00:00'),
+    ('05-EXEC DIRECTOR 1', 'EXEC DIRECTOR', 'EXEC DIRECTOR 1', '2024-01-01 00:00:00', 1, '2024-01-01 00:00:00'),
+    ('06-SENIOR MANAGER 2', 'SENIOR MANAGER', 'SENIOR MANAGER 2', '2024-01-01 00:00:00', 1, '2024-01-01 00:00:00'),
+    ('07-SENIOR MANAGER 1', 'SENIOR MANAGER', 'SENIOR MANAGER 1', '2024-01-01 00:00:00', 1, '2024-01-01 00:00:00'),
+    ('08-MANAGER 3', 'MANAGER', 'MANAGER 3', '2024-01-01 00:00:00', 1, '2024-01-01 00:00:00'),
+    ('09-MANAGER 2', 'MANAGER', 'MANAGER 2', '2024-01-01 00:00:00', 1, '2024-01-01 00:00:00'),
+    ('10-MANAGER 1', 'MANAGER', 'MANAGER 1', '2024-01-01 00:00:00', 1, '2024-01-01 00:00:00'),
+    ('11-SENIOR 3', 'SENIOR', 'SENIOR 3', '2024-01-01 00:00:00', 1, '2024-01-01 00:00:00'),
+    ('12-SENIOR 2', 'SENIOR', 'SENIOR 2', '2024-01-01 00:00:00', 1, '2024-01-01 00:00:00'),
+    ('13-SENIOR 1', 'SENIOR', 'SENIOR 1', '2024-01-01 00:00:00', 1, '2024-01-01 00:00:00'),
+    ('14-STAFF 3', 'STAFF', 'STAFF 3', '2024-01-01 00:00:00', 1, '2024-01-01 00:00:00'),
+    ('15-STAFF 2', 'STAFF', 'STAFF 2', '2024-01-01 00:00:00', 1, '2024-01-01 00:00:00'),
+    ('16-STAFF 1', 'STAFF', 'STAFF 1', '2024-01-01 00:00:00', 1, '2024-01-01 00:00:00'),
+    ('17-ASSISTANT', 'ASSISTANT', 'ASSISTANT', '2024-01-01 00:00:00', 1, '2024-01-01 00:00:00');
 
 
 INSERT INTO `FiscalYears` (`Name`, `StartDate`, `EndDate`, `AreaSalesTarget`, `AreaRevenueTarget`) VALUES
@@ -734,7 +918,7 @@ VALUES
     ('Vinicius Almeida', 'vinicius.almeida@br.ey.com', 'Manager', '', 'SA\\MP311WS');
     
     
-    INSERT INTO blac3289_GRCFinancialControl.Papds 
+INSERT INTO `Papds`
     (`Name`, `Level`, `EngagementPapdGUI`, `WindowsLogin`)
 VALUES
     ('Danilo Passos', 'AssociatePartner','25001571',  'SA\\danilo.passos'),
@@ -779,56 +963,19 @@ ANALYZE TABLE ActualsEntries;
 ANALYZE TABLE EngagementFiscalYearRevenueAllocations;
 
 SET FOREIGN_KEY_CHECKS = 1;
-CREATE OR REPLACE ALGORITHM=UNDEFINED 
-DEFINER=`blac3289_GRCFinControl`@`%` 
-SQL SECURITY DEFINER 
-VIEW `vw_PapdRevenueSummary` AS
-SELECT 
-    fy.Id AS FiscalYearId,
-    fy.Name AS FiscalYearName,
-    p.Id AS PapdId,
-    p.Name AS PapdName,
-    SUM(fe.RevenueToDateValue) AS TotalToDateValue,
-    SUM(fe.RevenueToGoValue)   AS TotalToGoValue,
-    SUM(fe.RevenueToDateValue + fe.RevenueToGoValue) AS TotalValue
-FROM `blac3289_GRCFinancialControl`.`FinancialEvolution` fe
-INNER JOIN (
-    -- ✅ Latest ClosingPeriod per Engagement based on chronological EndDate
-    SELECT 
-        fe2.EngagementId,
-        cp2.Id AS LatestClosingPeriodId
-    FROM `blac3289_GRCFinancialControl`.`FinancialEvolution` fe2
-    INNER JOIN `blac3289_GRCFinancialControl`.`ClosingPeriods` cp2 
-        ON cp2.Id = fe2.ClosingPeriodId
-    INNER JOIN (
-        SELECT 
-            fe3.EngagementId,
-            MAX(cp3.PeriodEnd) AS MaxEndDate
-        FROM `blac3289_GRCFinancialControl`.`FinancialEvolution` fe3
-        INNER JOIN `blac3289_GRCFinancialControl`.`ClosingPeriods` cp3 
-            ON cp3.Id = fe3.ClosingPeriodId
-        GROUP BY fe3.EngagementId
-    ) latest_dates
-        ON latest_dates.EngagementId = fe2.EngagementId
-       AND cp2.PeriodEnd = latest_dates.MaxEndDate
-) latest
-    ON latest.EngagementId = fe.EngagementId
-   AND latest.LatestClosingPeriodId = fe.ClosingPeriodId
-INNER JOIN `blac3289_GRCFinancialControl`.`Engagements` e 
-    ON e.Id = fe.EngagementId
-INNER JOIN `blac3289_GRCFinancialControl`.`EngagementPapds` ep 
-    ON ep.EngagementId = e.Id
-INNER JOIN `blac3289_GRCFinancialControl`.`Papds` p 
-    ON p.Id = ep.PapdId
-INNER JOIN `blac3289_GRCFinancialControl`.`FiscalYears` fy 
-    ON fy.Id = fe.FiscalYearId
-GROUP BY 
-    fy.Id,
-    fy.Name,
-    p.Id,
-    p.Name;
+CREATE OR REPLACE VIEW `vw_PapdRevenueSummary` AS
+SELECT
+    FiscalYearId,
+    FiscalYearName,
+    PapdId,
+    PapdName,
+    TotalToDateValue,
+    TotalToGoValue,
+    TotalValue,
+    ChargedHours,
+    FYTDHours,
+    FYTDExpenses,
+    FYTDMargin,
+    LatestClosingPeriodEnd
+FROM PapdRevenueSummary;
 
-SELECT 'Database recreation complete with all optimizations!' AS Status;
-SELECT 'Total tables created:' AS Info, COUNT(*) AS Count FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE';
-SELECT 'Total views created:' AS Info, COUNT(*) AS Count FROM information_schema.VIEWS WHERE TABLE_SCHEMA = DATABASE();
-SELECT 'Total indexes created:' AS Info, COUNT(DISTINCT INDEX_NAME) AS Count FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND INDEX_NAME != 'PRIMARY';
