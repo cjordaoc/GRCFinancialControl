@@ -118,7 +118,7 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
 - **Import Pipeline (FullManagementDataImporter):**
   1. `ParseRows` extracts Full Management Data rows and maps Excel headers to domain fields:
      - "Original Budget Hours" / "Budget Hours" → `OriginalBudgetHours` → `BudgetHours`
-     - "Original Budget TER" → `OriginalBudgetTer` → `Engagement.OpeningValue`
+     - Column **JN** – "Original Budget TER" → `OriginalBudgetTer` → `Engagement.OpeningValue`
      - "Charged Hours ETD" / "ETD Hours" → `ChargedHours`
      - "Charged Hours FYTD" / "FYTD Hours" → `FYTDHours`
     - "Ter Mercury Projected" / "ETC-P Value" → `TERMercuryProjectedOppCurrency` → `ValueData`
@@ -141,6 +141,7 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
   3. **Only the latest snapshot is applied** to the engagement entity:
      - `InitialHoursBudget = latest.BudgetHours`
      - `OpeningValue` is populated from the workbook's **Original Budget TER** column during import and left untouched when applying snapshots
+     - `ValueData` stores the same **Original Budget TER** amount when present so the Financial Data screen's *Opening Value* field mirrors column **JN**
      - `OpeningExpenses = latest.ExpenseBudget`
      - `MarginPctBudget = latest.BudgetMargin`
      - `EstimatedToCompleteHours = latest.ChargedHours`
@@ -261,6 +262,7 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
   - Status/rank columns are normalized via `NormalizeWhitespace` to maintain consistent storage.
 - Importers call `EngagementImportSkipEvaluator` to ignore rows targeting S/4 Project engagements or engagements with status `Closed`, emitting the warnings `⚠ Values for S/4 Projects must be inserted manually. Data import was skipped for Engagement {EngagementID}.` and `⚠ Engagement {EngagementID} skipped – status is Closed.`; the S/4 pathway now only refreshes metadata (description + customer link), creating missing customers and replacing placeholder codes when the workbook finally includes the official identifier. Whenever at least one S/4 engagement changes, `ImportViewModel` triggers `ToastService.ShowSuccess("FINC_Import_Toast_S4MetadataSuccess")` so users receive immediate confirmation.
 - `ImportViewModel` listens for `ApplicationParametersChangedMessage` to toggle `HasClosingPeriodSelected`, keeping the Full Management import command disabled until a closing period is selected on the Home dashboard.
+- `ImportCommand` routes through `ConfirmFullManagementClosingPeriodAsync` before `_filePickerService.OpenFileAsync()`; the helper loads the selected `ClosingPeriod` via `IClosingPeriodService`, formats the fiscal-year name and period range, and calls `DialogService.ShowConfirmationAsync` so the user explicitly approves the target closing period. Cancelling the dialog aborts the import.
 
 ---
 

@@ -399,7 +399,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             new(FieldNames.CustomerCode, "Client ID", "BI", ColumnLetterToIndex("BI"), CustomerIdHeaders, false),
             new(FieldNames.OpportunityCurrency, "Opportunity Currency", "FX", ColumnLetterToIndex("FX"), OpportunityCurrencyHeaders, false),
             new(FieldNames.OriginalBudgetHours, "Original Budget Hours", "HL", ColumnLetterToIndex("HL"), OriginalBudgetHoursHeaders, false),
-            new(FieldNames.OriginalBudgetTer, "Original Budget TER", "HV", ColumnLetterToIndex("HV"), OriginalBudgetTerHeaders, false),
+            new(FieldNames.OriginalBudgetTer, "Original Budget TER", "JN", ColumnLetterToIndex("JN"), OriginalBudgetTerHeaders, false),
             new(FieldNames.OriginalBudgetMarginPercent, "Original Budget Margin %", "HW", ColumnLetterToIndex("HW"), OriginalBudgetMarginPercentHeaders, false),
             new(FieldNames.OriginalBudgetExpenses, "Original Budget Expenses", "HQ", ColumnLetterToIndex("HQ"), OriginalBudgetExpensesHeaders, false),
             new(FieldNames.ChargedHours, "Charged Hours ETD", "CI", ColumnLetterToIndex("CI"), ChargedHoursETDHeaders, false),
@@ -883,7 +883,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                 row.OriginalBudgetHours,
                                 row.ChargedHours,
                                 row.FYTDHours,
-                                valueData,
+                                budgetValue: row.OriginalBudgetTer,
+                                value: valueData,
                                 row.OriginalBudgetMarginPercent,
                                 row.ToDateMargin,
                                 row.FYTDMargin,
@@ -1956,6 +1957,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             decimal? budgetHours,
             decimal? chargedHours,
             decimal? fytdHours,
+            decimal? budgetValue,
             decimal? value,
             decimal? budgetMargin,
             decimal? toDateMargin,
@@ -1968,7 +1970,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             decimal? revenueToDateValue = null)
         {
             if (!budgetHours.HasValue && !chargedHours.HasValue && !fytdHours.HasValue &&
-                !value.HasValue && !budgetMargin.HasValue && !toDateMargin.HasValue && !fytdMargin.HasValue &&
+                !budgetValue.HasValue && !value.HasValue && !budgetMargin.HasValue && !toDateMargin.HasValue && !fytdMargin.HasValue &&
                 !expenseBudget.HasValue && !expensesToDate.HasValue && !fytdExpenses.HasValue &&
                 !revenueToGoValue.HasValue && !revenueToDateValue.HasValue)
             {
@@ -1995,7 +1997,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             evolution.ChargedHours = chargedHours;
             evolution.FYTDHours = fytdHours;
             evolution.AdditionalHours = null;
-            evolution.ValueData = value;
+            evolution.ValueData = budgetValue ?? value;
             evolution.BudgetMargin = budgetMargin;
             evolution.ToDateMargin = toDateMargin;
             evolution.FYTDMargin = fytdMargin;
@@ -2020,7 +2022,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             public string CustomerCode { get; init; } = string.Empty;
             public string OpportunityCurrency { get; init; } = string.Empty;
             public decimal? OriginalBudgetHours { get; init; }
-            public decimal? OriginalBudgetTer { get; init; }
+            public decimal? OriginalBudgetTer { get; set; }
             public decimal? OriginalBudgetMarginPercent { get; init; }
             public decimal? OriginalBudgetExpenses { get; init; }
             public decimal? ChargedHours { get; init; }

@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using App.Presentation.Localization;
@@ -11,6 +14,7 @@ using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Persistence.Services.Importers;
 using GRCFinancialControl.Persistence.Services.Importers.Budget;
 using GRCFinancialControl.Persistence.Services.Interfaces;
+using GRCFinancialControl.Core.Models;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {
@@ -26,7 +30,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private readonly AllocationPlanningImporter _allocationPlanningImporter;
         private readonly LoggingService _loggingService;
         private readonly ISettingsService _settingsService;
+        private readonly DialogService _dialogService;
+        private readonly IClosingPeriodService _closingPeriodService;
         private readonly Action<string> _logHandler;
+        private IReadOnlyList<ClosingPeriod>? _closingPeriods;
 
         [ObservableProperty]
         private bool _isImporting;
@@ -63,7 +70,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                                IFullManagementDataImporter fullManagementImporter,
                                AllocationPlanningImporter allocationPlanningImporter,
                                LoggingService loggingService,
-                               ISettingsService settingsService)
+                               ISettingsService settingsService,
+                               DialogService dialogService,
+                               IClosingPeriodService closingPeriodService)
         {
             _filePickerService = filePickerService;
             _budgetImporter = budgetImporter ?? throw new ArgumentNullException(nameof(budgetImporter));
@@ -71,6 +80,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             _allocationPlanningImporter = allocationPlanningImporter ?? throw new ArgumentNullException(nameof(allocationPlanningImporter));
             _loggingService = loggingService;
             _settingsService = settingsService;
+            _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+            _closingPeriodService = closingPeriodService ?? throw new ArgumentNullException(nameof(closingPeriodService));
             _logHandler = message =>
             {
                 if (Dispatcher.UIThread.CheckAccess())
@@ -121,6 +132,17 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
+            int? confirmedClosingPeriodId = null;
+
+            if (string.Equals(FileType, FullManagementType, StringComparison.Ordinal))
+            {
+                confirmedClosingPeriodId = await ConfirmFullManagementClosingPeriodAsync();
+                if (!confirmedClosingPeriodId.HasValue)
+                {
+                    return;
+                }
+            }
+
             var filePath = await _filePickerService.OpenFileAsync();
             if (string.IsNullOrEmpty(filePath))
             {
@@ -149,10 +171,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                         resultSummary = await Task.Run(() => _budgetImporter.ImportAsync(filePath, budgetClosingPeriodId.Value));
                         break;
                     case FullManagementType:
-                        var closingPeriodId = await _settingsService.GetDefaultClosingPeriodIdAsync().ConfigureAwait(false);
+                        var closingPeriodId = confirmedClosingPeriodId
+                            ?? await _settingsService.GetDefaultClosingPeriodIdAsync().ConfigureAwait(false);
                         if (!closingPeriodId.HasValue)
                         {
                             _loggingService.LogError("No closing period selected. Please select a closing period before importing.");
+                            StatusMessage = LocalizationRegistry.Get("FINC_Import_Warning_SelectClosingPeriod");
                             return;
                         }
                         managementResult = await Task.Run(() => _fullManagementImporter.ImportAsync(filePath, closingPeriodId.Value));
@@ -215,6 +239,74 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             HasClosingPeriodSelected = defaultClosingPeriodId.HasValue;
         }
 
+        private async Task<int?> ConfirmFullManagementClosingPeriodAsync()
+        {
+            var closingPeriodId = await _settingsService.GetDefaultClosingPeriodIdAsync().ConfigureAwait(false);
+            if (!closingPeriodId.HasValue)
+            {
+                StatusMessage = LocalizationRegistry.Get("FINC_Import_Warning_SelectClosingPeriod");
+                _loggingService.LogError("Full Management import attempted without a selected closing period.");
+                return null;
+            }
+
+            var closingPeriod = await ResolveClosingPeriodAsync(closingPeriodId.Value);
+            if (closingPeriod is null)
+            {
+                StatusMessage = LocalizationRegistry.Get("FINC_Import_Warning_SelectClosingPeriod");
+                _loggingService.LogError($"Closing period {closingPeriodId.Value} could not be resolved before importing Full Management data.");
+                return null;
+            }
+
+            var fiscalYearName = closingPeriod.FiscalYear?.Name ?? closingPeriod.FiscalYearId.ToString(CultureInfo.CurrentCulture);
+            var startLabel = closingPeriod.PeriodStart.ToString("d", CultureInfo.CurrentCulture);
+            var endLabel = closingPeriod.PeriodEnd.ToString("d", CultureInfo.CurrentCulture);
+
+            var dialogTitle = GetLocalizedOrDefault(
+                "FINC_Import_Dialog_FullManagementClosingPeriodTitle",
+                "Confirm closing period");
+
+            var dialogMessage = FormatLocalizedOrDefault(
+                "FINC_Import_Dialog_FullManagementClosingPeriodMessage",
+                "Full Management data will be imported to fiscal year {0} closing period \"{1}\" ({2} - {3}). Continue?",
+                fiscalYearName,
+                string.IsNullOrWhiteSpace(closingPeriod.Name)
+                    ? closingPeriodId.Value.ToString(CultureInfo.CurrentCulture)
+                    : closingPeriod.Name,
+                startLabel,
+                endLabel);
+
+            var confirmed = await _dialogService.ShowConfirmationAsync(dialogTitle, dialogMessage);
+
+            return confirmed ? closingPeriodId : null;
+        }
+
+        private async Task<ClosingPeriod?> ResolveClosingPeriodAsync(int closingPeriodId)
+        {
+            if (_closingPeriods is null)
+            {
+                _closingPeriods = await _closingPeriodService.GetAllAsync();
+            }
+
+            return _closingPeriods.FirstOrDefault(period => period.Id == closingPeriodId);
+        }
+
+        private static string GetLocalizedOrDefault(string key, string fallback)
+        {
+            var value = LocalizationRegistry.Get(key);
+            return string.Equals(value, key, StringComparison.Ordinal) ? fallback : value;
+        }
+
+        private static string FormatLocalizedOrDefault(string key, string fallbackFormat, params object[] arguments)
+        {
+            var format = LocalizationRegistry.Get(key);
+            if (string.Equals(format, key, StringComparison.Ordinal))
+            {
+                format = fallbackFormat;
+            }
+
+            return string.Format(CultureInfo.CurrentCulture, format, arguments);
+        }
+
         partial void OnIsImportingChanged(bool value)
         {
             ImportCommand.NotifyCanExecuteChanged();
@@ -239,6 +331,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public void Receive(ApplicationParametersChangedMessage message)
         {
             HasClosingPeriodSelected = message.ClosingPeriodId.HasValue;
+            _closingPeriods = null;
         }
     }
 }
