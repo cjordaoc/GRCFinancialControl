@@ -77,17 +77,20 @@ Confirm .NET 8, restore dependencies, and ensure `dotnet build -c Release` passe
 > Make it work → Make it simple → Keep it consistent → **Make it perform.**
 
 
-## Submodule Setup Instructions
+## Submodule Setup Requirements
 
-After cloning this repository, run:
+The `GRC.Shared` submodule is **required** for any build, test, or tooling
+command. Follow this checklist whenever you clone the repository or reset the
+workspace:
 
-```bash
-git submodule update --init --recursive
-```
+1. Run `git submodule update --init --recursive` immediately after cloning and
+   before your first `dotnet build`.
+2. Confirm the folder `GRC.Shared/GRC.Shared.UI` exists locally; if it does not,
+   repeat the update command.
+3. Never copy submodule files into the root repository or stage them manually;
+   always rely on the submodule pointer.
 
-This ensures GRC.Shared is available before building.
-
-If the submodule breaks, fix it with:
+If the submodule breaks, repair it with:
 
 ```bash
 git submodule deinit -f --all

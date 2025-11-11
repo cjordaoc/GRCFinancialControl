@@ -783,6 +783,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                     closingPeriod,
                                     row.CurrentFiscalYearBacklog ?? 0m,
                                     row.FutureFiscalYearBacklog ?? 0m,
+                                    revenueToDate,
                                     Logger);
                             }
                         }
@@ -1966,6 +1967,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             ClosingPeriod closingPeriod,
             decimal currentBacklog,
             decimal futureBacklog,
+            decimal? revenueToDate,
             ILogger logger)
         {
             if (closingPeriod.FiscalYear == null)
@@ -2021,7 +2023,9 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             else if (!currentFy.IsLocked)
             {
                 var toGoCurrent = RoundMoney(currentBacklog);
-                var toDateCurrent = RoundMoney(engagement.ValueToAllocate - currentBacklog - futureBacklog);
+                var toDateCurrent = revenueToDate.HasValue
+                    ? RoundMoney(revenueToDate.Value)
+                    : RoundMoney(engagement.ValueToAllocate - currentBacklog - futureBacklog);
 
                 // Snapshot-based: Look for allocation for this specific closing period
                 var allocation = engagement.RevenueAllocations

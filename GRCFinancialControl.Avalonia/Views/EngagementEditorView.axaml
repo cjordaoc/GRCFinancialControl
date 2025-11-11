@@ -37,7 +37,6 @@
                                     <TextBlock Text="Engagement ID:" VerticalAlignment="Center"/>
                                     <TextBox Text="{Binding EngagementId}"
                                              IsReadOnly="{Binding IsEngagementIdReadOnly}"
-                                             IsEnabled="{Binding CanEditEngagementId}"
                                              HorizontalAlignment="Stretch"
                                              MinWidth="{StaticResource TextBoxMinWidth}"/>
                                 </StackPanel>
@@ -236,7 +235,7 @@
                             </DataGrid>
                             <StackPanel Orientation="Horizontal"
                                         Spacing="{StaticResource ControlSpacing}"
-                                        IsVisible="{Binding AllowEditing}">
+                                        IsEnabled="{Binding AllowEditing}">
                                 <Button Content="Add Period Data"
                                         Command="{Binding AddFinancialEvolutionEntryCommand}"
                                         Classes="accent"/>
@@ -293,7 +292,7 @@
                             </DataGrid>
                             <StackPanel Orientation="Horizontal"
                                         Spacing="{StaticResource ControlSpacing}"
-                                        IsVisible="{Binding AllowEditing}">
+                                        IsEnabled="{Binding AllowEditing}">
                                 <SplitButton Content="Additional Sales"
                                              Command="{Binding AddAdditionalSaleCommand}"
                                              MinWidth="{StaticResource ButtonMinWidth}">
