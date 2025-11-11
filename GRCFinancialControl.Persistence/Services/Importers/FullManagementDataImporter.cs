@@ -1,13 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using ExcelDataReader;
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence;
@@ -15,7 +12,7 @@ using GRCFinancialControl.Persistence.Services.Infrastructure;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using static GRCFinancialControl.Persistence.Services.Importers.WorksheetValueHelper;
+using static GRCFinancialControl.Persistence.Services.Utilities.DataNormalizationService;
 
 namespace GRCFinancialControl.Persistence.Services.Importers
 {
@@ -173,8 +170,10 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
         private static readonly string[] ValueDataHeaders =
         {
+            "ter etd",
+            "value data",
             "valuedata",
-            "value data"
+            "etd value"
         };
 
         private static readonly string[] MarginPercentMercuryProjectedHeaders =
@@ -321,43 +320,156 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             FutureFiscalYearBacklogHeaders
         };
 
+        private const int DefaultHeaderRowIndex = 10; // Row 11 in Excel (0-based index)
+
+        private static class FieldNames
+        {
+            public const string EngagementId = nameof(FullManagementDataRow.EngagementId);
+            public const string EngagementDescription = nameof(FullManagementDataRow.EngagementName);
+            public const string CustomerName = nameof(FullManagementDataRow.CustomerName);
+            public const string CustomerCode = nameof(FullManagementDataRow.CustomerCode);
+            public const string OpportunityCurrency = nameof(FullManagementDataRow.OpportunityCurrency);
+            public const string OriginalBudgetHours = nameof(FullManagementDataRow.OriginalBudgetHours);
+            public const string OriginalBudgetTer = nameof(FullManagementDataRow.OriginalBudgetTer);
+            public const string OriginalBudgetMarginPercent = nameof(FullManagementDataRow.OriginalBudgetMarginPercent);
+            public const string OriginalBudgetExpenses = nameof(FullManagementDataRow.OriginalBudgetExpenses);
+            public const string ChargedHours = nameof(FullManagementDataRow.ChargedHours);
+            public const string ChargedHoursFytd = nameof(FullManagementDataRow.FYTDHours);
+            public const string TermMercuryProjectedOppCurrency = nameof(FullManagementDataRow.TERMercuryProjectedOppCurrency);
+            public const string ValueData = nameof(FullManagementDataRow.ValueData);
+            public const string TerFiscalYearToDate = nameof(FullManagementDataRow.CurrentFiscalYearToDate);
+            public const string MarginPercentEtd = nameof(FullManagementDataRow.ToDateMargin);
+            public const string MarginPercentFytd = nameof(FullManagementDataRow.FYTDMargin);
+            public const string ExpensesEtd = nameof(FullManagementDataRow.ExpensesToDate);
+            public const string ExpensesFytd = nameof(FullManagementDataRow.FYTDExpenses);
+            public const string Status = nameof(FullManagementDataRow.StatusText);
+            public const string EngagementPartnerGui = nameof(FullManagementDataRow.PartnerGuiIds);
+            public const string EngagementManagerGui = nameof(FullManagementDataRow.ManagerGuiIds);
+            public const string EtcAgeDays = nameof(FullManagementDataRow.EtcpAgeDays);
+            public const string UnbilledRevenueDays = nameof(FullManagementDataRow.UnbilledRevenueDays);
+            public const string LastActiveEtcPDate = nameof(FullManagementDataRow.LastActiveEtcPDate);
+            public const string NextEtcDate = nameof(FullManagementDataRow.NextEtcDate);
+            public const string CurrentFiscalYearBacklog = nameof(FullManagementDataRow.CurrentFiscalYearBacklog);
+            public const string FutureFiscalYearBacklog = nameof(FullManagementDataRow.FutureFiscalYearBacklog);
+        }
+
+        private sealed record ColumnDefinition(
+            string FieldName,
+            string HeaderLabel,
+            string ColumnLetter,
+            int ColumnIndex,
+            string[] Aliases,
+            bool IsRequired);
+
+        private sealed record ColumnIndexes(
+            int HeaderRowIndex,
+            int EngagementId,
+            int? EngagementDescription,
+            int? CustomerName,
+            int? CustomerCode,
+            int? OpportunityCurrency,
+            int? OriginalBudgetHours,
+            int? OriginalBudgetTer,
+            int? OriginalBudgetMarginPercent,
+            int? OriginalBudgetExpenses,
+            int? ChargedHours,
+            int? ChargedHoursFytd,
+            int? TermMercuryProjectedOppCurrency,
+            int? ValueData,
+            int? TerFiscalYearToDate,
+            int? MarginPercentEtd,
+            int? MarginPercentFytd,
+            int? ExpensesEtd,
+            int? ExpensesFytd,
+            int? Status,
+            int? EngagementPartnerGui,
+            int? EngagementManagerGui,
+            int? EtcAgeDays,
+            int? UnbilledRevenueDays,
+            int? LastActiveEtcPDate,
+            int? NextEtcDate,
+            int? CurrentFiscalYearBacklog,
+            int? FutureFiscalYearBacklog);
+
+        private static readonly ColumnDefinition[] ColumnDefinitions =
+        {
+            new(FieldNames.EngagementId, "Engagement ID", "A", ColumnLetterToIndex("A"), EngagementIdHeaders, true),
+            new(FieldNames.EngagementDescription, "Engagement", "B", ColumnLetterToIndex("B"), EngagementNameHeaders, false),
+            new(FieldNames.CustomerName, "Client", "BK", ColumnLetterToIndex("BK"), CustomerNameHeaders, false),
+            new(FieldNames.CustomerCode, "Client ID", "BI", ColumnLetterToIndex("BI"), CustomerIdHeaders, false),
+            new(FieldNames.OpportunityCurrency, "Opportunity Currency", "FX", ColumnLetterToIndex("FX"), OpportunityCurrencyHeaders, false),
+            new(FieldNames.OriginalBudgetHours, "Original Budget Hours", "HL", ColumnLetterToIndex("HL"), OriginalBudgetHoursHeaders, false),
+            new(FieldNames.OriginalBudgetTer, "Original Budget TER", "HV", ColumnLetterToIndex("HV"), OriginalBudgetTerHeaders, false),
+            new(FieldNames.OriginalBudgetMarginPercent, "Original Budget Margin %", "HW", ColumnLetterToIndex("HW"), OriginalBudgetMarginPercentHeaders, false),
+            new(FieldNames.OriginalBudgetExpenses, "Original Budget Expenses", "HQ", ColumnLetterToIndex("HQ"), OriginalBudgetExpensesHeaders, false),
+            new(FieldNames.ChargedHours, "Charged Hours ETD", "CI", ColumnLetterToIndex("CI"), ChargedHoursETDHeaders, false),
+            new(FieldNames.ChargedHoursFytd, "Charged Hours FYTD", "CJ", ColumnLetterToIndex("CJ"), ChargedHoursFYTDHeaders, false),
+            new(FieldNames.TermMercuryProjectedOppCurrency, "TER Mercury Projected Opp Currency", "FP", ColumnLetterToIndex("FP"), TermMercuryProjectedHeaders, false),
+            new(FieldNames.ValueData, "TER ETD", "CU", ColumnLetterToIndex("CU"), ValueDataHeaders, false),
+            new(FieldNames.TerFiscalYearToDate, "TER FYTD", "CV", ColumnLetterToIndex("CV"), TerFiscalYearToDateHeaders, false),
+            new(FieldNames.MarginPercentEtd, "Margin % ETD", "CG", ColumnLetterToIndex("CG"), MarginPercentETDHeaders, false),
+            new(FieldNames.MarginPercentFytd, "Margin % FYTD", "CH", ColumnLetterToIndex("CH"), MarginPercentFYTDHeaders, false),
+            new(FieldNames.ExpensesEtd, "Expenses ETD", "DH", ColumnLetterToIndex("DH"), ExpensesETDHeaders, false),
+            new(FieldNames.ExpensesFytd, "Expenses FYTD", "DI", ColumnLetterToIndex("DI"), ExpensesFYTDHeaders, false),
+            new(FieldNames.Status, "Engagement Status", "AH", ColumnLetterToIndex("AH"), StatusHeaders, false),
+            new(FieldNames.EngagementPartnerGui, "Engagement Partner GUI", "AO", ColumnLetterToIndex("AO"), EngagementPartnerGuiHeaders, false),
+            new(FieldNames.EngagementManagerGui, "Engagement Manager GUI", "AZ", ColumnLetterToIndex("AZ"), EngagementManagerGuiHeaders, false),
+            new(FieldNames.EtcAgeDays, "ETC-P Age", "FB", ColumnLetterToIndex("FB"), EtcAgeDaysHeaders, false),
+            new(FieldNames.UnbilledRevenueDays, "Unbilled Revenue Days", "GA", ColumnLetterToIndex("GA"), UnbilledRevenueDaysHeaders, false),
+            new(FieldNames.LastActiveEtcPDate, "Last Active ETC-P Date", "EZ", ColumnLetterToIndex("EZ"), LastActiveEtcPDateHeaders, false),
+            new(FieldNames.NextEtcDate, "Next ETC Date", "FD", ColumnLetterToIndex("FD"), NextEtcDateHeaders, false),
+            new(FieldNames.CurrentFiscalYearBacklog, "FYTG Backlog", "GR", ColumnLetterToIndex("GR"), CurrentFiscalYearBacklogHeaders, false),
+            new(FieldNames.FutureFiscalYearBacklog, "Future FY Backlog", "GS", ColumnLetterToIndex("GS"), FutureFiscalYearBacklogHeaders, false)
+        };
+
         public async Task<FullManagementDataImportResult> ImportAsync(string filePath, int closingPeriodId)
         {
-            if (string.IsNullOrWhiteSpace(filePath))
-            {
-                throw new ArgumentException("File path must be provided.", nameof(filePath));
-            }
-
             if (closingPeriodId <= 0)
             {
                 throw new ArgumentException("Valid closing period ID must be provided.", nameof(closingPeriodId));
             }
 
-            if (!File.Exists(filePath))
-            {
-                throw new FileNotFoundException("Full Management Data workbook could not be found.", filePath);
-            }
+            return await ExecuteWorkbookOperationAsync(
+                filePath,
+                "Full Management Data",
+                workbook => ImportFromWorkbookAsync(workbook, closingPeriodId)).ConfigureAwait(false);
+        }
 
-            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-
-            using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            using var reader = ExcelReaderFactory.CreateReader(stream);
-            var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration
-            {
-                ConfigureDataTable = _ => new ExcelDataTableConfiguration
-                {
-                    UseHeaderRow = false
-                }
-            });
-
-            var worksheet = ResolveWorksheet(dataSet);
+        private async Task<FullManagementDataImportResult> ImportFromWorkbookAsync(
+            WorkbookData workbook,
+            int closingPeriodId)
+        {
+            var worksheet = ResolveWorksheet(workbook);
             if (worksheet == null)
             {
                 throw new InvalidDataException("The Full Management Data workbook does not contain any worksheets.");
             }
 
-            // Parse rows without requiring closing period from Excel
-            var parsedRows = ParseRows(worksheet, null);
+            var fallbackMessages = new List<string>();
+            var missingColumns = new List<string>();
+            var rowValidationIssues = new List<string>();
+
+            var columnIndexes = ResolveColumnIndexes(worksheet, fallbackMessages, missingColumns, out var hasCriticalMissing);
+
+            if (missingColumns.Count > 0)
+            {
+                foreach (var message in missingColumns)
+                {
+                    Logger.LogWarning("{Message}", message);
+                }
+            }
+
+            if (hasCriticalMissing)
+            {
+                throw new InvalidDataException(string.Join(Environment.NewLine, missingColumns));
+            }
+
+            foreach (var message in fallbackMessages)
+            {
+                Logger.LogWarning("{Message}", message);
+            }
+
+            var parsedRows = ParseRows(worksheet, columnIndexes, rowValidationIssues);
             if (parsedRows.Count == 0)
             {
                 return new FullManagementDataImportResult(
@@ -820,6 +932,11 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         skipReasons["Error"] = errors;
                     }
 
+                    if (rowValidationIssues.Count > 0)
+                    {
+                        skipReasons["IncompleteRow"] = rowValidationIssues;
+                    }
+
                     if (missingManagerGuis.Count > 0)
                     {
                         var sortedManagers = missingManagerGuis
@@ -898,71 +1015,280 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             });
         }
 
-        private static DataTable? ResolveWorksheet(DataSet dataSet)
+        private static IWorksheet? ResolveWorksheet(WorkbookData workbook)
         {
-            if (dataSet.Tables.Count == 0)
-            {
-                return null;
-            }
-
-            return dataSet.Tables[0];
+            return workbook.FirstWorksheet;
         }
 
-        private static List<FullManagementDataRow> ParseRows(DataTable worksheet, string? defaultClosingPeriodName)
+        private ColumnIndexes ResolveColumnIndexes(
+            IWorksheet worksheet,
+            ICollection<string> fallbackMessages,
+            ICollection<string> missingColumns,
+            out bool hasCriticalMissing)
         {
-            var (headerMap, headerRowIndex) = BuildHeaderMap(worksheet);
-
-            if (headerRowIndex < 0)
+            if (worksheet == null)
             {
-                throw new InvalidDataException("Unable to locate the header row in the Full Management Data worksheet. Ensure the first sheet is selected and any filters are cleared before importing.");
+                throw new ArgumentNullException(nameof(worksheet));
             }
 
-            var engagementIdIndex = GetRequiredColumnIndex(headerMap, EngagementIdHeaders, "Engagement ID");
-            var engagementNameIndex = GetOptionalColumnIndex(headerMap, EngagementNameHeaders);
-            var customerNameIndex = GetOptionalColumnIndex(headerMap, CustomerNameHeaders);
-            var customerIdIndex = GetOptionalColumnIndex(headerMap, CustomerIdHeaders);
-            var opportunityCurrencyIndex = GetOptionalColumnIndex(headerMap, OpportunityCurrencyHeaders);
-            var originalBudgetHoursIndex = GetOptionalColumnIndex(headerMap, OriginalBudgetHoursHeaders);
-            var originalBudgetTerIndex = GetOptionalColumnIndex(headerMap, OriginalBudgetTerHeaders);
-            var originalBudgetMarginPercentIndex = GetOptionalColumnIndex(headerMap, OriginalBudgetMarginPercentHeaders);
-            var originalBudgetExpensesIndex = GetOptionalColumnIndex(headerMap, OriginalBudgetExpensesHeaders);
-            var chargedHoursMercuryProjectedIndex = GetOptionalColumnIndex(headerMap, ChargedHoursMercuryProjectedHeaders);
-            var termMercuryProjectedIndex = GetOptionalColumnIndex(headerMap, TermMercuryProjectedHeaders);
-            var valueDataIndex = GetOptionalColumnIndex(headerMap, ValueDataHeaders);
-            var terFiscalYearToDateIndex = GetOptionalColumnIndex(headerMap, TerFiscalYearToDateHeaders);
-            var marginPercentMercuryProjectedIndex = GetOptionalColumnIndex(headerMap, MarginPercentMercuryProjectedHeaders);
-            var expensesMercuryProjectedIndex = GetOptionalColumnIndex(headerMap, ExpensesMercuryProjectedHeaders);
-            var statusIndex = GetOptionalColumnIndex(headerMap, StatusHeaders);
-            var engagementPartnerGuiIndex = GetOptionalColumnIndex(headerMap, EngagementPartnerGuiHeaders);
-            var engagementManagerGuiIndex = GetOptionalColumnIndex(headerMap, EngagementManagerGuiHeaders);
-            var etcAgeDaysIndex = GetOptionalColumnIndex(headerMap, EtcAgeDaysHeaders);
-            var unbilledRevenueDaysIndex = GetOptionalColumnIndex(headerMap, UnbilledRevenueDaysHeaders);
-            var lastActiveEtcPDateIndex = GetOptionalColumnIndex(headerMap, LastActiveEtcPDateHeaders);
-            var nextEtcDateIndex = GetOptionalColumnIndex(headerMap, NextEtcDateHeaders);
-            var currentFiscalYearBacklogIndex = GetOptionalColumnIndex(headerMap, CurrentFiscalYearBacklogHeaders);
-            var futureFiscalYearBacklogIndex = GetOptionalColumnIndex(headerMap, FutureFiscalYearBacklogHeaders);
-            var chargedHoursETDIndex = GetOptionalColumnIndex(headerMap, ChargedHoursETDHeaders);
-            var chargedHoursFYTDIndex = GetOptionalColumnIndex(headerMap, ChargedHoursFYTDHeaders);
-            var marginPercentETDIndex = GetOptionalColumnIndex(headerMap, MarginPercentETDHeaders);
-            var marginPercentFYTDIndex = GetOptionalColumnIndex(headerMap, MarginPercentFYTDHeaders);
-            var expensesETDIndex = GetOptionalColumnIndex(headerMap, ExpensesETDHeaders);
-            var expensesFYTDIndex = GetOptionalColumnIndex(headerMap, ExpensesFYTDHeaders);
+            hasCriticalMissing = false;
 
-            var rows = new List<FullManagementDataRow>();
+            var (headerMap, detectedHeaderRowIndex) = BuildBestHeaderMap(worksheet, DefaultHeaderRowIndex);
+            var headerRowIndex = detectedHeaderRowIndex >= 0 ? detectedHeaderRowIndex : DefaultHeaderRowIndex;
 
-            for (var rowIndex = headerRowIndex + 1; rowIndex < worksheet.Rows.Count; rowIndex++)
+            var resolvedIndices = new Dictionary<string, int?>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var definition in ColumnDefinitions)
             {
-                var row = worksheet.Rows[rowIndex];
-                var rowNumber = rowIndex + 1; // Excel rows are 1-based
+                var expectedNormalized = NormalizeHeader(definition.HeaderLabel);
+                var directHeader = NormalizeHeader(GetCellString(worksheet, DefaultHeaderRowIndex, definition.ColumnIndex));
 
-                if (IsRowEmpty(row))
+                if (!string.IsNullOrEmpty(directHeader) &&
+                    string.Equals(directHeader, expectedNormalized, StringComparison.Ordinal))
+                {
+                    resolvedIndices[definition.FieldName] = definition.ColumnIndex;
+                    continue;
+                }
+
+                var aliasIndex = TryResolveAliasColumn(
+                    worksheet,
+                    headerMap,
+                    headerRowIndex,
+                    definition,
+                    fallbackMessages);
+
+                if (aliasIndex.HasValue)
+                {
+                    resolvedIndices[definition.FieldName] = aliasIndex.Value;
+                }
+                else
+                {
+                    resolvedIndices[definition.FieldName] = null;
+                    var message = $"Full Management Data import: Column '{definition.HeaderLabel}' not found at expected column {definition.ColumnLetter} in row 11.";
+                    missingColumns.Add(message);
+                    if (definition.IsRequired)
+                    {
+                        hasCriticalMissing = true;
+                    }
+                }
+            }
+
+            return new ColumnIndexes(
+                headerRowIndex,
+                ResolveRequired(FieldNames.EngagementId),
+                ResolveOptional(FieldNames.EngagementDescription),
+                ResolveOptional(FieldNames.CustomerName),
+                ResolveOptional(FieldNames.CustomerCode),
+                ResolveOptional(FieldNames.OpportunityCurrency),
+                ResolveOptional(FieldNames.OriginalBudgetHours),
+                ResolveOptional(FieldNames.OriginalBudgetTer),
+                ResolveOptional(FieldNames.OriginalBudgetMarginPercent),
+                ResolveOptional(FieldNames.OriginalBudgetExpenses),
+                ResolveOptional(FieldNames.ChargedHours),
+                ResolveOptional(FieldNames.ChargedHoursFytd),
+                ResolveOptional(FieldNames.TermMercuryProjectedOppCurrency),
+                ResolveOptional(FieldNames.ValueData),
+                ResolveOptional(FieldNames.TerFiscalYearToDate),
+                ResolveOptional(FieldNames.MarginPercentEtd),
+                ResolveOptional(FieldNames.MarginPercentFytd),
+                ResolveOptional(FieldNames.ExpensesEtd),
+                ResolveOptional(FieldNames.ExpensesFytd),
+                ResolveOptional(FieldNames.Status),
+                ResolveOptional(FieldNames.EngagementPartnerGui),
+                ResolveOptional(FieldNames.EngagementManagerGui),
+                ResolveOptional(FieldNames.EtcAgeDays),
+                ResolveOptional(FieldNames.UnbilledRevenueDays),
+                ResolveOptional(FieldNames.LastActiveEtcPDate),
+                ResolveOptional(FieldNames.NextEtcDate),
+                ResolveOptional(FieldNames.CurrentFiscalYearBacklog),
+                ResolveOptional(FieldNames.FutureFiscalYearBacklog));
+
+            int ResolveRequired(string fieldName)
+            {
+                if (resolvedIndices.TryGetValue(fieldName, out var index) && index.HasValue)
+                {
+                    return index.Value;
+                }
+
+                throw new InvalidOperationException($"Required column '{fieldName}' could not be resolved.");
+            }
+
+            int? ResolveOptional(string fieldName)
+            {
+                return resolvedIndices.TryGetValue(fieldName, out var index) ? index : null;
+            }
+        }
+
+        private static (Dictionary<string, int> Map, int HeaderRowIndex) BuildBestHeaderMap(
+            IWorksheet worksheet,
+            int preferredHeaderRowIndex)
+        {
+            var bestMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var bestIndex = -1;
+            var bestScore = -1;
+
+            if (preferredHeaderRowIndex >= 0 && preferredHeaderRowIndex < worksheet.RowCount)
+            {
+                bestMap = BuildHeaderMap(worksheet, preferredHeaderRowIndex);
+                bestIndex = preferredHeaderRowIndex;
+                bestScore = CountHeaderMatches(bestMap);
+            }
+
+            var searchLimit = Math.Min(worksheet.RowCount, preferredHeaderRowIndex + 15);
+            for (var rowIndex = 0; rowIndex < searchLimit; rowIndex++)
+            {
+                if (rowIndex == preferredHeaderRowIndex)
                 {
                     continue;
                 }
 
-                var engagementId = NormalizeWhitespace(Convert.ToString(row[engagementIdIndex], CultureInfo.InvariantCulture));
+                var map = BuildHeaderMap(worksheet, rowIndex);
+                if (map.Count == 0)
+                {
+                    continue;
+                }
+
+                var score = CountHeaderMatches(map);
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    bestMap = map;
+                    bestIndex = rowIndex;
+                }
+            }
+
+            return (bestMap, bestIndex);
+        }
+
+        private int? TryResolveAliasColumn(
+            IWorksheet worksheet,
+            Dictionary<string, int> headerMap,
+            int headerRowIndex,
+            ColumnDefinition definition,
+            ICollection<string> fallbackMessages)
+        {
+            if (headerMap.Count == 0)
+            {
+                return null;
+            }
+
+            var normalizedCandidates = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var alias in definition.Aliases)
+            {
+                var normalized = NormalizeHeader(alias);
+                if (!string.IsNullOrEmpty(normalized))
+                {
+                    normalizedCandidates.Add(normalized);
+                }
+            }
+
+            normalizedCandidates.Add(NormalizeHeader(definition.HeaderLabel));
+
+            foreach (var candidate in normalizedCandidates)
+            {
+                if (headerMap.TryGetValue(candidate, out var columnIndex))
+                {
+                    LogFallback(columnIndex, candidate, false);
+                    return columnIndex;
+                }
+            }
+
+            foreach (var candidate in normalizedCandidates)
+            {
+                foreach (var kvp in headerMap)
+                {
+                    if (kvp.Key.Contains(candidate, StringComparison.OrdinalIgnoreCase))
+                    {
+                        LogFallback(kvp.Value, kvp.Key, true);
+                        return kvp.Value;
+                    }
+                }
+            }
+
+            return null;
+
+            void LogFallback(int columnIndex, string matchedHeader, bool isPartial)
+            {
+                var headerText = GetCellString(worksheet, headerRowIndex, columnIndex);
+                var descriptor = isPartial ? "partial" : "alias";
+                fallbackMessages.Add(
+                    $"Full Management Data import: Using {descriptor} header '{headerText}' (column {ColumnIndexToLetter(columnIndex)}) for field '{definition.FieldName}' (expected '{definition.HeaderLabel}' at column {definition.ColumnLetter} in row 11).");
+            }
+        }
+
+        private List<FullManagementDataRow> ParseRows(
+            IWorksheet worksheet,
+            ColumnIndexes columnIndexes,
+            ICollection<string> rowValidationIssues)
+        {
+            var headerRowIndex = columnIndexes.HeaderRowIndex >= 0
+                ? columnIndexes.HeaderRowIndex
+                : DefaultHeaderRowIndex;
+
+            var startRow = Math.Min(headerRowIndex + 1, worksheet.RowCount);
+
+            var rows = new List<FullManagementDataRow>();
+
+            for (var rowIndex = startRow; rowIndex < worksheet.RowCount; rowIndex++)
+            {
+                if (IsRowEmpty(worksheet, rowIndex))
+                {
+                    continue;
+                }
+
+                var rowNumber = rowIndex + 1;
+
+                var engagementId = NormalizeWhitespace(GetCellString(worksheet, rowIndex, columnIndexes.EngagementId));
                 if (string.IsNullOrWhiteSpace(engagementId))
                 {
+                    rowValidationIssues.Add($"Row {rowNumber}: Missing Engagement ID. Row skipped.");
+                    Logger.LogWarning("Skipping Full Management Data row {RowNumber} because the Engagement ID is blank.", rowNumber);
+                    continue;
+                }
+
+                var engagementName = columnIndexes.EngagementDescription.HasValue
+                    ? NormalizeWhitespace(GetCellString(worksheet, rowIndex, columnIndexes.EngagementDescription.Value))
+                    : string.Empty;
+
+                var customerName = columnIndexes.CustomerName.HasValue
+                    ? NormalizeWhitespace(GetCellString(worksheet, rowIndex, columnIndexes.CustomerName.Value))
+                    : string.Empty;
+
+                var customerCode = columnIndexes.CustomerCode.HasValue
+                    ? NormalizeWhitespace(GetCellString(worksheet, rowIndex, columnIndexes.CustomerCode.Value))
+                    : string.Empty;
+
+                var opportunityCurrency = columnIndexes.OpportunityCurrency.HasValue
+                    ? NormalizeWhitespace(GetCellString(worksheet, rowIndex, columnIndexes.OpportunityCurrency.Value))
+                    : string.Empty;
+
+                var missingCriticalFields = new List<string>();
+                if (columnIndexes.EngagementDescription.HasValue && string.IsNullOrWhiteSpace(engagementName))
+                {
+                    missingCriticalFields.Add("Engagement Description");
+                }
+
+                if (columnIndexes.CustomerName.HasValue && string.IsNullOrWhiteSpace(customerName))
+                {
+                    missingCriticalFields.Add("Customer Name");
+                }
+
+                if (columnIndexes.CustomerCode.HasValue && string.IsNullOrWhiteSpace(customerCode))
+                {
+                    missingCriticalFields.Add("Customer Code");
+                }
+
+                if (columnIndexes.OpportunityCurrency.HasValue && string.IsNullOrWhiteSpace(opportunityCurrency))
+                {
+                    missingCriticalFields.Add("Opportunity Currency");
+                }
+
+                if (missingCriticalFields.Count > 0)
+                {
+                    var issue = $"Row {rowNumber}: Missing critical fields ({string.Join(", ", missingCriticalFields)}). Row skipped.";
+                    rowValidationIssues.Add(issue);
+                    Logger.LogWarning(issue);
                     continue;
                 }
 
@@ -970,88 +1296,45 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                 {
                     RowNumber = rowNumber,
                     EngagementId = engagementId,
-                    EngagementName = engagementNameIndex.HasValue ? NormalizeWhitespace(Convert.ToString(row[engagementNameIndex.Value], CultureInfo.InvariantCulture)) : string.Empty,
-                    CustomerName = customerNameIndex.HasValue ? NormalizeWhitespace(Convert.ToString(row[customerNameIndex.Value], CultureInfo.InvariantCulture)) : string.Empty,
-                    CustomerCode = customerIdIndex.HasValue ? NormalizeWhitespace(Convert.ToString(row[customerIdIndex.Value], CultureInfo.InvariantCulture)) : string.Empty,
-                    OpportunityCurrency = opportunityCurrencyIndex.HasValue ? NormalizeWhitespace(Convert.ToString(row[opportunityCurrencyIndex.Value], CultureInfo.InvariantCulture)) : string.Empty,
-                    OriginalBudgetHours = originalBudgetHoursIndex.HasValue ? ParseDecimal(row[originalBudgetHoursIndex.Value], 2) : null,
-                    OriginalBudgetTer = originalBudgetTerIndex.HasValue ? ParseDecimal(row[originalBudgetTerIndex.Value], 2) : null,
-                    OriginalBudgetMarginPercent = originalBudgetMarginPercentIndex.HasValue ? ParsePercent(row[originalBudgetMarginPercentIndex.Value]) : null,
-                    OriginalBudgetExpenses = originalBudgetExpensesIndex.HasValue ? ParseDecimal(row[originalBudgetExpensesIndex.Value], 2) : null,
-                    ChargedHours = chargedHoursETDIndex.HasValue ? ParseDecimal(row[chargedHoursETDIndex.Value], 2) : null,
-                    FYTDHours = chargedHoursFYTDIndex.HasValue ? ParseDecimal(row[chargedHoursFYTDIndex.Value], 2) : null,
-                    TERMercuryProjectedOppCurrency = termMercuryProjectedIndex.HasValue ? ParseDecimal(row[termMercuryProjectedIndex.Value], 2) : null,
-                    ValueData = valueDataIndex.HasValue ? ParseDecimal(row[valueDataIndex.Value], 2) : null,
-                    CurrentFiscalYearToDate = terFiscalYearToDateIndex.HasValue ? ParseDecimal(row[terFiscalYearToDateIndex.Value], 2) : null,
-                    ToDateMargin = marginPercentETDIndex.HasValue ? ParsePercent(row[marginPercentETDIndex.Value]) : null,
-                    FYTDMargin = marginPercentFYTDIndex.HasValue ? ParsePercent(row[marginPercentFYTDIndex.Value]) : null,
-                    ExpensesToDate = expensesETDIndex.HasValue ? ParseDecimal(row[expensesETDIndex.Value], 2) : null,
-                    FYTDExpenses = expensesFYTDIndex.HasValue ? ParseDecimal(row[expensesFYTDIndex.Value], 2) : null,
-                    StatusText = statusIndex.HasValue ? NormalizeWhitespace(Convert.ToString(row[statusIndex.Value], CultureInfo.InvariantCulture)) : string.Empty,
-                    PartnerGuiIds = engagementPartnerGuiIndex.HasValue ? ParseGuiIdentifiers(row[engagementPartnerGuiIndex.Value]) : Array.Empty<string>(),
-                    ManagerGuiIds = engagementManagerGuiIndex.HasValue ? ParseGuiIdentifiers(row[engagementManagerGuiIndex.Value]) : Array.Empty<string>(),
-                    EtcpAgeDays = etcAgeDaysIndex.HasValue ? ParseInt(row[etcAgeDaysIndex.Value]) : null,
-                    UnbilledRevenueDays = unbilledRevenueDaysIndex.HasValue ? ParseInt(row[unbilledRevenueDaysIndex.Value]) : null,
-                    LastActiveEtcPDate = lastActiveEtcPDateIndex.HasValue ? ParseDate(row[lastActiveEtcPDateIndex.Value]) : null,
-                    NextEtcDate = nextEtcDateIndex.HasValue ? ParseDate(row[nextEtcDateIndex.Value]) : null,
-                    CurrentFiscalYearBacklog = currentFiscalYearBacklogIndex.HasValue ? ParseDecimal(row[currentFiscalYearBacklogIndex.Value], 2) : null,
-                    FutureFiscalYearBacklog = futureFiscalYearBacklogIndex.HasValue ? ParseDecimal(row[futureFiscalYearBacklogIndex.Value], 2) : null
+                    EngagementName = engagementName,
+                    CustomerName = customerName,
+                    CustomerCode = customerCode,
+                    OpportunityCurrency = opportunityCurrency,
+                    OriginalBudgetHours = columnIndexes.OriginalBudgetHours.HasValue ? ParseDecimal(GetCellValue(worksheet, rowIndex, columnIndexes.OriginalBudgetHours.Value), 2) : null,
+                    OriginalBudgetTer = columnIndexes.OriginalBudgetTer.HasValue ? ParseDecimal(GetCellValue(worksheet, rowIndex, columnIndexes.OriginalBudgetTer.Value), 2) : null,
+                    OriginalBudgetMarginPercent = columnIndexes.OriginalBudgetMarginPercent.HasValue ? ParsePercent(GetCellValue(worksheet, rowIndex, columnIndexes.OriginalBudgetMarginPercent.Value)) : null,
+                    OriginalBudgetExpenses = columnIndexes.OriginalBudgetExpenses.HasValue ? ParseDecimal(GetCellValue(worksheet, rowIndex, columnIndexes.OriginalBudgetExpenses.Value), 2) : null,
+                    ChargedHours = columnIndexes.ChargedHours.HasValue ? ParseDecimal(GetCellValue(worksheet, rowIndex, columnIndexes.ChargedHours.Value), 2) : null,
+                    FYTDHours = columnIndexes.ChargedHoursFytd.HasValue ? ParseDecimal(GetCellValue(worksheet, rowIndex, columnIndexes.ChargedHoursFytd.Value), 2) : null,
+                    TERMercuryProjectedOppCurrency = columnIndexes.TermMercuryProjectedOppCurrency.HasValue ? ParseDecimal(GetCellValue(worksheet, rowIndex, columnIndexes.TermMercuryProjectedOppCurrency.Value), 2) : null,
+                    ValueData = columnIndexes.ValueData.HasValue ? ParseDecimal(GetCellValue(worksheet, rowIndex, columnIndexes.ValueData.Value), 2) : null,
+                    CurrentFiscalYearToDate = columnIndexes.TerFiscalYearToDate.HasValue ? ParseDecimal(GetCellValue(worksheet, rowIndex, columnIndexes.TerFiscalYearToDate.Value), 2) : null,
+                    ToDateMargin = columnIndexes.MarginPercentEtd.HasValue ? ParsePercent(GetCellValue(worksheet, rowIndex, columnIndexes.MarginPercentEtd.Value)) : null,
+                    FYTDMargin = columnIndexes.MarginPercentFytd.HasValue ? ParsePercent(GetCellValue(worksheet, rowIndex, columnIndexes.MarginPercentFytd.Value)) : null,
+                    ExpensesToDate = columnIndexes.ExpensesEtd.HasValue ? ParseDecimal(GetCellValue(worksheet, rowIndex, columnIndexes.ExpensesEtd.Value), 2) : null,
+                    FYTDExpenses = columnIndexes.ExpensesFytd.HasValue ? ParseDecimal(GetCellValue(worksheet, rowIndex, columnIndexes.ExpensesFytd.Value), 2) : null,
+                    StatusText = columnIndexes.Status.HasValue ? NormalizeWhitespace(GetCellString(worksheet, rowIndex, columnIndexes.Status.Value)) : string.Empty,
+                    PartnerGuiIds = columnIndexes.EngagementPartnerGui.HasValue ? ParseGuiIdentifiers(GetCellValue(worksheet, rowIndex, columnIndexes.EngagementPartnerGui.Value)) : Array.Empty<string>(),
+                    ManagerGuiIds = columnIndexes.EngagementManagerGui.HasValue ? ParseGuiIdentifiers(GetCellValue(worksheet, rowIndex, columnIndexes.EngagementManagerGui.Value)) : Array.Empty<string>(),
+                    EtcpAgeDays = columnIndexes.EtcAgeDays.HasValue ? ParseInt(GetCellValue(worksheet, rowIndex, columnIndexes.EtcAgeDays.Value)) : null,
+                    UnbilledRevenueDays = columnIndexes.UnbilledRevenueDays.HasValue ? ParseInt(GetCellValue(worksheet, rowIndex, columnIndexes.UnbilledRevenueDays.Value)) : null,
+                    LastActiveEtcPDate = columnIndexes.LastActiveEtcPDate.HasValue ? ParseDate(GetCellValue(worksheet, rowIndex, columnIndexes.LastActiveEtcPDate.Value)) : null,
+                    NextEtcDate = columnIndexes.NextEtcDate.HasValue ? ParseDate(GetCellValue(worksheet, rowIndex, columnIndexes.NextEtcDate.Value)) : null,
+                    CurrentFiscalYearBacklog = columnIndexes.CurrentFiscalYearBacklog.HasValue ? ParseDecimal(GetCellValue(worksheet, rowIndex, columnIndexes.CurrentFiscalYearBacklog.Value), 2) : null,
+                    FutureFiscalYearBacklog = columnIndexes.FutureFiscalYearBacklog.HasValue ? ParseDecimal(GetCellValue(worksheet, rowIndex, columnIndexes.FutureFiscalYearBacklog.Value), 2) : null
                 });
             }
 
             return rows;
         }
 
-        private static (Dictionary<int, string> Map, int HeaderRowIndex) BuildHeaderMap(DataTable table)
+        private static int CountHeaderMatches(Dictionary<string, int> headerMap)
         {
-            Dictionary<int, string>? bestMap = null;
-            var bestIndex = -1;
-            var bestScore = -1;
-
-            for (var rowIndex = 0; rowIndex < table.Rows.Count; rowIndex++)
+            if (headerMap.Count == 0)
             {
-                var row = table.Rows[rowIndex];
-                var currentMap = new Dictionary<int, string>();
-                var hasContent = false;
-
-                for (var columnIndex = 0; columnIndex < table.Columns.Count; columnIndex++)
-                {
-                    var headerText = NormalizeWhitespace(Convert.ToString(row[columnIndex], CultureInfo.InvariantCulture));
-                    if (!string.IsNullOrEmpty(headerText))
-                    {
-                        hasContent = true;
-                    }
-
-                    currentMap[columnIndex] = headerText.ToLowerInvariant();
-                }
-
-                if (!hasContent)
-                {
-                    continue;
-                }
-
-                if (!ContainsAnyHeader(currentMap, EngagementIdHeaders))
-                {
-                    continue;
-                }
-
-                var score = CountHeaderMatches(currentMap);
-
-                if (score > bestScore)
-                {
-                    bestScore = score;
-                    bestMap = currentMap;
-                    bestIndex = rowIndex;
-                }
+                return 0;
             }
 
-            return bestMap != null
-                ? (bestMap, bestIndex)
-                : (new Dictionary<int, string>(), -1);
-        }
-
-        private static int CountHeaderMatches(Dictionary<int, string> headerMap)
-        {
             var score = 0;
 
             foreach (var group in HeaderGroups)
@@ -1065,150 +1348,71 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             return score;
         }
 
-        private static int GetRequiredColumnIndex(Dictionary<int, string> headerMap, string[] candidates, string friendlyName)
-        {
-            var index = GetOptionalColumnIndex(headerMap, candidates);
-            if (!index.HasValue)
-            {
-                throw new InvalidDataException($"The Full Management Data worksheet is missing required column '{friendlyName}'. Ensure the first sheet is selected and filters are cleared before importing.");
-            }
-
-            return index.Value;
-        }
-
-        private static int? GetOptionalColumnIndex(Dictionary<int, string> headerMap, string[] candidates)
-        {
-            // First pass: exact match (optimized with direct lookup via values)
-            var headerValues = headerMap.Values.ToList();
-            for (var i = 0; i < candidates.Length; i++)
-            {
-                var candidate = candidates[i];
-                for (var j = 0; j < headerValues.Count; j++)
-                {
-                    if (string.Equals(headerValues[j], candidate, StringComparison.OrdinalIgnoreCase))
-                    {
-                        // Find the key for this value
-                        foreach (var kvp in headerMap)
-                        {
-                            if (string.Equals(kvp.Value, candidate, StringComparison.OrdinalIgnoreCase))
-                            {
-                                return kvp.Key;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Second pass: partial match with exclusions
-            for (var i = 0; i < candidates.Length; i++)
-            {
-                var candidate = candidates[i];
-                var candidateLower = candidate.ToLowerInvariant();
-                var isEngagement = candidateLower.Contains("engagement");
-                var isDescription = string.Equals(candidate, "description", StringComparison.OrdinalIgnoreCase);
-
-                foreach (var kvp in headerMap)
-                {
-                    var header = kvp.Value;
-                    if (string.IsNullOrEmpty(header))
-                    {
-                        continue;
-                    }
-
-                    if (!header.Contains(candidate, StringComparison.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-
-                    if (isEngagement && header.Contains("id", StringComparison.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-
-                    if (isDescription &&
-                        (header.Contains("customer", StringComparison.OrdinalIgnoreCase) || header.Contains("client", StringComparison.OrdinalIgnoreCase)))
-                    {
-                        continue;
-                    }
-
-                    return kvp.Key;
-                }
-            }
-
-            return null;
-        }
-
-        private static bool IsS4MetadataWorkbook(Dictionary<int, string> headerMap)
-        {
-            var hasEngagement = ContainsAnyHeader(headerMap, EngagementIdHeaders);
-            var hasClientDetails = ContainsAnyHeader(headerMap, CustomerIdHeaders) || ContainsAnyHeader(headerMap, CustomerNameHeaders);
-            var hasStatus = ContainsAnyHeader(headerMap, StatusHeaders);
-            var lacksFinancialColumns = !ContainsAnyHeader(headerMap, OriginalBudgetHoursHeaders)
-                                        && !ContainsAnyHeader(headerMap, OriginalBudgetTerHeaders)
-                                        && !ContainsAnyHeader(headerMap, OriginalBudgetMarginPercentHeaders)
-                                        && !ContainsAnyHeader(headerMap, OriginalBudgetExpensesHeaders)
-                                        && !ContainsAnyHeader(headerMap, ChargedHoursMercuryProjectedHeaders)
-                                        && !ContainsAnyHeader(headerMap, TermMercuryProjectedHeaders)
-                                        && !ContainsAnyHeader(headerMap, MarginPercentMercuryProjectedHeaders)
-                                        && !ContainsAnyHeader(headerMap, ExpensesMercuryProjectedHeaders)
-                                        && !ContainsAnyHeader(headerMap, EtcAgeDaysHeaders)
-                                        && !ContainsAnyHeader(headerMap, UnbilledRevenueDaysHeaders)
-                                        && !ContainsAnyHeader(headerMap, LastActiveEtcPDateHeaders)
-                                        && !ContainsAnyHeader(headerMap, NextEtcDateHeaders);
-            var missingClosingPeriod = !ContainsAnyHeader(headerMap, ClosingPeriodHeaders);
-
-            return hasEngagement && hasClientDetails && hasStatus && lacksFinancialColumns && missingClosingPeriod;
-        }
-
-        private static bool ContainsAnyHeader(Dictionary<int, string> headerMap, IEnumerable<string> candidates)
+        private static bool ContainsAnyHeader(Dictionary<string, int> headerMap, IEnumerable<string> candidates)
         {
             foreach (var candidate in candidates)
             {
-                foreach (var value in headerMap.Values)
+                var normalized = NormalizeHeader(candidate);
+                if (headerMap.ContainsKey(normalized))
                 {
-                    if (!string.IsNullOrEmpty(value) && value.Contains(candidate, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return true;
-                    }
+                    return true;
                 }
             }
 
             return false;
         }
 
-        private static bool IsRowEmpty(DataRow row)
+        private static int ColumnLetterToIndex(string columnLetter)
         {
-            foreach (var item in row.ItemArray)
+            if (string.IsNullOrWhiteSpace(columnLetter))
             {
-                if (item != null && item != DBNull.Value && !string.IsNullOrWhiteSpace(Convert.ToString(item, CultureInfo.InvariantCulture)))
+                throw new ArgumentException("Column letter must be provided.", nameof(columnLetter));
+            }
+
+            var result = 0;
+            foreach (var c in columnLetter.Trim().ToUpperInvariant())
+            {
+                if (c < 'A' || c > 'Z')
                 {
-                    return false;
+                    continue;
                 }
+
+                result = result * 26 + (c - 'A' + 1);
             }
 
-            return true;
+            return result - 1;
         }
 
-        private static string? TryGetCellString(DataTable worksheet, int rowIndex, int columnIndex)
+        private static string ColumnIndexToLetter(int columnIndex)
         {
-            if (rowIndex < 0 || columnIndex < 0 || rowIndex >= worksheet.Rows.Count || columnIndex >= worksheet.Columns.Count)
+            if (columnIndex < 0)
             {
-                return null;
+                return "?";
             }
 
-            return Convert.ToString(worksheet.Rows[rowIndex][columnIndex], CultureInfo.InvariantCulture);
+            var builder = new StringBuilder();
+            var index = columnIndex + 1;
+
+            while (index > 0)
+            {
+                index--;
+                builder.Insert(0, (char)('A' + (index % 26)));
+                index /= 26;
+            }
+
+            return builder.ToString();
         }
 
-        private static FullManagementReportMetadata ExtractReportMetadata(DataTable worksheet)
+        private static FullManagementReportMetadata ExtractReportMetadata(IWorksheet worksheet)
         {
-            var rawValue = TryGetCellString(worksheet, 3, 0);
+            var rawValue = GetCellString(worksheet, 3, 0);
 
             if (string.IsNullOrWhiteSpace(rawValue))
             {
-                var searchLimit = Math.Min(worksheet.Rows.Count, 12);
+                var searchLimit = Math.Min(worksheet.RowCount, 12);
                 for (var rowIndex = 0; rowIndex < searchLimit; rowIndex++)
                 {
-                    var candidate = TryGetCellString(worksheet, rowIndex, 0);
+                    var candidate = GetCellString(worksheet, rowIndex, 0);
                     if (string.IsNullOrWhiteSpace(candidate))
                     {
                         continue;

@@ -75,6 +75,46 @@ namespace GRCFinancialControl.Persistence.Services
             return new WorkbookData(dataSet);
         }
 
+        /// <summary>
+        /// Executes an import operation that relies on Excel workbook data, handling logging
+        /// and exception propagation in a consistent manner for all inheritors.
+        /// </summary>
+        /// <typeparam name="T">Type returned by the import operation.</typeparam>
+        /// <param name="filePath">Path to the workbook file.</param>
+        /// <param name="operationName">Friendly name for logging context.</param>
+        /// <param name="operation">Delegate that performs the import work using the loaded workbook.</param>
+        /// <returns>Result from the supplied <paramref name="operation"/>.</returns>
+        protected async Task<T> ExecuteWorkbookOperationAsync<T>(
+            string filePath,
+            string operationName,
+            Func<WorkbookData, Task<T>> operation)
+        {
+            if (string.IsNullOrWhiteSpace(operationName))
+            {
+                throw new ArgumentException("Operation name must be provided.", nameof(operationName));
+            }
+
+            if (operation == null)
+            {
+                throw new ArgumentNullException(nameof(operation));
+            }
+
+            Logger.LogInformation("{Operation} import started for file: {FilePath}", operationName, filePath);
+
+            try
+            {
+                using var workbook = LoadWorkbook(filePath);
+                var result = await operation(workbook).ConfigureAwait(false);
+                Logger.LogInformation("{Operation} import completed successfully for file: {FilePath}", operationName, filePath);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "{Operation} import failed for file: {FilePath}", operationName, filePath);
+                throw;
+            }
+        }
+
         #endregion
 
         #region Helper Methods for Child Classes

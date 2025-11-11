@@ -1061,7 +1061,17 @@ namespace GRCFinancialControl.Persistence.Services
             }
 
             // Save changes from first pass
-            await context.SaveChangesAsync().ConfigureAwait(false);
+            try
+            {
+                await context.SaveChangesAsync().ConfigureAwait(false);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Allocation planning import failed while preparing engagement rank budgets.");
+                throw new InvalidOperationException(
+                    "Unable to persist allocation planning budgets. Verify the worksheet for duplicate engagement/rank combinations and fiscal year alignment.",
+                    ex);
+            }
 
             // STEP E, F, G, H, I: Go back to the file, calculate consumed hours (40 hours per engagement week)
             // and aggregate by engagement/rank/fiscal year, then update ConsumedHours
@@ -1270,7 +1280,17 @@ namespace GRCFinancialControl.Persistence.Services
             }
 
             // Save all changes to the database
-            await context.SaveChangesAsync().ConfigureAwait(false);
+            try
+            {
+                await context.SaveChangesAsync().ConfigureAwait(false);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Allocation planning import failed while finalizing updates.");
+                throw new InvalidOperationException(
+                    "Unable to finalize the allocation planning import due to database constraints. Review the import log for details.",
+                    ex);
+            }
 
             // Note: ManualOnly (S/4 projects) are no longer skipped for GRC allocation planning import
 
