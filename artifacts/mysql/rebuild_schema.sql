@@ -139,7 +139,6 @@ CREATE TABLE `Papds`
     `Level` VARCHAR(100) NOT NULL,
     `EngagementPapdGui` VARCHAR(10) NOT NULL,
     `WindowsLogin` VARCHAR(200) NULL,
-    `EngagementPapdGUI` VARCHAR(100) NULL,
     CONSTRAINT `PK_Papds` PRIMARY KEY (`Id`),
     CONSTRAINT `UQ_Papds_WindowsLogin` UNIQUE (`WindowsLogin`),
     CONSTRAINT `UQ_Papds_EngagementPapdGUI` UNIQUE (`EngagementPapdGUI`)
@@ -153,7 +152,6 @@ CREATE TABLE `Managers`
     `Position` VARCHAR(50)   NOT NULL,
     `EngagementManagerGui` VARCHAR(10) NOT NULL, 
     `WindowsLogin` VARCHAR(200) NULL,
-    `EngagementManagerGUI` VARCHAR(100) NULL,
     CONSTRAINT `PK_Managers` PRIMARY KEY (`Id`),
     CONSTRAINT `UQ_Managers_Email` UNIQUE (`Email`),
     CONSTRAINT `UQ_Managers_WindowsLogin` UNIQUE (`WindowsLogin`),
@@ -695,12 +693,13 @@ DELIMITER ;
 -- ================================================================
 
 INSERT INTO `FiscalYears` (`Name`, `StartDate`, `EndDate`, `AreaSalesTarget`, `AreaRevenueTarget`) VALUES
+    ('FY25', '2024-07-01 00:00:00', '2025-06-30 23:59:59', 20000000, 23000000),
     ('FY26', '2025-07-01 00:00:00', '2026-06-30 23:59:59', 20000000, 23000000),
     ('FY27', '2026-07-01 00:00:00', '2027-06-30 23:59:59', 0, 0);
     
 INSERT INTO `ClosingPeriods` (`Name`, `FiscalYearId`, `PeriodStart`, `PeriodEnd`) VALUES
-    ('2025-09', 1, '2025-09-01 00:00:00', '2025-09-30 23:59:59'),
-    ('2025-10', 1, '2025-10-01 00:00:00', '2025-10-31 23:59:59');
+    ('2025-09', 2, '2025-09-01 00:00:00', '2025-09-30 23:59:59'),
+    ('2025-10', 2, '2025-10-01 00:00:00', '2025-10-31 23:59:59');
 
 INSERT INTO `Managers` 
     (`Name`, `Email`, `Position`, `EngagementManagerGui`,`WindowsLogin`)
@@ -715,7 +714,7 @@ VALUES
     
     
     INSERT INTO blac3289_GRCFinancialControl.Papds 
-    (`Name`, `Level`, `EngagementPartnerGUI`, `WindowsLogin`)
+    (`Name`, `Level`, `EngagementPapdGUI`, `WindowsLogin`)
 VALUES
     ('Danilo Passos', 'AssociatePartner','25001571',  'SA\\danilo.passos'),
     ('Fernando São Pedro', 'Director', '25002618', 'SA\\fernando.sao-pedro'),
