@@ -149,7 +149,8 @@ The `FinancialEvolution` table captures point-in-time engagement financials acro
 2. **Full Management Data Import:**
    - Each row represents a snapshot at a specific closing period
    - Excel columns map to database fields:
-     - "Original Budget Hours" → `BudgetHours`
+    - "Original Budget Hours" → `BudgetHours`
+    - "Original Budget TER" → `Engagement.OpeningValue`
      - "Charged Hours ETD" → `ChargedHours`
      - "Charged Hours FYTD" → `FYTDHours`
     - "Ter Mercury Projected" → `ValueData`
@@ -167,7 +168,7 @@ The `FinancialEvolution` table captures point-in-time engagement financials acro
    - Budget values (BudgetHours, BudgetMargin, ExpenseBudget) are the same across all snapshots
    - ETD values (ChargedHours, ToDateMargin, ExpensesToDate) reflect the most recent period
    - FYTD values provide fiscal-year-to-date accumulation
-   - `OpeningValue` remains sourced from the Full Allocation Data import (column JO) and is not overwritten when applying Full Management snapshots
+   - `OpeningValue` is refreshed from the workbook's **Original Budget TER** column so the engagement baseline matches the most recent Full Management data
 
 **Validation & Consolidation Rules**
 - Each snapshot is keyed by `EngagementId` + `ClosingPeriodId` to maintain time-series integrity.
@@ -193,8 +194,9 @@ The `FinancialEvolution` table captures point-in-time engagement financials acro
 - Header detection scans the first rows for mandatory header groups and fails fast with guidance when not found.
 - Numeric parsing supports localized decimal separators and enforces midpoint rounding for currency/hours.
 - The loader sanitizes whitespace, strips non-printable characters, and normalizes ranks/status text for consistent persistence.
+- `ImportServiceBase` centralizes workbook access, sheet adapters, header normalization, and exception logging so every importer shares the same error handling and file-access patterns.
 - Import summaries include counts of processed rows, warnings (e.g., missing engagements), and accumulated totals to aid reconciliation.
-- The Full Management Data importer now owns budget/margin/projection updates, mapping Original Budget, Mercury projections, and the new Unbilled Revenue Days column onto existing engagements while logging "Engagement not found" when an ID is absent. Rows without a closing period still refresh opening budgets but skip ETC metrics and are summarized as warnings in the import notes.
+- The Full Management Data importer now owns budget/margin/projection updates, mapping Original Budget, Mercury projections, and the new Unbilled Revenue Days column onto existing engagements while logging "Engagement not found" when an ID is absent. It prioritizes direct Row 11 column mapping for the required metrics (Engagement ID/Description, Client/Client ID, Opportunity Currency, TER ETD, backlog, margin, expenses, etc.) and records every alias fallback (including legacy "value data" / "valuedata" headers) plus any missing columns. Rows missing critical fields (engagement ID, engagement description, customer code/name, opportunity currency) are skipped with warnings instead of aborting the import, ensuring partial workbooks no longer crash the import path.
 - Full Management imports remain disabled until a closing period is selected on the Home dashboard, preventing uploads when the workbook filter is undefined.
 - S/4 Project engagements still trigger the manual-entry warning; the importer now limits updates to metadata (description, project status, and customer assignment) while leaving budget/ETC metrics untouched. Customer records missing from the catalog are created on the fly and placeholder codes such as `AUTO-xxxxx` are replaced when the workbook later supplies the official customer ID.
 - When S/4 metadata changes are detected the UI surfaces a localized toast (“S/4HANA project metadata imported successfully.”), giving controllers immediate confirmation without opening the log panel.

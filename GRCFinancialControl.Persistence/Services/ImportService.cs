@@ -851,9 +851,15 @@ namespace GRCFinancialControl.Persistence.Services
                 .FirstOrDefaultAsync(cp => nowUtc >= cp.PeriodStart && nowUtc <= cp.PeriodEnd)
                 .ConfigureAwait(false);
 
-            var closingPeriodLabel = activeClosingPeriod != null && !string.IsNullOrWhiteSpace(activeClosingPeriod.Name)
+            if (activeClosingPeriod is null)
+            {
+                throw new InvalidOperationException(
+                    "No active closing period is currently configured. Set an active closing period before importing allocation planning data.");
+            }
+
+            var closingPeriodLabel = !string.IsNullOrWhiteSpace(activeClosingPeriod.Name)
                 ? activeClosingPeriod.Name
-                : $"Id={activeClosingPeriod?.Id ?? 0}";
+                : $"Id={activeClosingPeriod.Id}";
 
             // Load all fiscal years to map column dates correctly
             var fiscalYears = await context.FiscalYears
@@ -920,13 +926,13 @@ namespace GRCFinancialControl.Persistence.Services
 
             // Load engagements and their existing budgets
             var fiscalYearIds = fiscalYears.Select(fy => fy.Id).Distinct().ToList();
-            var closingPeriodId = activeClosingPeriod?.Id ?? 0;
+            var closingPeriodId = activeClosingPeriod.Id;
 
             List<Engagement> engagements;
             if (engagementCodes.Count > 0)
             {
                 engagements = await context.Engagements
-                    .Include(e => e.RankBudgets.Where(b => fiscalYearIds.Contains(b.FiscalYearId)))
+                    .Include(e => e.RankBudgets.Where(b => b.ClosingPeriodId == closingPeriodId && fiscalYearIds.Contains(b.FiscalYearId)))
                     .Where(e => e.EngagementId != null && engagementCodes.Contains(e.EngagementId))
                     .ToListAsync()
                     .ConfigureAwait(false);
@@ -1044,6 +1050,7 @@ namespace GRCFinancialControl.Persistence.Services
                     {
                         EngagementId = engagement.Id,
                         FiscalYearId = fiscalYearId,
+                        ClosingPeriodId = closingPeriodId,
                         RankName = canonicalRankCode, // Use canonical ID (RawRank from RankMapping)
                         BudgetHours = 0m, // BudgetHours = 0 and editable
                         ConsumedHours = 0m,
@@ -1061,7 +1068,17 @@ namespace GRCFinancialControl.Persistence.Services
             }
 
             // Save changes from first pass
-            await context.SaveChangesAsync().ConfigureAwait(false);
+            try
+            {
+                await context.SaveChangesAsync().ConfigureAwait(false);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Allocation planning import failed while preparing engagement rank budgets.");
+                throw new InvalidOperationException(
+                    "Unable to persist allocation planning budgets. Verify the worksheet for duplicate engagement/rank combinations and fiscal year alignment.",
+                    ex);
+            }
 
             // STEP E, F, G, H, I: Go back to the file, calculate consumed hours (40 hours per engagement week)
             // and aggregate by engagement/rank/fiscal year, then update ConsumedHours
@@ -1170,6 +1187,11 @@ namespace GRCFinancialControl.Persistence.Services
                     continue;
                 }
 
+                if (budget.ClosingPeriodId != closingPeriodId)
+                {
+                    budget.ClosingPeriodId = closingPeriodId;
+                }
+
                 var engagement = engagements.FirstOrDefault(e => e.Id == engagementId);
                 if (engagement is null)
                 {
@@ -1270,7 +1292,17 @@ namespace GRCFinancialControl.Persistence.Services
             }
 
             // Save all changes to the database
-            await context.SaveChangesAsync().ConfigureAwait(false);
+            try
+            {
+                await context.SaveChangesAsync().ConfigureAwait(false);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Allocation planning import failed while finalizing updates.");
+                throw new InvalidOperationException(
+                    "Unable to finalize the allocation planning import due to database constraints. Review the import log for details.",
+                    ex);
+            }
 
             // Note: ManualOnly (S/4 projects) are no longer skipped for GRC allocation planning import
 

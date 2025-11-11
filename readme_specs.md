@@ -12,22 +12,25 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
 
 ## Budget Allocation Management
 - **Primary Services:** `FullManagementDataImporter`, `ImportService`, `HoursAllocationService`
+- **Shared Infrastructure:** `ImportServiceBase` centralizes workbook loading, sheet adapters, header normalization, and error logging for all Excel importers.
 - **Domain Models:** `Engagement`, `EngagementRankBudget`, `EngagementRankBudgetHistory`, `FiscalYear`, `TrafficLightStatus`
 - **Persistence:** Tables `EngagementRankBudgets`, `EngagementRankBudgetHistory`; EF Core via `ApplicationDbContext`
 - **Import Pipeline:**
   1. `ImportService` routes "Full Management Data" uploads to `FullManagementDataImporter`.
-  2. The importer scans the worksheet to locate the header row (`HeaderGroups`) and resolves report metadata (`ExtractReportMetadata`).
+  2. The importer prioritizes Row 11 headers using a direct field-to-column map and falls back to alias detection (`HeaderGroups`) only when a direct header is missing—each fallback is logged alongside the aliases resolved.
   3. Required columns are validated; missing headers trigger `InvalidDataException` with friendly messages.
   4. Rows are parsed into engagement aggregates (Original Budget Hours/TER/Margin/Expenses, Mercury projections, Unbilled Revenue Days) with culture-aware decimal parsing.
   5. The service upserts rank budgets, records change history, and recalculates incurred/remaining totals via `EngagementRankBudget` domain methods.
 - **Validation Mechanics:**
-  - Header detection searches the first 12 rows and requires each mandatory header group.
+  - Direct mapping expects Row 11 to match the canonical headers (Engagement ID, Engagement, Client, Client ID, Opportunity Currency, TER ETD, backlog, margin, expenses, etc.); alias detection scans the first 12 rows for each header group and logs every fallback header used (including "value data" / "valuedata" / "etd value").
   - Closing period metadata must be present either in the worksheet metadata or the first data row; missing metadata raises an `ImportWarningException` that the UI surfaces as a warning before aborting the import.
   - Numeric parsing supports pt-BR and invariant formats; invalid decimals/percentages raise descriptive errors.
   - Only existing engagements are updated; unknown IDs are skipped with "Engagement not found" warnings in the import summary.
-  - Import result aggregates processed/skipped counts and exposes warnings for unresolved engagements.
+  - Rows missing critical fields (engagement ID, engagement description, customer code/name, opportunity currency) are skipped with warnings rather than halting the import, keeping partial workbooks resilient.
+  - Import result aggregates processed/skipped counts and exposes warnings for unresolved engagements and incomplete rows.
   - Rows that reach the importer without a closing period still update opening budget columns but skip ETC metrics; these rows are listed in the `MissingClosingPeriodSkips` summary collection.
   - `ImportViewModel` keeps the Full Management Data import disabled until `HasClosingPeriodSelected` resolves `true`, which only happens after `ApplicationParametersChangedMessage` persists a closing period from the Home dashboard.
+  - Allocation planning uploads require an active closing period; `ImportAllocationPlanningAsync` throws an `InvalidOperationException` when none is configured to avoid foreign-key violations.
 
 ---
 
@@ -115,6 +118,7 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
 - **Import Pipeline (FullManagementDataImporter):**
   1. `ParseRows` extracts Full Management Data rows and maps Excel headers to domain fields:
      - "Original Budget Hours" / "Budget Hours" → `OriginalBudgetHours` → `BudgetHours`
+     - "Original Budget TER" → `OriginalBudgetTer` → `Engagement.OpeningValue`
      - "Charged Hours ETD" / "ETD Hours" → `ChargedHours`
      - "Charged Hours FYTD" / "FYTD Hours" → `FYTDHours`
     - "Ter Mercury Projected" / "ETC-P Value" → `TERMercuryProjectedOppCurrency` → `ValueData`
@@ -136,7 +140,7 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
   2. `BuildFinancialEvolutionSortKey` orders snapshots by closing period (resolved date or numeric ID).
   3. **Only the latest snapshot is applied** to the engagement entity:
      - `InitialHoursBudget = latest.BudgetHours`
-     - `OpeningValue` is preserved from the Full Allocation Data import (column JO) and is not overwritten by Full Management snapshots
+     - `OpeningValue` is populated from the workbook's **Original Budget TER** column during import and left untouched when applying snapshots
      - `OpeningExpenses = latest.ExpenseBudget`
      - `MarginPctBudget = latest.BudgetMargin`
      - `EstimatedToCompleteHours = latest.ChargedHours`
