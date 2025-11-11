@@ -21,7 +21,11 @@
     <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridGap}">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
             <StackPanel Spacing="{StaticResource SectionSpacing}">
-                <TextBlock Text="{Binding Engagement.Description}" Classes="TitleMedium"/>
+                <TextBlock Classes="TitleMedium">
+                    <Run Text="{Binding Engagement.EngagementId}"/>
+                    <Run Text=" - "/>
+                    <Run Text="{Binding Engagement.Description}"/>
+                </TextBlock>
                 
                 <!-- Closing Period Display -->
                 <StackPanel Orientation="Horizontal" Spacing="{StaticResource SpacingUnit}">
@@ -56,7 +60,7 @@
                 <!-- Copy from Previous Button -->
                 <Button Content="Copy from Previous Period"
                         Command="{Binding CopyFromPreviousPeriodCommand}"
-                        IsVisible="{Binding AllowEditing}"
+                        IsEnabled="{Binding AllowEditing}"
                         ToolTip.Tip="Copy allocation values from the latest previous closing period"
                         HorizontalAlignment="Left"/>
 

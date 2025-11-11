@@ -57,7 +57,7 @@ All UI strings for both desktop applications are centralized under `GRC.Shared.R
 
 **Validation & Consolidation Rules**
 - The importer enforces presence of Current FY and Next FY columns; missing fields stop the load.
-- ToGo is derived from FYTG and Future FY backlog columns, while ToDate equals `OpeningValue − FYTG − FutureFY`; negative totals are preserved for audit.
+- When the workbook provides the **TER FYTD** column, its value becomes the Revenue-To-Date figure; the fallback calculation `OpeningValue − FYTG − FutureFY` only runs when the sheet omits that value so finance always sees the imported total first.
 - Rows without valid engagement matches are reported and skipped to avoid orphan allocations.
 
 [See Technical Spec →](readme_specs.md#fiscal-year-revenue-allocation)
@@ -70,6 +70,7 @@ All UI strings for both desktop applications are centralized under `GRC.Shared.R
 2. The system loads current allocations alongside closing periods and their fiscal-year lock status.
 3. Users edit allocations for open periods and submit the plan.
 4. Persisted allocations drive downstream retain template generation and staffing dashboards.
+5. Saving a closing period snapshot automatically seeds the next chronological closing period with matching To-Go proposals (To-Date starts at zero) whenever that period has no snapshot yet, so controllers begin from the last approved distribution.
 
 **Validation & Consolidation Rules**
 - `EngagementMutationGuard` ensures the engagement is neither manual-only nor Closed before any write operation proceeds.

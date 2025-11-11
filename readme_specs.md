@@ -52,8 +52,9 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
 - **Persistence:** Table `EngagementFiscalYearRevenueAllocations`
 - **Workflow:**
   1. Allocation worksheets are parsed to identify Current FY and Next FY columns.
-  2. For each engagement, `ToGo` and `ToDate` values are computed based on FYTG and Future FY backlog fields.
+  2. For each engagement, `ToGo` uses FYTG/Future FY backlog values while `ToDate` prefers the imported **TER FYTD** amount and falls back to `OpeningValue − FYTG − FutureFY` only when that column is blank.
   3. Records are upserted by composite key (EngagementId, FiscalYearId) using EF bulk operations.
+  4. `AllocationSnapshotService.SaveRevenueAllocationSnapshotAsync` seeds the next chronological closing period with proposal rows (same To-Go, zero To-Date) whenever no snapshot exists, preserving manual distributions across periods.
 - **Validation Mechanics:**
   - Missing FY columns or invalid numeric values trigger descriptive `InvalidDataException`s.
   - Rows with unknown engagements are logged in the import summary and excluded from persistence.

@@ -270,9 +270,89 @@ namespace GRCFinancialControl.Persistence.Services
 
             await context.SaveChangesAsync().ConfigureAwait(false);
 
+            await PropagateAllocationsToNextPeriodAsync(
+                    context,
+                    engagementId,
+                    closingPeriod,
+                    allocations,
+                    nowUtc)
+                .ConfigureAwait(false);
+
             _logger.LogInformation(
                 "Saved {Count} revenue allocations for engagement {EngagementId} and period {ClosingPeriodId}.",
                 allocations.Count, engagementId, closingPeriodId);
+        }
+
+        private async Task PropagateAllocationsToNextPeriodAsync(
+            ApplicationDbContext context,
+            int engagementId,
+            ClosingPeriod currentPeriod,
+            List<EngagementFiscalYearRevenueAllocation> allocations,
+            DateTime timestampUtc)
+        {
+            ArgumentNullException.ThrowIfNull(context);
+            ArgumentNullException.ThrowIfNull(currentPeriod);
+            ArgumentNullException.ThrowIfNull(allocations);
+
+            if (allocations.Count == 0)
+            {
+                return;
+            }
+
+            var nextPeriod = await context.ClosingPeriods
+                .Include(cp => cp.FiscalYear)
+                .AsNoTracking()
+                .Where(cp => cp.PeriodEnd > currentPeriod.PeriodEnd)
+                .OrderBy(cp => cp.PeriodEnd)
+                .FirstOrDefaultAsync()
+                .ConfigureAwait(false);
+
+            if (nextPeriod == null || (nextPeriod.FiscalYear?.IsLocked ?? false))
+            {
+                return;
+            }
+
+            var hasExisting = await context.EngagementFiscalYearRevenueAllocations
+                .AnyAsync(a => a.EngagementId == engagementId && a.ClosingPeriodId == nextPeriod.Id)
+                .ConfigureAwait(false);
+
+            if (hasExisting)
+            {
+                return;
+            }
+
+            var proposals = allocations
+                .Select(a => new EngagementFiscalYearRevenueAllocation
+                {
+                    EngagementId = engagementId,
+                    FiscalYearId = a.FiscalYearId,
+                    ClosingPeriodId = nextPeriod.Id,
+                    ToGoValue = a.ToGoValue,
+                    ToDateValue = 0m,
+                    CreatedAt = timestampUtc,
+                    UpdatedAt = timestampUtc,
+                    LastUpdateDate = timestampUtc.Date
+                })
+                .ToList();
+
+            if (proposals.Count == 0)
+            {
+                return;
+            }
+
+            context.EngagementFiscalYearRevenueAllocations.AddRange(proposals);
+            await context.SaveChangesAsync().ConfigureAwait(false);
+
+            await SyncRevenueToFinancialEvolutionAsync(context, engagementId, nextPeriod.Id, proposals)
+                .ConfigureAwait(false);
+
+            await context.SaveChangesAsync().ConfigureAwait(false);
+
+            _logger.LogInformation(
+                "Created {Count} proposed revenue allocations for engagement {EngagementId} in closing period {ClosingPeriodId}.",
+                proposals.Count,
+                engagementId,
+                nextPeriod.Id);
         }
 
         public async Task SaveHoursAllocationSnapshotAsync(
