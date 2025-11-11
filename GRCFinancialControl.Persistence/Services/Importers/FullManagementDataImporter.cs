@@ -808,6 +808,11 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                 engagement.InitialHoursBudget = row.OriginalBudgetHours.Value;
                             }
 
+                            if (row.OriginalBudgetTer.HasValue)
+                            {
+                                engagement.OpeningValue = row.OriginalBudgetTer.Value;
+                            }
+
                             if (row.OriginalBudgetMarginPercent.HasValue)
                             {
                                 engagement.MarginPctBudget = row.OriginalBudgetMarginPercent;
@@ -863,10 +868,13 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                             // Always create FinancialEvolution and process RevenueAllocations
                             // Calculate revenue to-go and to-date values from backlog data
                             var revenueToGo = row.CurrentFiscalYearBacklog;
-                            var revenueToDate = row.CurrentFiscalYearToDate ??
-                                ((row.CurrentFiscalYearBacklog.HasValue || row.FutureFiscalYearBacklog.HasValue)
-                                    ? engagement.ValueToAllocate - (row.CurrentFiscalYearBacklog ?? 0m) - (row.FutureFiscalYearBacklog ?? 0m)
-                                    : (decimal?)null);
+                            var revenueToDate = row.CurrentFiscalYearToDate;
+                            if (revenueToDate == null && (row.CurrentFiscalYearBacklog.HasValue || row.FutureFiscalYearBacklog.HasValue))
+                            {
+                                revenueToDate = engagement.ValueToAllocate
+                                    - (row.CurrentFiscalYearBacklog ?? 0m)
+                                    - (row.FutureFiscalYearBacklog ?? 0m);
+                            }
 
                             financialEvolutionUpserts += UpsertFinancialEvolution(
                                 context,
@@ -2019,7 +2027,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             public decimal? FYTDHours { get; init; }
             public decimal? TERMercuryProjectedOppCurrency { get; init; }
             public decimal? ValueData { get; init; }
-            public decimal? CurrentFiscalYearToDate { get; init; }
+            public decimal? CurrentFiscalYearToDate { get; set; }
             public decimal? ToDateMargin { get; init; }
             public decimal? FYTDMargin { get; init; }
             public decimal? ExpensesToDate { get; init; }

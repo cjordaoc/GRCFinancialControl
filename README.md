@@ -149,7 +149,8 @@ The `FinancialEvolution` table captures point-in-time engagement financials acro
 2. **Full Management Data Import:**
    - Each row represents a snapshot at a specific closing period
    - Excel columns map to database fields:
-     - "Original Budget Hours" → `BudgetHours`
+    - "Original Budget Hours" → `BudgetHours`
+    - "Original Budget TER" → `Engagement.OpeningValue`
      - "Charged Hours ETD" → `ChargedHours`
      - "Charged Hours FYTD" → `FYTDHours`
     - "Ter Mercury Projected" → `ValueData`
@@ -167,7 +168,7 @@ The `FinancialEvolution` table captures point-in-time engagement financials acro
    - Budget values (BudgetHours, BudgetMargin, ExpenseBudget) are the same across all snapshots
    - ETD values (ChargedHours, ToDateMargin, ExpensesToDate) reflect the most recent period
    - FYTD values provide fiscal-year-to-date accumulation
-   - `OpeningValue` remains sourced from the Full Allocation Data import (column JO) and is not overwritten when applying Full Management snapshots
+   - `OpeningValue` is refreshed from the workbook's **Original Budget TER** column so the engagement baseline matches the most recent Full Management data
 
 **Validation & Consolidation Rules**
 - Each snapshot is keyed by `EngagementId` + `ClosingPeriodId` to maintain time-series integrity.

@@ -30,6 +30,7 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
   - Import result aggregates processed/skipped counts and exposes warnings for unresolved engagements and incomplete rows.
   - Rows that reach the importer without a closing period still update opening budget columns but skip ETC metrics; these rows are listed in the `MissingClosingPeriodSkips` summary collection.
   - `ImportViewModel` keeps the Full Management Data import disabled until `HasClosingPeriodSelected` resolves `true`, which only happens after `ApplicationParametersChangedMessage` persists a closing period from the Home dashboard.
+  - Allocation planning uploads require an active closing period; `ImportAllocationPlanningAsync` throws an `InvalidOperationException` when none is configured to avoid foreign-key violations.
 
 ---
 
@@ -117,6 +118,7 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
 - **Import Pipeline (FullManagementDataImporter):**
   1. `ParseRows` extracts Full Management Data rows and maps Excel headers to domain fields:
      - "Original Budget Hours" / "Budget Hours" → `OriginalBudgetHours` → `BudgetHours`
+     - "Original Budget TER" → `OriginalBudgetTer` → `Engagement.OpeningValue`
      - "Charged Hours ETD" / "ETD Hours" → `ChargedHours`
      - "Charged Hours FYTD" / "FYTD Hours" → `FYTDHours`
     - "Ter Mercury Projected" / "ETC-P Value" → `TERMercuryProjectedOppCurrency` → `ValueData`
@@ -138,7 +140,7 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
   2. `BuildFinancialEvolutionSortKey` orders snapshots by closing period (resolved date or numeric ID).
   3. **Only the latest snapshot is applied** to the engagement entity:
      - `InitialHoursBudget = latest.BudgetHours`
-     - `OpeningValue` is preserved from the Full Allocation Data import (column JO) and is not overwritten by Full Management snapshots
+     - `OpeningValue` is populated from the workbook's **Original Budget TER** column during import and left untouched when applying snapshots
      - `OpeningExpenses = latest.ExpenseBudget`
      - `MarginPctBudget = latest.BudgetMargin`
      - `EstimatedToCompleteHours = latest.ChargedHours`
