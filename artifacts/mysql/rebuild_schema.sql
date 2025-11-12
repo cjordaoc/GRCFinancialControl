@@ -507,7 +507,8 @@ DROP PROCEDURE IF EXISTS sp_RefreshManagerRevenueSummary;
 DELIMITER $$
 CREATE PROCEDURE sp_RefreshManagerRevenueSummary()
 BEGIN
-    DELETE FROM ManagerRevenueSummaryMaterialized;
+    DELETE FROM ManagerRevenueSummaryMaterialized
+    WHERE FiscalYearId IS NOT NULL;
     INSERT INTO ManagerRevenueSummaryMaterialized (
         FiscalYearId, FiscalYearName, ManagerId, ManagerName, ManagerPosition,
         TotalToGoValue, TotalToDateValue, TotalValue,
@@ -569,7 +570,8 @@ DELIMITER $$
 CREATE PROCEDURE sp_RefreshPapdRevenueSummary()
 BEGIN
     -- Truncate and repopulate
-    DELETE FROM PapdRevenueSummary;
+    DELETE FROM PapdRevenueSummary
+    WHERE FiscalYearId IS NOT NULL;
 
     INSERT INTO PapdRevenueSummary (
         FiscalYearId, FiscalYearName, PapdId, PapdName,
@@ -651,7 +653,8 @@ DELIMITER $$
 
 CREATE PROCEDURE sp_RefreshEngagementLatestFinancials()
 BEGIN
-    DELETE FROM EngagementLatestFinancials;
+    DELETE FROM EngagementLatestFinancials
+    WHERE EngagementId IS NOT NULL;
 
     INSERT INTO EngagementLatestFinancials (
         EngagementId, EngagementCode, EngagementDescription, Source,
@@ -782,7 +785,8 @@ DELIMITER ;
 DELIMITER $$
 CREATE PROCEDURE sp_RefreshCustomerSummaryCache()
 BEGIN
-    DELETE FROM CustomerSummaryCache;
+    DELETE FROM CustomerSummaryCache
+    WHERE CustomerId IS NOT NULL;
     INSERT INTO CustomerSummaryCache (
         CustomerId, CustomerName, CustomerCode, TotalEngagements, ActiveEngagements,
         RevenueToGoValue, RevenueToDateValue, TotalRevenue, ValueData,
