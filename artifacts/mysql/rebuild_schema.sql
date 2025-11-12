@@ -86,12 +86,12 @@ CREATE TABLE `FiscalYears`
 (
     `Id`                INT             NOT NULL AUTO_INCREMENT,
     `Name`              VARCHAR(100)    NOT NULL,
-    `StartDate`         DATETIME(6)     NOT NULL,
-    `EndDate`           DATETIME(6)     NOT NULL,
+    `StartDate`         DATETIME NOT NULL,
+    `EndDate`           DATETIME NOT NULL,
     `AreaSalesTarget`   DECIMAL(18, 2)  NOT NULL DEFAULT 0,
     `AreaRevenueTarget` DECIMAL(18, 2)  NOT NULL DEFAULT 0,
     `IsLocked`          TINYINT(1)      NOT NULL DEFAULT 0,
-    `LockedAt`          DATETIME(6)     NULL,
+    `LockedAt`          DATETIME NULL,
     `LockedBy`          VARCHAR(100)    NULL,
     CONSTRAINT `PK_FiscalYears` PRIMARY KEY (`Id`),
     CONSTRAINT `UX_FiscalYears_Name` UNIQUE (`Name`)
@@ -103,8 +103,8 @@ CREATE TABLE `ClosingPeriods`
     `Id`           INT           NOT NULL AUTO_INCREMENT,
     `Name`         VARCHAR(100)  NOT NULL,
     `FiscalYearId` INT           NOT NULL,
-    `PeriodStart`  DATETIME(6)   NOT NULL,
-    `PeriodEnd`    DATETIME(6)   NOT NULL,
+    `PeriodStart`  DATETIME NOT NULL,
+    `PeriodEnd`    DATETIME NOT NULL,
     `IsLocked`     TINYINT(1)    NOT NULL DEFAULT 0,
     CONSTRAINT `PK_ClosingPeriods` PRIMARY KEY (`Id`),
     CONSTRAINT `UX_ClosingPeriods_Name` UNIQUE (`Name`),
@@ -148,7 +148,7 @@ CREATE TABLE IF NOT EXISTS `RankMappings`
     `SpreadsheetRank` VARCHAR(100)    NULL,
     `CreatedAt`       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `IsActive`        TINYINT(1)      NOT NULL DEFAULT 1,
-    `LastSeenAt`      DATETIME(6)     NULL,
+    `LastSeenAt`      DATETIME NULL,
     CONSTRAINT `PK_RankMappings` PRIMARY KEY (`Id`),
     CONSTRAINT `UX_RankMappings_RankCode` UNIQUE (`RankCode`),
     INDEX `IX_RankMappings_RankName` (`RankName`),
@@ -187,8 +187,8 @@ CREATE TABLE `Engagements`
     `Currency`             VARCHAR(16)    NOT NULL DEFAULT '',
     `MarginPctBudget`      DECIMAL(9, 4)  NULL,
     `MarginPctEtcp`        DECIMAL(9, 4)  NULL,
-    `LastEtcDate`          DATETIME(6)    NULL,
-    `ProposedNextEtcDate`  DATETIME(6)    NULL,
+    `LastEtcDate`          DATETIME NULL,
+    `ProposedNextEtcDate`  DATETIME NULL,
     `StatusText`           VARCHAR(100)   NULL,
     `CustomerId`           INT            NULL,
     `OpeningValue`         DECIMAL(18, 2) NOT NULL,
@@ -263,7 +263,7 @@ CREATE TABLE `EngagementRankBudgets`
     `RemainingHours` DECIMAL(18, 2) NOT NULL DEFAULT 0,
     `Status`         VARCHAR(20)    NOT NULL DEFAULT 'Green',
     `CreatedAtUtc`   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `UpdatedAtUtc`   DATETIME(6)    NULL,
+    `UpdatedAtUtc`   DATETIME NULL,
     CONSTRAINT `PK_EngagementRankBudgets` PRIMARY KEY (`Id`),
     CONSTRAINT `FK_EngagementRankBudgets_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
     CONSTRAINT `FK_EngagementRankBudgets_FiscalYears` FOREIGN KEY (`FiscalYearId`) REFERENCES `FiscalYears` (`Id`) ON DELETE CASCADE,
@@ -350,7 +350,7 @@ CREATE TABLE `ActualsEntries`
     `EngagementId`    INT            NOT NULL,
     `PapdId`          INT            NULL,
     `ClosingPeriodId` INT            NOT NULL,
-    `Date`            DATETIME(6)    NOT NULL,
+    `Date`            DATETIME NOT NULL,
     `Hours`           DECIMAL(18, 2) NOT NULL,
     `ImportBatchId`   VARCHAR(100)   NOT NULL,
     CONSTRAINT `PK_ActualsEntries` PRIMARY KEY (`Id`),
@@ -367,7 +367,7 @@ CREATE TABLE `ActualsEntries`
 CREATE TABLE `Exceptions`
 (
     `Id`         INT           NOT NULL AUTO_INCREMENT,
-    `Timestamp`  DATETIME(6)   NOT NULL, -- populated via trigger
+    `Timestamp`  DATETIME NOT NULL, -- populated via trigger
     `SourceFile` VARCHAR(260)  NOT NULL,
     `RowData`    TEXT          NOT NULL,
     `Reason`     VARCHAR(500)  NOT NULL,
@@ -497,7 +497,7 @@ CREATE TABLE `ManagerRevenueSummaryMaterialized` (
     `FYTDHours` DECIMAL(18, 2) DEFAULT 0,
     `FYTDExpenses` DECIMAL(18, 2) DEFAULT 0,
     `FYTDMargin` DECIMAL(18, 2) DEFAULT 0,
-    `LatestClosingPeriodEnd` DATETIME(6) NULL,
+    `LatestClosingPeriodEnd` DATETIME NULL,
     `EngagementCount` INT DEFAULT 0,
     `ActiveEngagementCount` INT DEFAULT 0,
     CONSTRAINT `PK_ManagerRevenueSummaryMaterialized` PRIMARY KEY (`FiscalYearId`, `ManagerId`)
@@ -558,7 +558,7 @@ CREATE TABLE `PapdRevenueSummary` (
     `FYTDHours` DECIMAL(18, 2) DEFAULT 0,
     `FYTDExpenses` DECIMAL(18, 2) DEFAULT 0,
     `FYTDMargin` DECIMAL(18, 2) DEFAULT 0,
-    `LatestClosingPeriodEnd` DATETIME(6) NULL,
+    `LatestClosingPeriodEnd` DATETIME NULL,
     CONSTRAINT `PK_PapdRevenueSummary` PRIMARY KEY (`FiscalYearId`, `PapdId`),
     INDEX `IX_PapdRevenueSummary_FY` (`FiscalYearId`),
     INDEX `IX_PapdRevenueSummary_Papd` (`PapdId`)
@@ -575,19 +575,11 @@ BEGIN
     -- -------------------------------------------------------------------------
     -- Purpose  : Rebuilds the PapdRevenueSummary materialized table
     -- Author   : GRC Financial Control Schema
-    -- Notes    : 
+    -- Notes    :
     --   - Removes all existing rows before repopulation (idempotent)
     --   - Aggregates data from EngagementLatestFinancials by PAPD/FiscalYear
     --   - Adds placeholder zero rows for all PAPD × FiscalYear combinations
     -- -------------------------------------------------------------------------
-
-    DECLARE exit HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END;
-
-    START TRANSACTION;
 
     -- -------------------------------------------------------------------------
     -- Step 1: Clear existing snapshot
@@ -666,8 +658,6 @@ BEGIN
         WHERE prs.FiscalYearId = fy.Id
           AND prs.PapdId = p.Id
     );
-
-    COMMIT;
 END$$
 DELIMITER ;
 
@@ -689,7 +679,7 @@ CREATE TABLE `EngagementLatestFinancials` (
     `ClosingPeriodId` VARCHAR(100) NOT NULL,
     `ClosingPeriodNumericId` INT NULL,
     `ClosingPeriodName` VARCHAR(100) NOT NULL,
-    `ClosingPeriodEnd` DATETIME(6) NOT NULL,
+    `ClosingPeriodEnd` DATETIME NOT NULL,
     `RevenueToGoValue` DECIMAL(18, 2) DEFAULT 0,
     `RevenueToDateValue` DECIMAL(18, 2) DEFAULT 0,
     `TotalRevenue` DECIMAL(18, 2) DEFAULT 0,
@@ -726,16 +716,8 @@ BEGIN
    -- -------------------------------------------------------------------------
     --  Purpose : Refresh EngagementLatestFinancials snapshot
     --  Author  : GRC Financial Control
-    --  Compatible with MySQL 5.7 (no window functions / no CTE)
+    --  Compatible with MySQL 5.3+ (no window functions / no CTE / no fractional DATETIME)
    -- -------------------------------------------------------------------------
-
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END;
-
-    START TRANSACTION;
 
    -- -------------------------------------------------------------------------
     -- Step 1 – Clear snapshot
@@ -1032,8 +1014,6 @@ BEGIN
         WHERE el.EngagementId = e.Id
           AND el.FiscalYearId = fy.Id
     );
-
-    COMMIT;
 END$$
 DELIMITER ;
 
@@ -1061,7 +1041,7 @@ CREATE TABLE `CustomerSummaryCache` (
     `TotalInvoiced` DECIMAL(18, 2) DEFAULT 0,
     `OutstandingInvoices` INT DEFAULT 0,
     `LastActivityDate` DATETIME NULL,
-    `LatestClosingPeriodEnd` DATETIME(6) NULL,
+    `LatestClosingPeriodEnd` DATETIME NULL,
     CONSTRAINT `PK_CustomerSummaryCache` PRIMARY KEY (`CustomerId`),
     INDEX `IX_CustomerSummaryCache_Code` (`CustomerCode`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
