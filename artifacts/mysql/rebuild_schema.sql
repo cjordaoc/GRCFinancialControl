@@ -588,6 +588,25 @@ BEGIN
         ChargedHours, FYTDHours, FYTDExpenses, FYTDMargin,
         LatestClosingPeriodEnd
     )
+    WITH aggregated AS (
+        SELECT
+            elf.FiscalYearId,
+            fy.Name AS FiscalYearName,
+            ep.PapdId,
+            SUM(elf.RevenueToGoValue)   AS TotalToGoValue,
+            SUM(elf.RevenueToDateValue) AS TotalToDateValue,
+            SUM(elf.TotalRevenue)       AS TotalValue,
+            SUM(elf.ChargedHours)       AS ChargedHours,
+            SUM(elf.FYTDHours)          AS FYTDHours,
+            SUM(elf.FYTDExpenses)       AS FYTDExpenses,
+            SUM(elf.FYTDMargin)         AS FYTDMargin,
+            MAX(elf.ClosingPeriodEnd)   AS LatestClosingPeriodEnd
+        FROM EngagementLatestFinancials elf
+        INNER JOIN FiscalYears fy ON fy.Id = elf.FiscalYearId
+        INNER JOIN EngagementPapds ep ON ep.EngagementId = elf.EngagementId
+        WHERE elf.FiscalYearId IS NOT NULL
+        GROUP BY elf.FiscalYearId, fy.Name, ep.PapdId
+    )
     SELECT
         aggregated.FiscalYearId,
         aggregated.FiscalYearName,
@@ -726,6 +745,62 @@ BEGIN
         PrimaryManagerId, PrimaryManagerName,
         PrimaryPapdId, PrimaryPapdName,
         LastRefresh
+    )
+    WITH ranked_financials AS (
+        SELECT
+            e.Id AS EngagementId,
+            e.EngagementId AS EngagementCode,
+            e.Description AS EngagementDescription,
+            e.Source,
+            e.CustomerId,
+            c.Name AS CustomerName,
+            fy.Id AS FiscalYearId,
+            fy.Name AS FiscalYearName,
+            CASE
+                WHEN TRIM(fe.ClosingPeriodId) IS NULL OR TRIM(fe.ClosingPeriodId) = '' THEN CONCAT('FE-', e.Id, '-FY', LPAD(fy.Id, 4, '0'))
+                ELSE TRIM(fe.ClosingPeriodId)
+            END AS ClosingPeriodId,
+            CASE
+                WHEN TRIM(fe.ClosingPeriodId) REGEXP '^[0-9]+$' THEN CAST(TRIM(fe.ClosingPeriodId) AS UNSIGNED)
+                ELSE NULL
+            END AS ClosingPeriodNumericId,
+            COALESCE(cp.Name, CONCAT('Closing ', fy.Name)) AS ClosingPeriodName,
+            COALESCE(cp.PeriodEnd, fy.EndDate) AS ClosingPeriodEnd,
+            COALESCE(fe.RevenueToGoValue, 0) AS RevenueToGoValue,
+            COALESCE(fe.RevenueToDateValue, 0) AS RevenueToDateValue,
+            COALESCE(fe.RevenueToGoValue, 0) + COALESCE(fe.RevenueToDateValue, 0) AS TotalRevenue,
+            COALESCE(fe.ValueData, 0) AS ValueData,
+            COALESCE(fe.BudgetHours, 0) AS BudgetHours,
+            COALESCE(fe.ChargedHours, 0) AS ChargedHours,
+            COALESCE(fe.FYTDHours, 0) AS FYTDHours,
+            COALESCE(fe.AdditionalHours, 0) AS AdditionalHours,
+            COALESCE(fe.ExpenseBudget, 0) AS ExpenseBudget,
+            COALESCE(fe.ExpensesToDate, 0) AS ExpensesToDate,
+            COALESCE(fe.FYTDExpenses, 0) AS FYTDExpenses,
+            COALESCE(fe.ToDateMargin, 0) AS ToDateMargin,
+            COALESCE(fe.FYTDMargin, 0) AS FYTDMargin,
+            CASE
+                WHEN NULLIF(COALESCE(fe.RevenueToDateValue, 0), 0) IS NULL THEN 0
+                ELSE ROUND(COALESCE(fe.ToDateMargin, 0) / NULLIF(COALESCE(fe.RevenueToDateValue, 0), 0) * 100, 4)
+            END AS MarginPercentage,
+            ROW_NUMBER() OVER (
+                PARTITION BY e.Id, fy.Id
+                ORDER BY COALESCE(cp.PeriodEnd, fy.EndDate) DESC,
+                         CASE
+                             WHEN TRIM(fe.ClosingPeriodId) REGEXP '^[0-9]+$' THEN CAST(TRIM(fe.ClosingPeriodId) AS UNSIGNED)
+                             ELSE 0
+                         END DESC,
+                         fe.Id DESC
+            ) AS RowRank
+        FROM FinancialEvolution fe
+        INNER JOIN Engagements e ON e.Id = fe.EngagementId
+        LEFT JOIN Customers c ON c.Id = e.CustomerId
+        LEFT JOIN ClosingPeriods cp ON (
+            TRIM(fe.ClosingPeriodId) REGEXP '^[0-9]+$'
+            AND cp.Id = CAST(TRIM(fe.ClosingPeriodId) AS UNSIGNED)
+        )
+        LEFT JOIN FiscalYears fy ON fy.Id = COALESCE(fe.FiscalYearId, cp.FiscalYearId)
+        WHERE fy.Id IS NOT NULL
     )
     SELECT
         rf.EngagementId,
