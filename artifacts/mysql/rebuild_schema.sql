@@ -1003,7 +1003,7 @@ BEGIN
         fy.Id, fy.Name,
         CONCAT('FY',LPAD(fy.Id,4,'0'),'-PLACEHOLDER'),
         NULL, CONCAT(fy.Name,' Placeholder'), fy.EndDate,
-        0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,
         mgr.PrimaryManagerId, mgr.PrimaryManagerName,
         papd.PrimaryPapdId, papd.PrimaryPapdName,
         CURRENT_TIMESTAMP
