@@ -567,8 +567,20 @@ CREATE TABLE `PapdRevenueSummary` (
 DROP PROCEDURE IF EXISTS sp_RefreshPapdRevenueSummary;
 DELIMITER $$
 
+DROP PROCEDURE IF EXISTS `sp_RefreshPapdRevenueSummary`;
+DELIMITER $$
+
 CREATE DEFINER=`blac3289_GRCFinControl`@`%` PROCEDURE `sp_RefreshPapdRevenueSummary`()
 BEGIN
+    -- -------------------------------------------------------------------------
+    -- Purpose  : Rebuilds the PapdRevenueSummary materialized table
+    -- Author   : GRC Financial Control Schema
+    -- Notes    : 
+    --   - Removes all existing rows before repopulation (idempotent)
+    --   - Aggregates data from EngagementLatestFinancials by PAPD/FiscalYear
+    --   - Adds placeholder zero rows for all PAPD × FiscalYear combinations
+    -- -------------------------------------------------------------------------
+
     DECLARE exit HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
@@ -577,49 +589,34 @@ BEGIN
 
     START TRANSACTION;
 
-    -- Step 1: clear existing snapshot so the refresh is idempotent
+    -- -------------------------------------------------------------------------
+    -- Step 1: Clear existing snapshot
+    -- -------------------------------------------------------------------------
     DELETE FROM PapdRevenueSummary
     WHERE FiscalYearId IS NOT NULL;
 
-    -- Step 2: aggregate EngagementLatestFinancials by PAPD and FiscalYear
+    -- -------------------------------------------------------------------------
+    -- Step 2: Insert aggregated PAPD-level data
+    -- -------------------------------------------------------------------------
     INSERT INTO PapdRevenueSummary (
         FiscalYearId, FiscalYearName, PapdId, PapdName,
         TotalToGoValue, TotalToDateValue, TotalValue,
         ChargedHours, FYTDHours, FYTDExpenses, FYTDMargin,
         LatestClosingPeriodEnd
     )
-    WITH aggregated AS (
-        SELECT
-            elf.FiscalYearId,
-            fy.Name AS FiscalYearName,
-            ep.PapdId,
-            SUM(elf.RevenueToGoValue)   AS TotalToGoValue,
-            SUM(elf.RevenueToDateValue) AS TotalToDateValue,
-            SUM(elf.TotalRevenue)       AS TotalValue,
-            SUM(elf.ChargedHours)       AS ChargedHours,
-            SUM(elf.FYTDHours)          AS FYTDHours,
-            SUM(elf.FYTDExpenses)       AS FYTDExpenses,
-            SUM(elf.FYTDMargin)         AS FYTDMargin,
-            MAX(elf.ClosingPeriodEnd)   AS LatestClosingPeriodEnd
-        FROM EngagementLatestFinancials elf
-        INNER JOIN FiscalYears fy ON fy.Id = elf.FiscalYearId
-        INNER JOIN EngagementPapds ep ON ep.EngagementId = elf.EngagementId
-        WHERE elf.FiscalYearId IS NOT NULL
-        GROUP BY elf.FiscalYearId, fy.Name, ep.PapdId
-    )
     SELECT
-        aggregated.FiscalYearId,
-        aggregated.FiscalYearName,
+        agg.FiscalYearId,
+        agg.FiscalYearName,
         p.Id AS PapdId,
         p.Name AS PapdName,
-        COALESCE(aggregated.TotalToGoValue, 0),
-        COALESCE(aggregated.TotalToDateValue, 0),
-        COALESCE(aggregated.TotalValue, 0),
-        COALESCE(aggregated.ChargedHours, 0),
-        COALESCE(aggregated.FYTDHours, 0),
-        COALESCE(aggregated.FYTDExpenses, 0),
-        COALESCE(aggregated.FYTDMargin, 0),
-        aggregated.LatestClosingPeriodEnd
+        COALESCE(agg.TotalToGoValue, 0),
+        COALESCE(agg.TotalToDateValue, 0),
+        COALESCE(agg.TotalValue, 0),
+        COALESCE(agg.ChargedHours, 0),
+        COALESCE(agg.FYTDHours, 0),
+        COALESCE(agg.FYTDExpenses, 0),
+        COALESCE(agg.FYTDMargin, 0),
+        agg.LatestClosingPeriodEnd
     FROM (
         SELECT
             elf.FiscalYearId,
@@ -634,14 +631,19 @@ BEGIN
             SUM(elf.FYTDMargin)         AS FYTDMargin,
             MAX(elf.ClosingPeriodEnd)   AS LatestClosingPeriodEnd
         FROM EngagementLatestFinancials elf
-        INNER JOIN FiscalYears fy ON fy.Id = elf.FiscalYearId
-        INNER JOIN EngagementPapds ep ON ep.EngagementId = elf.EngagementId
+        INNER JOIN FiscalYears fy 
+            ON fy.Id = elf.FiscalYearId
+        INNER JOIN EngagementPapds ep 
+            ON ep.EngagementId = elf.EngagementId
         WHERE elf.FiscalYearId IS NOT NULL
         GROUP BY elf.FiscalYearId, fy.Name, ep.PapdId
-    ) aggregated
-    INNER JOIN Papds p ON p.Id = aggregated.PapdId;
+    ) AS agg
+    INNER JOIN Papds p 
+        ON p.Id = agg.PapdId;
 
-    -- Step 3: ensure every FiscalYear × PAPD exists with zero placeholders
+    -- -------------------------------------------------------------------------
+    -- Step 3: Insert placeholder zero-value rows for missing FY × PAPD pairs
+    -- -------------------------------------------------------------------------
     INSERT INTO PapdRevenueSummary (
         FiscalYearId, FiscalYearName, PapdId, PapdName,
         TotalToGoValue, TotalToDateValue, TotalValue,
@@ -668,6 +670,7 @@ BEGIN
     COMMIT;
 END$$
 DELIMITER ;
+
 
 -- ===========================================================
 -- Procedure: sp_RefreshEngagementLatestFinancials
@@ -715,12 +718,18 @@ CREATE TABLE `EngagementLatestFinancials` (
     INDEX `IX_ELF_PrimaryPapd` (`PrimaryPapdId`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
-DROP PROCEDURE IF EXISTS sp_RefreshEngagementLatestFinancials;
+DROP PROCEDURE IF EXISTS `sp_RefreshEngagementLatestFinancials`;
 DELIMITER $$
 
 CREATE DEFINER=`blac3289_GRCFinControl`@`%` PROCEDURE `sp_RefreshEngagementLatestFinancials`()
 BEGIN
-    DECLARE exit HANDLER FOR SQLEXCEPTION
+   -- -------------------------------------------------------------------------
+    --  Purpose : Refresh EngagementLatestFinancials snapshot
+    --  Author  : GRC Financial Control
+    --  Compatible with MySQL 5.7 (no window functions / no CTE)
+   -- -------------------------------------------------------------------------
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
         RESIGNAL;
@@ -728,11 +737,15 @@ BEGIN
 
     START TRANSACTION;
 
-    -- Step 1: clear existing snapshot rows so refresh is deterministic
+   -- -------------------------------------------------------------------------
+    -- Step 1 – Clear snapshot
+   -- -------------------------------------------------------------------------
     DELETE FROM EngagementLatestFinancials
     WHERE EngagementId IS NOT NULL;
 
-    -- Step 2: load latest FinancialEvolution snapshot per engagement and fiscal year
+   -- -------------------------------------------------------------------------
+    -- Step 2 – Latest FinancialEvolution per Engagement × FiscalYear
+   -- -------------------------------------------------------------------------
     INSERT INTO EngagementLatestFinancials (
         EngagementId, EngagementCode, EngagementDescription, Source,
         CustomerId, CustomerName,
@@ -746,150 +759,89 @@ BEGIN
         PrimaryPapdId, PrimaryPapdName,
         LastRefresh
     )
-    WITH ranked_financials AS (
-        SELECT
-            e.Id AS EngagementId,
-            e.EngagementId AS EngagementCode,
-            e.Description AS EngagementDescription,
-            e.Source,
-            e.CustomerId,
-            c.Name AS CustomerName,
-            fy.Id AS FiscalYearId,
-            fy.Name AS FiscalYearName,
-            CASE
-                WHEN TRIM(fe.ClosingPeriodId) IS NULL OR TRIM(fe.ClosingPeriodId) = '' THEN CONCAT('FE-', e.Id, '-FY', LPAD(fy.Id, 4, '0'))
-                ELSE TRIM(fe.ClosingPeriodId)
-            END AS ClosingPeriodId,
-            CASE
-                WHEN TRIM(fe.ClosingPeriodId) REGEXP '^[0-9]+$' THEN CAST(TRIM(fe.ClosingPeriodId) AS UNSIGNED)
-                ELSE NULL
-            END AS ClosingPeriodNumericId,
-            COALESCE(cp.Name, CONCAT('Closing ', fy.Name)) AS ClosingPeriodName,
-            COALESCE(cp.PeriodEnd, fy.EndDate) AS ClosingPeriodEnd,
-            COALESCE(fe.RevenueToGoValue, 0) AS RevenueToGoValue,
-            COALESCE(fe.RevenueToDateValue, 0) AS RevenueToDateValue,
-            COALESCE(fe.RevenueToGoValue, 0) + COALESCE(fe.RevenueToDateValue, 0) AS TotalRevenue,
-            COALESCE(fe.ValueData, 0) AS ValueData,
-            COALESCE(fe.BudgetHours, 0) AS BudgetHours,
-            COALESCE(fe.ChargedHours, 0) AS ChargedHours,
-            COALESCE(fe.FYTDHours, 0) AS FYTDHours,
-            COALESCE(fe.AdditionalHours, 0) AS AdditionalHours,
-            COALESCE(fe.ExpenseBudget, 0) AS ExpenseBudget,
-            COALESCE(fe.ExpensesToDate, 0) AS ExpensesToDate,
-            COALESCE(fe.FYTDExpenses, 0) AS FYTDExpenses,
-            COALESCE(fe.ToDateMargin, 0) AS ToDateMargin,
-            COALESCE(fe.FYTDMargin, 0) AS FYTDMargin,
-            CASE
-                WHEN NULLIF(COALESCE(fe.RevenueToDateValue, 0), 0) IS NULL THEN 0
-                ELSE ROUND(COALESCE(fe.ToDateMargin, 0) / NULLIF(COALESCE(fe.RevenueToDateValue, 0), 0) * 100, 4)
-            END AS MarginPercentage,
-            ROW_NUMBER() OVER (
-                PARTITION BY e.Id, fy.Id
-                ORDER BY COALESCE(cp.PeriodEnd, fy.EndDate) DESC,
-                         CASE
-                             WHEN TRIM(fe.ClosingPeriodId) REGEXP '^[0-9]+$' THEN CAST(TRIM(fe.ClosingPeriodId) AS UNSIGNED)
-                             ELSE 0
-                         END DESC,
-                         fe.Id DESC
-            ) AS RowRank
-        FROM FinancialEvolution fe
-        INNER JOIN Engagements e ON e.Id = fe.EngagementId
-        LEFT JOIN Customers c ON c.Id = e.CustomerId
-        LEFT JOIN ClosingPeriods cp ON (
-            TRIM(fe.ClosingPeriodId) REGEXP '^[0-9]+$'
-            AND cp.Id = CAST(TRIM(fe.ClosingPeriodId) AS UNSIGNED)
-        )
-        LEFT JOIN FiscalYears fy ON fy.Id = COALESCE(fe.FiscalYearId, cp.FiscalYearId)
-        WHERE fy.Id IS NOT NULL
-    )
     SELECT
-        rf.EngagementId,
-        rf.EngagementCode,
-        rf.EngagementDescription,
-        rf.Source,
-        rf.CustomerId,
-        rf.CustomerName,
-        rf.FiscalYearId,
-        rf.FiscalYearName,
-        rf.ClosingPeriodId,
-        rf.ClosingPeriodNumericId,
-        rf.ClosingPeriodName,
-        rf.ClosingPeriodEnd,
-        rf.RevenueToGoValue,
-        rf.RevenueToDateValue,
-        rf.TotalRevenue,
-        rf.ValueData,
-        rf.BudgetHours,
-        rf.ChargedHours,
-        rf.FYTDHours,
-        rf.AdditionalHours,
-        rf.ExpenseBudget,
-        rf.ExpensesToDate,
-        rf.FYTDExpenses,
-        rf.ToDateMargin,
-        rf.FYTDMargin,
-        rf.MarginPercentage,
+        fe1.EngagementId,
+        e.EngagementId  AS EngagementCode,
+        e.Description   AS EngagementDescription,
+        e.Source,
+        e.CustomerId,
+        c.Name          AS CustomerName,
+        fy.Id           AS FiscalYearId,
+        fy.Name         AS FiscalYearName,
+        fe1.ClosingPeriodId,
+        fe1.ClosingPeriodNumericId,
+        fe1.ClosingPeriodName,
+        fe1.ClosingPeriodEnd,
+        fe1.RevenueToGoValue,
+        fe1.RevenueToDateValue,
+        fe1.TotalRevenue,
+        fe1.ValueData,
+        fe1.BudgetHours,
+        fe1.ChargedHours,
+        fe1.FYTDHours,
+        fe1.AdditionalHours,
+        fe1.ExpenseBudget,
+        fe1.ExpensesToDate,
+        fe1.FYTDExpenses,
+        fe1.ToDateMargin,
+        fe1.FYTDMargin,
+        fe1.MarginPercentage,
         mgr.PrimaryManagerId,
         mgr.PrimaryManagerName,
         papd.PrimaryPapdId,
         papd.PrimaryPapdName,
-        CURRENT_TIMESTAMP AS LastRefresh
+        CURRENT_TIMESTAMP
     FROM (
         SELECT
-            e.Id AS EngagementId,
-            e.EngagementId AS EngagementCode,
-            e.Description AS EngagementDescription,
-            e.Source,
-            e.CustomerId,
-            c.Name AS CustomerName,
-            fy.Id AS FiscalYearId,
-            fy.Name AS FiscalYearName,
+            fe.Id,
+            fe.EngagementId,
+            fy.Id  AS FiscalYearId,
             CASE
-                WHEN TRIM(fe.ClosingPeriodId) IS NULL OR TRIM(fe.ClosingPeriodId) = '' THEN CONCAT('FE-', e.Id, '-FY', LPAD(fy.Id, 4, '0'))
+                WHEN TRIM(fe.ClosingPeriodId) IS NULL OR TRIM(fe.ClosingPeriodId) = ''
+                    THEN CONCAT('FE-', fe.EngagementId, '-FY', LPAD(fy.Id,4,'0'))
                 ELSE TRIM(fe.ClosingPeriodId)
             END AS ClosingPeriodId,
             CASE
-                WHEN TRIM(fe.ClosingPeriodId) REGEXP '^[0-9]+$' THEN CAST(TRIM(fe.ClosingPeriodId) AS UNSIGNED)
-                ELSE NULL
+                WHEN TRIM(fe.ClosingPeriodId) REGEXP '^[0-9]+$'
+                    THEN CAST(TRIM(fe.ClosingPeriodId) AS UNSIGNED)
+                ELSE 0
             END AS ClosingPeriodNumericId,
             COALESCE(cp.Name, CONCAT('Closing ', fy.Name)) AS ClosingPeriodName,
             COALESCE(cp.PeriodEnd, fy.EndDate) AS ClosingPeriodEnd,
-            COALESCE(fe.RevenueToGoValue, 0) AS RevenueToGoValue,
-            COALESCE(fe.RevenueToDateValue, 0) AS RevenueToDateValue,
-            COALESCE(fe.RevenueToGoValue, 0) + COALESCE(fe.RevenueToDateValue, 0) AS TotalRevenue,
-            COALESCE(fe.ValueData, 0) AS ValueData,
-            COALESCE(fe.BudgetHours, 0) AS BudgetHours,
-            COALESCE(fe.ChargedHours, 0) AS ChargedHours,
-            COALESCE(fe.FYTDHours, 0) AS FYTDHours,
-            COALESCE(fe.AdditionalHours, 0) AS AdditionalHours,
-            COALESCE(fe.ExpenseBudget, 0) AS ExpenseBudget,
-            COALESCE(fe.ExpensesToDate, 0) AS ExpensesToDate,
-            COALESCE(fe.FYTDExpenses, 0) AS FYTDExpenses,
-            COALESCE(fe.ToDateMargin, 0) AS ToDateMargin,
-            COALESCE(fe.FYTDMargin, 0) AS FYTDMargin,
+            COALESCE(fe.RevenueToGoValue,0) AS RevenueToGoValue,
+            COALESCE(fe.RevenueToDateValue,0) AS RevenueToDateValue,
+            COALESCE(fe.RevenueToGoValue,0)+COALESCE(fe.RevenueToDateValue,0) AS TotalRevenue,
+            COALESCE(fe.ValueData,0) AS ValueData,
+            COALESCE(fe.BudgetHours,0) AS BudgetHours,
+            COALESCE(fe.ChargedHours,0) AS ChargedHours,
+            COALESCE(fe.FYTDHours,0) AS FYTDHours,
+            COALESCE(fe.AdditionalHours,0) AS AdditionalHours,
+            COALESCE(fe.ExpenseBudget,0) AS ExpenseBudget,
+            COALESCE(fe.ExpensesToDate,0) AS ExpensesToDate,
+            COALESCE(fe.FYTDExpenses,0) AS FYTDExpenses,
+            COALESCE(fe.ToDateMargin,0) AS ToDateMargin,
+            COALESCE(fe.FYTDMargin,0) AS FYTDMargin,
             CASE
-                WHEN NULLIF(COALESCE(fe.RevenueToDateValue, 0), 0) IS NULL THEN 0
-                ELSE ROUND(COALESCE(fe.ToDateMargin, 0) / NULLIF(COALESCE(fe.RevenueToDateValue, 0), 0) * 100, 4)
+                WHEN COALESCE(fe.RevenueToDateValue,0)=0 THEN 0
+                ELSE ROUND(fe.ToDateMargin/fe.RevenueToDateValue*100,4)
             END AS MarginPercentage,
-            ROW_NUMBER() OVER (
-                PARTITION BY e.Id, fy.Id
-                ORDER BY COALESCE(cp.PeriodEnd, fy.EndDate) DESC,
-                         CASE
-                             WHEN TRIM(fe.ClosingPeriodId) REGEXP '^[0-9]+$' THEN CAST(TRIM(fe.ClosingPeriodId) AS UNSIGNED)
-                             ELSE 0
-                         END DESC,
-                         fe.Id DESC
-            ) AS RowRank
+            COALESCE(cp.PeriodEnd, fy.EndDate) AS SortEnd,
+            CASE
+                WHEN TRIM(fe.ClosingPeriodId) REGEXP '^[0-9]+$'
+                    THEN CAST(TRIM(fe.ClosingPeriodId) AS UNSIGNED)
+                ELSE 0
+            END AS SortNum,
+            fe.Id AS SortId
         FROM FinancialEvolution fe
-        INNER JOIN Engagements e ON e.Id = fe.EngagementId
-        LEFT JOIN Customers c ON c.Id = e.CustomerId
-        LEFT JOIN ClosingPeriods cp ON (
-            TRIM(fe.ClosingPeriodId) REGEXP '^[0-9]+$'
-            AND cp.Id = CAST(TRIM(fe.ClosingPeriodId) AS UNSIGNED)
-        )
+        INNER JOIN Engagements e2 ON e2.Id = fe.EngagementId
+        LEFT JOIN ClosingPeriods cp ON (TRIM(fe.ClosingPeriodId) REGEXP '^[0-9]+$'
+                                        AND cp.Id = CAST(TRIM(fe.ClosingPeriodId) AS UNSIGNED))
         LEFT JOIN FiscalYears fy ON fy.Id = COALESCE(fe.FiscalYearId, cp.FiscalYearId)
         WHERE fy.Id IS NOT NULL
-    ) rf
+    ) fe1
+    INNER JOIN Engagements e ON e.Id = fe1.EngagementId
+    LEFT  JOIN Customers c ON c.Id = e.CustomerId
+    LEFT  JOIN FiscalYears fy ON fy.Id = fe1.FiscalYearId
     LEFT JOIN (
         SELECT ema.EngagementId,
                MIN(m.Id) AS PrimaryManagerId,
@@ -897,7 +849,7 @@ BEGIN
         FROM EngagementManagerAssignments ema
         INNER JOIN Managers m ON m.Id = ema.ManagerId
         GROUP BY ema.EngagementId
-    ) mgr ON mgr.EngagementId = rf.EngagementId
+    ) mgr ON mgr.EngagementId = e.Id
     LEFT JOIN (
         SELECT ep.EngagementId,
                MIN(p.Id) AS PrimaryPapdId,
@@ -905,10 +857,32 @@ BEGIN
         FROM EngagementPapds ep
         INNER JOIN Papds p ON p.Id = ep.PapdId
         GROUP BY ep.EngagementId
-    ) papd ON papd.EngagementId = rf.EngagementId
-    WHERE rf.RowRank = 1;
+    ) papd ON papd.EngagementId = e.Id
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM FinancialEvolution fe2
+        LEFT JOIN ClosingPeriods cp2 ON (TRIM(fe2.ClosingPeriodId) REGEXP '^[0-9]+$'
+                                         AND cp2.Id = CAST(TRIM(fe2.ClosingPeriodId) AS UNSIGNED))
+        LEFT JOIN FiscalYears fy2 ON fy2.Id = COALESCE(fe2.FiscalYearId, cp2.FiscalYearId)
+        WHERE fe2.EngagementId = fe1.EngagementId
+          AND fy2.Id = fe1.FiscalYearId
+          AND (
+                COALESCE(cp2.PeriodEnd, fy2.EndDate) > fe1.SortEnd
+             OR (COALESCE(cp2.PeriodEnd, fy2.EndDate) = fe1.SortEnd
+                 AND (CASE WHEN TRIM(fe2.ClosingPeriodId) REGEXP '^[0-9]+$'
+                           THEN CAST(TRIM(fe2.ClosingPeriodId) AS UNSIGNED)
+                           ELSE 0 END) > fe1.SortNum)
+             OR (COALESCE(cp2.PeriodEnd, fy2.EndDate) = fe1.SortEnd
+                 AND (CASE WHEN TRIM(fe2.ClosingPeriodId) REGEXP '^[0-9]+$'
+                           THEN CAST(TRIM(fe2.ClosingPeriodId) AS UNSIGNED)
+                           ELSE 0 END) = fe1.SortNum
+                 AND fe2.Id > fe1.SortId)
+          )
+    );
 
-    -- Step 3: project future fiscal-year allocations using planning/backlog snapshots
+   -- -------------------------------------------------------------------------
+    -- Step 3 – Latest Revenue Allocation per Engagement × FiscalYear
+   -- -------------------------------------------------------------------------
     INSERT INTO EngagementLatestFinancials (
         EngagementId, EngagementCode, EngagementDescription, Source,
         CustomerId, CustomerName,
@@ -923,21 +897,21 @@ BEGIN
         LastRefresh
     )
     SELECT
-        ra.EngagementId,
-        e.EngagementId AS EngagementCode,
-        e.Description AS EngagementDescription,
+        ra1.EngagementId,
+        e.EngagementId,
+        e.Description,
         e.Source,
         e.CustomerId,
-        c.Name AS CustomerName,
-        ra.FiscalYearId,
-        ra.FiscalYearName,
-        CONCAT('ALLOC-', LPAD(ra.ClosingPeriodNumericId, 6, '0'), '-FY', LPAD(ra.FiscalYearId, 4, '0')) AS ClosingPeriodId,
-        ra.ClosingPeriodNumericId,
-        ra.ClosingPeriodName,
-        ra.ClosingPeriodEnd,
-        ra.RevenueToGoValue,
-        ra.RevenueToDateValue,
-        ra.RevenueToGoValue + ra.RevenueToDateValue AS TotalRevenue,
+        c.Name,
+        ra1.FiscalYearId,
+        fy.Name,
+        CONCAT('ALLOC-', LPAD(ra1.ClosingPeriodNumericId,6,'0'), '-FY', LPAD(fy.Id,4,'0')),
+        ra1.ClosingPeriodNumericId,
+        ra1.ClosingPeriodName,
+        ra1.ClosingPeriodEnd,
+        ra1.RevenueToGoValue,
+        ra1.RevenueToDateValue,
+        ra1.RevenueToGoValue + ra1.RevenueToDateValue AS TotalRevenue,
         0 AS ValueData,
         0 AS BudgetHours,
         0 AS ChargedHours,
@@ -953,27 +927,25 @@ BEGIN
         mgr.PrimaryManagerName,
         papd.PrimaryPapdId,
         papd.PrimaryPapdName,
-        CURRENT_TIMESTAMP AS LastRefresh
+        CURRENT_TIMESTAMP
     FROM (
         SELECT
+            ra.Id,
             ra.EngagementId,
             ra.FiscalYearId,
-            fy.Name AS FiscalYearName,
             cp.Id AS ClosingPeriodNumericId,
             cp.Name AS ClosingPeriodName,
             cp.PeriodEnd AS ClosingPeriodEnd,
-            COALESCE(ra.ToGoValue, 0) AS RevenueToGoValue,
-            COALESCE(ra.ToDateValue, 0) AS RevenueToDateValue,
-            ROW_NUMBER() OVER (
-                PARTITION BY ra.EngagementId, ra.FiscalYearId
-                ORDER BY cp.PeriodEnd DESC, ra.UpdatedAt DESC, ra.Id DESC
-            ) AS RowRank
+            COALESCE(ra.ToGoValue,0) AS RevenueToGoValue,
+            COALESCE(ra.ToDateValue,0) AS RevenueToDateValue,
+            cp.PeriodEnd AS SortEnd,
+            COALESCE(ra.UpdatedAt,'1900-01-01') AS SortUpd
         FROM EngagementFiscalYearRevenueAllocations ra
         INNER JOIN ClosingPeriods cp ON cp.Id = ra.ClosingPeriodId
-        INNER JOIN FiscalYears fy ON fy.Id = ra.FiscalYearId
-    ) ra
-    INNER JOIN Engagements e ON e.Id = ra.EngagementId
+    ) ra1
+    INNER JOIN Engagements e ON e.Id = ra1.EngagementId
     LEFT JOIN Customers c ON c.Id = e.CustomerId
+    LEFT JOIN FiscalYears fy ON fy.Id = ra1.FiscalYearId
     LEFT JOIN (
         SELECT ema.EngagementId,
                MIN(m.Id) AS PrimaryManagerId,
@@ -981,7 +953,7 @@ BEGIN
         FROM EngagementManagerAssignments ema
         INNER JOIN Managers m ON m.Id = ema.ManagerId
         GROUP BY ema.EngagementId
-    ) mgr ON mgr.EngagementId = ra.EngagementId
+    ) mgr ON mgr.EngagementId = e.Id
     LEFT JOIN (
         SELECT ep.EngagementId,
                MIN(p.Id) AS PrimaryPapdId,
@@ -989,16 +961,29 @@ BEGIN
         FROM EngagementPapds ep
         INNER JOIN Papds p ON p.Id = ep.PapdId
         GROUP BY ep.EngagementId
-    ) papd ON papd.EngagementId = ra.EngagementId
-    WHERE ra.RowRank = 1
+    ) papd ON papd.EngagementId = e.Id
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM EngagementFiscalYearRevenueAllocations ra2
+        INNER JOIN ClosingPeriods cp2 ON cp2.Id = ra2.ClosingPeriodId
+        WHERE ra2.EngagementId = ra1.EngagementId
+          AND ra2.FiscalYearId = ra1.FiscalYearId
+          AND (
+                cp2.PeriodEnd > ra1.SortEnd
+             OR (cp2.PeriodEnd = ra1.SortEnd AND ra2.UpdatedAt > ra1.SortUpd)
+             OR (cp2.PeriodEnd = ra1.SortEnd AND ra2.UpdatedAt = ra1.SortUpd AND ra2.Id > ra1.Id)
+          )
+    )
       AND NOT EXISTS (
         SELECT 1
-        FROM EngagementLatestFinancials existing
-        WHERE existing.EngagementId = ra.EngagementId
-          AND existing.FiscalYearId = ra.FiscalYearId
+        FROM EngagementLatestFinancials el
+        WHERE el.EngagementId = ra1.EngagementId
+          AND el.FiscalYearId = ra1.FiscalYearId
     );
 
-    -- Step 4: add zero-value placeholders for missing engagement/fiscal-year pairs
+   -- -------------------------------------------------------------------------
+    -- Step 4 – Zero placeholders for missing Engagement × FiscalYear
+   -- -------------------------------------------------------------------------
     INSERT INTO EngagementLatestFinancials (
         EngagementId, EngagementCode, EngagementDescription, Source,
         CustomerId, CustomerName,
@@ -1013,37 +998,15 @@ BEGIN
         LastRefresh
     )
     SELECT
-        e.Id AS EngagementId,
-        e.EngagementId AS EngagementCode,
-        e.Description AS EngagementDescription,
-        e.Source,
-        e.CustomerId,
-        c.Name AS CustomerName,
-        fy.Id AS FiscalYearId,
-        fy.Name AS FiscalYearName,
-        CONCAT('FY', LPAD(fy.Id, 4, '0'), '-PLACEHOLDER') AS ClosingPeriodId,
-        NULL AS ClosingPeriodNumericId,
-        CONCAT(fy.Name, ' Placeholder') AS ClosingPeriodName,
-        fy.EndDate AS ClosingPeriodEnd,
-        0 AS RevenueToGoValue,
-        0 AS RevenueToDateValue,
-        0 AS TotalRevenue,
-        0 AS ValueData,
-        0 AS BudgetHours,
-        0 AS ChargedHours,
-        0 AS FYTDHours,
-        0 AS AdditionalHours,
-        0 AS ExpenseBudget,
-        0 AS ExpensesToDate,
-        0 AS FYTDExpenses,
-        0 AS ToDateMargin,
-        0 AS FYTDMargin,
-        0 AS MarginPercentage,
-        mgr.PrimaryManagerId,
-        mgr.PrimaryManagerName,
-        papd.PrimaryPapdId,
-        papd.PrimaryPapdName,
-        CURRENT_TIMESTAMP AS LastRefresh
+        e.Id, e.EngagementId, e.Description, e.Source,
+        e.CustomerId, c.Name,
+        fy.Id, fy.Name,
+        CONCAT('FY',LPAD(fy.Id,4,'0'),'-PLACEHOLDER'),
+        NULL, CONCAT(fy.Name,' Placeholder'), fy.EndDate,
+        0,0,0,0,0,0,0,0,0,0,0,0,
+        mgr.PrimaryManagerId, mgr.PrimaryManagerName,
+        papd.PrimaryPapdId, papd.PrimaryPapdName,
+        CURRENT_TIMESTAMP
     FROM Engagements e
     CROSS JOIN FiscalYears fy
     LEFT JOIN Customers c ON c.Id = e.CustomerId
@@ -1065,14 +1028,16 @@ BEGIN
     ) papd ON papd.EngagementId = e.Id
     WHERE NOT EXISTS (
         SELECT 1
-        FROM EngagementLatestFinancials existing
-        WHERE existing.EngagementId = e.Id
-          AND existing.FiscalYearId = fy.Id
+        FROM EngagementLatestFinancials el
+        WHERE el.EngagementId = e.Id
+          AND el.FiscalYearId = fy.Id
     );
 
     COMMIT;
 END$$
 DELIMITER ;
+
+
 
 -- ===========================================================
 -- Procedure: sp_RefreshAllMaterializedTables
