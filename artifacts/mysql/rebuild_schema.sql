@@ -291,6 +291,7 @@ CREATE UNIQUE INDEX `IX_History_Key`
     ON `EngagementRankBudgetHistory` (`EngagementCode`, `RankCode`, `FiscalYearId`, `ClosingPeriodId`);
 
 -- Financial Evolution: Granular metrics per closing period (Budget/ETD/FYTD breakdowns)
+-- Table: FinancialEvolution - monthly financial rollups feeding dashboards.
 CREATE TABLE `FinancialEvolution`
 (
     `Id`                   INT            NOT NULL AUTO_INCREMENT,
