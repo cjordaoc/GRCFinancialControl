@@ -295,7 +295,8 @@ CREATE UNIQUE INDEX `IX_History_Key`
 CREATE TABLE `FinancialEvolution`
 (
     `Id`                   INT            NOT NULL AUTO_INCREMENT,
-    `ClosingPeriodId`      INT            NOT NULL,
+    -- Stored as text because the importer persists the closing period identifier exactly as supplied by EF (numeric id string).
+    `ClosingPeriodId`      VARCHAR(100)   NOT NULL,
     `EngagementId`         INT            NOT NULL,
     -- Hours Metrics
     `BudgetHours`          DECIMAL(18, 2) NULL,
@@ -318,7 +319,6 @@ CREATE TABLE `FinancialEvolution`
     CONSTRAINT `PK_FinancialEvolution` PRIMARY KEY (`Id`),
     CONSTRAINT `UX_FinancialEvolution_Key` UNIQUE (`EngagementId`, `ClosingPeriodId`),
     CONSTRAINT `FK_FinancialEvolution_Engagements` FOREIGN KEY (`EngagementId`) REFERENCES `Engagements` (`Id`) ON DELETE CASCADE,
-    CONSTRAINT `FK_FinancialEvolution_ClosingPeriods` FOREIGN KEY (`ClosingPeriodId`) REFERENCES `ClosingPeriods` (`Id`) ON DELETE CASCADE,
     CONSTRAINT `FK_FinancialEvolution_FiscalYears` FOREIGN KEY (`FiscalYearId`) REFERENCES `FiscalYears` (`Id`) ON DELETE SET NULL,
     INDEX `IX_FinancialEvolution_FiscalYear` (`FiscalYearId`),
     INDEX `IX_FinancialEvolution_ClosingPeriod` (`ClosingPeriodId`)
@@ -617,7 +617,9 @@ BEGIN
         CustomerName VARCHAR(200) NULL,
         FiscalYearId INT NOT NULL,
         FiscalYearName VARCHAR(100) NOT NULL,
-        ClosingPeriodId INT NOT NULL,
+        ClosingPeriodId VARCHAR(100) NOT NULL,
+        -- Numeric pointer to ClosingPeriods.Id when the string identifier is numeric; helps joins stay sargable.
+        ClosingPeriodNumericId INT NULL,
         ClosingPeriodName VARCHAR(100) NOT NULL,
         ClosingPeriodEnd DATETIME(6) NOT NULL,
         RevenueToGoValue DECIMAL(18,2) DEFAULT 0,
@@ -642,6 +644,7 @@ BEGIN
         PRIMARY KEY (EngagementId, ClosingPeriodId),
         INDEX IX_ELF_FY (FiscalYearId),
         INDEX IX_ELF_CP (ClosingPeriodId),
+        INDEX IX_ELF_CP_NUM (ClosingPeriodNumericId),
         INDEX IX_ELF_Customer (CustomerId),
         INDEX IX_ELF_PrimaryManager (PrimaryManagerId),
         INDEX IX_ELF_PrimaryPapd (PrimaryPapdId)
@@ -653,7 +656,7 @@ BEGIN
         EngagementId, EngagementCode, EngagementDescription, Source,
         CustomerId, CustomerName,
         FiscalYearId, FiscalYearName,
-        ClosingPeriodId, ClosingPeriodName, ClosingPeriodEnd,
+        ClosingPeriodId, ClosingPeriodNumericId, ClosingPeriodName, ClosingPeriodEnd,
         RevenueToGoValue, RevenueToDateValue, TotalRevenue, ValueData,
         BudgetHours, ChargedHours, FYTDHours, AdditionalHours,
         ExpenseBudget, ExpensesToDate, FYTDExpenses,
@@ -671,7 +674,11 @@ BEGIN
         c.Name AS CustomerName,
         fy.Id AS FiscalYearId,
         fy.Name AS FiscalYearName,
-        fe.ClosingPeriodId,
+        TRIM(fe.ClosingPeriodId) AS ClosingPeriodId,
+        CASE
+            WHEN TRIM(fe.ClosingPeriodId) REGEXP '^[0-9]+$' THEN CAST(TRIM(fe.ClosingPeriodId) AS UNSIGNED)
+            ELSE NULL
+        END AS ClosingPeriodNumericId,
         cp.Name AS ClosingPeriodName,
         cp.PeriodEnd AS ClosingPeriodEnd,
         COALESCE(fe.RevenueToGoValue,0) AS RevenueToGoValue,
@@ -694,7 +701,7 @@ BEGIN
         papd.PrimaryPapdName,
         CURRENT_TIMESTAMP AS LastRefresh
     FROM FinancialEvolution fe
-    INNER JOIN ClosingPeriods cp ON cp.Id = fe.ClosingPeriodId
+    INNER JOIN ClosingPeriods cp ON cp.Id = CAST(TRIM(fe.ClosingPeriodId) AS UNSIGNED)
     INNER JOIN FiscalYears fy ON fy.Id = COALESCE(fe.FiscalYearId, cp.FiscalYearId)
     INNER JOIN Engagements e ON e.Id = fe.EngagementId
     LEFT JOIN Customers c ON c.Id = e.CustomerId
@@ -719,7 +726,7 @@ BEGIN
                COALESCE(fe3.FiscalYearId, cp3.FiscalYearId) AS FiscalYearId,
                MAX(cp3.PeriodEnd) AS MaxPeriodEnd
         FROM FinancialEvolution fe3
-        INNER JOIN ClosingPeriods cp3 ON cp3.Id = fe3.ClosingPeriodId
+        INNER JOIN ClosingPeriods cp3 ON cp3.Id = CAST(TRIM(fe3.ClosingPeriodId) AS UNSIGNED)
         GROUP BY fe3.EngagementId, COALESCE(fe3.FiscalYearId, cp3.FiscalYearId)
     ) latest
         ON latest.EngagementId = fe.EngagementId
