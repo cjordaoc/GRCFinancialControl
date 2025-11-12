@@ -483,30 +483,31 @@ CREATE TABLE `InvoiceEmission` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
+-- Table: ManagerRevenueSummaryMaterialized - cached KPI rollups per manager/year for dashboards.
+CREATE TABLE `ManagerRevenueSummaryMaterialized` (
+    `FiscalYearId` INT NOT NULL,
+    `FiscalYearName` VARCHAR(100) NOT NULL,
+    `ManagerId` INT NOT NULL,
+    `ManagerName` VARCHAR(200) NOT NULL,
+    `ManagerPosition` VARCHAR(50) NOT NULL,
+    `TotalToGoValue` DECIMAL(18, 2) DEFAULT 0,
+    `TotalToDateValue` DECIMAL(18, 2) DEFAULT 0,
+    `TotalValue` DECIMAL(18, 2) DEFAULT 0,
+    `ChargedHours` DECIMAL(18, 2) DEFAULT 0,
+    `FYTDHours` DECIMAL(18, 2) DEFAULT 0,
+    `FYTDExpenses` DECIMAL(18, 2) DEFAULT 0,
+    `FYTDMargin` DECIMAL(18, 2) DEFAULT 0,
+    `LatestClosingPeriodEnd` DATETIME(6) NULL,
+    `EngagementCount` INT DEFAULT 0,
+    `ActiveEngagementCount` INT DEFAULT 0,
+    CONSTRAINT `PK_ManagerRevenueSummaryMaterialized` PRIMARY KEY (`FiscalYearId`, `ManagerId`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
 DROP PROCEDURE IF EXISTS sp_RefreshManagerRevenueSummary;
 DELIMITER $$
 CREATE PROCEDURE sp_RefreshManagerRevenueSummary()
 BEGIN
-    CREATE TABLE IF NOT EXISTS ManagerRevenueSummaryMaterialized (
-        FiscalYearId INT NOT NULL,
-        FiscalYearName VARCHAR(100) NOT NULL,
-        ManagerId INT NOT NULL,
-        ManagerName VARCHAR(200) NOT NULL,
-        ManagerPosition VARCHAR(50) NOT NULL,
-        TotalToGoValue DECIMAL(18,2) DEFAULT 0,
-        TotalToDateValue DECIMAL(18,2) DEFAULT 0,
-        TotalValue DECIMAL(18,2) DEFAULT 0,
-        ChargedHours DECIMAL(18,2) DEFAULT 0,
-        FYTDHours DECIMAL(18,2) DEFAULT 0,
-        FYTDExpenses DECIMAL(18,2) DEFAULT 0,
-        FYTDMargin DECIMAL(18,2) DEFAULT 0,
-        LatestClosingPeriodEnd DATETIME(6) NULL,
-        EngagementCount INT DEFAULT 0,
-        ActiveEngagementCount INT DEFAULT 0,
-        PRIMARY KEY (FiscalYearId, ManagerId)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-    TRUNCATE TABLE ManagerRevenueSummaryMaterialized;
+    DELETE FROM ManagerRevenueSummaryMaterialized;
     INSERT INTO ManagerRevenueSummaryMaterialized (
         FiscalYearId, FiscalYearName, ManagerId, ManagerName, ManagerPosition,
         TotalToGoValue, TotalToDateValue, TotalValue,
@@ -540,35 +541,35 @@ DELIMITER ;
 
 -- ===========================================================
 -- Procedure: sp_RefreshPapdRevenueSummary
--- Purpose  : Truncate & repopulate the physical summary table PapdRevenueSummary
+-- Purpose  : Repopulate the physical summary table PapdRevenueSummary used by dashboards
 -- ===========================================================
+
+-- Table: PapdRevenueSummary - materialized PAPD-level KPI snapshot for dashboards.
+CREATE TABLE `PapdRevenueSummary` (
+    `FiscalYearId` INT NOT NULL,
+    `FiscalYearName` VARCHAR(100) NOT NULL,
+    `PapdId` INT NOT NULL,
+    `PapdName` VARCHAR(200) NOT NULL,
+    `TotalToGoValue` DECIMAL(18, 2) DEFAULT 0,
+    `TotalToDateValue` DECIMAL(18, 2) DEFAULT 0,
+    `TotalValue` DECIMAL(18, 2) DEFAULT 0,
+    `ChargedHours` DECIMAL(18, 2) DEFAULT 0,
+    `FYTDHours` DECIMAL(18, 2) DEFAULT 0,
+    `FYTDExpenses` DECIMAL(18, 2) DEFAULT 0,
+    `FYTDMargin` DECIMAL(18, 2) DEFAULT 0,
+    `LatestClosingPeriodEnd` DATETIME(6) NULL,
+    CONSTRAINT `PK_PapdRevenueSummary` PRIMARY KEY (`FiscalYearId`, `PapdId`),
+    INDEX `IX_PapdRevenueSummary_FY` (`FiscalYearId`),
+    INDEX `IX_PapdRevenueSummary_Papd` (`PapdId`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 DROP PROCEDURE IF EXISTS sp_RefreshPapdRevenueSummary;
 DELIMITER $$
 
 CREATE PROCEDURE sp_RefreshPapdRevenueSummary()
 BEGIN
-    -- Ensure the summary table exists
-    CREATE TABLE IF NOT EXISTS PapdRevenueSummary (
-        FiscalYearId INT NOT NULL,
-        FiscalYearName VARCHAR(100) NOT NULL,
-        PapdId INT NOT NULL,
-        PapdName VARCHAR(200) NOT NULL,
-        TotalToGoValue DECIMAL(18,2) DEFAULT 0,
-        TotalToDateValue DECIMAL(18,2) DEFAULT 0,
-        TotalValue DECIMAL(18,2) DEFAULT 0,
-        ChargedHours DECIMAL(18,2) DEFAULT 0,
-        FYTDHours DECIMAL(18,2) DEFAULT 0,
-        FYTDExpenses DECIMAL(18,2) DEFAULT 0,
-        FYTDMargin DECIMAL(18,2) DEFAULT 0,
-        LatestClosingPeriodEnd DATETIME(6) NULL,
-        PRIMARY KEY (FiscalYearId, PapdId),
-        INDEX IX_PapdRevenueSummary_FY (FiscalYearId),
-        INDEX IX_PapdRevenueSummary_Papd (PapdId)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
     -- Truncate and repopulate
-    TRUNCATE TABLE PapdRevenueSummary;
+    DELETE FROM PapdRevenueSummary;
 
     INSERT INTO PapdRevenueSummary (
         FiscalYearId, FiscalYearName, PapdId, PapdName,
@@ -603,54 +604,54 @@ DELIMITER ;
 -- Procedure: sp_RefreshEngagementLatestFinancials
 -- ===========================================================
 
+-- Table: EngagementLatestFinancials - materialized engagement KPI snapshot keyed by closing period.
+CREATE TABLE `EngagementLatestFinancials` (
+    `EngagementId` INT NOT NULL,
+    `EngagementCode` VARCHAR(64) NOT NULL,
+    `EngagementDescription` VARCHAR(255) NOT NULL,
+    `Source` VARCHAR(20) NOT NULL,
+    `CustomerId` INT NULL,
+    `CustomerName` VARCHAR(200) NULL,
+    `FiscalYearId` INT NOT NULL,
+    `FiscalYearName` VARCHAR(100) NOT NULL,
+    `ClosingPeriodId` VARCHAR(100) NOT NULL,
+    `ClosingPeriodNumericId` INT NULL,
+    `ClosingPeriodName` VARCHAR(100) NOT NULL,
+    `ClosingPeriodEnd` DATETIME(6) NOT NULL,
+    `RevenueToGoValue` DECIMAL(18, 2) DEFAULT 0,
+    `RevenueToDateValue` DECIMAL(18, 2) DEFAULT 0,
+    `TotalRevenue` DECIMAL(18, 2) DEFAULT 0,
+    `ValueData` DECIMAL(18, 2) DEFAULT 0,
+    `BudgetHours` DECIMAL(18, 2) DEFAULT 0,
+    `ChargedHours` DECIMAL(18, 2) DEFAULT 0,
+    `FYTDHours` DECIMAL(18, 2) DEFAULT 0,
+    `AdditionalHours` DECIMAL(18, 2) DEFAULT 0,
+    `ExpenseBudget` DECIMAL(18, 2) DEFAULT 0,
+    `ExpensesToDate` DECIMAL(18, 2) DEFAULT 0,
+    `FYTDExpenses` DECIMAL(18, 2) DEFAULT 0,
+    `ToDateMargin` DECIMAL(18, 2) DEFAULT 0,
+    `FYTDMargin` DECIMAL(18, 2) DEFAULT 0,
+    `MarginPercentage` DECIMAL(9, 4) DEFAULT 0,
+    `PrimaryManagerId` INT NULL,
+    `PrimaryManagerName` VARCHAR(200) NULL,
+    `PrimaryPapdId` INT NULL,
+    `PrimaryPapdName` VARCHAR(200) NULL,
+    `LastRefresh` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT `PK_EngagementLatestFinancials` PRIMARY KEY (`EngagementId`, `ClosingPeriodId`),
+    INDEX `IX_ELF_FY` (`FiscalYearId`),
+    INDEX `IX_ELF_CP` (`ClosingPeriodId`),
+    INDEX `IX_ELF_CP_NUM` (`ClosingPeriodNumericId`),
+    INDEX `IX_ELF_Customer` (`CustomerId`),
+    INDEX `IX_ELF_PrimaryManager` (`PrimaryManagerId`),
+    INDEX `IX_ELF_PrimaryPapd` (`PrimaryPapdId`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
 DROP PROCEDURE IF EXISTS sp_RefreshEngagementLatestFinancials;
 DELIMITER $$
 
 CREATE PROCEDURE sp_RefreshEngagementLatestFinancials()
 BEGIN
-    CREATE TABLE IF NOT EXISTS EngagementLatestFinancials (
-        EngagementId INT NOT NULL,
-        EngagementCode VARCHAR(64) NOT NULL,
-        EngagementDescription VARCHAR(255) NOT NULL,
-        Source VARCHAR(20) NOT NULL,
-        CustomerId INT NULL,
-        CustomerName VARCHAR(200) NULL,
-        FiscalYearId INT NOT NULL,
-        FiscalYearName VARCHAR(100) NOT NULL,
-        ClosingPeriodId VARCHAR(100) NOT NULL,
-        -- Numeric pointer to ClosingPeriods.Id when the string identifier is numeric; helps joins stay sargable.
-        ClosingPeriodNumericId INT NULL,
-        ClosingPeriodName VARCHAR(100) NOT NULL,
-        ClosingPeriodEnd DATETIME(6) NOT NULL,
-        RevenueToGoValue DECIMAL(18,2) DEFAULT 0,
-        RevenueToDateValue DECIMAL(18,2) DEFAULT 0,
-        TotalRevenue DECIMAL(18,2) DEFAULT 0,
-        ValueData DECIMAL(18,2) DEFAULT 0,
-        BudgetHours DECIMAL(18,2) DEFAULT 0,
-        ChargedHours DECIMAL(18,2) DEFAULT 0,
-        FYTDHours DECIMAL(18,2) DEFAULT 0,
-        AdditionalHours DECIMAL(18,2) DEFAULT 0,
-        ExpenseBudget DECIMAL(18,2) DEFAULT 0,
-        ExpensesToDate DECIMAL(18,2) DEFAULT 0,
-        FYTDExpenses DECIMAL(18,2) DEFAULT 0,
-        ToDateMargin DECIMAL(18,2) DEFAULT 0,
-        FYTDMargin DECIMAL(18,2) DEFAULT 0,
-        MarginPercentage DECIMAL(9,4) DEFAULT 0,
-        PrimaryManagerId INT NULL,
-        PrimaryManagerName VARCHAR(200) NULL,
-        PrimaryPapdId INT NULL,
-        PrimaryPapdName VARCHAR(200) NULL,
-        LastRefresh TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (EngagementId, ClosingPeriodId),
-        INDEX IX_ELF_FY (FiscalYearId),
-        INDEX IX_ELF_CP (ClosingPeriodId),
-        INDEX IX_ELF_CP_NUM (ClosingPeriodNumericId),
-        INDEX IX_ELF_Customer (CustomerId),
-        INDEX IX_ELF_PrimaryManager (PrimaryManagerId),
-        INDEX IX_ELF_PrimaryPapd (PrimaryPapdId)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-    TRUNCATE TABLE EngagementLatestFinancials;
+    DELETE FROM EngagementLatestFinancials;
 
     INSERT INTO EngagementLatestFinancials (
         EngagementId, EngagementCode, EngagementDescription, Source,
@@ -741,6 +742,29 @@ DELIMITER ;
 -- Procedure: sp_RefreshAllMaterializedTables
 -- ===========================================================
 
+-- Table: CustomerSummaryCache - materialized customer-level dashboard snapshot.
+CREATE TABLE `CustomerSummaryCache` (
+    `CustomerId` INT NOT NULL,
+    `CustomerName` VARCHAR(200) NOT NULL,
+    `CustomerCode` VARCHAR(20) NOT NULL,
+    `TotalEngagements` INT DEFAULT 0,
+    `ActiveEngagements` INT DEFAULT 0,
+    `RevenueToGoValue` DECIMAL(18, 2) DEFAULT 0,
+    `RevenueToDateValue` DECIMAL(18, 2) DEFAULT 0,
+    `TotalRevenue` DECIMAL(18, 2) DEFAULT 0,
+    `ValueData` DECIMAL(18, 2) DEFAULT 0,
+    `ChargedHours` DECIMAL(18, 2) DEFAULT 0,
+    `FYTDHours` DECIMAL(18, 2) DEFAULT 0,
+    `FYTDExpenses` DECIMAL(18, 2) DEFAULT 0,
+    `FYTDMargin` DECIMAL(18, 2) DEFAULT 0,
+    `TotalInvoiced` DECIMAL(18, 2) DEFAULT 0,
+    `OutstandingInvoices` INT DEFAULT 0,
+    `LastActivityDate` DATETIME NULL,
+    `LatestClosingPeriodEnd` DATETIME(6) NULL,
+    CONSTRAINT `PK_CustomerSummaryCache` PRIMARY KEY (`CustomerId`),
+    INDEX `IX_CustomerSummaryCache_Code` (`CustomerCode`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
 DROP PROCEDURE IF EXISTS sp_RefreshAllMaterializedTables;
 DELIMITER $$
 
@@ -758,29 +782,7 @@ DELIMITER ;
 DELIMITER $$
 CREATE PROCEDURE sp_RefreshCustomerSummaryCache()
 BEGIN
-    CREATE TABLE IF NOT EXISTS CustomerSummaryCache (
-        CustomerId INT NOT NULL,
-        CustomerName VARCHAR(200) NOT NULL,
-        CustomerCode VARCHAR(20) NOT NULL,
-        TotalEngagements INT DEFAULT 0,
-        ActiveEngagements INT DEFAULT 0,
-        RevenueToGoValue DECIMAL(18,2) DEFAULT 0,
-        RevenueToDateValue DECIMAL(18,2) DEFAULT 0,
-        TotalRevenue DECIMAL(18,2) DEFAULT 0,
-        ValueData DECIMAL(18,2) DEFAULT 0,
-        ChargedHours DECIMAL(18,2) DEFAULT 0,
-        FYTDHours DECIMAL(18,2) DEFAULT 0,
-        FYTDExpenses DECIMAL(18,2) DEFAULT 0,
-        FYTDMargin DECIMAL(18,2) DEFAULT 0,
-        TotalInvoiced DECIMAL(18,2) DEFAULT 0,
-        OutstandingInvoices INT DEFAULT 0,
-        LastActivityDate DATETIME NULL,
-        LatestClosingPeriodEnd DATETIME(6) NULL,
-        PRIMARY KEY (CustomerId),
-        INDEX IX_CustomerSummaryCache_Code (CustomerCode)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-    TRUNCATE TABLE CustomerSummaryCache;
+    DELETE FROM CustomerSummaryCache;
     INSERT INTO CustomerSummaryCache (
         CustomerId, CustomerName, CustomerCode, TotalEngagements, ActiveEngagements,
         RevenueToGoValue, RevenueToDateValue, TotalRevenue, ValueData,
