@@ -99,10 +99,10 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
       ValueData DECIMAL(18,2) NULL,
       RevenueToGoValue DECIMAL(18,2) NULL,
       RevenueToDateValue DECIMAL(18,2) NULL,
-      -- Margin Metrics
-      BudgetMargin DECIMAL(18,2) NULL,
-      ToDateMargin DECIMAL(18,2) NULL,
-      FYTDMargin DECIMAL(18,2) NULL,
+      -- Margin Metrics (stored as decimal ratios, e.g., 0.4829 = 48.29%)
+      BudgetMargin DECIMAL(9,4) NULL,
+      ToDateMargin DECIMAL(9,4) NULL,
+      FYTDMargin DECIMAL(9,4) NULL,
       -- Expense Metrics
       ExpenseBudget DECIMAL(18,2) NULL,
       ExpensesToDate DECIMAL(18,2) NULL,
@@ -133,7 +133,7 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
   2. Existing `FinancialEvolution` rows for the selected closing period are removed (matching both numeric IDs and legacy names) before applying new data to prevent cumulative totals.
   3. `UpsertFinancialEvolution` creates or updates snapshots using composite key `(EngagementId, ClosingPeriodId)`.
   4. Missing closing periods skip period-specific metrics but preserve budget baseline columns.
-  5. All decimals are stored with precision 18,2 matching MySQL schema.
+  5. Revenue/expense values use precision 18,2, while all margin ratios are normalized to scale 4 so downstream consumers can format percentages consistently.
 
 - **Snapshot Reading (EngagementService):**
   1. `ApplyFinancialControlSnapshot` loads all `FinancialEvolutions` for an engagement.
