@@ -252,6 +252,7 @@ The `FinancialEvolution` table captures point-in-time engagement financials acro
 
 **Validation & Consolidation Rules**
 - Reporting relies on read-only MySQL views to guarantee consistent aggregation logic.
+- Margin percentages materialized for dashboards (manager, PAPD, and customer summaries) are averaged rather than summed so KPI cards reflect true percentage performance.
 - EF projections fetch only the required columns and map them to view models, ensuring dashboards remain responsive.
 - Cached lookups are refreshed when imports complete to prevent stale dimension data.
 
