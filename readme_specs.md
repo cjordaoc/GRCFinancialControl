@@ -290,6 +290,7 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
   2. Data is projected into lightweight DTOs for visualization and cached when appropriate.
 - **Validation Mechanics:**
   - Views encapsulate aggregation rules to ensure consistent metrics across the application.
+  - Margin-related fields emitted by materialized summaries (`CustomerSummaryCache`, `ManagerRevenueSummaryMaterialized`, `PapdRevenueSummary`) compute averages instead of sums so percentage KPIs remain bounded between 0 and 100.
   - Services refresh caches after imports complete to avoid stale dimension data.
 
 ---

@@ -496,6 +496,27 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                 await using var context = await ContextFactory.CreateDbContextAsync().ConfigureAwait(false);
                 await using var transaction = await context.Database.BeginTransactionAsync().ConfigureAwait(false);
 
+                var refreshMaterializedViews = false;
+
+                var updatedEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var manualOnlySkips = new List<string>();
+                var closedEngagementSkips = new List<string>();
+                var missingEngagementSkips = new List<string>();
+                var errors = new List<string>();
+                var warningMessages = new HashSet<string>(StringComparer.Ordinal);
+
+                var missingManagerGuis = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var missingPapdGuis = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                var financialEvolutionUpserts = 0;
+                var s4MetadataRefreshes = 0;
+                var managerAssignmentChanges = 0;
+                var papdAssignmentChanges = 0;
+
+                ClosingPeriod? closingPeriod = null;
+
+                await context.Database.ExecuteSqlRawAsync("SET @DisableFinancialEvolutionRefresh := 1;").ConfigureAwait(false);
+
                 try
                 {
                     var engagementIds = parsedRows.Select(r => r.EngagementId).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
@@ -513,7 +534,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     var engagementLookup = engagements.ToDictionary(e => e.EngagementId, StringComparer.OrdinalIgnoreCase);
 
                     // Fetch the user-selected closing period
-                    var closingPeriod = await context.ClosingPeriods
+                    closingPeriod = await context.ClosingPeriods
                         .Include(cp => cp.FiscalYear)
                         .FirstOrDefaultAsync(cp => cp.Id == closingPeriodId)
                         .ConfigureAwait(false);
@@ -628,21 +649,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         .ToListAsync()
                         .ConfigureAwait(false);
                     var papdsByGui = papds.ToDictionary(p => p.EngagementPapdGui!, StringComparer.OrdinalIgnoreCase);
-
-                    var updatedEngagements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                    var manualOnlySkips = new List<string>();
-                    var closedEngagementSkips = new List<string>();
-                    var missingEngagementSkips = new List<string>();
-                    var errors = new List<string>();
-                    var warningMessages = new HashSet<string>(StringComparer.Ordinal);
-
-                    var missingManagerGuis = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                    var missingPapdGuis = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-                    var financialEvolutionUpserts = 0;
-                    var s4MetadataRefreshes = 0;
-                    var managerAssignmentChanges = 0;
-                    var papdAssignmentChanges = 0;
 
                     foreach (var row in parsedRows)
                     {
@@ -919,108 +925,125 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     await context.SaveChangesAsync().ConfigureAwait(false);
                     await transaction.CommitAsync().ConfigureAwait(false);
 
-                    var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>();
-
-                    if (manualOnlySkips.Count > 0)
-                    {
-                        skipReasons["ManualOnly"] = manualOnlySkips;
-                    }
-
-                    if (closedEngagementSkips.Count > 0)
-                    {
-                        skipReasons["ClosedEngagement"] = closedEngagementSkips;
-                    }
-
-                    if (missingEngagementSkips.Count > 0)
-                    {
-                        skipReasons["Engagement not found"] = missingEngagementSkips;
-                    }
-
-                    if (errors.Count > 0)
-                    {
-                        skipReasons["Error"] = errors;
-                    }
-
-                    if (rowValidationIssues.Count > 0)
-                    {
-                        skipReasons["IncompleteRow"] = rowValidationIssues;
-                    }
-
-                    if (missingManagerGuis.Count > 0)
-                    {
-                        var sortedManagers = missingManagerGuis
-                            .OrderBy(gui => gui, StringComparer.OrdinalIgnoreCase)
-                            .ToArray();
-                        warningMessages.Add($"Manager GUI identifiers not found: {string.Join(", ", sortedManagers)}.");
-                    }
-
-                    if (missingPapdGuis.Count > 0)
-                    {
-                        var sortedPapds = missingPapdGuis
-                            .OrderBy(gui => gui, StringComparer.OrdinalIgnoreCase)
-                            .ToArray();
-                        warningMessages.Add($"PAPD GUI identifiers not found: {string.Join(", ", sortedPapds)}.");
-                    }
-
-                    var notes = new List<string>
-                    {
-                        $"Financial evolution entries upserted: {financialEvolutionUpserts}",
-                        $"Distinct engagements updated: {updatedEngagements.Count}",
-                        $"Closing period used: {closingPeriod.Name} (ID: {closingPeriod.Id})"
-                    };
-
-                    if (managerAssignmentChanges > 0)
-                    {
-                        notes.Add($"Manager assignments synchronized: {managerAssignmentChanges}");
-                    }
-
-                    if (papdAssignmentChanges > 0)
-                    {
-                        notes.Add($"PAPD assignments synchronized: {papdAssignmentChanges}");
-                    }
-
-                    if (warningMessages.Count > 0)
-                    {
-                        foreach (var warning in warningMessages)
-                        {
-                            notes.Insert(0, warning);
-                        }
-                    }
-
-                    if (s4MetadataRefreshes > 0)
-                    {
-                        notes.Insert(0, $"S/4 metadata rows refreshed: {s4MetadataRefreshes}");
-                    }
-
-                    var summary = ImportSummaryFormatter.Build(
-                        "Full Management Data import",
-                        0,
-                        updatedEngagements.Count,
-                        skipReasons,
-                        notes,
-                        parsedRows.Count);
-                    Logger.LogInformation(summary);
-
-                    return new FullManagementDataImportResult(
-                        summary,
-                        parsedRows.Count,
-                        0,
-                        updatedEngagements.Count,
-                        financialEvolutionUpserts,
-                        s4MetadataRefreshes,
-                        manualOnlySkips.ToArray(),
-                        Array.Empty<string>(), // lockedFiscalYearSkips (now checked at import start)
-                        Array.Empty<string>(), // missingClosingPeriodSkips (now from UI selection)
-                        missingEngagementSkips.ToArray(),
-                        closedEngagementSkips.ToArray(),
-                        errors.ToArray(),
-                        warningMessages.ToArray());
+                    refreshMaterializedViews = true;
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Logger.LogError(ex, "Full Management Data import failed. Rolling back transaction.");
                     await transaction.RollbackAsync().ConfigureAwait(false);
                     throw;
                 }
+                finally
+                {
+                    await context.Database.ExecuteSqlRawAsync("SET @DisableFinancialEvolutionRefresh := NULL;").ConfigureAwait(false);
+                }
+
+                if (refreshMaterializedViews)
+                {
+                    await context.Database.ExecuteSqlRawAsync("CALL sp_RefreshAllMaterializedTables();").ConfigureAwait(false);
+                }
+
+                if (closingPeriod == null)
+                {
+                    throw new InvalidOperationException("Closing period could not be loaded for import summary.");
+                }
+
+                var skipReasons = new Dictionary<string, IReadOnlyCollection<string>>();
+
+                if (manualOnlySkips.Count > 0)
+                {
+                    skipReasons["ManualOnly"] = manualOnlySkips;
+                }
+
+                if (closedEngagementSkips.Count > 0)
+                {
+                    skipReasons["ClosedEngagement"] = closedEngagementSkips;
+                }
+
+                if (missingEngagementSkips.Count > 0)
+                {
+                    skipReasons["Engagement not found"] = missingEngagementSkips;
+                }
+
+                if (errors.Count > 0)
+                {
+                    skipReasons["Error"] = errors;
+                }
+
+                if (rowValidationIssues.Count > 0)
+                {
+                    skipReasons["IncompleteRow"] = rowValidationIssues;
+                }
+
+                if (missingManagerGuis.Count > 0)
+                {
+                    var sortedManagers = missingManagerGuis
+                        .OrderBy(gui => gui, StringComparer.OrdinalIgnoreCase)
+                        .ToArray();
+                    warningMessages.Add($"Manager GUI identifiers not found: {string.Join(", ", sortedManagers)}.");
+                }
+
+                if (missingPapdGuis.Count > 0)
+                {
+                    var sortedPapds = missingPapdGuis
+                        .OrderBy(gui => gui, StringComparer.OrdinalIgnoreCase)
+                        .ToArray();
+                    warningMessages.Add($"PAPD GUI identifiers not found: {string.Join(", ", sortedPapds)}.");
+                }
+
+                var notes = new List<string>
+                {
+                    $"Financial evolution entries upserted: {financialEvolutionUpserts}",
+                    $"Distinct engagements updated: {updatedEngagements.Count}",
+                    $"Closing period used: {closingPeriod.Name} (ID: {closingPeriod.Id})"
+                };
+
+                if (managerAssignmentChanges > 0)
+                {
+                    notes.Add($"Manager assignments synchronized: {managerAssignmentChanges}");
+                }
+
+                if (papdAssignmentChanges > 0)
+                {
+                    notes.Add($"PAPD assignments synchronized: {papdAssignmentChanges}");
+                }
+
+                if (warningMessages.Count > 0)
+                {
+                    foreach (var warning in warningMessages)
+                    {
+                        notes.Insert(0, warning);
+                    }
+                }
+
+                if (s4MetadataRefreshes > 0)
+                {
+                    notes.Insert(0, $"S/4 metadata rows refreshed: {s4MetadataRefreshes}");
+                }
+
+                var summary = ImportSummaryFormatter.Build(
+                    "Full Management Data import",
+                    0,
+                    updatedEngagements.Count,
+                    skipReasons,
+                    notes,
+                    parsedRows.Count);
+                Logger.LogInformation(summary);
+
+                return new FullManagementDataImportResult(
+                    summary,
+                    parsedRows.Count,
+                    0,
+                    updatedEngagements.Count,
+                    financialEvolutionUpserts,
+                    s4MetadataRefreshes,
+                    manualOnlySkips.ToArray(),
+                    Array.Empty<string>(), // lockedFiscalYearSkips (now checked at import start)
+                    Array.Empty<string>(), // missingClosingPeriodSkips (now from UI selection)
+                    missingEngagementSkips.ToArray(),
+                    closedEngagementSkips.ToArray(),
+                    errors.ToArray(),
+                    warningMessages.ToArray());
             });
         }
 

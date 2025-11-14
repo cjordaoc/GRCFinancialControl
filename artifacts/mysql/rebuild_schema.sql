@@ -527,7 +527,7 @@ BEGIN
         COALESCE(SUM(elf.ChargedHours), 0) AS ChargedHours,
         COALESCE(SUM(elf.FYTDHours), 0) AS FYTDHours,
         COALESCE(SUM(elf.FYTDExpenses), 0) AS FYTDExpenses,
-        COALESCE(SUM(elf.FYTDMargin), 0) AS FYTDMargin,
+        COALESCE(AVG(elf.FYTDMargin), 0) AS FYTDMargin,
         MAX(elf.ClosingPeriodEnd) AS LatestClosingPeriodEnd,
         COUNT(DISTINCT elf.EngagementId) AS EngagementCount,
         COUNT(DISTINCT CASE WHEN e.Status = 1 THEN elf.EngagementId END) AS ActiveEngagementCount
@@ -620,7 +620,7 @@ BEGIN
             SUM(elf.ChargedHours)       AS ChargedHours,
             SUM(elf.FYTDHours)          AS FYTDHours,
             SUM(elf.FYTDExpenses)       AS FYTDExpenses,
-            SUM(elf.FYTDMargin)         AS FYTDMargin,
+            AVG(elf.FYTDMargin)         AS FYTDMargin,
             MAX(elf.ClosingPeriodEnd)   AS LatestClosingPeriodEnd
         FROM EngagementLatestFinancials elf
         INNER JOIN FiscalYears fy 
@@ -685,6 +685,7 @@ CREATE TABLE `EngagementLatestFinancials` (
   `TotalRevenue` decimal(18,2) DEFAULT '0.00',
   `ValueData` decimal(18,2) DEFAULT '0.00',
   `BudgetHours` decimal(18,2) DEFAULT '0.00',
+  `BudgetMargin` decimal(18,2) DEFAULT '0.00',
   `ChargedHours` decimal(18,2) DEFAULT '0.00',
   `FYTDHours` decimal(18,2) DEFAULT '0.00',
   `AdditionalHours` decimal(18,2) DEFAULT '0.00',
@@ -734,7 +735,7 @@ BEGIN
         FiscalYearId, FiscalYearName,
         ClosingPeriodId, ClosingPeriodNumericId, ClosingPeriodName, ClosingPeriodEnd,
         RevenueToGoValue, RevenueToDateValue, TotalRevenue, ValueData,
-        BudgetHours, ChargedHours, FYTDHours, AdditionalHours,
+        BudgetHours, BudgetMargin, ChargedHours, FYTDHours, AdditionalHours,
         ExpenseBudget, ExpensesToDate, FYTDExpenses,
         ToDateMargin, FYTDMargin, MarginPercentage,
         PrimaryManagerId, PrimaryManagerName,
@@ -759,6 +760,7 @@ BEGIN
         fe1.TotalRevenue,
         fe1.ValueData,
         fe1.BudgetHours,
+        fe1.BudgetMargin,
         fe1.ChargedHours,
         fe1.FYTDHours,
         fe1.AdditionalHours,
@@ -795,6 +797,7 @@ BEGIN
             COALESCE(fe.RevenueToGoValue,0)+COALESCE(fe.RevenueToDateValue,0) AS TotalRevenue,
             COALESCE(fe.ValueData,0) AS ValueData,
             COALESCE(fe.BudgetHours,0) AS BudgetHours,
+            COALESCE(fe.BudgetMargin, e2.MarginPctBudget, 0) AS BudgetMargin,
             COALESCE(fe.ChargedHours,0) AS ChargedHours,
             COALESCE(fe.FYTDHours,0) AS FYTDHours,
             COALESCE(fe.AdditionalHours,0) AS AdditionalHours,
@@ -871,7 +874,7 @@ BEGIN
         FiscalYearId, FiscalYearName,
         ClosingPeriodId, ClosingPeriodNumericId, ClosingPeriodName, ClosingPeriodEnd,
         RevenueToGoValue, RevenueToDateValue, TotalRevenue, ValueData,
-        BudgetHours, ChargedHours, FYTDHours, AdditionalHours,
+        BudgetHours, BudgetMargin, ChargedHours, FYTDHours, AdditionalHours,
         ExpenseBudget, ExpensesToDate, FYTDExpenses,
         ToDateMargin, FYTDMargin, MarginPercentage,
         PrimaryManagerId, PrimaryManagerName,
@@ -896,6 +899,7 @@ BEGIN
         ra1.RevenueToGoValue + ra1.RevenueToDateValue AS TotalRevenue,
         0 AS ValueData,
         0 AS BudgetHours,
+        COALESCE(e.MarginPctBudget, 0) AS BudgetMargin,
         0 AS ChargedHours,
         0 AS FYTDHours,
         0 AS AdditionalHours,
@@ -972,7 +976,7 @@ BEGIN
         FiscalYearId, FiscalYearName,
         ClosingPeriodId, ClosingPeriodNumericId, ClosingPeriodName, ClosingPeriodEnd,
         RevenueToGoValue, RevenueToDateValue, TotalRevenue, ValueData,
-        BudgetHours, ChargedHours, FYTDHours, AdditionalHours,
+        BudgetHours, BudgetMargin, ChargedHours, FYTDHours, AdditionalHours,
         ExpenseBudget, ExpensesToDate, FYTDExpenses,
         ToDateMargin, FYTDMargin, MarginPercentage,
         PrimaryManagerId, PrimaryManagerName,
@@ -985,7 +989,7 @@ BEGIN
         fy.Id, fy.Name,
         CONCAT('FY',LPAD(fy.Id,4,'0'),'-PLACEHOLDER'),
         NULL, CONCAT(fy.Name,' Placeholder'), fy.EndDate,
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0, COALESCE(e.MarginPctBudget, 0), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         mgr.PrimaryManagerId, mgr.PrimaryManagerName,
         papd.PrimaryPapdId, papd.PrimaryPapdName,
         CURRENT_TIMESTAMP
@@ -1084,7 +1088,7 @@ BEGIN
         COALESCE(SUM(elf_summary.ChargedHours), 0) AS ChargedHours,
         COALESCE(SUM(elf_summary.FYTDHours), 0) AS FYTDHours,
         COALESCE(SUM(elf_summary.FYTDExpenses), 0) AS FYTDExpenses,
-        COALESCE(SUM(elf_summary.FYTDMargin), 0) AS FYTDMargin,
+        COALESCE(AVG(elf_summary.FYTDMargin), 0) AS FYTDMargin,
         COALESCE(SUM(inv_totals.TotalInvoiced), 0) AS TotalInvoiced,
         COALESCE(SUM(inv_totals.OutstandingInvoices), 0) AS OutstandingInvoices,
         GREATEST(
@@ -1105,7 +1109,7 @@ BEGIN
             SUM(ChargedHours) AS ChargedHours,
             SUM(FYTDHours) AS FYTDHours,
             SUM(FYTDExpenses) AS FYTDExpenses,
-            SUM(FYTDMargin) AS FYTDMargin,
+            AVG(FYTDMargin) AS FYTDMargin,
             MAX(ClosingPeriodEnd) AS LatestClosingPeriodEnd
         FROM EngagementLatestFinancials
         GROUP BY EngagementId
@@ -1140,7 +1144,9 @@ CREATE TRIGGER trg_FinancialEvolution_AfterInsert
 AFTER INSERT ON FinancialEvolution
 FOR EACH ROW
 BEGIN
-    CALL sp_RefreshAllMaterializedTables();
+    IF IFNULL(@DisableFinancialEvolutionRefresh, 0) = 0 THEN
+        CALL sp_RefreshAllMaterializedTables();
+    END IF;
 END$$
 DELIMITER ;
 
@@ -1150,7 +1156,9 @@ CREATE TRIGGER trg_FinancialEvolution_AfterUpdate
 AFTER UPDATE ON FinancialEvolution
 FOR EACH ROW
 BEGIN
-    CALL sp_RefreshAllMaterializedTables();
+    IF IFNULL(@DisableFinancialEvolutionRefresh, 0) = 0 THEN
+        CALL sp_RefreshAllMaterializedTables();
+    END IF;
 END$$
 DELIMITER ;
 
@@ -1160,7 +1168,9 @@ CREATE TRIGGER trg_FinancialEvolution_AfterDelete
 AFTER DELETE ON FinancialEvolution
 FOR EACH ROW
 BEGIN
-    CALL sp_RefreshAllMaterializedTables();
+    IF IFNULL(@DisableFinancialEvolutionRefresh, 0) = 0 THEN
+        CALL sp_RefreshAllMaterializedTables();
+    END IF;
 END$$
 DELIMITER ;
 
