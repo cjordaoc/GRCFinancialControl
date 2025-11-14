@@ -496,7 +496,7 @@ CREATE TABLE `ManagerRevenueSummaryMaterialized` (
     `ChargedHours` DECIMAL(18, 2) DEFAULT 0,
     `FYTDHours` DECIMAL(18, 2) DEFAULT 0,
     `FYTDExpenses` DECIMAL(18, 2) DEFAULT 0,
-    `FYTDMargin` DECIMAL(18, 2) DEFAULT 0,
+    `FYTDMargin` DECIMAL(9, 4) DEFAULT 0,
     `LatestClosingPeriodEnd` DATETIME NULL,
     `EngagementCount` INT DEFAULT 0,
     `ActiveEngagementCount` INT DEFAULT 0,
@@ -527,7 +527,7 @@ BEGIN
         COALESCE(SUM(elf.ChargedHours), 0) AS ChargedHours,
         COALESCE(SUM(elf.FYTDHours), 0) AS FYTDHours,
         COALESCE(SUM(elf.FYTDExpenses), 0) AS FYTDExpenses,
-        COALESCE(SUM(elf.FYTDMargin), 0) AS FYTDMargin,
+        COALESCE(ROUND(AVG(elf.FYTDMargin), 4), 0) AS FYTDMargin,
         MAX(elf.ClosingPeriodEnd) AS LatestClosingPeriodEnd,
         COUNT(DISTINCT elf.EngagementId) AS EngagementCount,
         COUNT(DISTINCT CASE WHEN e.Status = 1 THEN elf.EngagementId END) AS ActiveEngagementCount
@@ -557,7 +557,7 @@ CREATE TABLE `PapdRevenueSummary` (
     `ChargedHours` DECIMAL(18, 2) DEFAULT 0,
     `FYTDHours` DECIMAL(18, 2) DEFAULT 0,
     `FYTDExpenses` DECIMAL(18, 2) DEFAULT 0,
-    `FYTDMargin` DECIMAL(18, 2) DEFAULT 0,
+    `FYTDMargin` DECIMAL(9, 4) DEFAULT 0,
     `LatestClosingPeriodEnd` DATETIME NULL,
     CONSTRAINT `PK_PapdRevenueSummary` PRIMARY KEY (`FiscalYearId`, `PapdId`),
     INDEX `IX_PapdRevenueSummary_FY` (`FiscalYearId`),
@@ -620,7 +620,7 @@ BEGIN
             SUM(elf.ChargedHours)       AS ChargedHours,
             SUM(elf.FYTDHours)          AS FYTDHours,
             SUM(elf.FYTDExpenses)       AS FYTDExpenses,
-            SUM(elf.FYTDMargin)         AS FYTDMargin,
+            ROUND(AVG(elf.FYTDMargin), 4)         AS FYTDMargin,
             MAX(elf.ClosingPeriodEnd)   AS LatestClosingPeriodEnd
         FROM EngagementLatestFinancials elf
         INNER JOIN FiscalYears fy 
@@ -685,14 +685,15 @@ CREATE TABLE `EngagementLatestFinancials` (
   `TotalRevenue` decimal(18,2) DEFAULT '0.00',
   `ValueData` decimal(18,2) DEFAULT '0.00',
   `BudgetHours` decimal(18,2) DEFAULT '0.00',
+  `BudgetMargin` decimal(9,4) DEFAULT '0.0000',
   `ChargedHours` decimal(18,2) DEFAULT '0.00',
   `FYTDHours` decimal(18,2) DEFAULT '0.00',
   `AdditionalHours` decimal(18,2) DEFAULT '0.00',
   `ExpenseBudget` decimal(18,2) DEFAULT '0.00',
   `ExpensesToDate` decimal(18,2) DEFAULT '0.00',
   `FYTDExpenses` decimal(18,2) DEFAULT '0.00',
-  `ToDateMargin` decimal(18,2) DEFAULT '0.00',
-  `FYTDMargin` decimal(18,2) DEFAULT '0.00',
+  `ToDateMargin` decimal(9,4) DEFAULT '0.0000',
+  `FYTDMargin` decimal(9,4) DEFAULT '0.0000',
   `MarginPercentage` decimal(9,4) DEFAULT '0.0000',
   `PrimaryManagerId` int(11) DEFAULT NULL,
   `PrimaryManagerName` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -734,7 +735,7 @@ BEGIN
         FiscalYearId, FiscalYearName,
         ClosingPeriodId, ClosingPeriodNumericId, ClosingPeriodName, ClosingPeriodEnd,
         RevenueToGoValue, RevenueToDateValue, TotalRevenue, ValueData,
-        BudgetHours, ChargedHours, FYTDHours, AdditionalHours,
+        BudgetHours, BudgetMargin, ChargedHours, FYTDHours, AdditionalHours,
         ExpenseBudget, ExpensesToDate, FYTDExpenses,
         ToDateMargin, FYTDMargin, MarginPercentage,
         PrimaryManagerId, PrimaryManagerName,
@@ -759,6 +760,7 @@ BEGIN
         fe1.TotalRevenue,
         fe1.ValueData,
         fe1.BudgetHours,
+        fe1.BudgetMargin,
         fe1.ChargedHours,
         fe1.FYTDHours,
         fe1.AdditionalHours,
@@ -795,18 +797,56 @@ BEGIN
             COALESCE(fe.RevenueToGoValue,0)+COALESCE(fe.RevenueToDateValue,0) AS TotalRevenue,
             COALESCE(fe.ValueData,0) AS ValueData,
             COALESCE(fe.BudgetHours,0) AS BudgetHours,
+            COALESCE(
+                ROUND(
+                    CASE
+                        WHEN fe.BudgetMargin IS NULL THEN e2.MarginPctBudget
+                        WHEN ABS(fe.BudgetMargin) > 1 THEN fe.BudgetMargin / 100
+                        ELSE fe.BudgetMargin
+                    END,
+                    4
+                ),
+                0
+            ) AS BudgetMargin,
             COALESCE(fe.ChargedHours,0) AS ChargedHours,
             COALESCE(fe.FYTDHours,0) AS FYTDHours,
             COALESCE(fe.AdditionalHours,0) AS AdditionalHours,
             COALESCE(fe.ExpenseBudget,0) AS ExpenseBudget,
             COALESCE(fe.ExpensesToDate,0) AS ExpensesToDate,
             COALESCE(fe.FYTDExpenses,0) AS FYTDExpenses,
-            COALESCE(fe.ToDateMargin,0) AS ToDateMargin,
-            COALESCE(fe.FYTDMargin,0) AS FYTDMargin,
-            CASE
-                WHEN COALESCE(fe.RevenueToDateValue,0)=0 THEN 0
-                ELSE ROUND(fe.ToDateMargin/fe.RevenueToDateValue*100,4)
-            END AS MarginPercentage,
+            COALESCE(
+                ROUND(
+                    CASE
+                        WHEN fe.ToDateMargin IS NULL THEN NULL
+                        WHEN ABS(fe.ToDateMargin) > 1 THEN fe.ToDateMargin / 100
+                        ELSE fe.ToDateMargin
+                    END,
+                    4
+                ),
+                0
+            ) AS ToDateMargin,
+            COALESCE(
+                ROUND(
+                    CASE
+                        WHEN fe.FYTDMargin IS NULL THEN NULL
+                        WHEN ABS(fe.FYTDMargin) > 1 THEN fe.FYTDMargin / 100
+                        ELSE fe.FYTDMargin
+                    END,
+                    4
+                ),
+                0
+            ) AS FYTDMargin,
+            COALESCE(
+                ROUND(
+                    CASE
+                        WHEN fe.ToDateMargin IS NULL THEN NULL
+                        WHEN ABS(fe.ToDateMargin) > 1 THEN fe.ToDateMargin / 100
+                        ELSE fe.ToDateMargin
+                    END,
+                    4
+                ),
+                0
+            ) AS MarginPercentage,
             COALESCE(cp.PeriodEnd, fy.EndDate) AS SortEnd,
             CASE
                 WHEN TRIM(fe.ClosingPeriodId) REGEXP '^[0-9]+$'
@@ -871,7 +911,7 @@ BEGIN
         FiscalYearId, FiscalYearName,
         ClosingPeriodId, ClosingPeriodNumericId, ClosingPeriodName, ClosingPeriodEnd,
         RevenueToGoValue, RevenueToDateValue, TotalRevenue, ValueData,
-        BudgetHours, ChargedHours, FYTDHours, AdditionalHours,
+        BudgetHours, BudgetMargin, ChargedHours, FYTDHours, AdditionalHours,
         ExpenseBudget, ExpensesToDate, FYTDExpenses,
         ToDateMargin, FYTDMargin, MarginPercentage,
         PrimaryManagerId, PrimaryManagerName,
@@ -896,6 +936,7 @@ BEGIN
         ra1.RevenueToGoValue + ra1.RevenueToDateValue AS TotalRevenue,
         0 AS ValueData,
         0 AS BudgetHours,
+        COALESCE(e.MarginPctBudget, 0) AS BudgetMargin,
         0 AS ChargedHours,
         0 AS FYTDHours,
         0 AS AdditionalHours,
@@ -972,7 +1013,7 @@ BEGIN
         FiscalYearId, FiscalYearName,
         ClosingPeriodId, ClosingPeriodNumericId, ClosingPeriodName, ClosingPeriodEnd,
         RevenueToGoValue, RevenueToDateValue, TotalRevenue, ValueData,
-        BudgetHours, ChargedHours, FYTDHours, AdditionalHours,
+        BudgetHours, BudgetMargin, ChargedHours, FYTDHours, AdditionalHours,
         ExpenseBudget, ExpensesToDate, FYTDExpenses,
         ToDateMargin, FYTDMargin, MarginPercentage,
         PrimaryManagerId, PrimaryManagerName,
@@ -985,7 +1026,7 @@ BEGIN
         fy.Id, fy.Name,
         CONCAT('FY',LPAD(fy.Id,4,'0'),'-PLACEHOLDER'),
         NULL, CONCAT(fy.Name,' Placeholder'), fy.EndDate,
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0, COALESCE(e.MarginPctBudget, 0), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         mgr.PrimaryManagerId, mgr.PrimaryManagerName,
         papd.PrimaryPapdId, papd.PrimaryPapdName,
         CURRENT_TIMESTAMP
@@ -1037,7 +1078,7 @@ CREATE TABLE `CustomerSummaryCache` (
     `ChargedHours` DECIMAL(18, 2) DEFAULT 0,
     `FYTDHours` DECIMAL(18, 2) DEFAULT 0,
     `FYTDExpenses` DECIMAL(18, 2) DEFAULT 0,
-    `FYTDMargin` DECIMAL(18, 2) DEFAULT 0,
+    `FYTDMargin` DECIMAL(9, 4) DEFAULT 0,
     `TotalInvoiced` DECIMAL(18, 2) DEFAULT 0,
     `OutstandingInvoices` INT DEFAULT 0,
     `LastActivityDate` DATETIME NULL,
@@ -1084,7 +1125,7 @@ BEGIN
         COALESCE(SUM(elf_summary.ChargedHours), 0) AS ChargedHours,
         COALESCE(SUM(elf_summary.FYTDHours), 0) AS FYTDHours,
         COALESCE(SUM(elf_summary.FYTDExpenses), 0) AS FYTDExpenses,
-        COALESCE(SUM(elf_summary.FYTDMargin), 0) AS FYTDMargin,
+        COALESCE(ROUND(AVG(elf_summary.FYTDMargin), 4), 0) AS FYTDMargin,
         COALESCE(SUM(inv_totals.TotalInvoiced), 0) AS TotalInvoiced,
         COALESCE(SUM(inv_totals.OutstandingInvoices), 0) AS OutstandingInvoices,
         GREATEST(
@@ -1105,7 +1146,7 @@ BEGIN
             SUM(ChargedHours) AS ChargedHours,
             SUM(FYTDHours) AS FYTDHours,
             SUM(FYTDExpenses) AS FYTDExpenses,
-            SUM(FYTDMargin) AS FYTDMargin,
+            ROUND(AVG(FYTDMargin), 4) AS FYTDMargin,
             MAX(ClosingPeriodEnd) AS LatestClosingPeriodEnd
         FROM EngagementLatestFinancials
         GROUP BY EngagementId
@@ -1140,7 +1181,9 @@ CREATE TRIGGER trg_FinancialEvolution_AfterInsert
 AFTER INSERT ON FinancialEvolution
 FOR EACH ROW
 BEGIN
-    CALL sp_RefreshAllMaterializedTables();
+    IF IFNULL(@DisableFinancialEvolutionRefresh, 0) = 0 THEN
+        CALL sp_RefreshAllMaterializedTables();
+    END IF;
 END$$
 DELIMITER ;
 
@@ -1150,7 +1193,9 @@ CREATE TRIGGER trg_FinancialEvolution_AfterUpdate
 AFTER UPDATE ON FinancialEvolution
 FOR EACH ROW
 BEGIN
-    CALL sp_RefreshAllMaterializedTables();
+    IF IFNULL(@DisableFinancialEvolutionRefresh, 0) = 0 THEN
+        CALL sp_RefreshAllMaterializedTables();
+    END IF;
 END$$
 DELIMITER ;
 
@@ -1160,7 +1205,9 @@ CREATE TRIGGER trg_FinancialEvolution_AfterDelete
 AFTER DELETE ON FinancialEvolution
 FOR EACH ROW
 BEGIN
-    CALL sp_RefreshAllMaterializedTables();
+    IF IFNULL(@DisableFinancialEvolutionRefresh, 0) = 0 THEN
+        CALL sp_RefreshAllMaterializedTables();
+    END IF;
 END$$
 DELIMITER ;
 

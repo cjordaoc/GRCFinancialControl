@@ -131,9 +131,9 @@ The `FinancialEvolution` table captures point-in-time engagement financials acro
 - **RevenueToDateValue** – Revenue already realized
 
 **Margin Metrics:**
-- **BudgetMargin** – Baseline margin percentage from original budget
-- **ToDateMargin** – Current margin percentage (ETD)
-- **FYTDMargin** – Fiscal year cumulative margin percentage
+- **BudgetMargin** – Baseline margin ratio from the original budget (stored as decimal, e.g., `0.4829` → 48.29%)
+- **ToDateMargin** – Current ETD margin ratio (decimal fraction)
+- **FYTDMargin** – Fiscal year cumulative margin ratio (decimal fraction)
 
 **Expense Metrics:**
 - **ExpenseBudget** – Original budgeted expenses
@@ -176,7 +176,7 @@ The `FinancialEvolution` table captures point-in-time engagement financials acro
 - Missing closing periods skip period-specific metrics but preserve budget baseline values.
 - The importer upserts snapshots: existing records for the same engagement + period are updated rather than duplicated.
 - Re-importing a closing period clears prior Financial Evolution snapshots for that period before applying the new rows, preventing cumulative totals across uploads.
-- Decimal precision is enforced at 18,2 to match MySQL storage and prevent rounding inconsistencies.
+- Decimal precision for financial values is enforced at 18,2, while all margin ratios are normalized to 4 decimal places so downstream tools can format them as percentages on demand.
 - Revenue to-date values primarily use the imported `TER FYTD` column; when unavailable, the importer falls back to `ValueToAllocate − CurrentBacklog − FutureBacklog`.
 - All nullable fields gracefully handle missing Excel data without blocking the import.
 
@@ -252,6 +252,7 @@ The `FinancialEvolution` table captures point-in-time engagement financials acro
 
 **Validation & Consolidation Rules**
 - Reporting relies on read-only MySQL views to guarantee consistent aggregation logic.
+- Margin percentages materialized for dashboards (manager, PAPD, and customer summaries) are averaged rather than summed so KPI cards reflect true percentage performance.
 - EF projections fetch only the required columns and map them to view models, ensuring dashboards remain responsive.
 - Cached lookups are refreshed when imports complete to prevent stale dimension data.
 
