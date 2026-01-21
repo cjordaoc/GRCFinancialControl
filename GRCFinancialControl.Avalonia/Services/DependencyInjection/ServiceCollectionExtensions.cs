@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia;
 using GRC.Shared.UI.Dialogs;
 using GRCFinancialControl.Avalonia.Services;
+using GRCFinancialControl.Avalonia.Services.Interfaces;
 using GRCFinancialControl.Avalonia.ViewModels;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRCFinancialControl.Avalonia.Views;
@@ -80,6 +81,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IManagerService, ManagerService>();
         services.AddTransient<IManagerAssignmentService, ManagerAssignmentService>();
         services.AddTransient<IPapdAssignmentService, PapdAssignmentService>();
+        services.AddTransient<IEngagementManagementFacade, EngagementManagementFacade>();
         services.AddTransient<IExceptionService, ExceptionService>();
         services.AddTransient<ICustomerService, CustomerService>();
         services.AddTransient<IRankMappingService, RankMappingService>();
@@ -90,6 +92,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IMessenger>(_ => WeakReferenceMessenger.Default);
         services.AddSingleton<IModalDialogService, ModalDialogService>();
         services.AddSingleton<DialogService>();
+        services.AddSingleton<IDialogService>(provider => provider.GetRequiredService<DialogService>());
+        services.AddSingleton<IPresenterService>(provider => new PresenterService(provider.GetRequiredService<LoggingService>()));
         services.AddTransient<IRetainTemplateGenerator, RetainTemplateGenerator>();
         services.AddSingleton<IConnectionPackageService, ConnectionPackageService>();
         services.AddSingleton<IApplicationDataBackupService, ApplicationDataBackupService>();

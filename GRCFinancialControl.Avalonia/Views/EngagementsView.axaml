@@ -5,16 +5,26 @@
              xmlns:loc="using:App.Presentation.Localization"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
              xmlns:appConv="clr-namespace:App.Presentation.Converters;assembly=App.Presentation"
+             xmlns:sharedControls="clr-namespace:GRC.Shared.UI.Controls;assembly=GRC.Shared.UI"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.EngagementsView"
              x:DataType="vm:EngagementsViewModel">
     <UserControl.Resources>
         <appConv:CurrencyDisplayConverter x:Key="CurrencyDisplayConverter"/>
     </UserControl.Resources>
-    <Grid RowDefinitions="Auto,*,Auto" Margin="{StaticResource CardPaddingThickness}">
-        <TextBlock Text="{loc:Loc Key=FINC_Admin_Engagements_Title_List}" Classes="TitleLarge" Margin="{StaticResource MarginBottomRegular}"/>
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="{StaticResource CardPaddingThickness}" RowSpacing="{StaticResource GridGap}">
+        <StackPanel Spacing="{StaticResource SpacingUnit}">
+            <TextBlock Text="{loc:Loc Key=FINC_Admin_Engagements_Title_List}" Classes="TitleLarge"/>
+            <sharedControls:SearchBox Text="{Binding FilterText, Mode=TwoWay}" Placeholder="Search engagements..." />
+        </StackPanel>
 
-        <DataGrid Grid.Row="1"
+        <sharedControls:EmptyState Grid.Row="1"
+                                   Title="No engagements found"
+                                   Subtitle="Try adjusting your search filter or add new engagements."
+                                   IsVisible="{Binding !HasEngagements}" />
+
+        <DataGrid Grid.Row="2"
+                  IsVisible="{Binding HasEngagements}"
                   ItemsSource="{Binding Engagements}"
                   SelectedItem="{Binding SelectedEngagement}"
                   SelectionMode="Single"
@@ -66,7 +76,7 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <StackPanel Grid.Row="2"
+        <StackPanel Grid.Row="3"
                     Classes="ButtonRow"
                     HorizontalAlignment="Left"
                     Margin="{StaticResource MarginTopMedium}">

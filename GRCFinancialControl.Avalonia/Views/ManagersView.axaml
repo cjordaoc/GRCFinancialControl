@@ -4,13 +4,23 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
+             xmlns:sharedControls="clr-namespace:GRC.Shared.UI.Controls;assembly=GRC.Shared.UI"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GRCFinancialControl.Avalonia.Views.ManagersView"
              x:DataType="vm:ManagersViewModel">
-    <Grid RowDefinitions="Auto,*,Auto" Margin="{StaticResource CardPaddingThickness}">
-        <TextBlock Text="Managers" Classes="TitleLarge" Margin="{StaticResource MarginBottomSmall}"/>
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="{StaticResource CardPaddingThickness}" RowSpacing="{StaticResource GridGap}">
+        <StackPanel Spacing="{StaticResource SpacingUnit}">
+            <TextBlock Text="Managers" Classes="TitleLarge" />
+            <sharedControls:SearchBox Text="{Binding FilterText, Mode=TwoWay}" Placeholder="Search managers..." />
+        </StackPanel>
 
-        <DataGrid Grid.Row="1"
+        <sharedControls:EmptyState Grid.Row="1"
+                                   Title="No managers found"
+                                   Subtitle="Try adjusting your search filter or add new managers."
+                                   IsVisible="{Binding !HasManagers}" />
+
+        <DataGrid Grid.Row="2"
+                  IsVisible="{Binding HasManagers}"
                   ItemsSource="{Binding Managers}"
                   SelectedItem="{Binding SelectedManager}"
                   SelectionMode="Single"
@@ -27,7 +37,7 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <StackPanel Grid.Row="2"
+        <StackPanel Grid.Row="3"
                     Classes="ButtonRow"
                     HorizontalAlignment="Left"
                     Margin="{StaticResource MarginTopSmall}">

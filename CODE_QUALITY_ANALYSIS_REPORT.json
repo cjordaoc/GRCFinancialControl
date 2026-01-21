@@ -1,0 +1,283 @@
+{
+  "performanceIssues": [
+    {
+      "file": "GRCFinancialControl.Persistence/Services/PapdService.cs",
+      "lineRange": "60-70",
+      "severity": "medium",
+      "issue": "N+1 Query Pattern: ToListAsync() materializes assignments, then Where() filters in memory instead of database",
+      "suggestion": "Apply Where filter before ToListAsync: context.EngagementPapds.Where(ep => ep.PapdId == papdId).ToListAsync()"
+    },
+    {
+      "file": "GRCFinancialControl.Persistence/Services/ManagerService.cs",
+      "lineRange": "45-55",
+      "severity": "medium",
+      "issue": "Inefficient memory allocation: Loading EngagementAssignments collection then filtering with Where().ToList() instead of filtering at database level",
+      "suggestion": "Use context.EngagementManagerAssignments.Where(e => e.ManagerId == managerId && !engagementIds.Contains(e.EngagementId)).ToListAsync() before removal"
+    },
+    {
+      "file": "GRCFinancialControl.Avalonia/ViewModels/EngagementsViewModel.cs",
+      "lineRange": "170-175",
+      "severity": "medium",
+      "issue": "Double iteration inefficiency: ToHashSet() for lookup then Where().ToList() creates extra materialization",
+      "suggestion": "Eliminate ToList() call: var availablePapds = papds.Where(p => !assignedPapdIds.Contains(p.Id)); only materialize when needed for binding"
+    },
+    {
+      "file": "GRCFinancialControl.Avalonia/ViewModels/EngagementsViewModel.cs",
+      "lineRange": "209-214",
+      "severity": "medium",
+      "issue": "Redundant query pattern: managers loaded, then Where().ToList() filters which could be done in database",
+      "suggestion": "Keep data materialized once per load, avoid re-querying or use LINQ to Objects efficiently"
+    },
+    {
+      "file": "GRCFinancialControl.Persistence/Services/Importers/FullManagementDataImporter.cs",
+      "lineRange": "2103-2105",
+      "severity": "medium",
+      "issue": "Unnecessary materialization: engagement.ManagerAssignments.ToList() when only iterating for deletion - use LINQ to Objects or RemoveRange directly",
+      "suggestion": "Store reference without ToList(): var existingAssignments = engagement.ManagerAssignments; then iterate"
+    },
+    {
+      "file": "GRCFinancialControl.Persistence/Services/Importers/FullManagementDataImporter.cs",
+      "lineRange": "2168-2170",
+      "severity": "medium",
+      "issue": "Duplicate pattern: Same inefficiency as ManagerAssignments, ToList() on collection navigation property",
+      "suggestion": "Apply same optimization: reference collection directly without unnecessary materialization"
+    },
+    {
+      "file": "GRCFinancialControl.Persistence/Services/ReportService.cs",
+      "lineRange": "70-85",
+      "severity": "low",
+      "issue": "Dictionary lookup caching with tuple return - reasonable optimization but cache could be local-scoped function variable instead of parameter dependency",
+      "suggestion": "Pattern is sound for repeated access patterns, no change required"
+    },
+    {
+      "file": "GRCFinancialControl.Persistence/Services/Importers/FullManagementDataImporter.cs",
+      "lineRange": "520-525",
+      "severity": "medium",
+      "issue": "N+1 behavior: parsedRows.Select().Distinct().ToList() creates temporary list then queried against database",
+      "suggestion": "Acceptable pattern - list is needed for .Contains() check; ensure distinct is applied before ToList()"
+    },
+    {
+      "file": "GRCFinancialControl.Persistence/Services/ImportService.cs",
+      "lineRange": "664-670",
+      "severity": "low",
+      "issue": "Repeated string normalization in loops - NormalizeRank() called multiple times with same input",
+      "suggestion": "Cache normalized rank value in loop: var normalizedRank = NormalizeRank(value); then reuse throughout iteration"
+    },
+    {
+      "file": "GRCFinancialControl.Persistence/Services/HoursAllocationService.cs",
+      "lineRange": "305-310",
+      "severity": "low",
+      "issue": "String comparison in loop without case-insensitive normalization cached",
+      "suggestion": "Normalize once before loop: var normalizedRank = NormalizeRank(rank); then compare"
+    },
+    {
+      "file": "InvoicePlanner.Avalonia/ViewModels/PlanEditorViewModel.cs",
+      "lineRange": "535",
+      "severity": "medium",
+      "issue": "Multiple Where().ToList() calls in sequence on Items collection (lines 535, 561, 621, 648, 768, 859, 1407)",
+      "suggestion": "Cache filtered results: var editableItems = Items.Where(i => i.IsEditable).ToList(); reuse this variable"
+    },
+    {
+      "file": "InvoicePlanner.Avalonia/ViewModels/PlanEditorViewModel.cs",
+      "lineRange": "577-583",
+      "severity": "low",
+      "issue": "Sequential for-loops modifying collection - potential performance issue with repeated Count checks",
+      "suggestion": "Use foreach with index or store count: int count = remainingLines.Count; for (int i = 0; i < count; i++)"
+    },
+    {
+      "file": "GRCFinancialControl.Persistence/Services/Utilities/DataNormalizationService.cs",
+      "lineRange": "85-100",
+      "severity": "low",
+      "issue": "NormalizeHeader() method called repeatedly in loops without caching normalized values",
+      "suggestion": "Cache header normalization: var normalizedHeader = NormalizeHeader(candidate); reuse in comparisons"
+    },
+    {
+      "file": "App.Presentation/Services/InvoiceDescriptionFormatter.cs",
+      "lineRange": "105-110",
+      "severity": "low",
+      "issue": "Where().ToList() on email collection - small data set but pattern could be optimized",
+      "suggestion": "For small collections acceptable, but: var recipients = context.CustomerEmails?.Where(e => !string.IsNullOrWhiteSpace(e)); avoid ToList() unless binding"
+    }
+  ],
+  "solidViolations": [
+    {
+      "file": "GRCFinancialControl.Avalonia/ViewModels/MainWindowViewModel.cs",
+      "lineRange": "51-66",
+      "severity": "high",
+      "issue": "Single Responsibility Violation: MainWindowViewModel has 11 direct dependencies (10 sub-ViewModels + 2 services) and manages navigation, sidebar persistence, messenger subscription",
+      "suggestion": "Extract navigation logic to separate NavigationService, sidebar persistence to SettingsPersistenceService, reduce to 5-7 core dependencies"
+    },
+    {
+      "file": "GRCFinancialControl.Avalonia/ViewModels/EngagementsViewModel.cs",
+      "lineRange": "17-40",
+      "severity": "high",
+      "issue": "Single Responsibility Violation: 8 dependencies + manages CRUD, assignment operations, filtering, and dialog coordination",
+      "suggestion": "Extract assignment logic to separate AssignmentCoordinator service, dialog operations to DialogCoordinator interface"
+    },
+    {
+      "file": "GRCFinancialControl.Persistence/Services/Importers/FullManagementDataImporter.cs",
+      "lineRange": "1-50",
+      "severity": "high",
+      "issue": "Hard-coded header aliases and column mappings (300+ lines of string arrays) - violates Open/Closed principle, not extensible for schema changes",
+      "suggestion": "Move header definitions to external config (JSON/YAML), implement IHeaderMapProvider interface for runtime header resolution"
+    },
+    {
+      "file": "GRCFinancialControl.Persistence/Services/Importers/FullManagementDataImporter.cs",
+      "lineRange": "2080-2200",
+      "severity": "medium",
+      "issue": "Duplicate logic: SyncManagerAssignments and SyncPapdAssignments methods have nearly identical implementation (violates DRY)",
+      "suggestion": "Extract common assignment sync logic to generic SyncEntityAssignments<T> method accepting assignment collection and lookup"
+    },
+    {
+      "file": "GRCFinancialControl.Persistence/Services/PlannedAllocationService.cs",
+      "lineRange": "55-85",
+      "severity": "medium",
+      "issue": "Liskov Substitution Violation: Service doesn't properly honor IPlannedAllocationService contract - includes fiscal year lock validation outside interface scope",
+      "suggestion": "Move FiscalYearLockGuard checks to separate IAllocationValidator service or explicitly document lock enforcement in interface"
+    },
+    {
+      "file": "GRCFinancialControl.Avalonia/ViewModels/HoursAllocationsViewModel.cs",
+      "lineRange": "35-48",
+      "severity": "medium",
+      "issue": "Dependency Inversion Violation: Depends on concrete DialogService instead of IDialogService interface",
+      "suggestion": "Inject IDialogService interface instead of concrete DialogService for testability"
+    },
+    {
+      "file": "GRCFinancialControl.Persistence/Services/ReportService.cs",
+      "lineRange": "213-230",
+      "severity": "medium",
+      "issue": "Missing abstraction: Sorting logic (BuildFinancialEvolutionSortKey) tightly coupled to implementation, not extractable for different sort strategies",
+      "suggestion": "Implement ISortKeyProvider interface for closing period sorting to enable strategy swapping"
+    },
+    {
+      "file": "GRCFinancialControl.Persistence/Services/Importers/FullManagementDataImporter.cs",
+      "lineRange": "2250-2350",
+      "severity": "medium",
+      "issue": "Fat Interface: ImportServiceBase and FullManagementDataImporter expose too many public utility methods (ParseDecimal, ParseInt, ParseDate, ParsePercent, SanitizeNumericString)",
+      "suggestion": "Segregate parsing logic into IValueParser interface with specialized implementations (DecimalParser, IntParser, DateParser)"
+    },
+    {
+      "file": "GRCFinancialControl.Persistence/Services/EngagementService.cs",
+      "lineRange": "75-120",
+      "severity": "medium",
+      "issue": "Hard-coded status parsing logic (ParseStatus method) - not extensible for new engagement statuses without code change",
+      "suggestion": "Implement IStatusResolver interface or use enum-based mapping from configuration"
+    }
+  ],
+  "dryViolations": [
+    {
+      "file": "GRCFinancialControl.Persistence/Services/Importers/FullManagementDataImporter.cs",
+      "lineRange": "2080-2200",
+      "severity": "high",
+      "issue": "DRY Violation: SyncManagerAssignments (lines 2080-2120) and SyncPapdAssignments (lines 2145-2190) are nearly identical - same loop, same logic, just different entity types",
+      "suggestion": "Create generic method: int SyncEntityAssignments<TEntity>(context, engagement, guiIds, entityByGui, missingGuiSet) where TEntity : IAssignableEntity"
+    },
+    {
+      "file": "GRCFinancialControl.Persistence/Services/ImportService.cs",
+      "lineRange": "664-670",
+      "severity": "medium",
+      "issue": "Duplicate normalization methods: NormalizeRank (line 664), NormalizeCode (line 669) both implement similar whitespace+lowercase pattern",
+      "suggestion": "Create single NormalizeIdentifier(string value, string? additionalPattern = null) method, use for all identifier types"
+    },
+    {
+      "file": "GRCFinancialControl.Persistence/Services/Utilities/DataNormalizationService.cs",
+      "lineRange": "72-113",
+      "severity": "medium",
+      "issue": "Repeated pattern: NormalizeWhitespace called before NormalizeToUpperInvariant in multiple methods - combine into single method",
+      "suggestion": "Create NormalizeForLookup(string value) = NormalizeWhitespace(value).NormalizeToUpperInvariant()"
+    },
+    {
+      "file": "GRCFinancialControl.Avalonia/ViewModels/EngagementsViewModel.cs",
+      "lineRange": "95-110",
+      "severity": "medium",
+      "issue": "Repeated error handling pattern: Delete, DeleteData, and Assign operations all use identical try-catch-Toast pattern (lines 95-110, 120-133, 155-170)",
+      "suggestion": "Extract to OperationExecutor: await ExecuteAsync(() => operation, successKey, errorKey)"
+    },
+    {
+      "file": "InvoicePlanner.Avalonia/ViewModels/PlanEditorViewModel.cs",
+      "lineRange": "535-650",
+      "severity": "high",
+      "issue": "Repeated Where().ToList() filter pattern: Items.Where(line => line.IsEditable).ToList() appears 7 times (lines 535, 561, 621, 648, 768, 859, 1407)",
+      "suggestion": "Add property: ObservableCollection<InvoicePlanLineViewModel> EditableItems => Items.Where(l => l.IsEditable); use throughout"
+    },
+    {
+      "file": "GRCFinancialControl.Persistence/Services/HoursAllocationService.cs",
+      "lineRange": "225-250",
+      "severity": "medium",
+      "issue": "Repeated null-check and normalization pattern: if (string.IsNullOrEmpty(normalized)) checks appear multiple times (lines 232, 246, 291, 307)",
+      "suggestion": "Extract validation: private bool TryValidateNormalizedRank(string normalizedRank, out string error)"
+    },
+    {
+      "file": "GRCFinancialControl.Persistence/Services/Importers/FullManagementDataImporter.cs",
+      "lineRange": "700-850",
+      "severity": "medium",
+      "issue": "Repeated string comparison pattern: String.Equals with StringComparison.Ordinal/OrdinalIgnoreCase used 20+ times in row processing loop",
+      "suggestion": "Extract StringComparison selection logic to method: StringComparison GetComparisonForField(string fieldName)"
+    },
+    {
+      "file": "GRCFinancialControl.Persistence/Services/ReportService.cs",
+      "lineRange": "140-160",
+      "severity": "medium",
+      "issue": "Repeated sort key generation pattern: TryParsePeriodDate, TryExtractDigits, and Normalize called for every snapshot in list",
+      "suggestion": "Pre-generate sort keys once: var sortedSnapshots = snapshots.Select(s => (s, GetSortKey(s.ClosingPeriodId))).OrderBy(...)"
+    }
+  ],
+  "ooIssues": [
+    {
+      "file": "GRCFinancialControl.Persistence/Services/PapdService.cs",
+      "lineRange": "50-85",
+      "severity": "medium",
+      "issue": "Missing abstraction: AssignEngagementsAsync duplicates logic found in ManagerService.AssignEngagementsAsync - indicates need for common assignment strategy",
+      "suggestion": "Create IAssignmentStrategy interface: AssignEntitiesAsync(context, masterEntityId, slaveIds); implement for both PAPD and Manager"
+    },
+    {
+      "file": "GRCFinancialControl.Persistence/Services/Importers/FullManagementDataImporter.cs",
+      "lineRange": "450-550",
+      "severity": "high",
+      "issue": "Missing polymorphism: Column resolution, row parsing, and data transformation are all concrete implementations - should use strategy pattern for extensibility",
+      "suggestion": "Create IImportStrategy interface with ResolveColumns, ParseRows, UpsertData; allow runtime strategy selection"
+    },
+    {
+      "file": "GRCFinancialControl.Core/Models/",
+      "lineRange": "N/A",
+      "severity": "medium",
+      "issue": "Poor encapsulation: public fields and over-exposed internals (EngagementPapds, ManagerAssignments, FinancialEvolutions, etc. all directly mutable)",
+      "suggestion": "Convert to private setters: public IReadOnlyCollection<EngagementPapd> Papds { get; private set; }; add AddPapd() method for mutations"
+    },
+    {
+      "file": "GRCFinancialControl.Persistence/Services/Exporters/RetainTemplatePlanningWorkbook.cs",
+      "lineRange": "150-200",
+      "severity": "medium",
+      "issue": "Inheritance anti-pattern: Excel manipulation logic mixed in data layer - should extract to separate ExcelWriter service",
+      "suggestion": "Create IExcelWriter interface with Write(worksheet, data), implement in separate layer"
+    },
+    {
+      "file": "InvoicePlanner.Avalonia/ViewModels/PlanEditorViewModel.cs",
+      "lineRange": "535-650",
+      "severity": "medium",
+      "issue": "Missing strategy pattern: Multiple sequential Where().ToList() filters on same collection - should use Composite or Chain filter strategy",
+      "suggestion": "Implement ILineFilter interface: ApplyFilter(items); compose multiple filters instead of repeated inline LINQ"
+    },
+    {
+      "file": "GRCFinancialControl.Persistence/Services/ImportService.cs",
+      "lineRange": "400-700",
+      "severity": "high",
+      "issue": "Insufficient abstraction: Header matching uses hard-coded normalization - should use extensible IHeaderMatcher interface",
+      "suggestion": "Create IHeaderMatcher with Match(candidate, expected), implement OrdinalIgnoreCaseMatcher, ContainsMatcher, ExactMatcher"
+    },
+    {
+      "file": "GRCFinancialControl.Persistence/Services/EngagementService.cs",
+      "lineRange": "75-120",
+      "severity": "medium",
+      "issue": "Missing composition: Status parsing tightly coupled to service - should inject IStatusParser for testability and extensibility",
+      "suggestion": "Inject IStatusParser interface; implement EnumBasedStatusParser or ConfigurationBasedStatusParser"
+    },
+    {
+      "file": "GRCFinancialControl.Avalonia/ViewModels/AllocationEditorViewModel.cs",
+      "lineRange": "1-50",
+      "severity": "medium",
+      "issue": "Missing abstraction: Validation logic embedded in ViewModel - should extract to separate IAllocationValidator service",
+      "suggestion": "Create IAllocationValidator interface with Validate(allocation, context); inject for separation of concerns"
+    }
+  ]
+}

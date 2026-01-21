@@ -19,9 +19,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 {
     public partial class EngagementEditorViewModel : ViewModelBase
     {
-        private readonly IEngagementService _engagementService;
-        private readonly ICustomerService _customerService;
-        private readonly IClosingPeriodService _closingPeriodService;
+        private readonly IEngagementManagementFacade _engagementFacade;
         private readonly IMessenger _messenger;
         private readonly int? _initialLastClosingPeriodId;
         private readonly DialogService _dialogService;
@@ -169,18 +167,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public EngagementEditorViewModel(
             Engagement engagement,
-            IEngagementService engagementService,
-            ICustomerService customerService,
-            IClosingPeriodService closingPeriodService,
+            IEngagementManagementFacade engagementFacade,
             IMessenger messenger,
             DialogService dialogService,
             bool isReadOnlyMode = false)
         {
             _initialLastClosingPeriodId = engagement.LastClosingPeriodId;
             Engagement = engagement;
-            _engagementService = engagementService;
-            _customerService = customerService;
-            _closingPeriodService = closingPeriodService;
+            _engagementFacade = engagementFacade ?? throw new ArgumentNullException(nameof(engagementFacade));
             _messenger = messenger;
             _dialogService = dialogService;
 
@@ -196,10 +190,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             MarginPctEtcp = engagement.MarginPctEtcp;
             MarginPctBudget = engagement.MarginPctBudget;
             LastEtcDate = engagement.LastEtcDate;
-            if (engagement.ProposedNextEtcDate.HasValue)
-            {
-                ProposedNextEtcDate = engagement.ProposedNextEtcDate;
-            }
+            ProposedNextEtcDate = engagement.ProposedNextEtcDate;
             LastClosingPeriod = engagement.LastClosingPeriod;
             LastClosingPeriodFallbackName = string.IsNullOrWhiteSpace(engagement.LastClosingPeriodName)
                 ? null
@@ -227,7 +218,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private async Task LoadCustomersAsync()
         {
-            Customers = new ObservableCollection<Customer>(await _customerService.GetAllAsync());
+            Customers = new ObservableCollection<Customer>(await _engagementFacade.GetAllCustomersAsync());
             Customer? selected = null;
 
             if (Engagement.CustomerId.HasValue)
@@ -247,7 +238,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private async Task LoadClosingPeriodsAsync()
         {
-            var periods = await _closingPeriodService.GetAllAsync();
+            var periods = await _engagementFacade.GetAllClosingPeriodsAsync();
             var orderedPeriods = periods
                 .OrderBy(p => p.PeriodStart)
                 .ToList();
@@ -444,14 +435,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             var viewModel = new ViewModels.Dialogs.ViewAdditionalSalesViewModel(
                 Engagement.Id,
-                _engagementService,
+                _engagementFacade,
                 _messenger);
             
             await viewModel.LoadDataAsync();
             await _dialogService.ShowDialogAsync(viewModel, viewModel.Title);
             
             // Reload additional sales after the dialog closes
-            var engagement = await _engagementService.GetByIdAsync(Engagement.Id);
+            var engagement = await _engagementFacade.GetEngagementAsync(Engagement.Id);
             if (engagement is not null)
             {
                 AdditionalSales = new ObservableCollection<EngagementAdditionalSale>(
@@ -562,11 +553,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
                 if (Engagement.Id == 0)
                 {
-                    await _engagementService.AddAsync(Engagement);
+                    await _engagementFacade.AddEngagementAsync(Engagement);
                 }
                 else
                 {
-                    await _engagementService.UpdateAsync(Engagement);
+                    await _engagementFacade.UpdateEngagementAsync(Engagement);
                 }
 
                 ToastService.ShowSuccess("FINC_Engagements_Toast_SaveSuccess", Engagement.EngagementId);

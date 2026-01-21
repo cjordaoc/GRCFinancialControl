@@ -1,43 +1,35 @@
-using System.Windows.Input;
 using App.Presentation.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
 using GRC.Shared.UI.Messages;
+using GRC.Shared.UI.ViewModels.Dialogs;
 
 namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
 {
-    public partial class ConfirmationDialogViewModel : ViewModelBase
+    public partial class ConfirmationDialogViewModel : ConfirmationDialogViewModelBase
     {
-        [ObservableProperty]
-        private string _title;
+        private readonly IMessenger _messenger;
 
-        [ObservableProperty]
-        private string _message;
-
-        public IRelayCommand ConfirmCommand { get; }
-        public IRelayCommand CancelCommand { get; }
         public IRelayCommand SaveCommand => ConfirmCommand;
         public IRelayCommand CloseCommand => CancelCommand;
 
         public ConfirmationDialogViewModel(string title, string message, IMessenger messenger)
-            : base(messenger)
         {
-            _title = title;
-            _message = message;
-            ConfirmCommand = new RelayCommand(OnConfirm);
-            CancelCommand = new RelayCommand(OnCancel);
+            _messenger = messenger;
+            Title = title;
+            Message = message;
+            ConfirmButtonText = LocalizationRegistry.Get("Global_Button_Save");
+            CancelButtonText = LocalizationRegistry.Get("Global_Button_Cancel");
+
+            OnConfirmed = () => _messenger.Send(new CloseDialogMessage(true));
+            OnCanceled = () => _messenger.Send(new CloseDialogMessage(false));
         }
 
-        private void OnConfirm()
+        public ConfirmationDialogViewModel()
+            : this(string.Empty, string.Empty, WeakReferenceMessenger.Default)
         {
-            Messenger.Send(new CloseDialogMessage(true));
-        }
-
-        private void OnCancel()
-        {
-            Messenger.Send(new CloseDialogMessage(false));
         }
     }
 }

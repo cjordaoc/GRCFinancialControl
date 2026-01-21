@@ -7,6 +7,7 @@ using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using GRC.Shared.UI.Messages;
@@ -15,9 +16,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
 {
     public partial class PapdSelectionViewModel : ViewModelBase
     {
-        private readonly IEngagementService _engagementService;
-        private readonly IPapdService _papdService;
-        private readonly IPapdAssignmentService _papdAssignmentService;
+        private readonly IEngagementManagementFacade _engagementFacade;
         private readonly Engagement _engagement;
 
         [ObservableProperty]
@@ -27,21 +26,17 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
 
         public PapdSelectionViewModel(
             Engagement engagement,
-            IEngagementService engagementService,
-            IPapdService papdService,
-            IPapdAssignmentService papdAssignmentService,
+            IEngagementManagementFacade engagementFacade,
             IMessenger messenger)
             : base(messenger)
         {
             _engagement = engagement ?? throw new ArgumentNullException(nameof(engagement));
-            _engagementService = engagementService ?? throw new ArgumentNullException(nameof(engagementService));
-            _papdService = papdService ?? throw new ArgumentNullException(nameof(papdService));
-            _papdAssignmentService = papdAssignmentService ?? throw new ArgumentNullException(nameof(papdAssignmentService));
+            _engagementFacade = engagementFacade ?? throw new ArgumentNullException(nameof(engagementFacade));
         }
 
         public override async Task LoadDataAsync()
         {
-            var allPapds = await _papdService.GetAllAsync();
+            var allPapds = await _engagementFacade.GetAllPapdsAsync();
             var assignedPapdIds = _engagement.EngagementPapds.Select(a => a.PapdId).ToHashSet();
 
             var available = allPapds
@@ -71,10 +66,22 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
 
             try
             {
-                // Use the dedicated service for updating PAPD assignments
-                await _papdAssignmentService.UpdateAssignmentsForEngagementAsync(_engagement.Id, selectedPapdIds);
+                // Update each PAPD assignment through the facade
+                var currentPapdIds = _engagement.EngagementPapds.Select(p => p.PapdId).ToHashSet();
+                
+                // Remove unselected
+                foreach (var papdId in currentPapdIds.Where(id => !selectedPapdIds.Contains(id)))
+                {
+                    await _engagementFacade.RemovePapdAsync(_engagement.Id, papdId);
+                }
+                
+                // Add newly selected
+                foreach (var papdId in selectedPapdIds.Where(id => !currentPapdIds.Contains(id)))
+                {
+                    await _engagementFacade.AssignPapdAsync(_engagement.Id, papdId);
+                }
 
-                var engagement = await _engagementService.GetByIdAsync(_engagement.Id);
+                var engagement = await _engagementFacade.GetEngagementAsync(_engagement.Id);
                 var engagementDisplay = engagement?.EngagementId ?? engagement?.Description ?? _engagement.Description;
 
                 ToastService.ShowSuccess(

@@ -159,15 +159,12 @@ public sealed class InvoiceAccessScope : IInvoiceAccessScope
             return Array.Empty<string>();
         }
 
-        var normalizedLogin = login.Trim();
+        var normalizedLogin = login.Trim().ToLower();
         var engagementIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         var papdIds = context.Papds
             .AsNoTracking()
-            .Where(p => p.WindowsLogin != null)
-            .Select(p => new { p.Id, p.WindowsLogin })
-            .ToList()
-            .Where(p => string.Equals(p.WindowsLogin, normalizedLogin, StringComparison.OrdinalIgnoreCase))
+            .Where(p => p.WindowsLogin != null && p.WindowsLogin.ToLower() == normalizedLogin)
             .Select(p => p.Id)
             .ToArray();
 
@@ -190,10 +187,7 @@ public sealed class InvoiceAccessScope : IInvoiceAccessScope
 
         var managerIds = context.Managers
             .AsNoTracking()
-            .Where(m => m.WindowsLogin != null)
-            .Select(m => new { m.Id, m.WindowsLogin })
-            .ToList()
-            .Where(m => string.Equals(m.WindowsLogin, normalizedLogin, StringComparison.OrdinalIgnoreCase))
+            .Where(m => m.WindowsLogin != null && m.WindowsLogin.ToLower() == normalizedLogin)
             .Select(m => m.Id)
             .ToArray();
 

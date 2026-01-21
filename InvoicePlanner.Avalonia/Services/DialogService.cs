@@ -4,7 +4,9 @@ using Avalonia.Input;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Messaging;
 using App.Presentation.Services;
+using GRC.Shared.UI.Controls.Dialogs;
 using GRC.Shared.UI.Dialogs;
+using GRC.Shared.UI.ViewModels.Dialogs;
 using InvoicePlanner.Avalonia.ViewModels;
 
 namespace InvoicePlanner.Avalonia.Services;
@@ -28,7 +30,12 @@ public sealed class DialogService : BaseDialogService
         => base.ShowDialogAsync(viewModel, title);
 
     protected override UserControl? BuildView(object viewModel)
-        => _viewLocator.Build(viewModel) as UserControl;
+        => viewModel switch
+        {
+            ConfirmationDialogViewModelBase => new ConfirmationDialog(),
+            InformationDialogViewModelBase => new InformationDialog(),
+            _ => _viewLocator.Build(viewModel) as UserControl
+        };
 
     protected override ModalDialogOptions GetModalDialogOptions()
         => new() { Layout = ModalDialogLayout.OwnerAligned };

@@ -9,6 +9,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Messaging;
 using GRC.Shared.UI.Dialogs;
 using GRC.Shared.UI.Messages;
+using GRC.Shared.UI.ViewModels.Dialogs;
 
 namespace App.Presentation.Services;
 
@@ -59,12 +60,24 @@ public abstract class BaseDialogService
             throw new InvalidOperationException($"Could not locate a view for the view model '{viewModel.GetType().FullName}'.");
         }
 
-        view.DataContext = viewModel;
-
         var owner = desktop.MainWindow;
         var options = GetModalDialogOptions();
         var session = _modalDialogService.Create(owner, view, title, options);
         var dialog = session.Dialog;
+
+        // Provide close callback for shared dialog view models so they can close themselves.
+        void CloseDialog(bool result) => dialog.Close(result);
+
+        if (viewModel is ConfirmationDialogViewModelBase confirmationVm)
+        {
+            confirmationVm.CloseDialog = CloseDialog;
+        }
+        else if (viewModel is InformationDialogViewModelBase infoVm)
+        {
+            infoVm.CloseDialog = CloseDialog;
+        }
+
+        view.DataContext = viewModel;
 
         dialog.Opened += (_, _) =>
         {

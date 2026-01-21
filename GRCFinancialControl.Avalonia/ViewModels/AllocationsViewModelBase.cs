@@ -14,11 +14,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 {
     public abstract partial class AllocationsViewModelBase : ViewModelBase
     {
-        private readonly IEngagementService _engagementService;
+        private readonly IEngagementManagementFacade _engagementFacade;
         private readonly IFiscalYearService _fiscalYearService;
         private readonly DialogService _dialogService;
-        private readonly ICustomerService _customerService;
-        private readonly IClosingPeriodService _closingPeriodService;
         private readonly IAllocationSnapshotService _allocationSnapshotService;
         private readonly ISettingsService _settingsService;
 
@@ -31,20 +29,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private Engagement? _selectedEngagement;
 
-        protected AllocationsViewModelBase(IEngagementService engagementService,
+        protected AllocationsViewModelBase(IEngagementManagementFacade engagementFacade,
                                            IFiscalYearService fiscalYearService,
-                                           ICustomerService customerService,
-                                           IClosingPeriodService closingPeriodService,
                                            IAllocationSnapshotService allocationSnapshotService,
                                            ISettingsService settingsService,
                                            DialogService dialogService,
                                            IMessenger messenger)
             : base(messenger)
         {
-            _engagementService = engagementService;
+            _engagementFacade = engagementFacade;
             _fiscalYearService = fiscalYearService;
-            _customerService = customerService;
-            _closingPeriodService = closingPeriodService;
             _allocationSnapshotService = allocationSnapshotService;
             _settingsService = settingsService;
             _dialogService = dialogService;
@@ -54,7 +48,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public override async Task LoadDataAsync()
         {
-            Engagements = new ObservableCollection<Engagement>(await _engagementService.GetAllAsync());
+            Engagements = new ObservableCollection<Engagement>(await _engagementFacade.GetAllEngagementsAsync());
             FiscalYears = new ObservableCollection<FiscalYear>(await _fiscalYearService.GetAllAsync());
         }
 
@@ -73,7 +67,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return null;
             }
 
-            var allPeriods = await _closingPeriodService.GetAllAsync()
+            var allPeriods = await _engagementFacade.GetAllClosingPeriodsAsync()
                 .ConfigureAwait(false);
             
             return allPeriods.FirstOrDefault(p => p.Id == closingPeriodId.Value);
@@ -97,7 +91,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 engagement,
                 closingPeriod,
                 FiscalYears.ToList(),
-                _engagementService,
+                _engagementFacade.EngagementService,
                 _allocationSnapshotService,
                 Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
@@ -122,7 +116,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 engagement,
                 closingPeriod,
                 FiscalYears.ToList(),
-                _engagementService,
+                _engagementFacade.EngagementService,
                 _allocationSnapshotService,
                 Messenger,
                 isReadOnlyMode: true);
@@ -137,7 +131,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            var fullEngagement = await _engagementService.GetByIdAsync(engagement.Id);
+            var fullEngagement = await _engagementFacade.GetEngagementAsync(engagement.Id);
             if (fullEngagement is null)
             {
                 return;
@@ -145,9 +139,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             var editorViewModel = new EngagementEditorViewModel(
                 fullEngagement,
-                _engagementService,
-                _customerService,
-                _closingPeriodService,
+                _engagementFacade,
                 Messenger,
                 _dialogService,
                 isReadOnlyMode: true);

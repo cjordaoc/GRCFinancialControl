@@ -16,7 +16,8 @@ Confirm .NET 8, restore dependencies, and ensure `dotnet build -c Release` passe
 - ViewModels = interaction/state handling.
 - Models = domain entities inside *.Core.
 - Register all services through Host Builder; no custom factories.
-- Simplicity First â†' reuse > abstraction.
+- Simplicity First â†’ reuse > abstraction.
+- Prefer shared GRC.Shared.UI components (dialogs, status/loading/empty/toast/search controls, data templates) before creating app-specific XAML.
 
 ---
 

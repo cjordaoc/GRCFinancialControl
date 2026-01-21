@@ -66,7 +66,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand(CanExecute = nameof(CanEdit))]
         private async Task Edit(Papd papd)
         {
-            if (papd == null) return;
+            if (papd == null)
+            {
+                return;
+            }
+
             var editorViewModel = new PapdEditorViewModel(papd, _papdService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
             Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
@@ -75,7 +79,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand(CanExecute = nameof(CanEdit))]
         private async Task View(Papd papd)
         {
-            if (papd == null) return;
+            if (papd == null)
+            {
+                return;
+            }
+
             var editorViewModel = new PapdEditorViewModel(papd, _papdService, Messenger, isReadOnlyMode: true);
             await _dialogService.ShowDialogAsync(editorViewModel);
         }
@@ -83,7 +91,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand(CanExecute = nameof(CanDelete))]
         private async Task Delete(Papd papd)
         {
-            if (papd == null) return;
+            if (papd == null)
+            {
+                return;
+            }
+
             try
             {
                 await _papdService.DeleteAsync(papd.Id);
@@ -99,7 +111,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand(CanExecute = nameof(CanDeleteData))]
         private async Task DeleteData(Papd papd)
         {
-            if (papd is null) return;
+            if (papd is null)
+            {
+                return;
+            }
 
             var result = await _dialogService.ShowConfirmationAsync(
                 LocalizationRegistry.Get("FINC_Dialog_DeleteData_Title"),

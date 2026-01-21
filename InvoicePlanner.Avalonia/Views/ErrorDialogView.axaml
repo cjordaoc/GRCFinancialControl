@@ -3,40 +3,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:InvoicePlanner.Avalonia.ViewModels"
-             xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
+             xmlns:dialogs="clr-namespace:GRC.Shared.UI.Controls.Dialogs;assembly=GRC.Shared.UI"
              x:Class="InvoicePlanner.Avalonia.Views.ErrorDialogView"
              x:DataType="vm:ErrorDialogViewModel"
              mc:Ignorable="d">
-    <Border Padding="{StaticResource CardPaddingThickness}" Classes="Card">
-        <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridGap}">
-            <StackPanel Grid.Row="0" Spacing="{StaticResource SectionSpacing}">
-                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Classes="TitleMedium" />
-                <StackPanel Spacing="{StaticResource ControlSpacing}">
-                    <TextBlock Text="{Binding DetailsLabel}" FontWeight="{StaticResource FontWeightSemiBold}" />
-                    <TextBox Text="{Binding Details}"
-                             AcceptsReturn="True"
-                             IsReadOnly="True"
-                             Height="180"
-                             TextWrapping="Wrap"
-                             ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                             ScrollViewer.VerticalScrollBarVisibility="Auto" />
-                </StackPanel>
-            </StackPanel>
-            <StackPanel Grid.Row="1"
-                        Orientation="Horizontal"
-                        HorizontalAlignment="Right"
-                        Spacing="{StaticResource ControlSpacing}">
-                <Button Content="{loc:Loc Key=Global_Button_Save}"
-                        Command="{Binding SaveCommand}"
-                        IsDefault="True"
-                        MinWidth="{StaticResource ButtonMinWidth}" />
-                <Button Content="{loc:Loc Key=Global_Button_Cancel}"
-                        Command="{Binding CloseCommand}"
-                        IsCancel="True"
-                        MinWidth="{StaticResource ButtonMinWidth}" />
-                <Button Content="{loc:Loc Key=INV_Button_CopyDetails}"
-                        Command="{Binding CopyDetailsCommand}" />
-            </StackPanel>
-        </Grid>
-    </Border>
+    <dialogs:InformationDialog />
 </UserControl>

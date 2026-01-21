@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using GRCFinancialControl.Core.Exceptions;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Infrastructure;
 using GRCFinancialControl.Persistence.Services.Interfaces;
@@ -115,7 +116,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers.Budget
 
             if (targetClosingPeriod == null)
             {
-                throw new InvalidOperationException(
+                throw new ImportException(
                     closingPeriodId.HasValue
                         ? $"Closing period with ID {closingPeriodId.Value} not found."
                         : "No closing periods exist. Please create at least one closing period before importing budgets.");

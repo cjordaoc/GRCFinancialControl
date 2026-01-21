@@ -15,9 +15,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     /// </summary>
     public sealed partial class HoursAllocationsViewModel : ViewModelBase
     {
-        private readonly IEngagementService _engagementService;
-        private readonly ICustomerService _customerService;
-        private readonly IClosingPeriodService _closingPeriodService;
+        private readonly IEngagementManagementFacade _engagementFacade;
         private readonly Func<HoursAllocationDetailViewModel> _detailFactory;
         private readonly DialogService _dialogService;
         private readonly LoggingService _loggingService;
@@ -36,18 +34,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private string? _statusMessage;
 
         public HoursAllocationsViewModel(
-            IEngagementService engagementService,
-            ICustomerService customerService,
-            IClosingPeriodService closingPeriodService,
+            IEngagementManagementFacade engagementFacade,
             Func<HoursAllocationDetailViewModel> detailFactory,
             DialogService dialogService,
             LoggingService loggingService,
             IMessenger messenger)
             : base(messenger)
         {
-            _engagementService = engagementService ?? throw new ArgumentNullException(nameof(engagementService));
-            _customerService = customerService ?? throw new ArgumentNullException(nameof(customerService));
-            _closingPeriodService = closingPeriodService ?? throw new ArgumentNullException(nameof(closingPeriodService));
+            _engagementFacade = engagementFacade ?? throw new ArgumentNullException(nameof(engagementFacade));
             _detailFactory = detailFactory ?? throw new ArgumentNullException(nameof(detailFactory));
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
             _loggingService = loggingService ?? throw new ArgumentNullException(nameof(loggingService));
@@ -76,7 +70,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 IsBusy = true;
                 StatusMessage = null;
 
-                var engagements = await _engagementService.GetAllAsync().ConfigureAwait(false);
+                var engagements = await _engagementFacade.GetAllEngagementsAsync().ConfigureAwait(false);
                 var ordered = engagements
                     .OrderBy(e => e.EngagementId, StringComparer.OrdinalIgnoreCase)
                     .Select(e => new EngagementListItem(e.Id, e.EngagementId, e.Description, e.Customer?.Name ?? string.Empty))
@@ -167,7 +161,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             try
             {
-                var fullEngagement = await _engagementService.GetByIdAsync(engagementItem.Id);
+                var fullEngagement = await _engagementFacade.GetEngagementAsync(engagementItem.Id);
                 if (fullEngagement is null)
                 {
                     return;
@@ -175,9 +169,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
                 var editorViewModel = new EngagementEditorViewModel(
                     fullEngagement,
-                    _engagementService,
-                    _customerService,
-                    _closingPeriodService,
+                    _engagementFacade,
                     _messenger,
                     _dialogService,
                     isReadOnlyMode: true);

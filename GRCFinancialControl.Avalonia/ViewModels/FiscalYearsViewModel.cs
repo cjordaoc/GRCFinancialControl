@@ -64,7 +64,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand(CanExecute = nameof(CanEdit))]
         private async Task Edit(FiscalYear fiscalYear)
         {
-            if (fiscalYear == null) return;
+            if (fiscalYear == null)
+            {
+                return;
+            }
+
             var editorViewModel = new FiscalYearEditorViewModel(fiscalYear, _fiscalYearService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
             Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
@@ -73,7 +77,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand(CanExecute = nameof(CanView))]
         private async Task View(FiscalYear fiscalYear)
         {
-            if (fiscalYear == null) return;
+            if (fiscalYear == null)
+            {
+                return;
+            }
+
             var editorViewModel = new FiscalYearEditorViewModel(fiscalYear, _fiscalYearService, Messenger, isReadOnlyMode: true);
             await _dialogService.ShowDialogAsync(editorViewModel);
         }
@@ -81,7 +89,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand(CanExecute = nameof(CanDelete))]
         private async Task Delete(FiscalYear fiscalYear)
         {
-            if (fiscalYear == null) return;
+            if (fiscalYear == null)
+            {
+                return;
+            }
+
             StatusMessage = null;
 
             try
@@ -105,7 +117,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand(CanExecute = nameof(CanDeleteData))]
         private async Task DeleteData(FiscalYear fiscalYear)
         {
-            if (fiscalYear is null) return;
+            if (fiscalYear is null)
+            {
+                return;
+            }
 
             StatusMessage = null;
 
@@ -136,7 +151,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand(CanExecute = nameof(CanLock))]
         private async Task Lock(FiscalYear fiscalYear)
         {
-            if (fiscalYear is null) return;
+            if (fiscalYear is null)
+            {
+                return;
+            }
 
             StatusMessage = null;
 
@@ -166,7 +184,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand(CanExecute = nameof(CanUnlock))]
         private async Task Unlock(FiscalYear fiscalYear)
         {
-            if (fiscalYear is null) return;
+            if (fiscalYear is null)
+            {
+                return;
+            }
 
             StatusMessage = null;
 

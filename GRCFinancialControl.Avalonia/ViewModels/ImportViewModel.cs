@@ -9,6 +9,7 @@ using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using GRCFinancialControl.Avalonia.Constants;
 using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Persistence.Services.Importers;
@@ -20,9 +21,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 {
     public partial class ImportViewModel : ViewModelBase, IRecipient<ApplicationParametersChangedMessage>
     {
-        private const string BudgetType = "Budget";
-        private const string FullManagementType = "FullManagement";
-        private const string AllocationPlanningType = "AllocationPlanning";
 
         private readonly FilePickerService _filePickerService;
         private readonly BudgetImporter _budgetImporter;
@@ -55,9 +53,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public string? FileTypeDisplayName => FileType switch
         {
-            BudgetType => LocalizationRegistry.Get("FINC_Import_FileType_Budget"),
-            FullManagementType => LocalizationRegistry.Get("FINC_Import_FileType_FullManagement"),
-            AllocationPlanningType => LocalizationRegistry.Get("FINC_Import_FileType_AllocationPlanning"),
+            ImportTypes.Budget => LocalizationRegistry.Get("FINC_Import_FileType_Budget"),
+            ImportTypes.FullManagement => LocalizationRegistry.Get("FINC_Import_FileType_FullManagement"),
+            ImportTypes.AllocationPlanning => LocalizationRegistry.Get("FINC_Import_FileType_AllocationPlanning"),
             _ => FileType
         };
 
@@ -109,7 +107,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            if (string.Equals(fileType, FullManagementType, StringComparison.Ordinal) && !HasClosingPeriodSelected)
+            if (string.Equals(fileType, ImportTypes.FullManagement, StringComparison.Ordinal) && !HasClosingPeriodSelected)
             {
                 StatusMessage = LocalizationRegistry.Get("FINC_Import_Warning_SelectClosingPeriod");
                 return;
@@ -134,7 +132,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             int? confirmedClosingPeriodId = null;
 
-            if (string.Equals(FileType, FullManagementType, StringComparison.Ordinal))
+            if (string.Equals(FileType, ImportTypes.FullManagement, StringComparison.Ordinal))
             {
                 confirmedClosingPeriodId = await ConfirmFullManagementClosingPeriodAsync();
                 if (!confirmedClosingPeriodId.HasValue)
@@ -161,7 +159,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
                 switch (FileType)
                 {
-                    case BudgetType:
+                    case ImportTypes.Budget:
                         var budgetClosingPeriodId = await _settingsService.GetDefaultClosingPeriodIdAsync().ConfigureAwait(false);
                         if (!budgetClosingPeriodId.HasValue)
                         {
@@ -170,7 +168,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                         }
                         resultSummary = await Task.Run(() => _budgetImporter.ImportAsync(filePath, budgetClosingPeriodId.Value));
                         break;
-                    case FullManagementType:
+                    case ImportTypes.FullManagement:
                         var closingPeriodId = confirmedClosingPeriodId
                             ?? await _settingsService.GetDefaultClosingPeriodIdAsync().ConfigureAwait(false);
                         if (!closingPeriodId.HasValue)
@@ -182,7 +180,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                         managementResult = await Task.Run(() => _fullManagementImporter.ImportAsync(filePath, closingPeriodId.Value));
                         resultSummary = managementResult?.Summary;
                         break;
-                    case AllocationPlanningType:
+                    case ImportTypes.AllocationPlanning:
                         resultSummary = await Task.Run(() => _allocationPlanningImporter.ImportAsync(filePath));
                         break;
                     default:
@@ -221,7 +219,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return false;
             }
 
-            if (string.Equals(FileType, FullManagementType, StringComparison.Ordinal))
+            if (string.Equals(FileType, ImportTypes.FullManagement, StringComparison.Ordinal))
             {
                 return HasClosingPeriodSelected;
             }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using GRCFinancialControl.Core.Exceptions;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;

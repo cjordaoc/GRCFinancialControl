@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using GRCFinancialControl.Core.Exceptions;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Infrastructure;
 using GRCFinancialControl.Persistence.Services.Interfaces;
@@ -80,7 +81,7 @@ namespace GRCFinancialControl.Persistence.Services
                 {
                     if (existing != null)
                     {
-                        throw new InvalidOperationException($"Cannot remove planned allocation for locked fiscal year '{fiscalYearName}'. Unlock it before making changes.");
+                        throw new EngagementMutationException($"Cannot remove planned allocation for locked fiscal year '{fiscalYearName}'. Unlock it before making changes.");
                     }
 
                     continue;
@@ -88,13 +89,13 @@ namespace GRCFinancialControl.Persistence.Services
 
                 if (existing is null)
                 {
-                    throw new InvalidOperationException($"Cannot add a new planned allocation for locked fiscal year '{fiscalYearName}'. Unlock it before making changes.");
+                    throw new EngagementMutationException($"Cannot add a new planned allocation for locked fiscal year '{fiscalYearName}'. Unlock it before making changes.");
                 }
 
                 if (Math.Round(existing.AllocatedHours, 2, MidpointRounding.AwayFromZero) !=
                     Math.Round(incoming.AllocatedHours, 2, MidpointRounding.AwayFromZero))
                 {
-                    throw new InvalidOperationException($"Cannot change planned allocation hours for locked fiscal year '{fiscalYearName}'. Unlock it before making changes.");
+                    throw new EngagementMutationException($"Cannot change planned allocation hours for locked fiscal year '{fiscalYearName}'. Unlock it before making changes.");
                 }
             }
 
@@ -111,7 +112,7 @@ namespace GRCFinancialControl.Persistence.Services
             {
                 if (!closingPeriods.ContainsKey(allocation.ClosingPeriodId))
                 {
-                    throw new InvalidOperationException($"Closing period Id={allocation.ClosingPeriodId} could not be found. Refresh and try again.");
+                    throw new AllocationException($"Closing period Id={allocation.ClosingPeriodId} could not be found. Refresh and try again.");
                 }
 
                 allocation.EngagementId = engagementId;

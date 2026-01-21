@@ -1,10 +1,18 @@
 <Project>
   <PropertyGroup>
+    <!-- .NET 8 LTS Optimization & Modern Features -->
+    <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    
+    <!-- Performance & Safety (.NET 8+ features) -->
+    <PublishTrimmed>true</PublishTrimmed>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <TieredCompilation>true</TieredCompilation>
+    <TieredCompilationQuickJit>true</TieredCompilationQuickJit>
   </PropertyGroup>
 </Project>

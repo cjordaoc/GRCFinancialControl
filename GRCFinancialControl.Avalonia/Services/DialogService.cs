@@ -4,6 +4,9 @@ using CommunityToolkit.Mvvm.Messaging;
 using App.Presentation.Services;
 using GRCFinancialControl.Avalonia.ViewModels;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
+using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRC.Shared.UI.Controls.Dialogs;
+using GRC.Shared.UI.ViewModels.Dialogs;
 using GRC.Shared.UI.Dialogs;
 
 namespace GRCFinancialControl.Avalonia.Services;
@@ -11,7 +14,7 @@ namespace GRCFinancialControl.Avalonia.Services;
 /// <summary>
 /// GRC-specific dialog service with centered modal layout and confirmation helper.
 /// </summary>
-public sealed class DialogService : BaseDialogService
+public sealed class DialogService : BaseDialogService, IDialogService
 {
     private readonly IMessenger _messenger;
     private readonly ViewLocator _viewLocator = new();
@@ -38,5 +41,10 @@ public sealed class DialogService : BaseDialogService
     }
 
     protected override UserControl? BuildView(object viewModel)
-        => _viewLocator.Build(viewModel) as UserControl;
+        => viewModel switch
+        {
+            ConfirmationDialogViewModelBase => new ConfirmationDialog(),
+            InformationDialogViewModelBase => new InformationDialog(),
+            _ => _viewLocator.Build(viewModel) as UserControl
+        };
 }

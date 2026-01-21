@@ -10,6 +10,15 @@ All UI strings for both desktop applications are centralized under `GRC.Shared.R
 
 ---
 
+### Desktop UI Toolkit
+
+- Shared dialogs (`ConfirmationDialog`, `InformationDialog`) live in `GRC.Shared.UI`; dialog views now wrap these controls and the dialog services inject `CloseDialog` automatically.
+- Common controls: `StatusBar`, `LoadingIndicator`, `EmptyState`, `ToastNotification`, `SearchBox` (all in `GRC.Shared.UI/Controls`). Toast overlays in both shells now consume the shared control bound to `ToastService.Notifications`.
+- DataTemplates library is merged via `avares://GRC.Shared.UI/DataTemplates/DataTemplates.axaml` (StandardListItem, DetailListItem, GroupHeader) and is available application-wide for lists/grids.
+- Keep new UI surfaces declarative and reuse the shared controls/templates before introducing app-specific XAML.
+
+---
+
 ## 1 · Budget & Allocation Management
 **Happy Path**
 1. A portfolio manager imports the budget workbook produced by Finance.

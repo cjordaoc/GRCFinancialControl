@@ -1,4 +1,6 @@
+using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -16,12 +18,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         private readonly IManagerService _managerService;
         private readonly DialogService _dialogService;
+        private ObservableCollection<Manager> _allManagers = new();
 
         [ObservableProperty]
         private ObservableCollection<Manager> _managers = new();
 
         [ObservableProperty]
         private Manager? _selectedManager;
+
+        [ObservableProperty]
+        private string _filterText = string.Empty;
+
+        public bool HasManagers => Managers.Count > 0;
 
         private readonly IEngagementService _engagementService;
         private readonly IPapdService _papdService;
@@ -51,7 +59,31 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public override async Task LoadDataAsync()
         {
-            Managers = new ObservableCollection<Manager>(await _managerService.GetAllAsync());
+            _allManagers = new ObservableCollection<Manager>(await _managerService.GetAllAsync());
+            ApplyFilter();
+        }
+
+        partial void OnFilterTextChanged(string value)
+        {
+            ApplyFilter();
+        }
+
+        private void ApplyFilter()
+        {
+            if (string.IsNullOrWhiteSpace(FilterText))
+            {
+                Managers = new ObservableCollection<Manager>(_allManagers);
+            }
+            else
+            {
+                var filtered = _allManagers
+                    .Where(m => m.Name.Contains(FilterText, StringComparison.OrdinalIgnoreCase)
+                             || (m.Email?.Contains(FilterText, StringComparison.OrdinalIgnoreCase) ?? false)
+                             || (m.WindowsLogin?.Contains(FilterText, StringComparison.OrdinalIgnoreCase) ?? false))
+                    .ToList();
+                Managers = new ObservableCollection<Manager>(filtered);
+            }
+            OnPropertyChanged(nameof(HasManagers));
         }
 
         [RelayCommand]

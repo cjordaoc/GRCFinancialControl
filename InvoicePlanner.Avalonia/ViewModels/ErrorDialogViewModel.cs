@@ -6,38 +6,28 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRC.Shared.UI.Messages;
+using GRC.Shared.UI.ViewModels.Dialogs;
 
 namespace InvoicePlanner.Avalonia.ViewModels;
 
-public partial class ErrorDialogViewModel : ViewModelBase
+public partial class ErrorDialogViewModel : InformationDialogViewModelBase
 {
-    public event EventHandler? CloseRequested;
-
-    [ObservableProperty]
-    private string title = LocalizationRegistry.Get("INV_Dialogs_Error_Title");
-
-    [ObservableProperty]
-    private string message = LocalizationRegistry.Get("INV_Dialogs_Error_Message");
-
-    [ObservableProperty]
-    private string details = string.Empty;
-
-    [ObservableProperty]
-    private string detailsLabel = LocalizationRegistry.Get("INV_Dialogs_Error_Label_Details");
-
     internal IClipboard? Clipboard { get; set; }
 
     public IAsyncRelayCommand CopyDetailsCommand { get; }
 
-    public IRelayCommand SaveCommand { get; }
-
-    public IRelayCommand CloseCommand { get; }
-
     public ErrorDialogViewModel()
     {
         CopyDetailsCommand = new AsyncRelayCommand(CopyDetailsAsync);
-        SaveCommand = new RelayCommand(OnSave);
-        CloseCommand = new RelayCommand(OnCancel);
+        SecondaryCommand = CopyDetailsCommand;
+        SecondaryButtonText = LocalizationRegistry.Get("INV_Button_CopyDetails");
+
+        Title = LocalizationRegistry.Get("INV_Dialogs_Error_Title");
+        Message = LocalizationRegistry.Get("INV_Dialogs_Error_Message");
+        DetailsHeaderText = LocalizationRegistry.Get("INV_Dialogs_Error_Label_Details");
+        DismissButtonText = LocalizationRegistry.Get("Global_Button_OK");
+
+        OnDismissed = () => WeakReferenceMessenger.Default.Send(new CloseDialogMessage(true));
     }
 
     public void Initialise(string? messageText, string? detailsText)
@@ -58,17 +48,5 @@ public partial class ErrorDialogViewModel : ViewModelBase
         }
 
         await Clipboard.SetTextAsync(Details ?? string.Empty);
-    }
-
-    private void OnSave()
-    {
-        CloseRequested?.Invoke(this, EventArgs.Empty);
-        Messenger.Send(new CloseDialogMessage(true));
-    }
-
-    private void OnCancel()
-    {
-        CloseRequested?.Invoke(this, EventArgs.Empty);
-        Messenger.Send(new CloseDialogMessage(false));
     }
 }

@@ -17,52 +17,68 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 {
     public partial class EngagementsViewModel : ViewModelBase
     {
-        private readonly IEngagementService _engagementService;
-        private readonly ICustomerService _customerService;
-        private readonly IClosingPeriodService _closingPeriodService;
-        private readonly IPapdService _papdService;
-        private readonly IManagerService _managerService;
-        private readonly IManagerAssignmentService _managerAssignmentService;
-        private readonly IPapdAssignmentService _papdAssignmentService;
+        private readonly IEngagementManagementFacade _engagementFacade;
         private readonly DialogService _dialogService;
+        private ObservableCollection<Engagement> _allEngagements = new();
 
         [ObservableProperty]
         private Engagement? _selectedEngagement;
 
+        [ObservableProperty]
+        private string _filterText = string.Empty;
+
         public EngagementsViewModel(
-            IEngagementService engagementService, 
-            ICustomerService customerService, 
-            IClosingPeriodService closingPeriodService,
-            IPapdService papdService,
-            IManagerService managerService,
-            IManagerAssignmentService managerAssignmentService,
-            IPapdAssignmentService papdAssignmentService,
+            IEngagementManagementFacade engagementFacade,
             DialogService dialogService, 
             IMessenger messenger)
             : base(messenger)
         {
-            _engagementService = engagementService;
-            _customerService = customerService;
-            _closingPeriodService = closingPeriodService;
-            _papdService = papdService;
-            _managerService = managerService;
-            _managerAssignmentService = managerAssignmentService;
-            _papdAssignmentService = papdAssignmentService;
-            _dialogService = dialogService;
+            _engagementFacade = engagementFacade ?? throw new ArgumentNullException(nameof(engagementFacade));
+            _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
         }
 
         [ObservableProperty]
         private ObservableCollection<Engagement> _engagements = new();
 
+        public bool HasEngagements => Engagements.Count > 0;
+
         public override async Task LoadDataAsync()
         {
-            Engagements = new ObservableCollection<Engagement>(await _engagementService.GetAllAsync());
+            _allEngagements = new ObservableCollection<Engagement>(await _engagementFacade.GetAllEngagementsAsync());
+            ApplyFilter();
+        }
+
+        partial void OnFilterTextChanged(string value)
+        {
+            ApplyFilter();
+        }
+
+        private void ApplyFilter()
+        {
+            if (string.IsNullOrWhiteSpace(FilterText))
+            {
+                Engagements = new ObservableCollection<Engagement>(_allEngagements);
+            }
+            else
+            {
+                var filtered = _allEngagements
+                    .Where(e => e.EngagementId.Contains(FilterText, StringComparison.OrdinalIgnoreCase)
+                             || (e.Description?.Contains(FilterText, StringComparison.OrdinalIgnoreCase) ?? false)
+                             || (e.CustomerName?.Contains(FilterText, StringComparison.OrdinalIgnoreCase) ?? false))
+                    .ToList();
+                Engagements = new ObservableCollection<Engagement>(filtered);
+            }
+            OnPropertyChanged(nameof(HasEngagements));
         }
 
         [RelayCommand]
         private async Task Add()
         {
-            var editorViewModel = new EngagementEditorViewModel(new Engagement(), _engagementService, _customerService, _closingPeriodService, Messenger, _dialogService);
+            var editorViewModel = new EngagementEditorViewModel(
+                new Engagement(), 
+                _engagementFacade, 
+                Messenger, 
+                _dialogService);
             await _dialogService.ShowDialogAsync(editorViewModel);
             Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
@@ -70,14 +86,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand(CanExecute = nameof(CanEdit))]
         private async Task Edit(Engagement engagement)
         {
-            if (engagement == null) return;
-            var fullEngagement = await _engagementService.GetByIdAsync(engagement.Id);
+            ArgumentNullException.ThrowIfNull(engagement);
+
+            var fullEngagement = await _engagementFacade.GetEngagementAsync(engagement.Id);
             if (fullEngagement is null)
             {
+                ToastService.ShowWarning("FINC_Engagements_Toast_NotFound", engagement.EngagementId);
                 return;
             }
 
-            var editorViewModel = new EngagementEditorViewModel(fullEngagement, _engagementService, _customerService, _closingPeriodService, Messenger, _dialogService);
+            var editorViewModel = new EngagementEditorViewModel(fullEngagement, _engagementFacade, Messenger, _dialogService);
             await _dialogService.ShowDialogAsync(editorViewModel);
             Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
         }
@@ -85,25 +103,30 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand(CanExecute = nameof(CanView))]
         private async Task View(Engagement engagement)
         {
-            if (engagement == null) return;
+            ArgumentNullException.ThrowIfNull(engagement);
 
-            var fullEngagement = await _engagementService.GetByIdAsync(engagement.Id);
+            var fullEngagement = await _engagementFacade.GetEngagementAsync(engagement.Id);
             if (fullEngagement is null)
             {
+                ToastService.ShowWarning("FINC_Engagements_Toast_NotFound", engagement.EngagementId);
                 return;
             }
 
-            var editorViewModel = new EngagementEditorViewModel(fullEngagement, _engagementService, _customerService, _closingPeriodService, Messenger, _dialogService, isReadOnlyMode: true);
+            var editorViewModel = new EngagementEditorViewModel(fullEngagement, _engagementFacade, Messenger, _dialogService, isReadOnlyMode: true);
             await _dialogService.ShowDialogAsync(editorViewModel);
         }
 
         [RelayCommand(CanExecute = nameof(CanDelete))]
         private async Task Delete(Engagement engagement)
         {
-            if (engagement == null) return;
+            if (engagement == null)
+            {
+                return;
+            }
+
             try
             {
-                await _engagementService.DeleteAsync(engagement.Id);
+                await _engagementFacade.DeleteEngagementAsync(engagement.Id);
                 ToastService.ShowSuccess("FINC_Engagements_Toast_DeleteSuccess", engagement.EngagementId);
                 Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
@@ -120,7 +143,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand(CanExecute = nameof(CanDeleteData))]
         private async Task DeleteData(Engagement engagement)
         {
-            if (engagement is null) return;
+            if (engagement is null)
+            {
+                return;
+            }
 
             var result = await _dialogService.ShowConfirmationAsync(
                 LocalizationRegistry.Get("FINC_Dialog_DeleteData_Title"),
@@ -129,7 +155,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 try
                 {
-                    await _engagementService.DeleteDataAsync(engagement.Id);
+                    await _engagementFacade.DeleteEngagementDataAsync(engagement.Id);
                     ToastService.ShowSuccess("FINC_Engagements_Toast_ReverseSuccess", engagement.EngagementId);
                     Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
                 }
@@ -152,22 +178,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            var fullEngagement = await _engagementService.GetByIdAsync(SelectedEngagement.Id);
+            var fullEngagement = await _engagementFacade.GetEngagementAsync(SelectedEngagement.Id);
             if (fullEngagement is null)
             {
                 return;
             }
 
-            var papds = await _papdService.GetAllAsync();
-            if (papds.Count == 0)
-            {
-                ToastService.ShowWarning("FINC_Engagements_Toast_NoPapdsAvailable");
-                return;
-            }
-
-            // Check if all PAPDs are already assigned
-            var assignedPapdIds = fullEngagement.EngagementPapds.Select(a => a.PapdId).ToHashSet();
-            var availablePapds = papds.Where(p => !assignedPapdIds.Contains(p.Id)).ToList();
+            var availablePapds = await _engagementFacade.GetAvailablePapdsAsync(fullEngagement);
             
             if (availablePapds.Count == 0)
             {
@@ -178,9 +195,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             // Use the selection view model for choosing a PAPD
             var selectionViewModel = new PapdSelectionViewModel(
                 fullEngagement,
-                _engagementService,
-                _papdService,
-                _papdAssignmentService,
+                _engagementFacade,
                 Messenger);
 
             await selectionViewModel.LoadDataAsync();
@@ -196,15 +211,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            var fullEngagement = await _engagementService.GetByIdAsync(SelectedEngagement.Id);
+            var fullEngagement = await _engagementFacade.GetEngagementAsync(SelectedEngagement.Id);
             if (fullEngagement is null)
             {
                 return;
             }
 
-            var managers = await _managerService.GetAllAsync();
-            var assignedManagerIds = fullEngagement.ManagerAssignments.Select(a => a.ManagerId).ToHashSet();
-            var availableManagers = managers.Where(m => !assignedManagerIds.Contains(m.Id)).ToList();
+            var availableManagers = await _engagementFacade.GetAvailableManagersAsync(fullEngagement);
             
             if (availableManagers.Count == 0)
             {
@@ -214,9 +227,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             var selectionViewModel = new ManagerSelectionViewModel(
                 fullEngagement,
-                _engagementService,
-                _managerService,
-                _managerAssignmentService,
+                _engagementFacade,
                 Messenger);
 
             await selectionViewModel.LoadDataAsync();

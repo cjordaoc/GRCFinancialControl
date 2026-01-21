@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRC.Shared.UI.Messages;
+using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 
@@ -15,7 +16,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
     public partial class ViewAdditionalSalesViewModel : ViewModelBase
     {
         private readonly int _engagementId;
-        private readonly IEngagementService _engagementService;
+        private readonly IEngagementManagementFacade _engagementFacade;
         private readonly IMessenger _messenger;
 
         [ObservableProperty]
@@ -30,18 +31,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
 
         public ViewAdditionalSalesViewModel(
             int engagementId,
-            IEngagementService engagementService,
+            IEngagementManagementFacade engagementFacade,
             IMessenger messenger)
             : base(messenger)
         {
             _engagementId = engagementId;
-            _engagementService = engagementService;
+            _engagementFacade = engagementFacade;
             _messenger = messenger;
         }
 
         public override async Task LoadDataAsync()
         {
-            var engagement = await _engagementService.GetByIdAsync(_engagementId);
+            var engagement = await _engagementFacade.GetEngagementAsync(_engagementId);
             if (engagement is not null)
             {
                 AdditionalSales = new ObservableCollection<EngagementAdditionalSale>(
@@ -59,7 +60,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
 
             try
             {
-                var engagement = await _engagementService.GetByIdAsync(_engagementId);
+                var engagement = await _engagementFacade.GetEngagementAsync(_engagementId);
                 if (engagement is null)
                 {
                     return;
@@ -71,7 +72,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
                 if (saleToRemove is not null)
                 {
                     engagement.AdditionalSales.Remove(saleToRemove);
-                    await _engagementService.UpdateAsync(engagement);
+                    await _engagementFacade.UpdateEngagementAsync(engagement);
                     
                     AdditionalSales.Remove(SelectedAdditionalSale);
                     SelectedAdditionalSale = null;

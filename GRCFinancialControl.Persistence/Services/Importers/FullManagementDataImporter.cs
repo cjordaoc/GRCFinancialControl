@@ -9,6 +9,7 @@ using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence;
 using GRCFinancialControl.Persistence.Services.Infrastructure;
+using GRCFinancialControl.Persistence.Services.Importers.Strategies;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -2068,6 +2069,12 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             public decimal? FutureFiscalYearBacklog { get; init; }
         }
 
+        private static readonly IAssignmentStrategy<Manager, EngagementManagerAssignment> ManagerStrategy =
+            new ManagerAssignmentStrategy();
+
+        private static readonly IAssignmentStrategy<Papd, EngagementPapd> PapdStrategy =
+            new PapdAssignmentStrategy();
+
         private static int SyncManagerAssignments(
             ApplicationDbContext context,
             Engagement engagement,
@@ -2075,62 +2082,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             IReadOnlyDictionary<string, Manager> managersByGui,
             ISet<string> missingManagerGuis)
         {
-            if (managerGuiIds.Count == 0)
-            {
-                return 0;
-            }
-
-            var desiredManagerIds = new HashSet<int>();
-            foreach (var gui in managerGuiIds)
-            {
-                if (managersByGui.TryGetValue(gui, out var manager))
-                {
-                    desiredManagerIds.Add(manager.Id);
-                }
-                else
-                {
-                    missingManagerGuis.Add(gui);
-                }
-            }
-
-            if (desiredManagerIds.Count == 0)
-            {
-                return 0;
-            }
-
-            var changes = 0;
-            var existingAssignments = engagement.ManagerAssignments.ToList();
-
-            foreach (var assignment in existingAssignments)
-            {
-                if (!desiredManagerIds.Contains(assignment.ManagerId))
-                {
-                    context.EngagementManagerAssignments.Remove(assignment);
-                    engagement.ManagerAssignments.Remove(assignment);
-                    changes++;
-                }
-            }
-
-            var currentManagerIds = engagement.ManagerAssignments.Select(a => a.ManagerId).ToHashSet();
-            foreach (var managerId in desiredManagerIds)
-            {
-                if (currentManagerIds.Contains(managerId))
-                {
-                    continue;
-                }
-
-                var assignment = new EngagementManagerAssignment
-                {
-                    EngagementId = engagement.Id,
-                    ManagerId = managerId
-                };
-
-                engagement.ManagerAssignments.Add(assignment);
-                context.EngagementManagerAssignments.Add(assignment);
-                changes++;
-            }
-
-            return changes;
+            return ManagerStrategy.SyncAssignments(context, engagement, managerGuiIds, managersByGui, missingManagerGuis);
         }
 
         private static int SyncPapdAssignments(
@@ -2140,62 +2092,34 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             IReadOnlyDictionary<string, Papd> papdsByGui,
             ISet<string> missingPapdGuis)
         {
-            if (papdGuiIds.Count == 0)
-            {
-                return 0;
-            }
+            return PapdStrategy.SyncAssignments(context, engagement, papdGuiIds, papdsByGui, missingPapdGuis);
+        }
 
-            var desiredPapdIds = new HashSet<int>();
-            foreach (var gui in papdGuiIds)
+        /// <summary>
+        /// Extracts entity IDs from GUI identifiers using a provided lookup dictionary.
+        /// Tracks missing GUIs for error reporting. Used by both Manager and PAPD sync methods.
+        /// </summary>
+        private static HashSet<int> ExtractEntityIds<TEntity>(
+            IReadOnlyCollection<string> guiIds,
+            IReadOnlyDictionary<string, TEntity> entityLookup,
+            ISet<string> missingGuis,
+            Func<TEntity, int> idSelector) where TEntity : class
+        {
+            var desiredIds = new HashSet<int>();
+
+            foreach (var gui in guiIds)
             {
-                if (papdsByGui.TryGetValue(gui, out var papd))
+                if (entityLookup.TryGetValue(gui, out var entity))
                 {
-                    desiredPapdIds.Add(papd.Id);
+                    desiredIds.Add(idSelector(entity));
                 }
                 else
                 {
-                    missingPapdGuis.Add(gui);
+                    missingGuis.Add(gui);
                 }
             }
 
-            if (desiredPapdIds.Count == 0)
-            {
-                return 0;
-            }
-
-            var changes = 0;
-            var existingAssignments = engagement.EngagementPapds.ToList();
-
-            foreach (var assignment in existingAssignments)
-            {
-                if (!desiredPapdIds.Contains(assignment.PapdId))
-                {
-                    context.EngagementPapds.Remove(assignment);
-                    engagement.EngagementPapds.Remove(assignment);
-                    changes++;
-                }
-            }
-
-            var currentPapdIds = engagement.EngagementPapds.Select(a => a.PapdId).ToHashSet();
-            foreach (var papdId in desiredPapdIds)
-            {
-                if (currentPapdIds.Contains(papdId))
-                {
-                    continue;
-                }
-
-                var assignment = new EngagementPapd
-                {
-                    EngagementId = engagement.Id,
-                    PapdId = papdId
-                };
-
-                engagement.EngagementPapds.Add(assignment);
-                context.EngagementPapds.Add(assignment);
-                changes++;
-            }
-
-            return changes;
+            return desiredIds;
         }
 
         private static void ProcessBacklogData(

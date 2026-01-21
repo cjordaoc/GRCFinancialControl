@@ -7,6 +7,7 @@ using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using GRC.Shared.UI.Messages;
@@ -15,9 +16,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
 {
     public partial class ManagerSelectionViewModel : ViewModelBase
     {
-        private readonly IEngagementService _engagementService;
-        private readonly IManagerService _managerService;
-        private readonly IManagerAssignmentService _managerAssignmentService;
+        private readonly IEngagementManagementFacade _engagementFacade;
         private readonly Engagement _engagement;
 
         [ObservableProperty]
@@ -27,21 +26,17 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
 
         public ManagerSelectionViewModel(
             Engagement engagement,
-            IEngagementService engagementService,
-            IManagerService managerService,
-            IManagerAssignmentService managerAssignmentService,
+            IEngagementManagementFacade engagementFacade,
             IMessenger messenger)
             : base(messenger)
         {
             _engagement = engagement ?? throw new ArgumentNullException(nameof(engagement));
-            _engagementService = engagementService ?? throw new ArgumentNullException(nameof(engagementService));
-            _managerService = managerService ?? throw new ArgumentNullException(nameof(managerService));
-            _managerAssignmentService = managerAssignmentService ?? throw new ArgumentNullException(nameof(managerAssignmentService));
+            _engagementFacade = engagementFacade ?? throw new ArgumentNullException(nameof(engagementFacade));
         }
 
         public override async Task LoadDataAsync()
         {
-            var allManagers = await _managerService.GetAllAsync();
+            var allManagers = await _engagementFacade.GetAllManagersAsync();
             var assignedManagerIds = _engagement.ManagerAssignments.Select(a => a.ManagerId).ToHashSet();
 
             var available = allManagers
@@ -71,10 +66,22 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
 
             try
             {
-                // Use the dedicated service for updating manager assignments
-                await _managerAssignmentService.UpdateAssignmentsForEngagementAsync(_engagement.Id, selectedManagerIds);
+                // Update each manager assignment through the facade
+                var currentManagerIds = _engagement.ManagerAssignments.Select(m => m.ManagerId).ToHashSet();
+                
+                // Remove unselected
+                foreach (var managerId in currentManagerIds.Where(id => !selectedManagerIds.Contains(id)))
+                {
+                    await _engagementFacade.RemoveManagerAsync(_engagement.Id, managerId);
+                }
+                
+                // Add newly selected
+                foreach (var managerId in selectedManagerIds.Where(id => !currentManagerIds.Contains(id)))
+                {
+                    await _engagementFacade.AssignManagerAsync(_engagement.Id, managerId);
+                }
 
-                var engagement = await _engagementService.GetByIdAsync(_engagement.Id);
+                var engagement = await _engagementFacade.GetEngagementAsync(_engagement.Id);
                 var engagementDisplay = engagement?.EngagementId ?? engagement?.Description ?? _engagement.Description;
 
                 ToastService.ShowSuccess(

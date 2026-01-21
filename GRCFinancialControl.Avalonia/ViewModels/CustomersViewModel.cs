@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
 using App.Presentation.Services;
@@ -17,9 +18,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         private readonly ICustomerService _customerService;
         private readonly DialogService _dialogService;
+        private ObservableCollection<Customer> _allCustomers = new();
 
         [ObservableProperty]
         private Customer? _selectedCustomer;
+
+        [ObservableProperty]
+        private string _filterText = string.Empty;
 
         public CustomersViewModel(ICustomerService customerService, DialogService dialogService, IMessenger messenger)
             : base(messenger)
@@ -31,9 +36,34 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private ObservableCollection<Customer> _customers = new();
 
+        public bool HasCustomers => Customers.Count > 0;
+
         public override async Task LoadDataAsync()
         {
-            Customers = new ObservableCollection<Customer>(await _customerService.GetAllAsync());
+            _allCustomers = new ObservableCollection<Customer>(await _customerService.GetAllAsync());
+            ApplyFilter();
+        }
+
+        partial void OnFilterTextChanged(string value)
+        {
+            ApplyFilter();
+        }
+
+        private void ApplyFilter()
+        {
+            if (string.IsNullOrWhiteSpace(FilterText))
+            {
+                Customers = new ObservableCollection<Customer>(_allCustomers);
+            }
+            else
+            {
+                var filtered = _allCustomers
+                    .Where(c => c.CustomerCode.Contains(FilterText, StringComparison.OrdinalIgnoreCase)
+                             || (c.Name?.Contains(FilterText, StringComparison.OrdinalIgnoreCase) ?? false))
+                    .ToList();
+                Customers = new ObservableCollection<Customer>(filtered);
+            }
+            OnPropertyChanged(nameof(HasCustomers));
         }
 
         [RelayCommand]
@@ -47,7 +77,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand(CanExecute = nameof(CanEdit))]
         private async Task Edit(Customer customer)
         {
-            if (customer == null) return;
+            if (customer == null)
+            {
+                return;
+            }
+
             var editorViewModel = new CustomerEditorViewModel(customer, _customerService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
             Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
@@ -56,7 +90,11 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand(CanExecute = nameof(CanEdit))]
         private async Task View(Customer customer)
         {
-            if (customer == null) return;
+            if (customer == null)
+            {
+                return;
+            }
+
             var editorViewModel = new CustomerEditorViewModel(customer, _customerService, Messenger, isReadOnlyMode: true);
             await _dialogService.ShowDialogAsync(editorViewModel);
         }
@@ -64,7 +102,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand(CanExecute = nameof(CanDelete))]
         private async Task Delete(Customer customer)
         {
-            if (customer == null) return;
+            if (customer == null)
+            {
+                return;
+            }
             try
             {
                 await _customerService.DeleteAsync(customer.Id);
@@ -84,7 +125,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [RelayCommand(CanExecute = nameof(CanDeleteData))]
         private async Task DeleteData(Customer customer)
         {
-            if (customer is null) return;
+            if (customer is null)
+            {
+                return;
+            }
 
             var result = await _dialogService.ShowConfirmationAsync(
                 LocalizationRegistry.Get("FINC_Dialog_DeleteData_Title"),
