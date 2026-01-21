@@ -5,9 +5,8 @@ using App.Presentation.Services;
 using GRCFinancialControl.Avalonia.ViewModels;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
-using GRC.Shared.UI.Controls.Dialogs;
-using GRC.Shared.UI.ViewModels.Dialogs;
 using GRC.Shared.UI.Dialogs;
+using GRC.Shared.UI.ViewModels.Dialogs;
 
 namespace GRCFinancialControl.Avalonia.Services;
 
@@ -41,10 +40,5 @@ public sealed class DialogService : BaseDialogService, IDialogService
     }
 
     protected override UserControl? BuildView(object viewModel)
-        => viewModel switch
-        {
-            ConfirmationDialogViewModelBase => new ConfirmationDialog(),
-            InformationDialogViewModelBase => new InformationDialog(),
-            _ => _viewLocator.Build(viewModel) as UserControl
-        };
+        => _viewLocator.Build(viewModel) as UserControl;
 }

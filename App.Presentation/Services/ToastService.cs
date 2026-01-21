@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using Avalonia.Threading;
 using App.Presentation.Localization;
+using CommunityToolkit.Mvvm.Input;
 
 namespace App.Presentation.Services;
 
@@ -27,6 +28,7 @@ public sealed class ToastNotification
         Type = type;
         Message = message;
         CreatedAt = DateTimeOffset.UtcNow;
+        CloseCommand = new RelayCommand(() => ToastService.Dismiss(Id));
     }
 
     public Guid Id { get; }
@@ -36,6 +38,8 @@ public sealed class ToastNotification
     public string Message { get; }
 
     public DateTimeOffset CreatedAt { get; }
+
+    public IRelayCommand CloseCommand { get; }
 }
 
 /// <summary>
