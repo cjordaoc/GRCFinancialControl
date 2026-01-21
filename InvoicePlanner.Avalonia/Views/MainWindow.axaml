@@ -4,7 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:InvoicePlanner.Avalonia.ViewModels"
         xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
-        xmlns:services="clr-namespace:App.Presentation.Services;assembly=App.Presentation"
+        xmlns:services="clr-namespace:GRC.Shared.UI.Services;assembly=GRC.Shared.UI"
         xmlns:sharedControls="clr-namespace:GRC.Shared.UI.Controls;assembly=GRC.Shared.UI"
         xmlns:sharedConverters="clr-namespace:GRC.Shared.UI.Converters;assembly=GRC.Shared.UI"
         x:Class="InvoicePlanner.Avalonia.Views.MainWindow"

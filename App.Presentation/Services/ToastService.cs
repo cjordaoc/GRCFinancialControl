@@ -1,165 +1,48 @@
-using System;
-using System.Collections.ObjectModel;
-using System.Collections.Generic;
-using Avalonia.Threading;
 using App.Presentation.Localization;
-using CommunityToolkit.Mvvm.Input;
+using GRC.Shared.UI.Services;
+using System.Collections.ObjectModel;
 
 namespace App.Presentation.Services;
 
 /// <summary>
-/// Defines the visual severity of a toast notification.
-/// </summary>
-public enum ToastType
-{
-    Success,
-    Warning,
-    Error
-}
-
-/// <summary>
-/// Represents a single toast notification with type, message, and metadata.
-/// </summary>
-public sealed class ToastNotification
-{
-    internal ToastNotification(ToastType type, string message)
-    {
-        Id = Guid.NewGuid();
-        Type = type;
-        Message = message;
-        CreatedAt = DateTimeOffset.UtcNow;
-        CloseCommand = new RelayCommand(() => ToastService.Dismiss(Id));
-    }
-
-    public Guid Id { get; }
-
-    public ToastType Type { get; }
-
-    public string Message { get; }
-
-    public DateTimeOffset CreatedAt { get; }
-
-    public IRelayCommand CloseCommand { get; }
-}
-
-/// <summary>
-/// Manages toast notifications with auto-dismiss timers and UI thread dispatching.
+/// App-specific toast service that integrates LocalizationRegistry with shared ToastService.
+/// Re-exports the shared Notifications collection for backward compatibility.
 /// </summary>
 public static class ToastService
 {
-    private static readonly ObservableCollection<ToastNotification> NotificationsImpl = new();
-    private static readonly ReadOnlyObservableCollection<ToastNotification> NotificationsReadOnly = new(NotificationsImpl);
-    private static readonly Dictionary<Guid, DispatcherTimer> Timers = new();
-    private static readonly TimeSpan DefaultDuration = TimeSpan.FromSeconds(3);
-
-    public static ReadOnlyObservableCollection<ToastNotification> Notifications => NotificationsReadOnly;
+    /// <summary>
+    /// Observable collection of active toast notifications (from shared service).
+    /// </summary>
+    public static ReadOnlyObservableCollection<GRC.Shared.UI.Services.ToastNotification> Notifications => 
+        GRC.Shared.UI.Services.ToastService.Notifications;
 
     public static void ShowSuccess(string resourceKey, params object[] arguments)
     {
-        Show(ToastType.Success, resourceKey, arguments);
+        var message = ResolveMessage(resourceKey, arguments);
+        GRC.Shared.UI.Services.ToastService.ShowSuccess(message);
     }
 
     public static void ShowWarning(string resourceKey, params object[] arguments)
     {
-        Show(ToastType.Warning, resourceKey, arguments);
+        var message = ResolveMessage(resourceKey, arguments);
+        GRC.Shared.UI.Services.ToastService.ShowWarning(message);
     }
 
     public static void ShowError(string resourceKey, params object[] arguments)
     {
-        Show(ToastType.Error, resourceKey, arguments);
+        var message = ResolveMessage(resourceKey, arguments);
+        GRC.Shared.UI.Services.ToastService.ShowError(message);
     }
 
-    public static void Dismiss(Guid id)
-    {
-        void Execute()
-        {
-            if (Timers.Remove(id, out var timer))
-            {
-                timer.Stop();
-            }
-
-            for (var index = NotificationsImpl.Count - 1; index >= 0; index--)
-            {
-                if (NotificationsImpl[index].Id != id)
-                {
-                    continue;
-                }
-
-                NotificationsImpl.RemoveAt(index);
-                break;
-            }
-        }
-
-        Dispatch(Execute);
-    }
-
-    private static void Show(ToastType type, string resourceKey, params object[] arguments)
+    private static string ResolveMessage(string resourceKey, params object[] arguments)
     {
         if (string.IsNullOrWhiteSpace(resourceKey))
         {
-            return;
+            return string.Empty;
         }
 
-        var message = arguments is { Length: > 0 }
+        return arguments is { Length: > 0 }
             ? LocalizationRegistry.Format(resourceKey, arguments)
             : LocalizationRegistry.Get(resourceKey);
-
-        void Execute()
-        {
-            var notification = new ToastNotification(type, message);
-            NotificationsImpl.Add(notification);
-            ScheduleDismiss(notification.Id, DefaultDuration);
-        }
-
-        Dispatch(Execute);
-    }
-
-    private static void ScheduleDismiss(Guid id, TimeSpan interval)
-    {
-        if (Timers.TryGetValue(id, out var existingTimer))
-        {
-            existingTimer.Stop();
-        }
-
-        var timer = new DispatcherTimer
-        {
-            Interval = interval
-        };
-
-        timer.Tick += (_, _) =>
-        {
-            timer.Stop();
-            Timers.Remove(id);
-            RemoveNotification(id);
-        };
-
-        Timers[id] = timer;
-        timer.Start();
-    }
-
-    private static void RemoveNotification(Guid id)
-    {
-        for (var index = NotificationsImpl.Count - 1; index >= 0; index--)
-        {
-            if (NotificationsImpl[index].Id != id)
-            {
-                continue;
-            }
-
-            NotificationsImpl.RemoveAt(index);
-            break;
-        }
-    }
-
-    private static void Dispatch(Action action)
-    {
-        if (Dispatcher.UIThread.CheckAccess())
-        {
-            action();
-        }
-        else
-        {
-            Dispatcher.UIThread.Post(action);
-        }
     }
 }

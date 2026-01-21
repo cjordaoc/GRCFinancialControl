@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels.Dialogs"
-             xmlns:behaviors="clr-namespace:App.Presentation.Behaviors;assembly=App.Presentation"
+             xmlns:behaviors="clr-namespace:GRC.Shared.UI.Behaviors;assembly=GRC.Shared.UI"
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="300"
              x:Class="GRCFinancialControl.Avalonia.Views.Dialogs.AddAdditionalSaleView"

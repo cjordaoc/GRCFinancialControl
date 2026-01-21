@@ -12,7 +12,10 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
 
 ### GUI Shared Components
 - **Dialogs:** `ConfirmationDialog` and `InformationDialog` from `GRC.Shared.UI.Controls.Dialogs` are wrapped by app dialog views; `BaseDialogService` injects `CloseDialog` on the base view models so close/confirm routes work without manual wiring.
-- **Controls:** Status/feedback surfaces (`StatusBar`, `LoadingIndicator`, `EmptyState`, `ToastNotification`, `SearchBox`, `RadialGauge`) live in `GRC.Shared.UI/Controls`. Toast overlays in both shells bind `ToastService.Notifications` into `ToastNotification` with `ToastBrushConverter` for severity coloring.
+- **Controls:** Status/feedback surfaces (`StatusBar`, `LoadingIndicator`, `EmptyState`, `ToastNotification`, `SearchBox`, `RadialGauge`) live in `GRC.Shared.UI/Controls`. Toast overlays in both shells bind `ToastService.Notifications` into `ToastNotification` with `ToastTypeToBrushConverter` for severity coloring.
+- **Converters:** Shared XAML converters (`BoolToThemeResourceBrushConverter`, `DateTimeOffsetToDateTimeConverter`, `PercentageOfSizeConverter`, `ToastTypeToBrushConverter`) live in `GRC.Shared.UI/Converters` and handle theme resource lookups, date normalization, proportional sizing, and toast severity coloring for binding pipelines across both apps.
+- **Behaviors:** `NumericInputNullSafety` (attached property in `GRC.Shared.UI/Behaviors`) forces empty numeric inputs to zero on focus loss, preventing binding exceptions in TextBox and NumericUpDown controls.
+- **Toast Service:** `GRC.Shared.UI.Services.ToastService` is the centralized notification queue with auto-dismiss timers (`Notifications` collection, `ShowSuccess/Warning/Error` methods, `ToastType` enum). App.Presentation wraps this service with localization helpers that resolve resource keys before delegating to the shared service.
 - **DataTemplates:** `avares://GRC.Shared.UI/DataTemplates/DataTemplates.axaml` merges StandardListItem, DetailListItem, and GroupHeader templates and is included in both `App.axaml` files via `ResourceInclude`.
 - **Usage note:** Prefer these shared components over per-app XAML; keep views declarative (no code-behind logic) and push state/commands into the corresponding view models.
 
