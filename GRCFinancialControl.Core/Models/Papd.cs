@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using GRCFinancialControl.Core.Enums;
 
 namespace GRCFinancialControl.Core.Models
@@ -15,15 +16,10 @@ namespace GRCFinancialControl.Core.Models
         public string? WindowsLogin { get; set; }
         
         /// <summary>
-        /// Legacy GUI identifier (text name). Use GuiCode for the numeric identifier.
+        /// Engagement partner GUI identifier stored in column EngagementPapdGui.
         /// </summary>
+        [Column("EngagementPapdGui")]
         public string? EngagementPapdGui { get; set; }
-        
-        /// <summary>
-        /// Unique numeric GUI code from the spreadsheet (column AN).
-        /// This is the new primary identifier for matching PAPDs.
-        /// </summary>
-        public string? GuiCode { get; set; }
         
         public ICollection<EngagementPapd> EngagementPapds { get; set; } = new List<EngagementPapd>();
     }

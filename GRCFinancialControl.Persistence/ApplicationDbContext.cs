@@ -268,14 +268,6 @@ namespace GRCFinancialControl.Persistence
                 .HasIndex(p => p.EngagementPapdGui)
                 .IsUnique();
 
-            // New GuiCode property for Papd
-            modelBuilder.Entity<Papd>()
-                .Property(p => p.GuiCode)
-                .HasMaxLength(50);
-
-            modelBuilder.Entity<Papd>()
-                .HasIndex(p => p.GuiCode)
-                .IsUnique();
 
             modelBuilder.Entity<Manager>()
                 .Property(m => m.Name)
@@ -297,14 +289,6 @@ namespace GRCFinancialControl.Persistence
                 .HasIndex(m => m.EngagementManagerGui)
                 .IsUnique();
 
-            // New GuiCode property for Manager
-            modelBuilder.Entity<Manager>()
-                .Property(m => m.GuiCode)
-                .HasMaxLength(50);
-
-            modelBuilder.Entity<Manager>()
-                .HasIndex(m => m.GuiCode)
-                .IsUnique();
 
             modelBuilder.Entity<Manager>()
                 .Property(m => m.Position)

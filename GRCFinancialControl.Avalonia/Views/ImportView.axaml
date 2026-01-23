@@ -86,7 +86,13 @@
                                     CornerRadius="{StaticResource ControlCornerRadius}"
                                     Padding="{StaticResource CardPaddingThickness}"
                                     IsVisible="{Binding StatusMessage, Converter={x:Static converters:ObjectConverters.IsNotNull}}">
-                                <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
+                                <StackPanel Spacing="{StaticResource ControlSpacing}">
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <Button Content="Copy message"
+                                                Command="{Binding CopyStatusMessageCommand}"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
+                                </StackPanel>
                             </Border>
                         </StackPanel>
                     </Border>

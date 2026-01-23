@@ -660,41 +660,31 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
                     var managers = await context.Managers
                         .AsNoTracking()
-                        .Where(m => m.EngagementManagerGui != null || m.GuiCode != null)
+                        .Where(m => m.EngagementManagerGui != null)
                         .ToListAsync()
                         .ConfigureAwait(false);
-                    
-                    // Build lookup by both legacy EngagementManagerGui and new GuiCode
+
                     var managersByGui = new Dictionary<string, Manager>(StringComparer.OrdinalIgnoreCase);
                     foreach (var m in managers)
                     {
-                        if (m.EngagementManagerGui != null)
+                        if (!string.IsNullOrWhiteSpace(m.EngagementManagerGui))
                         {
                             managersByGui.TryAdd(m.EngagementManagerGui, m);
-                        }
-                        if (m.GuiCode != null)
-                        {
-                            managersByGui.TryAdd(m.GuiCode, m);
                         }
                     }
 
                     var papds = await context.Papds
                         .AsNoTracking()
-                        .Where(p => p.EngagementPapdGui != null || p.GuiCode != null)
+                        .Where(p => p.EngagementPapdGui != null)
                         .ToListAsync()
                         .ConfigureAwait(false);
-                    
-                    // Build lookup by both legacy EngagementPapdGui and new GuiCode
+
                     var papdsByGui = new Dictionary<string, Papd>(StringComparer.OrdinalIgnoreCase);
                     foreach (var p in papds)
                     {
-                        if (p.EngagementPapdGui != null)
+                        if (!string.IsNullOrWhiteSpace(p.EngagementPapdGui))
                         {
                             papdsByGui.TryAdd(p.EngagementPapdGui, p);
-                        }
-                        if (p.GuiCode != null)
-                        {
-                            papdsByGui.TryAdd(p.GuiCode, p);
                         }
                     }
 

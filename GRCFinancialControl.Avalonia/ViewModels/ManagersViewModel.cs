@@ -59,8 +59,18 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public override async Task LoadDataAsync()
         {
-            _allManagers = new ObservableCollection<Manager>(await _managerService.GetAllAsync());
-            ApplyFilter();
+            try
+            {
+                _allManagers = new ObservableCollection<Manager>(await _managerService.GetAllAsync());
+                ApplyFilter();
+            }
+            catch (Exception ex)
+            {
+                _allManagers = new ObservableCollection<Manager>();
+                ApplyFilter();
+                ToastService.ShowError("FINC_Managers_Toast_LoadError", ex.Message);
+                throw;
+            }
         }
 
         partial void OnFilterTextChanged(string value)

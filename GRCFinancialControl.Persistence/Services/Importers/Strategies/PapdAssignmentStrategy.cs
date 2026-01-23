@@ -82,7 +82,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers.Strategies
                     var newPapd = new Papd
                     {
                         EngagementPapdGui = gui,
-                        GuiCode = gui, // Set GuiCode as well for new numeric codes
                         Name = gui,
                         WindowsLogin = null,
                         Level = PapdLevel.AssociatePartner

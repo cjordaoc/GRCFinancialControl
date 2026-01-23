@@ -26,9 +26,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         [ObservableProperty]
         private string? _engagementPapdGui;
 
-        [ObservableProperty]
-        private string? _guiCode;
-
         public IEnumerable<PapdLevel> LevelOptions => System.Enum.GetValues<PapdLevel>();
 
         public Papd Papd { get; }
@@ -47,7 +44,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Level = papd.Level;
             WindowsLogin = papd.WindowsLogin;
             EngagementPapdGui = papd.EngagementPapdGui;
-            GuiCode = papd.GuiCode;
         }
 
         protected override async Task PersistChangesAsync()
@@ -60,9 +56,6 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             Papd.EngagementPapdGui = string.IsNullOrWhiteSpace(EngagementPapdGui)
                 ? null
                 : EngagementPapdGui.Trim();
-            Papd.GuiCode = string.IsNullOrWhiteSpace(GuiCode)
-                ? null
-                : GuiCode.Trim();
 
             if (Papd.Id == 0)
             {

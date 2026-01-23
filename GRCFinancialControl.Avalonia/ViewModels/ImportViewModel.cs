@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input.Platform;
 using Avalonia.Threading;
 using App.Presentation.Localization;
 using App.Presentation.Services;
@@ -95,10 +99,12 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             SetImportTypeCommand = new RelayCommand<string>(SetImportType);
             ImportCommand = new AsyncRelayCommand(ImportAsync, CanImport);
+            CopyStatusMessageCommand = new AsyncRelayCommand(CopyStatusMessageAsync, CanCopyStatusMessage);
         }
 
         public IRelayCommand SetImportTypeCommand { get; }
         public IAsyncRelayCommand ImportCommand { get; }
+        public IAsyncRelayCommand CopyStatusMessageCommand { get; }
 
         private void SetImportType(string? fileType)
         {
@@ -324,6 +330,49 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             NotifyCommandCanExecute(ImportCommand);
             OnPropertyChanged(nameof(CanSelectFullManagement));
             OnPropertyChanged(nameof(ClosingPeriodSelectionWarning));
+        }
+
+        partial void OnStatusMessageChanged(string? value)
+        {
+            CopyStatusMessageCommand.NotifyCanExecuteChanged();
+        }
+
+        private bool CanCopyStatusMessage()
+        {
+            return !string.IsNullOrWhiteSpace(StatusMessage);
+        }
+
+        private async Task CopyStatusMessageAsync()
+        {
+            var message = StatusMessage;
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                return;
+            }
+
+            var clipboard = ResolveClipboard();
+            if (clipboard is null)
+            {
+                _loggingService.LogWarning("Clipboard unavailable. Unable to copy status message.");
+                return;
+            }
+
+            await clipboard.SetTextAsync(message);
+        }
+
+        private static IClipboard? ResolveClipboard()
+        {
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime)
+            {
+                return desktopLifetime.MainWindow?.Clipboard;
+            }
+
+            if (Application.Current?.ApplicationLifetime is ISingleViewApplicationLifetime singleViewLifetime)
+            {
+                return (singleViewLifetime.MainView as TopLevel)?.Clipboard;
+            }
+
+            return null;
         }
 
         public void Receive(ApplicationParametersChangedMessage message)

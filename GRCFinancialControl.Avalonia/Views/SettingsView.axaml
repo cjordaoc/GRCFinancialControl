@@ -242,11 +242,13 @@
                 </Grid>
             </TabItem>
             <TabItem Header="{loc:Loc Key=FINC_Home_Markdown_Title}">
-                <Border Classes="Card"
-                        Padding="{StaticResource CardPaddingThickness}"
-                        Margin="{StaticResource PageMarginThickness}">
-                    <controls:MarkdownPresenter Markdown="{Binding ReadmeContent}"/>
-                </Border>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Border Classes="Card"
+                            Padding="{StaticResource CardPaddingThickness}"
+                            Margin="{StaticResource PageMarginThickness}">
+                        <controls:MarkdownPresenter Markdown="{Binding ReadmeContent}"/>
+                    </Border>
+                </ScrollViewer>
             </TabItem>
         </TabControl>
 

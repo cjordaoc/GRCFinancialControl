@@ -82,7 +82,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers.Strategies
                     var newManager = new Manager
                     {
                         EngagementManagerGui = gui,
-                        GuiCode = gui, // Set GuiCode as well for new numeric codes
                         Name = gui,
                         Email = $"placeholder.{Guid.NewGuid().ToString().Substring(0, 8)}@tbd",
                         WindowsLogin = null,

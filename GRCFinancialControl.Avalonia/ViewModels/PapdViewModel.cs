@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
@@ -52,7 +53,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public override async Task LoadDataAsync()
         {
-            Papds = new ObservableCollection<Papd>(await _papdService.GetAllAsync());
+            try
+            {
+                Papds = new ObservableCollection<Papd>(await _papdService.GetAllAsync());
+            }
+            catch (Exception ex)
+            {
+                Papds = new ObservableCollection<Papd>();
+                ToastService.ShowError("FINC_Papds_Toast_LoadError", ex.Message);
+                throw;
+            }
         }
 
         [RelayCommand]

@@ -11,7 +11,7 @@
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
             <StackPanel Spacing="{StaticResource SectionSpacing}">
                 <TextBlock Text="{loc:Loc Key=FINC_Admin_Managers_Title_Editor}" Classes="TitleSmall"/>
-                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="{StaticResource GridGap}" ColumnSpacing="{StaticResource GridGap}">
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="{StaticResource GridGap}" ColumnSpacing="{StaticResource GridGap}">
                     <TextBlock Grid.Row="0"
                                Grid.Column="0"
                                Text="{loc:Loc Key=FINC_Admin_Managers_Placeholder_Name}"
@@ -50,34 +50,21 @@
 
                     <TextBlock Grid.Row="3"
                                Grid.Column="0"
-                               Text="GUI Code (Numeric)"
-                               VerticalAlignment="Center"
-                               FontWeight="SemiBold"/>
+                               Text="Engagement Manager GUI"
+                               VerticalAlignment="Center"/>
                     <TextBox Grid.Row="3"
                              Grid.Column="1"
-                             Text="{Binding GuiCode}"
-                             Watermark="GUI Code from spreadsheet (e.g., 2394763)"
+                             Text="{Binding EngagementManagerGui}"
+                             Watermark="Engagement Manager GUI"
                              IsReadOnly="{Binding IsReadOnlyMode}"
                              HorizontalAlignment="Stretch"
                              MinWidth="{StaticResource TextBoxMinWidth}"/>
 
                     <TextBlock Grid.Row="4"
                                Grid.Column="0"
-                               Text="Engagement Manager GUI (Legacy)"
-                               VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="4"
-                             Grid.Column="1"
-                             Text="{Binding EngagementManagerGui}"
-                             Watermark="Legacy GUI identifier"
-                             IsReadOnly="{Binding IsReadOnlyMode}"
-                             HorizontalAlignment="Stretch"
-                             MinWidth="{StaticResource TextBoxMinWidth}"/>
-
-                    <TextBlock Grid.Row="5"
-                               Grid.Column="0"
                                Text="{loc:Loc Key=FINC_Admin_Managers_Placeholder_Position}"
                                VerticalAlignment="Center"/>
-                    <ComboBox Grid.Row="5"
+                    <ComboBox Grid.Row="4"
                               Grid.Column="1"
                               ItemsSource="{Binding PositionOptions}"
                               SelectedItem="{Binding Position}"

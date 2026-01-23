@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using GRCFinancialControl.Core.Enums;
 
 namespace GRCFinancialControl.Core.Models
@@ -13,15 +14,10 @@ namespace GRCFinancialControl.Core.Models
         public string? WindowsLogin { get; set; }
         
         /// <summary>
-        /// Legacy GUI identifier (text name). Use GuiCode for the numeric identifier.
+        /// Engagement manager GUI identifier stored in column EngagementManagerGui.
         /// </summary>
+        [Column("EngagementManagerGui")]
         public string? EngagementManagerGui { get; set; }
-        
-        /// <summary>
-        /// Unique numeric GUI code from the spreadsheet (column BA).
-        /// This is the new primary identifier for matching managers.
-        /// </summary>
-        public string? GuiCode { get; set; }
         
         public ICollection<EngagementManagerAssignment> EngagementAssignments { get; } = new List<EngagementManagerAssignment>();
     }
