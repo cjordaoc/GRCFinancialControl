@@ -214,13 +214,18 @@ namespace GRCFinancialControl.Persistence.Services.Importers
         {
             "engagement partner delegate",
             "partner gui code",
-            "partner code"
+            "partner guicode",
+            "partner code",
+            "papd gui code",
+            "papd guicode",
+            "papd code"
         };
 
         private static readonly string[] ManagerGuiCodeHeaders =
         {
             "engagement manager gu",
             "manager gui code",
+            "manager guicode",
             "manager code"
         };
 
