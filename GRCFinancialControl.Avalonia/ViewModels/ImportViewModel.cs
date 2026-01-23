@@ -210,7 +210,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
             catch (Exception ex)
             {
-                _loggingService.LogError(LocalizationRegistry.Format("FINC_Import_Status_Error", ex.Message));
+                var errorMessage = ex.Message;
+                if (ex.InnerException != null)
+                {
+                    errorMessage += $" | Inner: {ex.InnerException.Message}";
+                    if (ex.InnerException.InnerException != null)
+                    {
+                        errorMessage += $" | Inner2: {ex.InnerException.InnerException.Message}";
+                    }
+                }
+                _loggingService.LogError(LocalizationRegistry.Format("FINC_Import_Status_Error", errorMessage));
             }
             finally
             {
