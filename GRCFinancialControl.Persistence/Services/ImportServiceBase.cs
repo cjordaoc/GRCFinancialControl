@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using ExcelDataReader;
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
+using GRCFinancialControl.Persistence.Logging;
 using GRCFinancialControl.Persistence.Services.Importers;
 using GRCFinancialControl.Persistence.Services.Utilities;
 using Microsoft.EntityFrameworkCore;
@@ -110,7 +111,7 @@ namespace GRCFinancialControl.Persistence.Services
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "{Operation} import failed for file: {FilePath}", operationName, filePath);
+                Logger.LogErrorWithContext(ex, "{Operation} import failed for file: {FilePath}", operationName, filePath);
                 throw;
             }
         }

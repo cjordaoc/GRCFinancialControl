@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:InvoicePlanner.Avalonia.ViewModels"
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
+             xmlns:grid="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
              x:Class="InvoicePlanner.Avalonia.Views.EmissionConfirmationView"
              x:DataType="vm:EmissionConfirmationViewModel"
              mc:Ignorable="d">
@@ -17,7 +18,7 @@
                         <StackPanel Spacing="{StaticResource ControlSpacing}">
                         <TextBlock Text="{loc:Loc Key=INV_Emission_Section_AvailablePlans_Header}" FontWeight="{StaticResource FontWeightSemiBold}" />
                             <TextBlock Text="{Binding PlanSelectionMessage}" TextWrapping="Wrap" />
-                            <DataGrid ItemsSource="{Binding AvailablePlans}"
+                            <grid:DataGrid ItemsSource="{Binding AvailablePlans}"
                                       SelectedItem="{Binding SelectedPlan, Mode=TwoWay}"
                                       AutoGenerateColumns="False"
                                       HeadersVisibility="Column"
@@ -28,19 +29,19 @@
                                       Margin="{StaticResource MarginTopXSmall}"
                                       IsReadOnly="True"
                                       SelectionMode="Single">
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_PlanId}" Binding="{Binding Id}" Width="80"/>
-                                    <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Engagement}" Binding="{Binding EngagementId}" Width="160"/>
-                                    <DataGridTextColumn Header="Description" Binding="{Binding EngagementDescription}" Width="220"/>
-                                    <DataGridTextColumn Header="Customer" Binding="{Binding CustomerName}" Width="180"/>
-                                    <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Type}" Binding="{Binding TypeName}" Width="120"/>
-                                    <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_FirstEmission}" Binding="{Binding FirstEmissionDate, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
-                                    <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Requested}" Binding="{Binding RequestedItemCount}" Width="140"/>
-                                    <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Emitted}" Binding="{Binding EmittedItemCount}" Width="120"/>
-                                    <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Closed}" Binding="{Binding ClosedItemCount}" Width="120"/>
-                                    <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Canceled}" Binding="{Binding CanceledItemCount}" Width="120"/>
-                                </DataGrid.Columns>
-                            </DataGrid>
+                                <grid:DataGrid.Columns>
+                                    <grid:DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_PlanId}" Binding="{Binding Id}" Width="80"/>
+                                    <grid:DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Engagement}" Binding="{Binding EngagementId}" Width="160"/>
+                                    <grid:DataGridTextColumn Header="Description" Binding="{Binding EngagementDescription}" Width="220"/>
+                                    <grid:DataGridTextColumn Header="Customer" Binding="{Binding CustomerName}" Width="180"/>
+                                    <grid:DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Type}" Binding="{Binding TypeName}" Width="120"/>
+                                    <grid:DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_FirstEmission}" Binding="{Binding FirstEmissionDate, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
+                                    <grid:DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Requested}" Binding="{Binding RequestedItemCount}" Width="140"/>
+                                    <grid:DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Emitted}" Binding="{Binding EmittedItemCount}" Width="120"/>
+                                    <grid:DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Closed}" Binding="{Binding ClosedItemCount}" Width="120"/>
+                                    <grid:DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_Selection_Column_Canceled}" Binding="{Binding CanceledItemCount}" Width="120"/>
+                                </grid:DataGrid.Columns>
+                            </grid:DataGrid>
                             <StackPanel Orientation="Horizontal" Spacing="{StaticResource ControlSpacing}">
                                 <Button Content="{loc:Loc Key=INV_Button_Refresh}"
                                         Command="{Binding RefreshCommand}"
@@ -62,7 +63,7 @@
                             <TextBlock Text="{Binding EmittedCountDisplay}" />
                             <TextBlock Text="{Binding CanceledCountDisplay}" />
                         </StackPanel>
-                        <DataGrid ItemsSource="{Binding Lines}"
+                        <grid:DataGrid ItemsSource="{Binding Lines}"
                                   SelectedItem="{Binding SelectedLine, Mode=TwoWay}"
                                   AutoGenerateColumns="False"
                                   HeadersVisibility="Column"
@@ -72,24 +73,24 @@
                                   VerticalScrollBarVisibility="Auto"
                                   IsReadOnly="True"
                                   MaxHeight="260">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_Sequence}" Binding="{Binding Sequence}" Width="80"/>
-                                <DataGridTextColumn Header="{loc:Loc Key=INV_Emission_TableHeader_EmissionDate}" Binding="{Binding EmissionDate, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
-                                <DataGridTextColumn Header="{loc:Loc Key=INV_Emission_TableHeader_DueDate}" Binding="{Binding DueDate, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
-                                <DataGridTemplateColumn Header="{loc:Loc Key=INV_Emission_TableHeader_Amount}" Width="140">
-                                    <DataGridTemplateColumn.CellTemplate>
+                            <grid:DataGrid.Columns>
+                                <grid:DataGridTextColumn Header="{loc:Loc Key=INV_InvoicePlan_TableHeader_Sequence}" Binding="{Binding Sequence}" Width="80"/>
+                                <grid:DataGridTextColumn Header="{loc:Loc Key=INV_Emission_TableHeader_EmissionDate}" Binding="{Binding EmissionDate, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
+                                <grid:DataGridTextColumn Header="{loc:Loc Key=INV_Emission_TableHeader_DueDate}" Binding="{Binding DueDate, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
+                                <grid:DataGridTemplateColumn Header="{loc:Loc Key=INV_Emission_TableHeader_Amount}" Width="140">
+                                    <grid:DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:EmissionConfirmationLineViewModel">
                                             <TextBlock Text="{Binding AmountDisplay}" />
                                         </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="{loc:Loc Key=INV_Request_TableHeader_Ritm}" Binding="{Binding RitmNumber}" Width="160"/>
-                                <DataGridTextColumn Header="{loc:Loc Key=INV_Request_TableHeader_Status}" Binding="{Binding Status}" Width="120"/>
-                                <DataGridTextColumn Header="{loc:Loc Key=INV_Emission_TableHeader_BzCode}" Binding="{Binding BzCode}" Width="160"/>
-                                <DataGridTextColumn Header="{loc:Loc Key=INV_Emission_TableHeader_EmittedAt}" Binding="{Binding EmittedAt, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
-                                <DataGridTextColumn Header="{loc:Loc Key=INV_Emission_TableHeader_LastCancelReason}" Binding="{Binding LastCancellationReason}" Width="200"/>
-                            </DataGrid.Columns>
-                        </DataGrid>
+                                    </grid:DataGridTemplateColumn.CellTemplate>
+                                </grid:DataGridTemplateColumn>
+                                <grid:DataGridTextColumn Header="{loc:Loc Key=INV_Request_TableHeader_Ritm}" Binding="{Binding RitmNumber}" Width="160"/>
+                                <grid:DataGridTextColumn Header="{loc:Loc Key=INV_Request_TableHeader_Status}" Binding="{Binding Status}" Width="120"/>
+                                <grid:DataGridTextColumn Header="{loc:Loc Key=INV_Emission_TableHeader_BzCode}" Binding="{Binding BzCode}" Width="160"/>
+                                <grid:DataGridTextColumn Header="{loc:Loc Key=INV_Emission_TableHeader_EmittedAt}" Binding="{Binding EmittedAt, StringFormat={}{0:yyyy-MM-dd}}" Width="140"/>
+                                <grid:DataGridTextColumn Header="{loc:Loc Key=INV_Emission_TableHeader_LastCancelReason}" Binding="{Binding LastCancellationReason}" Width="200"/>
+                            </grid:DataGrid.Columns>
+                        </grid:DataGrid>
                         <StackPanel Spacing="{StaticResource ControlSpacing}" IsVisible="{Binding HasSelectedLine}">
                             <ContentControl Content="{Binding SelectedLine}">
                                 <ContentControl.ContentTemplate>

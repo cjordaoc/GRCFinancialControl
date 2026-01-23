@@ -1,10 +1,11 @@
 using System;
+using System.IO;
 using App.Presentation.Services;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia;
-using GRC.Shared.UI.Dialogs;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
+using GRCFinancialControl.Avalonia.Services.Logging;
 using GRCFinancialControl.Avalonia.ViewModels;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRCFinancialControl.Avalonia.Views;
@@ -16,6 +17,9 @@ using GRCFinancialControl.Persistence.Services.Importers;
 using GRCFinancialControl.Persistence.Services.Importers.Budget;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using GRCFinancialControl.Persistence.Services.People;
+using GRC.Shared.Core.Services;
+using GRC.Shared.UI.Dialogs;
+using GRC.Shared.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -32,7 +36,17 @@ public static class ServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.AddLogging(builder => builder.AddConsole());
+        services.AddLogging(builder =>
+        {
+            builder.AddConsole();
+
+            var logDirectory = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "GRCFinancialControl",
+                "Logs");
+
+            builder.AddProvider(new FileLoggerProvider(logDirectory, null, LogLevel.Debug));
+        });
 
         services.AddDbContext<SettingsDbContext>(options =>
             options.UseSqlite(SettingsDatabaseOptions.BuildConnectionString()));
@@ -43,24 +57,21 @@ public static class ServiceCollectionExtensions
         services.AddDbContextFactory<ApplicationDbContext>((provider, options) =>
         {
             var availability = provider.GetRequiredService<IDatabaseConnectionAvailability>();
-            if (!availability.IsConfigured)
-            {
-                return;
-            }
-
             var settingsService = provider.GetRequiredService<ISettingsService>();
             var settings = settingsService.GetAll();
 
             if (!App.TryBuildConnectionString(settings, out var connectionString))
             {
                 availability.Update(false);
-                return;
+                throw new InvalidOperationException("Database connection is not configured. Please provide valid MySQL settings.");
             }
 
             options.UseMySql(
                 connectionString,
                 new MySqlServerVersion(new Version(8, 0, 29)),
                 mySqlOptions => mySqlOptions.EnableRetryOnFailure());
+
+            availability.Update(true);
         });
 
         services.AddSingleton<IPersonDirectory, NullPersonDirectory>();
@@ -98,6 +109,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IConnectionPackageService, ConnectionPackageService>();
         services.AddSingleton<IApplicationDataBackupService, ApplicationDataBackupService>();
         services.AddSingleton<PowerBiEmbeddingService>();
+        services.AddSingleton<ITabDelimitedExportService, TabDelimitedExportService>();
 
         services.AddSingleton<MainWindow>();
         services.AddSingleton(provider => new FilePickerService(provider.GetRequiredService<MainWindow>()));

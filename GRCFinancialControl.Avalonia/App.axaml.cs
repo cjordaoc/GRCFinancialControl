@@ -13,6 +13,7 @@ using GRCFinancialControl.Avalonia.Views;
 using GRCFinancialControl.Core.Configuration;
 using GRCFinancialControl.Persistence;
 using GRCFinancialControl.Persistence.Configuration;
+using GRCFinancialControl.Persistence.Logging;
 using GRCFinancialControl.Persistence.Services;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using GRC.Shared.Resources.Localization;
@@ -88,6 +89,10 @@ namespace GRCFinancialControl.Avalonia
                 await settingsDbContext.Database.EnsureCreatedAsync();
 
                 var settingsService = provider.GetRequiredService<ISettingsService>();
+                
+                // Seed default MySQL connection settings on first run
+                await SeedDefaultSettingsAsync(settingsService);
+                
                 var settings = await settingsService.GetAllAsync();
                 settings.TryGetValue(SettingKeys.Language, out var language);
                 settings.TryGetValue(SettingKeys.DefaultCurrency, out var defaultCurrency);
@@ -127,8 +132,8 @@ namespace GRCFinancialControl.Avalonia
                 {
                     var provider = scope.ServiceProvider;
                     var settingsDbContext = provider.GetRequiredService<SettingsDbContext>();
+                    // Settings DB: use ensure-created only; migrations are not required for this local store.
                     await settingsDbContext.Database.EnsureCreatedAsync();
-                    await settingsDbContext.Database.MigrateAsync();
 
                     if (connectionAvailable)
                     {
@@ -144,7 +149,7 @@ namespace GRCFinancialControl.Avalonia
                                 .GetRequiredService<IDatabaseConnectionAvailability>()
                                 .Update(false, ex.Message);
                             var logger = provider.GetRequiredService<ILogger<App>>();
-                            logger.LogError(
+                            logger.LogErrorWithContext(
                                 ex,
                                 "Failed to initialize the remote database schema. The application will continue without a database connection.");
                         }
@@ -227,7 +232,7 @@ namespace GRCFinancialControl.Avalonia
                 catch (Exception ex)
                 {
                     var logger = Services.GetRequiredService<ILogger<App>>();
-                    logger.LogError(ex, "Failed to restart the application.");
+                    logger.LogErrorWithContext(ex, "Failed to restart the application.");
                     _restartRequested = false;
                     return;
                 }
@@ -268,6 +273,28 @@ namespace GRCFinancialControl.Avalonia
 
         private static string QuoteArgument(string argument) =>
             argument.Contains(' ') ? $"\"{argument}\"" : argument;
+
+        private static async Task SeedDefaultSettingsAsync(ISettingsService settingsService)
+        {
+            var settings = await settingsService.GetAllAsync();
+            
+            // Only seed if MySQL connection settings are missing
+            if (settings.ContainsKey(SettingKeys.Server) && 
+                !string.IsNullOrWhiteSpace(settings[SettingKeys.Server]))
+            {
+                return;
+            }
+
+            var defaultSettings = new Dictionary<string, string>
+            {
+                [SettingKeys.Server] = "162.241.203.96",
+                [SettingKeys.Database] = "blac3289_GRCFinancialControl",
+                [SettingKeys.User] = "blac3289_GRCFinControl",
+                [SettingKeys.Password] = "EYbr2@@25#"
+            };
+
+            await settingsService.SaveAllAsync(defaultSettings);
+        }
 
         private static void ObserveFailure(Task task, string context)
         {

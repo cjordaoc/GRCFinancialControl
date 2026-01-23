@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
@@ -7,6 +9,7 @@ using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using GRC.Shared.Core.Services;
 using GRC.Shared.UI.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
@@ -19,6 +22,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
     {
         private readonly IEngagementManagementFacade _engagementFacade;
         private readonly DialogService _dialogService;
+        private readonly FilePickerService _filePickerService;
+        private readonly ITabDelimitedExportService _exportService;
         private ObservableCollection<Engagement> _allEngagements = new();
 
         [ObservableProperty]
@@ -29,12 +34,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public EngagementsViewModel(
             IEngagementManagementFacade engagementFacade,
-            DialogService dialogService, 
+            DialogService dialogService,
+            FilePickerService filePickerService,
+            ITabDelimitedExportService exportService,
             IMessenger messenger)
             : base(messenger)
         {
             _engagementFacade = engagementFacade ?? throw new ArgumentNullException(nameof(engagementFacade));
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+            _filePickerService = filePickerService ?? throw new ArgumentNullException(nameof(filePickerService));
+            _exportService = exportService ?? throw new ArgumentNullException(nameof(exportService));
         }
 
         [ObservableProperty]
@@ -233,6 +242,55 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             await selectionViewModel.LoadDataAsync();
             await _dialogService.ShowDialogAsync(selectionViewModel, selectionViewModel.Title);
             Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+        }
+
+        [RelayCommand]
+        private async Task Export()
+        {
+            if (Engagements.Count == 0)
+            {
+                ToastService.ShowWarning("FINC_Toast_NoDataToExport");
+                return;
+            }
+
+            try
+            {
+                var fileName = $"Engagements_{DateTime.Now:yyyyMMdd_HHmmss}";
+                var filePath = await _filePickerService.SaveFileAsync(
+                    fileName,
+                    "Export Engagements",
+                    ".txt");
+                
+                if (string.IsNullOrEmpty(filePath))
+                {
+                    return;
+                }
+
+                var headers = new[]
+                {
+                    "ID", "Engagement ID", "Description", "Customer Name", 
+                    "Opening Value", "Status", "Estimated Hours", "Planned Hours"
+                };
+
+                var rows = Engagements.Select(engagement => new[]
+                {
+                    engagement.Id.ToString(),
+                    engagement.EngagementId ?? "",
+                    engagement.Description ?? "",
+                    engagement.CustomerName ?? "",
+                    engagement.OpeningValue.ToString("C"),
+                    engagement.StatusText ?? "",
+                    engagement.EstimatedToCompleteHours.ToString("N2"),
+                    engagement.InitialHoursBudget.ToString("N2")
+                }.AsEnumerable());
+
+                await _exportService.ExportAsync(filePath, headers, rows);
+                ToastService.ShowSuccess("FINC_Toast_ExportSuccess", Path.GetFileName(filePath));
+            }
+            catch (Exception ex)
+            {
+                ToastService.ShowError("FINC_Toast_ExportFailed", ex.Message);
+            }
         }
 
         private static bool CanEdit(Engagement engagement) => engagement is not null;

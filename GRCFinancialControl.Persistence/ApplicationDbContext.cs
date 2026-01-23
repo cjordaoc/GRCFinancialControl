@@ -9,7 +9,7 @@ using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
 namespace GRCFinancialControl.Persistence
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
     {
         public DbSet<Engagement> Engagements { get; set; }
         public DbSet<Papd> Papds { get; set; }
@@ -36,10 +36,6 @@ namespace GRCFinancialControl.Persistence
         public DbSet<MailOutboxLog> MailOutboxLogs { get; set; }
         public DbSet<InvoiceNotificationPreview> InvoiceNotificationPreviews { get; set; }
         public DbSet<EngagementAdditionalSale> EngagementAdditionalSales { get; set; }
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-            : base(options)
-        {
-        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

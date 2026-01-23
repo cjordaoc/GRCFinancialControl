@@ -122,6 +122,9 @@
                     </MenuFlyout>
                 </SplitButton.Flyout>
             </SplitButton>
+            <Button Content="Export to TXT"
+                    Command="{Binding ExportCommand}"
+                    MinWidth="{StaticResource ButtonMinWidth}"/>
         </StackPanel>
     </Grid>
 </UserControl>

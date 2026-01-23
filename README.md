@@ -21,6 +21,12 @@ All UI strings for both desktop applications are centralized under `GRC.Shared.R
 
 ---
 
+### Logging
+
+- All `ILogger` output (including import try/catch failures) now persists to `%LocalAppData%/GRCFinancialControl/Logs/<yyyyMMddHHmmss>.log` (one file per app run) in addition to the console. Use these files when diagnosing Full Management Data uploads and other background operations.
+
+---
+
 ## 1 · Budget & Allocation Management
 **Happy Path**
 1. A portfolio manager imports the budget workbook produced by Finance.

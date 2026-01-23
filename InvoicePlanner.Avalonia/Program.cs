@@ -1,5 +1,7 @@
 using System;
 using Avalonia;
+using Avalonia.Skia;
+using Avalonia.Win32;
 
 namespace InvoicePlanner.Avalonia;
 
@@ -10,7 +12,8 @@ internal static class Program
         .StartWithClassicDesktopLifetime(args);
 
     public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<App>()
-        .UsePlatformDetect()
+        .UseWin32()
+        .UseSkia()
         .WithInterFont()
         .LogToTrace();
 }

@@ -11,6 +11,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <!-- Shared resource dictionaries (not styles) -->
                 <ResourceInclude Source="avares://GRC.Shared.Resources/Theme/Theme.axaml" />
                 <ResourceInclude Source="avares://GRC.Shared.Resources/Theme/Typography.axaml" />
                 <ResourceInclude Source="avares://GRC.Shared.UI/DataTemplates/DataTemplates.axaml" />
@@ -22,7 +23,9 @@
 
     <Application.Styles>
         <FluentTheme />
+        <!-- Style dictionaries only -->
         <StyleInclude Source="avares://GRC.Shared.Resources/Theme/Controls.axaml" />
+        <StyleInclude Source="avares://GRC.Shared.UI/Styles/Sidebar.axaml" />
         <StyleInclude Source="avares://App.Presentation/Styles/Styles.xaml" />
     </Application.Styles>
 </Application>

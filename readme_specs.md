@@ -19,6 +19,9 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
 - **DataTemplates:** `avares://GRC.Shared.UI/DataTemplates/DataTemplates.axaml` merges StandardListItem, DetailListItem, and GroupHeader templates and is included in both `App.axaml` files via `ResourceInclude`.
 - **Usage note:** Prefer these shared components over per-app XAML; keep views declarative (no code-behind logic) and push state/commands into the corresponding view models.
 
+### Logging
+- `ILogger` output is captured to `%LocalAppData%/GRCFinancialControl/Logs/<yyyyMMddHHmmss>.log` (Debug level, one file per app run) via a built-in file logger, covering import pipelines and background services alongside console output.
+
 ---
 
 ## Budget Allocation Management
