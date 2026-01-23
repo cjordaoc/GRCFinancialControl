@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence;
+using GRCFinancialControl.Persistence.Logging;
 using GRCFinancialControl.Persistence.Services.Infrastructure;
 using GRCFinancialControl.Persistence.Services.Importers.Strategies;
 using GRCFinancialControl.Persistence.Services.Interfaces;
@@ -209,6 +210,20 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             "engagement manager gui"
         };
 
+        private static readonly string[] PartnerGuiCodeHeaders =
+        {
+            "engagement partner delegate",
+            "partner gui code",
+            "partner code"
+        };
+
+        private static readonly string[] ManagerGuiCodeHeaders =
+        {
+            "engagement manager gu",
+            "manager gui code",
+            "manager code"
+        };
+
         private static readonly string[] EtcAgeDaysHeaders =
         {
             "etc age days",
@@ -346,6 +361,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             public const string Status = nameof(FullManagementDataRow.StatusText);
             public const string EngagementPartnerGui = nameof(FullManagementDataRow.PartnerGuiIds);
             public const string EngagementManagerGui = nameof(FullManagementDataRow.ManagerGuiIds);
+            public const string PartnerGuiCode = nameof(FullManagementDataRow.PartnerGuiCode);
+            public const string ManagerGuiCode = nameof(FullManagementDataRow.ManagerGuiCode);
             public const string EtcAgeDays = nameof(FullManagementDataRow.EtcpAgeDays);
             public const string UnbilledRevenueDays = nameof(FullManagementDataRow.UnbilledRevenueDays);
             public const string LastActiveEtcPDate = nameof(FullManagementDataRow.LastActiveEtcPDate);
@@ -385,6 +402,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             int? Status,
             int? EngagementPartnerGui,
             int? EngagementManagerGui,
+            int? PartnerGuiCode,
+            int? ManagerGuiCode,
             int? EtcAgeDays,
             int? UnbilledRevenueDays,
             int? LastActiveEtcPDate,
@@ -415,6 +434,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             new(FieldNames.Status, "Engagement Status", "AH", ColumnLetterToIndex("AH"), StatusHeaders, false),
             new(FieldNames.EngagementPartnerGui, "Engagement Partner GUI", "AO", ColumnLetterToIndex("AO"), EngagementPartnerGuiHeaders, false),
             new(FieldNames.EngagementManagerGui, "Engagement Manager GUI", "AZ", ColumnLetterToIndex("AZ"), EngagementManagerGuiHeaders, false),
+            new(FieldNames.PartnerGuiCode, "Partner GUI Code", "AN", ColumnLetterToIndex("AN"), PartnerGuiCodeHeaders, false),
+            new(FieldNames.ManagerGuiCode, "Manager GUI Code", "BA", ColumnLetterToIndex("BA"), ManagerGuiCodeHeaders, false),
             new(FieldNames.EtcAgeDays, "ETC-P Age", "FB", ColumnLetterToIndex("FB"), EtcAgeDaysHeaders, false),
             new(FieldNames.UnbilledRevenueDays, "Unbilled Revenue Days", "GA", ColumnLetterToIndex("GA"), UnbilledRevenueDaysHeaders, false),
             new(FieldNames.LastActiveEtcPDate, "Last Active ETC-P Date", "EZ", ColumnLetterToIndex("EZ"), LastActiveEtcPDateHeaders, false),
@@ -639,17 +660,43 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
                     var managers = await context.Managers
                         .AsNoTracking()
-                        .Where(m => m.EngagementManagerGui != null)
+                        .Where(m => m.EngagementManagerGui != null || m.GuiCode != null)
                         .ToListAsync()
                         .ConfigureAwait(false);
-                    var managersByGui = managers.ToDictionary(m => m.EngagementManagerGui!, StringComparer.OrdinalIgnoreCase);
+                    
+                    // Build lookup by both legacy EngagementManagerGui and new GuiCode
+                    var managersByGui = new Dictionary<string, Manager>(StringComparer.OrdinalIgnoreCase);
+                    foreach (var m in managers)
+                    {
+                        if (m.EngagementManagerGui != null)
+                        {
+                            managersByGui.TryAdd(m.EngagementManagerGui, m);
+                        }
+                        if (m.GuiCode != null)
+                        {
+                            managersByGui.TryAdd(m.GuiCode, m);
+                        }
+                    }
 
                     var papds = await context.Papds
                         .AsNoTracking()
-                        .Where(p => p.EngagementPapdGui != null)
+                        .Where(p => p.EngagementPapdGui != null || p.GuiCode != null)
                         .ToListAsync()
                         .ConfigureAwait(false);
-                    var papdsByGui = papds.ToDictionary(p => p.EngagementPapdGui!, StringComparer.OrdinalIgnoreCase);
+                    
+                    // Build lookup by both legacy EngagementPapdGui and new GuiCode
+                    var papdsByGui = new Dictionary<string, Papd>(StringComparer.OrdinalIgnoreCase);
+                    foreach (var p in papds)
+                    {
+                        if (p.EngagementPapdGui != null)
+                        {
+                            papdsByGui.TryAdd(p.EngagementPapdGui, p);
+                        }
+                        if (p.GuiCode != null)
+                        {
+                            papdsByGui.TryAdd(p.GuiCode, p);
+                        }
+                    }
 
                     foreach (var row in parsedRows)
                     {
@@ -790,22 +837,44 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                 engagement.Status = ParseStatus(row.StatusText);
                             }
 
-                            if (row.ManagerGuiIds.Count > 0)
+                            // Sync manager assignments using GuiCode if available, else fall back to ManagerGuiIds
+                            var managerGuiList = new List<string>();
+                            if (!string.IsNullOrWhiteSpace(row.ManagerGuiCode))
+                            {
+                                managerGuiList.Add(row.ManagerGuiCode);
+                            }
+                            else if (row.ManagerGuiIds.Count > 0)
+                            {
+                                managerGuiList.AddRange(row.ManagerGuiIds);
+                            }
+
+                            if (managerGuiList.Count > 0)
                             {
                                 managerAssignmentChanges += SyncManagerAssignments(
                                     context,
                                     engagement,
-                                    row.ManagerGuiIds,
+                                    managerGuiList,
                                     managersByGui,
                                     missingManagerGuis);
                             }
 
-                            if (row.PartnerGuiIds.Count > 0)
+                            // Sync partner assignments using GuiCode if available, else fall back to PartnerGuiIds
+                            var partnerGuiList = new List<string>();
+                            if (!string.IsNullOrWhiteSpace(row.PartnerGuiCode))
+                            {
+                                partnerGuiList.Add(row.PartnerGuiCode);
+                            }
+                            else if (row.PartnerGuiIds.Count > 0)
+                            {
+                                partnerGuiList.AddRange(row.PartnerGuiIds);
+                            }
+
+                            if (partnerGuiList.Count > 0)
                             {
                                 papdAssignmentChanges += SyncPapdAssignments(
                                     context,
                                     engagement,
-                                    row.PartnerGuiIds,
+                                    partnerGuiList,
                                     papdsByGui,
                                     missingPapdGuis);
                             }
@@ -919,7 +988,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         {
                             var errorMessage = $"Row {row.RowNumber}: {ex.Message}";
                             errors.Add(errorMessage);
-                            Logger.LogError(ex, "Error processing Full Management Data row {RowNumber} for engagement {EngagementId}.", row.RowNumber, row.EngagementId);
+                            Logger.LogErrorWithContext(ex, "Error processing Full Management Data row {RowNumber} for engagement {EngagementId}.", row.RowNumber, row.EngagementId);
                         }
                     }
 
@@ -930,13 +999,16 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError(ex, "Full Management Data import failed. Rolling back transaction.");
+                    Logger.LogErrorWithContext(ex, "Full Management Data import failed. Rolling back transaction.");
                     await transaction.RollbackAsync().ConfigureAwait(false);
                     throw;
                 }
                 finally
                 {
                     await context.Database.ExecuteSqlRawAsync("SET @DisableFinancialEvolutionRefresh := NULL;").ConfigureAwait(false);
+                    // Clear placeholder caches after import
+                    ManagerAssignmentStrategy.ClearPlaceholderCache();
+                    PapdAssignmentStrategy.ClearPlaceholderCache();
                 }
 
                 if (refreshMaterializedViews)
@@ -1129,6 +1201,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                 ResolveOptional(FieldNames.Status),
                 ResolveOptional(FieldNames.EngagementPartnerGui),
                 ResolveOptional(FieldNames.EngagementManagerGui),
+                ResolveOptional(FieldNames.PartnerGuiCode),
+                ResolveOptional(FieldNames.ManagerGuiCode),
                 ResolveOptional(FieldNames.EtcAgeDays),
                 ResolveOptional(FieldNames.UnbilledRevenueDays),
                 ResolveOptional(FieldNames.LastActiveEtcPDate),
@@ -1349,6 +1423,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     StatusText = columnIndexes.Status.HasValue ? NormalizeWhitespace(GetCellString(worksheet, rowIndex, columnIndexes.Status.Value)) : string.Empty,
                     PartnerGuiIds = columnIndexes.EngagementPartnerGui.HasValue ? ParseGuiIdentifiers(GetCellValue(worksheet, rowIndex, columnIndexes.EngagementPartnerGui.Value)) : Array.Empty<string>(),
                     ManagerGuiIds = columnIndexes.EngagementManagerGui.HasValue ? ParseGuiIdentifiers(GetCellValue(worksheet, rowIndex, columnIndexes.EngagementManagerGui.Value)) : Array.Empty<string>(),
+                    PartnerGuiCode = columnIndexes.PartnerGuiCode.HasValue ? NormalizeWhitespace(GetCellString(worksheet, rowIndex, columnIndexes.PartnerGuiCode.Value)) : null,
+                    ManagerGuiCode = columnIndexes.ManagerGuiCode.HasValue ? NormalizeWhitespace(GetCellString(worksheet, rowIndex, columnIndexes.ManagerGuiCode.Value)) : null,
                     EtcpAgeDays = columnIndexes.EtcAgeDays.HasValue ? ParseInt(GetCellValue(worksheet, rowIndex, columnIndexes.EtcAgeDays.Value)) : null,
                     UnbilledRevenueDays = columnIndexes.UnbilledRevenueDays.HasValue ? ParseInt(GetCellValue(worksheet, rowIndex, columnIndexes.UnbilledRevenueDays.Value)) : null,
                     LastActiveEtcPDate = columnIndexes.LastActiveEtcPDate.HasValue ? ParseDate(GetCellValue(worksheet, rowIndex, columnIndexes.LastActiveEtcPDate.Value)) : null,
@@ -2061,6 +2137,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             public string StatusText { get; init; } = string.Empty;
             public IReadOnlyList<string> PartnerGuiIds { get; init; } = Array.Empty<string>();
             public IReadOnlyList<string> ManagerGuiIds { get; init; } = Array.Empty<string>();
+            public string? PartnerGuiCode { get; init; }
+            public string? ManagerGuiCode { get; init; }
             public int? EtcpAgeDays { get; init; }
             public int? UnbilledRevenueDays { get; init; }
             public DateTime? LastActiveEtcPDate { get; init; }
@@ -2159,7 +2237,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             }
             catch (Exception ex)
             {
-                logger.LogWarning(
+                logger.LogWarningWithContext(
                     ex,
                     "Unable to determine next fiscal year from '{CurrentFiscalYear}' for engagement {EngagementId}. Future backlog will be skipped.",
                     currentFiscalYearName,
