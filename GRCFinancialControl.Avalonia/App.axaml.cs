@@ -1,5 +1,5 @@
 using App.Presentation.Localization;
-using App.Presentation.Messages;
+using GRC.Shared.UI.Messages;
 using App.Presentation.Services;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;

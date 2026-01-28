@@ -1,40 +1,42 @@
 using App.Presentation.Localization;
 using GRC.Shared.UI.Services;
-using System.Collections.ObjectModel;
 
 namespace App.Presentation.Services;
 
 /// <summary>
-/// App-specific toast service that integrates LocalizationRegistry with shared ToastService.
-/// Re-exports the shared Notifications collection for backward compatibility.
+/// App-specific wrapper around GRC.Shared.UI.ToastService that integrates LocalizationRegistry.
+/// Enables passing localization keys directly instead of pre-formatted messages.
 /// </summary>
 public static class ToastService
 {
     /// <summary>
-    /// Observable collection of active toast notifications (from shared service).
+    /// Displays a success toast notification with localization support.
     /// </summary>
-    public static ReadOnlyObservableCollection<GRC.Shared.UI.Services.ToastNotification> Notifications => 
-        GRC.Shared.UI.Services.ToastService.Notifications;
-
     public static void ShowSuccess(string resourceKey, params object[] arguments)
     {
-        var message = ResolveMessage(resourceKey, arguments);
+        var message = FormatMessage(resourceKey, arguments);
         GRC.Shared.UI.Services.ToastService.ShowSuccess(message);
     }
 
+    /// <summary>
+    /// Displays a warning toast notification with localization support.
+    /// </summary>
     public static void ShowWarning(string resourceKey, params object[] arguments)
     {
-        var message = ResolveMessage(resourceKey, arguments);
+        var message = FormatMessage(resourceKey, arguments);
         GRC.Shared.UI.Services.ToastService.ShowWarning(message);
     }
 
+    /// <summary>
+    /// Displays an error toast notification with localization support.
+    /// </summary>
     public static void ShowError(string resourceKey, params object[] arguments)
     {
-        var message = ResolveMessage(resourceKey, arguments);
+        var message = FormatMessage(resourceKey, arguments);
         GRC.Shared.UI.Services.ToastService.ShowError(message);
     }
 
-    private static string ResolveMessage(string resourceKey, params object[] arguments)
+    private static string FormatMessage(string resourceKey, params object[] arguments)
     {
         if (string.IsNullOrWhiteSpace(resourceKey))
         {
