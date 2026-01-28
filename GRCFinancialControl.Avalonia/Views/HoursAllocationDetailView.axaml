@@ -4,7 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
              xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
-             xmlns:models="using:GRCFinancialControl.Core.Models"
+             xmlns:models="using:GRC.Shared.Core.Models.Core"
+             xmlns:lookups="using:GRC.Shared.Core.Models.Lookups"
              xmlns:behaviors="clr-namespace:GRC.Shared.UI.Behaviors;assembly=GRC.Shared.UI"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
              x:Class="GRCFinancialControl.Avalonia.Views.HoursAllocationDetailView"
@@ -44,7 +45,7 @@
                 <SplitButton.Flyout>
                     <MenuFlyout ItemsSource="{Binding AvailableRanks}">
                         <MenuFlyout.ItemTemplate>
-                            <DataTemplate x:DataType="models:RankOption">
+                            <DataTemplate x:DataType="lookups:RankOption">
                                 <MenuItem Header="{Binding DisplayName}"
                                           Command="{Binding DataContext.AddResourceCommand, ElementName=HoursAllocationDetailRoot}"
                                           CommandParameter="{Binding}"/>
