@@ -11,12 +11,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GRCFinancialControl.Avaloni
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App.Presentation", "App.Presentation\App.Presentation.csproj", "{99854BAC-708A-4C2C-A1D8-6F502B58FE7B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Invoices.Core", "Invoices.Core\Invoices.Core.csproj", "{CE3EF96B-D248-4ABC-866C-9EAE97974AA4}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Invoices.Data", "Invoices.Data\Invoices.Data.csproj", "{76512355-3548-42EC-AEEE-543A828A0647}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvoicePlanner.Avalonia", "InvoicePlanner.Avalonia\InvoicePlanner.Avalonia.csproj", "{C20054C8-5A08-4BD9-8818-51C1E1E90012}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GRC.Shared.Resources", "GRC.Shared\GRC.Shared.Resources\GRC.Shared.Resources.csproj", "{58F38076-DF30-4E3A-A128-B879FD8BD508}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GRC.Shared.UI", "GRC.Shared\GRC.Shared.UI\GRC.Shared.UI.csproj", "{FA2D0F2A-1876-4731-94CB-FBDAB14559F1}"
@@ -43,18 +37,6 @@ Global
 		{99854BAC-708A-4C2C-A1D8-6F502B58FE7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{99854BAC-708A-4C2C-A1D8-6F502B58FE7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{99854BAC-708A-4C2C-A1D8-6F502B58FE7B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CE3EF96B-D248-4ABC-866C-9EAE97974AA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CE3EF96B-D248-4ABC-866C-9EAE97974AA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CE3EF96B-D248-4ABC-866C-9EAE97974AA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CE3EF96B-D248-4ABC-866C-9EAE97974AA4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{76512355-3548-42EC-AEEE-543A828A0647}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{76512355-3548-42EC-AEEE-543A828A0647}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{76512355-3548-42EC-AEEE-543A828A0647}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{76512355-3548-42EC-AEEE-543A828A0647}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C20054C8-5A08-4BD9-8818-51C1E1E90012}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C20054C8-5A08-4BD9-8818-51C1E1E90012}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C20054C8-5A08-4BD9-8818-51C1E1E90012}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C20054C8-5A08-4BD9-8818-51C1E1E90012}.Release|Any CPU.Build.0 = Release|Any CPU
 		{58F38076-DF30-4E3A-A128-B879FD8BD508}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{58F38076-DF30-4E3A-A128-B879FD8BD508}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{58F38076-DF30-4E3A-A128-B879FD8BD508}.Release|Any CPU.ActiveCfg = Release|Any CPU
