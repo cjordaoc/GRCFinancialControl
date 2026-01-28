@@ -8,7 +8,11 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
-using GRCFinancialControl.Core.Models;
+using GRC.Shared.Core.Models.Core;
+using GRC.Shared.Core.Models.Financial;
+using GRC.Shared.Core.Models.Allocations;
+using GRC.Shared.Core.Models.Assignments;
+using GRC.Shared.Core.Models.Lookups;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using GRC.Shared.UI.Messages;
 

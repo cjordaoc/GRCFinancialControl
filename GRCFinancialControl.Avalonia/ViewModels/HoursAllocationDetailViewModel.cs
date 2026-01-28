@@ -10,8 +10,12 @@ using CommunityToolkit.Mvvm.Messaging;
 using GRC.Shared.UI.Messages;
 using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services;
-using GRCFinancialControl.Core.Enums;
-using GRCFinancialControl.Core.Models;
+using GRC.Shared.Core.Enums;
+using GRC.Shared.Core.Models.Core;
+using GRC.Shared.Core.Models.Financial;
+using GRC.Shared.Core.Models.Allocations;
+using GRC.Shared.Core.Models.Assignments;
+using GRC.Shared.Core.Models.Lookups;
 using GRCFinancialControl.Persistence.Services.Importers;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 

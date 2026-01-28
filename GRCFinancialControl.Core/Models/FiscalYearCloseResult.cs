@@ -1,4 +1,5 @@
 using System;
+using GRC.Shared.Core.Models.Financial;
 
 namespace GRCFinancialControl.Core.Models
 {

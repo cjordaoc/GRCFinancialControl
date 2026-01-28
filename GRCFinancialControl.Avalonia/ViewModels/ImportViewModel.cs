@@ -19,7 +19,11 @@ using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Persistence.Services.Importers;
 using GRCFinancialControl.Persistence.Services.Importers.Budget;
 using GRCFinancialControl.Persistence.Services.Interfaces;
-using GRCFinancialControl.Core.Models;
+using GRC.Shared.Core.Models.Core;
+using GRC.Shared.Core.Models.Financial;
+using GRC.Shared.Core.Models.Allocations;
+using GRC.Shared.Core.Models.Assignments;
+using GRC.Shared.Core.Models.Lookups;
 
 namespace GRCFinancialControl.Avalonia.ViewModels
 {

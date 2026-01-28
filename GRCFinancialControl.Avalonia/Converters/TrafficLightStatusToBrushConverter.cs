@@ -4,7 +4,7 @@ using Avalonia;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
 using Avalonia.Styling;
-using GRCFinancialControl.Core.Enums;
+using GRC.Shared.Core.Enums;
 
 namespace GRCFinancialControl.Avalonia.Converters
 {

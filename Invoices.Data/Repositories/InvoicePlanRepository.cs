@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using GRCFinancialControl.Core.Models;
+using GRC.Shared.Core.Models.Core;
 using GRCFinancialControl.Persistence;
 using GRCFinancialControl.Persistence.Services.Interfaces;
 using Invoices.Core.Enums;

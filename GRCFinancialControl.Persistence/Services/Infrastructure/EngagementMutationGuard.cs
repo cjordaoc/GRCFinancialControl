@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using GRCFinancialControl.Core.Enums;
+using GRC.Shared.Core.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace GRCFinancialControl.Persistence.Services.Infrastructure
