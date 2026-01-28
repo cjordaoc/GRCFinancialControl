@@ -250,6 +250,7 @@
                             <StackPanel Spacing="{StaticResource SectionSpacing}">
                                 <TextBlock Text="PAPD Assignments" Classes="TitleXSmall"/>
                                 <DataGrid ItemsSource="{Binding PapdAssignments}"
+                                          SelectedItem="{Binding SelectedPapdAssignment}"
                                           AutoGenerateColumns="False"
                                           IsReadOnly="True"
                                           SelectionMode="Single"
@@ -259,19 +260,43 @@
                                         <DataGridTextColumn Header="Level" Binding="{Binding Papd.Level}" Width="*"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="{StaticResource ControlSpacing}"
+                                            IsEnabled="{Binding AllowEditing}">
+                                    <Button Content="Add PAPD"
+                                            Command="{Binding AddPapdAssignmentCommand}"
+                                            MinWidth="{StaticResource ButtonMinWidth}"/>
+                                    <Button Content="Remove Selected"
+                                            Command="{Binding RemovePapdAssignmentCommand}"
+                                            IsEnabled="{Binding CanRemovePapdAssignment}"
+                                            MinWidth="{StaticResource ButtonMinWidth}"/>
+                                </StackPanel>
                             </StackPanel>
 
                             <StackPanel Spacing="{StaticResource SectionSpacing}">
                                 <TextBlock Text="Manager Assignments" Classes="TitleXSmall"/>
                                 <DataGrid ItemsSource="{Binding ManagerAssignments}"
+                                          SelectedItem="{Binding SelectedManagerAssignment}"
                                           AutoGenerateColumns="False"
                                           IsReadOnly="True"
+                                          SelectionMode="Single"
                                           Height="150">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Manager" Binding="{Binding Manager.Name}" Width="2*"/>
                                         <DataGridTextColumn Header="Position" Binding="{Binding Manager.Position}" Width="*"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="{StaticResource ControlSpacing}"
+                                            IsEnabled="{Binding AllowEditing}">
+                                    <Button Content="Add Manager"
+                                            Command="{Binding AddManagerAssignmentCommand}"
+                                            MinWidth="{StaticResource ButtonMinWidth}"/>
+                                    <Button Content="Remove Selected"
+                                            Command="{Binding RemoveManagerAssignmentCommand}"
+                                            IsEnabled="{Binding CanRemoveManagerAssignment}"
+                                            MinWidth="{StaticResource ButtonMinWidth}"/>
+                                </StackPanel>
                             </StackPanel>
                         </StackPanel>
                     </TabItem>

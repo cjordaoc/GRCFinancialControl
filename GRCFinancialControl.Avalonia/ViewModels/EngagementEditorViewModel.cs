@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services;
+using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRCFinancialControl.Core.Enums;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Services.Interfaces;
@@ -111,6 +112,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private ObservableCollection<EngagementPapd> _papdAssignments = new();
 
         [ObservableProperty]
+        private EngagementPapd? _selectedPapdAssignment;
+
+        [ObservableProperty]
         private ObservableCollection<ClosingPeriod> _closingPeriods = new();
 
         [ObservableProperty]
@@ -121,6 +125,9 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         [ObservableProperty]
         private ObservableCollection<EngagementManagerAssignment> _managerAssignments = new();
+
+        [ObservableProperty]
+        private EngagementManagerAssignment? _selectedManagerAssignment;
 
         [ObservableProperty]
         private ObservableCollection<EngagementAdditionalSale> _additionalSales = new();
@@ -162,6 +169,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         public bool IsCurrencyReadOnly => IsReadOnlyMode || IsExistingRecord;
 
         public bool CanDeleteAdditionalSale => SelectedAdditionalSale is not null && AllowEditing;
+
+        public bool CanRemovePapdAssignment => SelectedPapdAssignment is not null && AllowEditing;
+
+        public bool CanRemoveManagerAssignment => SelectedManagerAssignment is not null && AllowEditing;
 
         public string LastClosingPeriodDisplay => LastClosingPeriod?.Name ?? LastClosingPeriodFallbackName ?? string.Empty;
 
@@ -461,6 +472,110 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             AdditionalSales.Remove(SelectedAdditionalSale);
             SelectedAdditionalSale = null;
             MarkAsChanged();
+        }
+
+        [RelayCommand]
+        private async Task AddPapdAssignment()
+        {
+            if (IsReadOnlyMode || Engagement.Id == 0)
+            {
+                return;
+            }
+
+            var availablePapds = await _engagementFacade.GetAvailablePapdsAsync(Engagement);
+            if (availablePapds.Count == 0)
+            {
+                ToastService.ShowWarning("FINC_Engagements_Toast_AllPapdsAssigned");
+                return;
+            }
+
+            var selectionViewModel = new PapdSelectionViewModel(Engagement, _engagementFacade, Messenger);
+            await selectionViewModel.LoadDataAsync();
+            await _dialogService.ShowDialogAsync(selectionViewModel, selectionViewModel.Title);
+            
+            // Reload assignments after dialog closes
+            var updatedEngagement = await _engagementFacade.GetEngagementAsync(Engagement.Id);
+            if (updatedEngagement != null)
+            {
+                PapdAssignments = new ObservableCollection<EngagementPapd>(
+                    updatedEngagement.EngagementPapds
+                        .OrderBy(p => p.Papd?.Name, StringComparer.OrdinalIgnoreCase));
+                SelectedPapdAssignment = null;
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanRemovePapdAssignment))]
+        private async Task RemovePapdAssignment()
+        {
+            if (SelectedPapdAssignment is null || Engagement.Id == 0)
+            {
+                return;
+            }
+
+            try
+            {
+                await _engagementFacade.RemovePapdAsync(Engagement.Id, SelectedPapdAssignment.PapdId);
+                PapdAssignments.Remove(SelectedPapdAssignment);
+                SelectedPapdAssignment = null;
+                MarkAsChanged();
+                ToastService.ShowSuccess("FINC_Engagements_Toast_PapdRemoved");
+            }
+            catch (Exception ex)
+            {
+                ToastService.ShowError("FINC_Engagements_Toast_OperationFailed", ex.Message);
+            }
+        }
+
+        [RelayCommand]
+        private async Task AddManagerAssignment()
+        {
+            if (IsReadOnlyMode || Engagement.Id == 0)
+            {
+                return;
+            }
+
+            var availableManagers = await _engagementFacade.GetAvailableManagersAsync(Engagement);
+            if (availableManagers.Count == 0)
+            {
+                ToastService.ShowWarning("FINC_Engagements_Toast_AllManagersAssigned");
+                return;
+            }
+
+            var selectionViewModel = new ManagerSelectionViewModel(Engagement, _engagementFacade, Messenger);
+            await selectionViewModel.LoadDataAsync();
+            await _dialogService.ShowDialogAsync(selectionViewModel, selectionViewModel.Title);
+            
+            // Reload assignments after dialog closes
+            var updatedEngagement = await _engagementFacade.GetEngagementAsync(Engagement.Id);
+            if (updatedEngagement != null)
+            {
+                ManagerAssignments = new ObservableCollection<EngagementManagerAssignment>(
+                    updatedEngagement.ManagerAssignments
+                        .OrderBy(a => a.Manager?.Name, StringComparer.OrdinalIgnoreCase));
+                SelectedManagerAssignment = null;
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanRemoveManagerAssignment))]
+        private async Task RemoveManagerAssignment()
+        {
+            if (SelectedManagerAssignment is null || Engagement.Id == 0)
+            {
+                return;
+            }
+
+            try
+            {
+                await _engagementFacade.RemoveManagerAsync(Engagement.Id, SelectedManagerAssignment.ManagerId);
+                ManagerAssignments.Remove(SelectedManagerAssignment);
+                SelectedManagerAssignment = null;
+                MarkAsChanged();
+                ToastService.ShowSuccess("FINC_Engagements_Toast_ManagerRemoved");
+            }
+            catch (Exception ex)
+            {
+                ToastService.ShowError("FINC_Engagements_Toast_OperationFailed", ex.Message);
+            }
         }
 
         [RelayCommand]

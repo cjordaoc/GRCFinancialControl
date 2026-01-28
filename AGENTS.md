@@ -34,6 +34,15 @@ Confirm .NET 8, restore dependencies, and ensure `dotnet build -c Release` passe
 
 ---
 
+## 3.1 Â· Fail-Fast Principle (No Fallbacks)
+- **NO automatic column fallbacks** in data import. If expected column is not found at the hardcoded location, fail with explicit error.
+- Column header search/detection is **acceptable** (source files may shift columns), but the search must find the column unambiguously.
+- Once column is identified by header search, it must be used correctly (read from each row, not just header row).
+- Implicit fallbacks hide data corruption and make bugs hard to trace.
+- Always prefer explicit validation + clear error messages over silent fallback behavior.
+
+---
+
 ## 4 Â· Quality Gates
 - Strict MVVM boundaries.
 - Code must be small, readable, deterministic.

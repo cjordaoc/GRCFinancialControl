@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
 using App.Presentation.Services;
@@ -157,6 +159,113 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             await _dialogService.ShowDialogAsync(editViewModel, editViewModel.Title);
         }
 
+        [RelayCommand(CanExecute = nameof(CanEditAssignment))]
+        private async Task TransferAssignments()
+        {
+            if (SelectedPapd is null)
+            {
+                return;
+            }
+
+            try
+            {
+                // Get all assignments for this PAPD
+                var assignments = await _papdAssignmentService.GetByPapdIdAsync(SelectedPapd.Id);
+                if (assignments.Count == 0)
+                {
+                    ToastService.ShowWarning("FINC_Papds_Toast_NoAssignments");
+                    return;
+                }
+
+                // Get all PAPDs except the current one
+                var allPapds = await _papdService.GetAllAsync();
+                var availablePapds = allPapds.Where(p => p.Id != SelectedPapd.Id).ToList();
+                
+                if (availablePapds.Count == 0)
+                {
+                    ToastService.ShowWarning("FINC_Papds_Toast_NoPapdsForTransfer");
+                    return;
+                }
+
+                // Create a simple dialog to select target PAPD
+                var transferViewModel = new PapdTransferViewModel(availablePapds, Messenger);
+                await _dialogService.ShowDialogAsync(transferViewModel, "Transfer Assignments");
+
+                // If transfer was confirmed, transfer assignments
+                if (transferViewModel.SelectedPapd != null)
+                {
+                    foreach (var assignment in assignments)
+                    {
+                        // Update the assignment to point to the new PAPD
+                        assignment.PapdId = transferViewModel.SelectedPapd.Id;
+                    }
+                    
+                    // Now remove the original assignments
+                    foreach (var assignment in assignments)
+                    {
+                        await _papdAssignmentService.DeleteAsync(assignment.Id);
+                    }
+
+                    ToastService.ShowSuccess("FINC_Papds_Toast_TransferSuccess", 
+                        SelectedPapd.Name, 
+                        transferViewModel.SelectedPapd.Name,
+                        assignments.Count.ToString());
+                    
+                    Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ToastService.ShowError("FINC_Papds_Toast_OperationFailed", ex.Message);
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanEditAssignment))]
+        private async Task DeleteAllAssignments()
+        {
+            if (SelectedPapd is null)
+            {
+                return;
+            }
+
+            try
+            {
+                // Get all assignments for this PAPD
+                var assignments = await _papdAssignmentService.GetByPapdIdAsync(SelectedPapd.Id);
+                if (assignments.Count == 0)
+                {
+                    ToastService.ShowWarning("FINC_Papds_Toast_NoAssignments");
+                    return;
+                }
+
+                // Confirm deletion
+                var result = await _dialogService.ShowConfirmationAsync(
+                    "Delete All Assignments",
+                    $"Are you sure you want to delete all {assignments.Count} assignment(s) for {SelectedPapd.Name}?");
+                
+                if (!result)
+                {
+                    return;
+                }
+
+                // Delete all assignments
+                foreach (var assignment in assignments)
+                {
+                    await _papdAssignmentService.DeleteAsync(assignment.Id);
+                }
+
+                ToastService.ShowSuccess("FINC_Papds_Toast_DeleteAssignmentsSuccess", 
+                    assignments.Count.ToString(), 
+                    SelectedPapd.Name);
+                
+                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+            }
+            catch (System.Exception ex)
+            {
+                ToastService.ShowError("FINC_Papds_Toast_OperationFailed", ex.Message);
+            }
+        }
+
         private static bool CanEdit(Papd papd) => papd is not null;
 
         private static bool CanDelete(Papd papd) => papd is not null;
@@ -172,6 +281,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             DeleteDataCommand.NotifyCanExecuteChanged();
             EditAssignmentCommand.NotifyCanExecuteChanged();
             ViewCommand.NotifyCanExecuteChanged();
+            TransferAssignmentsCommand.NotifyCanExecuteChanged();
+            DeleteAllAssignmentsCommand.NotifyCanExecuteChanged();
         }
 
     }

@@ -202,31 +202,34 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
         private static readonly string[] EngagementPartnerGuiHeaders =
         {
-            "engagement partner gui"
+            "engagement partner gui",
+            "engagement partner"
         };
 
         private static readonly string[] EngagementManagerGuiHeaders =
         {
+            "engagement manager gui",
+            "engagement manager"
+        };
+
+        private static readonly string[] EngagementPartnerGUIHeaders =
+        {
+            "engagement partner gui"
+        };
+
+        private static readonly string[] EngagementPartnerHeaders =
+        {
+            "engagement partner"
+        };
+
+        private static readonly string[] EngagementManagerGUIHeaders =
+        {
             "engagement manager gui"
         };
 
-        private static readonly string[] PartnerGuiCodeHeaders =
+        private static readonly string[] EngagementManagerHeaders =
         {
-            "engagement partner delegate",
-            "partner gui code",
-            "partner guicode",
-            "partner code",
-            "papd gui code",
-            "papd guicode",
-            "papd code"
-        };
-
-        private static readonly string[] ManagerGuiCodeHeaders =
-        {
-            "engagement manager gu",
-            "manager gui code",
-            "manager guicode",
-            "manager code"
+            "engagement manager"
         };
 
         private static readonly string[] EtcAgeDaysHeaders =
@@ -246,13 +249,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             "last etc date",
             "last etc-p",
             "last etc"
-        };
-
-        private static readonly string[] NextEtcDateHeaders =
-        {
-            "next etc date",
-            "proposed next etc",
-            "next etc-p"
         };
 
         private static readonly string[] CurrentFiscalYearBacklogHeaders =
@@ -336,7 +332,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             EtcAgeDaysHeaders,
             UnbilledRevenueDaysHeaders,
             LastActiveEtcPDateHeaders,
-            NextEtcDateHeaders,
             CurrentFiscalYearBacklogHeaders,
             FutureFiscalYearBacklogHeaders
         };
@@ -364,14 +359,13 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             public const string ExpensesEtd = nameof(FullManagementDataRow.ExpensesToDate);
             public const string ExpensesFytd = nameof(FullManagementDataRow.FYTDExpenses);
             public const string Status = nameof(FullManagementDataRow.StatusText);
-            public const string EngagementPartnerGui = nameof(FullManagementDataRow.PartnerGuiIds);
-            public const string EngagementManagerGui = nameof(FullManagementDataRow.ManagerGuiIds);
-            public const string PartnerGuiCode = nameof(FullManagementDataRow.PartnerGuiCode);
-            public const string ManagerGuiCode = nameof(FullManagementDataRow.ManagerGuiCode);
+            public const string EngagementPartnerGUI = nameof(FullManagementDataRow.EngagementPartnerGUI);
+            public const string EngagementPartner = nameof(FullManagementDataRow.EngagementPartner);
+            public const string EngagementManagerGUI = nameof(FullManagementDataRow.EngagementManagerGUI);
+            public const string EngagementManager = nameof(FullManagementDataRow.EngagementManager);
             public const string EtcAgeDays = nameof(FullManagementDataRow.EtcpAgeDays);
             public const string UnbilledRevenueDays = nameof(FullManagementDataRow.UnbilledRevenueDays);
             public const string LastActiveEtcPDate = nameof(FullManagementDataRow.LastActiveEtcPDate);
-            public const string NextEtcDate = nameof(FullManagementDataRow.NextEtcDate);
             public const string CurrentFiscalYearBacklog = nameof(FullManagementDataRow.CurrentFiscalYearBacklog);
             public const string FutureFiscalYearBacklog = nameof(FullManagementDataRow.FutureFiscalYearBacklog);
         }
@@ -405,14 +399,13 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             int? ExpensesEtd,
             int? ExpensesFytd,
             int? Status,
-            int? EngagementPartnerGui,
-            int? EngagementManagerGui,
-            int? PartnerGuiCode,
-            int? ManagerGuiCode,
+            int? EngagementPartnerGUI,
+            int? EngagementPartner,
+            int? EngagementManagerGUI,
+            int? EngagementManager,
             int? EtcAgeDays,
             int? UnbilledRevenueDays,
             int? LastActiveEtcPDate,
-            int? NextEtcDate,
             int? CurrentFiscalYearBacklog,
             int? FutureFiscalYearBacklog);
 
@@ -437,14 +430,13 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             new(FieldNames.ExpensesEtd, "Expenses ETD", "DH", ColumnLetterToIndex("DH"), ExpensesETDHeaders, false),
             new(FieldNames.ExpensesFytd, "Expenses FYTD", "DI", ColumnLetterToIndex("DI"), ExpensesFYTDHeaders, false),
             new(FieldNames.Status, "Engagement Status", "AH", ColumnLetterToIndex("AH"), StatusHeaders, false),
-            new(FieldNames.EngagementPartnerGui, "Engagement Partner GUI", "AO", ColumnLetterToIndex("AO"), EngagementPartnerGuiHeaders, false),
-            new(FieldNames.EngagementManagerGui, "Engagement Manager GUI", "AZ", ColumnLetterToIndex("AZ"), EngagementManagerGuiHeaders, false),
-            new(FieldNames.PartnerGuiCode, "Partner GUI Code", "AN", ColumnLetterToIndex("AN"), PartnerGuiCodeHeaders, false),
-            new(FieldNames.ManagerGuiCode, "Manager GUI Code", "BA", ColumnLetterToIndex("BA"), ManagerGuiCodeHeaders, false),
+            new(FieldNames.EngagementPartnerGUI, "Engagement Partner GUI", "AM", ColumnLetterToIndex("AM"), EngagementPartnerGUIHeaders, false),
+            new(FieldNames.EngagementPartner, "Engagement Partner", "AN", ColumnLetterToIndex("AN"), EngagementPartnerHeaders, false),
+            new(FieldNames.EngagementManagerGUI, "Engagement Manager GUI", "AY", ColumnLetterToIndex("AY"), EngagementManagerGUIHeaders, false),
+            new(FieldNames.EngagementManager, "Engagement Manager", "BA", ColumnLetterToIndex("BA"), EngagementManagerHeaders, false),
             new(FieldNames.EtcAgeDays, "ETC-P Age", "FB", ColumnLetterToIndex("FB"), EtcAgeDaysHeaders, false),
             new(FieldNames.UnbilledRevenueDays, "Unbilled Revenue Days", "GA", ColumnLetterToIndex("GA"), UnbilledRevenueDaysHeaders, false),
             new(FieldNames.LastActiveEtcPDate, "Last Active ETC-P Date", "EZ", ColumnLetterToIndex("EZ"), LastActiveEtcPDateHeaders, false),
-            new(FieldNames.NextEtcDate, "Next ETC Date", "FD", ColumnLetterToIndex("FD"), NextEtcDateHeaders, false),
             new(FieldNames.CurrentFiscalYearBacklog, "FYTG Backlog", "GR", ColumnLetterToIndex("GR"), CurrentFiscalYearBacklogHeaders, false),
             new(FieldNames.FutureFiscalYearBacklog, "Future FY Backlog", "GS", ColumnLetterToIndex("GS"), FutureFiscalYearBacklogHeaders, false)
         };
@@ -832,15 +824,15 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                 engagement.Status = ParseStatus(row.StatusText);
                             }
 
-                            // Sync manager assignments using GuiCode if available, else fall back to ManagerGuiIds
+                            // Sync manager assignments using EngagementManagerGUI
                             var managerGuiList = new List<string>();
-                            if (!string.IsNullOrWhiteSpace(row.ManagerGuiCode))
+                            if (!string.IsNullOrWhiteSpace(row.EngagementManagerGUI))
                             {
-                                managerGuiList.Add(row.ManagerGuiCode);
+                                managerGuiList.Add(row.EngagementManagerGUI);
                             }
-                            else if (row.ManagerGuiIds.Count > 0)
+                            if (!string.IsNullOrWhiteSpace(row.EngagementManager))
                             {
-                                managerGuiList.AddRange(row.ManagerGuiIds);
+                                managerGuiList.Add(row.EngagementManager);
                             }
 
                             if (managerGuiList.Count > 0)
@@ -853,15 +845,15 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                                     missingManagerGuis);
                             }
 
-                            // Sync partner assignments using GuiCode if available, else fall back to PartnerGuiIds
+                            // Sync partner assignments using EngagementPartnerGUI
                             var partnerGuiList = new List<string>();
-                            if (!string.IsNullOrWhiteSpace(row.PartnerGuiCode))
+                            if (!string.IsNullOrWhiteSpace(row.EngagementPartnerGUI))
                             {
-                                partnerGuiList.Add(row.PartnerGuiCode);
+                                partnerGuiList.Add(row.EngagementPartnerGUI);
                             }
-                            else if (row.PartnerGuiIds.Count > 0)
+                            if (!string.IsNullOrWhiteSpace(row.EngagementPartner))
                             {
-                                partnerGuiList.AddRange(row.PartnerGuiIds);
+                                partnerGuiList.Add(row.EngagementPartner);
                             }
 
                             if (partnerGuiList.Count > 0)
@@ -927,10 +919,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                             {
                                 engagement.LastEtcDate = lastEtcDate;
                                 engagement.ProposedNextEtcDate = CalculateProposedNextEtcDate(lastEtcDate);
-                            }
-                            else if (row.NextEtcDate.HasValue)
-                            {
-                                engagement.ProposedNextEtcDate = DateTime.SpecifyKind(row.NextEtcDate.Value.Date, DateTimeKind.Unspecified);
                             }
 
                             engagement.LastClosingPeriodId = closingPeriod.Id;
@@ -1194,14 +1182,13 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                 ResolveOptional(FieldNames.ExpensesEtd),
                 ResolveOptional(FieldNames.ExpensesFytd),
                 ResolveOptional(FieldNames.Status),
-                ResolveOptional(FieldNames.EngagementPartnerGui),
-                ResolveOptional(FieldNames.EngagementManagerGui),
-                ResolveOptional(FieldNames.PartnerGuiCode),
-                ResolveOptional(FieldNames.ManagerGuiCode),
+                ResolveOptional(FieldNames.EngagementPartnerGUI),
+                ResolveOptional(FieldNames.EngagementPartner),
+                ResolveOptional(FieldNames.EngagementManagerGUI),
+                ResolveOptional(FieldNames.EngagementManager),
                 ResolveOptional(FieldNames.EtcAgeDays),
                 ResolveOptional(FieldNames.UnbilledRevenueDays),
                 ResolveOptional(FieldNames.LastActiveEtcPDate),
-                ResolveOptional(FieldNames.NextEtcDate),
                 ResolveOptional(FieldNames.CurrentFiscalYearBacklog),
                 ResolveOptional(FieldNames.FutureFiscalYearBacklog));
 
@@ -1274,6 +1261,11 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                 return null;
             }
 
+            // FAIL-FAST: Do not allow fallback for assignment columns (partner/manager)
+            // These columns must be found exactly or not at all to prevent data corruption
+            var isAssignmentField = definition.FieldName.Contains("Partner", StringComparison.OrdinalIgnoreCase) ||
+                                    definition.FieldName.Contains("Manager", StringComparison.OrdinalIgnoreCase);
+
             var normalizedCandidates = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var alias in definition.Aliases)
@@ -1287,35 +1279,50 @@ namespace GRCFinancialControl.Persistence.Services.Importers
 
             normalizedCandidates.Add(NormalizeHeader(definition.HeaderLabel));
 
+            // Exact match lookup
             foreach (var candidate in normalizedCandidates)
             {
                 if (headerMap.TryGetValue(candidate, out var columnIndex))
                 {
-                    LogFallback(columnIndex, candidate, false);
+                    LogFallback(columnIndex, candidate, false, false);
                     return columnIndex;
                 }
             }
 
-            foreach (var candidate in normalizedCandidates)
+            // Partial match lookup - but NOT for assignment fields
+            if (!isAssignmentField)
             {
-                foreach (var kvp in headerMap)
+                foreach (var candidate in normalizedCandidates)
                 {
-                    if (kvp.Key.Contains(candidate, StringComparison.OrdinalIgnoreCase))
+                    foreach (var kvp in headerMap)
                     {
-                        LogFallback(kvp.Value, kvp.Key, true);
-                        return kvp.Value;
+                        if (kvp.Key.Contains(candidate, StringComparison.OrdinalIgnoreCase))
+                        {
+                            LogFallback(kvp.Value, kvp.Key, true, true);
+                            return kvp.Value;
+                        }
                     }
                 }
+            }
+            else if (isAssignmentField)
+            {
+                // For assignment fields, log that we couldn't find the column
+                var headerText = NormalizeHeader(definition.HeaderLabel);
+                fallbackMessages.Add(
+                    $"CRITICAL: Assignment column '{definition.HeaderLabel}' (expected at column {definition.ColumnLetter}) not found in imported file. " +
+                    $"All engagements will NOT have {definition.FieldName} assigned. This is a data integrity issue.");
             }
 
             return null;
 
-            void LogFallback(int columnIndex, string matchedHeader, bool isPartial)
+            void LogFallback(int columnIndex, string matchedHeader, bool isPartial, bool isFallback)
             {
                 var headerText = GetCellString(worksheet, headerRowIndex, columnIndex);
-                var descriptor = isPartial ? "partial" : "alias";
+                var descriptor = isPartial ? "partial match" : "alias";
+                var level = isFallback ? "WARNING" : "INFO";
                 fallbackMessages.Add(
-                    $"Full Management Data import: Using {descriptor} header '{headerText}' (column {ColumnIndexToLetter(columnIndex)}) for field '{definition.FieldName}' (expected '{definition.HeaderLabel}' at column {definition.ColumnLetter} in row 11).");
+                    $"[{level}] Full Management Data import: Using {descriptor} header '{headerText}' (column {ColumnIndexToLetter(columnIndex)}) " +
+                    $"for field '{definition.FieldName}' (expected '{definition.HeaderLabel}' at column {definition.ColumnLetter} in row 11).");
             }
         }
 
@@ -1416,14 +1423,14 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                     ExpensesToDate = columnIndexes.ExpensesEtd.HasValue ? ParseDecimal(GetCellValue(worksheet, rowIndex, columnIndexes.ExpensesEtd.Value), 2) : null,
                     FYTDExpenses = columnIndexes.ExpensesFytd.HasValue ? ParseDecimal(GetCellValue(worksheet, rowIndex, columnIndexes.ExpensesFytd.Value), 2) : null,
                     StatusText = columnIndexes.Status.HasValue ? NormalizeWhitespace(GetCellString(worksheet, rowIndex, columnIndexes.Status.Value)) : string.Empty,
-                    PartnerGuiIds = columnIndexes.EngagementPartnerGui.HasValue ? ParseGuiIdentifiers(GetCellValue(worksheet, rowIndex, columnIndexes.EngagementPartnerGui.Value)) : Array.Empty<string>(),
-                    ManagerGuiIds = columnIndexes.EngagementManagerGui.HasValue ? ParseGuiIdentifiers(GetCellValue(worksheet, rowIndex, columnIndexes.EngagementManagerGui.Value)) : Array.Empty<string>(),
-                    PartnerGuiCode = columnIndexes.PartnerGuiCode.HasValue ? NormalizeWhitespace(GetCellString(worksheet, rowIndex, columnIndexes.PartnerGuiCode.Value)) : null,
-                    ManagerGuiCode = columnIndexes.ManagerGuiCode.HasValue ? NormalizeWhitespace(GetCellString(worksheet, rowIndex, columnIndexes.ManagerGuiCode.Value)) : null,
+                    EngagementPartnerGUI = columnIndexes.EngagementPartnerGUI.HasValue ? NormalizeWhitespace(GetCellString(worksheet, rowIndex, columnIndexes.EngagementPartnerGUI.Value)) : null,
+                    EngagementPartner = columnIndexes.EngagementPartner.HasValue ? NormalizeWhitespace(GetCellString(worksheet, rowIndex, columnIndexes.EngagementPartner.Value)) : null,
+                    EngagementManagerGUI = columnIndexes.EngagementManagerGUI.HasValue ? NormalizeWhitespace(GetCellString(worksheet, rowIndex, columnIndexes.EngagementManagerGUI.Value)) : null,
+                    EngagementManager = columnIndexes.EngagementManager.HasValue ? NormalizeWhitespace(GetCellString(worksheet, rowIndex, columnIndexes.EngagementManager.Value)) : null,
                     EtcpAgeDays = columnIndexes.EtcAgeDays.HasValue ? ParseInt(GetCellValue(worksheet, rowIndex, columnIndexes.EtcAgeDays.Value)) : null,
                     UnbilledRevenueDays = columnIndexes.UnbilledRevenueDays.HasValue ? ParseInt(GetCellValue(worksheet, rowIndex, columnIndexes.UnbilledRevenueDays.Value)) : null,
                     LastActiveEtcPDate = columnIndexes.LastActiveEtcPDate.HasValue ? ParseDate(GetCellValue(worksheet, rowIndex, columnIndexes.LastActiveEtcPDate.Value)) : null,
-                    NextEtcDate = columnIndexes.NextEtcDate.HasValue ? ParseDate(GetCellValue(worksheet, rowIndex, columnIndexes.NextEtcDate.Value)) : null,
+                    NextEtcDate = null, // Calculated: LastActiveEtcPDate + 1 month (computed later)
                     CurrentFiscalYearBacklog = columnIndexes.CurrentFiscalYearBacklog.HasValue ? ParseDecimal(GetCellValue(worksheet, rowIndex, columnIndexes.CurrentFiscalYearBacklog.Value), 2) : null,
                     FutureFiscalYearBacklog = columnIndexes.FutureFiscalYearBacklog.HasValue ? ParseDecimal(GetCellValue(worksheet, rowIndex, columnIndexes.FutureFiscalYearBacklog.Value), 2) : null
                 });
@@ -2130,10 +2137,10 @@ namespace GRCFinancialControl.Persistence.Services.Importers
             public decimal? ExpensesToDate { get; init; }
             public decimal? FYTDExpenses { get; init; }
             public string StatusText { get; init; } = string.Empty;
-            public IReadOnlyList<string> PartnerGuiIds { get; init; } = Array.Empty<string>();
-            public IReadOnlyList<string> ManagerGuiIds { get; init; } = Array.Empty<string>();
-            public string? PartnerGuiCode { get; init; }
-            public string? ManagerGuiCode { get; init; }
+            public string? EngagementPartnerGUI { get; init; }
+            public string? EngagementPartner { get; init; }
+            public string? EngagementManagerGUI { get; init; }
+            public string? EngagementManager { get; init; }
             public int? EtcpAgeDays { get; init; }
             public int? UnbilledRevenueDays { get; init; }
             public DateTime? LastActiveEtcPDate { get; init; }

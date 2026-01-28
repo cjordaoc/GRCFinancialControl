@@ -37,6 +37,8 @@
             <Button Content="{loc:Loc Key=FINC_Button_Delete}" Command="{Binding DeleteCommand}" CommandParameter="{Binding SelectedPapd}" MinWidth="{StaticResource ButtonMinWidth}"/>
             <Button Content="{loc:Loc Key=FINC_Admin_ClosingPeriods_Button_DeleteData}" Command="{Binding DeleteDataCommand}" CommandParameter="{Binding SelectedPapd}" Classes="Danger" MinWidth="{StaticResource ButtonMinWidth}"/>
             <Button Content="Edit Assignment" Command="{Binding EditAssignmentCommand}" CommandParameter="{Binding SelectedPapd}" MinWidth="{StaticResource ButtonMinWidth}"/>
+            <Button Content="Transfer Assignments" Command="{Binding TransferAssignmentsCommand}" CommandParameter="{Binding SelectedPapd}" MinWidth="{StaticResource ButtonMinWidth}"/>
+            <Button Content="Delete All Assignments" Command="{Binding DeleteAllAssignmentsCommand}" CommandParameter="{Binding SelectedPapd}" Classes="Danger" MinWidth="{StaticResource ButtonMinWidth}"/>
         </StackPanel>
     </Grid>
 </UserControl>
