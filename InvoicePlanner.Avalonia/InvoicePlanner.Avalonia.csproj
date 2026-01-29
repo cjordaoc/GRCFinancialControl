@@ -46,7 +46,17 @@
     <ProjectReference Include="..\GRCFinancialControl.Persistence\GRCFinancialControl.Persistence.csproj" />
     <ProjectReference Include="..\GRCFinancialControl.Core\GRCFinancialControl.Core.csproj" />
     <ProjectReference Include="..\App.Presentation\App.Presentation.csproj" />
-    <ProjectReference Include="..\GRC.Shared\GRC.Shared.UI\GRC.Shared.UI.csproj" />
-    <ProjectReference Include="..\GRC.Shared\GRC.Shared.Resources\GRC.Shared.Resources.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="GRC.Shared.Core">
+      <HintPath>..\lib\GRC.Shared.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="GRC.Shared.UI">
+      <HintPath>..\lib\GRC.Shared.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="GRC.Shared.Resources">
+      <HintPath>..\lib\GRC.Shared.Resources.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>
