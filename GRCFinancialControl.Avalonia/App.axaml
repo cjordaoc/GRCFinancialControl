@@ -3,6 +3,7 @@
              x:Class="GRCFinancialControl.Avalonia.App"
              xmlns:local="using:GRCFinancialControl.Avalonia"
              xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
+             xmlns:sharedConverters="using:GRC.Shared.UI.Converters"
              xmlns:sharedConverters="clr-namespace:GRC.Shared.UI.Converters;assembly=GRC.Shared.UI"
              RequestedThemeVariant="Dark">
              <!-- The app defaults to the dark variant for consistency with analytics dashboards. -->
@@ -20,7 +21,8 @@
                 <ResourceInclude Source="avares://GRC.Shared.UI/DataTemplates/DataTemplates.axaml" />
             </ResourceDictionary.MergedDictionaries>
 
-            <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+            <sharedConverters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+            <sharedConverters:NumericConverter x:Key="NumericConverter" />
             <sharedConverters:DateTimeOffsetToDateTimeConverter x:Key="DateTimeOffsetToDateTimeConverter" />
         </ResourceDictionary>
     </Application.Resources>

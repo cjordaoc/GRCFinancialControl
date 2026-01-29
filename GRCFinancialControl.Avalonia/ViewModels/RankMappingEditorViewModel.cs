@@ -69,12 +69,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 ? RankMapping.RawRank
                 : RankMapping.NormalizedRank;
 
-            ToastService.ShowSuccess("FINC_RankMappings_Toast_SaveSuccess", displayName);
+            var message = LocalizationRegistry.Format("FINC_RankMappings_Toast_SaveSuccess", displayName);
+
+            ToastService.ShowSuccess(message);
         }
 
         protected override void OnSaveFailed(Exception exception)
         {
-            ToastService.ShowError("FINC_RankMappings_Toast_OperationFailed", exception.Message);
+            var message = LocalizationRegistry.Format("FINC_RankMappings_Toast_OperationFailed", exception.Message);
+            ToastService.ShowError(message);
         }
     }
 }

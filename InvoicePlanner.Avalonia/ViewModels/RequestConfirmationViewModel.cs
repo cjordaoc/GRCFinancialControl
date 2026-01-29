@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using App.Presentation.Localization;
+using GRC.Shared.UI.Services;
 using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -304,21 +305,24 @@ public partial class RequestConfirmationViewModel : ViewModelBase
             if (result.Updated == 0)
             {
                 StatusMessage = LocalizationRegistry.Get("INV_Request_Status_NoUpdates");
-                ToastService.ShowWarning("INV_Request_Toast_NoUpdates");
+                var message = LocalizationRegistry.Get("INV_Request_Toast_NoUpdates");
+                ToastService.ShowWarning(message);
                 return;
             }
 
             line.ApplyRequestedState(update.RitmNumber, update.CoeResponsible, update.RequestDate.Date);
 
             StatusMessage = LocalizationRegistry.Format("INV_Request_Status_LineRequested", line.Sequence);
-            ToastService.ShowSuccess("INV_Request_Toast_LineRequested", line.Sequence);
+            var message = LocalizationRegistry.Format("INV_Request_Toast_LineRequested", line.Sequence);
+            ToastService.ShowSuccess(message);
             RefreshActionCommands();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to request invoice item {ItemId}.", line.Id);
             ValidationMessage = ex.Message;
-            ToastService.ShowError("INV_Request_Toast_RequestFailed");
+            var message = LocalizationRegistry.Get("INV_Request_Toast_RequestFailed");
+            ToastService.ShowError(message);
         }
     }
 
@@ -344,21 +348,24 @@ public partial class RequestConfirmationViewModel : ViewModelBase
             if (result.Updated == 0)
             {
                 StatusMessage = LocalizationRegistry.Get("INV_Request_Status_NoUndo");
-                ToastService.ShowWarning("INV_Request_Toast_NoUndo");
+                var message = LocalizationRegistry.Get("INV_Request_Toast_NoUndo");
+                ToastService.ShowWarning(message);
                 return;
             }
 
             line.ResetToPlanned(DateTime.Today);
 
             StatusMessage = LocalizationRegistry.Format("INV_Request_Status_LineUndone", line.Sequence);
-            ToastService.ShowSuccess("INV_Request_Toast_LineUndone", line.Sequence);
+            var message = LocalizationRegistry.Format("INV_Request_Toast_LineUndone", line.Sequence);
+            ToastService.ShowSuccess(message);
             RefreshActionCommands();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to undo invoice item {ItemId} request.", line.Id);
             ValidationMessage = ex.Message;
-            ToastService.ShowError("INV_Request_Toast_UndoFailed");
+            var message = LocalizationRegistry.Get("INV_Request_Toast_UndoFailed");
+            ToastService.ShowError(message);
         }
     }
 

@@ -105,7 +105,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
                 ToastService.ShowSuccess("Assignment deleted successfully.");
                 Assignments.Remove(SelectedAssignment);
                 SelectedAssignment = null;
-                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+                Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
             }
             catch (Exception ex)
             {

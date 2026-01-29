@@ -3,7 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Messaging;
-using App.Presentation.Services;
+using GRC.Shared.UI.Services;
 using GRC.Shared.UI.Dialogs;
 using GRC.Shared.UI.ViewModels.Dialogs;
 using InvoicePlanner.Avalonia.ViewModels;

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Globalization;
 using App.Presentation.Localization;
 using App.Presentation.Services;
+using GRC.Shared.UI.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -1009,7 +1010,8 @@ public partial class PlanEditorViewModel : ViewModelBase
         if (validationErrors.Count > 0)
         {
             ValidationMessage = string.Join(Environment.NewLine, validationErrors.Distinct());
-            ToastService.ShowWarning("INV_InvoicePlan_Toast_ValidationFailed");
+            var message = LocalizationRegistry.Get("INV_InvoicePlan_Toast_ValidationFailed");
+            ToastService.ShowWarning(message);
             return;
         }
 
@@ -1029,13 +1031,15 @@ public partial class PlanEditorViewModel : ViewModelBase
                 Items.Count,
                 result.AffectedRows,
                 result.Deleted);
-            ToastService.ShowSuccess("INV_InvoicePlan_Toast_PlanSaved", PlanId);
+            var message = LocalizationRegistry.Format("INV_InvoicePlan_Toast_PlanSaved", PlanId);
+            ToastService.ShowSuccess(message);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to save invoice plan {PlanId}.", plan.Id);
             ValidationMessage = LocalizationRegistry.Format("INV_InvoicePlan_Status_SaveFailure", ex.Message);
-            ToastService.ShowError("INV_InvoicePlan_Toast_SaveFailed");
+            var message = LocalizationRegistry.Get("INV_InvoicePlan_Toast_SaveFailed");
+            ToastService.ShowError(message);
         }
     }
 
@@ -1279,7 +1283,7 @@ public partial class PlanEditorViewModel : ViewModelBase
     {
         _dialogViewModel ??= new PlanEditorDialogViewModel(this);
         _dialogViewModel.NavigateToInvoiceItems();
-        Messenger.Send(new RefreshViewMessage(RefreshTargets.InvoiceLinesGrid));
+        Messenger.Send(new RefreshViewMessage(InvoicePlannerRefreshTargets.InvoiceLinesGrid));
     }
 
     private void DeletePlan()
@@ -1301,7 +1305,8 @@ public partial class PlanEditorViewModel : ViewModelBase
             if (result.Deleted == 0)
             {
                 ValidationMessage = LocalizationRegistry.Format("INV_InvoicePlan_Validation_PlanNotFound", currentPlanId);
-                ToastService.ShowWarning("INV_InvoicePlan_Toast_DeleteMissing", currentPlanId);
+                var message = LocalizationRegistry.Format("INV_InvoicePlan_Toast_DeleteMissing", currentPlanId);
+                ToastService.ShowWarning(message);
                 return;
             }
 
@@ -1318,13 +1323,15 @@ public partial class PlanEditorViewModel : ViewModelBase
             }
 
             EngagementSelectionMessage = LocalizationRegistry.Format("INV_InvoicePlan_Selection_Status_PlanDeleted", currentPlanId);
-            ToastService.ShowSuccess("INV_InvoicePlan_Toast_PlanDeleted", currentPlanId);
+            var message = LocalizationRegistry.Format("INV_InvoicePlan_Toast_PlanDeleted", currentPlanId);
+            ToastService.ShowSuccess(message);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to delete invoice plan {PlanId}.", currentPlanId);
             ValidationMessage = LocalizationRegistry.Format("INV_InvoicePlan_Status_DeleteFailure", ex.Message);
-            ToastService.ShowError("INV_InvoicePlan_Toast_DeleteFailed");
+            var message = LocalizationRegistry.Get("INV_InvoicePlan_Toast_DeleteFailed");
+            ToastService.ShowError(message);
         }
         finally
         {

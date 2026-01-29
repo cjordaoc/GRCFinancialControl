@@ -13,6 +13,7 @@ using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using GRC.Shared.UI.Services;
 using GRCFinancialControl.Avalonia.Constants;
 using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services;
@@ -205,7 +206,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
                 if (managementResult?.S4MetadataRefreshes > 0)
                 {
-                    ToastService.ShowSuccess("FINC_Import_Toast_S4MetadataSuccess");
+                    var message = LocalizationRegistry.Get("FINC_Import_Toast_S4MetadataSuccess");
+                    ToastService.ShowSuccess(message);
                 }
             }
             catch (ImportWarningException warning)

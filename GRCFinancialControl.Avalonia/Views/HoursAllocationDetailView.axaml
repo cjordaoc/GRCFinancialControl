@@ -7,13 +7,12 @@
              xmlns:models="using:GRC.Shared.Core.Models.Core"
              xmlns:lookups="using:GRC.Shared.Core.Models.Lookups"
              xmlns:behaviors="clr-namespace:GRC.Shared.UI.Behaviors;assembly=GRC.Shared.UI"
+             xmlns:sharedControls="using:GRC.Shared.UI.Controls"
+             xmlns:sharedConverters="using:GRC.Shared.UI.Converters"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
              x:Class="GRCFinancialControl.Avalonia.Views.HoursAllocationDetailView"
              x:Name="HoursAllocationDetailRoot"
              x:DataType="vm:HoursAllocationDetailViewModel">
-    <UserControl.Resources>
-        <converters:TrafficLightStatusToBrushConverter x:Key="TrafficLightStatusToBrushConverter" />
-    </UserControl.Resources>
     <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto"
           Margin="{StaticResource SpaceThickness0}">
         <Grid Grid.Row="0"
@@ -110,10 +109,11 @@
                 <DataGridTemplateColumn Header="" Width="Auto">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding TrafficLightSymbol}"
-                                       FontSize="{StaticResource FontSizeSubtitle}"
-                                       HorizontalAlignment="Center"
-                                       Foreground="{Binding Status, Converter={StaticResource TrafficLightStatusToBrushConverter}}"/>
+                            <sharedControls:TrafficLight Mode="String"
+                                                        Status="{Binding Status}"
+                                                        Symbol="{Binding TrafficLightSymbol}"
+                                                        Size="20"
+                                                        SymbolFontSize="12" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

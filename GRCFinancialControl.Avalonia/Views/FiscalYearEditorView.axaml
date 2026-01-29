@@ -9,9 +9,6 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
              x:Class="GRCFinancialControl.Avalonia.Views.FiscalYearEditorView"
              x:DataType="vm:FiscalYearEditorViewModel">
-    <UserControl.Resources>
-        <converters:NumericConverter x:Key="NumericConverter"/>
-    </UserControl.Resources>
     <Grid RowDefinitions="*,Auto" RowSpacing="{StaticResource GridGap}">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
             <StackPanel Spacing="{StaticResource SectionSpacing}">

@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRC.Shared.Core.Services;
 using GRC.Shared.UI.Messages;
+using GRC.Shared.UI.Services;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRC.Shared.Core.Models.Core;
@@ -93,7 +94,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 Messenger, 
                 _dialogService);
             await _dialogService.ShowDialogAsync(editorViewModel);
-            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+            Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanEdit))]
@@ -104,13 +105,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var fullEngagement = await _engagementFacade.GetEngagementAsync(engagement.Id);
             if (fullEngagement is null)
             {
-                ToastService.ShowWarning("FINC_Engagements_Toast_NotFound", engagement.EngagementId);
+                var message = LocalizationRegistry.Format("FINC_Engagements_Toast_NotFound", engagement.EngagementId);
+                ToastService.ShowWarning(message);
                 return;
             }
 
             var editorViewModel = new EngagementEditorViewModel(fullEngagement, _engagementFacade, Messenger, _dialogService);
             await _dialogService.ShowDialogAsync(editorViewModel);
-            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+            Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanView))]
@@ -121,7 +123,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var fullEngagement = await _engagementFacade.GetEngagementAsync(engagement.Id);
             if (fullEngagement is null)
             {
-                ToastService.ShowWarning("FINC_Engagements_Toast_NotFound", engagement.EngagementId);
+                var message = LocalizationRegistry.Format("FINC_Engagements_Toast_NotFound", engagement.EngagementId);
+                ToastService.ShowWarning(message);
                 return;
             }
 
@@ -140,16 +143,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             try
             {
                 await _engagementFacade.DeleteEngagementAsync(engagement.Id);
-                ToastService.ShowSuccess("FINC_Engagements_Toast_DeleteSuccess", engagement.EngagementId);
-                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+                var message = LocalizationRegistry.Format("FINC_Engagements_Toast_DeleteSuccess", engagement.EngagementId);
+                ToastService.ShowSuccess(message);
+                Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
             }
             catch (InvalidOperationException ex)
             {
-                ToastService.ShowWarning("FINC_Engagements_Toast_OperationFailed", ex.Message);
+                var message = LocalizationRegistry.Format("FINC_Engagements_Toast_OperationFailed", ex.Message);
+                ToastService.ShowWarning(message);
             }
             catch (Exception ex)
             {
-                ToastService.ShowError("FINC_Engagements_Toast_OperationFailed", ex.Message);
+                var message = LocalizationRegistry.Format("FINC_Engagements_Toast_OperationFailed", ex.Message);
+                ToastService.ShowError(message);
             }
         }
 
@@ -169,16 +175,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 try
                 {
                     await _engagementFacade.DeleteEngagementDataAsync(engagement.Id);
-                    ToastService.ShowSuccess("FINC_Engagements_Toast_ReverseSuccess", engagement.EngagementId);
-                    Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+                    var message = LocalizationRegistry.Format("FINC_Engagements_Toast_ReverseSuccess", engagement.EngagementId);
+                    ToastService.ShowSuccess(message);
+                    Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
                 }
                 catch (InvalidOperationException ex)
                 {
-                    ToastService.ShowWarning("FINC_Engagements_Toast_OperationFailed", ex.Message);
+                    var message = LocalizationRegistry.Format("FINC_Engagements_Toast_OperationFailed", ex.Message);
+                    ToastService.ShowWarning(message);
                 }
                 catch (Exception ex)
                 {
-                    ToastService.ShowError("FINC_Engagements_Toast_OperationFailed", ex.Message);
+                    var message = LocalizationRegistry.Format("FINC_Engagements_Toast_OperationFailed", ex.Message);
+                    ToastService.ShowError(message);
                 }
             }
         }
@@ -201,7 +210,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             
             if (availablePapds.Count == 0)
             {
-                ToastService.ShowWarning("FINC_Engagements_Toast_AllPapdsAssigned");
+                var message = LocalizationRegistry.Get("FINC_Engagements_Toast_AllPapdsAssigned");
+                ToastService.ShowWarning(message);
                 return;
             }
 
@@ -213,7 +223,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             await selectionViewModel.LoadDataAsync();
             await _dialogService.ShowDialogAsync(selectionViewModel, selectionViewModel.Title);
-            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+            Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanAssign))]
@@ -234,7 +244,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             
             if (availableManagers.Count == 0)
             {
-                ToastService.ShowWarning("FINC_Engagements_Toast_AllManagersAssigned");
+                var message = LocalizationRegistry.Get("FINC_Engagements_Toast_AllManagersAssigned");
+                ToastService.ShowWarning(message);
                 return;
             }
 
@@ -245,7 +256,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             await selectionViewModel.LoadDataAsync();
             await _dialogService.ShowDialogAsync(selectionViewModel, selectionViewModel.Title);
-            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+            Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
         }
 
         [RelayCommand]
@@ -253,7 +264,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             if (Engagements.Count == 0)
             {
-                ToastService.ShowWarning("FINC_Toast_NoDataToExport");
+                var message = LocalizationRegistry.Get("FINC_Toast_NoDataToExport");
+                ToastService.ShowWarning(message);
                 return;
             }
 
@@ -293,7 +305,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
             catch (Exception ex)
             {
-                ToastService.ShowError("FINC_Toast_ExportFailed", ex.Message);
+                var message = LocalizationRegistry.Format("FINC_Toast_ExportFailed", ex.Message);
+                ToastService.ShowError(message);
             }
         }
 

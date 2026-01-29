@@ -10,6 +10,7 @@ using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using GRC.Shared.UI.Services;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Configuration;
 using GRCFinancialControl.Persistence.Services.Interfaces;
@@ -240,13 +241,15 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 await _settingsService.SaveAllAsync(settings);
                 RunOnUiThread(() =>
                     StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_Saved"));
-                ToastService.ShowSuccess("FINC_Settings_Toast_ConnectionSaved");
+                var message = LocalizationRegistry.Get("FINC_Settings_Toast_ConnectionSaved");
+                ToastService.ShowSuccess(message);
             }
             catch (Exception ex)
             {
                 RunOnUiThread(() =>
                     StatusMessage = LocalizationRegistry.Format("FINC_Settings_Status_SaveError", ex.Message));
-                ToastService.ShowError("FINC_Settings_Toast_ConnectionFailed");
+                var message = LocalizationRegistry.Get("FINC_Settings_Toast_ConnectionFailed");
+                ToastService.ShowError(message);
             }
         }
 
@@ -266,13 +269,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_LocalizationSaved");
                 });
 
-                ToastService.ShowSuccess("FINC_Settings_Toast_LocalizationSaved");
+                var message = LocalizationRegistry.Get("FINC_Settings_Toast_LocalizationSaved");
+
+                ToastService.ShowSuccess(message);
             }
             catch (Exception ex)
             {
                 RunOnUiThread(() =>
                     StatusMessage = LocalizationRegistry.Format("FINC_Settings_Status_LocalizationFailed", ex.Message));
-                ToastService.ShowError("FINC_Settings_Toast_LocalizationFailed");
+                var message = LocalizationRegistry.Get("FINC_Settings_Toast_LocalizationFailed");
+                ToastService.ShowError(message);
             }
         }
 
@@ -289,13 +295,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_PowerBiSaved");
                 });
 
-                ToastService.ShowSuccess("FINC_Settings_Toast_PowerBiSaved");
+                var message = LocalizationRegistry.Get("FINC_Settings_Toast_PowerBiSaved");
+
+                ToastService.ShowSuccess(message);
             }
             catch (Exception ex)
             {
                 RunOnUiThread(() =>
                     StatusMessage = LocalizationRegistry.Format("FINC_Settings_Status_PowerBiFailed", ex.Message));
-                ToastService.ShowError("FINC_Settings_Toast_PowerBiFailed");
+                var message = LocalizationRegistry.Get("FINC_Settings_Toast_PowerBiFailed");
+                ToastService.ShowError(message);
             }
         }
 

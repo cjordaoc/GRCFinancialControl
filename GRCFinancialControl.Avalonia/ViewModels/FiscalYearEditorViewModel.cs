@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using GRC.Shared.UI.Services;
 using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -107,13 +108,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     await _fiscalYearService.UpdateAsync(FiscalYear);
                 }
 
-                ToastService.ShowSuccess("FINC_FiscalYears_Toast_SaveSuccess", FiscalYear.Name);
+                var message = LocalizationRegistry.Format("FINC_FiscalYears_Toast_SaveSuccess", FiscalYear.Name);
+
+                ToastService.ShowSuccess(message);
                 _messenger.Send(new CloseDialogMessage(true));
             }
             catch (Exception ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowError("FINC_FiscalYears_Toast_OperationFailed", ex.Message);
+                var message = LocalizationRegistry.Format("FINC_FiscalYears_Toast_OperationFailed", ex.Message);
+                ToastService.ShowError(message);
             }
         }
 

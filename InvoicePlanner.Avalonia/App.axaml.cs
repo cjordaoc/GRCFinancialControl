@@ -8,6 +8,7 @@ using System.Runtime.ExceptionServices;
 using App.Presentation.Localization;
 using GRC.Shared.UI.Messages;
 using App.Presentation.Services;
+using GRC.Shared.UI.Services;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -179,10 +180,10 @@ public partial class App : Application
                     provider.GetRequiredService<IMessenger>(),
                     provider.GetRequiredService<ILogger<MainWindowViewModel>>()));
                 services.AddSingleton<MainWindow>();
-                services.AddSingleton(provider =>
+                services.AddSingleton<GRC.Shared.UI.Services.FilePickerService>(provider =>
                 {
                     var mainWindow = provider.GetRequiredService<MainWindow>();
-                    return new FilePickerService(mainWindow);
+                    return new GRC.Shared.UI.Services.FilePickerService(mainWindow);
                 });
             })
             .Build();

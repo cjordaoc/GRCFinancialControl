@@ -42,7 +42,7 @@ public partial class InvoiceLinesEditorView : UserControl
 
     private void OnRefreshRequested(object recipient, RefreshViewMessage message)
     {
-        if (!message.Matches(RefreshTargets.InvoiceLinesGrid))
+        if (!message.Matches(InvoicePlannerRefreshTargets.InvoiceLinesGrid))
         {
             return;
         }

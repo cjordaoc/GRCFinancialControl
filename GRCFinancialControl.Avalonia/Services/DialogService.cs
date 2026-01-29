@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Messaging;
-using App.Presentation.Services;
+using GRC.Shared.UI.Services;
 using GRCFinancialControl.Avalonia.ViewModels;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRCFinancialControl.Avalonia.Services.Interfaces;

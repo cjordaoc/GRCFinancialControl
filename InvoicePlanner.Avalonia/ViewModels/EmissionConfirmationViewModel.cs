@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using App.Presentation.Localization;
+using GRC.Shared.UI.Services;
 using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -316,7 +317,8 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         {
             var message = LocalizationRegistry.Get("INV_Emission_Validation_PlanRequired");
             ValidationMessage = message;
-            ToastService.ShowWarning("INV_Emission_Toast_ValidationFailed", message);
+            var message = LocalizationRegistry.Format("INV_Emission_Toast_ValidationFailed", message);
+            ToastService.ShowWarning(message);
             return;
         }
 
@@ -324,7 +326,8 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         {
             var message = LocalizationRegistry.Get("INV_Emission_Validation_EmissionDate");
             ValidationMessage = message;
-            ToastService.ShowWarning("INV_Emission_Toast_ValidationFailed", message);
+            var message = LocalizationRegistry.Format("INV_Emission_Toast_ValidationFailed", message);
+            ToastService.ShowWarning(message);
             return;
         }
 
@@ -332,7 +335,8 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         {
             var message = LocalizationRegistry.Get("INV_Emission_Validation_BzCode");
             ValidationMessage = message;
-            ToastService.ShowWarning("INV_Emission_Toast_ValidationFailed", message);
+            var message = LocalizationRegistry.Format("INV_Emission_Toast_ValidationFailed", message);
+            ToastService.ShowWarning(message);
             return;
         }
 
@@ -350,7 +354,8 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
             if (result.Updated == 0)
             {
                 StatusMessage = LocalizationRegistry.Get("INV_Emission_Status_NoEmissions");
-                ToastService.ShowWarning("INV_Emission_Toast_NoEmissions");
+                var message = LocalizationRegistry.Get("INV_Emission_Toast_NoEmissions");
+                ToastService.ShowWarning(message);
                 return;
             }
 
@@ -358,13 +363,15 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
             LoadPlanById(CurrentPlanId, suppressStatusMessage: true);
             SelectedLine = Lines.FirstOrDefault(l => l.Sequence == sequence);
             StatusMessage = LocalizationRegistry.Format("INV_Emission_Status_LineEmitted", sequence);
-            ToastService.ShowSuccess("INV_Emission_Toast_LineEmitted", sequence);
+            var message = LocalizationRegistry.Format("INV_Emission_Toast_LineEmitted", sequence);
+            ToastService.ShowSuccess(message);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to close invoice item {ItemId}.", line.Id);
             ValidationMessage = ex.Message;
-            ToastService.ShowError("INV_Emission_Toast_OperationFailed", ex.Message);
+            var message = LocalizationRegistry.Format("INV_Emission_Toast_OperationFailed", ex.Message);
+            ToastService.ShowError(message);
         }
     }
 
@@ -381,7 +388,8 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         {
             var message = LocalizationRegistry.Get("INV_Emission_Validation_CancelPlanRequired");
             ValidationMessage = message;
-            ToastService.ShowWarning("INV_Emission_Toast_ValidationFailed", message);
+            var message = LocalizationRegistry.Format("INV_Emission_Toast_ValidationFailed", message);
+            ToastService.ShowWarning(message);
             return;
         }
 
@@ -389,7 +397,8 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
         {
             var message = LocalizationRegistry.Get("INV_Emission_Validation_CancelReason");
             ValidationMessage = message;
-            ToastService.ShowWarning("INV_Emission_Toast_ValidationFailed", message);
+            var message = LocalizationRegistry.Format("INV_Emission_Toast_ValidationFailed", message);
+            ToastService.ShowWarning(message);
             return;
         }
 
@@ -407,7 +416,8 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
             if (result.Updated == 0)
             {
                 StatusMessage = LocalizationRegistry.Get("INV_Emission_Status_NoCancellations");
-                ToastService.ShowWarning("INV_Emission_Toast_NoCancellations");
+                var message = LocalizationRegistry.Get("INV_Emission_Toast_NoCancellations");
+                ToastService.ShowWarning(message);
                 return;
             }
 
@@ -415,13 +425,15 @@ public partial class EmissionConfirmationViewModel : ViewModelBase
             SelectedLine = Lines.FirstOrDefault(l => l.Sequence == line.Sequence);
 
             StatusMessage = LocalizationRegistry.Format("INV_Emission_Status_LineCanceled", line.Sequence);
-            ToastService.ShowSuccess("INV_Emission_Toast_LineCanceled", line.Sequence);
+            var message = LocalizationRegistry.Format("INV_Emission_Toast_LineCanceled", line.Sequence);
+            ToastService.ShowSuccess(message);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to cancel invoice item {ItemId}.", line.Id);
             ValidationMessage = ex.Message;
-            ToastService.ShowError("INV_Emission_Toast_OperationFailed", ex.Message);
+            var message = LocalizationRegistry.Format("INV_Emission_Toast_OperationFailed", ex.Message);
+            ToastService.ShowError(message);
         }
     }
 

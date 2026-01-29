@@ -1,7 +1,7 @@
 using System;
 using GRC.Shared.Core.Models.Financial;
 
-namespace GRCFinancialControl.Core.Models
+namespace GRCFinancialControl.Persistence.Models
 {
     public sealed class FiscalYearCloseResult
     {

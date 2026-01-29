@@ -3,11 +3,11 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
-using App.Presentation.Services;
+using GRC.Shared.UI.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using GRC.Shared.UI.Messages;
+using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRC.Shared.Core.Models.Core;
 using GRC.Shared.Core.Models.Financial;
@@ -75,7 +75,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             var editorViewModel = new CustomerEditorViewModel(new Customer(), _customerService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
-            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+            Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanEdit))]
@@ -88,7 +88,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             var editorViewModel = new CustomerEditorViewModel(customer, _customerService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
-            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+            Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanEdit))]
@@ -113,16 +113,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             try
             {
                 await _customerService.DeleteAsync(customer.Id);
-                ToastService.ShowSuccess("FINC_Customers_Toast_DeleteSuccess", customer.Name);
-                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+                var message = LocalizationRegistry.Format("FINC_Customers_Toast_DeleteSuccess", customer.Name);
+                ToastService.ShowSuccess(message);
+                Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
             }
             catch (InvalidOperationException ex)
             {
-                ToastService.ShowWarning("FINC_Customers_Toast_OperationFailed", ex.Message);
+                var message = LocalizationRegistry.Format("FINC_Customers_Toast_OperationFailed", ex.Message);
+                ToastService.ShowWarning(message);
             }
             catch (Exception ex)
             {
-                ToastService.ShowError("FINC_Customers_Toast_OperationFailed", ex.Message);
+                var message = LocalizationRegistry.Format("FINC_Customers_Toast_OperationFailed", ex.Message);
+                ToastService.ShowError(message);
             }
         }
 
@@ -142,16 +145,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 try
                 {
                     await _customerService.DeleteDataAsync(customer.Id);
-                    ToastService.ShowSuccess("FINC_Customers_Toast_ReverseSuccess", customer.Name);
-                    Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+                    var message = LocalizationRegistry.Format("FINC_Customers_Toast_ReverseSuccess", customer.Name);
+                    ToastService.ShowSuccess(message);
+                    Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
                 }
                 catch (InvalidOperationException ex)
                 {
-                    ToastService.ShowWarning("FINC_Customers_Toast_OperationFailed", ex.Message);
+                    var message = LocalizationRegistry.Format("FINC_Customers_Toast_OperationFailed", ex.Message);
+                    ToastService.ShowWarning(message);
                 }
                 catch (Exception ex)
                 {
-                    ToastService.ShowError("FINC_Customers_Toast_OperationFailed", ex.Message);
+                    var message = LocalizationRegistry.Format("FINC_Customers_Toast_OperationFailed", ex.Message);
+                    ToastService.ShowError(message);
                 }
             }
         }

@@ -72,7 +72,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             {
                 _allManagers = new ObservableCollection<Manager>();
                 ApplyFilter();
-                ToastService.ShowError("FINC_Managers_Toast_LoadError", ex.Message);
+                var message = LocalizationRegistry.Format("FINC_Managers_Toast_LoadError", ex.Message);
+                ToastService.ShowError(message);
                 throw;
             }
         }
@@ -144,12 +145,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             try
             {
                 await _managerService.DeleteAsync(manager.Id);
-                ToastService.ShowSuccess("FINC_Managers_Toast_DeleteSuccess", manager.Name);
+                var message = LocalizationRegistry.Format("FINC_Managers_Toast_DeleteSuccess", manager.Name);
+                ToastService.ShowSuccess(message);
                 Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (System.Exception ex)
             {
-                ToastService.ShowError("FINC_Managers_Toast_OperationFailed", ex.Message);
+                var message = LocalizationRegistry.Format("FINC_Managers_Toast_OperationFailed", ex.Message);
+                ToastService.ShowError(message);
             }
         }
 

@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using GRC.Shared.UI.Services;
 using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -182,18 +183,21 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 }
 
                 await _closingPeriodService.DeleteAsync(closingPeriod.Id);
-                ToastService.ShowSuccess("FINC_ClosingPeriods_Toast_DeleteSuccess", closingPeriod.Name);
+                var message = LocalizationRegistry.Format("FINC_ClosingPeriods_Toast_DeleteSuccess", closingPeriod.Name);
+                ToastService.ShowSuccess(message);
                 Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (InvalidOperationException ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowWarning("FINC_ClosingPeriods_Toast_OperationFailed", ex.Message);
+                var message = LocalizationRegistry.Format("FINC_ClosingPeriods_Toast_OperationFailed", ex.Message);
+                ToastService.ShowWarning(message);
             }
             catch (Exception ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowError("FINC_ClosingPeriods_Toast_OperationFailed", ex.Message);
+                var message = LocalizationRegistry.Format("FINC_ClosingPeriods_Toast_OperationFailed", ex.Message);
+                ToastService.ShowError(message);
             }
         }
 
@@ -226,18 +230,21 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             try
             {
                 await _closingPeriodService.DeleteDataAsync(closingPeriod.Id);
-                ToastService.ShowSuccess("FINC_ClosingPeriods_Toast_ReverseSuccess", closingPeriod.Name);
+                var message = LocalizationRegistry.Format("FINC_ClosingPeriods_Toast_ReverseSuccess", closingPeriod.Name);
+                ToastService.ShowSuccess(message);
                 Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (InvalidOperationException ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowWarning("FINC_ClosingPeriods_Toast_OperationFailed", ex.Message);
+                var message = LocalizationRegistry.Format("FINC_ClosingPeriods_Toast_OperationFailed", ex.Message);
+                ToastService.ShowWarning(message);
             }
             catch (Exception ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowError("FINC_ClosingPeriods_Toast_OperationFailed", ex.Message);
+                var message = LocalizationRegistry.Format("FINC_ClosingPeriods_Toast_OperationFailed", ex.Message);
+                ToastService.ShowError(message);
             }
         }
 
@@ -268,12 +275,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             catch (InvalidOperationException ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowWarning("FINC_ClosingPeriods_Toast_ToggleFailed");
+                var message = LocalizationRegistry.Get("FINC_ClosingPeriods_Toast_ToggleFailed");
+                ToastService.ShowWarning(message);
             }
             catch (Exception ex)
             {
                 StatusMessage = LocalizationRegistry.Format("FINC_ClosingPeriods_Status_ToggleFailed", ex.Message);
-                ToastService.ShowError("FINC_ClosingPeriods_Toast_ToggleFailed");
+                var message = LocalizationRegistry.Get("FINC_ClosingPeriods_Toast_ToggleFailed");
+                ToastService.ShowError(message);
             }
         }
 

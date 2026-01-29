@@ -1,0 +1,26 @@
+using GRC.Shared.Core.Models.Core;
+using GRC.Shared.Core.Models.Financial;
+using GRC.Shared.Core.Models.Allocations;
+using GRCFinancialControl.Persistence.Models.Assignments;
+using GRC.Shared.Core.Models.Lookups;
+using GRC.Shared.Core.Enums;
+
+namespace GRC.Shared.Core.Models.Financial
+{
+    /// <summary>
+    /// Represents a single entry of actual recognized hours from an imported file.
+    /// </summary>
+    public class ActualsEntry
+    {
+        public int Id { get; set; }
+        public int EngagementId { get; set; }
+        public Engagement Engagement { get; set; } = null!;
+        public DateTime Date { get; set; }
+        public decimal Hours { get; set; }
+        public string ImportBatchId { get; set; } = string.Empty; // To trace back to the source file/upload
+        public int? PapdId { get; set; }
+        public Papd? Papd { get; set; }
+        public int ClosingPeriodId { get; set; }
+        public ClosingPeriod ClosingPeriod { get; set; } = null!;
+    }
+}

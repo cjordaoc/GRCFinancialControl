@@ -6,6 +6,7 @@
              xmlns:loc="clr-namespace:App.Presentation.Localization;assembly=App.Presentation"
              xmlns:conv="clr-namespace:GRC.Shared.UI.Converters;assembly=GRC.Shared.UI"
              xmlns:behaviors="using:InvoicePlanner.Avalonia.Behaviors"
+             xmlns:sharedBehaviors="using:GRC.Shared.UI.Behaviors"
              xmlns:appBehaviors="clr-namespace:GRC.Shared.UI.Behaviors;assembly=GRC.Shared.UI"
              x:Class="InvoicePlanner.Avalonia.Views.PlanEditorDialogView"
              x:Name="PlanEditorRoot"
@@ -183,7 +184,7 @@
                                   HeadersVisibility="Column"
                                   GridLinesVisibility="All"
                                   CanUserResizeColumns="True"
-                                  behaviors:DataGridRowResizeBehavior.IsEnabled="True"
+                                  sharedBehaviors:DataGridRowResizeBehavior.IsEnabled="True"
                                   HorizontalScrollBarVisibility="Auto"
                                   VerticalScrollBarVisibility="Auto"
                                   SelectionMode="Single">

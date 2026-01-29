@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using GRC.Shared.UI.Services;
 using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -66,7 +67,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             catch (Exception ex)
             {
                 Papds = new ObservableCollection<Papd>();
-                ToastService.ShowError("FINC_Papds_Toast_LoadError", ex.Message);
+                var message = LocalizationRegistry.Format("FINC_Papds_Toast_LoadError", ex.Message);
+                ToastService.ShowError(message);
                 throw;
             }
         }
@@ -115,12 +117,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             try
             {
                 await _papdService.DeleteAsync(papd.Id);
-                ToastService.ShowSuccess("FINC_Papds_Toast_DeleteSuccess", papd.Name);
+                var message = LocalizationRegistry.Format("FINC_Papds_Toast_DeleteSuccess", papd.Name);
+                ToastService.ShowSuccess(message);
                 Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (System.Exception ex)
             {
-                ToastService.ShowError("FINC_Papds_Toast_OperationFailed", ex.Message);
+                var message = LocalizationRegistry.Format("FINC_Papds_Toast_OperationFailed", ex.Message);
+                ToastService.ShowError(message);
             }
         }
 
@@ -140,12 +144,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 try
                 {
                     await _papdService.DeleteDataAsync(papd.Id);
-                    ToastService.ShowSuccess("FINC_Papds_Toast_DeleteDataSuccess", papd.Name);
+                    var message = LocalizationRegistry.Format("FINC_Papds_Toast_DeleteDataSuccess", papd.Name);
+                    ToastService.ShowSuccess(message);
                     Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
                 }
                 catch (System.Exception ex)
                 {
-                    ToastService.ShowError("FINC_Papds_Toast_OperationFailed", ex.Message);
+                    var message = LocalizationRegistry.Format("FINC_Papds_Toast_OperationFailed", ex.Message);
+                    ToastService.ShowError(message);
                 }
             }
         }
@@ -177,7 +183,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 var assignments = await _papdAssignmentService.GetByPapdIdAsync(SelectedPapd.Id);
                 if (assignments.Count == 0)
                 {
-                    ToastService.ShowWarning("FINC_Papds_Toast_NoAssignments");
+                    var message = LocalizationRegistry.Get("FINC_Papds_Toast_NoAssignments");
+                    ToastService.ShowWarning(message);
                     return;
                 }
 
@@ -187,7 +194,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 
                 if (availablePapds.Count == 0)
                 {
-                    ToastService.ShowWarning("FINC_Papds_Toast_NoPapdsForTransfer");
+                    var message = LocalizationRegistry.Get("FINC_Papds_Toast_NoPapdsForTransfer");
+                    ToastService.ShowWarning(message);
                     return;
                 }
 
@@ -220,7 +228,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
             catch (System.Exception ex)
             {
-                ToastService.ShowError("FINC_Papds_Toast_OperationFailed", ex.Message);
+                var message = LocalizationRegistry.Format("FINC_Papds_Toast_OperationFailed", ex.Message);
+                ToastService.ShowError(message);
             }
         }
 
@@ -238,7 +247,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 var assignments = await _papdAssignmentService.GetByPapdIdAsync(SelectedPapd.Id);
                 if (assignments.Count == 0)
                 {
-                    ToastService.ShowWarning("FINC_Papds_Toast_NoAssignments");
+                    var message = LocalizationRegistry.Get("FINC_Papds_Toast_NoAssignments");
+                    ToastService.ShowWarning(message);
                     return;
                 }
 
@@ -266,7 +276,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             }
             catch (System.Exception ex)
             {
-                ToastService.ShowError("FINC_Papds_Toast_OperationFailed", ex.Message);
+                var message = LocalizationRegistry.Format("FINC_Papds_Toast_OperationFailed", ex.Message);
+                ToastService.ShowError(message);
             }
         }
 

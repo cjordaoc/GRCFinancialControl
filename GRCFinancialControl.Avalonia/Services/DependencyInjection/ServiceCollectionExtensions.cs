@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using CommunityToolkit.Mvvm.Messaging;
+using App.Presentation.Services;
 using GRCFinancialControl.Avalonia;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
@@ -111,7 +112,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ITabDelimitedExportService, TabDelimitedExportService>();
 
         services.AddSingleton<MainWindow>();
-        services.AddSingleton(provider => new FilePickerService(provider.GetRequiredService<MainWindow>()));
+        services.AddSingleton<GRC.Shared.UI.Services.FilePickerService>(provider => new GRC.Shared.UI.Services.FilePickerService(provider.GetRequiredService<MainWindow>()));
 
         services.AddTransient<HomeViewModel>();
         services.AddTransient<MainWindowViewModel>();

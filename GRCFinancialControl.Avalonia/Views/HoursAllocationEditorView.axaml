@@ -5,13 +5,12 @@
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
              xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
              xmlns:behaviors="clr-namespace:GRC.Shared.UI.Behaviors;assembly=GRC.Shared.UI"
+             xmlns:sharedControls="using:GRC.Shared.UI.Controls"
+             xmlns:sharedConverters="using:GRC.Shared.UI.Converters"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
              x:Class="GRCFinancialControl.Avalonia.Views.HoursAllocationEditorView"
              x:Name="HoursAllocationEditorRoot"
              x:DataType="vm:HoursAllocationEditorViewModel">
-    <UserControl.Resources>
-        <converters:TrafficLightStatusToBrushConverter x:Key="TrafficLightStatusToBrushConverter" />
-    </UserControl.Resources>
     <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto" ColumnDefinitions="*"
           Margin="{StaticResource CardPaddingThickness}">
         <TextBlock Grid.Row="0"
@@ -31,9 +30,11 @@
                     Spacing="{StaticResource ControlSpacing}">
             <TextBlock Text="Resource:" FontWeight="{StaticResource FontWeightSemiBold}"/>
             <TextBlock Text="{Binding SelectedRow.RankName}"/>
-            <TextBlock Text="{Binding SelectedRow.TrafficLightSymbol}"
-                       FontSize="{StaticResource FontSizeSubtitle}"
-                       Foreground="{Binding SelectedRow.Status, Converter={StaticResource TrafficLightStatusToBrushConverter}}"/>
+            <sharedControls:TrafficLight Mode="String"
+                                           Status="{Binding SelectedRow.Status}"
+                                           Symbol="{Binding SelectedRow.TrafficLightSymbol}"
+                                           Size="20"
+                                           SymbolFontSize="12" />
         </StackPanel>
 
         <TextBlock Grid.Row="3"

@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using GRC.Shared.UI.Services;
 using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -81,12 +82,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 var displayName = string.IsNullOrWhiteSpace(rankMapping.NormalizedRank)
                     ? rankMapping.RawRank
                     : rankMapping.NormalizedRank;
-                ToastService.ShowSuccess("FINC_RankMappings_Toast_DeleteSuccess", displayName);
+                var message = LocalizationRegistry.Format("FINC_RankMappings_Toast_DeleteSuccess", displayName);
+                ToastService.ShowSuccess(message);
                 Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
             }
             catch (System.Exception ex)
             {
-                ToastService.ShowError("FINC_RankMappings_Toast_OperationFailed", ex.Message);
+                var message = LocalizationRegistry.Format("FINC_RankMappings_Toast_OperationFailed", ex.Message);
+                ToastService.ShowError(message);
             }
         }
 

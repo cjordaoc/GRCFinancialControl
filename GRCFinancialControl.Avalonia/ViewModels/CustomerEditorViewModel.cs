@@ -5,7 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
-using App.Presentation.Services;
+using App.Presentation.Localization;
+using GRC.Shared.UI.Services;
 using GRC.Shared.Core.Models.Core;
 using GRC.Shared.Core.Models.Financial;
 using GRC.Shared.Core.Models.Allocations;
@@ -70,12 +71,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         protected override void OnSaveSucceeded()
         {
-            ToastService.ShowSuccess("FINC_Customers_Toast_SaveSuccess", Customer.Name);
+            var message = LocalizationRegistry.Format("FINC_Customers_Toast_SaveSuccess", Customer.Name);
+            ToastService.ShowSuccess(message);
         }
 
         protected override void OnSaveFailed(Exception exception)
         {
-            ToastService.ShowError("FINC_Customers_Toast_OperationFailed", exception.Message);
+            var message = LocalizationRegistry.Format("FINC_Customers_Toast_OperationFailed", exception.Message);
+            ToastService.ShowError(message);
         }
 
         public string? NameError => GetErrors(nameof(Name)).FirstOrDefault()?.ErrorMessage;

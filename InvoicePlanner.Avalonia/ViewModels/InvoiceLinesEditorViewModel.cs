@@ -89,7 +89,7 @@ public partial class InvoiceLinesEditorViewModel : ViewModelBase
     private void RefreshGrid()
     {
         OnPropertyChanged(nameof(Items));
-        Messenger.Send(new RefreshViewMessage(RefreshTargets.InvoiceLinesGrid));
+        Messenger.Send(new RefreshViewMessage(InvoicePlannerRefreshTargets.InvoiceLinesGrid));
     }
 
     private void OnParentPropertyChanged(object? sender, PropertyChangedEventArgs e)

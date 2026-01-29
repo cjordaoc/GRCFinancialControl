@@ -444,7 +444,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             if (Engagement.Id == 0)
             {
-                ToastService.ShowWarning("Please save the engagement first before managing additional sales.");
+                var message = LocalizationRegistry.Get("Please save the engagement first before managing additional sales.");
+                ToastService.ShowWarning(message);
                 return;
             }
 
@@ -489,7 +490,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var availablePapds = await _engagementFacade.GetAvailablePapdsAsync(Engagement);
             if (availablePapds.Count == 0)
             {
-                ToastService.ShowWarning("FINC_Engagements_Toast_AllPapdsAssigned");
+                var message = LocalizationRegistry.Get("FINC_Engagements_Toast_AllPapdsAssigned");
+                ToastService.ShowWarning(message);
                 return;
             }
 
@@ -522,11 +524,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 PapdAssignments.Remove(SelectedPapdAssignment);
                 SelectedPapdAssignment = null;
                 MarkAsChanged();
-                ToastService.ShowSuccess("FINC_Engagements_Toast_PapdRemoved");
+                var message = LocalizationRegistry.Get("FINC_Engagements_Toast_PapdRemoved");
+                ToastService.ShowSuccess(message);
             }
             catch (Exception ex)
             {
-                ToastService.ShowError("FINC_Engagements_Toast_OperationFailed", ex.Message);
+                var message = LocalizationRegistry.Format("FINC_Engagements_Toast_OperationFailed", ex.Message);
+                ToastService.ShowError(message);
             }
         }
 
@@ -541,7 +545,8 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var availableManagers = await _engagementFacade.GetAvailableManagersAsync(Engagement);
             if (availableManagers.Count == 0)
             {
-                ToastService.ShowWarning("FINC_Engagements_Toast_AllManagersAssigned");
+                var message = LocalizationRegistry.Get("FINC_Engagements_Toast_AllManagersAssigned");
+                ToastService.ShowWarning(message);
                 return;
             }
 
@@ -574,11 +579,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 ManagerAssignments.Remove(SelectedManagerAssignment);
                 SelectedManagerAssignment = null;
                 MarkAsChanged();
-                ToastService.ShowSuccess("FINC_Engagements_Toast_ManagerRemoved");
+                var message = LocalizationRegistry.Get("FINC_Engagements_Toast_ManagerRemoved");
+                ToastService.ShowSuccess(message);
             }
             catch (Exception ex)
             {
-                ToastService.ShowError("FINC_Engagements_Toast_OperationFailed", ex.Message);
+                var message = LocalizationRegistry.Format("FINC_Engagements_Toast_OperationFailed", ex.Message);
+                ToastService.ShowError(message);
             }
         }
 
@@ -679,16 +686,20 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     await _engagementFacade.UpdateEngagementAsync(Engagement);
                 }
 
-                ToastService.ShowSuccess("FINC_Engagements_Toast_SaveSuccess", Engagement.EngagementId);
+                var message = LocalizationRegistry.Format("FINC_Engagements_Toast_SaveSuccess", Engagement.EngagementId);
+
+                ToastService.ShowSuccess(message);
                 _messenger.Send(new CloseDialogMessage(true));
             }
             catch (InvalidOperationException ex)
             {
-                ToastService.ShowWarning("FINC_Engagements_Toast_OperationFailed", ex.Message);
+                var message = LocalizationRegistry.Format("FINC_Engagements_Toast_OperationFailed", ex.Message);
+                ToastService.ShowWarning(message);
             }
             catch (Exception ex)
             {
-                ToastService.ShowError("FINC_Engagements_Toast_OperationFailed", ex.Message);
+                var message = LocalizationRegistry.Format("FINC_Engagements_Toast_OperationFailed", ex.Message);
+                ToastService.ShowError(message);
             }
         }
 

@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
+using GRC.Shared.UI.Services;
 using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -139,19 +140,23 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     await _closingPeriodService.UpdateAsync(ClosingPeriod);
                 }
 
-                ToastService.ShowSuccess("FINC_ClosingPeriods_Toast_SaveSuccess", ClosingPeriod.Name);
+                var message = LocalizationRegistry.Format("FINC_ClosingPeriods_Toast_SaveSuccess", ClosingPeriod.Name);
+
+                ToastService.ShowSuccess(message);
                 _messenger.Send(new ClosingPeriodsChangedMessage());
                 _messenger.Send(new CloseDialogMessage(true));
             }
             catch (InvalidOperationException ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowWarning("FINC_ClosingPeriods_Toast_OperationFailed", ex.Message);
+                var message = LocalizationRegistry.Format("FINC_ClosingPeriods_Toast_OperationFailed", ex.Message);
+                ToastService.ShowWarning(message);
             }
             catch (Exception ex)
             {
                 StatusMessage = ex.Message;
-                ToastService.ShowError("FINC_ClosingPeriods_Toast_OperationFailed", ex.Message);
+                var message = LocalizationRegistry.Format("FINC_ClosingPeriods_Toast_OperationFailed", ex.Message);
+                ToastService.ShowError(message);
             }
         }
 
