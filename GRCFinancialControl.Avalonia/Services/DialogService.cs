@@ -44,4 +44,13 @@ public sealed class DialogService : BaseDialogService, IDialogService
 
     protected override UserControl? BuildView(object viewModel)
         => _viewLocator.Build(viewModel) as UserControl;
+
+    protected override ModalDialogOptions GetModalDialogOptions()
+        => new()
+        {
+            SizeRatioResourceKey = "DialogContentRatioStandard",
+            ShowWindowControls = false,
+            DimBackground = true,
+            FreezeOwner = true
+        };
 }

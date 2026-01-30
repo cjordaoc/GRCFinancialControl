@@ -1,0 +1,37 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:converters="clr-namespace:GRC.Shared.UI.Converters;assembly=GRC.Shared.UI">
+  <Styles.Resources>
+    <!-- Elevation Tokens -->
+    <x:Double x:Key="Elevation1">4</x:Double>
+    <x:Double x:Key="Elevation2">8</x:Double>
+    <x:Double x:Key="Elevation3">16</x:Double>
+
+    <!-- Shared Layout Tokens -->
+    <Thickness x:Key="ButtonPaddingStandard">12,6</Thickness>
+    <Thickness x:Key="DialogContentPadding">16</Thickness>
+    <x:Double x:Key="PopupTextBoxMinWidth">280</x:Double>
+    <x:Double x:Key="PopupDatePickerMinWidth">240</x:Double>
+    
+    <!-- Toast Converters -->
+    <converters:ToastTypeToBrushConverter x:Key="ToastBrushConverter"
+                                          SuccessBrush="{StaticResource BrushSuccess}"
+                                          WarningBrush="{StaticResource BrushWarningHighlight}"
+                                          ErrorBrush="{StaticResource BrushError}" />
+
+    <!-- DataGrid Text Wrapping Style -->
+    <Style x:Key="DataGridWrappedTextStyle" Selector="TextBlock">
+      <Setter Property="TextWrapping" Value="Wrap" />
+      <Setter Property="TextTrimming" Value="None" />
+      <Setter Property="MaxWidth" Value="420" />
+    </Style>
+  </Styles.Resources>
+
+  <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
+  <StyleInclude Source="avares://App.Presentation/Styles/ModalOverlay.xaml" />
+
+  <!-- Application-Specific DatePicker Override (Min Width for Popups) -->
+  <Style Selector="DatePicker">
+    <Setter Property="MinWidth" Value="{StaticResource PopupDatePickerMinWidth}" />
+  </Style>
+</Styles>

@@ -1,0 +1,9 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="GRC.Shared.UI.Controls.LoadingIndicator">
+    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+        <ProgressBar IsIndeterminate="True" Width="120" Height="6" />
+        <TextBlock Text="{Binding Message, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                   VerticalAlignment="Center" />
+    </StackPanel>
+</UserControl>

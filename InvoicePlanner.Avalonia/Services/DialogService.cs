@@ -32,50 +32,67 @@ public sealed class DialogService : BaseDialogService
         => _viewLocator.Build(viewModel) as UserControl;
 
     protected override ModalDialogOptions GetModalDialogOptions()
-        => new() { Layout = ModalDialogLayout.OwnerAligned };
+        => new()
+        {
+            Layout = ModalDialogLayout.OwnerAligned,
+            SizeRatioResourceKey = "DialogContentRatioStandard",
+            ShowWindowControls = false,
+            DimBackground = true,
+            FreezeOwner = true
+        };
 
-    protected override DialogFocusState OnDialogOpening(Window dialog, Window owner, Window? previousDialog)
+    protected override DialogFocusState OnDialogOpening(Window dialog, Window owner, Window? previousDialog, ModalDialogOptions options)
     {
         var focusScope = previousDialog ?? owner;
         var previousFocus = focusScope.FocusManager?.GetFocusedElement();
 
-        if (previousDialog is null)
+        if (options.FreezeOwner)
         {
-            owner.IsEnabled = false;
-        }
-        else
-        {
-            previousDialog.IsEnabled = false;
+            if (previousDialog is null)
+            {
+                owner.IsEnabled = false;
+            }
+            else
+            {
+                previousDialog.IsEnabled = false;
+            }
         }
 
         return new DialogFocusState(previousDialog, previousFocus);
     }
 
-    protected override void OnDialogClosing(Window dialog, Window owner, DialogFocusState focusState)
+    protected override void OnDialogClosing(Window dialog, Window owner, DialogFocusState focusState, ModalDialogOptions options)
     {
         var restoredDialog = CurrentDialog;
 
-        if (restoredDialog is not null)
+        Dispatcher.UIThread.Post(() =>
         {
-            // Nested dialog: re-enable previous dialog and restore its focus
-            restoredDialog.IsEnabled = true;
-            Dispatcher.UIThread.Post(() =>
+            if (options.FreezeOwner)
             {
-                if (focusState.PreviousFocus is Control control)
+                if (restoredDialog is not null)
                 {
-                    control.Focus();
+                    // Nested dialog: re-enable previous dialog and restore its focus
+                    restoredDialog.IsEnabled = true;
+                    if (focusState.PreviousFocus is Control control)
+                    {
+                        control.Focus();
+                    }
+                    else
+                    {
+                        restoredDialog.Focus();
+                    }
                 }
                 else
                 {
-                    restoredDialog.Focus();
+                    // Top-level dialog: re-enable owner and restore focus
+                    owner.IsEnabled = true;
+                    focusState.PreviousFocus?.Focus();
                 }
-            }, DispatcherPriority.Background);
-        }
-        else
-        {
-            // Top-level dialog: re-enable owner and restore focus
-            owner.IsEnabled = true;
-            Dispatcher.UIThread.Post(() => focusState.PreviousFocus?.Focus(), DispatcherPriority.Background);
-        }
+            }
+            else
+            {
+                focusState.PreviousFocus?.Focus();
+            }
+        }, DispatcherPriority.Background);
     }
 }

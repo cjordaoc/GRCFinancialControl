@@ -12,6 +12,7 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
 
 ### GUI Shared Components
 - **Dialogs:** `ConfirmationDialog` and `InformationDialog` from `GRC.Shared.UI.Controls.Dialogs` are wrapped by app dialog views; `BaseDialogService` injects `CloseDialog` on the base view models so close/confirm routes work without manual wiring.
+- **Modal options:** `ModalDialogOptions` controls layout, tokenized sizing (`DialogContentRatioCompact|Standard|Wide`), title overrides, system decorations, dimmed background, and owner-freeze behavior; resources must exist or the dialog fails fast.
 - **Controls:** Status/feedback surfaces (`StatusBar`, `LoadingIndicator`, `EmptyState`, `ToastNotification`, `SearchBox`, `RadialGauge`) live in `GRC.Shared.UI/Controls`. Toast overlays in both shells bind `ToastService.Notifications` into `ToastNotification` with `ToastTypeToBrushConverter` for severity coloring.
 - **Converters:** Shared XAML converters (`BoolToThemeResourceBrushConverter`, `DateTimeOffsetToDateTimeConverter`, `PercentageOfSizeConverter`, `ToastTypeToBrushConverter`) live in `GRC.Shared.UI/Converters` and handle theme resource lookups, date normalization, proportional sizing, and toast severity coloring for binding pipelines across both apps.
 - **Behaviors:** `NumericInputNullSafety` (attached property in `GRC.Shared.UI/Behaviors`) forces empty numeric inputs to zero on focus loss, preventing binding exceptions in TextBox and NumericUpDown controls.

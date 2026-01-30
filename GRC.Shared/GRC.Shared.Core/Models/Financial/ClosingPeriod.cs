@@ -1,0 +1,25 @@
+using System;
+using System.Collections.Generic;
+using GRC.Shared.Core.Models.Core;
+using GRC.Shared.Core.Models.Allocations;
+
+namespace GRC.Shared.Core.Models.Financial
+{
+    /// <summary>
+    /// Represents a monthly or weekly closing period that can be associated with margin imports.
+    /// </summary>
+    public class ClosingPeriod
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int FiscalYearId { get; set; }
+        public FiscalYear FiscalYear { get; set; } = null!;
+        public DateTime PeriodStart { get; set; }
+        public DateTime PeriodEnd { get; set; }
+
+        public ICollection<ActualsEntry> ActualsEntries { get; } = new List<ActualsEntry>();
+        public ICollection<PlannedAllocation> PlannedAllocations { get; } = new List<PlannedAllocation>();
+        public ICollection<Engagement> Engagements { get; } = new List<Engagement>();
+        public bool IsLocked { get; set; }
+    }
+}

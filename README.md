@@ -13,6 +13,7 @@ All UI strings for both desktop applications are centralized under `GRC.Shared.R
 ### Desktop UI Toolkit
 
 - Shared dialogs (`ConfirmationDialog`, `InformationDialog`) live in `GRC.Shared.UI`; dialog views now wrap these controls and the dialog services inject `CloseDialog` automatically.
+- Modal dialog configuration is centralized in `ModalDialogOptions` (tokenized size via `DialogContentRatio*` keys, title, window controls, dim background, and owner freeze behavior).
 - Common controls: `StatusBar`, `LoadingIndicator`, `EmptyState`, `ToastNotification`, `SearchBox`, `RadialGauge` (all in `GRC.Shared.UI/Controls`). Toast overlays in both shells now consume the shared control bound to `ToastService.Notifications`.
 - DataTemplates library is merged via `avares://GRC.Shared.UI/DataTemplates/DataTemplates.axaml` (StandardListItem, DetailListItem, GroupHeader) and is available application-wide for lists/grids.
 - Shared converters: `BoolToThemeResourceBrushConverter`, `DateTimeOffsetToDateTimeConverter`, `PercentageOfSizeConverter`, `ToastTypeToBrushConverter` (all in `GRC.Shared.UI/Converters`) handle common XAML binding conversions across both apps.

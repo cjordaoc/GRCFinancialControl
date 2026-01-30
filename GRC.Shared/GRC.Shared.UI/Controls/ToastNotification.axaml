@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="GRC.Shared.UI.Controls.ToastNotification"
+             MinWidth="{Binding MinWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"
+             MaxWidth="{Binding MaxWidth, RelativeSource={RelativeSource AncestorType=UserControl}}">
+    <Border Padding="{Binding ContentPadding, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            CornerRadius="{Binding ContentCornerRadius, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Background="{Binding AccentBrush, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Opacity="{Binding ContentOpacity, RelativeSource={RelativeSource AncestorType=UserControl}}">
+        <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+            <Path Grid.Column="0"
+                  Data="{Binding IconData, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                  Width="{Binding IconSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                  Height="{Binding IconSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                  Fill="White"
+                  Margin="{Binding IconMargin, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                  IsVisible="True" />
+            <TextBlock Grid.Column="1"
+                       Text="{Binding Message, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                       Foreground="White"
+                       TextWrapping="Wrap"
+                       FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                       FontWeight="{Binding FontWeight, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+            <Button Grid.Column="2"
+                    Content="{Binding CloseButtonText, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    Margin="{Binding CloseButtonMargin, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    Command="{Binding CloseCommand}" />
+        </Grid>
+    </Border>
+</UserControl>

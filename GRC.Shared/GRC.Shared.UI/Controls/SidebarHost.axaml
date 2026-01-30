@@ -1,0 +1,89 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:GRC.Shared.UI.Converters"
+             x:Class="GRC.Shared.UI.Controls.SidebarHost"
+             x:Name="Root">
+  <UserControl.Resources>
+    <converters:BoolToHorizontalAlignmentConverter x:Key="SidebarAlignmentConverter"
+                                                   TrueValue="Left"
+                                                   FalseValue="Center" />
+    <converters:BoolToDoubleConverter x:Key="SidebarAngleConverter"
+                                      TrueValue="180"
+                                      FalseValue="0" />
+  </UserControl.Resources>
+  <Border x:Name="SidebarBorder"
+          Width="{Binding EffectiveWidth, ElementName=Root}"
+      Background="{StaticResource BrushOverlayStrong}"
+          CornerRadius="18"
+          Padding="8,12"
+          MinWidth="{Binding CompactWidth, ElementName=Root}"
+          Margin="12"
+      BoxShadow="{StaticResource ShadowHigh}"
+          ClipToBounds="True">
+    <Border.Transitions>
+      <Transitions>
+        <DoubleTransition Property="Border.Width"
+                          Duration="0:0:0.3">
+          <DoubleTransition.Easing>
+            <CubicEaseOut/>
+          </DoubleTransition.Easing>
+        </DoubleTransition>
+      </Transitions>
+    </Border.Transitions>
+    <Grid RowDefinitions="Auto,*,Auto"
+          RowSpacing="{StaticResource GridGap}">
+      <ContentPresenter Content="{Binding Header, ElementName=Root}"
+                        ContentTemplate="{Binding HeaderTemplate, ElementName=Root}"
+                        HorizontalAlignment="Stretch" />
+      <ScrollViewer Grid.Row="1"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+        <ItemsControl ItemsSource="{Binding ItemsSource, ElementName=Root}"
+                      ItemTemplate="{Binding ItemTemplate, ElementName=Root}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Spacing="{StaticResource ControlSpacing}" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+        </ItemsControl>
+      </ScrollViewer>
+      <ToggleButton Grid.Row="2"
+                    Classes="NavButton"
+                    IsChecked="{Binding IsExpanded, ElementName=Root, Mode=TwoWay}"
+                    HorizontalAlignment="Stretch"
+                    Margin="0,8,0,0"
+                    HorizontalContentAlignment="{Binding IsExpanded, ElementName=Root, Converter={StaticResource SidebarAlignmentConverter}}">
+        <ToggleButton.Content>
+          <Grid ColumnDefinitions="Auto,*">
+            <Border Grid.Column="0"
+                    Width="44"
+                    Height="44"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center">
+              <Viewbox Width="20"
+                       Height="20"
+                       Margin="12">
+                <Path Stretch="Uniform"
+                      Fill="{StaticResource BrushOnSurface}"
+                      Data="{StaticResource IconArrowExport}"
+                      RenderTransformOrigin="0.5,0.5">
+                  <Path.RenderTransform>
+                    <RotateTransform Angle="{Binding IsExpanded, ElementName=Root, Converter={StaticResource SidebarAngleConverter}}" />
+                  </Path.RenderTransform>
+                </Path>
+              </Viewbox>
+            </Border>
+            <TextBlock Grid.Column="1"
+                       Text="{Binding ToggleLabel, ElementName=Root}"
+                       Classes="SidebarTitle"
+                       TextTrimming="CharacterEllipsis"
+                       TextWrapping="NoWrap"
+                       VerticalAlignment="Center"
+                       Margin="8,0,12,0"
+                       IsVisible="{Binding IsExpanded, ElementName=Root}" />
+          </Grid>
+        </ToggleButton.Content>
+      </ToggleButton>
+    </Grid>
+  </Border>
+</UserControl>

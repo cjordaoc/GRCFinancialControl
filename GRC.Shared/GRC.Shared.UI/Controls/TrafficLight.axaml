@@ -1,0 +1,18 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="GRC.Shared.UI.Controls.TrafficLight">
+    <Border Width="{Binding Size, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Height="{Binding Size, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            BorderBrush="{Binding CalculatedStatus, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource TrafficLightStatusToBrushConverter}}"
+            Background="{Binding CalculatedStatus, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource TrafficLightStatusToLightBrushConverter}}"
+            VerticalAlignment="Center"
+            HorizontalAlignment="Center"
+            ToolTip.Tip="{Binding ColorName, RelativeSource={RelativeSource AncestorType=UserControl}}">
+        <TextBlock Text="{Binding Symbol, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                   FontSize="{Binding SymbolFontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                   FontWeight="Bold"
+                   Foreground="{Binding CalculatedStatus, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource TrafficLightStatusToBrushConverter}}"
+                   VerticalAlignment="Center"
+                   HorizontalAlignment="Center" />
+    </Border>
+</UserControl>

@@ -1,0 +1,17 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="GRC.Shared.UI.Controls.SearchBox">
+    <Border Padding="6" CornerRadius="{StaticResource ControlCornerRadius}" BorderBrush="{StaticResource BrushBorder}" BorderThickness="1" Background="{StaticResource BrushSurfaceVariant}">
+        <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+            <TextBox Grid.Column="0"
+                     Text="{Binding Text, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     Watermark="{Binding Placeholder, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                     BorderThickness="0" />
+                <Button Grid.Column="1"
+                    Content="{Binding ClearButtonText, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    Classes="flat"
+                        IsVisible="True"
+                    Command="{Binding ClearCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+        </Grid>
+    </Border>
+</UserControl>

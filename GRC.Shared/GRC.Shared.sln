@@ -1,0 +1,30 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.34728.123
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GRC.Shared.Resources", "GRC.Shared.Resources\GRC.Shared.Resources.csproj", "{1E0E7AAB-5FCD-4F41-A46E-4F3D4240A028}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GRC.Shared.UI", "GRC.Shared.UI\GRC.Shared.UI.csproj", "{D4D4C2F4-8641-4C1B-BACB-7E77E3D6087F}"
+EndProject
+Global
+    GlobalSection(SolutionConfigurationPlatforms) = preSolution
+        Debug|Any CPU = Debug|Any CPU
+        Release|Any CPU = Release|Any CPU
+    EndGlobalSection
+    GlobalSection(ProjectConfigurationPlatforms) = postSolution
+        {1E0E7AAB-5FCD-4F41-A46E-4F3D4240A028}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {1E0E7AAB-5FCD-4F41-A46E-4F3D4240A028}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {1E0E7AAB-5FCD-4F41-A46E-4F3D4240A028}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {1E0E7AAB-5FCD-4F41-A46E-4F3D4240A028}.Release|Any CPU.Build.0 = Release|Any CPU
+        {D4D4C2F4-8641-4C1B-BACB-7E77E3D6087F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {D4D4C2F4-8641-4C1B-BACB-7E77E3D6087F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {D4D4C2F4-8641-4C1B-BACB-7E77E3D6087F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {D4D4C2F4-8641-4C1B-BACB-7E77E3D6087F}.Release|Any CPU.Build.0 = Release|Any CPU
+    EndGlobalSection
+    GlobalSection(SolutionProperties) = preSolution
+        HideSolutionNode = FALSE
+    EndGlobalSection
+    GlobalSection(ExtensibilityGlobals) = postSolution
+        SolutionGuid = {19B4D3AD-BA63-4A9D-AB36-6A8A0CFF4A6F}
+    EndGlobalSection
+EndGlobal

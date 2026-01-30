@@ -1,0 +1,10 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Shared data templates placeholder. Define item templates here as needed. -->
+    <DataTemplate x:Key="StandardListItem">
+        <StackPanel Orientation="Vertical" Spacing="2">
+            <TextBlock Text="{Binding Title}" />
+            <TextBlock Text="{Binding Subtitle}" Opacity="0.7" />
+        </StackPanel>
+    </DataTemplate>
+</ResourceDictionary>

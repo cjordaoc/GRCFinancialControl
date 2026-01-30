@@ -1,0 +1,28 @@
+using System;
+using System.Collections.Generic;
+using GRC.Shared.Core.Enums;
+using GRC.Shared.Core.Models.Assignments;
+using GRC.Shared.Core.Models.Core;
+using GRC.Shared.Core.Models.Lookups;
+
+namespace GRC.Shared.Core.Models.Financial
+{
+    /// <summary>
+    /// Defines a fiscal year period.
+    /// </summary>
+    public class FiscalYear
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public decimal AreaSalesTarget { get; set; }
+        public decimal AreaRevenueTarget { get; set; }
+        public bool IsLocked { get; set; }
+        public DateTime? LockedAt { get; set; }
+        public string? LockedBy { get; set; }
+
+        public ICollection<ClosingPeriod> ClosingPeriods { get; } = new List<ClosingPeriod>();
+        public ICollection<EngagementRankBudget> RankBudgets { get; } = new List<EngagementRankBudget>();
+    }
+}

@@ -1,0 +1,11 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="GRC.Shared.UI.Controls.StatusBar">
+    <Border Padding="8" Background="{StaticResource BrushSurfaceVariant}" BorderBrush="{StaticResource BrushBorder}" BorderThickness="1" CornerRadius="4">
+        <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+            <TextBlock Text="!" FontWeight="Bold" Foreground="{StaticResource BrushOnSurface}" Margin="0,0,8,0" IsVisible="{Binding HasIcon, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+            <TextBlock Grid.Column="1" Foreground="{StaticResource BrushOnSurface}" Text="{Binding Message, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+            <ContentPresenter Grid.Column="2" Content="{Binding RightContent, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+        </Grid>
+    </Border>
+</UserControl>

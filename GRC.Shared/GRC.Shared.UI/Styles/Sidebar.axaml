@@ -1,0 +1,89 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:sharedControls="clr-namespace:GRC.Shared.UI.Controls;assembly=GRC.Shared.UI">
+
+  <Styles.Resources>
+    <!-- Sidebar Design Tokens - Glassmorphism Style -->
+    <Thickness x:Key="SidebarItemPadding">0</Thickness>
+    <Thickness x:Key="SidebarItemMargin">0,2</Thickness>
+    <CornerRadius x:Key="SidebarItemCornerRadius">12</CornerRadius>
+    <x:Double x:Key="SidebarBorderThickness">1</x:Double>
+    <x:Double x:Key="SidebarTransitionDuration">250</x:Double>
+  </Styles.Resources>
+
+  <!-- SidebarHost Background and Border Styling -->
+  <Style Selector="sharedControls|SidebarHost">
+    <Setter Property="Background" Value="{StaticResource BrushOverlayStrong}" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+
+  <!-- Navigation Button Styling (NavButton class) -->
+  <Style Selector="ToggleButton.NavButton">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="{StaticResource SidebarItemPadding}" />
+    <Setter Property="Margin" Value="{StaticResource SidebarItemMargin}" />
+    <Setter Property="CornerRadius" Value="{StaticResource SidebarItemCornerRadius}" />
+    <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="FontWeight" Value="Medium" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="MinHeight" Value="48" />
+    <Setter Property="Height" Value="48" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.25" />
+        <BrushTransition Property="Foreground" Duration="0:0:0.25" />
+      </Transitions>
+    </Setter>
+  </Style>
+
+  <!-- NavButton Hover State -->
+  <Style Selector="ToggleButton.NavButton:pointerover">
+    <Setter Property="Background" Value="{StaticResource BrushOverlay}" />
+  </Style>
+
+  <!-- NavButton Checked/Selected State -->
+  <Style Selector="ToggleButton.NavButton:checked">
+    <Setter Property="Background" Value="{StaticResource BrushPrimary}" />
+    <Setter Property="Foreground" Value="{StaticResource BrushOnPrimary}" />
+  </Style>
+
+  <!-- NavButton Checked Hover State -->
+  <Style Selector="ToggleButton.NavButton:checked:pointerover">
+    <Setter Property="Background" Value="{StaticResource BrushPrimaryContainer}" />
+  </Style>
+
+  <!-- Sidebar Title Text -->
+  <Style Selector="TextBlock.SidebarTitle">
+    <Setter Property="FontWeight" Value="Medium" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="Foreground" Value="{StaticResource BrushOnSurface}" />
+    <Setter Property="Opacity" Value="0.88" />
+  </Style>
+
+  <!-- Sidebar Header Styling -->
+  <Style Selector="Border.SidebarHeader">
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="BorderBrush" Value="{StaticResource BrushBorder}" />
+    <Setter Property="Opacity" Value="0.5" />
+    <Setter Property="Padding" Value="16,16" />
+    <Setter Property="Margin" Value="0,0,0,16" />
+  </Style>
+
+  <!-- Sidebar Section Group Styling -->
+  <Style Selector="ItemsControl.SidebarSection">
+    <Setter Property="Margin" Value="0,8" />
+  </Style>
+
+  <!-- Section Divider -->
+  <Style Selector="Border.SidebarDivider">
+    <Setter Property="Height" Value="1" />
+    <Setter Property="Background" Value="{StaticResource BrushBorder}" />
+    <Setter Property="Margin" Value="12,16" />
+    <Setter Property="Opacity" Value="0.6" />
+  </Style>
+
+</Styles>
