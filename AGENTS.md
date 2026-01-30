@@ -19,6 +19,7 @@ Confirm .NET 8, restore dependencies, and ensure `dotnet build -c Release` passe
 - Register all services through Host Builder; no custom factories.
 - Simplicity First â†’ reuse > abstraction.
 - Prefer shared GRC.Shared.UI components (dialogs, status/loading/empty/toast/search controls, data templates) before creating app-specific XAML.
+- Fail Fast. No Fallbacks
 
 ---
 
@@ -87,25 +88,19 @@ Confirm .NET 8, restore dependencies, and ensure `dotnet build -c Release` passe
 ✅ **Core Mantra**
 > Make it work → Make it simple → Keep it consistent → **Make it perform.**
 
+---
 
-## Submodule Setup Requirements
+## 9 · GRC.Shared Library Management
 
-The `GRC.Shared` submodule is **required** for any build, test, or tooling
-command. Follow this checklist whenever you clone the repository or reset the
-workspace:
+**Build & Reference Process:**
+- GRC.Shared sources live in `/GRC.Shared` as part of the main repository (no longer a submodule).
+- Build GRC.Shared in Release configuration: `dotnet build GRC.Shared/GRC.Shared.sln -c Release`.
+- Copy resulting DLLs (`GRC.Shared.Core.dll`, `GRC.Shared.Resources.dll`, `GRC.Shared.UI.dll`) to `/lib`.
+- All application projects reference these DLLs via `<Reference Include="..."><HintPath>..\lib\...</HintPath></Reference>`.
+- **Do not add project references** to GRC.Shared projects from application layers.
 
-1. Run `git submodule update --init --recursive` immediately after cloning and
-   before your first `dotnet build`.
-2. Confirm the folder `GRC.Shared/GRC.Shared.UI` exists locally; if it does not,
-   repeat the update command.
-3. Never copy submodule files into the root repository or stage them manually;
-   always rely on the submodule pointer.
+**Modal Dialog Configuration:**
+- `ModalDialogOptions` controls dialog behavior: tokenized sizing via `DialogContentRatio*` resource keys, title overrides, system window decorations, dimmed background, and owner-freeze behavior.
+- Dialog services override `GetModalDialogOptions()` to configure layout (CenteredOverlay vs OwnerAligned), size tokens, and interaction behavior.
+- All resource lookups (size ratios, brushes) enforce fail-fast validation—missing keys throw exceptions.
 
-If the submodule breaks, repair it with:
-
-```bash
-git submodule deinit -f --all
-git rm -rf --cached GRC.Shared
-git submodule add https://github.com/cjordaoc/GRC.Shared.git GRC.Shared
-git submodule update --init --recursive
-```

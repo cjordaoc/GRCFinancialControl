@@ -12,7 +12,16 @@ Shared localization resources live under `GRC.Shared.Resources/Localization/Stri
 
 ### GUI Shared Components
 - **Dialogs:** `ConfirmationDialog` and `InformationDialog` from `GRC.Shared.UI.Controls.Dialogs` are wrapped by app dialog views; `BaseDialogService` injects `CloseDialog` on the base view models so close/confirm routes work without manual wiring.
-- **Modal options:** `ModalDialogOptions` controls layout, tokenized sizing (`DialogContentRatioCompact|Standard|Wide`), title overrides, system decorations, dimmed background, and owner-freeze behavior; resources must exist or the dialog fails fast.
+- **Modal options:** `ModalDialogOptions` configures dialog presentation and behavior:
+  - `Layout` (`ModalDialogLayout`): `CenteredOverlay` (screen center) or `OwnerAligned` (owner center).
+  - `SizeRatioResourceKey`: Tokenized size from theme (`DialogContentRatioCompact` = 0.7, `DialogContentRatioStandard` = 0.85, `DialogContentRatioWide` = 0.92); falls back to `ContentSizeRatio` numeric value when resource key is null.
+  - `Title`: Overrides dialog window title when the service call doesn't provide one.
+  - `ShowWindowControls`: Enables/disables system window chrome (close button, title bar).
+  - `DimBackground`: Controls semi-transparent overlay rendering.
+  - `FreezeOwner`: Disables owner window interaction while dialog is open; nested dialogs freeze the previous dialog instead of the root owner.
+  - `ContainerMargin`: Optional padding around dialog content.
+  - All resource lookups (`SizeRatioResourceKey`, brush keys) enforce fail-fast validation; missing keys throw `InvalidOperationException` with descriptive messages.
+  - Dialog services override `GetModalDialogOptions()` to configure layout and behavior; `OnDialogOpening` and `OnDialogClosing` hooks receive options for conditional owner freeze logic.
 - **Controls:** Status/feedback surfaces (`StatusBar`, `LoadingIndicator`, `EmptyState`, `ToastNotification`, `SearchBox`, `RadialGauge`) live in `GRC.Shared.UI/Controls`. Toast overlays in both shells bind `ToastService.Notifications` into `ToastNotification` with `ToastTypeToBrushConverter` for severity coloring.
 - **Converters:** Shared XAML converters (`BoolToThemeResourceBrushConverter`, `DateTimeOffsetToDateTimeConverter`, `PercentageOfSizeConverter`, `ToastTypeToBrushConverter`) live in `GRC.Shared.UI/Converters` and handle theme resource lookups, date normalization, proportional sizing, and toast severity coloring for binding pipelines across both apps.
 - **Behaviors:** `NumericInputNullSafety` (attached property in `GRC.Shared.UI/Behaviors`) forces empty numeric inputs to zero on focus loss, preventing binding exceptions in TextBox and NumericUpDown controls.
