@@ -120,7 +120,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var editor = new ClosingPeriodEditorViewModel(newClosingPeriod, selectableFiscalYears, _closingPeriodService, Messenger);
 
             await _dialogService.ShowDialogAsync(editor);
-            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+            Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanEdit))]
@@ -143,7 +143,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             var editor = new ClosingPeriodEditorViewModel(closingPeriod, GetSelectableFiscalYears(closingPeriod), _closingPeriodService, Messenger);
             await _dialogService.ShowDialogAsync(editor);
-            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+            Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanView))]
@@ -185,7 +185,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 await _closingPeriodService.DeleteAsync(closingPeriod.Id);
                 var message = LocalizationRegistry.Format("FINC_ClosingPeriods_Toast_DeleteSuccess", closingPeriod.Name);
                 ToastService.ShowSuccess(message);
-                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+                Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
             }
             catch (InvalidOperationException ex)
             {
@@ -232,7 +232,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 await _closingPeriodService.DeleteDataAsync(closingPeriod.Id);
                 var message = LocalizationRegistry.Format("FINC_ClosingPeriods_Toast_ReverseSuccess", closingPeriod.Name);
                 ToastService.ShowSuccess(message);
-                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+                Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
             }
             catch (InvalidOperationException ex)
             {
@@ -264,13 +264,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             try
             {
                 await _closingPeriodService.SetLockStateAsync(closingPeriodId, targetState);
-                ToastService.ShowSuccess(targetState
-                    ? "FINC_ClosingPeriods_Toast_Locked"
-                    : "FINC_ClosingPeriods_Toast_Unlocked",
+                var toggleMessage = LocalizationRegistry.Format(
+                    targetState ? "FINC_ClosingPeriods_Toast_Locked" : "FINC_ClosingPeriods_Toast_Unlocked",
                     SelectedClosingPeriod?.Name ?? string.Empty);
+                ToastService.ShowSuccess(toggleMessage);
                 await ReloadAsync(filterId, closingPeriodId);
                 _suppressNextRefresh = true;
-                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+                Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
             }
             catch (InvalidOperationException ex)
             {
@@ -370,7 +370,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         public override void Receive(RefreshViewMessage message)
         {
-            if (!message.Matches(RefreshTargets.FinancialData))
+            if (!message.Matches(FinancialControlRefreshTargets.FinancialData))
             {
                 return;
             }

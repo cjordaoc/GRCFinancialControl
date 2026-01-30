@@ -13,7 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GRC.Shared\GRC.Shared.Core\GRC.Shared.Core.csproj" />
+    <Reference Include="GRC.Shared.Core">
+      <HintPath>..\lib\GRC.Shared.Core.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

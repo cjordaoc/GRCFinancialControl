@@ -6,7 +6,7 @@ using GRC.Shared.Core.Models.Allocations;
 using GRC.Shared.Core.Models.Lookups;
 using GRCFinancialControl.Core.Models;
 using GRCFinancialControl.Persistence.Models;
-using GRCFinancialControl.Persistence.Models.Assignments;
+using GRC.Shared.Core.Models.Assignments;
 using Invoices.Core.Enums;
 using Invoices.Core.Models;
 using Microsoft.EntityFrameworkCore;

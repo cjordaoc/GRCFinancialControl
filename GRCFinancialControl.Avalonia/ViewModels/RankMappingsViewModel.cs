@@ -3,11 +3,11 @@ using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
 using GRC.Shared.UI.Services;
-using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRC.Shared.UI.Messages;
+using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRC.Shared.Core.Models.Core;
 using GRC.Shared.Core.Models.Financial;
@@ -51,7 +51,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var editor = new RankMappingEditorViewModel(new RankMapping(), _rankMappingService, Messenger);
             var title = LocalizationRegistry.Get("FINC_MasterData_RankMappings_Dialog_AddTitle");
             await _dialogService.ShowDialogAsync(editor, title).ConfigureAwait(false);
-            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+            Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanModify))]
@@ -65,7 +65,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             var editor = new RankMappingEditorViewModel(rankMapping, _rankMappingService, Messenger);
             var title = LocalizationRegistry.Get("FINC_MasterData_RankMappings_Dialog_EditTitle");
             await _dialogService.ShowDialogAsync(editor, title).ConfigureAwait(false);
-            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+            Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanModify))]
@@ -84,7 +84,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     : rankMapping.NormalizedRank;
                 var message = LocalizationRegistry.Format("FINC_RankMappings_Toast_DeleteSuccess", displayName);
                 ToastService.ShowSuccess(message);
-                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+                Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
             }
             catch (System.Exception ex)
             {

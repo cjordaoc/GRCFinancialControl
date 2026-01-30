@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using App.Presentation.Localization;
-using App.Presentation.Services;
+using GRC.Shared.UI.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -95,16 +95,20 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
                     await _assignmentService.UpdateAsync(_assignment);
                 }
 
-                ToastService.ShowSuccess(
+                var successMessage = LocalizationRegistry.Format(
                     "FINC_Admin_ManagerAssignments_Toast_SaveSuccess",
                     SelectedManager.Name,
                     SelectedEngagement.ToString());
+                ToastService.ShowSuccess(successMessage);
 
                 Messenger.Send(new CloseDialogMessage(true));
             }
             catch (Exception ex)
             {
-                ToastService.ShowError("FINC_Admin_ManagerAssignments_Toast_OperationFailed", ex.Message);
+                var errorMessage = LocalizationRegistry.Format(
+                    "FINC_Admin_ManagerAssignments_Toast_OperationFailed",
+                    ex.Message);
+                ToastService.ShowError(errorMessage);
             }
         }
 

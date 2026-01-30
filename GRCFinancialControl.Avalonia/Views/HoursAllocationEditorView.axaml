@@ -5,7 +5,7 @@
              xmlns:vm="using:GRCFinancialControl.Avalonia.ViewModels"
              xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
              xmlns:behaviors="clr-namespace:GRC.Shared.UI.Behaviors;assembly=GRC.Shared.UI"
-             xmlns:sharedControls="using:GRC.Shared.UI.Controls"
+             xmlns:sharedControls="clr-namespace:GRC.Shared.UI.Controls;assembly=GRC.Shared.UI"
              xmlns:sharedConverters="using:GRC.Shared.UI.Converters"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
              x:Class="GRCFinancialControl.Avalonia.Views.HoursAllocationEditorView"

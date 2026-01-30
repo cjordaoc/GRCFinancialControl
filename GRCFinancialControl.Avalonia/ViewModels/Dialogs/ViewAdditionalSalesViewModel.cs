@@ -2,7 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using App.Presentation.Services;
+using GRC.Shared.UI.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -86,7 +86,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             }
             catch (Exception ex)
             {
-                ToastService.ShowError("Failed to delete additional sale", ex.Message);
+                ToastService.ShowError($"Failed to delete additional sale. {ex.Message}");
             }
         }
 

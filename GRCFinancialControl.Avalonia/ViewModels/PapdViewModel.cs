@@ -5,11 +5,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
 using GRC.Shared.UI.Services;
-using App.Presentation.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRC.Shared.UI.Messages;
+using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRC.Shared.Core.Models.Core;
@@ -78,7 +78,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             var editorViewModel = new PapdEditorViewModel(new Papd(), _papdService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
-            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+            Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanEdit))]
@@ -91,7 +91,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             var editorViewModel = new PapdEditorViewModel(papd, _papdService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
-            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+            Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanEdit))]
@@ -119,7 +119,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 await _papdService.DeleteAsync(papd.Id);
                 var message = LocalizationRegistry.Format("FINC_Papds_Toast_DeleteSuccess", papd.Name);
                 ToastService.ShowSuccess(message);
-                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+                Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
             }
             catch (System.Exception ex)
             {
@@ -146,7 +146,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     await _papdService.DeleteDataAsync(papd.Id);
                     var message = LocalizationRegistry.Format("FINC_Papds_Toast_DeleteDataSuccess", papd.Name);
                     ToastService.ShowSuccess(message);
-                    Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+                    Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
                 }
                 catch (System.Exception ex)
                 {
@@ -218,12 +218,14 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                         await _papdAssignmentService.DeleteAsync(assignment.Id);
                     }
 
-                    ToastService.ShowSuccess("FINC_Papds_Toast_TransferSuccess", 
-                        SelectedPapd.Name, 
+                    var transferMessage = LocalizationRegistry.Format(
+                        "FINC_Papds_Toast_TransferSuccess",
+                        SelectedPapd.Name,
                         transferViewModel.SelectedPapd.Name,
                         assignments.Count.ToString());
+                    ToastService.ShowSuccess(transferMessage);
                     
-                    Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+                    Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
                 }
             }
             catch (System.Exception ex)
@@ -268,11 +270,13 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     await _papdAssignmentService.DeleteAsync(assignment.Id);
                 }
 
-                ToastService.ShowSuccess("FINC_Papds_Toast_DeleteAssignmentsSuccess", 
-                    assignments.Count.ToString(), 
+                var deleteMessage = LocalizationRegistry.Format(
+                    "FINC_Papds_Toast_DeleteAssignmentsSuccess",
+                    assignments.Count.ToString(),
                     SelectedPapd.Name);
+                ToastService.ShowSuccess(deleteMessage);
                 
-                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+                Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
             }
             catch (System.Exception ex)
             {

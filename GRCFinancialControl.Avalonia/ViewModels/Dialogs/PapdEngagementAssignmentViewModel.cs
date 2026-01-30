@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
-using App.Presentation.Services;
+using GRC.Shared.UI.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -107,19 +107,21 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             var engagement = await _engagementService.GetByIdAsync(engagementId);
             if (engagement is null)
             {
-                ToastService.ShowError(
+                var errorMessage = LocalizationRegistry.Format(
                     "FINC_Admin_PapdAssignments_Toast_OperationFailed",
                     LocalizationRegistry.Get("FINC_Admin_PapdAssignments_Error_EngagementMissing"));
+                ToastService.ShowError(errorMessage);
                 return;
             }
 
             var exists = engagement.EngagementPapds.Any(a => a.PapdId == Papd.Id);
             if (exists)
             {
-                ToastService.ShowWarning(
+                var warningMessage = LocalizationRegistry.Format(
                     "FINC_Admin_PapdAssignments_Toast_Exists",
                     Papd.Name,
                     BuildEngagementDisplay(SelectedEngagement, engagement));
+                ToastService.ShowWarning(warningMessage);
                 return;
             }
 
@@ -132,15 +134,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             try
             {
                 await _engagementService.UpdateAsync(engagement);
-                ToastService.ShowSuccess(
+                var successMessage = LocalizationRegistry.Format(
                     "FINC_Admin_PapdAssignments_Toast_SaveSuccess",
                     Papd.Name,
                     BuildEngagementDisplay(SelectedEngagement, engagement));
+                ToastService.ShowSuccess(successMessage);
                 Messenger.Send(new CloseDialogMessage(true));
             }
             catch (Exception ex)
             {
-                ToastService.ShowError("FINC_Admin_PapdAssignments_Toast_OperationFailed", ex.Message);
+                var errorMessage = LocalizationRegistry.Format(
+                    "FINC_Admin_PapdAssignments_Toast_OperationFailed",
+                    ex.Message);
+                ToastService.ShowError(errorMessage);
             }
         }
 
@@ -149,27 +155,30 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             var currentEngagement = await _engagementService.GetByIdAsync(_assignment.EngagementId);
             if (currentEngagement is null)
             {
-                ToastService.ShowError(
+                var errorMessage = LocalizationRegistry.Format(
                     "FINC_Admin_PapdAssignments_Toast_OperationFailed",
                     LocalizationRegistry.Get("FINC_Admin_PapdAssignments_Error_EngagementMissing"));
+                ToastService.ShowError(errorMessage);
                 return;
             }
 
             var existingAssignment = currentEngagement.EngagementPapds.FirstOrDefault(a => a.Id == _assignment.Id);
             if (existingAssignment is null)
             {
-                ToastService.ShowError(
+                var errorMessage = LocalizationRegistry.Format(
                     "FINC_Admin_PapdAssignments_Toast_OperationFailed",
                     LocalizationRegistry.Get("FINC_Admin_PapdAssignments_Error_AssignmentMissing"));
+                ToastService.ShowError(errorMessage);
                 return;
             }
 
             if (currentEngagement.Id == newEngagementId)
             {
-                ToastService.ShowWarning(
+                var warningMessage = LocalizationRegistry.Format(
                     "FINC_Admin_PapdAssignments_Toast_Exists",
                     Papd.Name,
                     BuildEngagementDisplay(SelectedEngagement, currentEngagement));
+                ToastService.ShowWarning(warningMessage);
                 return;
             }
 
@@ -180,25 +189,30 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             }
             catch (Exception ex)
             {
-                ToastService.ShowError("FINC_Admin_PapdAssignments_Toast_OperationFailed", ex.Message);
+                var errorMessage = LocalizationRegistry.Format(
+                    "FINC_Admin_PapdAssignments_Toast_OperationFailed",
+                    ex.Message);
+                ToastService.ShowError(errorMessage);
                 return;
             }
 
             var targetEngagement = await _engagementService.GetByIdAsync(newEngagementId);
             if (targetEngagement is null)
             {
-                ToastService.ShowError(
+                var errorMessage = LocalizationRegistry.Format(
                     "FINC_Admin_PapdAssignments_Toast_OperationFailed",
                     LocalizationRegistry.Get("FINC_Admin_PapdAssignments_Error_EngagementMissing"));
+                ToastService.ShowError(errorMessage);
                 return;
             }
 
             if (targetEngagement.EngagementPapds.Any(a => a.PapdId == Papd.Id))
             {
-                ToastService.ShowWarning(
+                var warningMessage = LocalizationRegistry.Format(
                     "FINC_Admin_PapdAssignments_Toast_Exists",
                     Papd.Name,
                     BuildEngagementDisplay(SelectedEngagement, targetEngagement));
+                ToastService.ShowWarning(warningMessage);
                 return;
             }
 
@@ -211,15 +225,19 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
             try
             {
                 await _engagementService.UpdateAsync(targetEngagement);
-                ToastService.ShowSuccess(
+                var successMessage = LocalizationRegistry.Format(
                     "FINC_Admin_PapdAssignments_Toast_SaveSuccess",
                     Papd.Name,
                     BuildEngagementDisplay(SelectedEngagement, targetEngagement));
+                ToastService.ShowSuccess(successMessage);
                 Messenger.Send(new CloseDialogMessage(true));
             }
             catch (Exception ex)
             {
-                ToastService.ShowError("FINC_Admin_PapdAssignments_Toast_OperationFailed", ex.Message);
+                var errorMessage = LocalizationRegistry.Format(
+                    "FINC_Admin_PapdAssignments_Toast_OperationFailed",
+                    ex.Message);
+                ToastService.ShowError(errorMessage);
             }
         }
 

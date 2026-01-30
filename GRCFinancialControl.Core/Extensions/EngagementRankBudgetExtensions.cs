@@ -3,7 +3,7 @@ using GRC.Shared.Core.Models.Core;
 using GRC.Shared.Core.Models.Lookups;
 using GRC.Shared.Core.Models.Assignments;
 
-namespace GRCFinancialControl.Persistence.Extensions
+namespace GRCFinancialControl.Core.Extensions
 {
     public static class EngagementRankBudgetExtensions
     {

@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRC.Shared.UI.Services;
+using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Core.Configuration;
 using GRCFinancialControl.Persistence.Services.Interfaces;
@@ -331,7 +332,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
             RunOnUiThread(() =>
             {
                 StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_TestSuccess");
-                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+                Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
             });
         }
 
@@ -481,7 +482,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     StatusMessage = LocalizationRegistry.Format(
                         "FINC_Settings_Status_ImportSuccess",
                         Path.GetFileName(SelectedImportPackagePath));
-                    Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+                    Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
                     Messenger.Send(ApplicationRestartRequestedMessage.Instance);
                 });
             }
@@ -581,7 +582,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     StatusMessage = LocalizationRegistry.Format(
                         "FINC_Settings_Status_DataImportSuccess",
                         Path.GetFileName(filePath));
-                    Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+                    Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
                     Messenger.Send(ApplicationRestartRequestedMessage.Instance);
                 });
             }

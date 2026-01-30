@@ -504,7 +504,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
                 _loggingService.LogInfo(summary);
                 StatusMessage = summary;
-                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+                Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
                 updateCompleted = true;
             }
             catch (Exception ex)
@@ -578,7 +578,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                     StatusMessage = "Changes saved successfully.";
                 }
 
-                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+                Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
             }
             catch (Exception ex)
             {

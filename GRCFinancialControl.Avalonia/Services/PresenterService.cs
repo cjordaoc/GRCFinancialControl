@@ -1,6 +1,6 @@
 using System;
 using System.Linq;
-using App.Presentation.Services;
+using App.Presentation.Localization;
 using GRC.Shared.UI.Services;
 using GRCFinancialControl.Avalonia.Services.Interfaces;
 
@@ -25,17 +25,20 @@ public sealed class PresenterService : IPresenterService
 
     public void ShowSuccess(string localizationKey, params object?[] formatArgs)
     {
-        ToastService.ShowSuccess(localizationKey, formatArgs.Where(x => x != null).Cast<object>().ToArray());
+        var message = LocalizationRegistry.Format(localizationKey, formatArgs.Where(x => x != null).Cast<object>().ToArray());
+        ToastService.ShowSuccess(message);
     }
 
     public void ShowWarning(string localizationKey, params object?[] formatArgs)
     {
-        ToastService.ShowWarning(localizationKey, formatArgs.Where(x => x != null).Cast<object>().ToArray());
+        var message = LocalizationRegistry.Format(localizationKey, formatArgs.Where(x => x != null).Cast<object>().ToArray());
+        ToastService.ShowWarning(message);
     }
 
     public void ShowError(string localizationKey, params object?[] formatArgs)
     {
-        ToastService.ShowError(localizationKey, formatArgs.Where(x => x != null).Cast<object>().ToArray());
+        var message = LocalizationRegistry.Format(localizationKey, formatArgs.Where(x => x != null).Cast<object>().ToArray());
+        ToastService.ShowError(message);
     }
 
     public void LogInfo(string message)

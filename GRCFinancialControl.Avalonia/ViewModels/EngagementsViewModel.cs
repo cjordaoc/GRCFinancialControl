@@ -12,6 +12,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using GRC.Shared.Core.Services;
 using GRC.Shared.UI.Messages;
 using GRC.Shared.UI.Services;
+using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRC.Shared.Core.Models.Core;
@@ -301,7 +302,10 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 }.AsEnumerable());
 
                 await _exportService.ExportAsync(filePath, headers, rows);
-                ToastService.ShowSuccess("FINC_Toast_ExportSuccess", Path.GetFileName(filePath));
+                var successMessage = LocalizationRegistry.Format(
+                    "FINC_Toast_ExportSuccess",
+                    Path.GetFileName(filePath));
+                ToastService.ShowSuccess(successMessage);
             }
             catch (Exception ex)
             {

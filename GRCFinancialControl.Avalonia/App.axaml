@@ -3,7 +3,6 @@
              x:Class="GRCFinancialControl.Avalonia.App"
              xmlns:local="using:GRCFinancialControl.Avalonia"
              xmlns:converters="using:GRCFinancialControl.Avalonia.Converters"
-             xmlns:sharedConverters="using:GRC.Shared.UI.Converters"
              xmlns:sharedConverters="clr-namespace:GRC.Shared.UI.Converters;assembly=GRC.Shared.UI"
              RequestedThemeVariant="Dark">
              <!-- The app defaults to the dark variant for consistency with analytics dashboards. -->

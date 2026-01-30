@@ -2,11 +2,13 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using App.Presentation.Services;
+using App.Presentation.Localization;
+using GRC.Shared.UI.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GRC.Shared.UI.Messages;
+using GRCFinancialControl.Avalonia.Messages;
 using GRCFinancialControl.Avalonia.Services;
 using GRCFinancialControl.Avalonia.ViewModels.Dialogs;
 using GRC.Shared.Core.Models.Core;
@@ -106,7 +108,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         {
             var editorViewModel = new ManagerEditorViewModel(new Manager(), _managerService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
-            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+            Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanModifySelection))]
@@ -119,7 +121,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
             var editorViewModel = new ManagerEditorViewModel(manager, _managerService, Messenger);
             await _dialogService.ShowDialogAsync(editorViewModel);
-            Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+            Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
         }
 
         [RelayCommand(CanExecute = nameof(CanModifySelection))]
@@ -147,7 +149,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 await _managerService.DeleteAsync(manager.Id);
                 var message = LocalizationRegistry.Format("FINC_Managers_Toast_DeleteSuccess", manager.Name);
                 ToastService.ShowSuccess(message);
-                Messenger.Send(new RefreshViewMessage(RefreshTargets.FinancialData));
+                Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
             }
             catch (System.Exception ex)
             {

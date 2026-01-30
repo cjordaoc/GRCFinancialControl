@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Presentation.Localization;
-using App.Presentation.Services;
+using GRC.Shared.UI.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -88,18 +88,22 @@ namespace GRCFinancialControl.Avalonia.ViewModels.Dialogs
                 var engagement = await _engagementFacade.GetEngagementAsync(_engagement.Id);
                 var engagementDisplay = engagement?.EngagementId ?? engagement?.Description ?? _engagement.Description;
 
-                ToastService.ShowSuccess(
+                var successMessage = LocalizationRegistry.Format(
                     "FINC_Admin_PapdAssignments_Toast_SaveSuccess",
                     string.Join(", ", AvailablePapds
                         .Where(p => p.IsSelected)
                         .Select(p => p.Papd.Name)),
                     engagementDisplay);
+                ToastService.ShowSuccess(successMessage);
 
                 Messenger.Send(new CloseDialogMessage(true));
             }
             catch (Exception ex)
             {
-                ToastService.ShowError("FINC_Admin_PapdAssignments_Toast_OperationFailed", ex.Message);
+                var errorMessage = LocalizationRegistry.Format(
+                    "FINC_Admin_PapdAssignments_Toast_OperationFailed",
+                    ex.Message);
+                ToastService.ShowError(errorMessage);
             }
         }
 

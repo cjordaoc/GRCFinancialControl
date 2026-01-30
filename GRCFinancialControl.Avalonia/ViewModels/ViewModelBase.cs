@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.Messaging;
 using GRC.Shared.UI.Messages;
+using GRCFinancialControl.Avalonia.Messages;
 using GRC.Shared.UI.ViewModels;
 
 namespace GRCFinancialControl.Avalonia.ViewModels;
@@ -9,7 +10,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels;
 /// </summary>
 public abstract class ViewModelBase : ValidatableViewModelBase
 {
-    private static readonly string[] DefaultRefreshTargets = { RefreshTargets.FinancialData };
+    private static readonly string[] DefaultRefreshTargets = { FinancialControlRefreshTargets.FinancialData };
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ViewModelBase"/> class.

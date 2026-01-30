@@ -7,6 +7,7 @@ All work must follow the **â€œas simple as it can beâ€** rule â€" ever
 
 ## 1 Â· Environment & Build Readiness
 Confirm .NET 8, restore dependencies, and ensure `dotnet build -c Release` passes with zero warnings before shipping significant code changes.
+**GRC.Shared usage:** build the GRC.Shared DLLs (Release) and reference them from `/lib`. **Do not add project references** to GRC.Shared projects.
 
 ---
 
