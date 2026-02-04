@@ -3,12 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using GRC.Shared.Core.Enums;
 using GRC.Shared.Core.Models.Core;
-using GRC.Shared.Core.Models.Financial;
-using GRC.Shared.Core.Models.Allocations;
-
 using GRC.Shared.Core.Models.Assignments;
-using GRC.Shared.Core.Models.Lookups;
 using GRCFinancialControl.Core.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace GRCFinancialControl.Persistence.Services.Importers.Strategies
 {
@@ -85,6 +82,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers.Strategies
                 {
                     // Check if Manager already exists in database by GUI code
                     var existingManager = context.Managers
+                        .AsNoTracking()
                         .FirstOrDefault(m => m.EngagementManagerGui == gui);
                     
                     if (existingManager != null)
@@ -104,8 +102,8 @@ namespace GRCFinancialControl.Persistence.Services.Importers.Strategies
                         var newManager = new Manager
                         {
                             EngagementManagerGui = gui,
-                            Name = gui,
-                            Email = $"placeholder.{Guid.NewGuid().ToString().Substring(0, 8)}@tbd",
+                            Name = $"[Pending] {gui}",
+                            Email = $"pending.{Guid.NewGuid().ToString().Substring(0, 8)}@tbd.local",
                             WindowsLogin = null,
                             Position = ManagerPosition.Manager
                         };

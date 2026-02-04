@@ -31,10 +31,10 @@ namespace GRCFinancialControl.Persistence.Services
             await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
             return await context.EngagementManagerAssignments
                 .AsNoTracking()
-                .AsSplitQuery()
                 .Include(a => a.Manager)
                 .Include(a => a.Engagement)
                     .ThenInclude(e => e.Customer)
+                .AsSplitQuery()
                 .OrderBy(a => a.Engagement.EngagementId)
                 .ThenBy(a => a.Manager.Name)
                 .ToListAsync().ConfigureAwait(false);
@@ -45,10 +45,10 @@ namespace GRCFinancialControl.Persistence.Services
             await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
             return await context.EngagementManagerAssignments
                 .AsNoTracking()
-                .AsSplitQuery()
                 .Include(a => a.Manager)
                 .Include(a => a.Engagement)
                     .ThenInclude(e => e.Customer)
+                .AsSplitQuery()
                 .Where(a => a.EngagementId == engagementId)
                 .OrderBy(a => a.Manager.Name)
                 .ToListAsync().ConfigureAwait(false);
@@ -59,10 +59,10 @@ namespace GRCFinancialControl.Persistence.Services
             await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
             return await context.EngagementManagerAssignments
                 .AsNoTracking()
-                .AsSplitQuery()
                 .Include(a => a.Manager)
                 .Include(a => a.Engagement)
                     .ThenInclude(e => e.Customer)
+                .AsSplitQuery()
                 .Where(a => a.ManagerId == managerId)
                 .OrderBy(a => a.Engagement.EngagementId)
                 .ThenBy(a => a.Engagement.Description)
@@ -74,10 +74,10 @@ namespace GRCFinancialControl.Persistence.Services
             await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
             return await context.EngagementManagerAssignments
                 .AsNoTracking()
-                .AsSplitQuery()
                 .Include(a => a.Manager)
                 .Include(a => a.Engagement)
                     .ThenInclude(e => e.Customer)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(a => a.Id == id).ConfigureAwait(false);
         }
 

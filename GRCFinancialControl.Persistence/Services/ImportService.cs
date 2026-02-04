@@ -231,6 +231,7 @@ namespace GRCFinancialControl.Persistence.Services
             var engagements = await context.Engagements
                 .Include(e => e.RankBudgets.Where(b => b.FiscalYearId == closingPeriod.FiscalYearId))
                 .Where(e => engagementCodes.Contains(e.EngagementId))
+                .AsSingleQuery()
                 .ToListAsync()
                 .ConfigureAwait(false);
 
@@ -940,6 +941,7 @@ namespace GRCFinancialControl.Persistence.Services
                 engagements = await context.Engagements
                     .Include(e => e.RankBudgets.Where(b => b.ClosingPeriodId == closingPeriodId && fiscalYearIds.Contains(b.FiscalYearId)))
                     .Where(e => e.EngagementId != null && engagementCodes.Contains(e.EngagementId))
+                    .AsSingleQuery()
                     .ToListAsync()
                     .ConfigureAwait(false);
             }

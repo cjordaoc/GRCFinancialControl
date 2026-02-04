@@ -43,7 +43,6 @@ namespace GRCFinancialControl.Persistence.Services
 
             var engagements = await context.Engagements
                 .AsNoTrackingWithIdentityResolution()
-                .AsSplitQuery()
                 .Include(e => e.Customer)
                 .Include(e => e.EngagementPapds)
                 .Include(e => e.ManagerAssignments)
@@ -54,6 +53,7 @@ namespace GRCFinancialControl.Persistence.Services
                     .ThenInclude(a => a.FiscalYear)
                 .Include(e => e.FinancialEvolutions)
                 .Include(e => e.LastClosingPeriod)
+                .AsSplitQuery()
                 .ToListAsync()
                 .ConfigureAwait(false);
 
@@ -77,7 +77,6 @@ namespace GRCFinancialControl.Persistence.Services
 
             var engagement = await context.Engagements
                 .AsNoTrackingWithIdentityResolution()
-                .AsSplitQuery()
                 .Include(e => e.Customer)
                 .Include(e => e.EngagementPapds)
                 .Include(e => e.ManagerAssignments)
@@ -88,6 +87,7 @@ namespace GRCFinancialControl.Persistence.Services
                     .ThenInclude(a => a.FiscalYear)
                 .Include(e => e.FinancialEvolutions)
                 .Include(e => e.LastClosingPeriod)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(e => e.Id == id)
                 .ConfigureAwait(false);
 

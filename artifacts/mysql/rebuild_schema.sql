@@ -527,7 +527,7 @@ BEGIN
         COALESCE(SUM(elf.ChargedHours), 0) AS ChargedHours,
         COALESCE(SUM(elf.FYTDHours), 0) AS FYTDHours,
         COALESCE(SUM(elf.FYTDExpenses), 0) AS FYTDExpenses,
-        COALESCE(ROUND(AVG(elf.FYTDMargin), 4), 0) AS FYTDMargin,
+        COALESCE(ROUND(SUM(elf.FYTDMargin * elf.TotalRevenue) / NULLIF(SUM(elf.TotalRevenue), 0), 4), 0) AS FYTDMargin,
         MAX(elf.ClosingPeriodEnd) AS LatestClosingPeriodEnd,
         COUNT(DISTINCT elf.EngagementId) AS EngagementCount,
         COUNT(DISTINCT CASE WHEN e.Status = 1 THEN elf.EngagementId END) AS ActiveEngagementCount
@@ -620,7 +620,7 @@ BEGIN
             SUM(elf.ChargedHours)       AS ChargedHours,
             SUM(elf.FYTDHours)          AS FYTDHours,
             SUM(elf.FYTDExpenses)       AS FYTDExpenses,
-            ROUND(AVG(elf.FYTDMargin), 4)         AS FYTDMargin,
+            ROUND(SUM(elf.FYTDMargin * elf.TotalRevenue) / NULLIF(SUM(elf.TotalRevenue), 0), 4) AS FYTDMargin,
             MAX(elf.ClosingPeriodEnd)   AS LatestClosingPeriodEnd
         FROM EngagementLatestFinancials elf
         INNER JOIN FiscalYears fy 
@@ -1125,7 +1125,7 @@ BEGIN
         COALESCE(SUM(elf_summary.ChargedHours), 0) AS ChargedHours,
         COALESCE(SUM(elf_summary.FYTDHours), 0) AS FYTDHours,
         COALESCE(SUM(elf_summary.FYTDExpenses), 0) AS FYTDExpenses,
-        COALESCE(ROUND(AVG(elf_summary.FYTDMargin), 4), 0) AS FYTDMargin,
+        COALESCE(ROUND(SUM(elf_summary.FYTDMargin * elf_summary.TotalRevenue) / NULLIF(SUM(elf_summary.TotalRevenue), 0), 4), 0) AS FYTDMargin,
         COALESCE(SUM(inv_totals.TotalInvoiced), 0) AS TotalInvoiced,
         COALESCE(SUM(inv_totals.OutstandingInvoices), 0) AS OutstandingInvoices,
         GREATEST(
@@ -1146,7 +1146,7 @@ BEGIN
             SUM(ChargedHours) AS ChargedHours,
             SUM(FYTDHours) AS FYTDHours,
             SUM(FYTDExpenses) AS FYTDExpenses,
-            ROUND(AVG(FYTDMargin), 4) AS FYTDMargin,
+            ROUND(SUM(FYTDMargin * TotalRevenue) / NULLIF(SUM(TotalRevenue), 0), 4) AS FYTDMargin,
             MAX(ClosingPeriodEnd) AS LatestClosingPeriodEnd
         FROM EngagementLatestFinancials
         GROUP BY EngagementId

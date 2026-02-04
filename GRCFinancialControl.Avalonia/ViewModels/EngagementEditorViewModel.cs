@@ -496,7 +496,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            var selectionViewModel = new PapdSelectionViewModel(Engagement, _engagementFacade, Messenger);
+            var selectionViewModel = new PapdSelectionViewModel(Engagement, _engagementFacade, _messenger);
             await selectionViewModel.LoadDataAsync();
             await _dialogService.ShowDialogAsync(selectionViewModel, selectionViewModel.Title);
             
@@ -551,7 +551,7 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            var selectionViewModel = new ManagerSelectionViewModel(Engagement, _engagementFacade, Messenger);
+            var selectionViewModel = new ManagerSelectionViewModel(Engagement, _engagementFacade, _messenger);
             await selectionViewModel.LoadDataAsync();
             await _dialogService.ShowDialogAsync(selectionViewModel, selectionViewModel.Title);
             
@@ -947,6 +947,16 @@ namespace GRCFinancialControl.Avalonia.ViewModels
         private void MarkAsChanged()
         {
             HasChanges = true;
+        }
+        
+        partial void OnSelectedPapdAssignmentChanged(EngagementPapd? value)
+        {
+            RemovePapdAssignmentCommand.NotifyCanExecuteChanged();
+        }
+        
+        partial void OnSelectedManagerAssignmentChanged(EngagementManagerAssignment? value)
+        {
+            RemoveManagerAssignmentCommand.NotifyCanExecuteChanged();
         }
     }
 }

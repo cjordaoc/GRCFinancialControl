@@ -2,7 +2,7 @@ using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
-using GRC.Shared.Core.Enums;
+using GRC.Shared.UI.Enums;
 
 namespace GRC.Shared.UI.Controls;
 

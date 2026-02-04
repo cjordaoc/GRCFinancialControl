@@ -22,6 +22,7 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto"/>
                 <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2*"/>
+                <DataGridTextColumn Header="GUI Code" Binding="{Binding EngagementPapdGui}" Width="*"/>
                 <DataGridTextColumn Header="Level" Binding="{Binding Level}" Width="*"/>
                 <DataGridTextColumn Header="Windows Login" Binding="{Binding WindowsLogin}" Width="2*"/>
             </DataGrid.Columns>

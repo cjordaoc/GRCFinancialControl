@@ -1,20 +1,16 @@
-using System;
 using GRC.Shared.Core.Enums;
 using GRC.Shared.Core.Models.Core;
 using GRC.Shared.Core.Models.Financial;
 using GRC.Shared.Core.Models.Allocations;
 using GRC.Shared.Core.Models.Lookups;
 using GRCFinancialControl.Core.Models;
-using GRCFinancialControl.Persistence.Models;
 using GRC.Shared.Core.Models.Assignments;
-using Invoices.Core.Enums;
 using Invoices.Core.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
-using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
 namespace GRCFinancialControl.Persistence
 {
+    [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("EF Core migrations and model building are not fully compatible with trimming.")]
     public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
     {
         public DbSet<Engagement> Engagements { get; set; }
@@ -49,20 +45,20 @@ namespace GRCFinancialControl.Persistence
 
             var isMySql = Database.ProviderName?.Contains("MySql", StringComparison.OrdinalIgnoreCase) == true;
 
-            modelBuilder.Entity<EngagementPapd>()
+            _ = modelBuilder.Entity<EngagementPapd>()
                 .HasIndex(ep => new { ep.EngagementId, ep.PapdId })
                 .IsUnique();
 
             // Configure relationships
-            modelBuilder.Entity<Customer>()
+            _ = modelBuilder.Entity<Customer>()
                 .Property(c => c.CustomerCode)
                 .HasMaxLength(20);
 
-            modelBuilder.Entity<Customer>()
+            _ = modelBuilder.Entity<Customer>()
                 .Property(c => c.Name)
                 .HasMaxLength(200);
 
-            modelBuilder.Entity<Customer>()
+            _ = modelBuilder.Entity<Customer>()
                 .HasIndex(c => c.CustomerCode)
                 .IsUnique();
 
@@ -242,7 +238,15 @@ namespace GRCFinancialControl.Persistence
                 .HasOne(e => e.LastClosingPeriod)
                 .WithMany(cp => cp.Engagements)
                 .HasForeignKey(e => e.LastClosingPeriodId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+
+            modelBuilder.Entity<Engagement>()
+                .Ignore(e => e.LastClosingPeriodName);
+                
+            modelBuilder.Entity<Engagement>()
+                .Navigation(e => e.LastClosingPeriod)
+                .AutoInclude(false);
 
             modelBuilder.Entity<Papd>()
                 .HasMany(p => p.EngagementPapds) // A PAPD can be linked to many EngagementPapd records

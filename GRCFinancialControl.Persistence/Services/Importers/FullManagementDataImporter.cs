@@ -553,6 +553,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                         .Include(e => e.ManagerAssignments)
                         .Include(e => e.EngagementPapds)
                         .Where(e => engagementIds.Contains(e.EngagementId))
+                        .AsSingleQuery()
                         .ToListAsync()
                         .ConfigureAwait(false);
 
@@ -836,10 +837,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                             {
                                 managerGuiList.Add(row.EngagementManagerGUI);
                             }
-                            if (!string.IsNullOrWhiteSpace(row.EngagementManager))
-                            {
-                                managerGuiList.Add(row.EngagementManager);
-                            }
 
                             if (managerGuiList.Count > 0)
                             {
@@ -856,10 +853,6 @@ namespace GRCFinancialControl.Persistence.Services.Importers
                             if (!string.IsNullOrWhiteSpace(row.EngagementPartnerGUI))
                             {
                                 partnerGuiList.Add(row.EngagementPartnerGUI);
-                            }
-                            if (!string.IsNullOrWhiteSpace(row.EngagementPartner))
-                            {
-                                partnerGuiList.Add(row.EngagementPartner);
                             }
 
                             if (partnerGuiList.Count > 0)

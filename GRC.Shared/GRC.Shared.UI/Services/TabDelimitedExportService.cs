@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using GRC.Shared.Core.Services;
 
 namespace GRC.Shared.UI.Services
 {

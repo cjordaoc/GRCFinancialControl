@@ -3,12 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using GRC.Shared.Core.Enums;
 using GRC.Shared.Core.Models.Core;
-using GRC.Shared.Core.Models.Financial;
-using GRC.Shared.Core.Models.Allocations;
-
 using GRC.Shared.Core.Models.Assignments;
-using GRC.Shared.Core.Models.Lookups;
 using GRCFinancialControl.Core.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace GRCFinancialControl.Persistence.Services.Importers.Strategies
 {
@@ -85,6 +82,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers.Strategies
                 {
                     // Check if Papd already exists in database by GUI code
                     var existingPapd = context.Papds
+                        .AsNoTracking()
                         .FirstOrDefault(p => p.EngagementPapdGui == gui);
                     
                     if (existingPapd != null)
@@ -104,7 +102,7 @@ namespace GRCFinancialControl.Persistence.Services.Importers.Strategies
                         var newPapd = new Papd
                         {
                             EngagementPapdGui = gui,
-                            Name = gui,
+                            Name = $"[Pending] {gui}",
                             WindowsLogin = null,
                             Level = PapdLevel.AssociatePartner
                         };

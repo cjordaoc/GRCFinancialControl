@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using GRC.Shared.Core.Models.Core;
@@ -26,6 +27,7 @@ namespace GRCFinancialControl.Persistence.Services
             _contextFactory = contextFactory;
         }
 
+        [RequiresUnreferencedCode("EF Core model building and migrations are not fully compatible with trimming.")]
         public async Task<List<EngagementPapd>> GetByEngagementIdAsync(int engagementId)
         {
             await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
@@ -35,21 +37,23 @@ namespace GRCFinancialControl.Persistence.Services
                 .ToListAsync().ConfigureAwait(false);
         }
 
+        [RequiresUnreferencedCode("EF Core model building and migrations are not fully compatible with trimming.")]
         public async Task<List<EngagementPapd>> GetByPapdIdAsync(int papdId)
         {
             await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
             return await context.EngagementPapds
                 .AsNoTracking()
-                .AsSplitQuery()
                 .Include(a => a.Papd)
                 .Include(a => a.Engagement)
                     .ThenInclude(e => e.Customer)
+                .AsSplitQuery()
                 .Where(a => a.PapdId == papdId)
                 .OrderBy(a => a.Engagement.EngagementId)
                 .ThenBy(a => a.Engagement.Description)
                 .ToListAsync().ConfigureAwait(false);
         }
 
+        [RequiresUnreferencedCode("EF Core model building and migrations are not fully compatible with trimming.")]
         public async Task DeleteAsync(int id)
         {
             await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
@@ -69,6 +73,7 @@ namespace GRCFinancialControl.Persistence.Services
             await context.SaveChangesAsync().ConfigureAwait(false);
         }
 
+        [RequiresUnreferencedCode("EF Core model building and migrations are not fully compatible with trimming.")]
         public async Task UpdateAssignmentsForEngagementAsync(int engagementId, IEnumerable<int> papdIds)
         {
             await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
