@@ -318,22 +318,35 @@ namespace GRCFinancialControl.Avalonia.ViewModels
 
         private async Task TestConnectionAsync()
         {
-            RunOnUiThread(() => StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_Testing"));
-            var settings = BuildSettingsDictionary();
-            var result = await _settingsService.TestConnectionAsync(Server, Database, User, Password);
-
-            if (!result.Success)
+            try
             {
-                RunOnUiThread(() => StatusMessage = result.Message);
-                return;
-            }
+                RunOnUiThread(() => StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_Testing"));
+                var result = await _settingsService.TestConnectionAsync(Server, Database, User, Password);
 
-            await _settingsService.SaveAllAsync(settings);
-            RunOnUiThread(() =>
-            {
-                StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_TestSuccess");
+                if (!result.Success)
+                {
+                    RunOnUiThread(() => StatusMessage = result.Message);
+                    var errorMessage = LocalizationRegistry.Get("FINC_Settings_Toast_ConnectionFailed");
+                    ToastService.ShowError(errorMessage);
+                    return;
+                }
+
+                var settings = BuildSettingsDictionary();
+                await _settingsService.SaveAllAsync(settings);
+
+                RunOnUiThread(() => StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_TestSuccess"));
+
+                var successMessage = LocalizationRegistry.Get("FINC_Settings_Toast_ConnectionTested");
+                ToastService.ShowSuccess(successMessage);
+
                 Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
-            });
+            }
+            catch (Exception ex)
+            {
+                RunOnUiThread(() => StatusMessage = LocalizationRegistry.Format("FINC_Settings_Status_TestError", ex.Message));
+                var errorMessage = LocalizationRegistry.Get("FINC_Settings_Toast_ConnectionFailed");
+                ToastService.ShowError(errorMessage);
+            }
         }
 
         private async Task ClearAllDataAsync()
@@ -347,9 +360,24 @@ namespace GRCFinancialControl.Avalonia.ViewModels
                 return;
             }
 
-            RunOnUiThread(() => StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_Clearing"));
-            await _schemaInitializer.ClearAllDataAsync();
-            RunOnUiThread(() => StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_Cleared"));
+            try
+            {
+                RunOnUiThread(() => StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_Clearing"));
+                await _schemaInitializer.ClearAllDataAsync();
+
+                RunOnUiThread(() => StatusMessage = LocalizationRegistry.Get("FINC_Settings_Status_Cleared"));
+
+                var successMessage = LocalizationRegistry.Get("FINC_Settings_Toast_DataCleared");
+                ToastService.ShowSuccess(successMessage);
+
+                Messenger.Send(new RefreshViewMessage(FinancialControlRefreshTargets.FinancialData));
+            }
+            catch (Exception ex)
+            {
+                RunOnUiThread(() => StatusMessage = LocalizationRegistry.Format("FINC_Settings_Status_ClearError", ex.Message));
+                var errorMessage = LocalizationRegistry.Format("FINC_Settings_Toast_ClearFailed", ex.Message);
+                ToastService.ShowError(errorMessage);
+            }
         }
 
         private async Task ExportConnectionPackageAsync()

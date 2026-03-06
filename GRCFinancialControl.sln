@@ -1,7 +1,6 @@
-
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31903.59
+# Visual Studio Version 18
+VisualStudioVersion = 18.2.11415.280 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GRCFinancialControl.Core", "GRCFinancialControl.Core\GRCFinancialControl.Core.csproj", "{321849FB-31C7-4130-ABD3-A05A44189544}"
 EndProject
@@ -10,6 +9,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GRCFinancialControl.Avalonia", "GRCFinancialControl.Avalonia\GRCFinancialControl.Avalonia.csproj", "{33A024B6-A150-40DB-AB1D-253FE5E25CA8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App.Presentation", "App.Presentation\App.Presentation.csproj", "{99854BAC-708A-4C2C-A1D8-6F502B58FE7B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BenchmarkSuite1", "BenchmarkSuite1\BenchmarkSuite1.csproj", "{A20861A9-411E-6150-BF5C-69E8196E5D22}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +34,10 @@ Global
 		{99854BAC-708A-4C2C-A1D8-6F502B58FE7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{99854BAC-708A-4C2C-A1D8-6F502B58FE7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{99854BAC-708A-4C2C-A1D8-6F502B58FE7B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A20861A9-411E-6150-BF5C-69E8196E5D22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A20861A9-411E-6150-BF5C-69E8196E5D22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A20861A9-411E-6150-BF5C-69E8196E5D22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A20861A9-411E-6150-BF5C-69E8196E5D22}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

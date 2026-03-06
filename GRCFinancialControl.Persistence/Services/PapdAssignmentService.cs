@@ -43,11 +43,11 @@ namespace GRCFinancialControl.Persistence.Services
             await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
             return await context.EngagementPapds
                 .AsNoTracking()
+                .Where(a => a.PapdId == papdId)
                 .Include(a => a.Papd)
                 .Include(a => a.Engagement)
                     .ThenInclude(e => e.Customer)
                 .AsSplitQuery()
-                .Where(a => a.PapdId == papdId)
                 .OrderBy(a => a.Engagement.EngagementId)
                 .ThenBy(a => a.Engagement.Description)
                 .ToListAsync().ConfigureAwait(false);
@@ -88,36 +88,93 @@ namespace GRCFinancialControl.Persistence.Services
                 .Where(a => a.EngagementId == engagementId)
                 .ToListAsync().ConfigureAwait(false);
 
-            var existingPapdIds = existingAssignments.Select(a => a.PapdId).ToHashSet();
-            var incomingPapdIds = papdIds.ToHashSet();
-
-            var assignmentsToRemove = existingAssignments
-                .Where(a => !incomingPapdIds.Contains(a.PapdId))
-                .ToList();
-
-            var papdIdsToAdd = incomingPapdIds
-                .Where(id => !existingPapdIds.Contains(id))
-                .ToList();
-
-            if (assignmentsToRemove.Any())
+            var incomingPapdIds = papdIds as HashSet<int> ?? papdIds.ToHashSet();
+            
+            if (IsNoChangeRequired(existingAssignments, incomingPapdIds))
             {
-                context.EngagementPapds.RemoveRange(assignmentsToRemove);
+                return;
             }
 
-            if (papdIdsToAdd.Any())
-            {
-                var newAssignments = papdIdsToAdd.Select(papdId => new EngagementPapd
-                {
-                    EngagementId = engagementId,
-                    PapdId = papdId
-                });
-                await context.EngagementPapds.AddRangeAsync(newAssignments).ConfigureAwait(false);
-            }
+            var diff = CalculateAssignmentDifferences(existingAssignments, incomingPapdIds);
 
-            if (assignmentsToRemove.Any() || papdIdsToAdd.Any())
+            ApplyAssignmentChanges(context, engagementId, diff);
+
+            if (diff.HasChanges)
             {
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
         }
+
+        private static bool IsNoChangeRequired(List<EngagementPapd> existingAssignments, HashSet<int> incomingPapdIds)
+        {
+            return existingAssignments.Count == 0 && incomingPapdIds.Count == 0;
+        }
+
+        private static AssignmentDifferences CalculateAssignmentDifferences(
+            List<EngagementPapd> existingAssignments, 
+            HashSet<int> incomingPapdIds)
+        {
+            var existingPapdIds = new HashSet<int>(existingAssignments.Count);
+            var assignmentsToRemove = new List<EngagementPapd>(existingAssignments.Count);
+            
+            foreach (var assignment in existingAssignments)
+            {
+                existingPapdIds.Add(assignment.PapdId);
+                if (!incomingPapdIds.Contains(assignment.PapdId))
+                {
+                    assignmentsToRemove.Add(assignment);
+                }
+            }
+
+            var papdIdsToAdd = new List<int>();
+            foreach (var papdId in incomingPapdIds)
+            {
+                if (!existingPapdIds.Contains(papdId))
+                {
+                    papdIdsToAdd.Add(papdId);
+                }
+            }
+
+            return new AssignmentDifferences(assignmentsToRemove, papdIdsToAdd);
+        }
+
+        private static void ApplyAssignmentChanges(
+            ApplicationDbContext context, 
+            int engagementId, 
+            AssignmentDifferences diff)
+        {
+            if (diff.AssignmentsToRemove.Count > 0)
+            {
+                context.EngagementPapds.RemoveRange(diff.AssignmentsToRemove);
+            }
+
+            foreach (var papdId in diff.PapdIdsToAdd)
+            {
+                context.EngagementPapds.Add(CreateAssignment(engagementId, papdId));
+            }
+        }
+
+        private static EngagementPapd CreateAssignment(int engagementId, int papdId)
+        {
+            return new EngagementPapd
+            {
+                EngagementId = engagementId,
+                PapdId = papdId
+            };
+        }
+
+        private readonly struct AssignmentDifferences
+        {
+            public AssignmentDifferences(List<EngagementPapd> assignmentsToRemove, List<int> papdIdsToAdd)
+            {
+                AssignmentsToRemove = assignmentsToRemove;
+                PapdIdsToAdd = papdIdsToAdd;
+            }
+
+            public List<EngagementPapd> AssignmentsToRemove { get; }
+            public List<int> PapdIdsToAdd { get; }
+            public bool HasChanges => AssignmentsToRemove.Count > 0 || PapdIdsToAdd.Count > 0;
+        }
     }
 }
+

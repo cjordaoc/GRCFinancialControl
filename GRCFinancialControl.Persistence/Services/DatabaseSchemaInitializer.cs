@@ -25,10 +25,23 @@ namespace GRCFinancialControl.Persistence.Services
         {
             "ActualsEntries",
             "PlannedAllocations",
+            "EngagementPapds",
+            "EngagementManagerAssignments",
             "EngagementFiscalYearRevenueAllocations",
             "EngagementRankBudgets",
+            "EngagementRankBudgetHistory",
             "FinancialEvolution",
-            "Exceptions"
+            "Exceptions",
+            "InvoiceItems",
+            "InvoiceEmissions",
+            "InvoicePlanEmails",
+            "InvoicePlans",
+            "EngagementAdditionalSales",
+            "Engagements",
+            "Customers",
+            "Managers",
+            "Employees",
+            "FiscalYears"
         };
 
         private const string TableExistsSql =
